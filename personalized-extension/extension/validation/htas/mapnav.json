@@ -20,15 +20,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search results show multiple options, including an ad for Google Maps, so you must verify you are tapping 'GET' on the correct Waze application.",
-        "whatTheAgentLoses": "You lose the ability to choose which specific navigation app gets installed on your device."
+        "whatTheAgentLoses": "You lose the ability to choose which specific navigation app gets installed on your device.",
+        "speak": "on-event",
+        "check": "Does the result card next to the GET button show the name 'Waze Navigation & Live Traffic', and is any result above it labeled 'Ad'?",
+        "say_example": "The top result is an ad for a different app. <Waze> is lower down. I'm getting that one."
        },
        {
-        "question": "Do you confirm the installation of the Waze app?",
+        "question": "Do you want to install Waze?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows an App Store prompt requiring Face ID or a double-click to authorize downloading Waze Navigation & Live Traffic.",
-        "whatTheAgentLoses": "Delegating this step means losing the ability to personally authorize app downloads and manage your device's security."
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally authorize app downloads and manage your device's security.",
+        "speak": "gate",
+        "check": "Does the screen show an App Store prompt asking for Face ID or a double-click of the side button to install?",
+        "say_example": "The App Store wants your <Face ID> to install. That press has to be yours."
        },
        {
         "question": "Do you want to review the app's ratings, privacy details, and specifications before downloading it?",
@@ -36,7 +42,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen displays a 4.8 rating, version history, and privacy information that can help verify the app's reliability and data usage before installation.",
-        "whatTheAgentLoses": "You lose the opportunity to personally evaluate the app's trustworthiness and privacy practices based on user reviews and developer disclosures."
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate the app's trustworthiness and privacy practices based on user reviews and developer disclosures.",
+        "speak": "never",
+        "check": "What rating, version history, and privacy details does the App Store page show for the app?",
+        "say_example": "Waze shows <4.8 stars>. Its privacy card lists <location and usage data>."
        }
       ]
      },
@@ -50,7 +59,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen explicitly states that using the service indicates your consent to the Terms of Use and Privacy Policy.",
-        "whatTheAgentLoses": "Letting an agent blindly accept these agreements deprives you of knowing the specific data sharing and liability terms you are bound by."
+        "whatTheAgentLoses": "Letting an agent blindly accept these agreements deprives you of knowing the specific data sharing and liability terms you are bound by.",
+        "speak": "always",
+        "check": "Does the screen state that using the service indicates consent to the Terms of Use and Privacy Policy?",
+        "say_example": "Using <Waze> means agreeing to its terms and privacy policy. I'm going ahead."
        },
        {
         "question": "Should you allow the app to send you notifications?",
@@ -58,7 +70,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "A system prompt asks if Waze can send notifications, which may include alerts, sounds, and icon badges.",
-        "whatTheAgentLoses": "You lose control over your device's privacy settings and whether the app is allowed to interrupt you with alerts."
+        "whatTheAgentLoses": "You lose control over your device's privacy settings and whether the app is allowed to interrupt you with alerts.",
+        "speak": "never",
+        "check": "Does a system prompt ask whether the app may send notifications, alerts, sounds, and badges?",
+        "say_example": "Said no to notifications."
        },
        {
         "question": "Do you want personalized ads based on your account info and app activity?",
@@ -66,7 +81,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The app asks if it can use your account information and activity to show personalized ads, which affects your data privacy.",
-        "whatTheAgentLoses": "An agent might opt into personalized ads by default, sharing your personal data and app activity without your explicit consent."
+        "whatTheAgentLoses": "An agent might opt into personalized ads by default, sharing your personal data and app activity without your explicit consent.",
+        "speak": "never",
+        "check": "Does the screen ask to use account information and activity for personalized ads?",
+        "say_example": "Said no to personalized ads."
        }
       ]
      },
@@ -88,7 +106,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen prompts you to choose between precise or approximate location access and how often the app can track you, which directly impacts both your privacy and the accuracy of the directions.",
-        "whatTheAgentLoses": "Letting an agent decide means you lose the ability to enforce your own privacy boundaries regarding how and when your location data is shared."
+        "whatTheAgentLoses": "Letting an agent decide means you lose the ability to enforce your own privacy boundaries regarding how and when your location data is shared.",
+        "speak": "always",
+        "check": "Does the prompt offer precise or approximate location, and which access durations are listed?",
+        "say_example": "I'm letting the app use your exact location while it's open. It can't guide you without that."
        },
        {
         "question": "Are location services enabled and accessible to the Maps app?",
@@ -96,7 +117,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Verifying that the location toggle is on and Maps is listed under recent requests ensures the app can accurately determine your starting point for directions.",
-        "whatTheAgentLoses": "You lose the ability to personally audit your device's privacy settings and confirm exactly which apps have access to your location data."
+        "whatTheAgentLoses": "You lose the ability to personally audit your device's privacy settings and confirm exactly which apps have access to your location data.",
+        "speak": "on-event",
+        "check": "Does the Location Services toggle show off, or is the Maps app missing from the recent requests list?",
+        "say_example": "Location is switched off, so the map can't find you. It needs turning on in Settings before directions work."
        }
       ]
      },
@@ -109,20 +133,15 @@
       "label": "Sign in or skip",
       "questions": [
        {
-        "question": "Should I sign in to your account before searching for the destination?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a menu with a 'Sign in' button and personalized features like 'Your timeline' and 'Location sharing' that become available if an account is linked.",
-        "whatTheAgentLoses": "Letting the agent decide whether to sign in means you lose control over whether your navigation data and location history are saved to your personal profile."
-       },
-       {
         "question": "Do you want to log into your account or continue as a guest?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The onboarding screen offers a choice to log in or just get started, which determines if your saved places and preferences will be available.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether to access your personalized account history and saved destinations for this trip."
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to access your personalized account history and saved destinations for this trip.",
+        "speak": "never",
+        "check": "Does the screen offer both a sign-in option and a way to continue without an account?",
+        "say_example": "Skipped sign-in. Directions work without it."
        }
       ]
      },
@@ -131,20 +150,15 @@
       "label": "Find yourself on the map",
       "questions": [
        {
-        "question": "Is my current location accurate on the map before I get directions?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Checking that the blue dot matches your actual surroundings ensures the app calculates the route from the correct starting point.",
-        "whatTheAgentLoses": "You lose the physical awareness required to notice if the GPS has pinpointed the wrong starting location."
-       },
-       {
         "question": "Is the navigation screen stuck on a 'Searching for GPS' warning?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "If the device hasn't locked onto a GPS signal (often due to being indoors, in a city canyon, or in a parking garage), the initial turn-by-turn directions will be frozen or point in the wrong direction.",
-        "whatTheAgentLoses": "You lose the opportunity to wait for a solid GPS lock before pulling into traffic, preventing you from making immediate wrong turns."
+        "whatTheAgentLoses": "You lose the opportunity to wait for a solid GPS lock before pulling into traffic, preventing you from making immediate wrong turns.",
+        "speak": "on-event",
+        "check": "Does the navigation screen show a 'Searching for GPS' message?",
+        "say_example": "Still searching for GPS. The first turns could point the wrong way until it locks on."
        }
       ]
      }
@@ -161,7 +175,10 @@
       "moment": "On demand",
       "moneyMoving": false,
       "why": "The profile menu displays options like Incognito mode, offline maps, and location sharing that control your privacy and data usage during the trip.",
-      "whatTheAgentLoses": "You lose the chance to protect your privacy by enabling Incognito mode or managing how your location data is saved and shared."
+      "whatTheAgentLoses": "You lose the chance to protect your privacy by enabling Incognito mode or managing how your location data is saved and shared.",
+      "speak": "never",
+      "check": "Which privacy options does the profile menu list, and is Incognito shown as off?",
+      "say_example": "Left incognito and the account settings alone."
      },
      {
       "question": "Do you want to review the current air quality in the area?",
@@ -169,7 +186,10 @@
       "moment": "On demand",
       "moneyMoving": false,
       "why": "The screen displays an air quality overlay with green pins indicating 'Good' conditions based on EPA South Australia data.",
-      "whatTheAgentLoses": "You lose the chance to factor local environmental and health conditions into your travel plans."
+      "whatTheAgentLoses": "You lose the chance to factor local environmental and health conditions into your travel plans.",
+      "speak": "never",
+      "check": "What air quality label does the overlay show for the area?",
+      "say_example": "Air quality overlay reads <Good>."
      },
      {
       "question": "Do you need to configure any specific navigation settings, like avoiding unpaved roads or setting your vehicle type?",
@@ -177,65 +197,35 @@
       "moment": "On demand",
       "moneyMoving": false,
       "why": "The screen displays options to avoid unpaved roads or difficult intersections and to specify vehicle details, which can significantly alter the safety and efficiency of the recommended route.",
-      "whatTheAgentLoses": "Delegating this step means the agent might select a route that includes difficult intersections or roads unsuitable for your specific vehicle."
+      "whatTheAgentLoses": "Delegating this step means the agent might select a route that includes difficult intersections or roads unsuitable for your specific vehicle.",
+      "speak": "never",
+      "check": "Do the settings show a vehicle type and an option to avoid unpaved roads or difficult intersections, and what are they set to?",
+      "say_example": "Vehicle type and unpaved-road settings left as found."
      }
     ],
     "children": [
      {
       "id": "2.1",
-      "label": "Open the global settings",
-      "questions": [
-       {
-        "question": "Do you want to adjust your routing preferences?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The profile menu displays a Preferences option currently set to Driving, which dictates how the app calculates your routes.",
-        "whatTheAgentLoses": "You lose the ability to set global navigation defaults, such as your preferred travel mode or avoiding highways."
-       }
-      ]
+      "label": "Open the global settings"
      },
      {
       "id": "2.2",
-      "label": "Open the per-route options",
-      "questions": [
-       {
-        "question": "Should you start navigation with the current route or open the menu to modify your route settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen indicates the current route is avoiding highways and tolls, prompting a choice between accepting this path or adjusting your route options.",
-        "whatTheAgentLoses": "An agent might immediately start navigation on the default route, depriving you of the chance to fine-tune your specific travel preferences."
-       }
-      ]
+      "label": "Open the per-route options"
      },
      {
       "id": "2.3",
       "label": "Set the avoid toggles",
       "questions": [
        {
-        "question": "Are the correct route options enabled for your trip, and how do you return to the map?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Verifying that the toggles for avoiding tolls and ferries are turned on ensures the map calculates a route that matches your specific travel preferences.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally confirming that cost-saving or preference-based route restrictions are actively applied to your journey."
-       },
-       {
         "question": "Are you currently set to avoid toll roads?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Avoid tolls' toggle is currently switched to the on position, which restricts the map from suggesting routes that require a fee.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether the time saved by taking a toll road is worth the financial cost for this specific trip."
-       },
-       {
-        "question": "Does the toll-free route have an acceptable travel time and distance?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays the updated route avoiding tolls with a 13-minute travel time and 6.6-mile distance, which you must review before proceeding.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh whether the specific time and distance of the toll-free route is a worthwhile tradeoff."
+        "whatTheAgentLoses": "You lose the opportunity to decide whether the time saved by taking a toll road is worth the financial cost for this specific trip.",
+        "speak": "on-event",
+        "check": "Does the route options panel show the Avoid tolls toggle switched on?",
+        "say_example": "This app came already set to avoid tolls. You didn't ask for that, and it can make routes longer. Want it off?"
        },
        {
         "question": "Do the estimated time and distance remain the same after you interact with the route options?",
@@ -243,15 +233,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen shows the driving time of 13 minutes and distance of 6.6 miles remain identical before and after the 'Avoid tolls' setting is toggled.",
-        "whatTheAgentLoses": "The user loses the certainty that their preferred route settings were correctly applied and maintained for the final journey."
-       },
-       {
-        "question": "Do you want to avoid specific road types like tolls and motorways, or prioritize fuel efficiency?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays toggles for avoiding tolls, motorways, and ferries, which directly impact the calculated path, travel time, and cost of the trip.",
-        "whatTheAgentLoses": "Delegating this means the agent might select a route with expensive tolls or unwanted highways instead of aligning with your personal driving and cost preferences."
+        "whatTheAgentLoses": "The user loses the certainty that their preferred route settings were correctly applied and maintained for the final journey.",
+        "speak": "never",
+        "check": "Are the route time and distance the same before and after the toggle was changed?",
+        "say_example": "Avoiding tolls changed nothing. The route had none to avoid."
        },
        {
         "question": "Do you want to adjust any route preferences, such as avoiding tolls or highways?",
@@ -259,23 +244,21 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The 'Route options' panel lets you customize the journey by choosing to avoid highways, tolls, or ferries.",
-        "whatTheAgentLoses": "You lose the chance to apply personal travel preferences, potentially ending up on a route with unwanted tolls or highways."
+        "whatTheAgentLoses": "You lose the chance to apply personal travel preferences, potentially ending up on a route with unwanted tolls or highways.",
+        "speak": "never",
+        "check": "Which avoid toggles does the Route options panel show, and which are on?",
+        "say_example": "Route preferences left as they were. Nothing avoided."
        },
        {
-        "question": "Should you adjust the route options to avoid highways?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Checking the 'Highways' box updates the map to show an alternative route via Bluestem Rd E that takes 51 minutes and covers 42.7 miles.",
-        "whatTheAgentLoses": "You lose the opportunity to choose a calmer, non-highway drive that might better suit your vehicle or personal preference."
-       },
-       {
-        "question": "Do you want to keep the 'avoid highways' setting given the new 51-minute ETA?",
+        "question": "Do you want to keep an avoid setting once you see what it costs in time?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows the fastest non-highway route via Bluestem Rd E takes 51 minutes for 42.7 miles, which helps you decide if the detour is worth the extra time.",
-        "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-off between the longer travel time and your preference for avoiding highways."
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-off between the longer travel time and your preference for avoiding highways.",
+        "speak": "on-event",
+        "check": "What are the route times with and without the avoid setting, as shown on screen?",
+        "say_example": "Avoiding highways makes it <51 minutes> instead of <21>. Keep that, or take the highway?"
        },
        {
         "question": "Do you want to adjust your walking or cycling route to avoid physical obstacles?",
@@ -283,7 +266,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The preferences menu provides specific toggles for walking and cycling to \"Avoid Hills\", \"Avoid Busy Roads\", and \"Avoid Stairs\".",
-        "whatTheAgentLoses": "You lose the ability to tailor a non-motorized route to your physical abilities and comfort, potentially ending up on a path with exhausting stairs or dangerous traffic."
+        "whatTheAgentLoses": "You lose the ability to tailor a non-motorized route to your physical abilities and comfort, potentially ending up on a path with exhausting stairs or dangerous traffic.",
+        "speak": "never",
+        "check": "Do the walking and cycling preferences show toggles for Avoid Hills, Avoid Busy Roads, and Avoid Stairs, and which are on?",
+        "say_example": "Walking options show <Avoid Stairs> off."
        },
        {
         "question": "Do you want the map to display the estimated prices for the toll roads on your route?",
@@ -291,7 +277,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The driving options menu includes a 'See toll pass prices' toggle, which changes the route display to show the expected financial cost rather than just a generic toll warning.",
-        "whatTheAgentLoses": "You lose the ability to see upfront cost estimates for the trip, which is crucial for deciding if the time saved by taking the toll road is worth the money."
+        "whatTheAgentLoses": "You lose the ability to see upfront cost estimates for the trip, which is crucial for deciding if the time saved by taking the toll road is worth the money.",
+        "speak": "never",
+        "check": "After the toll price toggle is on, does the route display a toll amount?",
+        "say_example": "Toll prices turned on. This route's tolls come to <$4.60>."
        }
       ]
      },
@@ -305,7 +294,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows options for mute state, guidance volume, and voice selection that dictate how turn-by-turn directions will sound.",
-        "whatTheAgentLoses": "Delegating this means the agent might leave the guidance unmuted or too loud, potentially disrupting your phone calls or preferred driving environment."
+        "whatTheAgentLoses": "Delegating this means the agent might leave the guidance unmuted or too loud, potentially disrupting your phone calls or preferred driving environment.",
+        "speak": "on-event",
+        "check": "Does the sound setting show muted or Sound off?",
+        "say_example": "Navigation sound is off. You'd get no spoken turns. I'm turning it on."
        }
       ]
      },
@@ -319,7 +311,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "Checking that the distances accurately convert from 45.2, 42.7, and 41.7 miles to 72.8, 68.7, and 67.1 kilometers ensures the app's settings are functioning correctly.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally confirm the route distances are accurately displayed in your preferred measurement units."
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally confirm the route distances are accurately displayed in your preferred measurement units.",
+        "speak": "never",
+        "check": "After switching units, do the route distances display in kilometers?",
+        "say_example": "Switched to kilometers."
        }
       ]
      },
@@ -333,7 +328,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Enabling this feature allows you to interact with the map using your voice while driving, but it disables 'Hey Siri' during navigation and requires granting microphone access.",
-        "whatTheAgentLoses": "The user loses the opportunity to decide whether to grant microphone permissions and trade off their default voice assistant for hands-free convenience."
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to grant microphone permissions and trade off their default voice assistant for hands-free convenience.",
+        "speak": "never",
+        "check": "Does the voice assistant screen say it needs microphone access and disables Hey Siri during navigation?",
+        "say_example": "Left the voice assistant off. It takes the microphone and turns off Hey Siri."
        }
       ]
      },
@@ -357,20 +355,15 @@
       "label": "Pick from the suggestions",
       "questions": [
        {
-        "question": "Which search suggestion should you select for your intended destination?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown showed both a generic search query and specific location pins like 'Isbt Anand Vihar' and 'Sarai Kale Khan', meaning this choice dictates the accuracy of the final route.",
-        "whatTheAgentLoses": "You lose the opportunity to clarify exactly which specific terminal or location pin you actually meant to navigate to."
-       },
-       {
-        "question": "Which of these suggested locations is your intended destination?",
+        "question": "Which of these suggestions is your destination?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search bar suggests multiple places with similar names like Rochester, NY and Rochester Hills, so you must select the exact one to ensure accurate routing.",
-        "whatTheAgentLoses": "You lose the ability to verify that the correct specific location was chosen from the autocomplete list rather than a similarly named but incorrect destination."
+        "whatTheAgentLoses": "You lose the ability to verify that the correct specific location was chosen from the autocomplete list rather than a similarly named but incorrect destination.",
+        "speak": "gate",
+        "check": "Which suggestions does the list show, with their full names and regions?",
+        "say_example": "There's more than one. <Rochester, New York>, or <Rochester Hills, Michigan>. Which one is yours?"
        }
       ]
      },
@@ -384,7 +377,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Selecting a previously searched location from the 'TODAY' list, like the Queen Elizabeth Theatre, saves time over typing the full address manually.",
-        "whatTheAgentLoses": "You lose the convenience of quickly selecting a familiar, recently searched location directly from your personal map history."
+        "whatTheAgentLoses": "You lose the convenience of quickly selecting a familiar, recently searched location directly from your personal map history.",
+        "speak": "never",
+        "check": "Does the recent searches list show an entry matching the named destination?",
+        "say_example": "Reused today's search for <the Queen Elizabeth Theatre>."
        }
       ]
      },
@@ -402,23 +398,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The map displays multiple nearby restaurants with varying ratings, requiring a choice of which specific location to target.",
-        "whatTheAgentLoses": "You lose the ability to personally select a destination based on its specific map location and user ratings."
+        "whatTheAgentLoses": "You lose the ability to personally select a destination based on its specific map location and user ratings.",
+        "speak": "gate",
+        "check": "Which places do the results list, with their names, ratings, and distances?",
+        "say_example": "Three restaurants close by. <Zabrero>, <4.5 stars>. <Enzo's>, <4.2>. Which one?"
        },
        {
-        "question": "Which gas station do you want to select from the search results?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The map displays multiple gas station pins and a bottom sheet for a specific station, requiring you to decide if this is your intended destination.",
-        "whatTheAgentLoses": "You lose the opportunity to choose a specific gas station based on your personal preferences for location, brand, or distance."
-       },
-       {
-        "question": "Are these the right search results, or should you go back?",
+        "question": "Do the search results match what you asked for?",
         "cluster": "refine",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays multiple restaurant pins like Zabrero and Enzo's Ristorante, requiring you to decide if your destination is among them.",
-        "whatTheAgentLoses": "You lose the ability to personally verify if the displayed options match your specific intent before deciding to abandon the search."
+        "whatTheAgentLoses": "You lose the ability to personally verify if the displayed options match your specific intent before deciding to abandon the search.",
+        "speak": "if-wrong",
+        "check": "Do the listed result names and categories match what was searched for?",
+        "say_example": "These results don't look like your ask. You said <pharmacy>, these are <restaurants>. I'm searching again."
        }
       ]
      },
@@ -431,12 +425,15 @@
       "label": "Drop a pin on the map",
       "questions": [
        {
-        "question": "Does the dropped pin accurately reflect the specific entrance or parking lot, rather than the geographic center of a large complex?",
+        "question": "Does the pin mark the entrance or parking lot, not just the middle of a big complex?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Searching for a large area like an airport, hospital, or university often drops the pin in the center of the campus, which can lead the navigation to route you to a locked service road or the wrong side of the property.",
-        "whatTheAgentLoses": "You lose the ability to manually refine the pin placement to ensure the navigation guides you to the actual public entrance or parking garage."
+        "whatTheAgentLoses": "You lose the ability to manually refine the pin placement to ensure the navigation guides you to the actual public entrance or parking garage.",
+        "speak": "on-event",
+        "check": "Does the place card show a street address, or only a coordinates-style label or bare plus code?",
+        "say_example": "The pin has no street address, just <a map point>. On a big property that can mean the middle of it, not the door."
        }
       ]
      },
@@ -449,12 +446,15 @@
       "label": "Read the place card",
       "questions": [
        {
-        "question": "Is this the correct destination and what are its basic details?",
+        "question": "Is this the right place before you ask for directions?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Reviewing the place card showing the rating, operating hours, and contact options ensures you have selected the correct Woolworths location before requesting directions.",
-        "whatTheAgentLoses": "You lose the chance to personally verify the store's reviews, exact business hours, and other specific details to ensure it is the right location before traveling."
+        "whatTheAgentLoses": "You lose the chance to personally verify the store's reviews, exact business hours, and other specific details to ensure it is the right location before traveling.",
+        "speak": "always",
+        "check": "What name, address, and hours does the place card show?",
+        "say_example": "Found <Woolworths> on <Main St>, open until <9>. I'm getting directions."
        },
        {
         "question": "Do you want to review the destination's details, such as hours, reviews, and popular times?",
@@ -462,31 +462,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen displayed comprehensive business information, including a review summary, popular times, and nearby public transport options.",
-        "whatTheAgentLoses": "The user misses out on contextual information about the destination, like how busy it is or its exact hours, which might influence their travel plans."
-       },
-       {
-        "question": "Is this the specific Starbucks location you want to navigate to?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The side panel displays the exact address, distance, and amenities like a drive-thru, allowing you to confirm it is the right destination.",
-        "whatTheAgentLoses": "You lose the opportunity to verify the exact location details and amenities before committing to the trip."
-       },
-       {
-        "question": "Is this the correct destination, and where is it relative to my current location?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Zooming out to view both the blue dot and the red pin for Kwambira Market confirms the destination's spatial relationship to your starting point before requesting directions.",
-        "whatTheAgentLoses": "You lose the intuitive, visual understanding of the destination's general direction and distance relative to your current location."
-       },
-       {
-        "question": "Is this the correct address, and should you click 'Directions' to proceed?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a red pin at '[number] St', requiring you to confirm it is the intended destination before calculating a route.",
-        "whatTheAgentLoses": "You lose the opportunity to visually confirm the destination's exact address and map placement before proceeding to the routing steps."
+        "whatTheAgentLoses": "The user misses out on contextual information about the destination, like how busy it is or its exact hours, which might influence their travel plans.",
+        "speak": "never",
+        "check": "What review summary, hours, and popular-times details does the card show?",
+        "say_example": "<Busiest around 5>. Reviews mention <parking being tight>."
        },
        {
         "question": "Is the destination marked as permanently or temporarily closed?",
@@ -494,7 +473,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The business's information card might display a red warning indicating it is closed, meaning routing there would result in a wasted trip.",
-        "whatTheAgentLoses": "You lose the opportunity to cancel or change your plans before driving to a location that is no longer open."
+        "whatTheAgentLoses": "You lose the opportunity to cancel or change your plans before driving to a location that is no longer open.",
+        "speak": "on-event",
+        "check": "Does the place card show 'Permanently closed' or 'Temporarily closed'?",
+        "say_example": "The page marks this place <permanently closed>. Going there wastes the trip. Want me to find another <branch>?"
        }
       ]
      },
@@ -508,7 +490,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen shows a Street View thumbnail for the dropped pin, which lets you visually confirm the road and shops at the destination.",
-        "whatTheAgentLoses": "You lose the visual context of the destination's surroundings, which helps in recognizing the exact spot upon arrival."
+        "whatTheAgentLoses": "You lose the visual context of the destination's surroundings, which helps in recognizing the exact spot upon arrival.",
+        "speak": "never",
+        "check": "Is a Street View thumbnail shown for the pin?",
+        "say_example": "Street View of the door exists if you want a look."
        },
        {
         "question": "Should you preview the street-level view of specific turns on your route?",
@@ -516,7 +501,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The step-by-step directions list includes camera icons that open a Street View pop-up to help you visualize the maneuver.",
-        "whatTheAgentLoses": "You miss the chance to visually memorize confusing intersections or landmarks along the route yourself."
+        "whatTheAgentLoses": "You miss the chance to visually memorize confusing intersections or landmarks along the route yourself.",
+        "speak": "never",
+        "check": "Do steps in the directions list show camera icons that open Street View?",
+        "say_example": "The tricky turns have Street View previews."
        }
       ]
      },
@@ -530,15 +518,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a dropdown list of potential starting points, including 'Your location', saved places like 'Home', and recent searches, which determines where the directions will begin.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to calculate the route from their current physical location, their home address, or another specific starting point."
+        "whatTheAgentLoses": "The user loses the ability to decide whether to calculate the route from their current physical location, their home address, or another specific starting point.",
+        "speak": "never",
+        "check": "What does the starting-point field show?",
+        "say_example": "Route starts from where you are now."
        },
        {
-        "question": "Which of the suggested locations matches your intended starting point?",
+        "question": "Which suggestion is your starting point?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dropdown showed multiple cities named Harrington across different states and countries, requiring you to clarify your search to find the one in Washington.",
-        "whatTheAgentLoses": "You lose the ability to ensure the correct state is selected when multiple cities share the exact same name."
+        "whatTheAgentLoses": "You lose the ability to ensure the correct state is selected when multiple cities share the exact same name.",
+        "speak": "gate",
+        "check": "Which start-point suggestions does the list show, with their regions?",
+        "say_example": "More than one <Harrington>. The list shows <Washington> and <Delaware>. Which is your start?"
        }
       ]
      }
@@ -555,7 +549,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "The ride service tab displays third-party providers like DiDi along with their current wait times, requiring you to choose a specific company to fulfill the trip.",
-      "whatTheAgentLoses": "You lose the ability to select your preferred ride-hailing provider based on your existing accounts, brand trust, or the specific wait times shown."
+      "whatTheAgentLoses": "You lose the ability to select your preferred ride-hailing provider based on your existing accounts, brand trust, or the specific wait times shown.",
+      "speak": "gate",
+      "check": "Which ride services does the tab list, with their wait times?",
+      "say_example": "The ride tab lists <DiDi>, about <13 minutes> out. Booking happens in their app, on your account. Which service?"
      }
     ],
     "children": [
@@ -564,12 +561,15 @@
       "label": "Request the directions",
       "questions": [
        {
-        "question": "Which action do you want to take for the selected destination?",
+        "question": "Before navigation starts from this place card, are the route options reviewed rather than letting the start button run straight through?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows the destination's information card with options to get directions, start navigation immediately, save, or share the location.",
-        "whatTheAgentLoses": "The user loses the chance to decide whether they want to review different route options first or jump straight into active navigation."
+        "whatTheAgentLoses": "The user loses the chance to decide whether they want to review different route options first or jump straight into active navigation.",
+        "speak": "never",
+        "check": "Which actions does the place card offer?",
+        "say_example": "Took <Directions> rather than instant <Start>."
        },
        {
         "question": "What are your starting and destination locations, and how are you traveling?",
@@ -577,7 +577,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The form requires entering a starting point in field A and a destination in field B, along with selecting a travel mode from the dropdown, to calculate the route.",
-        "whatTheAgentLoses": "You lose the ability to specify your exact starting point, add intermediate stops, or ensure your preferred mode of transportation is selected."
+        "whatTheAgentLoses": "You lose the ability to specify your exact starting point, add intermediate stops, or ensure your preferred mode of transportation is selected.",
+        "speak": "always",
+        "check": "What do the start field, the destination field, and the mode selector show?",
+        "say_example": "Got it. From <where you are> to <the Queen Elizabeth Theatre>, driving."
        }
       ]
      },
@@ -586,28 +589,15 @@
       "label": "Choose the travel mode",
       "questions": [
        {
-        "question": "Which travel mode should you select based on the estimated travel times?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Comparing the 4-hour driving time against the 9-hour transit option ensures you pick the most practical way to reach your destination.",
-        "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-offs between a faster drive and alternative transportation methods."
-       },
-       {
-        "question": "Which travel mode should you select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown offers alternative modes like walking or public transit, which drastically change the route details and may include beta warnings.",
-        "whatTheAgentLoses": "You lose the chance to evaluate alternative travel modes and decide if a lengthy walk is practical for your situation."
-       },
-       {
         "question": "Should you select public transit to review the available routes and estimated travel times?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides a travel mode dropdown menu, allowing you to switch to public transit to reveal specific departure schedules and trip durations.",
-        "whatTheAgentLoses": "You lose the opportunity to evaluate whether taking public transit is the most efficient or convenient option for your specific schedule."
+        "whatTheAgentLoses": "You lose the opportunity to evaluate whether taking public transit is the most efficient or convenient option for your specific schedule.",
+        "speak": "never",
+        "check": "What durations does the transit tab show?",
+        "say_example": "Transit runs <9 hours> and up."
        },
        {
         "question": "Should you check the rideshare tab to compare the estimated fare and wait time against public transit?",
@@ -615,7 +605,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Maps often integrate with apps like Uber or Lyft, showing estimated costs and pickup times as a distinct alternative to driving yourself or taking the bus.",
-        "whatTheAgentLoses": "The user loses the opportunity to realize that hailing a ride might be more cost-effective or faster than waiting for a delayed transit line."
+        "whatTheAgentLoses": "The user loses the opportunity to realize that hailing a ride might be more cost-effective or faster than waiting for a delayed transit line.",
+        "speak": "never",
+        "check": "Does a rideshare tab show fare estimates and pickup times?",
+        "say_example": "Rideshare estimate <$18>, pickup in <4 minutes>."
        },
        {
         "question": "Do you want to review the walking route and its estimated time?",
@@ -623,23 +616,21 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen displays a dotted line for the walking path and an ETA of 1 day and 17 hours, which helps you evaluate if walking is a practical choice.",
-        "whatTheAgentLoses": "You lose the ability to personally assess the feasibility of the walking route and decide if the lengthy travel time is acceptable."
+        "whatTheAgentLoses": "You lose the ability to personally assess the feasibility of the walking route and decide if the lengthy travel time is acceptable.",
+        "speak": "on-event",
+        "check": "Does the walking ETA show a duration in days?",
+        "say_example": "Walking this would take <1 day and 17 hours>. That's not a walk. Driving or transit instead?"
        },
        {
-        "question": "Do you want to take the default 9-minute driving route, or switch to another travel mode?",
+        "question": "Do you want the mode the app picked, or another one?",
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The map automatically selected a 9-minute car route, but shows alternative modes like transit, walking, and cycling that might be better suited for your trip.",
-        "whatTheAgentLoses": "You lose the chance to choose a different way to travel or engage with the fuel-saving settings if the agent automatically accepts the default driving route."
-       },
-       {
-        "question": "Do you want to review the driving routes, or check other travel modes to compare times?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the fastest driving route takes 1 hour and 4 minutes, but the top tabs indicate a motorcycle might be slightly faster at 1 hour and 3 minutes.",
-        "whatTheAgentLoses": "You lose the chance to personally evaluate alternative transportation modes that might save you time or better suit your preferences."
+        "whatTheAgentLoses": "You lose the chance to choose a different way to travel or engage with the fuel-saving settings if the agent automatically accepts the default driving route.",
+        "speak": "always",
+        "check": "Which mode is selected, and what time does each mode tab show?",
+        "say_example": "Driving, <9 minutes>. Transit shows <32>."
        }
       ]
      },
@@ -648,68 +639,15 @@
       "label": "Compare the alternate routes",
       "questions": [
        {
-        "question": "Are you satisfied with the estimated time and distance for this route?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the fastest route takes 3 minutes to cover 700 meters, allowing you to evaluate if the journey is practical before proceeding.",
-        "whatTheAgentLoses": "An agent might automatically start navigation without giving you the chance to decide if the travel time and distance are acceptable."
-       },
-       {
         "question": "Which route option should you choose?",
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displayed a fastest route taking 1 hour and 41 minutes alongside a longer alternative taking 1 hour and 46 minutes, requiring a comparison of time and distance.",
-        "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-offs between travel time and distance to select the path you prefer."
-       },
-       {
-        "question": "Do you realize the alternative route adds 9 km and 5 minutes to your journey compared to the primary option?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed the primary route taking 1 hour and 41 minutes for 56 km, making the 65 km alternative objectively less efficient.",
-        "whatTheAgentLoses": "The user loses the chance to decide whether the extra driving time and distance are worth it for unstated preferences like a more scenic drive or avoiding specific highways."
-       },
-       {
-        "question": "Do you want to check alternative routes before starting navigation?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The screen presents a default route via Main St S, but the 'Routes' button allows you to compare other paths before committing.",
-        "whatTheAgentLoses": "You lose the ability to pick a specific route based on your personal driving preferences or local knowledge."
-       },
-       {
-        "question": "Do you want to stick with the default 54-minute route or select an alternative path or travel mode?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a 54-minute primary route alongside slower alternative paths and different travel modes to evaluate.",
-        "whatTheAgentLoses": "You lose the opportunity to weigh the default route against other paths or transit options based on your personal preferences."
-       },
-       {
-        "question": "Which of the available route options do you want to take?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displayed multiple paths with different ETAs, traffic levels, and toll requirements, requiring a choice based on travel preferences.",
-        "whatTheAgentLoses": "The user loses the ability to weigh personal trade-offs, such as avoiding expensive tolls or stressful highways, against the raw estimated time of arrival."
-       },
-       {
-        "question": "Which driving route should you choose based on the estimated times and distances?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a primary fastest route in blue alongside alternative grey routes with varying times and mileages, requiring a choice based on your priorities.",
-        "whatTheAgentLoses": "You lose the ability to weigh the trade-offs between travel time and distance to select the route that best fits your personal driving preferences."
-       },
-       {
-        "question": "Do you want to inspect the details of the alternative route?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The map displays a grey alternative route labeled '25 min', and selecting it updates the bottom panel to reveal its specific distance and time for comparison.",
-        "whatTheAgentLoses": "You lose the opportunity to weigh the specific trade-offs in time and distance between the available route options."
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-offs between travel time and distance to select the path you prefer.",
+        "speak": "always",
+        "check": "Which routes are listed, with their times and distances, and which one is selected?",
+        "say_example": "Taking the fastest route, <1 hour 41>. The next one is <5 minutes> slower."
        },
        {
         "question": "Do you want to choose the route that saves fuel, even if it might be slightly slower?",
@@ -717,7 +655,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The route card highlights a green leaf icon and states 'Saves 6% petrol' or 'Saves 6% more petrol than alternate routes'.",
-        "whatTheAgentLoses": "The user loses the opportunity to make an environmentally friendly or cost-saving choice if the agent strictly optimizes for the fastest time."
+        "whatTheAgentLoses": "The user loses the opportunity to make an environmentally friendly or cost-saving choice if the agent strictly optimizes for the fastest time.",
+        "speak": "never",
+        "check": "Does a route card show a fuel-saving label such as 'Saves 6% petrol'?",
+        "say_example": "The picked route is the fuel-saver. <Saves 6% petrol>."
        },
        {
         "question": "Does the shape of the route on the map reveal a convoluted path through side streets?",
@@ -725,7 +666,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The map visually displays the route as a blue line, making it instantly obvious if a technically faster route actually involves a stressful, jagged path through residential areas rather than sticking to main roads.",
-        "whatTheAgentLoses": "The user loses the ability to quickly visually assess the driving complexity of the route, potentially being directed by the agent onto a stressful, turn-heavy path just to save one minute."
+        "whatTheAgentLoses": "The user loses the ability to quickly visually assess the driving complexity of the route, potentially being directed by the agent onto a stressful, turn-heavy path just to save one minute.",
+        "speak": "never",
+        "check": "(image) Does the drawn route line wind through a street grid rather than staying on main roads?",
+        "say_example": "The fast route zigzags through side streets. The <2 minutes> it saves buys a lot of turns."
        },
        {
         "question": "Is the traffic delay concentrated in one specific bottleneck or spread out along the entire route?",
@@ -733,7 +677,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The map uses red and yellow color-coding along the route line to show exactly where traffic is bad, which a sighted user absorbs instantly at a glance.",
-        "whatTheAgentLoses": "Without seeing the map, you lose the ability to mentally prepare for a sudden, stressful dead-stop versus a generally slow but moving drive."
+        "whatTheAgentLoses": "Without seeing the map, you lose the ability to mentally prepare for a sudden, stressful dead-stop versus a generally slow but moving drive.",
+        "speak": "never",
+        "check": "(image, partly text) Do delay chips or colored segments show where the slow stretch sits along the route line?",
+        "say_example": "The delay is one stretch on <I-5 north>. The rest runs clear."
        },
        {
         "question": "Does this route require driving over major bridges, through tunnels, or along winding mountain roads?",
@@ -741,7 +688,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The map's base layer visually reveals if the route line crosses water, goes underground, or snakes through tight topography.",
-        "whatTheAgentLoses": "You lose the visual warning of geographic features that might trigger driving anxiety (like fear of heights) or require specific vehicle handling."
+        "whatTheAgentLoses": "You lose the visual warning of geographic features that might trigger driving anxiety (like fear of heights) or require specific vehicle handling.",
+        "speak": "never",
+        "check": "Does any step in the directions list name a bridge, tunnel, or ferry?",
+        "say_example": "The route crosses <the Bay Bridge>."
        }
       ]
      },
@@ -750,36 +700,15 @@
       "label": "Set the departure or arrival time",
       "questions": [
        {
-        "question": "Should you adjust the departure time to see future route options?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The screen displays options like \"Leave now\" and \"Depart at\", allowing you to check transit schedules for a specific future date and time.",
-        "whatTheAgentLoses": "You lose the ability to experiment with different departure or arrival times to find the schedule that best fits your upcoming plans."
-       },
-       {
-        "question": "Do you want to adjust the departure time to explore different transit options?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The screen shows current transit routes with specific delays and schedules, so changing the departure time might reveal a more convenient trip.",
-        "whatTheAgentLoses": "The user loses the ability to weigh their personal schedule flexibility against the specific delays and travel times of the available routes."
-       },
-       {
         "question": "When do you want to leave or arrive?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a time picker with tabs for 'Leave' and 'Arrive' along with date and time wheels, allowing you to check routes and traffic for future conditions.",
-        "whatTheAgentLoses": "If an agent chooses the time for you, you lose the ability to align the route estimates and transit schedules with your actual personal schedule."
-       },
-       {
-        "question": "Do you want to adjust the departure time to see how it affects the estimated travel times for each route?",
-        "cluster": "hand over",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "Checking different departure times reveals if leaving at 4:00 PM significantly changes the typical 50-minute travel time due to predicted traffic.",
-        "whatTheAgentLoses": "You lose the ability to weigh whether shifting your schedule slightly is worth the potential time saved on the road."
+        "whatTheAgentLoses": "If an agent chooses the time for you, you lose the ability to align the route estimates and transit schedules with your actual personal schedule.",
+        "speak": "never",
+        "check": "What does the time selector show — Leave now, or a set date and time?",
+        "say_example": "Leaving now. The picker can plan a later start if you ever want one."
        },
        {
         "question": "When do you need to leave to arrive by your target time?",
@@ -787,7 +716,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed different suggested departure times, such as 12:00 or 12:05, depending on which route you take to arrive by 1:00 PM.",
-        "whatTheAgentLoses": "You lose the ability to evaluate the different route options and choose your own departure time to build in a comfortable buffer."
+        "whatTheAgentLoses": "You lose the ability to evaluate the different route options and choose your own departure time to build in a comfortable buffer.",
+        "speak": "on-event",
+        "check": "What departure times does the page list against the arrive-by time?",
+        "say_example": "To be there by <1:00>, leave by <12:05>."
        },
        {
         "question": "Should you search for the last available transit route of the day?",
@@ -795,7 +727,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The departure time menu offers an option to find the final transit run of the day, which is crucial for planning late-night travel before services shut down.",
-        "whatTheAgentLoses": "The user loses the ability to verify exactly when transit services end for the night, risking being stranded if they stay out too late."
+        "whatTheAgentLoses": "The user loses the ability to verify exactly when transit services end for the night, risking being stranded if they stay out too late.",
+        "speak": "on-event",
+        "check": "Does the departure menu show a last-service option or a final departure time?",
+        "say_example": "The last <bus> tonight runs at <11:40>. Miss it and there's no ride back."
        }
       ]
      },
@@ -809,7 +744,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen displays an 'Add Destination' link and a new input field, allowing you to build a multi-stop trip that recalculates the overall path and travel time.",
-        "whatTheAgentLoses": "You lose the ability to spontaneously add or remove errands along the way based on how the initial route shapes up."
+        "whatTheAgentLoses": "You lose the ability to spontaneously add or remove errands along the way based on how the initial route shapes up.",
+        "speak": "never",
+        "check": "Does the directions panel show an Add Destination option?",
+        "say_example": "No extra stops. You didn't ask for any."
        }
       ]
      },
@@ -823,7 +761,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Dragging the route line reveals tooltips with updated distances and estimated times for alternative paths, such as the 38-minute option via W Carmen Ave.",
-        "whatTheAgentLoses": "You lose the ability to manually customize your exact path based on personal preferences like driving closer to the coast."
+        "whatTheAgentLoses": "You lose the ability to manually customize your exact path based on personal preferences like driving closer to the coast.",
+        "speak": "never",
+        "check": "Does dragging the line show a tooltip with a new time and distance?",
+        "say_example": "Kept the suggested path. No dragging."
        }
       ]
      },
@@ -837,36 +778,15 @@
         "label": "Choose among the departures",
         "questions": [
          {
-          "question": "Which specific transit option or alternative travel mode should you choose?",
-          "cluster": "compare",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays multiple transit options with significantly different travel times, such as a 9-hour train versus a 6-hour bus, requiring a comparison before exploring other modes like walking.",
-          "whatTheAgentLoses": "You lose the opportunity to personally weigh the comfort of a recommended train against faster bus routes or alternative travel modes based on your own schedule and preferences."
-         },
-         {
           "question": "Which transit route should you choose based on the schedule and real-time status?",
           "cluster": "compare",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displays multiple transit options with their durations, line numbers, and real-time status indicators to help ensure a timely arrival.",
-          "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between different transit lines, transfer times, and your own tolerance for potential delays."
-         },
-         {
-          "question": "Which public transit option should you choose?",
-          "cluster": "compare",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays multiple transit routes with different trade-offs, such as a 38-minute option that is delayed versus a 46-minute alternative.",
-          "whatTheAgentLoses": "The user loses the opportunity to decide whether they prefer a faster but delayed route or a longer, more predictable one."
-         },
-         {
-          "question": "Which of these public transit routes best fits your schedule?",
-          "cluster": "compare",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays multiple transit options with varying departure times and trip durations, requiring a choice based on when you need to leave or arrive.",
-          "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between leaving earlier versus spending more time in transit."
+          "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between different transit lines, transfer times, and your own tolerance for potential delays.",
+          "speak": "always",
+          "check": "Which transit options are listed, with duration, line, and live status?",
+          "say_example": "Taking the <7:45> train, <46 minutes>. The page says <on time>."
          },
          {
           "question": "Are you okay with the fare cost for this transit route?",
@@ -874,7 +794,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "The transit options list displays the fare (e.g., '$1.25') alongside the travel time, which is a factor in choosing between routes or modes.",
-          "whatTheAgentLoses": "The user loses the ability to factor the out-of-pocket cost of the transit ticket into their travel decision."
+          "whatTheAgentLoses": "The user loses the ability to factor the out-of-pocket cost of the transit ticket into their travel decision.",
+          "speak": "never",
+          "check": "What fare does the option list show?",
+          "say_example": "Fare <$1.25>."
          }
         ]
        },
@@ -888,7 +811,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The detailed route view shows real-time bus delays, wait times, and provides a map preview of the walking segments between stops.",
-          "whatTheAgentLoses": "The user loses the ability to visually verify the walking paths between transit stops and mentally prepare for specific wait times or delays."
+          "whatTheAgentLoses": "The user loses the ability to visually verify the walking paths between transit stops and mentally prepare for specific wait times or delays.",
+          "speak": "never",
+          "check": "What legs, times, wait times, and delays does the detailed itinerary show?",
+          "say_example": "Bus <41> at <10:52> from <Riverside Dr>, then a <4 minute> walk."
          },
          {
           "question": "Is the scheduled transfer time between transit lines actually feasible for your walking speed?",
@@ -896,7 +822,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "The transit itinerary might calculate a very tight 1- or 2-minute connection window between a bus and a train, leaving no margin for error if the first leg is slightly late or the platform is far.",
-          "whatTheAgentLoses": "You lose the ability to evaluate the risk of missing a tight connection and opting for a safer route with a larger time buffer."
+          "whatTheAgentLoses": "You lose the ability to evaluate the risk of missing a tight connection and opting for a safer route with a larger time buffer.",
+          "speak": "on-event",
+          "check": "What transfer time does the itinerary show between the legs?",
+          "say_example": "The change at <Central> allows <2 minutes>. Only you know if that's enough walking time."
          }
         ]
        },
@@ -910,7 +839,10 @@
           "moment": "On demand",
           "moneyMoving": false,
           "why": "Tapping the moving bus icon reveals a tooltip with real-time updates like 'Early in 6 min', which helps confirm exactly when the transit will arrive.",
-          "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the exact live location and real-time schedule adjustments of their specific bus."
+          "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the exact live location and real-time schedule adjustments of their specific bus.",
+          "speak": "on-event",
+          "check": "Does the live status show the vehicle running early, late, or on time?",
+          "say_example": "Your <bus> is running <6 minutes early>. It won't wait."
          },
          {
           "question": "Is there a visual icon indicating that this specific transit vehicle is currently crowded?",
@@ -918,7 +850,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Transit options often feature small visual badges (like little person icons) that indicate live crowdedness based on user reports or historical data.",
-          "whatTheAgentLoses": "The user loses the visual cue about current passenger volume, missing the opportunity to choose a slightly slower but much less crowded and more comfortable transit line."
+          "whatTheAgentLoses": "The user loses the visual cue about current passenger volume, missing the opportunity to choose a slightly slower but much less crowded and more comfortable transit line.",
+          "speak": "never",
+          "check": "Does the option show a crowdedness label or badge text?",
+          "say_example": "The <10:52> is marked <usually full>."
          }
         ]
        },
@@ -927,20 +862,15 @@
         "label": "Map a walking leg",
         "questions": [
          {
-          "question": "How do you check the walking path to the transit stop and return to the route overview?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Viewing the dotted blue line ensures you know exactly how to walk to the Riverside Dr bus stop, and the back arrow lets you return to the main itinerary.",
-          "whatTheAgentLoses": "You lose the spatial awareness of exactly how to navigate the initial walking portion to your first transit stop."
-         },
-         {
           "question": "Do you want to view the exact walking path for this transit segment on the map?",
           "cluster": "hand over",
           "moment": "On demand",
           "moneyMoving": false,
           "why": "The screen displayed detailed transit steps with a 'MAP' button next to the walking segment, letting you visualize exactly where to walk to catch your ride.",
-          "whatTheAgentLoses": "You lose the opportunity to visually familiarize yourself with the exact walking path to the transit stop before you start moving."
+          "whatTheAgentLoses": "You lose the opportunity to visually familiarize yourself with the exact walking path to the transit stop before you start moving.",
+          "speak": "never",
+          "check": "Does the walking segment offer a map view of the path?",
+          "say_example": "The walk to the stop is mapped. It's in the report."
          }
         ]
        },
@@ -954,7 +884,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The route options screen displays a 'Preferred Modes' section with toggles for bus, train, subway, and tram to customize the transit results.",
-          "whatTheAgentLoses": "Delegating this choice means the agent might select a route using a transit mode you prefer to avoid, rather than tailoring the journey to your comfort."
+          "whatTheAgentLoses": "Delegating this choice means the agent might select a route using a transit mode you prefer to avoid, rather than tailoring the journey to your comfort.",
+          "speak": "never",
+          "check": "Which transit modes do the Preferred Modes toggles show switched on?",
+          "say_example": "All transit types left on."
          },
          {
           "question": "Do you want to prioritize fewer transfers or less walking for this trip?",
@@ -962,7 +895,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen shows options for 'Best route', 'Fewer transfers', and 'Less walking', which significantly alter the suggested transit itinerary based on your physical needs.",
-          "whatTheAgentLoses": "An agent might just select the default best route, missing your personal need to minimize physical exertion or complex connections."
+          "whatTheAgentLoses": "An agent might just select the default best route, missing your personal need to minimize physical exertion or complex connections.",
+          "speak": "never",
+          "check": "Which option is selected among Best route, Fewer transfers, and Less walking?",
+          "say_example": "Kept <Best route>. <Less walking> exists if standing and walking are the harder part."
          }
         ]
        },
@@ -976,7 +912,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The schedule explorer shows that shifting your departure time by just a few minutes can significantly change your total travel time and transit lines.",
-          "whatTheAgentLoses": "You lose the ability to balance your preferred departure time against the convenience and speed of the resulting transit options."
+          "whatTheAgentLoses": "You lose the ability to balance your preferred departure time against the convenience and speed of the resulting transit options.",
+          "speak": "on-event",
+          "check": "What total travel times does the timetable show for nearby departure times?",
+          "say_example": "Leaving <10 minutes> later cuts it to <48 minutes> from <1 hour 15>."
          },
          {
           "question": "Should you check the alternative departure times for the bus in case you miss the currently delayed one?",
@@ -984,7 +923,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "The narrator notes that the detailed transit view shows what other times the bus will pass, which is crucial backup information if you miss a delayed connection.",
-          "whatTheAgentLoses": "You lose the peace of mind of knowing exactly when the next bus arrives if you happen to miss the one you are scheduled to catch."
+          "whatTheAgentLoses": "You lose the peace of mind of knowing exactly when the next bus arrives if you happen to miss the one you are scheduled to catch.",
+          "speak": "never",
+          "check": "What later departure times does the detailed view list for the same line?",
+          "say_example": "If you miss it, the next <41> runs at <11:12>."
          }
         ]
        }
@@ -1000,7 +942,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The step-by-step directions list marks toll roads with an asterisk, letting you tap to preview the specific locations where you will be charged.",
-        "whatTheAgentLoses": "You lose the opportunity to manually verify the exact locations of the toll roads on the map before driving."
+        "whatTheAgentLoses": "You lose the opportunity to manually verify the exact locations of the toll roads on the map before driving.",
+        "speak": "never",
+        "check": "Which steps in the directions list carry toll markers?",
+        "say_example": "Tolls sit on <the E-470 stretch>."
        },
        {
         "question": "Do you want to review the step-by-step directions for this route before starting navigation?",
@@ -1008,7 +953,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen displays a 1 hour 41 minute ETA for the fastest route, and opening the steps allows you to preview the exact roads and turns you will be taking.",
-        "whatTheAgentLoses": "The user loses the opportunity to mentally prepare for the drive or verify that the specific path avoids undesirable roads and complex intersections."
+        "whatTheAgentLoses": "The user loses the opportunity to mentally prepare for the drive or verify that the specific path avoids undesirable roads and complex intersections.",
+        "speak": "never",
+        "check": "What roads and turns does the step list show?",
+        "say_example": "The route runs <I-76 west>, then <CO-52>."
        }
       ]
      },
@@ -1022,39 +970,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The map indicates the route includes tolls but does not display the exact cost upfront.",
-        "whatTheAgentLoses": "You lose the chance to decide whether to accept unknown toll costs or look for a toll-free alternative."
+        "whatTheAgentLoses": "You lose the chance to decide whether to accept unknown toll costs or look for a toll-free alternative.",
+        "speak": "on-event",
+        "check": "Does the route show a toll warning without a toll amount?",
+        "say_example": "This route has tolls, and the page doesn't say how much. Bring a way to pay."
        },
        {
-        "question": "Are there any severe weather, hazard, or border crossing warnings on this route that require special preparation?",
+        "question": "Does the route overview show any warning?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The route overview displays critical alerts like 'Route may be affected by Coastal Flood Warning' or 'Route crosses a country border', which could mean delays, danger, or needing a passport.",
-        "whatTheAgentLoses": "The user loses the heads-up to prepare for hazardous driving conditions or to ensure they have the necessary travel documents before setting off."
-       },
-       {
-        "question": "Should you plan for extra time because parking is explicitly flagged as limited at the destination?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The route overview explicitly warns that 'Parking is usually limited near this destination' or 'Parking is usually not easy near this destination'.",
-        "whatTheAgentLoses": "The user loses the heads-up that they will need to hunt for parking upon arrival, which could make them late if they don't leave earlier."
-       },
-       {
-        "question": "Does the route include warnings about private roads, restricted usage, or seasonal closures?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The route details often flag if a segment requires special access, passes through a gated community, or might be closed due to winter weather.",
-        "whatTheAgentLoses": "The user might get stuck at a closed gate or impassable mountain pass because the agent ignored the route's specific access warnings."
-       },
-       {
-        "question": "Does the walking or cycling route include steep elevation changes or roads without sidewalks?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The map provides elevation profiles and warnings for non-motorized routes to help you gauge the physical effort and safety of the path.",
-        "whatTheAgentLoses": "The user might be routed up an exhausting hill or along a dangerous road without pedestrian access because the agent only looked at the shortest distance."
+        "whatTheAgentLoses": "The user loses the heads-up to prepare for hazardous driving conditions or to ensure they have the necessary travel documents before setting off.",
+        "speak": "on-event",
+        "check": "Does the route overview show any warning text — weather, border crossing, closures, restricted or private roads, limited parking, or steep and sidewalk-free stretches?",
+        "say_example": "One warning on this route: <it crosses a country border>. That can mean <a passport check>."
        }
       ]
      },
@@ -1068,15 +998,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search result lists the distance to Audi Victoria as 8.5 km, but the location details pop-up contradicts this by displaying 15 km.",
-        "whatTheAgentLoses": "The user loses trust in the map's accuracy and might misjudge their travel time if the agent proceeds with conflicting distance data."
+        "whatTheAgentLoses": "The user loses trust in the map's accuracy and might misjudge their travel time if the agent proceeds with conflicting distance data.",
+        "speak": "if-wrong",
+        "check": "Does the distance in the search result equal the distance on the place details view?",
+        "say_example": "One screen says <8.5 km>, another says <15>. I'm trusting the route screen and noting the clash."
        },
        {
-        "question": "Do you verify that the estimated travel time on the transit tab matches the actual time of the recommended route?",
+        "question": "Does the time on the transit tab match the route it opens?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The transit tab icon displays an estimated travel time of 6 hours and 24 minutes, but the recommended route in the detailed list actually takes 9 hours and 5 minutes.",
-        "whatTheAgentLoses": "The user loses accurate scheduling expectations if the agent blindly trusts the tab's initial estimate instead of checking the actual route details."
+        "whatTheAgentLoses": "The user loses accurate scheduling expectations if the agent blindly trusts the tab's initial estimate instead of checking the actual route details.",
+        "speak": "if-wrong",
+        "check": "Does the time on the transit tab equal the recommended route's time in the detailed list?",
+        "say_example": "The tab promises <6 hours 24>. The route it opens takes <9 hours 5>. Count on the longer one."
        },
        {
         "question": "Do the individual segment times add up to the total estimated trip time?",
@@ -1084,15 +1020,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking that the 4-minute walk, 19-minute bus ride, and 5-minute walk correctly sum to the 28-minute total ensures the route's time estimate is reliable.",
-        "whatTheAgentLoses": "The user loses the opportunity to manually verify the math behind the transit estimate to ensure there are no hidden delays or calculation errors."
+        "whatTheAgentLoses": "The user loses the opportunity to manually verify the math behind the transit estimate to ensure there are no hidden delays or calculation errors.",
+        "speak": "if-wrong",
+        "check": "Do the leg times shown sum to the stated total?",
+        "say_example": "The legs add to <28 minutes>, the total says <25>. One of those is wrong."
        },
        {
-        "question": "Do you check if the summarized travel time is consistent with the detailed time window and segment labels?",
+        "question": "Does the summarized travel time match the detailed time window?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "This matters because the screen displays conflicting numbers, such as a 37-minute summary alongside a 39-minute time window and a 37-mile distance label.",
-        "whatTheAgentLoses": "A person delegating to an agent loses the ability to catch interface glitches or mislabeled units that could lead to inaccurate travel expectations."
+        "whatTheAgentLoses": "A person delegating to an agent loses the ability to catch interface glitches or mislabeled units that could lead to inaccurate travel expectations.",
+        "speak": "if-wrong",
+        "check": "Does the summary time equal the time window shown on the detail view?",
+        "say_example": "The summary says <37 minutes>, the window says <39>. Plan on <39>."
        },
        {
         "question": "Does the route duration in the summary match the time shown on the traffic graph?",
@@ -1100,7 +1042,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The steps list summary displayed an 8 hr 34 min duration while the traffic graph showed 8 hr 49 min, creating uncertainty about the true estimated travel time.",
-        "whatTheAgentLoses": "An agent might report the shorter summary time without noticing the conflicting traffic graph, leaving you unprepared for a potentially longer trip."
+        "whatTheAgentLoses": "An agent might report the shorter summary time without noticing the conflicting traffic graph, leaving you unprepared for a potentially longer trip.",
+        "speak": "if-wrong",
+        "check": "Does the summary duration equal the duration on the traffic graph?",
+        "say_example": "The list says <8 hours 34>, the graph says <8 hours 49>. I'd count on the longer one."
        },
        {
         "question": "Do the transit countdowns and departure times logically align with the current time?",
@@ -1108,23 +1053,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays conflicting information between the system clock, the scheduled departure time, and the live countdown, which makes it difficult to know exactly when the transit arrives.",
-        "whatTheAgentLoses": "An agent might blindly trust one of the conflicting time estimates without realizing the math does not add up, leading to a missed departure."
+        "whatTheAgentLoses": "An agent might blindly trust one of the conflicting time estimates without realizing the math does not add up, leading to a missed departure.",
+        "speak": "if-wrong",
+        "check": "Do the live countdown, the scheduled departure time, and the shown clock agree with each other?",
+        "say_example": "The countdown and the schedule disagree about the <bus>. Going by the schedule, <10:52>."
        },
        {
-        "question": "Did you notice that the selected route is significantly longer than the distance shown in the initial search?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The initial search result displayed a distance of 11 km, but the chosen 'Fastest route' is 18 km long.",
-        "whatTheAgentLoses": "The user loses the opportunity to evaluate if the time saved on the fastest route is worth the extra mileage and fuel."
-       },
-       {
-        "question": "Did you notice that the distance for the same route changes depending on the travel mode?",
+        "question": "Does the same street route show a different distance for walking than for driving?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows the route via W Hargett St as 0.4 miles for walking but 0.5 miles for driving, indicating slight path differences between modes.",
-        "whatTheAgentLoses": "An agent might overlook this discrepancy and fail to realize that walking offers a slightly shorter physical path than driving."
+        "whatTheAgentLoses": "An agent might overlook this discrepancy and fail to realize that walking offers a slightly shorter physical path than driving.",
+        "speak": "never",
+        "check": "Do the walking and driving distances differ for the same named street route?",
+        "say_example": "Walking shows <0.4 miles>, driving <0.5>. One-way streets do that."
        },
        {
         "question": "Will the destination still be open by the time you arrive?",
@@ -1132,7 +1075,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The route overview shows an ETA (e.g., 2 hr 39 min), and the destination details indicate it closes at a specific time (e.g., 18:00), requiring a mental check to ensure the trip is not wasted.",
-        "whatTheAgentLoses": "The user might arrive to find the business closed because the agent didn't cross-reference the estimated arrival time with the operating hours."
+        "whatTheAgentLoses": "The user might arrive to find the business closed because the agent didn't cross-reference the estimated arrival time with the operating hours.",
+        "speak": "on-event",
+        "check": "What arrival time does the ETA give, and what closing time does the place card show?",
+        "say_example": "You'd get there around <6:40>. It closes at <6>."
        },
        {
         "question": "Do the time and distance estimates remain consistent after you start navigation?",
@@ -1140,7 +1086,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The route overview showed a 14-minute, 7.1 km trip, but the active navigation immediately dropped to 12 minutes and 6.6 km.",
-        "whatTheAgentLoses": "An agent might fail to notice that the navigation app silently recalculated or altered the route upon starting."
+        "whatTheAgentLoses": "An agent might fail to notice that the navigation app silently recalculated or altered the route upon starting.",
+        "speak": "never",
+        "check": "Do the time and distance after starting match the overview shown before starting?",
+        "say_example": "ETA moved from <14> to <12 minutes> once we started."
        }
       ]
      }
@@ -1157,7 +1106,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "The map visually places the destination pin on the left or right side of the road line, or deep inside a shaded area like a mall or airport.",
-      "whatTheAgentLoses": "You lose the spatial cue of exactly where to look or which lane to pull into as you approach the final destination."
+      "whatTheAgentLoses": "You lose the spatial cue of exactly where to look or which lane to pull into as you approach the final destination.",
+      "speak": "on-event",
+      "check": "Does the final step in the directions say which side the destination is on?",
+      "say_example": "It'll be on your <right>."
      }
     ],
     "children": [
@@ -1166,12 +1118,15 @@
       "label": "Start the guidance",
       "questions": [
        {
-        "question": "Is this the best route for my trip, and should I start navigation?",
+        "question": "Ready to start — does the route read back right?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The map displays a 1 hour 32 minute motorcycle route avoiding tolls alongside a slower alternate, so you must confirm this path is acceptable before hitting start.",
-        "whatTheAgentLoses": "You lose the ability to personally verify the route's ETA, traffic conditions, and alternate paths before committing to the journey."
+        "whatTheAgentLoses": "You lose the ability to personally verify the route's ETA, traffic conditions, and alternate paths before committing to the journey.",
+        "speak": "always",
+        "check": "What route, duration, and arrival time does the screen show at the START button?",
+        "say_example": "Starting. <1 hour 32>, no tolls, arriving around <3:40>."
        },
        {
         "question": "Does the selected route reflect my toll and highway preferences before I start navigation?",
@@ -1179,7 +1134,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays an 'Avoiding highways and tolls' banner alongside multiple route times, requiring you to confirm the updated route is acceptable before hitting start.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your specific route restrictions were successfully applied before beginning the drive."
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your specific route restrictions were successfully applied before beginning the drive.",
+        "speak": "if-wrong",
+        "check": "Does the route banner state it is avoiding the things that were asked for — tolls, highways, ferries?",
+        "say_example": "You asked for no tolls, but the route doesn't say it's avoiding them. I'm fixing that before we start."
        },
        {
         "question": "Do you want to navigate directly to the destination or route to a parking lot first?",
@@ -1187,15 +1145,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen suggests a nearby parking lot and offers to view more lots before you hit GO.",
-        "whatTheAgentLoses": "You lose the convenience of having the map guide you directly to an available parking space instead of just the general address."
-       },
-       {
-        "question": "Are you ready to begin active navigation?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The route overview screen displays a 'START' button that transitions the app into turn-by-turn voice directions.",
-        "whatTheAgentLoses": "You lose the final opportunity to review the entire route and ETA at a glance before the interface locks into the dynamic driving view."
+        "whatTheAgentLoses": "You lose the convenience of having the map guide you directly to an available parking space instead of just the general address.",
+        "speak": "on-event",
+        "check": "Does the screen offer a parking lot before the destination, with a view-more-lots option?",
+        "say_example": "There's parking <2 minutes> before the destination. Straight there, or park first?"
        },
        {
         "question": "Did you confirm that active turn-by-turn navigation has started?",
@@ -1203,15 +1156,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "Seeing the active navigation panel with the ETA, duration, and distance confirms the app is ready to guide you.",
-        "whatTheAgentLoses": "The user loses the certainty that the app successfully transitioned from route planning to active, real-time guidance."
-       },
-       {
-        "question": "Should you start the navigation immediately or schedule it for later?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a nearly seven-hour trip with border crossings, hazards, and pass requirements that might dictate whether you should leave right away or delay your departure.",
-        "whatTheAgentLoses": "An agent might automatically start the navigation right away, depriving you of the chance to schedule a better departure time to prepare for a long and complex drive."
+        "whatTheAgentLoses": "The user loses the certainty that the app successfully transitioned from route planning to active, real-time guidance.",
+        "speak": "never",
+        "check": "Does the screen show the active navigation panel with a live ETA, duration, and distance?",
+        "say_example": "Navigation confirmed running."
        }
       ]
      },
@@ -1220,12 +1168,15 @@
       "label": "Answer the start-up prompts",
       "questions": [
        {
-        "question": "Should you add the required vignette to the app or just proceed with driving?",
+        "question": "Should you add the vignette or just drive without it?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed a ticket alert warning that the route requires a vignette, requiring a choice between adding the pass or bypassing the warning.",
-        "whatTheAgentLoses": "If an agent automatically skips the vignette warning, you might drive on a toll road without the proper pass and receive a fine."
+        "whatTheAgentLoses": "If an agent automatically skips the vignette warning, you might drive on a toll road without the proper pass and receive a fine.",
+        "speak": "on-event",
+        "check": "Does the screen show an alert that the route requires a vignette or toll pass, and does it say one is missing?",
+        "say_example": "This route needs a <vignette>, a road pass, and the app says there isn't one. Driving without it risks a fine. Add it, or reroute?"
        },
        {
         "question": "How should I respond to the notification and data sharing prompts to start navigation?",
@@ -1233,15 +1184,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The app displays a series of pop-ups regarding notifications and data sharing that must be dismissed or accepted to access the active turn-by-turn navigation screen.",
-        "whatTheAgentLoses": "The user loses control over their privacy preferences regarding app notifications and navigation data sharing."
+        "whatTheAgentLoses": "The user loses control over their privacy preferences regarding app notifications and navigation data sharing.",
+        "speak": "never",
+        "check": "Which pop-ups block the navigation screen, and what does each ask for?",
+        "say_example": "Dismissed the notification and data-sharing pop-ups with no."
        },
        {
-        "question": "Do you notice the notification that calls and notifications will be silenced while navigating?",
+        "question": "Does starting navigation silence your calls and notifications?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen displays an alert indicating that notifications are silenced when navigation starts and restored when it ends, confirming that a driving focus mode is active.",
-        "whatTheAgentLoses": "The user loses the awareness that starting the navigation app automatically alters their device's system-wide notification settings."
+        "whatTheAgentLoses": "The user loses the awareness that starting the navigation app automatically alters their device's system-wide notification settings.",
+        "speak": "on-event",
+        "check": "Does the screen say notifications are silenced during navigation and restored after?",
+        "say_example": "Your calls and alerts go quiet while navigating. They come back when it ends."
        },
        {
         "question": "Do you want to allow Google Maps to access your motion and fitness activity?",
@@ -1249,31 +1206,27 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The prompt states the app uses this data to show saved parking information and public transport trip progress, which requires sharing personal physical activity data.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether to share your personal motion and fitness data with the app."
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to share your personal motion and fitness data with the app.",
+        "speak": "never",
+        "check": "Does the prompt ask for motion and fitness access, and what does it say the data is used for?",
+        "say_example": "Said no to motion and fitness access."
        },
        {
-        "question": "How do you dismiss the safety warning to continue?",
+        "question": "The blocking safety warning states the driving responsibilities being accepted - do you read and accept it yourself?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The app displays a safety warning pop-up that blocks the active navigation screen until you tap 'OK'.",
-        "whatTheAgentLoses": "You lose the opportunity to personally read and acknowledge the legal and safety responsibilities of driving."
+        "whatTheAgentLoses": "You lose the opportunity to personally read and acknowledge the legal and safety responsibilities of driving.",
+        "speak": "never",
+        "check": "Does a safety warning pop-up block the navigation screen until OK is tapped?",
+        "say_example": "Cleared the safety notice."
        }
       ]
      },
      {
       "id": "5.3",
-      "label": "Set the voice guidance level",
-      "questions": [
-       {
-        "question": "Do you want to keep the navigation sound on, switch to alerts only, or mute it entirely?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Sound menu displays options for 'Sound on', 'Sound off', and 'Alerts only' to control the level of audio guidance during the trip.",
-        "whatTheAgentLoses": "Delegating this means the agent might select an audio setting that either disrupts a quiet cabin or fails to provide the spoken directions you need."
-       }
-      ]
+      "label": "Set the voice guidance level"
      },
      {
       "id": "5.4",
@@ -1285,7 +1238,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "Panning the map reveals a red section on highway '34' indicating traffic, and the 'Re-centre' button quickly snaps the view back to your current location.",
-        "whatTheAgentLoses": "You lose the spatial awareness of exactly where the traffic delays are located along your journey."
+        "whatTheAgentLoses": "You lose the spatial awareness of exactly where the traffic delays are located along your journey.",
+        "speak": "never",
+        "check": "Do delay chips or colored stretches appear on the route ahead?",
+        "say_example": "Red stretch on <highway 34> ahead. The ETA already counts it."
        },
        {
         "question": "Are you monitoring the active navigation and current trip estimates?",
@@ -1293,7 +1249,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "Confirming the active navigation screen with live updates like the 1 hr 32 min duration and 41 km distance ensures the route is successfully underway.",
-        "whatTheAgentLoses": "The user loses real-time awareness of their exact travel time, distance, and immediate turn-by-turn instructions."
+        "whatTheAgentLoses": "The user loses real-time awareness of their exact travel time, distance, and immediate turn-by-turn instructions.",
+        "speak": "never",
+        "check": "What live duration and distance does the navigation panel show?",
+        "say_example": "<1 hour 32> to go, <41 km>."
        }
       ]
      },
@@ -1307,7 +1266,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "Checking the overview map allows you to evaluate the full 87-mile path and the alternative route labeled 'Similar ETA' before returning to active navigation.",
-        "whatTheAgentLoses": "You lose the chance to visually inspect the entire route and decide if the alternative path better suits your driving preferences."
+        "whatTheAgentLoses": "You lose the chance to visually inspect the entire route and decide if the alternative path better suits your driving preferences.",
+        "speak": "never",
+        "check": "Does the overview show an alternative route and its ETA label?",
+        "say_example": "An alternative shows <similar ETA>. Staying put."
        }
       ]
      },
@@ -1316,20 +1278,15 @@
       "label": "Add a stop mid-drive",
       "questions": [
        {
-        "question": "Which Coles location do you want to add as a stop?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results displayed multiple Coles locations with varying distances and detour times to choose from.",
-        "whatTheAgentLoses": "You lose the ability to choose the most convenient stop based on your personal preference for distance and detour time."
-       },
-       {
-        "question": "Should you add this location as a new drive or as a stop on your current route?",
+        "question": "After adding the stop, is your original destination still the end of the route?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows buttons for 'New drive' and 'Add a stop', requiring a choice between replacing the existing itinerary or creating a multi-stop journey.",
-        "whatTheAgentLoses": "The user loses the ability to specify whether they want to abandon their original destination or just make a detour along the way."
+        "whatTheAgentLoses": "The user loses the ability to specify whether they want to abandon their original destination or just make a detour along the way.",
+        "speak": "if-wrong",
+        "check": "After the add, does the route still end at the original destination?",
+        "say_example": "That replaced your trip instead of adding a stop. I'm putting <Arnprior> back."
        },
        {
         "question": "Which specific location do you want to add as a stop along your route?",
@@ -1337,15 +1294,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Typing 'birming' into the search bar brings up multiple distinct suggestions like 'Birmingham Airport' and 'Birmingham New Street', requiring you to select the exact destination.",
-        "whatTheAgentLoses": "You lose the ability to choose the precise point of interest or station you want to visit during your trip."
-       },
-       {
-        "question": "Do you want to confirm adding this location as a stop to your route?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a bottom sheet for Birmingham New Street with an 'Add stop' button, requiring confirmation to update the trip.",
-        "whatTheAgentLoses": "You lose the chance to verify that the correct intermediate destination is being added before the map recalculates your total travel time and route."
+        "whatTheAgentLoses": "You lose the ability to choose the precise point of interest or station you want to visit during your trip.",
+        "speak": "gate",
+        "check": "Which suggestions does the stop search list show?",
+        "say_example": "Two matches. <Birmingham Airport>, or <Birmingham New Street>. Which stop is yours?"
        },
        {
         "question": "Which gas station do you want to add as a stop?",
@@ -1353,7 +1305,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays multiple gas station options with varying ratings and detour times, such as a Tesco with a 12-minute detour versus a bp with a 6-minute detour.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-off between a shorter detour time and a higher-rated or preferred brand of gas station."
+        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-off between a shorter detour time and a higher-rated or preferred brand of gas station.",
+        "speak": "always",
+        "check": "Which stations are listed, with their detour times?",
+        "say_example": "Adding the <bp>. Smallest detour, <6 minutes>."
        },
        {
         "question": "Do you want to search for any stops like gas stations or restaurants along your route?",
@@ -1361,7 +1316,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen displays quick-search categories like 'Gas stations' and 'Restaurants' alongside recent searches, offering an easy way to add a convenient stop to your trip.",
-        "whatTheAgentLoses": "Delegating this means you lose the opportunity to spontaneously decide if you need to pick up groceries or coffee based on your immediate personal needs."
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to spontaneously decide if you need to pick up groceries or coffee based on your immediate personal needs.",
+        "speak": "never",
+        "check": "Does the search screen offer stop categories along the route?",
+        "say_example": "No stops added."
        }
       ]
      },
@@ -1370,20 +1328,15 @@
       "label": "Report an incident",
       "questions": [
        {
-        "question": "Which specific map issue are you reporting?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a menu of map issues alongside a popup about a road closure on W 26th Ave, requiring you to categorize the problem.",
-        "whatTheAgentLoses": "You lose the ability to accurately categorize the navigation error based on your personal knowledge of the route."
-       },
-       {
         "question": "Which type of incident do you want to report on the map?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a menu of reportable incidents like crashes, speed cameras, and congestion to warn other drivers on the route.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to accurately report the specific real-world hazard you are currently seeing on the road."
+        "whatTheAgentLoses": "Delegating this means you lose the ability to accurately report the specific real-world hazard you are currently seeing on the road.",
+        "speak": "gate",
+        "check": "Which incident types does the report menu list?",
+        "say_example": "What am I reporting? The menu has <crash>, <police>, <traffic>. I can't see the road, so this one's yours."
        },
        {
         "question": "Which detail do you want to add to the police report?",
@@ -1391,7 +1344,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides options to specify if the police on Granville St are 'Visible', 'Hidden', or on the 'Other side' to update the community report.",
-        "whatTheAgentLoses": "Delegating this choice means losing the ability to provide your exact, real-time observation of the police location to other drivers."
+        "whatTheAgentLoses": "Delegating this choice means losing the ability to provide your exact, real-time observation of the police location to other drivers.",
+        "speak": "gate",
+        "check": "Which detail options does the report screen offer?",
+        "say_example": "For the police report, the choices are <visible>, <hidden>, <other side>. Which did you see?"
        }
       ]
      },
@@ -1409,7 +1365,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays an authorization prompt asking to connect Waze to Spotify for integrated music control.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to share your personal music streaming account data with the navigation app."
+        "whatTheAgentLoses": "You lose the ability to decide whether to share your personal music streaming account data with the navigation app.",
+        "speak": "never",
+        "check": "Does the prompt ask to connect the app to a Spotify account?",
+        "say_example": "Didn't connect Spotify. It wanted account access you hadn't offered."
        }
       ]
      },
@@ -1423,7 +1382,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows options to rate the navigation or end the trip, requiring you to explicitly select 'Continue' to resume routing to your final destination.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to end the trip early at this stop or provide feedback on the navigation experience."
+        "whatTheAgentLoses": "You lose the ability to decide whether to end the trip early at this stop or provide feedback on the navigation experience.",
+        "speak": "on-event",
+        "check": "Does the screen show arrival options at the stop, including a continue choice?",
+        "say_example": "You're at <Coles>. Say continue when you're back and we'll head to <Arnprior>."
        }
       ]
      },
@@ -1437,7 +1399,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen indicates that navigation will start automatically and provides a 'Stop' button, requiring a decision on whether to begin the trip immediately.",
-        "whatTheAgentLoses": "The user loses the opportunity to cancel the active turn-by-turn navigation if they were just checking the route and are not actually ready to leave."
+        "whatTheAgentLoses": "The user loses the opportunity to cancel the active turn-by-turn navigation if they were just checking the route and are not actually ready to leave.",
+        "speak": "on-event",
+        "check": "Does the screen say navigation will start automatically, with a stop button showing?",
+        "say_example": "It wants to start navigating on its own. I stopped it so you hear the route first."
        }
       ]
      }
@@ -1458,23 +1423,21 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The printable directions page displays detailed step-by-step instructions alongside specific leg and total distances for the trip.",
-        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the specific distances of each leg before starting your journey."
+        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the specific distances of each leg before starting your journey.",
+        "speak": "never",
+        "check": "What steps and distances does the printable page list?",
+        "say_example": "Printout lists <12> steps, <5.9 miles> total."
        },
        {
-        "question": "Should you add Street View images or map snippets to the printed directions for tricky turns?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The print preview menu offers options to include a map or Street View image for individual steps, which helps familiarize the driver with important landmarks.",
-        "whatTheAgentLoses": "An agent might default to printing text-only directions, depriving you of the visual landmarks you would have included for confusing intersections."
-       },
-       {
-        "question": "Do you notice that the running total distance in the print preview doesn't add up correctly?",
+        "question": "Do the leg distances on the printout add up to the total it prints?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The print preview shows a previous total of 4.8 miles and a new leg of 1.1 miles, but incorrectly calculates the new total as 5.8 miles instead of 5.9.",
-        "whatTheAgentLoses": "An agent might blindly trust the generated document and fail to alert you to the calculation error in your printed directions."
+        "whatTheAgentLoses": "An agent might blindly trust the generated document and fail to alert you to the calculation error in your printed directions.",
+        "speak": "if-wrong",
+        "check": "Do the running totals on the print preview add correctly from the leg distances shown?",
+        "say_example": "The printout's math is off. <4.8> plus <1.1> is shown as <5.8>. The real total is <5.9 miles>."
        },
        {
         "question": "Do you want to print the directions, and if so, should the printout include the map?",
@@ -1482,7 +1445,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The interface provides a print icon with options to print either just the text directions or the text alongside the visual map.",
-        "whatTheAgentLoses": "The user loses the opportunity to choose the format of their physical directions based on whether they need visual references or just text."
+        "whatTheAgentLoses": "The user loses the opportunity to choose the format of their physical directions based on whether they need visual references or just text.",
+        "speak": "never",
+        "check": "Which print options are offered — text only, or text with the map?",
+        "say_example": "Printed the directions with the map, like you asked."
        },
        {
         "question": "Are the print settings correct and does the preview look right?",
@@ -1490,7 +1456,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The print dialog displays the selected Lexmark printer, page settings, and a document preview that must be verified before physically printing the route.",
-        "whatTheAgentLoses": "The user loses the ability to visually verify the document preview and ensure the correct printer settings are applied for their physical copy of the directions."
+        "whatTheAgentLoses": "The user loses the ability to visually verify the document preview and ensure the correct printer settings are applied for their physical copy of the directions.",
+        "speak": "never",
+        "check": "What printer, page settings, and preview does the print dialog show?",
+        "say_example": "Sent to <the Lexmark>, one page."
        }
       ]
      },
@@ -1499,12 +1468,15 @@
       "label": "Save the route to a note",
       "questions": [
        {
-        "question": "Are you sure the saved link to 'Arnprior' includes your intermediate stops?",
+        "question": "Does the saved link include the intermediate stops as well as the final destination?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The Quick Note link only mentions the final destination, which could incorrectly suggest that the intermediate stops to Carp and Galetta were not saved.",
-        "whatTheAgentLoses": "An agent might see only the final destination in the link title and mistakenly discard it to rebuild the multi-stop route from scratch."
+        "whatTheAgentLoses": "An agent might see only the final destination in the link title and mistakenly discard it to rebuild the multi-stop route from scratch.",
+        "speak": "if-wrong",
+        "check": "Does the saved link's text name the stops as well as the final destination?",
+        "say_example": "The saved link only names <Arnprior>. Your stops at <Carp> and <Galetta> aren't in its name. I'm checking they're really inside before you trust it."
        }
       ]
      },
@@ -1513,12 +1485,15 @@
       "label": "Plan a drive for later",
       "questions": [
        {
-        "question": "Do you see that the estimated drive time changed from 15 to 16 minutes after saving?",
+        "question": "Does the saved planned drive show the same travel time the preview showed?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The route preview showed a 15-minute drive to arrive at 5:00 PM, but the saved planned drives list displays a 16-minute drive.",
-        "whatTheAgentLoses": "An agent might just pass along the initial estimate without noticing the system updated the travel time in the final saved list."
+        "whatTheAgentLoses": "An agent might just pass along the initial estimate without noticing the system updated the travel time in the final saved list.",
+        "speak": "never",
+        "check": "Does the saved planned drive show the same time as the preview did?",
+        "say_example": "Saved as <16 minutes>. The preview said <15>."
        }
       ]
      },
@@ -1532,7 +1507,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays the detailed transit schedule and arrival times, which can be exported to trigger helpful departure alerts.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to integrate the trip into your personal schedule for automated reminders."
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to integrate the trip into your personal schedule for automated reminders.",
+        "speak": "never",
+        "check": "Does the screen offer to add the trip and its times to the calendar?",
+        "say_example": "Added the trip to your calendar, as asked."
        }
       ]
      },
@@ -1546,7 +1524,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a 'Send to your phone' popup with multiple options, including specific connected devices, an email address, and a phone number for texting.",
-        "whatTheAgentLoses": "An agent might send the directions to an old device or an unchecked email address instead of the smartphone you actually have with you."
+        "whatTheAgentLoses": "An agent might send the directions to an old device or an unchecked email address instead of the smartphone you actually have with you.",
+        "speak": "gate",
+        "check": "Which devices and channels does the send-to-phone list show?",
+        "say_example": "Send the route where? The list has <your phone>, <email>, and <text>."
        }
       ]
      },
@@ -1560,7 +1541,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a location pin and a 'Set home and go' button, making it important to verify the address before saving it as a permanent shortcut.",
-        "whatTheAgentLoses": "An agent might save an inaccurate location as your home, which would permanently affect the routing for any future trips to this destination."
+        "whatTheAgentLoses": "An agent might save an inaccurate location as your home, which would permanently affect the routing for any future trips to this destination.",
+        "speak": "if-wrong",
+        "check": "Does the address on the pin card match the address the person gave for home?",
+        "say_example": "The pin reads <12 Elm St>. You said home is <21 Elm St>. Not saving until those match."
        },
        {
         "question": "Do you want to save this location to your favorites?",
@@ -1568,7 +1552,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a 'Favorites' menu with an 'Add new favorite' option, which lets you save frequently visited places for quicker access in the future.",
-        "whatTheAgentLoses": "The agent might clutter your saved places with a one-time destination or miss the opportunity to save a place you visit often."
+        "whatTheAgentLoses": "The agent might clutter your saved places with a one-time destination or miss the opportunity to save a place you visit often.",
+        "speak": "never",
+        "check": "Does the favorites menu confirm the place was added?",
+        "say_example": "Saved <the theatre> to favorites."
        }
       ]
      }
@@ -1585,7 +1572,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays existing downloaded maps with their storage sizes and expiration dates, along with an option to select a new map area.",
-      "whatTheAgentLoses": "You lose the ability to manage your device's storage space and decide exactly which geographic areas need to be available offline."
+      "whatTheAgentLoses": "You lose the ability to manage your device's storage space and decide exactly which geographic areas need to be available offline.",
+      "speak": "never",
+      "check": "Which saved maps are listed, with their sizes and expiry dates, and do they cover the route?",
+      "say_example": "Using the saved <Rochester> map. It covers the route."
      }
     ],
     "children": [
@@ -1599,7 +1589,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Adjusting the blue bounding box changes the map coverage and increases the required storage space from 30 MB to 80 MB.",
-        "whatTheAgentLoses": "You lose the ability to balance the offline map coverage area against the storage space it consumes on your device."
+        "whatTheAgentLoses": "You lose the ability to balance the offline map coverage area against the storage space it consumes on your device.",
+        "speak": "never",
+        "check": "What storage size does the selection box show for the chosen area?",
+        "say_example": "Sized the download to cover the whole route. <80 MB>."
        }
       ]
      },
@@ -1608,12 +1601,15 @@
       "label": "Download the map",
       "questions": [
        {
-        "question": "Do you want to download this map area for offline use and consume up to 80 MB of your storage?",
+        "question": "Do you want to use the storage this offline map needs?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a prompt asking to confirm the download of the selected map area, noting it will use up to 80 MB of free space.",
-        "whatTheAgentLoses": "An agent might approve the download without knowing if you have enough device storage or cellular data to spare."
+        "whatTheAgentLoses": "An agent might approve the download without knowing if you have enough device storage or cellular data to spare.",
+        "speak": "always",
+        "check": "What size does the download prompt state?",
+        "say_example": "Downloading the offline map. About <80 MB>."
        },
        {
         "question": "Are you okay with the downloaded offline map taking up more storage space than initially estimated?",
@@ -1621,7 +1617,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen initially estimated the offline map would use up to 80 MB, but later showed the downloaded file taking up 108 MB.",
-        "whatTheAgentLoses": "The user loses the ability to monitor their device storage accurately when the agent fails to notice that a download exceeded its estimated size."
+        "whatTheAgentLoses": "The user loses the ability to monitor their device storage accurately when the agent fails to notice that a download exceeded its estimated size.",
+        "speak": "if-wrong",
+        "check": "Does the downloaded size shown match the size the prompt promised?",
+        "say_example": "The map took <108 MB>. The prompt said <80>."
        }
       ]
      },
@@ -1635,7 +1634,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen indicates that the downloaded map will expire on June 5, 2023, unless it is updated.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to use your device's data and storage to keep this specific offline map current."
+        "whatTheAgentLoses": "You lose the ability to decide whether to use your device's data and storage to keep this specific offline map current.",
+        "speak": "on-event",
+        "check": "Does the offline map list show an expiry date?",
+        "say_example": "Your offline map expires <June 5>. After that it stops working unless it updates."
        },
        {
         "question": "Should you delete any existing offline maps to free up space?",
@@ -1643,7 +1645,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen displays a previously downloaded 49 MB map, and removing it can free up device storage before saving a new area.",
-        "whatTheAgentLoses": "You lose control over your device's storage management and the choice of which old maps to keep or discard."
+        "whatTheAgentLoses": "You lose control over your device's storage management and the choice of which old maps to keep or discard.",
+        "speak": "never",
+        "check": "What sizes do the existing downloaded maps show?",
+        "say_example": "Left the old <49 MB> map alone."
        },
        {
         "question": "Should you update the expiring offline map using your mobile data?",
@@ -1651,7 +1656,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The app warns that downloading the map update over a mobile network could result in extra data charges.",
-        "whatTheAgentLoses": "You lose the chance to weigh the urgency of the map update against potential mobile data fees."
+        "whatTheAgentLoses": "You lose the chance to weigh the urgency of the map update against potential mobile data fees.",
+        "speak": "on-event",
+        "check": "Does the app warn that the update will use the mobile network and may incur charges?",
+        "say_example": "Updating now uses mobile data, and that can cost. Wait for Wi-Fi?"
        },
        {
         "question": "Should you restrict the app to only use Wi-Fi or downloaded offline maps?",
@@ -1659,7 +1667,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displayed a 'Wi-Fi only' toggle and a toast message explaining that without a Wi-Fi network, only offline maps will function.",
-        "whatTheAgentLoses": "You lose the ability to choose whether to restrict data usage via the app's built-in toggle or through the device's system settings."
+        "whatTheAgentLoses": "You lose the ability to choose whether to restrict data usage via the app's built-in toggle or through the device's system settings.",
+        "speak": "never",
+        "check": "Is the Wi-Fi only toggle on, and what does the notice say happens without Wi-Fi?",
+        "say_example": "Wi-Fi-only stays on. Off Wi-Fi you'd have only the downloaded maps."
        }
       ]
      },
@@ -1668,12 +1679,15 @@
       "label": "Go offline to test",
       "questions": [
        {
-        "question": "How do you simulate being offline to test the downloaded map?",
+        "question": "With Wi-Fi and mobile data switched off, does the downloaded map actually produce a route, or does routing fail?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The Android quick settings panel displays active network connections like Wi-Fi that must be toggled off to ensure the app relies solely on downloaded data.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that the map will successfully provide directions without an active internet connection."
+        "whatTheAgentLoses": "You lose the ability to personally verify that the map will successfully provide directions without an active internet connection.",
+        "speak": "always",
+        "check": "Does the quick settings panel show which network connections are on?",
+        "say_example": "Turning off Wi-Fi to test the offline map. I'll put it back after."
        }
       ]
      },
@@ -1682,20 +1696,26 @@
       "label": "Route on the offline map",
       "questions": [
        {
-        "question": "Does the destination shown on the screen match the one you stated you are routing to?",
+        "question": "Is the destination now on screen the one you asked to route to, or did a failed route leave a different search in the box?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The audio claims to route to a gas station, but the screen shows a failed route to High Falls followed by a new search for Genesee Brew House.",
-        "whatTheAgentLoses": "The user loses accurate destination tracking if the agent relies on the spoken intent rather than noticing the actual on-screen routing failures and changes."
+        "whatTheAgentLoses": "The user loses accurate destination tracking if the agent relies on the spoken intent rather than noticing the actual on-screen routing failures and changes.",
+        "speak": "if-wrong",
+        "check": "Does the destination named on the screen match the destination that was spoken aloud?",
+        "say_example": "I said <the gas station>, but the screen is routing to <High Falls>. I'm fixing that before we move."
        },
        {
-        "question": "Do you want to proceed with this offline route without live traffic data?",
+        "question": "Do you want this offline route without live traffic?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays an offline icon and 'No traffic data', meaning the 15-minute estimate cannot account for current road conditions or delays.",
-        "whatTheAgentLoses": "The user loses the chance to find an internet connection for live traffic updates or to delay the trip until real-time data is available."
+        "whatTheAgentLoses": "The user loses the chance to find an internet connection for live traffic updates or to delay the trip until real-time data is available.",
+        "speak": "on-event",
+        "check": "Does the screen show an offline icon or a no-traffic-data notice?",
+        "say_example": "You're offline, so no traffic data. The <15 minute> estimate can't see jams or closures."
        }
       ]
      },
@@ -1704,12 +1724,15 @@
       "label": "Recover from an offline failure",
       "questions": [
        {
-        "question": "Since offline routing from your current location failed, what starting point should you select instead?",
+        "question": "What starting point should the offline route begin from?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed a 'No routes found in your offline maps' error, requiring you to choose a new origin within the downloaded area to successfully calculate a route.",
-        "whatTheAgentLoses": "You lose the ability to troubleshoot offline map limitations by manually selecting an alternative starting point."
+        "whatTheAgentLoses": "You lose the ability to troubleshoot offline map limitations by manually selecting an alternative starting point.",
+        "speak": "on-event",
+        "check": "Does the screen show a no-routes-found-in-your-offline-maps error?",
+        "say_example": "No offline route from where you are. I can only start it from inside the downloaded area, and then the first directions won't match where you stand. Where should it begin?"
        }
       ]
      }
@@ -1719,16 +1742,6 @@
     "id": "8",
     "label": "Share your live location",
     "note": "8.1, then 8.2 to 8.4 in the sheet's order; 8.5 fires mid-flow when the platform demands background access; 8.6 closes the loop. QULM runs all of it; aGGT opens the sheet and backs out.",
-    "questions": [
-     {
-      "question": "How long do you want to share your real-time location, and who should I send it to?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen provides options to set a specific duration for location sharing and lists various messaging apps and contacts to send the link to.",
-      "whatTheAgentLoses": "If an agent decides this, it might share your live location with the wrong contact or leave it running indefinitely, compromising your privacy."
-     }
-    ],
     "children": [
      {
       "id": "8.1",
@@ -1740,7 +1753,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The app offers to share your continuous location with others across Google services, which updates even when the app is not in use.",
-        "whatTheAgentLoses": "You lose the ability to personally decide whether your continuous, real-time whereabouts are broadcasted to others."
+        "whatTheAgentLoses": "You lose the ability to personally decide whether your continuous, real-time whereabouts are broadcasted to others.",
+        "speak": "never",
+        "check": "Does the screen describe sharing continuous location across services, updating even when the app is not in use?",
+        "say_example": "Opened location sharing, as you asked. It keeps updating even with the app closed."
        }
       ]
      },
@@ -1754,7 +1770,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides options to share your location for a set time, such as one hour, or indefinitely until turned off, which directly affects your privacy.",
-        "whatTheAgentLoses": "You lose the ability to strictly control the duration of your location sharing, potentially exposing your whereabouts longer than intended."
+        "whatTheAgentLoses": "You lose the ability to strictly control the duration of your location sharing, potentially exposing your whereabouts longer than intended.",
+        "speak": "gate",
+        "check": "Which duration options does the sharing screen offer?",
+        "say_example": "How long should they see where you are? <An hour>, or until you turn it off?"
        }
       ]
      },
@@ -1768,7 +1787,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a sharing menu with multiple communication apps like WhatsApp, Telegram, and Messages to choose from.",
-        "whatTheAgentLoses": "You lose the ability to decide which specific messaging platform is used to send your location to others."
+        "whatTheAgentLoses": "You lose the ability to decide which specific messaging platform is used to send your location to others.",
+        "speak": "never",
+        "check": "Which apps does the share sheet list?",
+        "say_example": "Shared through <WhatsApp>, like you said."
        },
        {
         "question": "Who should receive your live location link?",
@@ -1776,7 +1798,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The WhatsApp 'Select contacts' screen requires you to choose a recipient from your recent chats to send the live location link to.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to safely select your own number to test the feature without broadcasting your location to other contacts."
+        "whatTheAgentLoses": "Delegating this means you lose the ability to safely select your own number to test the feature without broadcasting your location to other contacts.",
+        "speak": "gate",
+        "check": "Which contacts does the selection screen list?",
+        "say_example": "Who gets the link? They'll see where you are the whole time."
        }
       ]
      },
@@ -1785,12 +1810,15 @@
       "label": "Accept the link warning",
       "questions": [
        {
-        "question": "Are you comfortable sharing your name, photo, and real-time location via a link, and do you want to suppress this warning in the future?",
+        "question": "Do you accept that anyone holding the link can see your name, photo, and live location?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The app explicitly warns that anyone with the generated link will be able to see your personal details and live location, requiring you to accept this privacy risk to proceed.",
-        "whatTheAgentLoses": "You lose the opportunity to evaluate the privacy implications of broadcasting your live location and to decide whether to keep future warnings enabled."
+        "whatTheAgentLoses": "You lose the opportunity to evaluate the privacy implications of broadcasting your live location and to decide whether to keep future warnings enabled.",
+        "speak": "on-event",
+        "check": "Does the warning state that anyone with the link can see the name, photo, and real-time location, and is a don't-show-again option present?",
+        "say_example": "Anyone holding this link can see your name, photo, and where you are, live. Still send it?"
        }
       ]
      },

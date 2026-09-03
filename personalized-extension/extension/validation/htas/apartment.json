@@ -4,51 +4,26 @@
   "id": "0",
   "label": "Find a rental apartment",
   "note": "do 1. 2 only as the account state demands - 9tEl registers before anything else, most keepers arrive signed in and skip it, and 8.2 reaches into 2.5 when a save hits the login wall (dS5q). repeat 3, 4, and 5 in any order until the results fit: 5.1's count drives the revisions (9tEl, mKVE, n9qo), and 3.4 or 3.5 re-cut the set as silently as any filter. 5.6 opens 6 - except on 3.3, which lands inside 6 directly and reaches 5 only by backing out (iHOh). from 6: back to 5 for the next candidate (pCy8, mKVE, Q8ex), into 7 to prepare contact, into 8 to keep it - in any order, or not at all. no keeper carries 7 past 7.5. 8.6 and 8.7 close the loop on 8's own actions.",
-  "questions": [
-   {
-    "question": "Do you want to apply filters to narrow down the 26,568 results, or start saving top listings like 'Horizons North' right away?",
-    "cluster": "refine",
-    "moment": "Now",
-    "moneyMoving": false,
-    "why": "The screen displays a massive number of results alongside unused filter options for price and beds.",
-    "whatTheAgentLoses": "The user loses the chance to enforce their specific budget and bedroom requirements before evaluating listings."
-   },
-   {
-    "question": "Should you apply filters to narrow the search, or immediately investigate the Elan Capital Hills listing?",
-    "cluster": "select",
-    "moment": "Now",
-    "moneyMoving": false,
-    "why": "The screen shows multiple listings with varying prices and unit sizes, meaning filters could quickly eliminate properties that do not fit your needs.",
-    "whatTheAgentLoses": "You lose the ability to ensure the agent strictly filters for your budget and bedroom requirements before spending time evaluating individual listings."
-   }
-  ],
   "children": [
    {
     "id": "1",
     "label": "Reach the rental search",
     "note": "1.1 then 1.2. 1.3 whenever the platform lands on the for-sale side - at entry (4NIC, XmWM), inside the search sheet (7oPn), or as a check that finds nothing wrong (n9qo). 1.4 and 1.5 as they come up.",
-    "questions": [
-     {
-      "question": "What details do you need to provide to add a new property listing?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The 'Add Your Property' form requires an address, property type, and bed and bath counts to activate the submission button.",
-      "whatTheAgentLoses": "The user loses the ability to control the specific property details being shared or to realize they have navigated to the landlord portal instead of the renter search."
-     }
-    ],
     "children": [
      {
       "id": "1.1",
       "label": "Open the app or site",
       "questions": [
        {
-        "question": "Which search result should you click to reach the official Zillow website?",
+        "question": "Is the result about to be opened the official Zillow site rather than a sponsored ad or a third-party lookalike?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Selecting the top result titled 'Zillow: Real Estate, Apartments, Mortgages & Home Values' ensures you navigate to the legitimate platform rather than a sponsored ad or third-party site.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify they are entering the authentic, secure real estate marketplace rather than a potentially deceptive link."
+        "whatTheAgentLoses": "The user loses the opportunity to verify they are entering the authentic, secure real estate marketplace rather than a potentially deceptive link.",
+        "speak": "never",
+        "check": "Which search results carry an Ad or Sponsored label, and which one is the official site?",
+        "say_example": "Skipped 2 sponsored results and opened zillow.com."
        }
       ]
      },
@@ -57,20 +32,15 @@
       "label": "Enter the rentals section",
       "questions": [
        {
-        "question": "Which type of rental property are you looking for?",
+        "question": "Which option under the Rent menu matches the ask?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Rent' dropdown menu offers different starting points like apartments, houses, or all rentals, which sets the baseline property filter for your search.",
-        "whatTheAgentLoses": "You lose the opportunity to immediately narrow the search strictly to apartments instead of having to sift through single-family homes and other property types."
-       },
-       {
-        "question": "Which type of rental property do you want to search for?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Rent' dropdown menu requires choosing between specific property types like apartments, houses, condos, or townhomes to narrow down the search results.",
-        "whatTheAgentLoses": "You lose the ability to dictate the specific type of home you want to rent, potentially resulting in inquiries for properties that do not match your lifestyle needs."
+        "whatTheAgentLoses": "You lose the opportunity to immediately narrow the search strictly to apartments instead of having to sift through single-family homes and other property types.",
+        "speak": "never",
+        "check": "Which options does the Rent menu list, and which is selected?",
+        "say_example": "Opened the Rent menu and picked apartments."
        }
       ]
      },
@@ -84,23 +54,21 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen displays '[address] Listings' and an active 'For Rent' filter, which confirms the base search parameters are correct before you add more specific filters.",
-        "whatTheAgentLoses": "You lose the ability to visually confirm that the agent is searching in the correct area and hasn't accidentally included properties for sale."
+        "whatTheAgentLoses": "You lose the ability to visually confirm that the agent is searching in the correct area and hasn't accidentally included properties for sale.",
+        "speak": "if-wrong",
+        "check": "What area and listing type does the results header show?",
+        "say_example": "The results are for <downtown Seattle>, and you asked for <Capitol Hill>. Redoing the search."
        },
        {
-        "question": "Should you switch the search tab from 'For sale' to 'For rent' before entering your location?",
+        "question": "Is the search set to For rent or For sale?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The interface defaults to the 'For sale' tab, which will show homes to buy instead of apartments to lease if left unchanged.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify that the fundamental search category matches their specific housing needs."
-       },
-       {
-        "question": "Are you looking at rentals or properties for sale?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen showed listings filtered 'For sale' with prices over a million dollars, which doesn't match the goal of finding an apartment to rent.",
-        "whatTheAgentLoses": "The user loses the ability to correct the search mode from buying to renting."
+        "whatTheAgentLoses": "The user loses the opportunity to verify that the fundamental search category matches their specific housing needs.",
+        "speak": "if-wrong",
+        "check": "Which tab is active, For rent or For sale?",
+        "say_example": "The site loaded homes for sale. You want rentals. I switched the tab to For rent."
        }
       ]
      },
@@ -109,12 +77,15 @@
       "label": "Dismiss the interrupts",
       "questions": [
        {
-        "question": "Do you want to dismiss the 'total monthly price' popup to proceed with filtering the results?",
+        "question": "A notice is covering the results and it changes how the price is read - what does it say, before it is dismissed?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The site is displaying a 'Say hello to total monthly price' modal that overlays the 26,075 available Los Angeles rentals and needs to be cleared to interact with the page.",
-        "whatTheAgentLoses": "The user loses the opportunity to read and understand how the platform calculates and displays the total monthly price before the notice is dismissed."
+        "whatTheAgentLoses": "The user loses the opportunity to read and understand how the platform calculates and displays the total monthly price before the notice is dismissed.",
+        "speak": "never",
+        "check": "Is a popup or modal overlaying the results?",
+        "say_example": "Closed the total monthly price popup."
        }
       ]
      },
@@ -123,12 +94,15 @@
       "label": "Set the language",
       "questions": [
        {
-        "question": "Do you want to change the website's display language?",
+        "question": "What language is the site set to?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dropdown menu displays multiple language options like Español and 简体中文, which determines the language used for the search interface and listing details.",
-        "whatTheAgentLoses": "If the agent defaults to English without asking, you lose the opportunity to navigate the site and read apartment details in your preferred language."
+        "whatTheAgentLoses": "If the agent defaults to English without asking, you lose the opportunity to navigate the site and read apartment details in your preferred language.",
+        "speak": "if-wrong",
+        "check": "Which language is selected in the site's language menu?",
+        "say_example": "The site came up in <Spanish>. I switched it to English."
        }
       ]
      }
@@ -144,20 +118,15 @@
       "label": "Decide whether to sign in",
       "questions": [
        {
-        "question": "Do you want to manage your account settings or log out of the current profile?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown under the name 'Amanda' shows options for 'My Account' and 'Log Out', which lets you verify or change who is currently signed in.",
-        "whatTheAgentLoses": "You lose the opportunity to verify that the correct personal account is active before saving listings or sending inquiries."
-       },
-       {
-        "question": "Are you being instructed to sign up even though you are already logged in?",
+        "question": "Does the page show an account already signed in?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The narrator tells you to create an account, but the profile name 'Amanda' is already visible in the top right corner.",
-        "whatTheAgentLoses": "The user loses time and risks account duplication if the agent blindly attempts to sign up instead of using the active session."
+        "whatTheAgentLoses": "The user loses time and risks account duplication if the agent blindly attempts to sign up instead of using the active session.",
+        "speak": "if-wrong",
+        "check": "Does the page header show a signed-in account name?",
+        "say_example": "You're already signed in as <Amanda>, so I'm skipping the sign-up."
        }
       ]
      },
@@ -171,7 +140,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The homepage provides options to either fill out your information manually or use a third-party service like Google, Facebook, or Apple to create an account.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to link your existing social profiles to the apartment platform or keep them separate with a manual login."
+        "whatTheAgentLoses": "You lose the ability to decide whether to link your existing social profiles to the apartment platform or keep them separate with a manual login.",
+        "speak": "on-event",
+        "check": "What sign-in options does the page offer?",
+        "say_example": "The site wants an account before I can send anything. I can sign up with your email, or with your Google. Which one?"
        },
        {
         "question": "What password should you set for the new account, or should you skip it?",
@@ -179,7 +151,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen requires choosing between entering an 8-15 character password to save the account or clicking 'Do this later'.",
-        "whatTheAgentLoses": "The user loses the ability to choose their own security credentials or opt out of creating a permanent account."
+        "whatTheAgentLoses": "The user loses the ability to choose their own security credentials or opt out of creating a permanent account.",
+        "speak": "on-event",
+        "check": "Does the password screen offer a skip option, and what are the password rules?",
+        "say_example": "It's asking to set a password. There's a skip button. Skip it, or set one now?"
        }
       ]
      },
@@ -193,7 +168,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The browser displayed a prompt asking whether to save the password for Trulia.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether their login credentials are saved in the browser's password manager."
+        "whatTheAgentLoses": "The user loses the ability to decide whether their login credentials are saved in the browser's password manager.",
+        "speak": "on-event",
+        "check": "Is the browser showing a save-password prompt?",
+        "say_example": "Chrome offered to save the password. I said no."
        }
       ]
      },
@@ -202,20 +180,15 @@
       "label": "Check the confirmation email",
       "questions": [
        {
-        "question": "Do you need to interact with the 'Create Password' button in the welcome email to finish your account setup?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The email displays a 'Create Password' button that might be necessary to activate the account if you haven't already set one.",
-        "whatTheAgentLoses": "You lose the opportunity to personally confirm your account registration status and ensure no further setup steps were missed."
-       },
-       {
-        "question": "Do you need to verify your email address before sending inquiries?",
+        "question": "Does the page say the email must be verified before inquiries are delivered?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The browser tab shows a 'Welcome! Please verify your e[mail]' notification, which might be required for the platform to actually deliver your messages to landlords.",
-        "whatTheAgentLoses": "The user's inquiries might be silently blocked or flagged as spam by the platform because their account email was never verified."
+        "whatTheAgentLoses": "The user's inquiries might be silently blocked or flagged as spam by the platform because their account email was never verified.",
+        "speak": "on-event",
+        "check": "Does the page or tab show a verify-your-email notice?",
+        "say_example": "The site says to verify your email first. Until then your messages may not reach anyone. I'll open the email and click the link."
        }
       ]
      },
@@ -231,36 +204,15 @@
     "note": "one of 3.1, 3.2, or 3.3 fixes the place - 3.3 skips the results stage entirely (iHOh). 3.4 and 3.5 any time after results exist; both change the result set silently, so 5.1 is re-read after them.",
     "questions": [
      {
-      "question": "How should you reset the interface to initiate your next search?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen features a 'rentals' tab and an '+ advanced search' link that can be used to clear previous parameters and access the full filter menu.",
-      "whatTheAgentLoses": "The user loses the ability to dictate the specific workflow used to efficiently clear previous data and set up a new search."
-     },
-     {
-      "question": "Should you define your search boundary by an entire neighborhood or by specific buildings?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Selecting 'Neighborhood' instead of 'In Building(s)' captures a wider set of historical rental data but introduces extraneous listings from across the broader geographic area.",
-      "whatTheAgentLoses": "You lose the ability to fine-tune the geographic scope to perfectly balance getting enough historical comps without being overwhelmed by irrelevant data."
-     },
-     {
-      "question": "How far outside your target location are you willing to search?",
+      "question": "What search radius is set?",
       "cluster": "",
       "moment": null,
       "moneyMoving": false,
       "why": "The search interface includes an 'area' radius slider (e.g., '0 km'), allowing you to strictly limit results to the exact city or expand the search to surrounding suburbs.",
-      "whatTheAgentLoses": "You lose the ability to control the geographic strictness of your search, potentially missing out on nearby options if the radius is too tight, or seeing irrelevant listings if it is too broad."
-     },
-     {
-      "question": "With over 25,000 listings shown, should you narrow the search area to find truly comparable properties?",
-      "cluster": "refine",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays a massive cluster of 25,085 listings in Chelsea, making it difficult to identify genuinely comparable properties without stricter boundaries.",
-      "whatTheAgentLoses": "You lose the ability to apply your personal neighborhood knowledge to determine if a specific building is actually a fair comparison."
+      "whatTheAgentLoses": "You lose the ability to control the geographic strictness of your search, potentially missing out on nearby options if the radius is too tight, or seeing irrelevant listings if it is too broad.",
+      "speak": "never",
+      "check": "What is the search radius set to?",
+      "say_example": "Search radius left at 0 km, exact city only."
      }
     ],
     "children": [
@@ -269,68 +221,37 @@
       "label": "Enter the location",
       "questions": [
        {
-        "question": "Which Seattle search suggestion should you select from the dropdown?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown offers multiple variations like general homes, single-family homes, and school districts, which determines the initial boundaries and property types of your search.",
-        "whatTheAgentLoses": "You lose the ability to choose whether the initial search targets the entire city, specific property types, or a particular school district."
-       },
-       {
         "question": "Where exactly do you want to search for an apartment?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search bar prompts for an address, neighborhood, city, or ZIP code to focus the results on the exact area you want to live.",
-        "whatTheAgentLoses": "If an agent decides the search area, they might pick a broader city search instead of the specific neighborhood or zip code you actually want to live in."
+        "whatTheAgentLoses": "If an agent decides the search area, they might pick a broader city search instead of the specific neighborhood or zip code you actually want to live in.",
+        "speak": "gate",
+        "check": "What location is entered in the search bar?",
+        "say_example": "What area should I search? A city, a neighborhood, or a zip code all work."
        },
        {
-        "question": "Should you select a specific autocomplete suggestion or just tap the search button on the keyboard?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displayed specific suggestions like 'Malibu CA apartments' that might automatically apply filters, whereas the keyboard search button executes a broader location query.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to use a pre-filtered search suggestion or start with a broad location search."
-       },
-       {
-        "question": "Which location suggestion matches your intended search?",
+        "question": "Which suggestion is the place you meant?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Typing 'bos' generated a dropdown list of multiple cities like 'Boston, MA' and 'Bossier City, LA', requiring a specific selection to center the search map.",
-        "whatTheAgentLoses": "The user loses the ability to specify the exact target city or neighborhood they want to explore for apartments."
+        "whatTheAgentLoses": "The user loses the ability to specify the exact target city or neighborhood they want to explore for apartments.",
+        "speak": "gate",
+        "check": "What suggestions does the location dropdown list?",
+        "say_example": "There's more than one <Portland>. I'll use <Portland, Oregon>. OK, or did you mean <Maine>?"
        },
        {
-        "question": "Are you satisfied with the general location set for your search?",
+        "question": "What location is set for the search?",
         "cluster": "refine",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows the location tag 'All Upper East Side', which dictates the geographic boundaries for all the apartment listings you will see.",
-        "whatTheAgentLoses": "You lose the opportunity to decide exactly how broad or narrow the neighborhood boundaries should be for your new home."
-       },
-       {
-        "question": "Which location suggestion should you select from the autocomplete dropdown?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The autocomplete dropdown provides various city and neighborhood options that determine the initial boundaries of the map view.",
-        "whatTheAgentLoses": "You lose the ability to intuitively choose between a broader city search or a specific neighborhood based on the provided suggestions."
-       },
-       {
-        "question": "Does the current search area have any listings, or do you need to enter a new location?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen displays a 'No homes match your search' message for Sturbridge, MA, indicating you must enter a different location to find available apartments.",
-        "whatTheAgentLoses": "You lose the ability to decide which alternative city or state to pivot your search to when the initial location yields no results."
-       },
-       {
-        "question": "Should you remove any neighborhoods to avoid getting too many irrelevant listings?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Including multiple neighborhoods like Midtown West expands the geographic area and clutters your results with extraneous listings.",
-        "whatTheAgentLoses": "You lose the ability to fine-tune the exact geographic boundaries of your search to match your specific neighborhood preferences."
+        "whatTheAgentLoses": "You lose the opportunity to decide exactly how broad or narrow the neighborhood boundaries should be for your new home.",
+        "speak": "always",
+        "check": "What location tag does the page show applied?",
+        "say_example": "Searching <the Upper East Side>, rentals only."
        },
        {
         "question": "Did the map actually load the correct city and state, or did it default to a different city with the same name?",
@@ -338,7 +259,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Many cities share names across different states or countries (e.g., Portland, OR vs. Portland, ME). If the search executes without explicitly selecting a state, the site might load the wrong geographical area.",
-        "whatTheAgentLoses": "The agent wastes time searching and filtering apartments in completely the wrong state, returning useless results."
+        "whatTheAgentLoses": "The agent wastes time searching and filtering apartments in completely the wrong state, returning useless results.",
+        "speak": "if-wrong",
+        "check": "What city and state does the results header or map label show?",
+        "say_example": "Heads up, the map loaded <Portland, Maine>, and you wanted <Oregon>. Fixing it."
        }
       ]
      },
@@ -352,23 +276,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search bar dropdown displays your recent viewing history and previous searches, offering a quick way to continue where you left off instead of typing a new location.",
-        "whatTheAgentLoses": "An agent might automatically type in a new location, ignoring your recent search history and missing the context of what you were previously interested in."
-       },
-       {
-        "question": "Should you select 'Apartments for rent' under the suggested Carlsbad location or manually enter a new search?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown menu offered quick links for Carlsbad rentals, which dictates the geographic starting point of your apartment search.",
-        "whatTheAgentLoses": "You lose the opportunity to specify whether you want to continue searching in Carlsbad or pivot to a new city."
-       },
-       {
-        "question": "Have you verified that you are logged in and the search bar is pre-filled with your target location?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the homepage with 'Miami, FL' already in the search bar and an active account session for 'Amanda'.",
-        "whatTheAgentLoses": "The user loses the assurance that the search will be conducted under their account with the correct starting location."
+        "whatTheAgentLoses": "An agent might automatically type in a new location, ignoring your recent search history and missing the context of what you were previously interested in.",
+        "speak": "never",
+        "check": "What recent searches does the dropdown show?",
+        "say_example": "Started fresh, didn't reuse the old search."
        }
       ]
      },
@@ -377,104 +288,58 @@
       "label": "Search a full address",
       "questions": [
        {
-        "question": "Do you want to search for a specific address or a broader neighborhood?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search bar accepts both specific addresses and general areas, which dictates whether you browse multiple options or go straight to one property.",
-        "whatTheAgentLoses": "The user loses the chance to discover other available apartments in the area if the agent restricts the search to a single address."
-       },
-       {
-        "question": "How do you adjust the address format to fix the search error?",
+        "question": "The red banner says the addresses could not be found - is the search failing on the site's address format, not on there being no such buildings?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed a red error banner stating the addresses could not be found, requiring you to remove the city name to make the search work.",
-        "whatTheAgentLoses": "You lose the awareness of the site's specific address formatting quirks needed to successfully search for specific buildings."
+        "whatTheAgentLoses": "You lose the awareness of the site's specific address formatting quirks needed to successfully search for specific buildings.",
+        "speak": "on-event",
+        "check": "Does the page show an address-not-found error?",
+        "say_example": "The site couldn't find that address. I'm trying it again without the city name."
        },
        {
-        "question": "How should you adjust the address format after the search fails silently?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search form reloaded without results or an error banner while retaining the city and state text, indicating the current address format is preventing the search from executing properly.",
-        "whatTheAgentLoses": "You lose the opportunity to discover the specific formatting workaround needed to bypass this website's strict or buggy search form."
-       },
-       {
-        "question": "Did the platform auto-correct your intended building address in the search results?",
+        "question": "Did the site change the address you typed?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The input field updated from '[address] 42nd st' to '[address] 42nd Street, N' and showed results for 'Silver Towers', indicating the site altered your specific search.",
-        "whatTheAgentLoses": "You lose the ability to notice the address auto-correction and determine if the substituted building is an acceptable alternative to your original target."
+        "whatTheAgentLoses": "You lose the ability to notice the address auto-correction and determine if the substituted building is an acceptable alternative to your original target.",
+        "speak": "if-wrong",
+        "check": "Does the executed search text match what was typed?",
+        "say_example": "The site changed the address to <Silver Towers on 42nd Street>. That may be a different building than yours. Checking before I go on."
        }
       ]
      },
      {
       "id": "3.4",
-      "label": "Adjust the map viewport",
-      "questions": [
-       {
-        "question": "Which nearby area and specific listing should you investigate since the main city has no matches?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The map shows no apartments in Manhattan within the set price range, but several affordable pins appear in nearby boroughs like Brooklyn and Queens.",
-        "whatTheAgentLoses": "You lose the ability to decide which alternative neighborhood is most acceptable when your primary location is too expensive."
-       },
-       {
-        "question": "Should you zoom in on the map to narrow down the available listings to a specific neighborhood?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Zooming in updates the map boundary, reducing the overwhelming 8,878 available rentals down to a manageable 11 in your specific area of interest.",
-        "whatTheAgentLoses": "You lose the ability to visually explore the map and discover exactly which micro-neighborhoods have the most appealing apartment clusters."
-       }
-      ]
+      "label": "Adjust the map viewport"
      },
      {
       "id": "3.5",
       "label": "Draw or remove a boundary",
       "questions": [
        {
-        "question": "Did you actually remove the search boundary and check if the rental count updated?",
+        "question": "Is the boundary still applied after the removal?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen at 1:26 shows the Seattle boundary outline and the 'Remove Boundary' button are still present, contradicting the claim that the boundary was removed.",
-        "whatTheAgentLoses": "The user loses an accurate understanding of how many rentals are actually available within their specific desired area."
+        "whatTheAgentLoses": "The user loses an accurate understanding of how many rentals are actually available within their specific desired area.",
+        "speak": "if-wrong",
+        "check": "Are the boundary outline and Remove Boundary button still shown?",
+        "say_example": "The boundary didn't actually clear. I'm removing it again."
        },
        {
-        "question": "Should you keep the search strictly confined to the initial boundary?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The map displays a blue boundary line and a 'Remove Boundary' button, offering the choice to either restrict results to the exact area or expand it.",
-        "whatTheAgentLoses": "The user loses the ability to decide their flexibility regarding the exact neighborhood boundaries and whether nearby areas should be considered."
-       },
-       {
-        "question": "Should you search by a predefined neighborhood or draw a custom boundary?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The advanced search panel provides a 'Custom Boundary' option under the location criteria, allowing for highly specific geographical targeting instead of relying on broad neighborhood names.",
-        "whatTheAgentLoses": "You lose the ability to define the exact, personalized geographical shape of your desired living area."
-       },
-       {
-        "question": "Does the map boundary accurately capture your desired search area?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The map displays a red polygon containing over 18,000 listings, indicating whether the drawn area is too broad and needs refinement.",
-        "whatTheAgentLoses": "You lose the opportunity to visually adjust the specific neighborhood boundaries to match your exact geographic preferences."
-       },
-       {
-        "question": "Should you fix the boundary name typo and change the listing status to available before searching?",
+        "question": "Is the listing status filter set to available listings?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a typo in the custom boundary name ('Union Squarea') and the listing status is set to include only unavailable listings.",
-        "whatTheAgentLoses": "The user loses the ability to find an actual apartment because the agent wastes time searching for unavailable properties in a misspelled location."
+        "whatTheAgentLoses": "The user loses the ability to find an actual apartment because the agent wastes time searching for unavailable properties in a misspelled location.",
+        "speak": "if-wrong",
+        "check": "What listing status is the search set to?",
+        "say_example": "The status filter was set to homes already taken. I switched it to available ones."
        },
        {
         "question": "Did the map silently clear your custom drawn boundary when you applied a new filter?",
@@ -482,7 +347,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "On some sites, applying a new filter like price or bedrooms causes the map to refresh and silently erase any custom boundaries you previously drew.",
-        "whatTheAgentLoses": "The user receives listings outside their desired neighborhood because the agent didn't notice the custom boundary was dropped."
+        "whatTheAgentLoses": "The user receives listings outside their desired neighborhood because the agent didn't notice the custom boundary was dropped.",
+        "speak": "if-wrong",
+        "check": "Is the drawn boundary still applied after the filter change?",
+        "say_example": "Adding the price filter quietly erased the map boundary. I'm drawing it again."
        }
       ]
      }
@@ -494,124 +362,81 @@
     "note": "any subset, any order - the dominant pattern is opening a menu and changing nothing (five Zillow keepers change zero filters). 4.8 ends every menu, and whether the choices took effect only shows in 5.1's count. 4.9 where ordering matters. re-entered whenever 5.1 reads too many, too few, or zero.",
     "questions": [
      {
-      "question": "Do you want to use the affordability calculator before starting your search?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The 'Rent' dropdown includes tools like 'How much rent can I afford?', which helps you establish a realistic budget based on your income before you start looking at listings.",
-      "whatTheAgentLoses": "You lose the opportunity to use the platform's financial tools to set a data-driven budget, potentially leading you to search for apartments you cannot afford."
-     },
-     {
-      "question": "How do you want to filter the 4967 available properties in Tokyo?",
-      "cluster": "refine",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows 4967 hits across various stations like Togoshiginza and Yotsuya, making it necessary to apply filters to find relevant listings.",
-      "whatTheAgentLoses": "You lose the opportunity to specify which exact stations or neighborhoods fit your daily commute and lifestyle preferences."
-     },
-     {
-      "question": "Should you filter for listings that accept Zillow applications?",
+      "question": "Is the accepts-applications filter selected?",
       "cluster": "select",
       "moment": "Now",
       "moneyMoving": false,
       "why": "Selecting the option for listings that accept Zillow applications can streamline the rental process if you are ready to apply.",
-      "whatTheAgentLoses": "You lose the chance to decide if the convenience of applying directly through the platform outweighs potentially missing out on other good listings."
+      "whatTheAgentLoses": "You lose the chance to decide if the convenience of applying directly through the platform outweighs potentially missing out on other good listings.",
+      "speak": "never",
+      "check": "Does the filter panel offer an accepts-applications option, and is it selected?",
+      "say_example": "Left the accepts-applications-on-the-site filter off."
      },
      {
-      "question": "Do you need to scroll down in the 'More Filters' menu to specify pet policies or amenities?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The visible screen only shows options like move-in date and square footage, hiding important lifestyle filters further down the menu.",
-      "whatTheAgentLoses": "The user loses the ability to automatically filter out listings that lack essential personal requirements like pet-friendliness."
-     },
-     {
-      "question": "Does the visible filter menu actually include the pet policies and amenities the narrator mentioned?",
-      "cluster": "facts",
-      "moment": "After",
-      "moneyMoving": false,
-      "why": "The narrator claims the menu includes pet policies and amenities, but the screen only displays options like Move-In Date, Square feet, and Lot size.",
-      "whatTheAgentLoses": "The user loses the ability to accurately filter for specific needs like pet policies if the agent relies on inaccurate audio instructions instead of the visible interface."
-     },
-     {
-      "question": "Do you want to set specific filters for your move-in date, pet policy, laundry, and parking?",
+      "question": "Which of the asked-for filters are set?",
       "cluster": "hand over",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The 'More Filters' menu contains options for move-in dates and specific amenities needed to match the requested preferences.",
-      "whatTheAgentLoses": "You risk wasting time inquiring about apartments that do not meet your specific move-in timeline or amenity requirements."
+      "whatTheAgentLoses": "You risk wasting time inquiring about apartments that do not meet your specific move-in timeline or amenity requirements.",
+      "speak": "always",
+      "check": "Which filters does the panel show selected?",
+      "say_example": "Setting your filters now. Move-in <June 1>, cats OK, laundry in the unit, parking."
      },
      {
-      "question": "Should you apply commute or transit filters before clicking search?",
+      "question": "Are commute or transit filters set?",
       "cluster": "select",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays unused commute and transit filters next to the search button, which could help narrow down the results to locations that fit your daily travel needs.",
-      "whatTheAgentLoses": "You lose the opportunity to ensure the resulting apartments are conveniently located for your specific daily commute or public transit needs."
+      "whatTheAgentLoses": "You lose the opportunity to ensure the resulting apartments are conveniently located for your specific daily commute or public transit needs.",
+      "speak": "never",
+      "check": "Does the page offer commute or transit filters, and are they set?",
+      "say_example": "Commute filter available, not used."
      },
      {
-      "question": "Which floor preferences should you select?",
+      "question": "Which floor options are selected?",
       "cluster": "select",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen provides specific floor checkboxes like 'EC', '1', '2', and '3' to help narrow down the search based on accessibility or living preferences.",
-      "whatTheAgentLoses": "Delegating this choice means the agent might include undesirable floor levels that do not match your personal living or accessibility needs."
+      "whatTheAgentLoses": "Delegating this choice means the agent might include undesirable floor levels that do not match your personal living or accessibility needs.",
+      "speak": "never",
+      "check": "Which floor options are checked?",
+      "say_example": "No floor preference set."
      },
      {
-      "question": "What is the maximum square footage you want to set?",
+      "question": "What maximum square footage is set?",
       "cluster": "hand over",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen showed a dropdown for the maximum square foot range to filter out apartments that are too large.",
-      "whatTheAgentLoses": "The person loses the ability to cap the apartment size, potentially leading to recommendations that are unnecessarily large."
+      "whatTheAgentLoses": "The person loses the ability to cap the apartment size, potentially leading to recommendations that are unnecessarily large.",
+      "speak": "never",
+      "check": "What maximum size is selected?",
+      "say_example": "No size cap set."
      },
      {
-      "question": "Should you apply any filters for rent, size, or rooms before searching?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The search modal offers options to filter by base rent, area, and number of rooms, which helps narrow down the 88 results to match your specific needs.",
-      "whatTheAgentLoses": "You lose the opportunity to restrict the search to apartments that actually fit your budget and space requirements."
-     },
-     {
-      "question": "Should you execute the search with only the status filter?",
-      "cluster": "refine",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Leaving the available criteria box empty will return an overwhelming number of results that cannot be sorted properly.",
-      "whatTheAgentLoses": "You lose the opportunity to define the specific criteria that keep the search results manageable and relevant to your actual preferences."
-     },
-     {
-      "question": "Which specific buildings and listing statuses do you want to filter by?",
+      "question": "Which buildings and listing statuses are set in the filters?",
       "cluster": "hand over",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen provides inputs for specific building addresses and a dropdown for listing status to help narrow the search to truly available units.",
-      "whatTheAgentLoses": "The user loses the ability to target their specific preferred buildings and apply their nuanced understanding of how local management companies classify off-market units."
+      "whatTheAgentLoses": "The user loses the ability to target their specific preferred buildings and apply their nuanced understanding of how local management companies classify off-market units.",
+      "speak": "never",
+      "check": "What building and status inputs are set?",
+      "say_example": "Building and status inputs left on the defaults."
      },
      {
-      "question": "Are the search results showing the unavailable listings you requested?",
-      "cluster": "facts",
-      "moment": "After",
-      "moneyMoving": false,
-      "why": "The screen showed the listing status dropdown had reset to exclude listings in contract, meaning the search returned available apartments instead of the requested unavailable ones.",
-      "whatTheAgentLoses": "You receive information about available apartments instead of the specific off-market or unavailable properties you needed."
-     },
-     {
-      "question": "Did you select 'Available' for the listing status as instructed?",
-      "cluster": "facts",
-      "moment": "After",
-      "moneyMoving": false,
-      "why": "The narrator instructed to select 'Available', but the screen shows 'Exclude listings already in contract' being selected.",
-      "whatTheAgentLoses": "The delegator loses the assurance that the agent is strictly following the specified filtering criteria, potentially resulting in viewing unavailable listings."
-     },
-     {
-      "question": "Do you want to filter apartments by the year they were built?",
+      "question": "What year-built range is set?",
       "cluster": "",
       "moment": null,
       "moneyMoving": false,
       "why": "The 'More Filters' menu includes a 'Year built' range, allowing you to restrict your search to newer constructions or historic buildings.",
-      "whatTheAgentLoses": "You lose the ability to filter out older buildings that might lack modern insulation or amenities, or conversely, to seek out historic charm."
+      "whatTheAgentLoses": "You lose the ability to filter out older buildings that might lack modern insulation or amenities, or conversely, to seek out historic charm.",
+      "speak": "never",
+      "check": "What year-built range is set?",
+      "say_example": "Year-built filter not used."
      }
     ],
     "children": [
@@ -625,31 +450,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Price Range' popover allows you to input specific minimum and maximum values so you only spend time reviewing apartments you can afford.",
-        "whatTheAgentLoses": "You lose the ability to decide exactly how strict your maximum budget limit should be or if you want to leave room for slightly more expensive options."
+        "whatTheAgentLoses": "You lose the ability to decide exactly how strict your maximum budget limit should be or if you want to leave room for slightly more expensive options.",
+        "speak": "gate",
+        "check": "What minimum and maximum price are set?",
+        "say_example": "What's the most you want to pay a month? I'll cap the search there."
        },
        {
-        "question": "Did you open the price dropdown to set the requested rent range?",
+        "question": "Does the price filter show the requested range?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen shows that the price dropdown is never opened, meaning the instruction to set a monthly rent range was completely ignored.",
-        "whatTheAgentLoses": "The user receives apartment recommendations that ignore their budget constraints because the price filter was never actually applied."
-       },
-       {
-        "question": "What minimum and maximum price limits do you want to set?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays minimum and maximum price fields, which let you restrict the search results to apartments that fit your specific budget.",
-        "whatTheAgentLoses": "Letting an agent decide your price range means they might select limits that do not accurately reflect your actual budget or financial flexibility."
-       },
-       {
-        "question": "Should you set your maximum price slightly higher than your strict budget to uncover move-in specials?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Leaving a little headroom in your price filter can reveal apartments that seem slightly out of budget but actually offer move-in specials that bring the net effective rent down.",
-        "whatTheAgentLoses": "The agent might strictly enforce your budget maximum, causing you to miss out on higher-tier apartments that are actually affordable due to unadvertised or hidden deals."
+        "whatTheAgentLoses": "The user receives apartment recommendations that ignore their budget constraints because the price filter was never actually applied.",
+        "speak": "if-wrong",
+        "check": "Does the price filter show the requested range?",
+        "say_example": "The price cap didn't take. The filter still shows any price. Setting it again."
        }
       ]
      },
@@ -663,39 +478,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Opening the 'Beds & baths' dropdown lets you specify your exact room requirements to ensure the search results match your living needs.",
-        "whatTheAgentLoses": "You lose the ability to decide exactly how many bedrooms and bathrooms are necessary for your living situation."
+        "whatTheAgentLoses": "You lose the ability to decide exactly how many bedrooms and bathrooms are necessary for your living situation.",
+        "speak": "gate",
+        "check": "What bed and bath counts are selected?",
+        "say_example": "How many bedrooms do you need? And bathrooms, if that matters."
        },
        {
-        "question": "Did you actually select the number of beds and baths, or did you leave the filter on 'Any'?",
+        "question": "Is the beds and baths filter still on Any?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The instructions specified setting the number of beds and baths, but the screen showed the filter menu being opened and closed with all selections remaining on 'Any'.",
-        "whatTheAgentLoses": "The user receives irrelevant apartment listings because the agent failed to apply the requested bedroom and bathroom constraints."
-       },
-       {
-        "question": "What bedroom and bathroom filters do you want to apply?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown menu offers specific minimum bedroom and bathroom counts, such as '1+' or '1.5+', which dictate how strictly the search results are narrowed down.",
-        "whatTheAgentLoses": "You lose the ability to decide exactly how flexible your space requirements are when setting the initial search filters."
-       },
-       {
-        "question": "How many bedrooms do you need?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Selecting a specific number in the bedrooms dropdown ensures the search results only show apartments that fit your space requirements.",
-        "whatTheAgentLoses": "You lose the ability to define your exact living space needs, which could result in the agent selecting apartments that are too small or unnecessarily expensive."
-       },
-       {
-        "question": "How many rooms do you need?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The filter defaults to '1' room, which will restrict the search results to only one-bedroom apartments if left unchanged.",
-        "whatTheAgentLoses": "You lose the ability to ensure the search results match your actual space and living requirements."
+        "whatTheAgentLoses": "The user receives irrelevant apartment listings because the agent failed to apply the requested bedroom and bathroom constraints.",
+        "speak": "if-wrong",
+        "check": "Is the beds and baths filter still on Any?",
+        "say_example": "The beds filter is still on Any. I set it to <2> like you asked."
        }
       ]
      },
@@ -704,60 +501,37 @@
       "label": "Pick the home types",
       "questions": [
        {
-        "question": "Which property type filter should you apply?",
+        "question": "Is the home type filter set to apartments?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows 'Any' selected under 'Home type', which will include irrelevant listings like houses and townhomes instead of just apartments.",
-        "whatTheAgentLoses": "The user receives search results cluttered with irrelevant property types, wasting time evaluating non-apartment listings."
+        "whatTheAgentLoses": "The user receives search results cluttered with irrelevant property types, wasting time evaluating non-apartment listings.",
+        "speak": "if-wrong",
+        "check": "What home types does the filter show selected?",
+        "say_example": "Home type was on Any, so houses were mixed in. I set it to apartments."
        },
        {
-        "question": "Did you select 'apartment or condo' under the home type filter?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The instructions specifically requested filtering for an apartment or condo, but the screen showed the Home Type filter was left as 'Any'.",
-        "whatTheAgentLoses": "The user receives search results cluttered with unwanted property types like single-family homes or land."
-       },
-       {
-        "question": "Does the selected home type filter actually exclude condos like you intended?",
+        "question": "Does the home type filter separate apartments from condos?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen shows the 'Apartments/Condos/Co-ops' filter checked, which contradicts the explicit goal to search only for apartment buildings.",
-        "whatTheAgentLoses": "The user receives listings for condos and co-ops instead of strictly apartment buildings, leading to irrelevant results."
+        "whatTheAgentLoses": "The user receives listings for condos and co-ops instead of strictly apartment buildings, leading to irrelevant results.",
+        "speak": "on-event",
+        "check": "Does the home type filter offer apartments separately from condos?",
+        "say_example": "This site lumps apartments and condos into one filter. A few condos may slip through. I'll flag them when I open one."
        },
        {
-        "question": "Have you selected the exact home types you want before applying the filters?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Verifying the checked boxes for options like 'Apartments/Condos/Co-ops' and 'Entire place' ensures the search results will match your specific living requirements.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that only your preferred property types are included in the search."
-       },
-       {
-        "question": "Should you exclude corporate housing from your search results?",
+        "question": "Is corporate housing excluded?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The filter menu includes a checkbox for 'corporate housing', which typically refers to expensive, fully furnished short-term rentals that might clutter your results if you want a standard lease.",
-        "whatTheAgentLoses": "You lose the ability to filter out specialized, high-cost short-term rentals, making it harder to find standard long-term apartments."
-       },
-       {
-        "question": "Are you consistently filtering for and selecting only apartments rather than houses or townhomes?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The search results page showed the 'Home Type' filter set to include houses, resulting in the selection of a single-family residence instead of an apartment.",
-        "whatTheAgentLoses": "The user ends up inquiring about a single-family home instead of an apartment, failing the primary goal of the search."
-       },
-       {
-        "question": "Are the search results displaying apartments rather than houses?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The URL explicitly confirms the search is filtered for apartments, ensuring the listings match the task's requirement.",
-        "whatTheAgentLoses": "The user loses the certainty that the agent is evaluating the correct type of rental property."
+        "whatTheAgentLoses": "You lose the ability to filter out specialized, high-cost short-term rentals, making it harder to find standard long-term apartments.",
+        "speak": "never",
+        "check": "Is the corporate housing option checked?",
+        "say_example": "Corporate housing not excluded."
        }
       ]
      },
@@ -766,28 +540,26 @@
       "label": "Set the pet policy",
       "questions": [
        {
-        "question": "Do you need to filter the search for pet-friendly apartments?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The filter menu displays a 'PETS ALLOWED' section with dog and cat icons to help narrow down listings based on specific animal policies.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might incorrectly assume your pet ownership status, resulting in either missing out on good apartments or viewing listings that prohibit your pets."
-       },
-       {
-        "question": "Which pet filters should you select to ensure your specific animals are allowed?",
+        "question": "Which pet filters match the pets you have?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Choosing specific pet policies like 'Allows large dogs' and 'Allows cats' immediately updates the available rentals count to ensure you only see accommodating properties.",
-        "whatTheAgentLoses": "You lose the ability to specify exactly which types of pets you have, potentially resulting in an agent showing you listings that do not accommodate your animals."
+        "whatTheAgentLoses": "You lose the ability to specify exactly which types of pets you have, potentially resulting in an agent showing you listings that do not accommodate your animals.",
+        "speak": "gate",
+        "check": "Which pet policy options does the filter list, and which are selected?",
+        "say_example": "Do you have pets? What kind matters here. Some buildings only take cats, some cap dog weight."
        },
        {
-        "question": "Do you want to filter for buildings that strictly prohibit pets?",
+        "question": "Is the no-pets filter selected?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The pet filter includes a 'No pets allowed' option, which is crucial for renters with severe allergies or those who prefer a pet-free environment.",
-        "whatTheAgentLoses": "You lose the ability to ensure your future home is free of animal allergens or noise, as the agent might only focus on whether your own pets are allowed."
+        "whatTheAgentLoses": "You lose the ability to ensure your future home is free of animal allergens or noise, as the agent might only focus on whether your own pets are allowed.",
+        "speak": "never",
+        "check": "Is the no-pets-allowed option available?",
+        "say_example": "The no-pets-allowed filter exists. Not used."
        }
       ]
      },
@@ -796,20 +568,15 @@
       "label": "Require the amenities",
       "questions": [
        {
-        "question": "What specific amenities and features do you require for the rental?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'More filters' modal includes options like 'Allows large dogs', 'Must have A/C', and 'Hardwood floors' to narrow down the search to properties that fit your lifestyle.",
-        "whatTheAgentLoses": "You lose the ability to ensure the final search results actually include your non-negotiable lifestyle requirements like pet policies or specific amenities."
-       },
-       {
-        "question": "Do you want to restrict your search to listings that offer a 3D tour?",
+        "question": "Is the 3D tour filter selected?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The 'More Filters' menu includes a checkbox for 'Must have 3D Tour', which allows you to only view apartments you can virtually walk through.",
-        "whatTheAgentLoses": "You lose the ability to prioritize listings that offer comprehensive virtual tours, which is crucial if you are renting sight-unseen or have limited time to visit in person."
+        "whatTheAgentLoses": "You lose the ability to prioritize listings that offer comprehensive virtual tours, which is crucial if you are renting sight-unseen or have limited time to visit in person.",
+        "speak": "never",
+        "check": "Is the 3D tour checkbox selected?",
+        "say_example": "3D tour filter not used."
        }
       ]
      },
@@ -818,20 +585,26 @@
       "label": "Set the listing freshness",
       "questions": [
        {
-        "question": "Do you want to restrict the search to recently added listings?",
+        "question": "What listing freshness limit is set?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The filter menu provides options to limit results to listings added within the last 6 hours to 5 days, which helps prioritize the newest available apartments.",
-        "whatTheAgentLoses": "Letting the agent decide means you lose control over whether to prioritize acting quickly on the freshest inventory or keeping a wider pool of older listings."
+        "whatTheAgentLoses": "Letting the agent decide means you lose control over whether to prioritize acting quickly on the freshest inventory or keeping a wider pool of older listings.",
+        "speak": "never",
+        "check": "What listing age limit is selected?",
+        "say_example": "Left the listing age filter off."
        },
        {
-        "question": "Should you hide listings that do not provide a specific move-in date?",
+        "question": "Are listings without a move-in date hidden?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The 'Availability' filter includes a checkbox to 'Hide listings with no date provided', ensuring you only see apartments that explicitly confirm they are ready when you need them.",
-        "whatTheAgentLoses": "You lose the ability to filter out ambiguous listings, potentially wasting time evaluating apartments that might not be available on your required timeline."
+        "whatTheAgentLoses": "You lose the ability to filter out ambiguous listings, potentially wasting time evaluating apartments that might not be available on your required timeline.",
+        "speak": "never",
+        "check": "Is the hide-listings-with-no-date box checked?",
+        "say_example": "Kept listings with no move-in date."
        }
       ]
      },
@@ -840,12 +613,15 @@
       "label": "Hide the fee listings",
       "questions": [
        {
-        "question": "Do you want to hide listings that charge broker fees?",
+        "question": "Are listings with broker fees hidden?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides a 'HIDE LISTINGS WITH FEES' checkbox to filter out apartments that require paying an additional broker fee.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to consider apartments that require paying an upfront broker fee."
+        "whatTheAgentLoses": "You lose the ability to decide whether to consider apartments that require paying an upfront broker fee.",
+        "speak": "never",
+        "check": "Is the hide-listings-with-fees box checked?",
+        "say_example": "Hid the listings that charge broker fees."
        }
       ]
      },
@@ -854,20 +630,15 @@
       "label": "Apply or close the panel",
       "questions": [
        {
-        "question": "Does the available rental count on the filter modal's submit button update as you select specific amenities?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The rental count remaining static despite selecting multiple specific amenities suggests the filters might not be registering correctly.",
-        "whatTheAgentLoses": "The user loses confidence that their specific preferences are actually being applied to narrow down the search results."
-       },
-       {
         "question": "Do the listings in the search results actually reflect the filters you just applied?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The search results show properties costing up to $1,425 with 0 bedrooms, contradicting the $1,000 maximum and 2+ bedroom filters set previously.",
-        "whatTheAgentLoses": "The user receives apartment options that completely ignore their specified budget and size requirements."
+        "whatTheAgentLoses": "The user receives apartment options that completely ignore their specified budget and size requirements.",
+        "speak": "if-wrong",
+        "check": "Do the visible results stay inside the price and bedroom filters?",
+        "say_example": "These results ignore the filters. A <$1,425> studio got through your <$1,000> two-bed search. Running it again."
        }
       ]
      },
@@ -876,12 +647,15 @@
       "label": "Sort the results",
       "questions": [
        {
-        "question": "How do you want to sort the 510 available listings?",
+        "question": "What sort order is applied?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a sorting dropdown with options like 'Newest' and 'Payment (Low to High)' that determine which of the 510 properties you will see and evaluate first.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to prioritize the site's algorithm recommendations, the newest inventory, or the lowest prices when browsing the results."
+        "whatTheAgentLoses": "You lose the ability to decide whether to prioritize the site's algorithm recommendations, the newest inventory, or the lowest prices when browsing the results.",
+        "speak": "never",
+        "check": "What sort order is selected?",
+        "say_example": "Sorted by price, low to high."
        }
       ]
      }
@@ -898,7 +672,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The 'Export limit exceeded' dialog requires you to decide whether to accept an incomplete dataset of the first 1,000 listings or adjust your filters to reduce the total count.",
-      "whatTheAgentLoses": "You lose the ability to decide whether a truncated dataset is sufficient for your evaluation or if applying stricter filters is necessary to capture all relevant listings."
+      "whatTheAgentLoses": "You lose the ability to decide whether a truncated dataset is sufficient for your evaluation or if applying stricter filters is necessary to capture all relevant listings.",
+      "speak": "on-event",
+      "check": "Does the page show an export limit dialog, and what does it say?",
+      "say_example": "The export stops at 1,000 listings. I'm tightening the filters so nothing gets cut off."
      }
     ],
     "children": [
@@ -907,68 +684,15 @@
       "label": "Read the result count",
       "questions": [
        {
-        "question": "Should you browse these broad search results or apply more filters to narrow them down?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "With over 12,000 rentals shown across the Seattle map, deciding whether to adjust the search boundary or apply specific filters dictates how efficiently you will find a suitable apartment.",
-        "whatTheAgentLoses": "You lose the ability to personally decide how to prioritize your preferences when narrowing down a massive list of potential homes."
-       },
-       {
-        "question": "Did your new filter apply correctly, and how many properties remain?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen continued to display 214 rentals available instead of updating to a smaller number, indicating the new filter was not successfully applied.",
-        "whatTheAgentLoses": "You lose the ability to verify that your strict preferences are actually filtering out unwanted listings."
-       },
-       {
-        "question": "Does the updated number of available rentals make sense given the filter you just applied?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The results dropped from 319 to 318 after filtering for 'Apartments/Condos/Co-ops', indicating the filter successfully removed one non-apartment listing.",
-        "whatTheAgentLoses": "The user loses the chance to verify that the platform's search results correctly responded to the applied filters."
-       },
-       {
-        "question": "Did your filters yield a reasonable number of results?",
-        "cluster": "refine",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Seeing 25 results for your specified price and location confirms that your criteria are balanced enough to provide good options without being overwhelming.",
-        "whatTheAgentLoses": "You lose the chance to intuitively gauge market availability and decide for yourself if your budget or location expectations need adjusting."
-       },
-       {
-        "question": "Have the filtered results finished loading, and should you apply additional filters to narrow down the search?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Waiting for the result count to fully update ensures you are evaluating the correct subset of listings before deciding if further curation is necessary.",
-        "whatTheAgentLoses": "You lose the opportunity to personally gauge if the current number of results is manageable or if your specific preferences require additional filtering."
-       },
-       {
         "question": "Did your search yield any results, or do you need to adjust your filters?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen displayed a banner stating 'No homes match your search', indicating that the current criteria are too restrictive and need modification.",
-        "whatTheAgentLoses": "The user loses the ability to decide exactly which search criteria to relax or change when no initial results are found."
-       },
-       {
-        "question": "Did your refined filters reduce the results below the export limit?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen showed 358 listings, confirming the search criteria successfully narrowed the results to a manageable number under the 1,000-listing limit.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether to export this specific batch of listings for offline comparison or just browse them directly on the site."
-       },
-       {
-        "question": "Do the search result counts update logically as you apply each filter?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Observing the total number of listings change sequentially as price, bed/bath, property type, and amenity limits are applied confirms the platform is correctly registering your criteria.",
-        "whatTheAgentLoses": "You lose the opportunity to gauge the local market's inventory at each step and adjust your strictness if a specific filter eliminates too many options."
+        "whatTheAgentLoses": "The user loses the ability to decide exactly which search criteria to relax or change when no initial results are found.",
+        "speak": "on-event",
+        "check": "Does the page say no homes match the search?",
+        "say_example": "Nothing matches in <Sturbridge> at that price. I can widen the area, or raise the cap. Which one?"
        },
        {
         "question": "Did the platform silently drop your strict filters to show 'similar' results?",
@@ -976,23 +700,21 @@
         "moment": null,
         "moneyMoving": false,
         "why": "When a search yields zero exact matches, many apartment sites automatically remove strict filters (like budget caps or pet policies) to show 'nearby' or 'similar' listings without a prominent warning.",
-        "whatTheAgentLoses": "You end up evaluating apartments that are too expensive or do not allow your pets because you falsely assumed your filters were still active."
+        "whatTheAgentLoses": "You end up evaluating apartments that are too expensive or do not allow your pets because you falsely assumed your filters were still active.",
+        "speak": "if-wrong",
+        "check": "Does the results page say filters were removed or that it is showing similar or nearby listings?",
+        "say_example": "Careful, the site quietly dropped your pet filter to pad out the list. Some of these won't take <your dog>. Re-filtering."
        },
        {
-        "question": "Are there suitable rental properties available in your exact searched location?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen explicitly states that the matching rentals are outside the boundary of your searched location, meaning you must decide whether to accept nearby options or adjust your search area.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to compromise on your target location by accepting nearby listings or to manually explore adjacent neighborhoods on the map."
-       },
-       {
-        "question": "How many apartments match your criteria, and where are they clustered on the map?",
+        "question": "How many listings match the current filters?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Seeing the 1,228 total results and map clusters like '25+' or '50+' helps you decide if your filters are too broad or if you should zoom in on a specific neighborhood.",
-        "whatTheAgentLoses": "You lose the opportunity to visually gauge which specific neighborhoods have the highest concentration of available apartments within your budget."
+        "whatTheAgentLoses": "You lose the opportunity to visually gauge which specific neighborhoods have the highest concentration of available apartments within your budget.",
+        "speak": "always",
+        "check": "How many results does the header say match?",
+        "say_example": "Found <1,228> places with your filters. Most sit around <downtown>."
        },
        {
         "question": "Are you accurately reading the total number of available rentals in the results header?",
@@ -1000,45 +722,20 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen clearly displays '8 rentals available' and shows three property cards, so falsely claiming there is only one rental misrepresents the search results.",
-        "whatTheAgentLoses": "The user loses an accurate picture of market availability and might miss out on viable apartments if the agent artificially limits the options."
+        "whatTheAgentLoses": "The user loses an accurate picture of market availability and might miss out on viable apartments if the agent artificially limits the options.",
+        "speak": "if-wrong",
+        "check": "How many rentals does the results header say are available?",
+        "say_example": "The page actually says <8> rentals, so there are more options than I said."
        }
       ]
      },
      {
       "id": "5.2",
-      "label": "Scan the listing cards",
-      "questions": [
-       {
-        "question": "Do you want to explore the default listings in Worcester, MA, or start a new search?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen currently displays hot market listings for Worcester, MA, which might not be your intended target area.",
-        "whatTheAgentLoses": "You lose the ability to define your actual target neighborhood if the agent assumes the default location is correct."
-       },
-       {
-        "question": "Do you want to review the 14 available sharehouses or return to the homepage to explore other affordable options?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays 14 sharehouse listings in Tokyo with specific rent and size details, presenting an opportunity to evaluate them before looking elsewhere.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether these specific sharehouses meet their needs or if they should explore other affordable alternatives."
-       }
-      ]
+      "label": "Scan the listing cards"
      },
      {
       "id": "5.3",
-      "label": "Probe the map pins",
-      "questions": [
-       {
-        "question": "Do the map pins match the properties shown in the search results list?",
-        "cluster": "facts",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "A discrepancy between the list showing multiple results and the map showing only one pin means you might miss evaluating where other available properties are located.",
-        "whatTheAgentLoses": "The user loses the ability to visually compare the neighborhoods of all available properties if the agent relies on an incomplete map view."
-       }
-      ]
+      "label": "Probe the map pins"
      },
      {
       "id": "5.4",
@@ -1054,7 +751,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The top two listings are marked as featured paid placements and lack square footage data, while the first organic listing clearly displays its size.",
-        "whatTheAgentLoses": "You lose the ability to bypass paid promotions and prioritize organic listings that provide complete information like square footage."
+        "whatTheAgentLoses": "You lose the ability to bypass paid promotions and prioritize organic listings that provide complete information like square footage.",
+        "speak": "always",
+        "check": "Which results are labelled Featured, Sponsored, or Ad?",
+        "say_example": "The top two are paid placements, so I'm starting below them."
        }
       ]
      },
@@ -1063,76 +763,15 @@
       "label": "Pick a listing to open",
       "questions": [
        {
-        "question": "Which property listing should you select to proceed with the tour request?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results show only one available rental for $1,400/mo at 1293 S 70th Rd, so it must be selected to view details and request a tour.",
-        "whatTheAgentLoses": "You lose the chance to personally evaluate if this specific house aligns with your preferences before reaching out to the landlord."
-       },
-       {
-        "question": "Which of these rare rental houses should you investigate further?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows 116 property hits in Tokyo, and since rental houses are rare, you need to quickly identify promising options like the Kamata Station listing.",
-        "whatTheAgentLoses": "You lose the chance to quickly spot and act on a rare, highly desirable property before someone else rents it."
-       },
-       {
-        "question": "Which of these monthly apartment listings should you explore further?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Evaluating the 40 available hits, like the ¥289,000 1R layout at Nishi-shinjuku-gochome Station, ensures you find a suitable option for a short-term stay.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between rent prices, layouts, and locations for your specific short-term needs."
-       },
-       {
         "question": "Should you view any of the nearby listings outside the Moundville boundary, or stop evaluating?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen indicates there are no more exact matches in Moundville but shows seven nearby rentals, requiring a choice on whether to consider properties outside the original boundary.",
-        "whatTheAgentLoses": "You lose the ability to decide if living in a nearby town is an acceptable compromise for finding a suitable apartment."
-       },
-       {
-        "question": "Does this 4-bedroom Beverly Hills house look promising enough to save and view in detail?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The map preview shows a $29,995/mo, 4-bedroom house on Sherwood Forest Ln, so you need to decide if its basic specs justify adding it to your shortlist.",
-        "whatTheAgentLoses": "You lose the chance to personally decide if this specific property matches your aesthetic and practical preferences enough to shortlist it."
-       },
-       {
-        "question": "Which of these apartment listings should you investigate further?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "With 427 rentals available, you must decide if the Palma Beverly Hills listing with its mid-century modern design and special offer is the best candidate to explore.",
-        "whatTheAgentLoses": "You lose the opportunity to personally weigh the visual appeal, specific price points, and promotional offers of each property against your own subjective preferences."
-       },
-       {
-        "question": "Should you investigate this nearby listing even though it is outside your target zip code?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search yielded no exact matches for [number] but suggested one nearby option in Jersey City, requiring you to decide if an out-of-bounds location is acceptable.",
-        "whatTheAgentLoses": "You lose the ability to decide whether a nearby alternative in a different city is an acceptable compromise for your original location preference."
-       },
-       {
-        "question": "Does this property preview look promising enough to open for full details?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The map pin preview shows essential details like the $5,995+/mo price and 36 days on the market, helping you quickly decide if it warrants further investigation.",
-        "whatTheAgentLoses": "You lose the chance to personally scan the map and instantly dismiss or explore properties based on your own gut reaction to their preview stats."
-       },
-       {
-        "question": "Which rental property from the search results should you examine more closely?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows drastically different options, from apartment complexes starting at $2,234 to a luxury house for $24,800 a month, meaning the choice heavily impacts your budget and lifestyle.",
-        "whatTheAgentLoses": "You lose the ability to decide whether a luxury house is worth the massive price jump compared to the available apartment complexes."
+        "whatTheAgentLoses": "You lose the ability to decide if living in a nearby town is an acceptable compromise for finding a suitable apartment.",
+        "speak": "on-event",
+        "check": "Does the page say there are no more exact matches, and how many nearby listings does it offer?",
+        "say_example": "Only <one> exact match in <Moundville>. There are <seven> more just outside the line. Want me to include those?"
        },
        {
         "question": "Which listing should you select from the search results based on your budget and requirements?",
@@ -1140,23 +779,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search results display multiple listings with varying rents, sizes, and room counts, requiring you to weigh these details to find the best match.",
-        "whatTheAgentLoses": "Delegating this step means losing the ability to personally weigh the trade-offs between rent, size, and specific apartment features when choosing a candidate."
-       },
-       {
-        "question": "Which of these rental listings best fits your needs to investigate further?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows multiple options ranging from a $500 one-bedroom to a $1,350 two-bedroom, so reviewing these details helps identify the most suitable candidate.",
-        "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-offs between price, square footage, and location to find the perfect fit."
-       },
-       {
-        "question": "Since there is only one exact match, should you consider the nearby alternatives or promoted listings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results only showed one exact rental in Chillicothe alongside a promoted property in Lancaster, requiring a decision on whether to expand the search area.",
-        "whatTheAgentLoses": "The user loses the opportunity to weigh their own preferences for location compromises when the exact target area has limited inventory."
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally weigh the trade-offs between rent, size, and specific apartment features when choosing a candidate.",
+        "speak": "gate",
+        "check": "What price, beds, and location does each shortlisted card show?",
+        "say_example": "Two good ones under <$2,000>. <The Marlowe>, <$1,850>, two beds, cats OK, <10 minutes> from work. <Horizons North>, <$1,795>, but a <40 minute> drive. Which one?"
        }
       ]
      }
@@ -1168,120 +794,47 @@
     "note": "6.1 to 6.9 in any order and depth - most keepers read two or three and skip the rest. 6.3 wherever the page is held against the card that promised it. 6.10 where money is the question. exit to 5 for another candidate, to 7 to make contact, or to 8 to keep it - mKVE rejects a listing on 6.2 alone, n9qo on 6.5.",
     "questions": [
      {
-      "question": "Did you review the additional tabs like 'Facts & features' and 'Neighborhood' before dismissing this listing?",
+      "question": "What extra tabs does the listing page offer?",
       "cluster": "facts",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The top navigation includes tabs for 'Facts & features' and 'Neighborhood' that provide crucial context and structured data not found on the default overview.",
-      "whatTheAgentLoses": "You lose the assurance that the agent fully evaluated the property's complete profile, potentially causing them to skip a suitable apartment based on incomplete information."
-     },
-     {
-      "question": "Do these specific amenities and the move-in special make this listing a strong candidate, or should you close it and keep looking?",
-      "cluster": "compare",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Reviewing details like in-unit laundry, pet policies, and the half-month free offer determines if this building is worth touring.",
-      "whatTheAgentLoses": "You lose the ability to personally weigh how much you value specific perks like the move-in special or in-unit laundry against other available options."
-     },
-     {
-      "question": "Do the basic specifications and price look promising enough to scroll down for more details?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The header displays the $24,800/mo price, 5 beds, and 4,500 sqft, allowing you to quickly determine if the property warrants further investigation.",
-      "whatTheAgentLoses": "You lose the chance to personally weigh whether the high monthly cost and undisclosed address are acceptable trade-offs before spending time reviewing the rest of the listing."
-     },
-     {
-      "question": "How deeply do you want to review the listing's features, landlord criteria, and total costs?",
-      "cluster": "facts",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays extensive property details, landlord requirements like a 740+ credit score, and a cost calculator, which are crucial for determining if the rental is a viable fit.",
-      "whatTheAgentLoses": "You lose the opportunity to personally weigh strict landlord requirements and upfront costs against your own financial situation and preferences."
-     },
-     {
-      "question": "Do the specific details, costs, and availability of this apartment meet your requirements?",
-      "cluster": "facts",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Reviewing the €830.83 total rent, 63.67 m² size, and March 2026 availability ensures the property fits your budget and timeline before you initiate contact.",
-      "whatTheAgentLoses": "You lose the opportunity to personally weigh whether the specific rent breakdown and distant move-in date are acceptable compromises for your situation."
+      "whatTheAgentLoses": "You lose the assurance that the agent fully evaluated the property's complete profile, potentially causing them to skip a suitable apartment based on incomplete information.",
+      "speak": "never",
+      "check": "What tabs does the listing page show?",
+      "say_example": "Read the facts and neighborhood tabs."
      }
     ],
     "children": [
      {
       "id": "6.1",
-      "label": "Study the photos",
-      "questions": [
-       {
-        "question": "Are the photos appealing enough to share this listing with a roommate or partner?",
-        "cluster": "photos",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the first few photos of the apartment and a share icon, letting you gather input from others before proceeding.",
-        "whatTheAgentLoses": "You lose the chance to personally evaluate the apartment's visual appeal and consult with your co-renters before contacting the property."
-       },
-       {
-        "question": "Do the photos look legitimate and provide enough detail about the apartment?",
-        "cluster": "photos",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Checking the image carousel for multiple, realistic photos helps you avoid scams or AI-generated fake listings.",
-        "whatTheAgentLoses": "You lose the ability to use your human intuition to spot subtle signs of AI-generated or suspicious photos."
-       },
-       {
-        "question": "Are you satisfied enough with the apartment's condition and layout in these photos to contact the lister?",
-        "cluster": "photos",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The photo gallery reveals specific details about the room sizes, appliance quality, and overall condition that help determine if the space is actually suitable.",
-        "whatTheAgentLoses": "You lose the opportunity to personally assess whether the aesthetic condition and room sizes meet your specific living standards."
-       },
-       {
-        "question": "Do the provided photos actually match the layout shown in the floor plan, or are they generic photos of a different unit in the building?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Large apartment complexes often use generic model unit photos, but a quick visual comparison between the photos and the specific unit's floor plan can reveal discrepancies in layout or finishes.",
-        "whatTheAgentLoses": "The user is misled into expecting a specific layout or finish level, only to find out the photos were from a different, nicer unit."
-       }
-      ]
+      "label": "Study the photos"
      },
      {
       "id": "6.2",
       "label": "Read the description",
       "questions": [
        {
-        "question": "Do the availability date, time on the market, and description meet your expectations for a promising listing?",
+        "question": "What availability date and time on market does the listing state?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking details like the November 30th availability, the four days on the market, and the luxury description ensures the apartment is a viable candidate before you commit to it.",
-        "whatTheAgentLoses": "You lose the opportunity to explicitly verify the specific amenities further down the page, relying instead on the agent's trust in the initial search filters and general description."
+        "whatTheAgentLoses": "You lose the opportunity to explicitly verify the specific amenities further down the page, relying instead on the agent's trust in the initial search filters and general description.",
+        "speak": "never",
+        "check": "What availability date and days on market does the listing state?",
+        "say_example": "Available <Nov 30>, on the market <4 days>."
        },
        {
-        "question": "Does the lease term in the description match your need for a standard one-year lease?",
+        "question": "Does the lease term in the description match the asked-for term?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "Although the search result had a 'Furnished' tag, the detailed description revealed it was actually an unfurnished short-term lease ending in April.",
-        "whatTheAgentLoses": "You lose the stability of a long-term home if the agent ignores the description and commits you to a short-term lease that forces an early move."
-       },
-       {
-        "question": "Do the amenities and description match what you are looking for?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Scrolling through the full description and amenities list reveals crucial property details and potential dealbreakers not visible in the basic summary.",
-        "whatTheAgentLoses": "You lose the opportunity to weigh subjective trade-offs or spot subtle red flags in the written description that matter to your specific lifestyle."
-       },
-       {
-        "question": "Do you want to tap 'READ MORE' to see the full description of this room sharing arrangement?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The description cuts off mid-sentence while explaining the commute and room sharing details, which are crucial for evaluating the listing.",
-        "whatTheAgentLoses": "The user loses the ability to fully evaluate the living arrangement and might miss important details or dealbreakers hidden in the unread text."
+        "whatTheAgentLoses": "You lose the stability of a long-term home if the agent ignores the description and commits you to a short-term lease that forces an early move.",
+        "speak": "if-wrong",
+        "check": "What lease term does the description state?",
+        "say_example": "The lease here ends in <April>. You asked for a full year. I'd let this one go."
        },
        {
         "question": "Does the listing description contain common scam red flags, such as asking for a deposit before a tour or stating the owner is out of the country?",
@@ -1289,7 +842,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Scam listings often have prices that are too good to be true and descriptions that demand upfront wire transfers or explain why the landlord cannot meet in person.",
-        "whatTheAgentLoses": "You risk handing over personal information or money to a fraudulent lister because the agent only checked the price and bedroom count."
+        "whatTheAgentLoses": "You risk handing over personal information or money to a fraudulent lister because the agent only checked the price and bedroom count.",
+        "speak": "on-event",
+        "check": "Does the description ask for money before a tour, or say the owner is out of the country?",
+        "say_example": "This one wants a deposit before you ever see the place. And the owner is supposedly out of the country. That's how the scams read. I'd skip it."
        },
        {
         "question": "Does the description explicitly state that the photos show a 'model unit' or 'similar apartment' rather than the actual unit for rent?",
@@ -1297,7 +853,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Large apartment complexes often use photos of staged, renovated model units that look significantly better than the specific apartment actually available to lease.",
-        "whatTheAgentLoses": "The user might waste time touring or applying for an apartment expecting luxury finishes, only to find the actual unit is outdated or has a different layout."
+        "whatTheAgentLoses": "The user might waste time touring or applying for an apartment expecting luxury finishes, only to find the actual unit is outdated or has a different layout.",
+        "speak": "on-event",
+        "check": "Does the description say the photos show a model unit or a similar apartment?",
+        "say_example": "The photos are of a model unit. The one for rent may look worse."
        }
       ]
      },
@@ -1311,7 +870,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "Verifying that the search card's '$3,879+ Studio' matches Unit 3B's actual base rent ensures the listing is accurate and not using deceptive pricing.",
-        "whatTheAgentLoses": "The user loses the ability to personally verify that the advertised price accurately reflects the actual available units rather than a bait-and-switch tactic."
+        "whatTheAgentLoses": "The user loses the ability to personally verify that the advertised price accurately reflects the actual available units rather than a bait-and-switch tactic.",
+        "speak": "if-wrong",
+        "check": "What starting price did the card show, and what is the cheapest unit on the page?",
+        "say_example": "The card said from <$3,879>. The cheapest real unit is <$4,210>. The teaser price doesn't exist right now."
        },
        {
         "question": "Do the bedroom and bathroom counts in the description match the listing header?",
@@ -1319,23 +881,21 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The listing header displayed 4 beds and 4 baths, but the property description contradicted this by claiming 3 bedrooms and 3 baths.",
-        "whatTheAgentLoses": "The user loses the chance to catch glaring inconsistencies that might indicate a scam or an apartment that doesn't actually fit their needs."
+        "whatTheAgentLoses": "The user loses the chance to catch glaring inconsistencies that might indicate a scam or an apartment that doesn't actually fit their needs.",
+        "speak": "if-wrong",
+        "check": "What bed and bath counts do the header and the description each state?",
+        "say_example": "The header says <4> bedrooms. The description says <3>. One of them is wrong, so I'll ask which before you decide."
        },
        {
-        "question": "Did you notice that the listing description contradicts the 'Furnished' tag shown in the search results?",
+        "question": "Does the description's furnished status match the tag on the card?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The search results previewed the apartment as furnished, but the detailed description explicitly stated it was an unfurnished short-term lease.",
-        "whatTheAgentLoses": "The user might waste time inquiring about an unfurnished apartment when they actually needed a furnished one."
-       },
-       {
-        "question": "Do the apartment details on the search results card match the full listing page?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Verifying that the listing card for [number]st Avenue #12D matches its detail page ensures the advertised specifications are accurate.",
-        "whatTheAgentLoses": "The user loses the ability to spot discrepancies between search results and actual listing details before committing to an inquiry."
+        "whatTheAgentLoses": "The user might waste time inquiring about an unfurnished apartment when they actually needed a furnished one.",
+        "speak": "if-wrong",
+        "check": "Does the description's furnished status match the tag on the card?",
+        "say_example": "The card had a furnished tag. The description says it comes empty. Don't count on furniture."
        },
        {
         "question": "Does the move-in special advertised on the search results page match the one on the detailed property page?",
@@ -1343,15 +903,21 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "Inconsistent move-in specials between the search results and the detailed property page could indicate misleading advertising or affect the actual cost.",
-        "whatTheAgentLoses": "The user loses the ability to verify the exact terms of the move-in special, potentially leading to unexpected costs or missed savings."
+        "whatTheAgentLoses": "The user loses the ability to verify the exact terms of the move-in special, potentially leading to unexpected costs or missed savings.",
+        "speak": "if-wrong",
+        "check": "Does the move-in special on the card appear on the listing page?",
+        "say_example": "The card promised <a month free>. The listing page never mentions it. Don't count on the discount."
        },
        {
-        "question": "Does the address shown in the street view match the address on the listing?",
+        "question": "Does the address on the page match the location named in the listing title?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The street view showed the building number as [address], which contradicted the listing's text of [address] and suggests a potential scam or inaccurate listing.",
-        "whatTheAgentLoses": "You lose the critical visual verification that ensures the property actually exists at the advertised location, risking engagement with a fraudulent listing."
+        "whatTheAgentLoses": "You lose the critical visual verification that ensures the property actually exists at the advertised location, risking engagement with a fraudulent listing.",
+        "speak": "if-wrong",
+        "check": "Does the street address on the page match the place named in the listing title?",
+        "say_example": "The listing calls itself <Palo Alto>. The address is really in <East Palo Alto>, across the freeway."
        },
        {
         "question": "Does the actual monthly cost on the detail page match the advertised price from the search results?",
@@ -1359,15 +925,21 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The initial search result quoted a base price of $1,270, but the property detail page disclosed additional non-optional fees and utilities that increase the true monthly cost.",
-        "whatTheAgentLoses": "The user might waste time touring or applying for an apartment that ultimately exceeds their budget because the agent ignored hidden fees."
+        "whatTheAgentLoses": "The user might waste time touring or applying for an apartment that ultimately exceeds their budget because the agent ignored hidden fees.",
+        "speak": "if-wrong",
+        "check": "What monthly total do the page's required fees add up to, against the advertised price?",
+        "say_example": "The real monthly cost is <$1,410> once the required fees go in. That's <$140> over the advertised price."
        },
        {
-        "question": "Did you verify in the description that the price covers the entire unit rather than just a single room?",
+        "question": "Does the description say the price is for a room rather than the whole unit?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The listing header advertises $900 for 4 beds, but the tags and description explicitly state it is only a room for rent.",
-        "whatTheAgentLoses": "The user wastes time inquiring about a shared room situation when they expected to rent an entire apartment."
+        "whatTheAgentLoses": "The user wastes time inquiring about a shared room situation when they expected to rent an entire apartment.",
+        "speak": "if-wrong",
+        "check": "Does the description say the price is for a room rather than the whole unit?",
+        "say_example": "That <$900> rents a single room. The other <three> bedrooms come with housemates."
        },
        {
         "question": "Is the estimated monthly payment consistent between the comparable homes carousel and the property details page?",
@@ -1375,7 +947,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The comparable homes carousel listed the payment as $1,028/mo, but the property details page showed $937/mo.",
-        "whatTheAgentLoses": "The user loses accurate financial expectations if the agent fails to notice conflicting pricing information."
+        "whatTheAgentLoses": "The user loses accurate financial expectations if the agent fails to notice conflicting pricing information.",
+        "speak": "never",
+        "check": "What monthly payment estimates appear on the page, and do they agree?",
+        "say_example": "Two payment estimates on the page disagree, <$1,028> and <$937>."
        },
        {
         "question": "Is the listing marked as 'Pending' or 'Application Submitted' in the description, despite showing as 'Available' in the search results?",
@@ -1383,7 +958,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Property managers often leave listings active to collect backup applications, but note in the description that an application is already pending.",
-        "whatTheAgentLoses": "The user wastes an application fee and time applying for an apartment that is already effectively taken."
+        "whatTheAgentLoses": "The user wastes an application fee and time applying for an apartment that is already effectively taken.",
+        "speak": "on-event",
+        "check": "Does the description say an application is pending or submitted?",
+        "say_example": "The description says an application is already in on this one. It may be gone before you could apply."
        }
       ]
      },
@@ -1392,20 +970,15 @@
       "label": "Read the unit table",
       "questions": [
        {
-        "question": "Which of the available units best fits your budget and move-in timeline?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen listed multiple units with varying prices, square footage, and availability dates, requiring you to evaluate if any specific unit meets your exact needs.",
-        "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-offs between unit size, price, and exact move-in dates."
-       },
-       {
         "question": "Do the available floor plan sizes match the square footage range advertised in the property summary?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "Verifying the specific floor plans ensures you are not misled by a broad summary range that doesn't reflect the actual units shown on screen.",
-        "whatTheAgentLoses": "The user loses accurate expectations about the apartment size if the agent relies on a misleading summary range instead of verifying the actual available units."
+        "whatTheAgentLoses": "The user loses accurate expectations about the apartment size if the agent relies on a misleading summary range instead of verifying the actual available units.",
+        "speak": "if-wrong",
+        "check": "What sizes do the floor plans list, against the range in the summary?",
+        "say_example": "The summary promised up to <1,100> square feet. The biggest unit listed is <850>."
        },
        {
         "question": "Which specific floorplan and unit should you choose?",
@@ -1413,15 +986,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen lists multiple available units within the building, such as '7K' and '6C', with varying prices and square footage.",
-        "whatTheAgentLoses": "You lose the chance to personally weigh the trade-offs between specific unit prices, layouts, and square footage before starting the application."
-       },
-       {
-        "question": "Which specific floor plan and price point do you want to select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the Sussex 2-bed, 1-bath floor plan for $1,049/mo has only one unit available, requiring you to decide if this specific layout meets your requirements.",
-        "whatTheAgentLoses": "You lose the opportunity to weigh the exact square footage, layout style, and price against your personal living preferences."
+        "whatTheAgentLoses": "You lose the chance to personally weigh the trade-offs between specific unit prices, layouts, and square footage before starting the application.",
+        "speak": "gate",
+        "check": "What units does the availability table list, with price, size, and date?",
+        "say_example": "Two units work here. <7K>, <$2,150>, <720> square feet, free <June 1>. <6C>, <$2,090>, a floor lower. Which one?"
        }
       ]
      },
@@ -1430,28 +998,15 @@
       "label": "Check the policies and criteria",
       "questions": [
        {
-        "question": "Which specific home features, building amenities, and policies are essential for you?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays critical details like policies, in-unit features, and building amenities that determine if the apartment is truly a good fit.",
-        "whatTheAgentLoses": "You lose the ability to prioritize or reject listings based on specific lifestyle preferences like having a dishwasher, gym, or favorable building policies."
-       },
-       {
-        "question": "Do the fees, pet policies, and amenities shown here meet your requirements?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays specific details like a $300 pet deposit, a $35 application fee, and lease terms that must be evaluated before choosing this listing.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally weigh the trade-offs of these specific fees and policies against their own preferences and budget."
-       },
-       {
         "question": "Are you eligible for this specific community based on its age or income restrictions?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The listing is explicitly tagged as 'Senior housing' and 'Income restricted', meaning you must meet specific age and financial criteria to legally rent there.",
-        "whatTheAgentLoses": "The user wastes time evaluating or applying for an apartment they are legally or financially disqualified from renting."
+        "whatTheAgentLoses": "The user wastes time evaluating or applying for an apartment they are legally or financially disqualified from renting.",
+        "speak": "on-event",
+        "check": "Is the listing tagged senior housing or income restricted?",
+        "say_example": "This building is seniors only, <62> and up. You can't rent it, so I'm moving on."
        },
        {
         "question": "Does the description list specific pet breed or weight restrictions that the general 'Pets Allowed' filter missed?",
@@ -1459,7 +1014,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The broad 'Pets Allowed' filter often includes properties that only allow cats or have strict 15-lb weight limits, which are only disclosed deep in the written description.",
-        "whatTheAgentLoses": "The user might fall in love with a listing and initiate contact, only to be rejected later because their specific dog breed or size is prohibited by the fine print."
+        "whatTheAgentLoses": "The user might fall in love with a listing and initiate contact, only to be rejected later because their specific dog breed or size is prohibited by the fine print.",
+        "speak": "on-event",
+        "check": "Does the description state pet breed or weight limits?",
+        "say_example": "Pets are allowed here, but only under <15 pounds>. <Rex> is over the limit, so this one's out."
        }
       ]
      },
@@ -1468,20 +1026,26 @@
       "label": "Read the price history",
       "questions": [
        {
-        "question": "How do you interpret the property's price history and Zestimate?",
+        "question": "What does the price history table show?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The price history table reveals past fluctuations and listing events, which, along with the Rent Zestimate, helps determine if the current asking price is fair.",
-        "whatTheAgentLoses": "You lose the ability to personally judge whether the current rent is a good deal based on its historical price changes and market benchmarks."
+        "whatTheAgentLoses": "You lose the ability to personally judge whether the current rent is a good deal based on its historical price changes and market benchmarks.",
+        "speak": "never",
+        "check": "What price changes does the history table show?",
+        "say_example": "Price history shows a <$2,700> drop in <March>."
        },
        {
-        "question": "Did you verify that the current monthly rent accurately reflects the price decrease shown in the price history?",
+        "question": "Does the listed rent match the lower price in the price history?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "Checking the price history ensures the current rent of $24,800 correctly includes the recent $2,700 decrease from the previous $27,500 listing price.",
-        "whatTheAgentLoses": "The user loses valuable financial context about the property's recent price drop, which could be crucial for evaluating the deal or negotiating the lease."
+        "whatTheAgentLoses": "The user loses valuable financial context about the property's recent price drop, which could be crucial for evaluating the deal or negotiating the lease.",
+        "speak": "if-wrong",
+        "check": "Does the current rent match the latest price in the history table?",
+        "say_example": "The history says the rent dropped to <$24,800>. The listing still shows <$27,500>. I'll trust the higher number until they confirm."
        }
       ]
      },
@@ -1490,36 +1054,15 @@
       "label": "Assess the neighborhood",
       "questions": [
        {
-        "question": "Are you okay with this location being highly car-dependent with no nearby transit?",
+        "question": "What Walk and Transit scores does the page show?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows extremely low Walk, Transit, and Bike scores, meaning you will need a car for almost all daily activities.",
-        "whatTheAgentLoses": "You lose the chance to decide if you are willing to compromise on walkability and transit access for this specific apartment."
-       },
-       {
-        "question": "Do the neighborhood's walkability, bikeability, and school ratings meet your needs?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a Walk Score of 0 and a Bike Score of 25, plus nearby school ratings, which dictates how car-dependent you will be and the quality of local education.",
-        "whatTheAgentLoses": "You lose the chance to personally evaluate if a highly car-dependent area and the specific local school ratings align with your lifestyle preferences."
-       },
-       {
-        "question": "Do you want to explore the neighborhood using the street view tab?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The street view tab allows you to visually inspect the immediate surroundings and gauge the neighborhood's atmosphere before choosing the apartment.",
-        "whatTheAgentLoses": "You lose the opportunity to personally assess the surrounding streets and determine if the neighborhood feels safe and appealing to you."
-       },
-       {
-        "question": "Does the map pin show the apartment is located directly adjacent to a major highway, train track, or industrial zone that the text description ignores?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Listings often use euphemisms like 'convenient transit access', but a quick visual check of the map pin instantly reveals if the building is right next to a noisy highway or train line.",
-        "whatTheAgentLoses": "The user wastes time touring or applying for an apartment with severe noise or environmental issues that were obvious visually but hidden in the text."
+        "whatTheAgentLoses": "You lose the chance to decide if you are willing to compromise on walkability and transit access for this specific apartment.",
+        "speak": "on-event",
+        "check": "What Walk, Transit, and Bike scores does the page show?",
+        "say_example": "The Walk Score here is <0>. You'd need a car for everything, even groceries."
        }
       ]
      },
@@ -1528,36 +1071,15 @@
       "label": "Compare against the market",
       "questions": [
        {
-        "question": "Do you check the stats tab to compare prices?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Viewing the stats tab reveals how the price compares to the local market, such as noting it is 10% less than average.",
-        "whatTheAgentLoses": "You lose the opportunity to personally gauge the market value and feel confident that you are getting a competitive deal."
-       },
-       {
         "question": "Is the listing price realistic compared to the neighborhood median?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Comparing the $2,025 listing price to the $2,250 neighborhood median confirms the deal is realistic and not a suspiciously cheap scam.",
-        "whatTheAgentLoses": "You lose the ability to apply your own judgment on whether a below-market price is a lucky find or a red flag for a scam."
-       },
-       {
-        "question": "Since the specific addresses could not be found and the listings are unavailable, should you review the summary statistics and start a new search?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen indicates that several specific addresses could not be found and 945 listings are unavailable, prompting a decision on whether to use the provided summary statistics before starting over.",
-        "whatTheAgentLoses": "The user loses the opportunity to analyze the median price and size statistics from the unavailable listings to better calibrate their next search."
-       },
-       {
-        "question": "Are the financing assumptions consistent with the prices of the comparable homes shown?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The stated 20% down payment of $148,000 implies a total home price far exceeding the $135,000 to $159,900 prices of the homes actually shown in the carousel.",
-        "whatTheAgentLoses": "The user loses the critical eye needed to spot glaring discrepancies in the financial estimates that could skew their budget expectations."
+        "whatTheAgentLoses": "You lose the ability to apply your own judgment on whether a below-market price is a lucky find or a red flag for a scam.",
+        "speak": "on-event",
+        "check": "What is the listing price, and what neighborhood median does the page show?",
+        "say_example": "This one is <$500> under the going rate nearby. Deals that big usually have a catch. I'm reading the fine print before we trust it."
        }
       ]
      },
@@ -1566,20 +1088,26 @@
       "label": "Vet the lister",
       "questions": [
        {
-        "question": "Do you want to factor in the company's additional services, like online tours and utility setup, when evaluating this listing?",
+        "question": "What additional services does the company list?",
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows the company offers extra conveniences like online room tours, digital contracts, and free utility setup, which might influence your choice of listing.",
-        "whatTheAgentLoses": "You lose the chance to prioritize a company that provides specific conveniences like online contracts or utility setup that best fit your personal needs."
+        "whatTheAgentLoses": "You lose the chance to prioritize a company that provides specific conveniences like online contracts or utility setup that best fit your personal needs.",
+        "speak": "never",
+        "check": "What extra services does the company page list?",
+        "say_example": "The company offers online tours and free utility setup."
        },
        {
-        "question": "Where is the leasing office located, and what are their business hours?",
+        "question": "What office address and hours does the page state?",
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
         "why": "Reviewing the physical address, transit access, and operating hours helps you verify the agency's legitimacy and determine if you can easily visit them.",
-        "whatTheAgentLoses": "You lose the ability to personally assess whether the office's location and operating hours are convenient for your own schedule."
+        "whatTheAgentLoses": "You lose the ability to personally assess whether the office's location and operating hours are convenient for your own schedule.",
+        "speak": "never",
+        "check": "What office address and hours does the page state?",
+        "say_example": "Office at <the address shown>, open <weekdays 9 to 6>."
        },
        {
         "question": "Do the business hours shown in the contact modal agree with the office page?",
@@ -1587,15 +1115,21 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The contact modal lists weekday-only hours while the office page claims they are open every day, revealing a contradiction in the listing's details.",
-        "whatTheAgentLoses": "You might attempt to contact the agent or schedule a tour on a weekend when the office is actually closed."
+        "whatTheAgentLoses": "You might attempt to contact the agent or schedule a tour on a weekend when the office is actually closed.",
+        "speak": "never",
+        "check": "Do the hours in the contact modal match the office page?",
+        "say_example": "The contact box and the office page disagree on hours."
        },
        {
-        "question": "How legitimate and experienced is the listing agent?",
+        "question": "What track record does the agent profile show?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking the agent's profile for past rentals and sales helps confirm you are dealing with a legitimate broker rather than a potential scammer.",
-        "whatTheAgentLoses": "You lose the peace of mind that comes from personally verifying a broker's track record and online reputation before reaching out."
+        "whatTheAgentLoses": "You lose the peace of mind that comes from personally verifying a broker's track record and online reputation before reaching out.",
+        "speak": "never",
+        "check": "What past rentals and sales does the agent profile list?",
+        "say_example": "The agent's profile shows <34> past rentals."
        }
       ]
      },
@@ -1604,20 +1138,15 @@
       "label": "Read the move-in offers",
       "questions": [
        {
-        "question": "Are you interested in this Beverly Hills apartment and its current promotional offers?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The listing at 409 N Palm Dr features significant promotions like a free TV and two weeks free rent that could strongly influence your decision to request a tour.",
-        "whatTheAgentLoses": "You lose the opportunity to personally evaluate whether these specific move-in specials make this apartment the right choice for you."
-       },
-       {
-        "question": "Did you verify that the 'Two Months Free' promotion mathematically aligns with the stated base rent?",
+        "question": "What are the promotion terms and the base rent?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "Calculating the actual value of the 'Two Months Free' offer against the $1,270 base rent ensures the promotion provides the expected $2,540 minimum savings.",
-        "whatTheAgentLoses": "The user loses the assurance that the advertised move-in specials actually translate to the expected financial savings."
+        "whatTheAgentLoses": "The user loses the assurance that the advertised move-in specials actually translate to the expected financial savings.",
+        "speak": "never",
+        "check": "What does the promotion say, and what is the base rent?",
+        "say_example": "The two months free checks out against the <$1,270> rent."
        }
       ]
      },
@@ -1631,20 +1160,15 @@
         "label": "Read the fee breakdown",
         "questions": [
          {
-          "question": "Have you reviewed the full breakdown of monthly and move-in costs?",
+          "question": "What monthly and move-in costs does the breakdown list?",
           "cluster": "facts",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen shows significant additional expenses like agency and guarantor fees that drastically increase the initial move-in cost beyond just the base rent.",
-          "whatTheAgentLoses": "You lose the opportunity to weigh whether the high upfront move-in fees fit your personal budget before committing to an inquiry."
-         },
-         {
-          "question": "Did you review the building overview to understand the non-optional fees before applying?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen explicitly warns that the shown price is only the base rent and excludes non-optional fees detailed in the building overview.",
-          "whatTheAgentLoses": "You risk applying for an apartment with hidden monthly costs that push the actual price beyond your budget."
+          "whatTheAgentLoses": "You lose the opportunity to weigh whether the high upfront move-in fees fit your personal budget before committing to an inquiry.",
+          "speak": "always",
+          "check": "What monthly and one-time costs does the fee breakdown list?",
+          "say_example": "The real move-in cost here is <$5,400> once the deposit and fees go in. Monthly it's <$2,150> with the building fees."
          },
          {
           "question": "What additional fees apply to this base rent?",
@@ -1652,15 +1176,21 @@
           "moment": null,
           "moneyMoving": false,
           "why": "The listing explicitly states 'Fees may apply' next to the base rent, indicating that the advertised price does not include all mandatory monthly or upfront costs.",
-          "whatTheAgentLoses": "The user might commit to touring or applying for an apartment without realizing that hidden fees push the actual cost over their budget."
+          "whatTheAgentLoses": "The user might commit to touring or applying for an apartment without realizing that hidden fees push the actual cost over their budget.",
+          "speak": "on-event",
+          "check": "Does the page say fees may apply without listing the amounts?",
+          "say_example": "The price says fees may apply, and never says how much. I'll ask them for the true monthly total."
          },
          {
-          "question": "Should you toggle the 'Total monthly price' view to see the net effective rent?",
+          "question": "Is the price being compared the base rent, or the total monthly price with the move-in specials and fees folded in?",
           "cluster": "",
           "moment": null,
           "moneyMoving": false,
           "why": "The interface features a 'Total monthly price' toggle that automatically factors in move-in specials and fees, giving a more accurate picture of the actual monthly cost.",
-          "whatTheAgentLoses": "The user loses the ability to instantly see the true amortized cost of the apartment, forcing them to manually calculate the value of any free rent promotions."
+          "whatTheAgentLoses": "The user loses the ability to instantly see the true amortized cost of the apartment, forcing them to manually calculate the value of any free rent promotions.",
+          "speak": "never",
+          "check": "Is there a total monthly price toggle, and what total does it show?",
+          "say_example": "Used the total monthly price toggle."
          }
         ]
        },
@@ -1673,28 +1203,26 @@
         "label": "Compute the income requirement",
         "questions": [
          {
-          "question": "Do you meet the 40x annual income requirement to qualify for this listing?",
+          "question": "What income requirement does the listing state?",
           "cluster": "facts",
           "moment": "Now",
           "moneyMoving": false,
           "why": "Calculating that you need $152,000 in annual income for the $3,800 rent ensures you only spend time inquiring about apartments you actually qualify for.",
-          "whatTheAgentLoses": "The user loses the opportunity to personally verify if their specific financial situation meets the strict income requirements for the apartment."
+          "whatTheAgentLoses": "The user loses the opportunity to personally verify if their specific financial situation meets the strict income requirements for the apartment.",
+          "speak": "on-event",
+          "check": "What income requirement does the listing state?",
+          "say_example": "This one wants proof you earn <40> times the rent. That's <$152,000> a year here."
          },
          {
-          "question": "Do you meet the income requirement for this rent, or should you ask if they accept guarantors?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Calculating the standard 40x rent rule shows a $152,000 income requirement for this $3,800 listing, which dictates whether you need to ask about guarantors.",
-          "whatTheAgentLoses": "You lose the chance to evaluate if your specific financial situation requires a guarantor or third-party service before committing to a tour."
-         },
-         {
-          "question": "Does the calculator show 152,000 as the result of 3800 multiplied by 40?",
+          "question": "Does the stated income requirement match the rent times the multiple the page names?",
           "cluster": "facts",
           "moment": "After",
           "moneyMoving": false,
           "why": "The calculator needs to display the result of multiplying the $3,800 monthly rent by 40 to verify the required annual income.",
-          "whatTheAgentLoses": "The user loses the assurance that the income requirement for the apartment was accurately calculated and verified."
+          "whatTheAgentLoses": "The user loses the assurance that the income requirement for the apartment was accurately calculated and verified.",
+          "speak": "if-wrong",
+          "check": "Does the income figure shown equal the rent times the stated multiple?",
+          "say_example": "The math on the page is off. <$3,800> times <40> is <$152,000>, and they show <$142,000>."
          }
         ]
        }
@@ -1708,36 +1236,37 @@
     "note": "7.1 opens the form - or ends the goal when both buttons are read and left alone (cd07, iHOh). 7.2 to 7.4 in the order the form asks. 7.5 ends it, and in this corpus always by closing: ten keepers reach a form, none sends.",
     "questions": [
      {
-      "question": "Which contact option should I choose, and is my pre-filled information accurate?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The contact modal displays pre-filled personal details alongside multiple inquiry options like scheduling a tour or requesting an application, requiring you to verify accuracy before proceeding.",
-      "whatTheAgentLoses": "You lose the chance to verify your personal contact details and decide on the specific type of inquiry to send to the property."
-     },
-     {
       "question": "Did a CAPTCHA or security challenge appear that needs to be solved before the inquiry can actually be sent?",
       "cluster": "",
       "moment": null,
       "moneyMoving": false,
       "why": "Listing sites frequently use CAPTCHAs to prevent bot spam on their contact forms, which can silently block a submission if not completed.",
-      "whatTheAgentLoses": "The inquiry is never actually sent to the landlord because the agent failed to notice or solve the anti-bot challenge."
+      "whatTheAgentLoses": "The inquiry is never actually sent to the landlord because the agent failed to notice or solve the anti-bot challenge.",
+      "speak": "on-event",
+      "check": "Is a CAPTCHA or security challenge blocking the form?",
+      "say_example": "There's a robot check I can't pass. Can you tap the box for me?"
      },
      {
-      "question": "Does the confirmation email accurately reflect your inquiry details?",
+      "question": "Does the confirmation email match what you asked for?",
       "cluster": "receipts",
       "moment": "Completion",
       "moneyMoving": true,
       "why": "Reviewing the confirmation email ensures that the correct parameters, such as your contact info and requested tour time, were successfully submitted to the property.",
-      "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct contact information and viewing preferences were sent to the landlord."
+      "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct contact information and viewing preferences were sent to the landlord.",
+      "speak": "if-wrong",
+      "check": "Do the details in the confirmation email match the request that was sent?",
+      "say_example": "The confirmation email doesn't match what we sent. It shows <Tuesday>, and we asked for <Saturday>. I'll follow up."
      },
      {
-      "question": "Did you confirm that the request was successfully sent?",
+      "question": "Does the page confirm the request was sent?",
       "cluster": "receipts",
       "moment": "Completion",
       "moneyMoving": true,
       "why": "The screen displayed a pop-up modal with a checkmark and success message, which is the only way to guarantee the inquiry was actually processed.",
-      "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the visual confirmation that their specific message successfully went through to the property manager."
+      "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the visual confirmation that their specific message successfully went through to the property manager.",
+      "speak": "always",
+      "check": "Does the page show a success message for the inquiry?",
+      "say_example": "Sent. The site confirmed your request to <Origin Apartments> at <3:07>."
      },
      {
       "question": "Did the confirmation message state that the property manager will contact you, or does it require you to call them to confirm the tour?",
@@ -1745,15 +1274,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "A 'success' screen might actually contain instructions that the user must take further action, like calling a number, to actually secure the booking.",
-      "whatTheAgentLoses": "The user thinks the tour is booked, but it gets canceled because they didn't see the instruction to call and confirm."
-     },
-     {
-      "question": "Did a temporary success banner or toast notification appear and disappear to confirm the inquiry, rather than the page redirecting?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "Many sites confirm form submissions with a brief, ephemeral visual toast notification at the edge of the screen that vanishes after a few seconds.",
-      "whatTheAgentLoses": "The user loses the certainty that the inquiry was actually sent if the agent misses the fleeting visual confirmation and assumes the lack of a page redirect means the submission failed."
+      "whatTheAgentLoses": "The user thinks the tour is booked, but it gets canceled because they didn't see the instruction to call and confirm.",
+      "speak": "on-event",
+      "check": "Does the confirmation say the property will contact you, or that you must call?",
+      "say_example": "The confirmation says you have to call them to lock in the tour. Nothing is booked until that call."
      },
      {
       "question": "Did the confirmation screen include a visual upsell for a paid renter profile or background check that you should ignore?",
@@ -1761,7 +1285,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "After a successful inquiry, platforms often display prominent visual upsells for premium services, which can look like required next steps if not read carefully.",
-      "whatTheAgentLoses": "The user might be tricked into paying for an unnecessary premium renter profile or background check because the agent mistook the visual upsell for a mandatory application step."
+      "whatTheAgentLoses": "The user might be tricked into paying for an unnecessary premium renter profile or background check because the agent mistook the visual upsell for a mandatory application step.",
+      "speak": "on-event",
+      "check": "Does the screen after the inquiry offer a paid profile or background check?",
+      "say_example": "The next screen is selling a paid renter profile. You don't need it for this. I'm skipping past it."
      }
     ],
     "children": [
@@ -1775,7 +1302,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The listing displays an upcoming open house on Sunday from 1-4pm, offering a chance to view the property without needing to schedule an appointment.",
-        "whatTheAgentLoses": "The user loses the opportunity to simply walk into the open house, potentially missing out if the agent waits for a private tour response that comes too late."
+        "whatTheAgentLoses": "The user loses the opportunity to simply walk into the open house, potentially missing out if the agent waits for a private tour response that comes too late.",
+        "speak": "on-event",
+        "check": "Does the listing show open house times?",
+        "say_example": "There's an open house <Sunday, 1 to 4>. You could just walk in. Want that instead of booking a tour?"
        },
        {
         "question": "Do you want to request a tour or request to apply for this property?",
@@ -1783,55 +1313,32 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen presents both a blue 'Request a tour' button and a white 'Request to apply' button, which initiate very different steps in the rental process.",
-        "whatTheAgentLoses": "You lose the ability to decide whether you want to view the property in person first or immediately commit to starting the application process."
+        "whatTheAgentLoses": "You lose the ability to decide whether you want to view the property in person first or immediately commit to starting the application process.",
+        "speak": "gate",
+        "check": "What contact buttons does the listing offer?",
+        "say_example": "Should I ask for a tour, or start an application? Applying usually costs a fee and runs a credit check."
        },
        {
-        "question": "Which contact method should you use to reach the agent?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The modal displays both mail buttons for renting or buying and a direct phone number with specific weekday business hours.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to call the agent directly during their business hours or send a written inquiry."
-       },
-       {
-        "question": "Should you select 'Inquire for Buy' or 'VIP Tour' from the dropdown?",
+        "question": "Is the inquiry type set to renting?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dropdown menu presents different contact methods that determine whether you send a standard message or request a specialized tour.",
-        "whatTheAgentLoses": "You lose the ability to decide the specific type of purchasing inquiry or tour experience you want to initiate."
+        "whatTheAgentLoses": "You lose the ability to decide the specific type of purchasing inquiry or tour experience you want to initiate.",
+        "speak": "if-wrong",
+        "check": "Which inquiry type is selected in the dropdown?",
+        "say_example": "The form was set to buying. I switched it to renting."
        },
        {
-        "question": "Did you actually tap to check availability or contact the manager?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen showed the unit availability modal being closed without any contact button being tapped, failing to initiate the inquiry.",
-        "whatTheAgentLoses": "You fail to actually reach out to the property, meaning no inquiry is sent and the apartment search stalls."
-       },
-       {
-        "question": "Should you use the 'Schedule Tour' or 'Send Message' buttons right away, or scroll down to review more details first?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a prominent contact box alongside basic property stats, presenting a choice between reaching out immediately or gathering more information.",
-        "whatTheAgentLoses": "An agent might immediately send an inquiry using the visible buttons, skipping the chance to review the rest of the listing for potential dealbreakers."
-       },
-       {
-        "question": "What message should you include in the inquiry, and do the terms below the form affect your request?",
+        "question": "Does the disclaimer say this form goes to someone other than the lister?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The disclaimer warns that inquiries about property requests should only go to the person listed in the property details, meaning this general contact form might be the wrong channel.",
-        "whatTheAgentLoses": "You lose control over the exact wording of the inquiry and the chance to notice if the form's disclaimer invalidates your request."
-       },
-       {
-        "question": "Do you tap the 'Request to apply' button even though the instructions say to 'sign up'?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The narrator's instruction to sign up contradicts the actual button text on the modal, which says 'Request to apply'.",
-        "whatTheAgentLoses": "The user loses the certainty that the correct action was taken when the agent has to guess how to resolve conflicting instructions and interface labels."
+        "whatTheAgentLoses": "You lose control over the exact wording of the inquiry and the chance to notice if the form's disclaimer invalidates your request.",
+        "speak": "on-event",
+        "check": "What does the disclaimer under the form say about who receives the inquiry?",
+        "say_example": "The fine print says this form doesn't reach the landlord. I'm using the contact on the listing instead."
        },
        {
         "question": "Did clicking 'Request a tour' open a scheduling form, or did it redirect you to an external property management website?",
@@ -1839,35 +1346,31 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Aggregator sites often link out to third-party portals for the actual booking, which means the process and required information will suddenly change.",
-        "whatTheAgentLoses": "The agent might fail the task if it doesn't realize it has been redirected and needs to navigate a completely new website to finish the request."
+        "whatTheAgentLoses": "The agent might fail the task if it doesn't realize it has been redirected and needs to navigate a completely new website to finish the request.",
+        "speak": "on-event",
+        "check": "Did the tour button open a form here, or a different website?",
+        "say_example": "The tour button jumped to the building's own site. The form there asks for different things. I'll keep going and tell you if it wants more."
        }
       ]
      },
      {
       "id": "7.2",
-      "label": "Review the pre-filled form",
-      "questions": [
-       {
-        "question": "Does the visible form actually include fields for a preferred date and time?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The narrator claims the form asks for a preferred date and time, but the screen only displays fields for a name, email, phone number, and message.",
-        "whatTheAgentLoses": "The user loses an accurate understanding of the inquiry process if the agent hallucinates form fields that do not exist."
-       }
-      ]
+      "label": "Review the pre-filled form"
      },
      {
       "id": "7.3",
       "label": "Fill the required fields",
       "questions": [
        {
-        "question": "What information is required to submit the request, and should you add custom notes?",
+        "question": "What should the message say?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The pop-up form requires a phone number to proceed and provides a default message that can be customized.",
-        "whatTheAgentLoses": "The user loses the opportunity to personalize the inquiry or ask specific questions before submitting the tour request."
+        "whatTheAgentLoses": "The user loses the opportunity to personalize the inquiry or ask specific questions before submitting the tour request.",
+        "speak": "gate",
+        "check": "What fields and message does the form require before sending?",
+        "say_example": "Here's what I'll send. You'd like a tour <Saturday morning> for unit <7K>, and a question about parking. Anything to add before I write it in?"
        },
        {
         "question": "Are all fields in the request form filled out correctly without errors?",
@@ -1875,39 +1378,32 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The phone number field shows a red border and a 'Please enter a valid phone number' error, which will prevent the request from being sent.",
-        "whatTheAgentLoses": "The user loses the opportunity to contact the property because the agent fails to provide a valid phone number to successfully submit the form."
+        "whatTheAgentLoses": "The user loses the opportunity to contact the property because the agent fails to provide a valid phone number to successfully submit the form.",
+        "speak": "if-wrong",
+        "check": "Does any form field show a validation error?",
+        "say_example": "The form flagged the phone number. I'm fixing the format and trying again."
        },
        {
-        "question": "What information is required to submit the inquiry, and what are the current limitations on available apartments?",
+        "question": "Does the form show an availability notice that conflicts with the ask?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The form includes a notice that only one-room apartments are currently available, which might affect your decision to proceed.",
-        "whatTheAgentLoses": "The ability to decide whether to continue applying given the restriction to one-room apartments."
+        "whatTheAgentLoses": "The ability to decide whether to continue applying given the restriction to one-room apartments.",
+        "speak": "on-event",
+        "check": "Does the form show a notice about limited availability?",
+        "say_example": "The form says only one-room flats are left. Your two-bedroom ask won't be met here. Still want me to send?"
        },
        {
-        "question": "Which personal details will you provide on the inquiry form?",
+        "question": "Which personal fields is the form asking for?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The form includes mandatory fields like your name and phone number, alongside optional fields like your current address that you must decide whether to share.",
-        "whatTheAgentLoses": "You lose the ability to decide exactly which optional personal details are shared with the listing agent."
-       },
-       {
-        "question": "What contact number should you provide for the inquiry?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The property manager requires a valid phone number to follow up on the apartment inquiry or tour request.",
-        "whatTheAgentLoses": "The user loses control over which personal phone number is shared with the listing agent."
-       },
-       {
-        "question": "Which email address should you provide in the personal information section?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires an email address under the personal information section so the property manager can reply to your inquiry.",
-        "whatTheAgentLoses": "Letting an agent choose the email address means they might use an account you do not actively monitor, causing you to miss the landlord's response."
+        "whatTheAgentLoses": "You lose the ability to decide exactly which optional personal details are shared with the listing agent.",
+        "speak": "always",
+        "check": "Which fields are required, and which are optional?",
+        "say_example": "I'm filling in your name, email, and phone number. The address field is optional, so I'm leaving it blank."
        },
        {
         "question": "Do you have a housing entitlement certificate (WBS)?",
@@ -1915,15 +1411,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The inquiry form requires you to indicate whether you hold a WBS certificate to determine your eligibility for the apartment.",
-        "whatTheAgentLoses": "You lose the opportunity to accurately report your housing entitlement status, which could result in your inquiry being rejected if the agent guesses incorrectly."
-       },
-       {
-        "question": "What contact information should you provide in the inquiry form?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a 'Check Availability' form that requires a name, email, and phone number to contact the seller.",
-        "whatTheAgentLoses": "The user loses the ability to decide which specific personal contact details are shared with the listing agent."
+        "whatTheAgentLoses": "You lose the opportunity to accurately report your housing entitlement status, which could result in your inquiry being rejected if the agent guesses incorrectly.",
+        "speak": "gate",
+        "check": "Does the form ask for a WBS housing certificate?",
+        "say_example": "The form asks if you hold a WBS certificate. That's the German housing permit, and this flat needs one. Do you have it?"
        },
        {
         "question": "Who should you address in your inquiry message?",
@@ -1931,7 +1422,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Identifying the specific contact person shown on the listing, such as [provider], ensures your message is properly directed and professional.",
-        "whatTheAgentLoses": "You lose the ability to personalize the greeting and carefully set the tone of your initial communication with the property manager."
+        "whatTheAgentLoses": "You lose the ability to personalize the greeting and carefully set the tone of your initial communication with the property manager.",
+        "speak": "never",
+        "check": "Which contact name does the listing show?",
+        "say_example": "Addressed the message to <Ms. Weber>."
        },
        {
         "question": "Which unique property identifier should you include in the inquiry template?",
@@ -1939,7 +1433,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Copying the specific Object ID from the listing's overview ensures the property manager knows exactly which unit you are inquiring about.",
-        "whatTheAgentLoses": "You lose the certainty that the exact property identifier is correctly referenced in your personalized inquiry message."
+        "whatTheAgentLoses": "You lose the certainty that the exact property identifier is correctly referenced in your personalized inquiry message.",
+        "speak": "never",
+        "check": "What object ID does the listing overview show?",
+        "say_example": "Included object ID <B-2231> in the message."
        },
        {
         "question": "What is the exact address to include in your inquiry template?",
@@ -1947,47 +1444,32 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The top of the listing page displays the full property address, which needs to be accurately copied into your message so the landlord knows which specific unit you are referencing.",
-        "whatTheAgentLoses": "You lose the ability to verify that the correct property address was accurately extracted and included in your outreach message."
+        "whatTheAgentLoses": "You lose the ability to verify that the correct property address was accurately extracted and included in your outreach message.",
+        "speak": "never",
+        "check": "What full address does the listing page show?",
+        "say_example": "Included the full address in the message."
        },
        {
-        "question": "Which text should you copy to send to the landlord?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a pre-written German message detailing your profession, income, and lifestyle, which is crucial for making a strong impression on the landlord.",
-        "whatTheAgentLoses": "The user loses the opportunity to present themselves with a carefully crafted, personalized message that highlights their specific lifestyle and professional stability."
-       },
-       {
-        "question": "Which type of income should you declare?",
+        "question": "What income source and bracket does the form require you to select?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The inquiry form requires you to select your income source from options like salary, unemployment, or retirement to qualify for the apartment.",
-        "whatTheAgentLoses": "An agent might select an incorrect income type, which could lead to your inquiry being rejected by the property manager."
+        "whatTheAgentLoses": "An agent might select an incorrect income type, which could lead to your inquiry being rejected by the property manager.",
+        "speak": "gate",
+        "check": "What income questions does the form require?",
+        "say_example": "The form wants your income source and your monthly range before it will send. What should I put in?"
        },
        {
-        "question": "Which monthly net income bracket should you select?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The inquiry form requires you to select a specific monthly net income bracket from the dropdown menu to qualify for the apartment.",
-        "whatTheAgentLoses": "Delegating this step requires sharing sensitive financial information with an agent, reducing your privacy and control over how your income is disclosed to landlords."
-       },
-       {
-        "question": "What preferred move-in date should you specify in the contact form?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The contact form often asks for a preferred move-in date, which tells the landlord when you intend to start paying rent and determines if your timeline aligns with the unit's availability.",
-        "whatTheAgentLoses": "The user might be rejected for the apartment or forced to pay for weeks of empty overlap if the agent selects a move-in date that doesn't match their actual moving timeline."
-       },
-       {
-        "question": "Did you specify the exact unit or floorplan in your message when contacting a multi-unit building?",
+        "question": "Does the message name the unit that was chosen?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The main contact form on a building's listing page often sends a generic inquiry to the leasing office without automatically indicating which specific unit or floorplan you expanded and evaluated.",
-        "whatTheAgentLoses": "The user risks the landlord assuming they are interested in a different, potentially more expensive unit, or receiving a generic auto-reply instead of information about the specific apartment they want."
+        "whatTheAgentLoses": "The user risks the landlord assuming they are interested in a different, potentially more expensive unit, or receiving a generic auto-reply instead of information about the specific apartment they want.",
+        "speak": "if-wrong",
+        "check": "Does the message name the exact unit that was chosen?",
+        "say_example": "The message didn't name a unit, so I added <7K>. Now they know which one you mean."
        }
       ]
      },
@@ -1996,44 +1478,48 @@
       "label": "Pick the request options",
       "questions": [
        {
-        "question": "Are you ready to consent to the privacy terms and submit your inquiry?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen requires checking GDPR and email consent boxes to successfully submit your personal information to the listing agent.",
-        "whatTheAgentLoses": "The user loses the chance to review the specific data privacy terms and control exactly what marketing communications they agree to receive."
-       },
-       {
         "question": "What is the primary purpose of your inquiry?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The contact form includes a 'Purpose of inquiry' dropdown with options like 'I want to know availability', which sets the context for the agent receiving your message.",
-        "whatTheAgentLoses": "You lose the ability to explicitly categorize your request, potentially leading to slower or less relevant responses from the leasing agent."
+        "whatTheAgentLoses": "You lose the ability to explicitly categorize your request, potentially leading to slower or less relevant responses from the leasing agent.",
+        "speak": "never",
+        "check": "What purpose options does the inquiry dropdown list?",
+        "say_example": "Set the inquiry purpose to availability."
        },
        {
-        "question": "Do you want to opt out of receiving marketing emails and apartment recommendations?",
+        "question": "Is the marketing-email box pre-checked?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The contact form includes a pre-checked box to 'Email me listings and apartment related info', which will subscribe you to marketing communications if left checked.",
-        "whatTheAgentLoses": "You lose control over your inbox, potentially receiving unwanted promotional emails and alerts because the agent failed to uncheck the marketing opt-in."
+        "whatTheAgentLoses": "You lose control over your inbox, potentially receiving unwanted promotional emails and alerts because the agent failed to uncheck the marketing opt-in.",
+        "speak": "never",
+        "check": "Which consent boxes are pre-checked?",
+        "say_example": "Said no to marketing emails."
        },
        {
-        "question": "Does the contact form include pre-checked boxes that consent to sharing your information with third-party moving or insurance companies?",
+        "question": "Are any pre-checked boxes consenting to share details with third parties?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Many listing aggregators monetize inquiries by pre-checking consent boxes that allow them to sell your phone number and email to moving companies, insurers, or mortgage brokers.",
-        "whatTheAgentLoses": "You end up receiving relentless spam calls and emails from third parties because the agent didn't uncheck the hidden marketing consent boxes."
+        "whatTheAgentLoses": "You end up receiving relentless spam calls and emails from third parties because the agent didn't uncheck the hidden marketing consent boxes.",
+        "speak": "on-event",
+        "check": "Are any pre-checked boxes about sharing details with third parties?",
+        "say_example": "A box was already ticked to share your number with movers and insurers. I unticked it."
        },
        {
-        "question": "Did you realize that checking 'Request Application' in the contact form only sends an email, rather than starting a formal application on the platform?",
+        "question": "What does the form say the application checkbox does?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The 'Request Application' checkbox merely adds a line to your initial inquiry email asking the landlord for next steps; it does not actually initiate or log a formal rental application in the platform's 'My Applications' portal.",
-        "whatTheAgentLoses": "The user might falsely believe they have successfully applied for the apartment and wait for a status update in their account, ultimately missing out on the property because they never completed the actual application process."
+        "whatTheAgentLoses": "The user might falsely believe they have successfully applied for the apartment and wait for a status update in their account, ultimately missing out on the property because they never completed the actual application process.",
+        "speak": "on-event",
+        "check": "What does the form say the application checkbox actually does?",
+        "say_example": "That application checkbox only adds a line to the email. It doesn't start a real application anywhere."
        }
       ]
      },
@@ -2042,28 +1528,26 @@
       "label": "Decide whether to send",
       "questions": [
        {
-        "question": "Are you satisfied with the property details and ready to submit the contact form?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displayed the property details for 'Origin Apartments' alongside a partially filled contact form.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally verify the property details and ensure their contact information is accurate before sending an inquiry."
-       },
-       {
         "question": "Do you want to send the pre-filled inquiry message to the agent?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays a pre-filled email to the broker, requiring a choice to either send the inquiry or cancel it.",
-        "whatTheAgentLoses": "An AI might automatically send the generic message, removing your ability to customize the text or back out of the inquiry."
+        "whatTheAgentLoses": "An AI might automatically send the generic message, removing your ability to customize the text or back out of the inquiry.",
+        "speak": "gate",
+        "check": "What does the form show it is about to send, and to whom?",
+        "say_example": "Ready to send. A tour request for <the Marlowe, unit 7K>, <Saturday morning>, with your name and phone number. Send it, or say change."
        },
        {
-        "question": "Are you comfortable agreeing to the fine print that allows real estate professionals to call or text you?",
+        "question": "Does the fine print include consent to calls and texts from affiliates?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Submitting the tour request form includes a disclaimer that you consent to receive calls and texts from the platform's affiliates and real estate agents, which could lead to unwanted phone solicitations.",
-        "whatTheAgentLoses": "The user inadvertently consents to receiving spam calls and text messages from real estate agents because the browser agent accepted the hidden terms without asking."
+        "whatTheAgentLoses": "The user inadvertently consents to receiving spam calls and text messages from real estate agents because the browser agent accepted the hidden terms without asking.",
+        "speak": "on-event",
+        "check": "Does the fine print consent to calls and texts from affiliates?",
+        "say_example": "Sending this also agrees to calls and texts from their partner agents. Expect a few calls this week."
        },
        {
         "question": "Does submitting the tour request form include fine print consenting to a soft credit check or background screening?",
@@ -2071,15 +1555,21 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Some aggressive leasing platforms embed consent for preliminary credit or background checks directly into the initial contact or tour scheduling form.",
-        "whatTheAgentLoses": "The user might unknowingly have their credit profiled or personal data run through a screening service before they even decide if they like the property."
+        "whatTheAgentLoses": "The user might unknowingly have their credit profiled or personal data run through a screening service before they even decide if they like the property.",
+        "speak": "on-event",
+        "check": "Does the fine print consent to a credit or background check?",
+        "say_example": "Careful, the fine print here runs a credit check just for the tour request. That mark outlives the request. Still want to send?"
        },
        {
-        "question": "Did you actually fill out and submit the inquiry form?",
+        "question": "Does the page show the form submitted?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The video cuts away while the 'Property Inquiry' form is still blank, meaning the contact step was never completed.",
-        "whatTheAgentLoses": "The user misses out on actually contacting the property because the inquiry was never sent."
+        "whatTheAgentLoses": "The user misses out on actually contacting the property because the inquiry was never sent.",
+        "speak": "if-wrong",
+        "check": "Does the page show the form submitted, or still blank?",
+        "say_example": "The form never went through. It's still sitting blank. I'm filling it in again."
        }
       ]
      }
@@ -2089,44 +1579,32 @@
     "id": "8",
     "label": "Save listings and searches",
     "note": "each of 8.1 to 8.5 where the keeper wants something durable - 8.1 fires from three surfaces: the results card (TNMH), the map preview (cd07), the detail page (pCy8). 8.2 reaches into 2.5 when signed out (dS5q). 8.6 after a save; 8.7 as its own tour of the account.",
-    "questions": [
-     {
-      "question": "Did you actually enter the property details and click the button as you instructed?",
-      "cluster": "facts",
-      "moment": "After",
-      "moneyMoving": false,
-      "why": "The narrator stated they were entering the address, property type, and bed and bath details, but the screen showed the form fields remaining empty and the submit button unclicked.",
-      "whatTheAgentLoses": "The user fails to successfully submit their information because the agent skipped filling out the required form."
-     }
-    ],
     "children": [
      {
       "id": "8.1",
       "label": "Favorite a listing",
       "questions": [
        {
-        "question": "Which listing from the updated feed should you favorite?",
+        "question": "Which listings were saved to favorites?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The feed displays multiple options with varying prices and locations, such as a $2,[address] and a $4,895 unit on E 13th St, so you must decide which ones are worth saving.",
-        "whatTheAgentLoses": "You lose the ability to apply your subjective preferences for specific streets and price points when curating a shortlist of potential homes."
+        "whatTheAgentLoses": "You lose the ability to apply your subjective preferences for specific streets and price points when curating a shortlist of potential homes.",
+        "speak": "never",
+        "check": "Which listings does the feed show, with price and location?",
+        "say_example": "Saved <2> listings to favorites."
        },
        {
-        "question": "Should you save this listing, and to which folder?",
+        "question": "Which folder was the listing saved to?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a save modal for the '[address] 82nd Street' rental that requires selecting a specific folder like 'Gus Waite' to organize the listing.",
-        "whatTheAgentLoses": "The user loses the ability to organize their favorite apartment candidates into specific custom folders for later review."
-       },
-       {
-        "question": "Which listing do you want to save to your favorites?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Clicking the heart icon on the Horizons North listing allows you to easily keep track of an appealing apartment that offers a '1 Month Free' special.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to personally curate a shortlist of preferred apartments based on your own subjective appeal."
+        "whatTheAgentLoses": "The user loses the ability to organize their favorite apartment candidates into specific custom folders for later review.",
+        "speak": "never",
+        "check": "What folders does the save modal list?",
+        "say_example": "Saved it to the <apartment hunt> folder."
        }
       ]
      },
@@ -2135,28 +1613,26 @@
       "label": "Save the search",
       "questions": [
        {
-        "question": "Did you actually click to save the search, or just hover over the button?",
+        "question": "Does the page show the search saved?",
         "cluster": "watch",
         "moment": "After",
         "moneyMoving": false,
         "why": "The narrator explicitly asked to save the search, but the cursor only hovered over the button without clicking it, meaning the search parameters won't be saved for later.",
-        "whatTheAgentLoses": "The user loses the ability to easily return to or receive alerts for this specific set of apartment filters because the search was never actually saved."
+        "whatTheAgentLoses": "The user loses the ability to easily return to or receive alerts for this specific set of apartment filters because the search was never actually saved.",
+        "speak": "if-wrong",
+        "check": "Does the page show the search as saved?",
+        "say_example": "The search never actually saved. I'm clicking it properly this time."
        },
        {
-        "question": "Which folder should you save this search in?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a 'Save this Search' modal with multiple folder options like 'Tasso Ferreira' and 'Gus Waite', allowing you to organize your saved criteria.",
-        "whatTheAgentLoses": "The user loses the ability to organize their saved searches according to their personal folder structure."
-       },
-       {
-        "question": "Should you save this search to get notified about new matching listings?",
+        "question": "Is the search saved for alerts?",
         "cluster": "watch",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search results list includes a 'Save my search' prompt to 'See new homes first,' offering a way to receive future alerts for these specific filters.",
-        "whatTheAgentLoses": "You lose the ability to decide whether you want to receive ongoing notifications and emails about new properties that match this search."
+        "whatTheAgentLoses": "You lose the ability to decide whether you want to receive ongoing notifications and emails about new properties that match this search.",
+        "speak": "always",
+        "check": "Does the page offer to save the search for alerts?",
+        "say_example": "I saved this search, so new matches will come to you first."
        }
       ]
      },
@@ -2166,37 +1642,22 @@
      },
      {
       "id": "8.4",
-      "label": "Add a note or comment",
-      "questions": [
-       {
-        "question": "What comment should you add to the saved listing for discussion?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Discuss' section provides a text box to leave specific notes and questions about the listing for your relocation specialist to review.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to express your personal thoughts and specific concerns about the property's location to your specialist."
-       }
-      ]
+      "label": "Add a note or comment"
      },
      {
       "id": "8.5",
       "label": "Set the neighborhood alerts",
       "questions": [
        {
-        "question": "Which specific neighborhoods do you want to add to your search area?",
+        "question": "Which neighborhoods are selected for alerts?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The map overlay allows selecting multiple adjacent neighborhoods like West Village and Tribeca to customize the alert feed.",
-        "whatTheAgentLoses": "You lose the ability to hand-pick the exact neighborhoods you are willing to live in."
-       },
-       {
-        "question": "Do you want to subscribe to new listing alerts for this specific neighborhood?",
-        "cluster": "watch",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a checkbox to get new listing alerts for Soho, which determines if you will receive ongoing notifications for this area.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether they want their inbox populated with ongoing notifications for this specific neighborhood."
+        "whatTheAgentLoses": "You lose the ability to hand-pick the exact neighborhoods you are willing to live in.",
+        "speak": "never",
+        "check": "Which neighborhoods are selected on the alert map?",
+        "say_example": "Alerts set for <West Village> and <Tribeca>, same as the search."
        }
       ]
      },
@@ -2210,23 +1671,21 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen displays a detailed string of your applied filters, such as price range and amenities, alongside quick links to view all 25 rentals or just the 9 updated in the last week.",
-        "whatTheAgentLoses": "You lose the opportunity to verify that the saved search criteria perfectly match your specific requirements before time is spent evaluating individual listings."
+        "whatTheAgentLoses": "You lose the opportunity to verify that the saved search criteria perfectly match your specific requirements before time is spent evaluating individual listings.",
+        "speak": "never",
+        "check": "What filter summary does the saved search show?",
+        "say_example": "Saved search reads <$1,500 to $2,000, 2 beds, cats>."
        },
        {
-        "question": "Does the saved search description accurately reflect the filters you manually selected?",
+        "question": "Does the saved search match the filters you picked?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "Checking the auto-generated search summary ensures the platform correctly captured all your specific requirements for price, location, and amenities.",
-        "whatTheAgentLoses": "You lose the opportunity to verify that the system correctly interpreted and saved your exact housing requirements."
-       },
-       {
-        "question": "Did the listing you just favorited successfully appear in your saved folder alongside your other options?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Confirming that the $4,895 E 13th St property appears alongside your other saved listings ensures you can easily compare your top choices before reaching out.",
-        "whatTheAgentLoses": "You lose the ability to personally review and compare your curated list of favorite properties to decide which one you want to tour."
+        "whatTheAgentLoses": "You lose the opportunity to verify that the system correctly interpreted and saved your exact housing requirements.",
+        "speak": "if-wrong",
+        "check": "Does the saved search summary include every filter that was set?",
+        "say_example": "The saved search dropped your pet filter. I put it back so the alerts match what you asked."
        },
        {
         "question": "Does the number of saved listings match the ones you actually favorited?",
@@ -2234,31 +1693,21 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The Favorites badge count incorrectly jumps from 1 to 3 after saving just one additional listing, and an unselected $4,365 apartment mysteriously appears in the folder.",
-        "whatTheAgentLoses": "You lose control over your curated options if the agent silently adds unselected, expensive listings to your favorites."
+        "whatTheAgentLoses": "You lose control over your curated options if the agent silently adds unselected, expensive listings to your favorites.",
+        "speak": "if-wrong",
+        "check": "Do the listings in the favorites folder match the ones that were saved?",
+        "say_example": "Your favorites show <three> saves, and you only picked <two>. The site slipped a promoted one in. I'm removing it."
        },
        {
-        "question": "Do you notice that the listing's status changes from '4h' in the alerts feed to 'Featured' in your favorites?",
+        "question": "What label does the saved listing carry in the alerts feed, and what label in favorites?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen showed the $4,895 E 13th St listing labeled as '4h' in the alerts feed but 'Featured' in favorites, which matters because it might indicate a promoted listing rather than a genuinely new one.",
-        "whatTheAgentLoses": "The user loses the ability to spot inconsistencies in listing labels that might reveal a property is a paid promotion rather than a fresh market opportunity."
-       },
-       {
-        "question": "Does the initial search result count match the number of rentals in your saved search?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Verifying that both screens display exactly 25 apartments confirms that the search criteria remained consistent and no filters were dropped.",
-        "whatTheAgentLoses": "The user loses the certainty that the agent is evaluating the complete and correct set of filtered listings throughout the session."
-       },
-       {
-        "question": "Are the properties you previously favorited correctly saved in your account?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Verifying that the two favorited properties in California City appear on the 'Saved Homes' page ensures your selected candidates are safely stored for review.",
-        "whatTheAgentLoses": "The user loses the reassurance of personally verifying that their preferred apartment candidates were successfully saved to their account."
+        "whatTheAgentLoses": "The user loses the ability to spot inconsistencies in listing labels that might reveal a property is a paid promotion rather than a fresh market opportunity.",
+        "speak": "never",
+        "check": "What labels does the saved listing carry in the alerts feed and in favorites?",
+        "say_example": "The <E 13th St> save now shows a Featured tag."
        }
       ]
      },
@@ -2267,12 +1716,15 @@
       "label": "Walk the account sections",
       "questions": [
        {
-        "question": "Do you want to review the listings you have already messaged?",
+        "question": "What listings appear under Messaged Listings?",
         "cluster": "select",
         "moment": "Completion",
         "moneyMoving": false,
         "why": "Checking the 'Messaged Listings' screen allows you to track specific properties like [address] and 1 St Francis Pl that you have already contacted.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify and keep track of exactly which apartments have already received your inquiries."
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify and keep track of exactly which apartments have already received your inquiries.",
+        "speak": "never",
+        "check": "Which listings does the messaged page list?",
+        "say_example": "You've messaged <2> places so far."
        },
        {
         "question": "Are there any current messages in your inbox?",
@@ -2280,15 +1732,21 @@
         "moment": "Completion",
         "moneyMoving": false,
         "why": "The screen explicitly displays a 'No Messages' state, confirming whether there is any existing or pending communication with property managers.",
-        "whatTheAgentLoses": "The user loses the situational awareness of knowing their communication history is currently empty before initiating or verifying new apartment inquiries."
+        "whatTheAgentLoses": "The user loses the situational awareness of knowing their communication history is currently empty before initiating or verifying new apartment inquiries.",
+        "speak": "never",
+        "check": "Does the inbox show any messages?",
+        "say_example": "No replies yet."
        },
        {
-        "question": "How do you check the status of your submitted applications?",
+        "question": "What does the My Applications page show?",
         "cluster": "hand over",
         "moment": "Completion",
         "moneyMoving": false,
         "why": "The 'My Applications' page displays 'No Applications Yet', which serves as the definitive record of whether your application was successfully processed by the platform.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that your application was successfully registered and tracked in your account."
+        "whatTheAgentLoses": "You lose the ability to personally verify that your application was successfully registered and tracked in your account.",
+        "speak": "never",
+        "check": "What does the applications page show?",
+        "say_example": "The applications page shows none on file. The inquiry went by email only."
        }
       ]
      }

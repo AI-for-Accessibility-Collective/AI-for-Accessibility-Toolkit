@@ -1,0 +1,1733 @@
+{
+ "task": "pay a bill through a bank or biller portal (bank bill pay, utility, credit-card, phone-company sites): log in, locate the bill or add the payee, set the amount and payment date, pick the funding account, submit; complete when the payment-scheduled or payment-confirmed screen is on screen. Surface pinned: a bank's bill-pay interface or a biller's own web/app payment portal. Variants: setting up recurring autopay, sending money to a person, and paying at a store register do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Pay a bill online",
+  "note": "1 where the session is not already inside - half the keepers arrive signed in. then 2. 3 on the bill-pay and wallet surfaces, where the payee has to be found, linked or typed; on the issuer sites the To field is the user's own card or loan and 3 is skipped. 4 before 5, though on the wallet surfaces the bill is read at the form itself. 5, then 6 - or 6 first where the source has to be linked before anything (EnZK), or 6.2 mid-way when the picked account turns out unverified (W0JT). 7 where the platform offers dates and rails; on the wallets the money leaves at once, so 7 is only reading what the platform prints. then 8, then 9. 9.7 loops back to 2 for the next bill - three times in 8n6j.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the account",
+    "note": "1.1 where the video starts outside the app or site, then 1.2; 1.3 whenever the platform interrupts. 1.4 once, on a bank whose bill pay is not yet enrolled (NfKb) or a tool that charges for it (W0JT). 1.5 in place of 1.2 on a biller portal that has never seen the user (RoGB) - the login page offers sign in, register, or a one-time payment by account number, and the first visit takes register.",
+    "questions": [
+     {
+      "question": "Which ways into the payment portal does the page offer?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen offers options to log in with an email and password, register for a new account, or make a one-time payment using just an account number.",
+      "whatTheAgentLoses": "The user loses the choice between the long-term convenience of a saved account profile and the privacy of a quick one-time guest payment.",
+      "speak": "on-event",
+      "check": "Which ways into the portal does the page offer - sign in, register, or pay as a guest with an account number?",
+      "say_example": "This site lets me pay with just the account number, no sign-in. You didn't give me a login, so I'm using that."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Reach the site or app",
+      "questions": [
+       {
+        "question": "Which app on the screen is the bank's or biller's own?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a folder with multiple finance apps, so you must identify the correct bank or biller app to initiate the payment.",
+        "whatTheAgentLoses": "The user loses the ability to decide which specific bank or financial institution to use for managing and paying their bills.",
+        "speak": "never",
+        "check": "Which app on the screen carries the bank's or biller's own name?",
+        "say_example": "Opened <the bank app>"
+       },
+       {
+        "question": "Which search result is the bank's real site?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top search result is an ad, so selecting the second link ensures you reach the legitimate S-Pankki site instead of a potentially misleading sponsored link.",
+        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that the authentic, non-sponsored bank link was chosen to avoid phishing risks.",
+        "speak": "on-event",
+        "check": "Is the top search result marked as an ad or sponsored, and which result is the bank's own domain?",
+        "say_example": "The first result is an ad. The real <bank> site is the second one, so I'm using that."
+       },
+       {
+        "question": "Is your biller on the list of supported companies shown on the landing page?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The landing page outlines benefits like instant payments and displays logos of the 13 supported companies so you know what is available.",
+        "whatTheAgentLoses": "You lose the chance to learn about the platform's features and verify if your specific biller is supported before logging in.",
+        "speak": "if-wrong",
+        "check": "Does the list of supported billers on the landing page include the biller on your bill?",
+        "say_example": "This site lists <13> billers it can pay. <Your biller> isn't one of them. It can't pay this bill. I'll look for the biller's own site."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Sign in",
+      "questions": [
+       {
+        "question": "Will you type your bank username and password in yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login page requires a username and password to proceed with the selected passcode table method.",
+        "whatTheAgentLoses": "The user must share their sensitive banking credentials with the agent to allow it to log in.",
+        "speak": "gate",
+        "check": "Which sign-in fields does the page show, which are still empty, and does the page say what a first-time password is made of?",
+        "say_example": "The bank wants your username and password. I don't take those. Type them in, and tell me when you're through."
+       },
+       {
+        "question": "Will you choose and type the new password the site now requires?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The portal requires you to create a new 4-6 digit password before you can finish logging in.",
+        "whatTheAgentLoses": "You lose the ability to choose a memorable, secure password that you alone know for future access to this account.",
+        "speak": "gate",
+        "check": "Does the page require a new password to be created now, and what rules does it list for it?",
+        "say_example": "It won't let you in until you set a new password. <Four to six digits>. Choose one and type it yourself. I'll wait."
+       },
+       {
+        "question": "Will you enter the second code from your phone, app, or passcode table yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen requires a secondary authentication code sent via SMS to verify your identity before granting access to the portal.",
+        "whatTheAgentLoses": "Delegating this step requires giving the agent real-time access to your personal text messages to complete the multi-factor authentication.",
+        "speak": "gate",
+        "check": "What second-step code does the page ask for - a text message, an app, or a printed passcode table - and which cell or number does it name?",
+        "say_example": "It wants the code from the text it just sent you. Read it to me, or type it in yourself."
+       },
+       {
+        "question": "Are the remember-username and Face ID toggles left off?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen includes toggles for 'Remember Username' and 'Enable Face ID Authentication' that determine how easily the account can be accessed later.",
+        "whatTheAgentLoses": "The user loses the personal choice of balancing convenience and device-level security by deciding whether to store credentials or use biometrics.",
+        "speak": "never",
+        "check": "Are the 'Remember Username' and 'Enable Face ID' toggles on or off?",
+        "say_example": "Left Face ID and remember-me off"
+       },
+       {
+        "question": "Is the account type in the login dropdown the right one for your account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login form requires your User ID, password, and the correct account type selection from the dropdown to successfully access your billing account.",
+        "whatTheAgentLoses": "You lose the ability to verify that the correct account type is selected from the dropdown before submitting your login credentials.",
+        "speak": "if-wrong",
+        "check": "Which account type is selected in the dropdown on the login form?",
+        "say_example": "The login form is set to <business>. Your account is <personal>, so I'm switching it before I sign in."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Answer the session prompts",
+      "questions": [
+       {
+        "question": "Does the page say the account is locked?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Security policies, expired credentials, or too many failed login attempts by an agent can trigger a lockout or forced reset, preventing access to the bill pay dashboard.",
+        "whatTheAgentLoses": "The user loses the ability to personally recover their account, answer security questions, or update their credentials securely when the standard login flow is interrupted.",
+        "speak": "on-event",
+        "check": "Does the page say the account is locked after too many tries?",
+        "say_example": "The bank says this account is locked after too many tries. I can't get past that. You'll need to unlock it with them first."
+       },
+       {
+        "question": "Is a CAPTCHA or picture puzzle blocking the login?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many bank portals use visual challenges like selecting images to prevent automated logins, which must be solved to proceed.",
+        "whatTheAgentLoses": "An agent might fail silently or get stuck in a loop if it cannot interpret or solve a purely visual security challenge.",
+        "speak": "gate",
+        "check": "Is there a CAPTCHA or picture challenge on the login page?",
+        "say_example": "There's a picture puzzle to prove you're a person. I'm not going to solve it. Do it and tell me when it's through."
+       },
+       {
+        "question": "Do you want to extend your banking session before it times out?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 60-second warning that your session will expire for security reasons unless you choose to continue.",
+        "whatTheAgentLoses": "You lose the ability to quickly intervene to keep the session active, risking a timeout and lost progress if the agent misses the brief warning window.",
+        "speak": "never",
+        "check": "Is a session timeout warning showing with a continue button?",
+        "say_example": "Kept the session alive at the <60 second> warning"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Enroll in the bill-pay service",
+      "note": "1.4.1 alone on a bank (NfKb). 1.4.2, then 1.4.3, then 1.4.4 on the paid tool (W0JT); 6.2.3 follows before the first payment can be made.",
+      "children": [
+       {
+        "id": "1.4.1",
+        "label": "Accept the bill-pay agreement",
+        "questions": [
+         {
+          "question": "Do you want to hear the Bill Pay Agreement before I accept it?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires agreeing to a legal contract that covers your rights and responsibilities for the digital banking services before you can proceed.",
+          "whatTheAgentLoses": "You lose the opportunity to read and understand the specific legal terms, rights, and responsibilities you are legally binding yourself to.",
+          "speak": "gate",
+          "check": "Which agreement does the page require accepting before continuing, and what does it say about fees, liability, or cancellation?",
+          "say_example": "Before it lets you pay, the bank wants you to accept its Bill Pay Agreement. Want me to read the main points, or say accept."
+         }
+        ]
+       },
+       {
+        "id": "1.4.2",
+        "label": "Pick the plan",
+        "questions": [
+         {
+          "question": "Which bill-pay plan do you want, given each one is a monthly charge?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen presents three subscription tiers with different monthly costs and ACH payment limits that dictate your ongoing business expenses.",
+          "whatTheAgentLoses": "You lose the opportunity to choose the subscription tier that best balances the monthly fee with your expected payment volume.",
+          "speak": "gate",
+          "check": "Which plans does the page list, and what monthly price and payment limit does each show?",
+          "say_example": "Three plans. <Basic> is <15> a month with <5> free payments. <Elite> is <90> a month plus <1.27> per check. This is a charge every month. Which one?"
+         }
+        ]
+       },
+       {
+        "id": "1.4.3",
+        "label": "Enter the business details",
+        "questions": [
+         {
+          "question": "Are the business name and address on the form the ones you gave me?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a business profile setup form with pre-filled data and address suggestions that must be verified to enroll in the service.",
+          "whatTheAgentLoses": "The user loses the opportunity to verify or correct their business information before it is submitted for enrollment.",
+          "speak": "if-wrong",
+          "check": "Does the business name and address on the form match what you gave me, and is the page suggesting a different address?",
+          "say_example": "The form filled in <an old address>. That's not the one you gave me, so I'm correcting it."
+         },
+         {
+          "question": "Do you want to give your SSN, date of birth, and home address for the identity check?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form requires sensitive personal details, including the last 4 digits of your SSN and your date of birth, to verify your identity.",
+          "whatTheAgentLoses": "Delegating this step removes your ability to control exactly when and where your highly sensitive personal information is shared for underwriting purposes.",
+          "speak": "gate",
+          "check": "Which identity fields does the form require - SSN digits, date of birth, home address?",
+          "say_example": "To turn on bill pay, the site wants the last four of your SSN and your date of birth. That's for identity checks. Type them yourself, or say skip and we stop here."
+         },
+         {
+          "question": "Did the 'About you' section save and unlock the next step?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The 'About you' section is still marked 'In progress' and the 'Your payment method' section remains greyed out and collapsed, indicating the form submission silently failed or stalled.",
+          "whatTheAgentLoses": "The user loses the ability to recognize that their personal information was not accepted, leaving them stuck in the setup flow.",
+          "speak": "if-wrong",
+          "check": "Does the 'About you' section show as complete, or still 'In progress' with the next section greyed out?",
+          "say_example": "The form says it saved, but the section still shows in progress and the next step is locked. I'm trying it again."
+         }
+        ]
+       },
+       {
+        "id": "1.4.4",
+        "label": "Read what happens next",
+        "questions": [
+         {
+          "question": "Are you okay waiting up to three business days for the micro-deposits to verify your account?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The modal states that two small deposits will be made to your account within three business days to complete the verification process.",
+          "whatTheAgentLoses": "You lose the awareness that your funding account is not instantly available and will require manual follow-up to verify the deposits.",
+          "speak": "on-event",
+          "check": "What does the page say about how the account is verified, and how long it takes?",
+          "say_example": "The site verifies your bank with two tiny deposits. That takes up to three business days. Your bill is due <date>, so it won't be paid from here before then."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Register a new account",
+      "questions": [
+       {
+        "question": "What account number from your statement does the registration ask for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to enter the account number found on your statement to identify your account and continue.",
+        "whatTheAgentLoses": "You lose the ability to keep your specific utility account number private from the agent.",
+        "speak": "gate",
+        "check": "What number does the registration form ask for, and where does the page say it is printed?",
+        "say_example": "To register it needs the account number from your paper statement. Top right, the page says. Read it to me."
+       },
+       {
+        "question": "Will you pick the security question and type its answer yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to provide contact information and select a security question to establish your account access.",
+        "whatTheAgentLoses": "Delegating this means the agent chooses your security questions and profile details, which could make it difficult for you to recover or access the account later.",
+        "speak": "gate",
+        "check": "Which security question is selected, and is the answer field empty?",
+        "say_example": "It wants a security question and answer. Those recover the account later, so I shouldn't know them. Pick one and type the answer, then tell me."
+       },
+       {
+        "question": "Is the service address shown the one for the account you're paying?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires you to verify your identity by confirming that the partially hidden service address matches your records before proceeding.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the retrieved service address matches your own before confirming the payee.",
+        "speak": "on-event",
+        "check": "What partially hidden service address does the page ask you to confirm?",
+        "say_example": "It's asking whether <a partly hidden address on Oak St> is your service address. If that's not your place, say stop."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Reach the payment",
+    "note": "2.1 first on the issuer and bank sites; 2.2 on any dashboard with more than one account or bill. 2.3 on the bill-pay and wallet surfaces, 2.4 on all of them - 2.4 is the PAY button on the account row, the Make a payment on a payee, or the arrow beside a biller. EnZK runs 2.4 twice, before and after 6.2.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Read the account summary",
+      "questions": [
+       {
+        "question": "Does the available balance shown cover the bill you are about to pay?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays your available balance of 5 500,00 EUR and recent account activity, which is crucial for verifying you have sufficient funds before initiating a bill payment.",
+        "whatTheAgentLoses": "You lose the opportunity to personally audit your recent spending and ensure all listed transactions are accurate and authorized.",
+        "speak": "if-wrong",
+        "check": "What available balance does the summary show, and what is the bill amount?",
+        "say_example": "Your available balance is <120>. The bill is <217>. Paying it would overdraw you. I'm holding."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Pick the bill to pay",
+      "questions": [
+       {
+        "question": "Which of the listed accounts or bills is the one to pay?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple accounts with varying balances and due dates, requiring you to select the specific obligation you intend to pay.",
+        "whatTheAgentLoses": "You lose the ability to prioritize which specific debt or bill to pay based on your current financial strategy.",
+        "speak": "gate",
+        "check": "Which accounts or bills does the page list, with what balance and due date for each?",
+        "say_example": "Three cards here. <Discover>, <251.81> due <the 15th>. <Visa>, <60> due <the 20th>. <Amex>, nothing due. Which one are we paying?"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Open the bill-pay section",
+      "questions": [
+       {
+        "question": "Is this the 'Pay bills' screen, not 'Bill', which records the bill and pays nothing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The '+ New' menu presents multiple vendor-related actions like 'Expense', 'Check', and 'Bill', so you must specifically select 'Pay bills' to access the correct payment workflow.",
+        "whatTheAgentLoses": "You lose the opportunity to review other available vendor transaction types that might be relevant to your current accounting needs.",
+        "speak": "if-wrong",
+        "check": "Which menu item is highlighted - 'Pay bills', or 'Bill', 'Check', or 'Expense'?",
+        "say_example": "This menu has 'Bill' and 'Pay bills'. 'Bill' only records it. Nothing gets paid. I'm on 'Pay bills'."
+       },
+       {
+        "question": "Has the phone number you're paying been unused for more than three months?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides a specific alternative link that must be used to successfully make a payment if the target phone number has been inactive for over three months.",
+        "whatTheAgentLoses": "The user loses the ability to direct the agent to the correct alternative payment flow for an inactive account, risking a failed transaction.",
+        "speak": "on-event",
+        "check": "Does the page say a number inactive for over three months needs a different link?",
+        "say_example": "The page says a number unused for three months needs a different form. I'm assuming yours is active. Say so if it isn't."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Start the payment",
+      "questions": [
+       {
+        "question": "Do you still want to pay when the minimum due is zero?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a $0.00 minimum payment due, but paying now prevents interest from accruing on the remaining balance.",
+        "whatTheAgentLoses": "You lose the financial foresight to proactively pay down a balance and avoid interest when an agent might just skip the payment upon seeing zero dollars due.",
+        "speak": "on-event",
+        "check": "What minimum payment does the page show, and what is the full balance?",
+        "say_example": "Minimum due is <0>. The balance is still <217>, and interest builds on it. I'm paying the <balance> you asked for."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Identify the payee",
+    "note": "skipped on the issuer sites, where the To field is the user's own card or loan (B3DP, Nu5a, VmJW, 8n6j, Kgwb, KUG3, b_Qz, EnZK). 3.1 then 3.2 on the wallets; 3.2 then 3.4 or 3.5 on the bank bill-pay surfaces when the directory misses; 3.3 in place of all of it when the payee is on file - dlQH backs out of a blank form to take a favorite. 3.5 on S-Pankki with no directory at all. 3.6 as a detour (NfKb) or as the check after 3.5.5 (4uIk).",
+    "questions": [
+     {
+      "question": "Is the biller already in the saved payee list?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays your current bill pay payees alongside an '+ Add a payee' button, requiring you to decide if the biller is already set up.",
+      "whatTheAgentLoses": "You lose the opportunity to manage your payee list and personally verify that the correct new or existing biller is selected for the payment.",
+      "speak": "on-event",
+      "check": "Does the payee list already contain your biller?",
+      "say_example": "<PG&E> is already in your payees, so I'm using that one."
+     },
+     {
+      "question": "Should I link the biller by logging into it, or add it by hand?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen presents a choice between entering login credentials for an encrypted connection or clicking 'Add Biller Manually'.",
+      "whatTheAgentLoses": "The user loses the ability to decide whether to share their biller login credentials with the bank or manually enter the payee details.",
+      "speak": "on-event",
+      "check": "Does the page offer to link the biller by logging into it, next to a manual option?",
+      "say_example": "It offers to log in to your <utility> account to pull bills. That means handing them your <utility> password. I'm adding it by hand instead. Say link if you'd rather."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Pick the biller category",
+      "questions": [
+       {
+        "question": "Which category is your biller under?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple options like 'Electric Utilities' and 'Water Utilities', so you must choose the correct classification to locate your specific payee.",
+        "whatTheAgentLoses": "Letting an agent navigate the categories means you lose direct oversight over how your specific utility provider is classified within the portal.",
+        "speak": "never",
+        "check": "Which category on the page matches the type of bill?",
+        "say_example": "Picked <Electric Utilities>"
+       },
+       {
+        "question": "Are you paying a company or a person?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interface requires categorizing the new payee by selecting either the 'Company' or 'Person' radio button under 'Who are you paying?'.",
+        "whatTheAgentLoses": "The user loses control over correctly categorizing the payee, which dictates what details are needed to set them up.",
+        "speak": "if-wrong",
+        "check": "Is 'Company' or 'Person' selected under 'Who are you paying?'",
+        "say_example": "The form is set to paying a person. <Your biller> is a company. Switching it."
+       },
+       {
+        "question": "Which country's bills do you want to pay?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Pay Bills' menu requires selecting the specific country, such as Costa Rica or Mexico, where your biller is located.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact country for their bill payment, which could result in the agent being unable to locate the correct international payee.",
+        "speak": "if-wrong",
+        "check": "Which country is selected, and which country is the biller in?",
+        "say_example": "The country is set to <Mexico>. Your biller is in <Costa Rica>. Switching it."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Search the biller directory",
+      "questions": [
+       {
+        "question": "Which of the search results is the biller on your bill?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Because the screen currently shows a loading spinner after typing the query, you must wait for the results to populate to ensure you select the correct, verified biller.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify that the correct official biller was selected from the search results rather than a similarly named but incorrect payee.",
+        "speak": "gate",
+        "check": "Which search results share the biller's name, and what does each say it is - the standard bill, a prepaid load, a department?",
+        "say_example": "Several matches for <Chase>. <Card Services>, <Auto>, <Mortgage>. Which one is on your bill?"
+       },
+       {
+        "question": "Does the summary now show the company just picked?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The radio button for COOPELESCA is selected, but the Transaction Summary panel still displays 'Compañía Nacional de Fuerza y Luz', indicating the interface may not have registered the change.",
+        "whatTheAgentLoses": "The user loses the chance to catch a silent interface failure where their selection hasn't fully registered, potentially leading them to pay the wrong company.",
+        "speak": "if-wrong",
+        "check": "Does the summary panel name the same company as the selected radio button?",
+        "say_example": "I picked <COOPELESCA>, but the summary still says <the old company>. I'm re-selecting it before going on."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Pick a saved payee",
+      "questions": [
+       {
+        "question": "Does the account number filled into the form match the saved payee?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the pre-filled credit card number and email ensures the payment will be routed to the correct account without manual entry.",
+        "whatTheAgentLoses": "You lose the reassurance of personally verifying that the system has loaded the correct account details for your payee.",
+        "speak": "if-wrong",
+        "check": "Which fields on the payment form are prefilled, and does the account number match the saved payee?",
+        "say_example": "The form filled in the account ending <4821>. Your bill says <1553>. I'm fixing it."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Link the biller electronically",
+      "questions": [
+       {
+        "question": "Do you want eBills from this payee sent here?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts to subscribe to eBills, which requires the last four digits of your SSN and a selection for receiving options.",
+        "whatTheAgentLoses": "You lose control over your billing preferences and whether your SSN is used to enroll in electronic statements.",
+        "speak": "on-event",
+        "check": "Does the page offer eBills for this payee, and what does it require to subscribe?",
+        "say_example": "It offers to bring this payee's bills here. That needs the last four of your SSN. I'm skipping it. Say yes if you want them."
+       },
+       {
+        "question": "Does the vendor's eBill status now show as subscribed?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the green 'Subscribed' badge ensures that future bills from this vendor will automatically appear in your portal.",
+        "whatTheAgentLoses": "You lose the peace of mind of visually confirming that the eBill connection was successfully established.",
+        "speak": "never",
+        "check": "What does the eBill status badge for this vendor show?",
+        "say_example": "Saw the eBill badge read Subscribed for <vendor>"
+       },
+       {
+        "question": "Is the eBill actually on, when one screen says pending and the other says subscribed?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The confirmation screen states eBills will be added once approved, but the vendor profile immediately shows a 'Subscribed' status with a past bill date, creating confusion about the actual setup status.",
+        "whatTheAgentLoses": "A person delegating this loses the opportunity to investigate whether the eBill is truly active or if they still need to manually monitor for the next statement.",
+        "speak": "on-event",
+        "check": "Does the confirmation say the eBill is pending while the vendor page shows it subscribed?",
+        "say_example": "One screen says the eBill is pending. The other says it's on. Until a bill actually shows up here, watch for the paper one."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Enter the payee by hand",
+      "note": "3.5.1 and 3.5.2 in the form's order - on the wallets and on S-Pankki 3.5.2 is the payment form itself and the payee record is never saved. 3.5.3 where the platform standardizes the address (lpVy). 3.5.4 where offered, and after the payment on GCash. then 3.5.5.",
+      "children": [
+       {
+        "id": "3.5.1",
+        "label": "Enter the name and address",
+        "questions": [
+         {
+          "question": "What name, mailing address, and phone does the add-payee form need from your bill?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Add a payee' screen requires the complete physical address to ensure the payment is routed to the correct destination.",
+          "whatTheAgentLoses": "You lose the opportunity to personally verify that the payment is being sent to the exact, correct address for your biller.",
+          "speak": "gate",
+          "check": "Which name, address, and phone fields on the add-payee form are required, and which are still empty?",
+          "say_example": "This payee isn't in their list, so it needs the name and mailing address from your bill. Read me the pay-to address on the statement."
+         },
+         {
+          "question": "Does one of the names the form offers match the biller on your bill?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displayed a dropdown of previously entered names, requiring you to decide whether to select an existing contact or type a new one.",
+          "whatTheAgentLoses": "You lose control over exactly who is added to your payee list, risking a payment being sent to the wrong person.",
+          "speak": "on-event",
+          "check": "Does the name field offer previously entered names, and does one match the biller?",
+          "say_example": "The form offers <a name> from a past payee. It matches your bill, so I'm using it."
+         },
+         {
+          "question": "Does the payee name on the form match the pay-to name on your bill?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The speaker warns that companies often use DBAs, and entering the wrong name will cause the paper check to be rejected by the payee's bank.",
+          "whatTheAgentLoses": "The user loses the chance to verify the exact legal or DBA name required by the payee, risking a bounced or uncashable check.",
+          "speak": "if-wrong",
+          "check": "Does the payee name on the form match the pay-to name printed on the bill?",
+          "say_example": "The check will be printed to <the name typed>. Your bill says pay to <a different name>. A wrong name means the check bounces. I'm using the name on the bill."
+         },
+         {
+          "question": "Is the payee's phone number typed in the format the form wants?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The speaker explicitly notes that you must include the \"hash marks\" (dashes) between the numbers when entering the company's phone number.",
+          "whatTheAgentLoses": "The user loses the chance to ensure the phone number is formatted correctly according to the system's specific requirements, which might cause validation errors.",
+          "speak": "never",
+          "check": "Does the phone field show a format error?",
+          "say_example": "Re-entered the phone with dashes"
+         }
+        ]
+       },
+       {
+        "id": "3.5.2",
+        "label": "Enter the account number",
+        "questions": [
+         {
+          "question": "Is the name typed the way the statement prints it, in the order the form wants?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The physical billing statement shows a specific name format, so you must carefully extract and enter just the surname and first name exactly as printed to avoid payment errors.",
+          "whatTheAgentLoses": "You lose the ability to personally verify that the correct name from your physical billing statement is interpreted and formatted accurately in the app.",
+          "speak": "if-wrong",
+          "check": "Does the name field match the name printed on the statement, in the order the form asks for?",
+          "say_example": "The form wants surname first. Your statement says <surname, first name>, so I'm entering it that way."
+         },
+         {
+          "question": "What account or customer number from your bill does the form ask for?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Add a payee' screen includes an 'Account number (recommended)' field to ensure the payment is accurately routed to your specific account with the biller.",
+          "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that their exact account number is entered to prevent a misdirected payment.",
+          "speak": "gate",
+          "check": "Which account, customer, or reference number does the form ask for, and where does the page say it appears on the bill?",
+          "say_example": "It needs your account number with <the biller>. The page shows where it sits on the bill, top right under <customer code>. Read it to me."
+         },
+         {
+          "question": "What are the vendor's bank routing and account numbers?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires the vendor's 9-digit routing number and account number to save their bank details for future payments.",
+          "whatTheAgentLoses": "You lose the ability to verify that the correct routing and account numbers are being saved for this specific vendor.",
+          "speak": "gate",
+          "check": "Which bank account fields does the form require for the payee - routing, account, IBAN - and does it offer to let the vendor enter their own?",
+          "say_example": "The form wants <the vendor's> bank details. Routing and account number, or you can have them enter it by email. Read me the numbers from the invoice, or say invite."
+         },
+         {
+          "question": "What reference number from the invoice goes in the reference field?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The invoice displays a specific 'Viitenumero' (reference number) that must be entered into the corresponding field without spaces to ensure the business correctly attributes the payment.",
+          "whatTheAgentLoses": "You lose the opportunity to manually verify that the exact reference number from the invoice is chosen over a generic message and formatted correctly.",
+          "speak": "on-event",
+          "check": "Does the form have a reference number field, and what reference does the invoice show?",
+          "say_example": "There's a reference field. The invoice shows <number>. I'm entering it without spaces, so the payment lands on your account."
+         },
+         {
+          "question": "Will you type the full card number in yourself?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen explicitly prompts for a 16-digit credit card number to identify the funding account for the transaction.",
+          "whatTheAgentLoses": "You lose the ability to manually select and verify the specific credit card used to fund the payment.",
+          "speak": "gate",
+          "check": "Does the form ask for a full card number?",
+          "say_example": "It wants the full card number. I don't take card numbers. Type it in, and tell me when it's done."
+         },
+         {
+          "question": "Is your email in the receipt field?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Entering an accurate email address ensures you receive a digital receipt for your records once the payment is complete.",
+          "whatTheAgentLoses": "The user loses the ability to choose which email address receives the payment confirmation or whether to provide one at all.",
+          "speak": "never",
+          "check": "Does the receipt email field contain your email?",
+          "say_example": "Entered <email> for the receipt"
+         }
+        ]
+       },
+       {
+        "id": "3.5.3",
+        "label": "Confirm the standardized address",
+        "questions": [
+         {
+          "question": "Is the address the site suggests the same place as the one typed?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen asks you to confirm a standardized pay-to address before saving the payee.",
+          "whatTheAgentLoses": "You lose the ability to personally verify that the system's suggested address is correct for your specific biller.",
+          "speak": "if-wrong",
+          "check": "Does the standardized address the page recommends differ from what was typed?",
+          "say_example": "The site corrected the address. The ZIP typed puts it in <Idaho>. Its suggestion is <the full address>. I'm using that."
+         }
+        ]
+       },
+       {
+        "id": "3.5.4",
+        "label": "Set the payee preferences",
+        "questions": [
+         {
+          "question": "On what day of the month should the app remind you to pay this bill?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Edit Biller' screen provides a 'Remind Me Every' dropdown list to select a specific day for recurring monthly notifications.",
+          "whatTheAgentLoses": "You lose the ability to strategically time the reminder based on your personal cash flow and preferred buffer around the actual due date.",
+          "speak": "never",
+          "check": "What day is selected in the 'Remind Me Every' dropdown?",
+          "say_example": "Left the reminder on <the 1st>"
+         },
+         {
+          "question": "Do you want this amount saved for future payments to this biller?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Edit Biller' screen pre-filled the optional amount field with the last transaction's value, which needs to be cleared if the bill fluctuates monthly.",
+          "whatTheAgentLoses": "The user loses the application of their personal knowledge that this specific bill's amount changes every month and should not be saved as a fixed default.",
+          "speak": "on-event",
+          "check": "Is the saved amount field prefilled with a previous payment?",
+          "say_example": "The form saved <last month's 84> as this biller's fixed amount. Bills change, so I cleared it."
+         },
+         {
+          "question": "Which email notifications do you want to receive for payments to this payee?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen offers checkboxes to receive email alerts when a payment is made, a paper check is cashed, or a payment is due.",
+          "whatTheAgentLoses": "Delegating this means the agent might sign you up for unnecessary emails or fail to enable reminders you rely on to track your bills.",
+          "speak": "never",
+          "check": "Which email notification boxes are checked?",
+          "say_example": "Left the payment email alerts on"
+         }
+        ]
+       },
+       {
+        "id": "3.5.5",
+        "label": "Save the payee",
+        "questions": [
+         {
+          "question": "Does the account number box actually hold a number?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The account number field contains the name 'Anthony' instead of a valid number, suggesting a data entry error that could cause the payment to fail.",
+          "whatTheAgentLoses": "You lose the ability to catch and correct obvious data entry errors before adding a new payee to your account.",
+          "speak": "if-wrong",
+          "check": "Does the account number field contain digits, or a name or other text?",
+          "say_example": "The account number box has a name in it. That payment would fail. Fixing it before I save."
+         },
+         {
+          "question": "Does the new biller appear in your list of payees?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Seeing the new PG&E entry with the 'NEW' badge confirms the payee was successfully added and is ready for payment.",
+          "whatTheAgentLoses": "You lose the direct visual confirmation that the specific biller and account number were correctly saved to your profile.",
+          "speak": "never",
+          "check": "Does the confirmation or the payee list show the new biller as added?",
+          "say_example": "Added <PG&E> to payees, marked NEW"
+         },
+         {
+          "question": "Did the page reject the payee's account number or address?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Banks validate routing numbers and sometimes account formats; ignoring a validation error means the payment cannot be routed.",
+          "whatTheAgentLoses": "The user loses the opportunity to correct a typo in the payee's account details before the system blocks the setup.",
+          "speak": "on-event",
+          "check": "Does the page show an error on the account number or address?",
+          "say_example": "The bank rejected the routing number. It can't send anything there. Check the number on the invoice."
+         },
+         {
+          "question": "Do you want to make the payment now or save the details to pay later?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen presents a choice between 'Make Payment' to transfer funds immediately and 'Save & Pay Later' to defer the transaction.",
+          "whatTheAgentLoses": "Delegating this choice means giving up personal control over exactly when the funds are deducted from your account.",
+          "speak": "never",
+          "check": "Which button is selected - make payment now, or save and pay later?",
+          "say_example": "Chose Make Payment"
+         },
+         {
+          "question": "Do you want to save the biller details for future payments?",
+          "cluster": "select",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The screen displays the 'Payment Received' receipt with an explicit 'Save Biller Details >' link.",
+          "whatTheAgentLoses": "The user loses the convenience of having the biller saved for faster transactions in the future if the agent skips this step.",
+          "speak": "never",
+          "check": "Does the receipt offer to save the biller details?",
+          "say_example": "Saved biller details for next time"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Check the saved billers"
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Read what is owed",
+    "note": "4.1 on the issuer sites and the accounting tool; 4.2 wherever the bill is paper or a PDF, and it can come before anything else (dlQH reads the statement in the other bank's app first). 4.3 where the balance leaves something out. 4.4 wherever autopay is already on. 4.5 as a detour on the biller portal that offers paperless on the overview row (RoGB) - it changes how the next bill arrives, not this payment.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Read the balances and dates",
+      "questions": [
+       {
+        "question": "What is your current balance, minimum payment, and due date?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Reviewing the current balance of $217.03, the minimum payment of $35.00, and the June 15 due date helps you decide exactly how much to pay.",
+        "whatTheAgentLoses": "You lose the opportunity to review your statement balance and minimum payment requirements before initiating the transaction.",
+        "speak": "always",
+        "check": "What current balance, minimum payment, and due date does the page show?",
+        "say_example": "Balance is <217.03>. Minimum is <35>. Due <June 15>."
+       },
+       {
+        "question": "Did the emailed invoice show up in the bills list?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the SOHO House invoice appears with the correct $1,200.00 amount and due date ensures the automated system captured the bill accurately.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the automated system extracted the correct vendor, amount, and due date from the emailed invoice.",
+        "speak": "never",
+        "check": "Does the bills list show the emailed invoice with its amount and due date?",
+        "say_example": "Found the emailed invoice in the bills list, <1,200> due <June 15>"
+       },
+       {
+        "question": "Is the amount shown owed, or is it a credit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Account credits are sometimes shown with just a minus sign or in green text, which can easily be misread as a balance due if the visual context is ignored.",
+        "whatTheAgentLoses": "The user loses the visual cue that they actually have a credit, potentially leading the agent to mistakenly pay an amount they do not owe.",
+        "speak": "on-event",
+        "check": "Does the amount carry a minus sign, 'CR', or a credit label?",
+        "say_example": "This account is in credit by <12.50>. Nothing is owed. I'm not paying anything unless you say so."
+       },
+       {
+        "question": "Has the balance actually loaded, rather than a spinner or a placeholder zero?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many portals display $0.00 or a skeleton loader for a few seconds while fetching the actual balance from the server.",
+        "whatTheAgentLoses": "The agent might scrape a temporary placeholder zero and incorrectly conclude that no payment is required this month, causing a missed bill.",
+        "speak": "never",
+        "check": "Is the balance a real figure, or still a spinner, a zero, or a grey loading block?",
+        "say_example": "Waited <8 seconds> for the balance to load, then read <217.03>"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Read the bill or statement",
+      "questions": [
+       {
+        "question": "Do you want the full statement rather than the quick overview?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a summary with the minimum amount due, but checking the full statement allows you to verify individual charges.",
+        "whatTheAgentLoses": "You lose the opportunity to personally audit your recent transactions for accuracy before the payment is initiated.",
+        "speak": "never",
+        "check": "Does the page link to the full statement?",
+        "say_example": "Found the link to the full statement"
+       },
+       {
+        "question": "Which statement period do you want to select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a list of available statement dates, requiring you to choose the specific billing cycle you intend to review or pay.",
+        "whatTheAgentLoses": "You lose the ability to verify the exact billing cycle being accessed, which could lead to the agent reviewing or paying the wrong month's statement.",
+        "speak": "never",
+        "check": "Which statement periods are listed, and which is the latest?",
+        "say_example": "Picked the <June> statement, the latest"
+       },
+       {
+        "question": "Did your statement download successfully?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The notification shade shows the PDF statement downloaded successfully, which means you can now open the file to review your billing details.",
+        "whatTheAgentLoses": "You lose the ability to personally open and inspect the downloaded statement to ensure the billed charges are accurate before paying.",
+        "speak": "never",
+        "check": "Does the page show a message that the statement PDF downloaded?",
+        "say_example": "Downloaded the <June> statement PDF"
+       },
+       {
+        "question": "Is the file opened the statement just downloaded, not an older one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the most recent file, like '[id].pdf', ensures you are viewing the correct bill details for this payment cycle.",
+        "whatTheAgentLoses": "You lose the chance to personally inspect the downloaded PDF statement to verify your specific charges before paying.",
+        "speak": "if-wrong",
+        "check": "Is the opened file the one just downloaded, by name and date?",
+        "say_example": "The file that opened is from <last month>. Opening today's instead."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Check the pending charges",
+      "questions": [
+       {
+        "question": "Are there pending charges not yet in the current balance?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows $84.56 in pending transactions that have not yet posted to the $135.21 current balance, which might affect how much you decide to pay.",
+        "whatTheAgentLoses": "You lose the opportunity to manually adjust your payment amount to cover recent charges that are still pending.",
+        "speak": "on-event",
+        "check": "What pending amount does the page show separately from the current balance?",
+        "say_example": "There's <84.56> pending that isn't in the <135.21> balance yet. Paying the balance leaves that for next time."
+       },
+       {
+        "question": "Do available credit, balance, and pending add up to the credit limit?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that the available credit, current balance, and pending transactions sum exactly to the total credit limit confirms that the account's ledger is accurate and fully synced.",
+        "whatTheAgentLoses": "The user loses the chance to manually audit the account's math to ensure no fraudulent or missing transactions exist before submitting a payment.",
+        "speak": "if-wrong",
+        "check": "Do the available credit, current balance, and pending amounts add up to the credit limit shown?",
+        "say_example": "The numbers on this page don't add up. Available plus balance plus pending is <50> short of the limit. Something hasn't posted. I'd wait a minute."
+       },
+       {
+        "question": "Does the current balance add up from the last statement and the payments since?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that the $302.81 current balance correctly accounts for the $169.39 previous balance and the matching payment ensures the bill is accurate before you pay.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally audit the bill's math and catch potential accounting errors before money leaves your account.",
+        "speak": "if-wrong",
+        "check": "Does the current balance equal the previous balance plus new charges minus the payments listed?",
+        "say_example": "The balance doesn't add up from the last statement and the payment shown. It's <40> high. Check the statement before paying it all."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Check the standing autopay",
+      "questions": [
+       {
+        "question": "Do you still want to pay now when autopay is already scheduled?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that an automatic payment is already scheduled for March 28, so making a manual payment could result in paying more than intended.",
+        "whatTheAgentLoses": "You lose the opportunity to review your current balances and existing automatic payment schedule before deciding to initiate an additional manual payment.",
+        "speak": "gate",
+        "check": "Does the page say an automatic payment is already scheduled, for what amount and date, and does it say a manual payment reduces it?",
+        "say_example": "Autopay is already set to pay <the minimum> on <March 28>. Paying now as well could pay twice. The page says a payment before <the 27th> reduces it. Still pay now?"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Set the statement delivery",
+      "questions": [
+       {
+        "question": "Do you want paperless billing turned on?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Billing Account Overview' table presents a 'Go Green!' option under the 'Paperless Billing' column to change how you receive your statements.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides your statement delivery preferences, which could result in you unexpectedly missing physical mail.",
+        "speak": "never",
+        "check": "Is paperless billing on or off?",
+        "say_example": "Left paperless billing <off>"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Set the amount",
+    "note": "one of 5.1 to 5.3 sets the figure: 5.1 where the platform computes the candidates, 5.2 where the bill supplies it, 5.3 where the user decides. 5.4 on the wallets, where a fee or an add-on rides on the amount. B3DP and Nu5a open every option before choosing; W0JT edits the figure down on the review screen.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Choose among the balances",
+      "questions": [
+       {
+        "question": "Which amount do you pay when the current balance and the payoff amount differ?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Account Summary shows a balance of $250.00, but the Transfers page lists a payoff amount of $250.52, creating ambiguity about the exact amount owed.",
+        "whatTheAgentLoses": "The user loses the ability to choose whether to pay the stated balance or the full payoff amount that includes accrued interest.",
+        "speak": "on-event",
+        "check": "Does the page show a payoff amount that differs from the current balance?",
+        "say_example": "The summary says <250.00>. The payoff is <250.52>. The extra is interest to today. Paying the payoff clears it."
+       },
+       {
+        "question": "Does the statement balance option count payments already made this cycle?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that the statement balance option does not reflect previous payments made during the current cycle, meaning selecting it could result in an overpayment.",
+        "whatTheAgentLoses": "The user loses the opportunity to apply their knowledge of recent, unreflected payments to avoid accidentally overpaying their credit card bill.",
+        "speak": "on-event",
+        "check": "Does the page warn that the statement balance option doesn't count payments made this cycle?",
+        "say_example": "You already paid <100> this cycle. The statement balance option ignores that, so it would overpay by <100>. I'm using <the current balance>."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Type the billed amount",
+      "questions": [
+       {
+        "question": "Did the page swap the amount typed for the bill's default amount?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The user typed '30.00' into the amount field, but the primary action button immediately updated to 'PAY $11.51' (the eBill balance), indicating the interface discarded the manual input.",
+        "whatTheAgentLoses": "An agent might type a custom amount and blindly click the submit button without noticing the interface reverted the value, resulting in an unintended payment amount.",
+        "speak": "if-wrong",
+        "check": "Does the amount on the pay button match the amount typed in the field?",
+        "say_example": "I typed <30>, but the button now says pay <11.51>. The page swapped in the bill amount. Fixing it."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Enter a custom amount",
+      "questions": [
+       {
+        "question": "How much do you want to pay toward your bill?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Pay card' screen provides preset options like the statement balance, but selecting 'Other amount' lets you enter exactly $110.00.",
+        "whatTheAgentLoses": "You lose the financial control of deciding exactly how much of your balance to pay off based on your current budget.",
+        "speak": "gate",
+        "check": "Which payment amounts does the page offer, and what figure sits by each?",
+        "say_example": "It offers the statement balance, <217.03>. The minimum, <35>. Or another amount. Statement balance is the one with no interest. Which?"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Check the fee and add-on",
+      "questions": [
+       {
+        "question": "Should I leave the bill protection box checked when it adds a fee?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form defaults to including an optional insurance fee that increases your total payment.",
+        "whatTheAgentLoses": "The user loses the chance to opt out of an unnecessary extra charge.",
+        "speak": "if-wrong",
+        "check": "Is a bill protection or insurance box pre-checked, and what fee does it add?",
+        "say_example": "A bill protection box came pre-checked. It adds <68.33>. I unchecked it."
+       },
+       {
+        "question": "What service fee does the form add to this payment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form explicitly states a PHP 10.00 service fee, a next business day posting period, and requires a specific biller reference number to process the payment.",
+        "whatTheAgentLoses": "Delegating this step means the agent accepts the additional service fee and posting timeline on your behalf without giving you the chance to evaluate them.",
+        "speak": "on-event",
+        "check": "What service fee does the form say is added, and is it shown or behind a link?",
+        "say_example": "There's a <10 peso> fee on top. <2,231.04> becomes <2,241.04>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Pick the funding source",
+    "note": "6.1 on every platform - a default accepted on most, a real choice on B3DP, Vb1X, dlQH and KUG3. 6.2 where the source has to exist first: before 2.4 on EnZK, mid-way on W0JT when the picked account reads Verify this account, toured and abandoned on Kgwb. 6.3 in place of or beside 6.1 where a rewards balance pays.",
+    "questions": [
+     {
+      "question": "Which payment method do you want, given the fee on each?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows that using a bank transfer is free, while paying with a credit or debit card incurs a 2.9% fee.",
+      "whatTheAgentLoses": "You lose the opportunity to decide whether the benefits of using a card, like earning rewards, outweigh the extra 2.9% fee compared to a free bank transfer.",
+      "speak": "on-event",
+      "check": "What fee does the page list for each payment method?",
+      "say_example": "A card adds <2.9 percent>, about <3.20> here. Bank transfer is free, so I'm paying from <checking>."
+     }
+    ],
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Pick the source account",
+      "questions": [
+       {
+        "question": "Which saved account do you want to use for this payment, or do you need to link a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists several saved options like \"Regular Checking\" and \"Cap Bill Pay,\" but you must decide whether to use one of these or select \"+ Link another account\" to fund the payment from a different bank.",
+        "whatTheAgentLoses": "Letting an agent choose the funding source means you lose control over your cash flow and might accidentally overdraw an account instead of linking the specific one you intended to use.",
+        "speak": "gate",
+        "check": "Which saved funding accounts does the page list, with what balance for each, and is there a link-new option?",
+        "say_example": "Pay from which account? <Regular Checking>, balance <1,240>. <Savings>, <5,000>. Or link a new one."
+       },
+       {
+        "question": "Does the funding account's balance match from one screen to the next?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The available balance for the checking account ending in *2000 inexplicably jumps from $152.00 to $27,700.17 and back again without any intervening deposits.",
+        "whatTheAgentLoses": "An agent might proceed with scheduling a payment based on a falsely inflated account balance, resulting in a failed transaction or overdraft fees.",
+        "speak": "if-wrong",
+        "check": "Does the available balance shown for the funding account match the figure on the previous screen?",
+        "say_example": "This screen says your checking has <27,700>. The last one said <152>. One of them is wrong. I'm holding until it settles."
+       },
+       {
+        "question": "Is the default payment source the one you asked for?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a default payment source and a date of 11/18/2020, which must be verified to ensure funds are drawn from the correct account on the intended day.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the default bank account has sufficient funds and that the scheduled payment date aligns with your current cash flow.",
+        "speak": "if-wrong",
+        "check": "What payment source does the form default to?",
+        "say_example": "The form defaulted to <savings>. You said checking. Changing it."
+       },
+       {
+        "question": "Is the linked bank account marked disconnected or needing sign-in again?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the connection to an external bank has expired, the payment will fail unless the account is re-linked.",
+        "whatTheAgentLoses": "The user loses the chance to re-authenticate their bank connection, resulting in a failed payment and potential late fees.",
+        "speak": "on-event",
+        "check": "Does the page mark the funding account as disconnected or needing to be signed in again?",
+        "say_example": "Your <bank> link has expired. The payment would fail from it. It needs signing in again before we can use it."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Link a new bank account",
+      "note": "6.2.1 then 6.2.2 on the routing-number route (EnZK); 6.2.3 on the micro-deposit route (W0JT), which the platform announced in 1.4.4. Kgwb opens 6.2.1's screen and cancels out through 1.3.",
+      "children": [
+       {
+        "id": "6.2.1",
+        "label": "Enter the bank numbers",
+        "questions": [
+         {
+          "question": "Do you want to cancel adding an external account and leave the screen?",
+          "cluster": "undo",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The prompt warns that leaving will discard any changes made to the external account setup.",
+          "whatTheAgentLoses": "The user loses the opportunity to decide whether to use an existing funding account or proceed with adding a new one.",
+          "speak": "never",
+          "check": "Does a leave-screen warning say the account setup would be discarded?",
+          "say_example": "Stayed on the link-account screen"
+         },
+         {
+          "question": "What are the details of the bank account you want to add?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires a routing number, account number, and account type to add a new funding source for online payments.",
+          "whatTheAgentLoses": "Delegating this step means you lose control over which specific bank account is linked to your profile to fund this and future payments.",
+          "speak": "gate",
+          "check": "Which fields does the add-account form require - routing, account number, account type - and does it say the site can both put money in and take it out?",
+          "say_example": "To pay from <this bank>, the site needs its routing and account number. Linking it lets them put money in and take it out. Type the numbers yourself."
+         }
+        ]
+       },
+       {
+        "id": "6.2.2",
+        "label": "Verify the bank details",
+        "questions": [
+         {
+          "question": "Are the routing and account numbers you entered correct?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen asks you to verify the routing and account numbers for your checking account to ensure the payment can be processed successfully.",
+          "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct bank account details are being added to the portal.",
+          "speak": "if-wrong",
+          "check": "Do the routing and account numbers on the verify screen match what was entered?",
+          "say_example": "The verify screen shows an account ending <1553>. The field I filled was ending <2000>. Going back."
+         }
+        ]
+       },
+       {
+        "id": "6.2.3",
+        "label": "Confirm the micro-deposits",
+        "questions": [
+         {
+          "question": "What are the two tiny deposits the site sent to your bank account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Entering the exact deposit amounts of $0.11 and $0.12 shown in the Chase account activity is required to verify the linked account.",
+          "whatTheAgentLoses": "You lose the security of personally verifying the micro-deposits to ensure the correct bank account is linked.",
+          "speak": "gate",
+          "check": "What deposit amounts does the verification form ask for?",
+          "say_example": "It needs the two tiny deposits the site sent to your <bank> account. Look for amounts under a dollar. What are they?"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Pay with a rewards balance",
+      "questions": [
+       {
+        "question": "Do you want to apply your available cashback bonus to this payment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides an option to apply up to $5.86 of your accumulated Cashback Bonus toward the transaction.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to save your rewards for a future purchase or use them to reduce this specific bill.",
+        "speak": "on-event",
+        "check": "Does the page offer a cashback or rewards balance to apply, and how much?",
+        "say_example": "You have <5.86> cashback available. I'm putting it toward this bill. Say no if you'd rather keep it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Schedule the payment",
+    "note": "7.1 wherever a date field exists - kept at today on most, moved on Vb1X, NfKb, Kgwb and b_Qz. 7.2 wherever the platform prints a second date or a posting period. 7.3 on the one platform that offers two rails. 7.4 is read on the sites that state one, and skipped on most. 7.5 wherever a one-time-or-repeat control is on the form. 7.6 where a memo field exists. on the wallets the user only reads 7.2 and 7.4 - the money leaves at once. 7.7 only when 7.5 is taken the other way (iSpk, lpVy) - the branch TASK.txt excludes, kept as one op because the gold asks about its fields; it holds the recurring form's own decisions and nothing that belongs to a one-time payment.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Pick the payment date",
+      "questions": [
+       {
+        "question": "Do you want this paid today or on a later date?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to 'Pay today', and checking the calendar allows you to verify if immediate processing is the best choice for your finances.",
+        "whatTheAgentLoses": "You lose the ability to strategically time the payment based on your current account balance and upcoming expenses.",
+        "speak": "on-event",
+        "check": "What payment date is selected, and what due date does the page show?",
+        "say_example": "It's set to pay today, <date>. Due is <March 28>. I'm leaving it on today."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Read the delivery date",
+      "questions": [
+       {
+        "question": "Does the delivery date the page shows fall on or before the due date?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates a five-business-day delivery time, meaning a payment sent on October 18 will not arrive until October 25, which could trigger late fees if the bill is due sooner.",
+        "whatTheAgentLoses": "The user loses the ability to personally ensure the payment's projected arrival date safely precedes the bill's actual due date.",
+        "speak": "if-wrong",
+        "check": "What send date, delivery date, and due date does the page show, and did the date change from what was picked?",
+        "say_example": "This goes as a paper check. It leaves <October 18> and arrives <October 25>. The bill is due <the 22nd>. That's late. I'll move the send date up."
+       },
+       {
+        "question": "Does the money leave your account days before the vendor gets it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The review screen explicitly separates the 'Debit date' (when money leaves your account) from the 'Delivery ETA' (when the vendor receives it), meaning your cash is tied up in transit.",
+        "whatTheAgentLoses": "The user loses the ability to manage their cash flow, as they might assume the money stays in their account until the delivery date.",
+        "speak": "on-event",
+        "check": "Does the page show a debit date separate from a delivery date, or say the money leaves immediately?",
+        "say_example": "Money leaves your account <Monday>. The vendor gets it <Friday>."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Choose the payment rail",
+      "questions": [
+       {
+        "question": "Should this go by bank transfer or paper check?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The paper check option incurs a $1.27 fee and arrives later, triggering a past-due warning, while the ACH payment is free and faster.",
+        "whatTheAgentLoses": "The user loses control over selecting the most cost-effective and timely payment method to avoid potential late penalties.",
+        "speak": "on-event",
+        "check": "What does the page say each rail costs and when it arrives?",
+        "say_example": "Paper check costs <1.27> and lands past the due date. Bank transfer is free and on time. Using the transfer."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Read the cutoff rules",
+      "questions": [
+       {
+        "question": "Is it before today's cut-off time, so the payment counts today?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The confirmation screen warns of a specific cut-off time (like 10 PM or 12:00 Midnight ET) for same-day settlement, meaning a payment submitted late will not count until the next business day.",
+        "whatTheAgentLoses": "The user loses the awareness that their payment might be considered late if the agent submits it after the cut-off time on the due date.",
+        "speak": "on-event",
+        "check": "What cut-off time does the page state for same-day credit?",
+        "say_example": "Cut-off for today is <10 pm>. It's past that, so this counts <tomorrow>. Due is <the 28th>, so that's fine."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Keep the payment one-time",
+      "questions": [
+       {
+        "question": "Do you want this payment to repeat?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Recurring Off >' option, presenting the choice to automate future bills rather than just initiating a one-time payment.",
+        "whatTheAgentLoses": "You lose the ability to manage your own cash flow automation if an agent decides whether bills should be paid automatically.",
+        "speak": "if-wrong",
+        "check": "Is the recurring or frequency setting switched on for this payment?",
+        "say_example": "Recurring is switched on here. You asked for one payment. Turning it off."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Add a memo",
+      "questions": [
+       {
+        "question": "What note goes in the memo field?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes an optional notes field that allows you to label the transaction for easier tracking in your personal records.",
+        "whatTheAgentLoses": "You lose the ability to attach a specific, personalized memo that makes sense for your own financial tracking.",
+        "speak": "never",
+        "check": "Is there a memo or note field, and what is in it?",
+        "say_example": "Set the memo to <invoice 4471>"
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Set the recurring schedule",
+      "questions": [
+       {
+        "question": "How often should it repeat, how much each time, and when does it start and stop?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers multiple frequency options like weekly, monthly, or yearly, which dictates exactly how often funds will be automatically deducted from your account.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to align the automated payment schedule with your personal cash flow and pay periods.",
+        "speak": "gate",
+        "check": "What frequency, amount, start date, and end options does the recurring form show?",
+        "say_example": "Setting up the repeat. I need how often, how much each time, when the first one goes, and when it stops. I'd say monthly on the <1st>, <100> each time, until you cancel. Sound right?"
+       },
+       {
+        "question": "Is the recurring payment successfully turned on?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking that the 'Recurring' row says 'On' ensures the bill will be paid automatically every month without needing manual approval.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the automation is active and won't result in missed future payments.",
+        "speak": "never",
+        "check": "Does the payee's page show recurring as on?",
+        "say_example": "Confirmed recurring is on, <monthly on the 1st>"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Review and confirm",
+    "note": "8.1 on every platform, with 8.2 against it. 8.3 where the review adds a warning the form did not carry. then 8.4 - one click on most, Make payment then Pay it on Chase; 8.5 after it where the platform demands a separate credential. 2Mbe, iSpk and b_Qz stop at 8.1 and never run 8.4.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Review the payment summary"
+     },
+     {
+      "id": "8.2",
+      "label": "Check the figures across screens",
+      "questions": [
+       {
+        "question": "Do the dates shown across the different screens agree with each other?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard lists a past payment on December 27, which contradicts the bill showing a December 31 due date as 'Due in 5 days' (implying today is December 26).",
+        "whatTheAgentLoses": "The user loses the human ability to spot timeline inconsistencies that could indicate a system error, a simulated environment, or an unreliable portal.",
+        "speak": "if-wrong",
+        "check": "Do the dates on this screen agree with the dates on the previous screens?",
+        "say_example": "The dashboard says a payment went out <December 27>. The bill still says due in five days. Those don't fit. Check the payment history before paying again."
+       },
+       {
+        "question": "Does the per-check fee here match the one on the pricing page?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The pricing page explicitly lists check payments at $1.50 per transaction, but the subscription summary and payment screen show a fee of $1.27.",
+        "whatTheAgentLoses": "You lose the opportunity to investigate the conflicting fee amounts to ensure you understand the actual cost before submitting the payment.",
+        "speak": "if-wrong",
+        "check": "Does the per-check fee on the payment screen match the fee on the pricing page?",
+        "say_example": "The pricing page said <1.50> a check. This screen charges <1.27>. Small, but the numbers disagree. I'm going with what's charged here."
+       },
+       {
+        "question": "Which is right when the portal and the billing site show different amounts due for the same date?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The customer portal shows an amount due of $79.60, but the e-billing site displays a balance of $164.60 for the exact same due date.",
+        "whatTheAgentLoses": "The user loses the ability to investigate the discrepancy and decide which amount is the correct one to pay.",
+        "speak": "on-event",
+        "check": "Do two pages show different amounts due for the same date?",
+        "say_example": "The portal says <79.60> due. The billing site says <164.60>, same date. Two answers for one bill. I'm holding until we know which. The statement itself should say."
+       },
+       {
+        "question": "Is the masked account number the same length as the one entered?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The account number originally entered was 11 characters long, but the system later displayed a 13-character mask, indicating a potential mismatch or formatting error.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch a subtle data entry or system formatting error that could cause the payment to be rejected or misdirected.",
+        "speak": "if-wrong",
+        "check": "Does the masked account number match the length of the number entered?",
+        "say_example": "I entered an <11>-digit account number. The page shows <13> characters masked. That may be a different number. Checking it before paying."
+       },
+       {
+        "question": "Does the funding account stay the same from pick to confirmation?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The account identifier changed from 7600 during selection to 123 during review and 1234 on confirmation, raising concerns about which account will actually be debited.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch a potentially critical system glitch where the wrong bank account might be charged.",
+        "speak": "if-wrong",
+        "check": "Do the funding account's last digits stay the same from selection through confirmation?",
+        "say_example": "The account picked ended <7600>. The confirmation shows <1234>. I don't know which one gets charged. Holding."
+       },
+       {
+        "question": "Is the total exactly the bill amount plus the fee shown?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Verifying that the final total exactly matches your entered bill amount plus the service fee ensures you are not being overcharged.",
+        "whatTheAgentLoses": "You lose the opportunity to catch unexpected charges or calculation errors before the transaction is finalized.",
+        "speak": "if-wrong",
+        "check": "Does the total on the page equal the bill amount plus the fee it disclosed?",
+        "say_example": "Bill is <2,231.04>. Fee is <10>. The total shows <2,251.04>. That's <10> over. Something else got added."
+       },
+       {
+        "question": "Is the payee name on the confirmation the same one entered at setup?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The vendor was initially added as 'US Food' but appeared as 'US Foods' during scheduling and confirmation, raising concerns about whether the correct account was credited.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch a potential database glitch or mismatch in the payee name that might result in the payment going to the wrong vendor.",
+        "speak": "if-wrong",
+        "check": "Does the payee name on the confirmation match the name entered when the payee was set up?",
+        "say_example": "You added <US Food>. The confirmation says <US Foods>. If that's a different vendor, the money goes elsewhere. Checking the bill."
+       },
+       {
+        "question": "Does the payment method on the final receipt match the one you selected?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The final receipt shows the payment was processed using a credit or debit card instead of the rewards points selected on the payment gateway.",
+        "whatTheAgentLoses": "An agent might fail to notice this discrepancy, resulting in an unexpected charge to your card instead of using your rewards points.",
+        "speak": "if-wrong",
+        "check": "Does the payment method on the receipt match the one selected?",
+        "say_example": "The receipt says it charged your <card>. You picked <rewards points>. The points weren't used."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Read the review warnings",
+      "questions": [
+       {
+        "question": "Is the page warning this payment would overdraw the account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the payment exceeds the available balance, the bank might charge an overdraft fee or reject the payment entirely.",
+        "whatTheAgentLoses": "The user loses the chance to switch funding accounts or lower the payment amount to avoid costly overdraft fees or a bounced payment.",
+        "speak": "on-event",
+        "check": "Does the review page show an insufficient funds or overdraft warning?",
+        "say_example": "The page warns this would overdraw <checking>. That's a fee on top. I'm holding."
+       },
+       {
+        "question": "Is the page warning the amount is over a daily or bill-pay limit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Large bills (like property taxes or tuition) might hit a bank's security limit, requiring the payment to be split across multiple days or authorized differently.",
+        "whatTheAgentLoses": "The user loses the chance to adjust the payment amount or contact the bank to raise the limit before the transaction is outright blocked.",
+        "speak": "on-event",
+        "check": "Does the review page warn the amount exceeds a daily or bill-pay limit?",
+        "say_example": "This is over the <5,000> daily limit. The bank won't send it in one go. It can go as <two> payments on different days."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Confirm the payment",
+      "questions": [
+       {
+        "question": "Are the amount, payee, account, dates, and fee on the review screen right?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents a final review step with a 'Schedule' button to confirm the transaction and an 'Edit' link to make changes.",
+        "whatTheAgentLoses": "Delegating this step removes your final chance to personally verify the payment amount, date, and funding account before the funds are committed.",
+        "speak": "gate",
+        "check": "What amount, payee, funding account, fee, send date, and delivery date does the review screen show?",
+        "say_example": "Ready to pay. <217.03> to <PG&E>, from checking ending <4521>. Arrives <June 12>. No fee. Press to pay, or say change."
+       },
+       {
+        "question": "Was Submit actually pressed, or did the page move on without it?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Navigating to the Accounts tab without clicking 'Submit Payment(s)' means the $50 transaction was abandoned and never processed.",
+        "whatTheAgentLoses": "The user is left with an unpaid bill and a false sense of security, potentially leading to late fees or service interruption.",
+        "speak": "if-wrong",
+        "check": "Is a confirmation showing, or is the payment form still on screen with the submit button unpressed?",
+        "say_example": "I left the page without pressing Submit. Nothing was paid. I'm going back to the review screen, and I'll ask before pressing it."
+       },
+       {
+        "question": "Is the pay button greyed out because a field has an error?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a field is formatted incorrectly, the submit button often turns gray without an explicit error popup, requiring the user to scan the form for red borders.",
+        "whatTheAgentLoses": "The user loses the visual cue that the form is incomplete, which might cause the agent to fail silently or get stuck trying to click a disabled button.",
+        "speak": "on-event",
+        "check": "Is the submit button disabled, and which field shows a red outline or error?",
+        "say_example": "The pay button is greyed out. The <phone> field is outlined red. Fixing that first."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Pass the authorization gate",
+      "questions": [
+       {
+        "question": "Will you read in the code from your security card yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen prompts for a specific passcode corresponding to column A and row 00 on your physical security card to authorize the transaction.",
+        "whatTheAgentLoses": "Delegating this step requires sharing your physical security card or its codes, which compromises the multi-factor authentication protecting your bank account.",
+        "speak": "gate",
+        "check": "What does the page ask for before it sends - a code from a security card, a text code, a PIN, or a card-check popup - and which cell or number does it name?",
+        "say_example": "To send it, the bank wants the code from your security card, column <A> row <00>. Read it to me, or type it yourself."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Verify the payment",
+    "note": "9.1 on every completed keeper. 9.2 where a receipt can be kept or arrives elsewhere. 9.3 and 9.4 as the after-check - 9.3 moves at once on the transfers and the wallets and not at all on the scheduled checks; 9.4 stays put until the next business day and the platform says so. 9.5 where a scheduled, pending or history list exists. 9.6 never happens in the corpus. 9.7 loops back to 2 - three times in 8n6j, and 4uIk sets up next month's pass.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Read the confirmation",
+      "questions": [
+       {
+        "question": "Is the payment confirmed and do you have the reference number?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays a 'Payment Received' message along with a reference number and posting timeline, which serves as your official proof of payment.",
+        "whatTheAgentLoses": "You lose the immediate opportunity to screenshot or save the specific reference number for your own personal records in case of a billing dispute.",
+        "speak": "always",
+        "check": "What does the confirmation say - amount, payee, reference number, and when it posts - and is it a page that stays, or a message that vanished?",
+        "say_example": "Paid. <2,241.04> to <the biller>. Reference <number>. It posts in <three business days>."
+       },
+       {
+        "question": "Do the amount and date on the confirmation match what you approved?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking that the final confirmation screen reflects the exact amount and date you submitted ensures the system processed your payment correctly without unexpected changes.",
+        "whatTheAgentLoses": "You lose the ability to immediately catch and document a system error if the processed payment differs from what was authorized.",
+        "speak": "if-wrong",
+        "check": "Do the amount and date on the confirmation match the amount and date on the review screen?",
+        "say_example": "The confirmation says <10>. We authorized <30>. The scheduled list shows <10> too. Only <10> is going. I'm not sending anything else on my own. Tell me if you want the other <20> sent."
+       },
+       {
+        "question": "Did an error page come up after submit instead of a confirmation?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the portal times out, the payment might be in limbo, requiring you to check your bank or contact support rather than just trying again and risking a double charge.",
+        "whatTheAgentLoses": "The user loses the awareness that the payment status is unknown, which dictates whether they should wait, check their bank, or retry.",
+        "speak": "on-event",
+        "check": "Did an error or timeout page appear after submit instead of a confirmation?",
+        "say_example": "The page errored after I pressed pay. The money may or may not have gone. I'm not pressing again. Checking the payments list first."
+       },
+       {
+        "question": "Does the confirmation say the payment is held or pending review?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Fraud algorithms sometimes flag unusual payments (e.g., a new large payee or an out-of-pattern amount) for manual bank review, delaying the processing indefinitely.",
+        "whatTheAgentLoses": "The user loses the awareness that their payment is delayed and might require them to call the bank's fraud department to release the funds.",
+        "speak": "on-event",
+        "check": "Does the confirmation say the payment is pending review or held?",
+        "say_example": "It went through, but the bank is holding it for review. No date given. It may not arrive by <the due date>."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Keep the receipt",
+      "questions": [
+       {
+        "question": "Do you want to download and save a copy of the payment receipt?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen provides a reference number and an option to save the receipt, which serves as proof of payment while the transaction processes over the next three business days.",
+        "whatTheAgentLoses": "The user loses the immediate, personal possession of the downloaded receipt image on their own device for their financial records.",
+        "speak": "never",
+        "check": "Does the confirmation offer a receipt to save or download?",
+        "say_example": "Saved the receipt to <Downloads>"
+       },
+       {
+        "question": "Does the confirmation say a receipt was emailed to you?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Reviewing the GCash email receipt ensures the payment amount of PHP 2241.04 and the biller SOCOTECO1 were processed correctly.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of personally verifying the email receipt to confirm the exact payment details were recorded correctly.",
+        "speak": "never",
+        "check": "Does the confirmation say a receipt was sent by email, and to which address?",
+        "say_example": "Noted the confirmation says a receipt went to <email>"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Check the source balance",
+      "questions": [
+       {
+        "question": "Is the new checking balance the old one minus the payments made?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Verifying that the initial balance of $3,746.76 decreased by exactly the sum of the three payments to $3,692.27 ensures no extra fees or errors occurred during processing.",
+        "whatTheAgentLoses": "You lose the mathematical certainty of independently verifying that your account was debited for the exact intended amounts without any unexpected charges.",
+        "speak": "if-wrong",
+        "check": "Does the new balance equal the old balance minus the payments made?",
+        "say_example": "Checking was <3,746.76>. Three payments should leave <3,692.27>. It shows <3,680>. That's <12> more than the payments. Something else came out."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Check the bill updated",
+      "questions": [
+       {
+        "question": "Now that this is paid, is the autopay still going to pay it again?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displayed a warning about an upcoming automatic minimum payment, which could result in an unintended double charge if not addressed.",
+        "whatTheAgentLoses": "The user loses the financial assurance that they will not be double-charged by an overlapping automatic payment.",
+        "speak": "on-event",
+        "check": "After the payment, does the page still show an automatic payment scheduled for this bill?",
+        "say_example": "Autopay is still set for <the 28th>. The bill may get paid twice. You can turn it off under autopay."
+       },
+       {
+        "question": "Does the bill's balance now show the payment?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Noticing that the checking balance decreased while the credit card balance remained unchanged helps you understand the processing delay for the transaction.",
+        "whatTheAgentLoses": "You lose the reassurance of seeing exactly how and when your account balances update after a payment is submitted.",
+        "speak": "never",
+        "check": "Does the bill's balance or amount due now reflect the payment?",
+        "say_example": "Checked the card balance, still <217.03>, payment not posted yet"
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Check the payments list",
+      "questions": [
+       {
+        "question": "Is the new payment in the scheduled payments list with the right amount and date?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the scheduled payments list confirms that the system successfully registered the transaction for the correct date and amount.",
+        "whatTheAgentLoses": "You lose the peace of mind of visually confirming that the payment is officially queued in the system and matches your intended details.",
+        "speak": "never",
+        "check": "Does the scheduled payments list show the new payment with the right amount and date?",
+        "say_example": "Found the payment in the scheduled list, <50> to <Qbk Accounting> on <June 12>"
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Cancel the scheduled payment",
+      "questions": [
+       {
+        "question": "Until when can this scheduled payment be cancelled?",
+        "cluster": "undo",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the payment details confirms that no unexpected processing fees were applied and identifies the exact window available to cancel the transaction.",
+        "whatTheAgentLoses": "You lose the immediate peace of mind of personally verifying the zero-dollar fee and knowing exactly how long you have to cancel the payment.",
+        "speak": "always",
+        "check": "What does the scheduled payment's detail page say about cancelling, and until when?",
+        "say_example": "You can cancel this until <it's sent on the 20th>. After that it's paid."
+       }
+      ]
+     },
+     {
+      "id": "9.7",
+      "label": "Pay the next bill"
+     }
+    ]
+   }
+  ]
+ }
+}

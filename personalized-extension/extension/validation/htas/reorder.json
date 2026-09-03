@@ -1,0 +1,857 @@
+{
+ "task": "reorder a previous online order with a modification (grocery or food apps: Walmart, Instacart, Amazon \"buy again\", DoorDash reorder): open order history, use the reorder or buy-again feature, adjust the cart (swap or remove an item, change a quantity), and check out; complete when the order confirmation is on screen. Surface pinned: a grocery or food-ordering website or app. Variants: first-time ordering (that is ordinary shopping), couponing content, and delivery-driver content do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Reorder a past order with changes",
+  "note": "1 where the session is not already inside the account - most keepers open signed in. then 2 to reach the past purchases, then 3 to bring them back; 4 for whatever the old order lacked, in any order with 3 on the grocery apps. 5 on the refilled cart, and 5.8 sends the session back to 3 or 4 when the cart is short. then 6, then 7 where a confirmation exists - only EvSy. 8 replaces 2 through 5 when the reorder is delegated to an agent; the user keeps 6 for themselves.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the store",
+    "note": "1.1, then 1.2 - the storefront keepers check the header and stop. 1.3 on the grocery apps before any shopping; Xr-4 tours the store picker and the delivery form without changing either.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the app or site",
+      "questions": [
+       {
+        "question": "Which side of the store should I shop on, groceries or everything else?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose between 'Pickup & delivery' for groceries and 'Walmart.com' for general items before you can access the correct order history.",
+        "whatTheAgentLoses": "You lose the ability to specify whether your reorder should be processed as a local grocery delivery or a standard shipped package.",
+        "speak": "on-event",
+        "check": "Does the page ask to choose a shopping mode before order history is shown, and which modes are listed?",
+        "say_example": "This site has two sides, <groceries> and <everything else>. Your past order was on the <groceries> side, so that's where I'm looking."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Confirm the signed-in account",
+      "questions": [
+       {
+        "question": "Are you currently logged into your account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top right header showing the username \"HUGE COFFEE FAN\" and a \"LOGOUT\" link confirms you meet the prerequisite to access your past orders.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent is operating under your specific profile before it accesses your personal order history.",
+        "speak": "if-wrong",
+        "check": "Does the header show a signed-in account name or a Logout link, and what name does it show?",
+        "say_example": "This page isn't signed in, so there are no past orders to work from. I'll stop here so you can sign in."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Set the store and fulfilment",
+      "questions": [
+       {
+        "question": "Which store and delivery address does the page show as current?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Item availability and pricing for a past order can change if the app's current delivery context defaults to an old or incorrect location.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch a delivery location error before the agent populates the cart and checks out.",
+        "speak": "always",
+        "check": "What store name and delivery or pickup address does the header show as current?",
+        "say_example": "I'm shopping from the <store name> store, delivering to <street>. Prices and what's in stock come from there. Say change if that's not the one."
+       },
+       {
+        "question": "Should I enter your address to check if delivery is available?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a 'Delivery' tab that requires an address to verify if delivery service is an option for this order.",
+        "whatTheAgentLoses": "The user loses the ability to decide between pickup and delivery and whether to provide their address.",
+        "speak": "on-event",
+        "check": "Does the page ask for an address before it will show delivery availability, and is any saved address shown?",
+        "say_example": "Delivery needs an address first, and there's none saved here. Which address should I use?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Reach the past purchases",
+    "note": "2.1 then 2.2 on the storefront sites, then 2.3 where the user bothers - fouT skips it and reorders 31 items unread. 2.4 alone on the grocery apps, which have no order to open; Xr-4 uses it twice, the carousel and the 346-item list.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Open the order list",
+      "questions": [
+       {
+        "question": "If the order list is empty, what reason does the page give?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a note explaining that orders won't appear if you previously checked out under a guest account, which explains why the list might be empty despite past purchases.",
+        "whatTheAgentLoses": "The user loses the context needed to troubleshoot a missing order history, potentially leading the agent to fail the task instead of realizing a guest checkout was used.",
+        "speak": "on-event",
+        "check": "Does the order list show no orders, and does the page show a note such as orders placed as a guest do not appear?",
+        "say_example": "There are no past orders here. The page says orders placed as a guest don't show up. If that order was a guest checkout, I can't reorder it from this page."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Pick the past order",
+      "questions": [
+       {
+        "question": "Which past order should I start from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The order history displays multiple past orders with varying statuses like Incomplete, Pending, and Completed, requiring you to identify a successfully fulfilled order to duplicate.",
+        "whatTheAgentLoses": "You lose the ability to choose exactly which past purchase contains the specific combination of items you want to base your new order on.",
+        "speak": "on-event",
+        "check": "Which past orders are listed, with date, status and total, and is the most recent one marked completed?",
+        "say_example": "You have <4> past orders. The newest, <March 3>, says <Incomplete>. The last one that went through is <February 24>, <31> items, <64.49>. I'll use that one unless you meant another."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Read what the order held",
+      "questions": [
+       {
+        "question": "Does the page show the item list of the past order, not only the summary totals?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'General' tab only displays the order summary and totals, so you must navigate to another tab to view the actual items.",
+        "whatTheAgentLoses": "The user loses the ability to verify the exact items from the past order before initiating the reorder.",
+        "speak": "never",
+        "check": "Is the past order's item list visible on the page, or only a summary tab with totals?",
+        "say_example": "Opened the items tab, <31> lines."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Open the buy-again list"
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Bring the items back",
+    "note": "3.1 on the storefront sites, 3.2 on the grocery apps - the platform decides this for the user. 3.3 after either; eiC1 is the case where the add never lands.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Duplicate the whole order",
+      "note": "3.1.1, then 3.1.2 where the site asks - only SHEIN does. no quantity or line choice is offered at this point on any site; edits wait for 5.",
+      "children": [
+       {
+        "id": "3.1.1",
+        "label": "Trigger the reorder",
+        "questions": [
+         {
+          "question": "Do you want the whole past order added to the cart in one go?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen displays a 'Reorder all items' button, which provides a quick way to move the entire previous order into your current cart before making modifications.",
+          "whatTheAgentLoses": "You lose the chance to review the specific items and substituted products from this past order before deciding to bulk-add them to your new cart.",
+          "speak": "never",
+          "check": "Does the page show a 'Reorder all items' control, and how many items does it say it will add?",
+          "say_example": "Reordered all <31> items from <February 24>"
+         }
+        ]
+       },
+       {
+        "id": "3.1.2",
+        "label": "Confirm the bulk add"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Re-add items one by one",
+      "note": "repeat 3.2.1 per item; 3.2.2 before it where the user wants a look; 3.2.3 after it where more than one is wanted. 3.2.4 is a skipped affordance in three keepers.",
+      "children": [
+       {
+        "id": "3.2.1",
+        "label": "Add the past item",
+        "questions": [
+         {
+          "question": "Is each item you asked for shown in the Buy Again list?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a carousel of past purchases like strawberries, salad, and coffee creamer, requiring you to choose which specific product to add to your cart.",
+          "whatTheAgentLoses": "You lose the ability to personally decide which specific past purchases you actually need to restock today.",
+          "speak": "if-wrong",
+          "check": "Does the Buy Again list contain a tile whose title matches <requested item>?",
+          "say_example": "<Item> isn't in your Buy Again list. I'll search the store for it instead."
+         }
+        ]
+       },
+       {
+        "id": "3.2.2",
+        "label": "Check the item before adding"
+       },
+       {
+        "id": "3.2.3",
+        "label": "Set the quantity",
+        "questions": [
+         {
+          "question": "How many of this item do you want to order?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen displays a quantity selector with plus and minus buttons, requiring you to specify the exact amount needed for this new order.",
+          "whatTheAgentLoses": "Delegating this step means losing the ability to adjust the item quantity based on your current household inventory or immediate needs.",
+          "speak": "never",
+          "check": "What quantity does the selector show for <item> after it is set?",
+          "say_example": "Set <coffee> to <2>"
+         }
+        ]
+       },
+       {
+        "id": "3.2.4",
+        "label": "Answer the recurring offer"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Verify the add landed",
+      "questions": [
+       {
+        "question": "After pressing reorder, does the cart count show the items went in?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Although the narrator claims the items were added, the cart indicator remains at zero items and zero dollars for the rest of the video.",
+        "whatTheAgentLoses": "The user loses the ability to actually purchase their previous items because the agent fails to notice the cart is still empty.",
+        "speak": "if-wrong",
+        "check": "What item count and total does the cart indicator show after reorder is pressed, compared with before?",
+        "say_example": "I pressed reorder, but the cart still says <0> items. Nothing went in. I'll add them one at a time instead."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Shop for the extras",
+    "note": "any of 4.1 to 4.3 raises candidates, then 4.5; 4.4 on Safeway, where nothing in the deals section applies unless clipped. 4.6 where offered. the storefront keepers never enter this goal; Xr-4 spends most of its runtime here.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Browse the departments",
+      "questions": [
+       {
+        "question": "Which department is the new item under?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a list of departments like 'Fruits & Vegetables', offering a structured way to quickly locate the item you want to add to your modified cart.",
+        "whatTheAgentLoses": "You lose the opportunity to visually browse your preferred grocery departments to discover or select the exact replacement items you want.",
+        "speak": "never",
+        "check": "Which departments does the page list, and which one contains <item>?",
+        "say_example": "Found <spinach> under <Fruits & Vegetables>"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Search for an item",
+      "questions": [
+       {
+        "question": "Which search suggestion matches the item you want to add?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays auto-complete suggestions like 'lysol spray' as you type, which determine exactly which product results will be shown.",
+        "whatTheAgentLoses": "You lose the ability to choose the exact search phrasing or suggestion that best matches the specific product you have in mind.",
+        "speak": "never",
+        "check": "Which search suggestions appear, and which one matches the item as named?",
+        "say_example": "Searched <disinfecting spray>"
+       },
+       {
+        "question": "Do the search results include the exact item you asked for, or only near matches?",
+        "cluster": "refine",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The search results display various multi-purpose and kitchen cleaners, but lack the specific disinfecting spray you intended to add.",
+        "whatTheAgentLoses": "You lose the chance to decide whether a multi-purpose cleaner is an acceptable substitute for the disinfecting spray you originally wanted.",
+        "speak": "if-wrong",
+        "check": "Does any result title contain <the item as named>, and what do the top results say instead?",
+        "say_example": "I searched for <disinfecting spray>, but the results are all <kitchen cleaners>. None is the one you named. Want one of those, or should I keep looking?"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Filter and sort the results",
+      "questions": [
+       {
+        "question": "When several sizes or brands of the item are listed, which one should go in the cart?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays several spinach varieties with differing sizes, overall prices, and unit prices, requiring a decision on whether any of them offer the right value.",
+        "whatTheAgentLoses": "The user loses the opportunity to weigh the cost and quantity of alternatives to decide if an item is actually worth purchasing.",
+        "speak": "on-event",
+        "check": "How many listings match <item>, and what price and unit price does each show?",
+        "say_example": "There are <three> kinds of <spinach>. The <5 oz> is <2.49>. The <16 oz> is <4.99>, and cheaper per ounce. Which one? Say <small> or <large>."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Clip the deals",
+      "questions": [
+       {
+        "question": "Does the page show the deal marked as clipped?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "This matters because the claim of a changing 'Clipped' counter is contradicted by the Safeway home screen shown at 4:36, which lacks this element entirely.",
+        "whatTheAgentLoses": "You lose transparency into the actual state of your applied deals if the agent hallucinates UI changes that never happened on screen.",
+        "speak": "if-wrong",
+        "check": "Does the coupon control read 'Clipped', or does the clipped count go up, after the press?",
+        "say_example": "I tried to clip the <coupon> on <item>, but the page never marked it clipped. It won't come off the price. I'll try once more."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Add the new item",
+      "questions": [
+       {
+        "question": "Does the page show a purchase limit on the item, so the quantity can't reach what was asked?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The plus button for the paper towels grays out after adding one, indicating a strict purchase limit for that item.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to substitute a different brand to get the total quantity you need when an item is restricted.",
+        "speak": "on-event",
+        "check": "Does the item show a 'limit' note or a greyed-out plus control, and at what quantity?",
+        "say_example": "There's a limit of <1> on <paper towels>, so I can't add the <3> you asked for. You'll get <1>."
+       },
+       {
+        "question": "Which new items were added to the cart, and at what quantity?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays various household items like Downy fabric softener and Clorox cleaner, requiring you to decide which specific products and quantities to add to your reorder.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to check your physical household inventory and decide exactly which supplies and quantities need restocking.",
+        "speak": "never",
+        "check": "Which cart lines were added in this session, with their quantities?",
+        "say_example": "Added <Downy>, <1>"
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Save the item for later"
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Fix the cart",
+    "note": "5.1, then 5.2 and 5.5 in any order - every keeper reads at least one. 5.3, 5.4 and 5.6 as the change demands; only 1IWU performs any of them, and 5.4 is filled. 5.7 where a minimum blocks the button. 5.8 back to 3 or 4 when the cart is short or the user is not done, then 5.1 again.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Open the cart"
+     },
+     {
+      "id": "5.2",
+      "label": "Check the returned lines",
+      "questions": [
+       {
+        "question": "Was the cart already holding items before reorder was pressed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking 'reorder all' will add the past order's items to whatever is currently in the cart, potentially leading to duplicate items or an unexpectedly high total.",
+        "whatTheAgentLoses": "The user loses the chance to clear out stale items from an abandoned session, resulting in accidentally purchasing things they no longer want.",
+        "speak": "on-event",
+        "check": "What item count and total does the cart show before reorder is pressed?",
+        "say_example": "Your cart already has <3> things in it from before. Reorder adds on top of that. Keep them, or clear the cart first?"
+       },
+       {
+        "question": "Does the cart hold exactly the past order's items plus your changes, nothing missing and nothing extra?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "When reordering, apps sometimes silently swap in the closest available match (like a family size instead of regular) if the exact original item is out of stock.",
+        "whatTheAgentLoses": "The user loses the chance to reject an unwanted automatic substitution or price increase before it becomes part of the final order.",
+        "speak": "if-wrong",
+        "check": "List every cart line with quantity. Which lines are not on the past order or the requested additions, and which requested lines are absent?",
+        "say_example": "The cart doesn't match. <Item> from your order is missing, and <item> is in there, and no one asked for it. I'll fix both, then read it back."
+       },
+       {
+        "question": "Did the store swap any item for a different size or version than the past order had?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows 19 distinct items being added earlier, but the cart review only displays 6 items and includes a product that was never added.",
+        "whatTheAgentLoses": "The user ends up paying for and receiving the wrong groceries because the agent failed to ensure the cart updated correctly before checking out.",
+        "speak": "on-event",
+        "check": "Does any cart line carry a 'substituted' or 'replaced' badge, or show a size or variant different from the past order's line?",
+        "say_example": "<Item> came back as the <family size>, not the <regular> you had. The <regular> is out. Keep the big one, or leave it off?"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Remove a line",
+      "questions": [
+       {
+        "question": "Did a one-time item from the past order, like hardware, come back into the cart?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The previous order included a K Cup Mini Carousel, which is a one-time hardware purchase that must be manually removed so you don't buy it again.",
+        "whatTheAgentLoses": "The user ends up paying for duplicate hardware items because the agent blindly reordered the entire past cart without filtering out non-consumables.",
+        "speak": "on-event",
+        "check": "Which cart lines are one-time items from the past order, like hardware, by name?",
+        "say_example": "Your old order had a <coffee pod carousel> in it, and it came back. That's a one-time thing. Take it out?"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Swap a line for another",
+      "questions": [
+       {
+        "question": "Is any reordered item marked 'Out of stock' in the cart?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Because inventory changes between orders, the system may pull a past item into the cart but mark it out of stock rather than silently dropping it, requiring you to manually remove or substitute it.",
+        "whatTheAgentLoses": "You lose the chance to realize a crucial item won't be delivered and to pick a replacement before finalizing the order.",
+        "speak": "on-event",
+        "check": "Does any cart line show 'Out of stock' or a price of $0?",
+        "say_example": "<Item> came back marked out of stock at <$0>. It won't ship. Want a replacement, or leave it off?"
+       },
+       {
+        "question": "Is the replacement I picked marked 'Sponsored' or 'Ad'?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "When searching for a swap or replacement item, the top results are often visually badged as sponsored placements rather than the most relevant or cost-effective organic matches.",
+        "whatTheAgentLoses": "You lose the ability to bypass paid placements and select a cheaper or more accurate replacement, as an agent might blindly grab the first result in the list.",
+        "speak": "on-event",
+        "check": "Does the result the agent picked as the replacement carry a 'Sponsored' or 'Ad' label?",
+        "say_example": "The first match for <item> is an ad, so I'm skipping it. The next one is <item>, <price>."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Check the cart totals",
+      "questions": [
+       {
+        "question": "What does the cart hold before checkout: items, quantities and total?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the cart summary with specific items, quantities, and a total of $89.00, which needs to be verified before clicking 'Secure checkout'.",
+        "whatTheAgentLoses": "The user loses the chance to personally verify the order details and total cost before proceeding to payment.",
+        "speak": "always",
+        "check": "What items, quantities and total does the cart page show above the checkout button?",
+        "say_example": "Cart's done. <28> items, <89.00>. Your changes are in, <two coffee instead of one> and <the brush is out>. I'm going to checkout."
+       },
+       {
+        "question": "Does any reordered item cost more now than on the past order?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Reordering bypasses the normal browsing experience where you evaluate prices, meaning you might unknowingly pay a premium if an item is no longer on sale or has experienced inflation.",
+        "whatTheAgentLoses": "The user loses the opportunity to notice a price spike and decide to swap the item for a cheaper brand or remove it entirely.",
+        "speak": "on-event",
+        "check": "For each cart line, what is the price now, and what was it on the past order? On the ones that went up, did the past order show a sale price?",
+        "say_example": "Heads up, <item> is <4.99> now. You paid <3.49> last time, but that was a sale price."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Change a quantity",
+      "questions": [
+       {
+        "question": "What quantity does each changed cart line show now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The cart displays the reordered items and their current quantities, which must be modified to fulfill the task requirements before checking out.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which item's quantity to change or remove to suit your current needs.",
+        "speak": "never",
+        "check": "What quantity does each cart line show?",
+        "say_example": "Changed <coffee> from <1> to <2>"
+       },
+       {
+        "question": "After pressing update, does the cart show the new quantity and a new total?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Typing a new number into the quantity box does not automatically update the cart total; you must explicitly click the green refresh circle to commit the change.",
+        "whatTheAgentLoses": "If the agent types a new quantity but fails to trigger the manual update button, you will end up ordering the original amount.",
+        "speak": "if-wrong",
+        "check": "After the quantity is entered and the update control pressed, does the line show the new quantity, and does the total change?",
+        "say_example": "I typed <2> for <coffee>, but the cart still says <1> and the total didn't move. The change didn't take. I'll press update again."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Meet the order minimum",
+      "questions": [
+       {
+        "question": "Is the cart over the store's order minimum?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The cart showed a subtotal that was below the thirty-dollar minimum required to proceed.",
+        "whatTheAgentLoses": "The user loses the ability to choose which additional items to add to reach the minimum order threshold.",
+        "speak": "on-event",
+        "check": "Does the page show a minimum order amount or a message that the cart is below it, and how much more is needed?",
+        "say_example": "Your cart is <22.50>, and this store needs <30> to check out. That's <7.50> short. What should I add?"
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Return to shopping"
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Check out the order",
+    "note": "6.1 on every keeper that gets past the cart. then 6.2 where the app interrupts with suggestions - both grocery apps do. 6.3 to 6.6 in the order the app imposes: Walmart runs slot, pickup card, substitutions, summary; Safeway runs slot, payment, summary. then 6.7, then 6.8. the storefront keepers end at or one click past 6.1.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Start the checkout"
+     },
+     {
+      "id": "6.2",
+      "label": "Answer the last-call suggestions",
+      "questions": [
+       {
+        "question": "Do you want to add any of these suggested items to your order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a 'You may also like' section with items like Entenmann's muffins for $2.98 and Reddi-wip for $3.88, offering a final chance to include impulse or forgotten items.",
+        "whatTheAgentLoses": "The user loses the opportunity to browse personalized recommendations and spontaneously discover appealing items to add to their grocery order.",
+        "speak": "never",
+        "check": "Does the checkout page show a suggested-items section, and what does it list?",
+        "say_example": "Skipped the 'you may also like' add-ons"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Reserve the pickup slot",
+      "questions": [
+       {
+        "question": "Which pickup day and time slot do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires choosing a specific day and time for pickup, with some slots having special conditions like 'At-risk only'.",
+        "whatTheAgentLoses": "The user loses the ability to coordinate the pickup time with their personal schedule and eligibility.",
+        "speak": "gate",
+        "check": "Which pickup dates and time slots does the page list, with any fee or condition beside each?",
+        "say_example": "Pickup slots. <Tomorrow> <10 to 11> is free, and <4 to 5> is free. The early morning ones say <at-risk only>, so they might not hold. Which one?"
+       },
+       {
+        "question": "Does the chosen pickup slot carry a fee?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "You stated earlier that in-store pickup is usually free, so it is important to verify that the time slots shown during checkout actually list the fee as 'Free'.",
+        "whatTheAgentLoses": "An agent might select a time slot without verifying the cost, potentially incurring an unexpected fee for a service you expected to be free.",
+        "speak": "on-event",
+        "check": "What fee, if any, does the page list beside the selected slot?",
+        "say_example": "The <10 to 11> slot has a <2.99> fee. The <4 to 5> one is free. Keep it, or switch?"
+       },
+       {
+        "question": "Is the pickup slot still held at checkout, or did it expire while the cart was being changed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Delivery and pickup slots are often only held for a limited time, and a highly demanded slot might fill up if you spend too long adjusting your reorder.",
+        "whatTheAgentLoses": "The user might end up with a delivery scheduled for the wrong day or time if the agent blindly clicks through a prompt asking to select a new slot.",
+        "speak": "if-wrong",
+        "check": "Does the checkout page still show the reserved slot <day, time>, or a message that it expired or was released?",
+        "say_example": "Your <10 to 11> pickup slot expired while I was fixing the cart. <Tomorrow> <4 to 5> is still free. Take that one, or a different one?"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Review the pickup details",
+      "questions": [
+       {
+        "question": "Which store and pickup time does the review page show?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the selected Walmart store, the scheduled time slot, and an option to add an alternate pickup person, which dictates exactly where, when, and who can collect the order.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to ensure the pickup time fits your current schedule or to authorize someone else to collect the groceries for you.",
+        "speak": "never",
+        "check": "What store and time slot does the pickup details section show?",
+        "say_example": "Confirmed pickup at <store>, <Saturday 10 to 11>"
+       },
+       {
+        "question": "Do you want texts about the order? That means giving your phone number.",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout flow offers an option to enter a phone number for text alerts, which the narrator recommends for tracking the order.",
+        "whatTheAgentLoses": "The user loses the convenience of receiving real-time SMS updates about their grocery order's readiness or delivery status.",
+        "speak": "never",
+        "check": "Does the checkout offer a phone number field for text alerts, and is it optional?",
+        "say_example": "Skipped text alerts"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Set the substitutions",
+      "questions": [
+       {
+        "question": "Should the store substitute items that are out of stock?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This matters because the screen allows you to toggle global substitutions or set item-specific rules, such as marking the chimichanga as 'Don't replace'.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal judgment on which specific items are acceptable to substitute versus which you would rather just skip.",
+        "speak": "gate",
+        "check": "What does the substitutions control show: on, off, or per-item choices, and which items are marked?",
+        "say_example": "If something's out, the store can swap in something close, or leave it off. Which do you want? Say swap or leave it off. I can also set it per item."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Choose the payment method",
+      "questions": [
+       {
+        "question": "Is the saved card the one you want for this order?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen automatically defaults to a saved payment method, such as a specific credit card, which might not be the account you want to draw from today.",
+        "whatTheAgentLoses": "You lose the chance to switch the charge to a different card, potentially causing budgeting issues or a declined transaction if the default card is no longer appropriate.",
+        "speak": "never",
+        "check": "Which payment method does the checkout show as selected, by type and last digits?",
+        "say_example": "Kept the saved <Mastercard ending 4821>"
+       },
+       {
+        "question": "Is the card from last time still good, or has it expired?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reordering an old purchase often defaults to the payment method used at that time, which may no longer be active, causing the checkout to fail or require a retry.",
+        "whatTheAgentLoses": "The user loses the ability to proactively update their payment details, resulting in a declined transaction and a delayed order.",
+        "speak": "on-event",
+        "check": "Does the page show the selected card as expired or declined, or an expiry date in the past?",
+        "say_example": "The card on file, ending <4821>, expired <March>. The page won't take it. Which card should I use?"
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Review the order summary",
+      "questions": [
+       {
+        "question": "Is the order summary what you want before it is placed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This matters because the screen displays the final itemized list, including specific items like the Barbie Food Truck and coffee pods, along with optional promo code and donation fields that must be finalized before checkout.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to apply a last-minute discount code or choose to round up your total for charity.",
+        "speak": "gate",
+        "check": "What does the summary list: items, quantities, subtotal, fees, tip, total, payment method, and pickup or delivery time?",
+        "say_example": "Ready to place it. <28> items, <89.00> total on your <Mastercard ending 4821>. Pickup <Saturday 10 to 11> at <store>. <Two coffee>, <no brush>, as you asked. Press to order, or say change."
+       },
+       {
+        "question": "Are there fees on this order beyond the items?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Even if the items cost the same, ordering during a busy window (like dinner time on a food app or Sunday evening for groceries) can add significant service or delivery fees that weren't present on the original order.",
+        "whatTheAgentLoses": "The user loses the opportunity to delay the order by a few hours or switch to pickup to avoid paying premium delivery surcharges.",
+        "speak": "on-event",
+        "check": "Expand any collapsed fees section. What fee lines does the page list, with amounts, beyond the items?",
+        "say_example": "There's a <busy-time fee> of <4.99> on this one, tucked under <Taxes & fees>. Keep going, or wait for a quieter slot?"
+       },
+       {
+        "question": "Has the checkout preselected a tip, and how much?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Food and grocery apps frequently default to a 15% or 20% tip and obscure additional service fees in expandable menus, relying on visual subtlety to pass them through.",
+        "whatTheAgentLoses": "You lose control over your final total, potentially paying a higher tip or unexpected fees because the agent didn't expand the visual breakdown to check.",
+        "speak": "on-event",
+        "check": "Does the page show a tip control with an amount or percentage already selected?",
+        "say_example": "The page put a <15%> tip on, <6.50>. Keep it, change it, or none?"
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Place the order"
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Verify the order",
+    "note": "7.1 where the app shows it - one keeper. 7.2 afterwards, from email; EvSy's are static screenshots.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Read the confirmation",
+      "questions": [
+       {
+        "question": "Is the order confirmation visible on the screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The video cuts to exterior store footage before the 'Place order' button is clicked, leaving the order unconfirmed on screen.",
+        "whatTheAgentLoses": "You lose the certainty that the modified order was successfully submitted and processed by the app.",
+        "speak": "always",
+        "check": "Does the page show an order confirmation with an order number, and what total and time does it list?",
+        "say_example": "Order placed. Number <1234>, <89.00>, pickup <Saturday 10 to 11>."
+       },
+       {
+        "question": "Do the items on the confirmation match the cart changes you asked for?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the final confirmation against the earlier cart modifications ensures that the changes were successfully applied and not lost during checkout.",
+        "whatTheAgentLoses": "The user loses the final verification that their intended changes were actually processed, risking an incorrect order.",
+        "speak": "if-wrong",
+        "check": "For each requested change, what does the confirmation's item list show for that line?",
+        "say_example": "The confirmation says <1 coffee>, not the <2> you asked for. The order's already placed. I'll look for an edit option."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Read the follow-up notices"
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Delegate the reorder",
+    "note": "8.1, then 8.2 when the agent asks, then 8.3. 8.4 to try it, then 8.5. 8.5 is the user's only verification - the cart is never opened. the run recurs weekly by design and only while the app is open.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Write the standing instructions",
+      "questions": [
+       {
+        "question": "Which store website should the weekly run open first?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Providing the exact Amazon Whole Foods storefront URL shown in the address bar ensures the agent targets the correct local grocery delivery service rather than the generic Amazon homepage.",
+        "whatTheAgentLoses": "The user loses the peace of mind of manually verifying that the agent is starting its task on the correct localized grocery storefront.",
+        "speak": "never",
+        "check": "What URL does the address bar show, and does it match the storefront named in the instruction?",
+        "say_example": "Started at <walmart.com>"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Set the checkout boundary",
+      "questions": [
+       {
+        "question": "Do you want to check out yourself, or should I place the order?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The AI prompt offers different levels of automation, allowing you to decide whether to retain control over the final payment and delivery scheduling.",
+        "whatTheAgentLoses": "If the agent completes the checkout automatically, you lose the opportunity to review the modified cart and manually confirm the delivery details.",
+        "speak": "gate",
+        "check": "Does the setup page offer a choice of where the agent stops: before checkout, or placing the order?",
+        "say_example": "Where should I stop each week? I can fill the cart and leave checkout to you, or place the order myself. Say cart or order."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Check the agent's plan",
+      "questions": [
+       {
+        "question": "Does the page show the scheduled task with its day and time?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays the creation of 'grocery-list.md' and a scheduled task for Monday at 11:00 AM, confirming the requested automation is underway.",
+        "whatTheAgentLoses": "If the agent fails to set up these files and cron jobs correctly, you lose the automated workflow and will have to manually initiate your grocery reorders.",
+        "speak": "always",
+        "check": "What day, time and instruction text does the scheduled task show?",
+        "say_example": "Set up. Every <Monday> at <11>, I'll build the cart from your <Buy Again> list and stop before checkout."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Run a test order",
+      "questions": [
+       {
+        "question": "Does the grocery list document show the requested items under the right week?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Seeing 'Milk' and 'Eggs' under the correct week in the grocery-list.md file confirms the requested modifications were accurately captured.",
+        "whatTheAgentLoses": "The user loses the reassurance of visually confirming their specific grocery needs were accurately recorded before the cart is modified.",
+        "speak": "if-wrong",
+        "check": "Does the list file show <items> under <week>?",
+        "say_example": "I added <milk> and <eggs> to this week's list, but the file doesn't show them. I'll write it again."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Check the agent's report",
+      "questions": [
+       {
+        "question": "Does the cart sidebar agree that free delivery is unlocked?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The AI claimed free delivery was unlocked, but the cart sidebar clearly showed that $9.22 more was needed to qualify.",
+        "whatTheAgentLoses": "You lose the opportunity to catch an AI hallucination that could result in paying unexpected delivery fees.",
+        "speak": "if-wrong",
+        "check": "What does the cart sidebar say about the delivery threshold: free delivery unlocked, or add <amount> more?",
+        "say_example": "I said free delivery was unlocked, but the cart says you're <9.22> short. Delivery would cost <5.99>. Add something, or pay it?"
+       },
+       {
+        "question": "Is the cart ready for you to take over at checkout, with the items you asked for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The chat response shows the AI successfully added the requested milk and eggs to your cart and left the final review and checkout process for you to complete.",
+        "whatTheAgentLoses": "An agent might automatically complete the purchase, preventing you from verifying the specific items, total cost, and free delivery status before paying.",
+        "speak": "always",
+        "check": "Which cart lines are present, with quantities and total, and is the page at the cart rather than checkout?",
+        "say_example": "Cart's ready. <Milk> and <eggs> are in, <8> items, <41.20>. Checkout is yours."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

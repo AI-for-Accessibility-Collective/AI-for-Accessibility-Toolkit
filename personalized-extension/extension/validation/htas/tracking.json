@@ -1,0 +1,884 @@
+{
+ "task": "track a package or order (Amazon orders, UPS/FedEx/USPS tracking): find the tracking entry from the order — or enter the tracking number on the carrier site — open the status page, read the scan history, and interpret where the package is and when it will arrive; complete when the current status and expected delivery are on screen and read out. Surface pinned: a carrier tracking page or retailer order-status page on web or app. Variants: filing claims for lost packages, and receiving or verifying the delivery at the door, do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Track a package or order",
+  "note": "1 on every run - most runs start in a search box or an app icon. then 2 on a retailer or tracker-app surface, where the shipment is already listed, or 3 then 4 on a carrier surface, where the user has to bring the number - GHCW runs both, in that order, and gets less from the second. 5 whenever a status page loads; five keepers never get there and stop at the form in 4. 6 alongside 5 wherever a second source is on screen. 7 after the read where the surface offers it; pKsL spends most of its time there.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the tracking surface",
+    "note": "1.1 first on phone runs. then 1.2 and 1.3, or 1.4, or 1.5, or 1.6 - 1.6 is also the exit from 2 in 3qOX. 1.7 when the browser opens on the wrong page. 1.8 as prompts land. 1.9 only in JZfe; every retailer run arrives signed in and 1.10 is how they notice.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Choose the app or browser",
+      "questions": [
+       {
+        "question": "Which carrier or store does the order say is shipping it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple package and mail-related apps like USPS Mobile, UPS, and InformedDelivery, requiring you to choose the correct portal for this specific tracking method.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred tracking ecosystem, such as opting for Informed Delivery to monitor all incoming mail instead of using a standard carrier app.",
+        "speak": "never",
+        "check": "Which carrier or retailer does the order page or the notification name as the shipper?",
+        "say_example": "Opened the <UPS> app, the shipper named on the order."
+       },
+       {
+        "question": "Is a banner asking to install the app in the way, and does it close?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The FedEx mobile website displays a banner prompting you to get the FedEx Mobile app from the Google Play store for tracking and shipping.",
+        "whatTheAgentLoses": "The user loses the choice to transition to a native app experience, which might offer persistent push notifications and easier future access.",
+        "speak": "never",
+        "check": "Does the page show a banner asking to install the carrier's app, and does the banner have a close control?",
+        "say_example": "Closed the app install banner. Stayed in the browser."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Search for the carrier"
+     },
+     {
+      "id": "1.3",
+      "label": "Pick the search result",
+      "questions": [
+       {
+        "question": "Which search result is the carrier's own tracking page?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results include localized links like 'UPS - Taiwan, China', so you must ensure you select the correct regional or global portal.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the appropriate regional UPS site instead of a foreign localized version.",
+        "speak": "if-wrong",
+        "check": "Which search result's address is the carrier's own domain, and which results are regional variants, ads, or third-party lookalikes?",
+        "say_example": "The top result isn't <UPS> itself. It's their <Taiwan> site. I'm opening the main one instead."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Go straight to the site"
+     },
+     {
+      "id": "1.5",
+      "label": "Follow the notification link"
+     },
+     {
+      "id": "1.6",
+      "label": "Search the number directly"
+     },
+     {
+      "id": "1.7",
+      "label": "Discard the wrong page",
+      "questions": [
+       {
+        "question": "Is the page that loaded the right carrier's own tracking page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a DHL tracking portal, which will fail to find the package if the shipment is actually handled by a different carrier like OnTrac.",
+        "whatTheAgentLoses": "The user loses the chance to realize the agent has navigated to the wrong carrier's site and redirect it before it fails to find the package.",
+        "speak": "if-wrong",
+        "check": "Does the page name the carrier from the order and show a field to enter a tracking number? If not, what does the page's own heading or address say it is?",
+        "say_example": "This isn't <DHL>'s page. It's a <casino> site. I'm leaving without touching anything."
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Clear the entry prompts",
+      "questions": [
+       {
+        "question": "Is a country or language chooser covering the page?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Choose your location' popup with country and language options alongside an 'X' close button.",
+        "whatTheAgentLoses": "The user loses the ability to explicitly set their preferred region and language for the tracking interface.",
+        "speak": "never",
+        "check": "Does a country or language chooser cover the page, and does it have a close control?",
+        "say_example": "Closed the country chooser."
+       },
+       {
+        "question": "Is a chat popup covering part of the scan history?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The DHL Express Digital Assistant popup is obstructing the screen, preventing you from reading the detailed scan history.",
+        "whatTheAgentLoses": "The user loses the ability to manually dismiss intrusive chat popups to ensure all tracking details are fully visible.",
+        "speak": "never",
+        "check": "Is a chat or assistant popup overlapping the tracking details, and after it is closed, is the full scan history visible?",
+        "say_example": "Closed a chat popup that was covering the scan history. Read the full list."
+       }
+      ]
+     },
+     {
+      "id": "1.9",
+      "label": "Sign in to the account",
+      "questions": [
+       {
+        "question": "The page wants an account sign-in. Do you take over the password field yourself, or skip the account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents both manual entry fields and an iOS prompt to auto-fill saved credentials, requiring a choice on how to authenticate.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to securely manage your own passwords using your device's built-in biometric authentication.",
+        "speak": "gate",
+        "check": "Does the page require a sign-in before it shows tracking, and which fields does it ask for?",
+        "say_example": "This needs your <USPS> account. The password field is yours. Or say no account, and I'll try tracking without one."
+       },
+       {
+        "question": "Do you want to agree to the site's terms to see the tracking?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app's welcome screen states that continuing to sign in constitutes agreement to the USPS Informed Delivery Terms and Conditions.",
+        "whatTheAgentLoses": "The user loses the chance to read and consent to the specific privacy and data handling policies of the tracking application.",
+        "speak": "gate",
+        "check": "Does the page say that continuing means agreeing to terms and conditions, and which button does the agreeing?",
+        "say_example": "Pressing <Continue> here means agreeing to their terms. That press is yours. Or say skip."
+       }
+      ]
+     },
+     {
+      "id": "1.10",
+      "label": "Confirm the signed-in state"
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Pick the order to track",
+    "note": "2.1 where the user does not know where tracking lives. 2.2 then 2.3 on every retailer run; 2.4 where the row does not open straight onto tracking - JsGs and u8aE land on the map from the row itself. 2.5 only in the tracker app. the row already states the status and the arrival day, so 5.1 and 5.2 begin here.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Learn where tracking lives"
+     },
+     {
+      "id": "2.2",
+      "label": "Reach the orders list"
+     },
+     {
+      "id": "2.3",
+      "label": "Pick the order",
+      "questions": [
+       {
+        "question": "More than one order matches the ask. Which delivery should be opened?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a mix of active and completed deliveries, so you must choose which specific item's tracking details to open.",
+        "whatTheAgentLoses": "You lose the ability to prioritize which specific package's status is most important to check first.",
+        "speak": "gate",
+        "check": "Which orders on the list match the item or date in the ask, and which of those show an active delivery status?",
+        "say_example": "Two orders match. The <headphones>, arriving <Tuesday>. The <shoes>, delivered <last week>. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Open the order's tracking",
+      "questions": [
+       {
+        "question": "Did the order's tracking link open your shipment, or just the carrier's empty tracking form?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Retailer tracking links sometimes fail to pass the tracking parameter, dropping the user on a blank carrier homepage where they must realize they need to go back, copy the number, and paste it manually.",
+        "whatTheAgentLoses": "The user loses the seamless transition and might fail to track the package if the agent doesn't realize it needs to fetch the tracking number manually after a broken link.",
+        "speak": "if-wrong",
+        "check": "After following the tracking link, does the carrier page show this shipment's number and a status, or an empty tracking form?",
+        "say_example": "The link opened <FedEx> but nothing loaded. I'll paste the number in myself."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Filter the tracked packages",
+      "questions": [
+       {
+        "question": "Does the count of packages on the way match what the list shows?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the actual number of tracked packages on screen prevents false assumptions about the app's capacity based on incorrect narration.",
+        "whatTheAgentLoses": "The user loses an accurate understanding of their active orders if the agent reports a contradictory number of deliveries that are not actually on the screen.",
+        "speak": "if-wrong",
+        "check": "How many deliveries does the list show, and how many of them are marked as on the way?",
+        "say_example": "I miscounted. The list shows <three> packages on the way."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Get the tracking number",
+    "note": "3.1 or 3.2 gives the number - 3.2 is the retailer's copy of it. 3.3 wherever the number has to leave the screen it is on. 3.4 before 4 where the number's kind decides which form takes it; vHzC's whole lesson is that one kind has no form outside the retailer.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Find the shipping number",
+      "questions": [
+       {
+        "question": "Which tracking number and carrier do you need to look up?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The text in the document explicitly identifies the carrier as DHL and provides the exact tracking number needed to find the package.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the correct tracking number and carrier were accurately extracted from their personal document.",
+        "speak": "always",
+        "check": "What carrier name and tracking number does the order page or document show for this shipment?",
+        "say_example": "Got it. Your <DHL> package, number ending <4821>, from the <Amazon> order."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Read the order's tracking ID",
+      "questions": [
+       {
+        "question": "Does this shipment cover every item in the order, or was the order split into several packages with their own tracking numbers?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The order summary showed multiple items, which are often split into separate packages with different tracking numbers.",
+        "whatTheAgentLoses": "An agent might track the first tracking number it sees and incorrectly report that your entire order is arriving on that date, leaving you unaware of missing items.",
+        "speak": "on-event",
+        "check": "How many items does the order list, and does the shipment page say how many pieces or packages this number covers?",
+        "say_example": "This order shipped in two boxes. This number covers the <headphones>. The <case> has its own number. I'll check that one next."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Copy the number out"
+     },
+     {
+      "id": "3.4",
+      "label": "Tell the number kinds apart",
+      "questions": [
+       {
+        "question": "Can this number be tracked on the carrier's site, or only inside the store's account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Proprietary tracking IDs (like Amazon's TBA numbers) cannot be tracked on standard carrier sites like UPS or FedEx, requiring the user to log into the specific retailer's platform.",
+        "whatTheAgentLoses": "The user loses the awareness that the agent might waste time trying to track a proprietary retailer ID on a public search engine where it will inevitably fail.",
+        "speak": "on-event",
+        "check": "Does the order page say the shipment is handled by the retailer itself, or does the carrier site say the number is not recognized?",
+        "say_example": "This one's shipped by <Amazon> itself. Only their page can track it. I'm staying here."
+       },
+       {
+        "question": "Which number on the shipping label should you use as the tracking number?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The shipping label displays multiple identifiers like a Consignment Number and a Ref number, making it necessary to determine which one the carrier actually uses for tracking.",
+        "whatTheAgentLoses": "You lose the ability to verify that the correct identifier was chosen from a cluttered label rather than an irrelevant reference number.",
+        "speak": "never",
+        "check": "Which number on the label is marked as the tracking, consignment, or waybill number, and which are labelled as references?",
+        "say_example": "Used the consignment number. The <Ref> number is the shipper's own reference."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Look up the number",
+    "note": "4.1 first on a carrier site - three keepers take the menu route past the homepage box on purpose. then 4.2 or 4.3; 4.4 on an aggregator, before or after the number depending on the site; 4.5 in place of 4.2 when the number is a reference, and n3mJ then runs 4.2 and 4.7 a second time with the waybill it returns. 4.6 where the user bothers. 4.7 submits the lookup - twice in jvgF and YOwJ. 4.8 when the page comes back with nothing; five keepers stop before 4.7 with the form empty.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Find the tracking field"
+     },
+     {
+      "id": "4.2",
+      "label": "Enter or accept the number"
+     },
+     {
+      "id": "4.3",
+      "label": "Scan the number",
+      "questions": [
+       {
+        "question": "Should you use the camera to scan the tracking barcode?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a camera viewfinder with a checkered pattern, offering a visual method to input the tracking number instead of typing it.",
+        "whatTheAgentLoses": "The user loses the physical convenience of instantly capturing a tracking number by pointing their device at a real-world shipping label.",
+        "speak": "never",
+        "check": "Does the page offer a camera scan as well as a typed field?",
+        "say_example": "Skipped the camera scan. Typed the number instead."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Pick the carrier",
+      "questions": [
+       {
+        "question": "Does the carrier the site selected match the one on the order?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main input field is generic, but clicking the circular icon next to it reveals a modal to explicitly choose carriers like FedEx or UPS for accurate routing.",
+        "whatTheAgentLoses": "You lose the peace of mind of manually confirming that the system is querying the correct carrier for your package.",
+        "speak": "if-wrong",
+        "check": "Which carrier does the page show as selected or auto-detected for this number, and does it match the carrier named on the order?",
+        "say_example": "The site guessed <USPS> for this number. Your order says <FedEx>. Switching it."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Track by reference",
+      "note": "4.5.1 then 4.5.2, then 4.7 as usual. 4.5.3 only where the result is a different number - n3mJ has to run 4.2 and 4.7 again with it; mqrl gets the same page by either route.",
+      "children": [
+       {
+        "id": "4.5.1",
+        "label": "Pick the reference method",
+        "questions": [
+         {
+          "question": "If there's no tracking number, what other way can the carrier look it up?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides an 'ALL TRACKING SERVICES' link to access alternative tracking methods when the standard tracking ID is unavailable.",
+          "whatTheAgentLoses": "The user loses the opportunity to specify which alternative tracking method or account details should be used to locate the package.",
+          "speak": "on-event",
+          "check": "Is there a tracking number on the order? If not, does the carrier page offer tracking by reference or another method?",
+          "say_example": "No tracking number on the order yet. <DHL> can search by the shipper's reference. Trying that."
+         }
+        ]
+       },
+       {
+        "id": "4.5.2",
+        "label": "Fill the reference form",
+        "questions": [
+         {
+          "question": "The reference form asks for something that isn't on the order. Do you know it?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The tracking form requires both the shipper's reference number and a specific date range to successfully locate the package.",
+          "whatTheAgentLoses": "You lose control over defining the exact reference number and date range used to query the carrier's system.",
+          "speak": "gate",
+          "check": "Which fields does the reference form mark as required, and which of those are not shown on the order page?",
+          "say_example": "Searching by reference needs a <ship date range> too. That's not on your order. Do you know it? Or say wait and I'll check the order again later."
+         }
+        ]
+       },
+       {
+        "id": "4.5.3",
+        "label": "Resolve the waybill",
+        "questions": [
+         {
+          "question": "Did the reference search return a new waybill number for the shipment?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen showed that tracking by your initial reference generated a new waybill number, [number], which is now required to see the actual scan history.",
+          "whatTheAgentLoses": "You lose the opportunity to record this new waybill number for your own records in case you need to check the status again later.",
+          "speak": "on-event",
+          "check": "Did the reference search return a waybill or tracking number that was not on the order, and what is it?",
+          "say_example": "The reference search found a new waybill number, ending <7730>. I'll use that from now on. It's in your report."
+         },
+         {
+          "question": "Do the tracking results for the waybill number match the results for the shipper's reference?",
+          "cluster": "compare",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen shows identical delivery details and signatures for both the waybill number and the shipper's reference, confirming they track the exact same package.",
+          "whatTheAgentLoses": "You lose the assurance that the agent cross-verified the package's identity using multiple reference numbers to ensure accurate tracking.",
+          "speak": "if-wrong",
+          "check": "Do the delivery details and dates shown for the waybill number match those shown for the shipper's reference?",
+          "say_example": "The waybill and the reference show different deliveries. One of them isn't your package. Checking the destination on each."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Check the number before submitting",
+      "questions": [
+       {
+        "question": "Does the tracking number you entered exactly match the one from your order?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering a mistyped or incomplete tracking number into the 'Track & Confirm' field will pull up the wrong package or return an error.",
+        "whatTheAgentLoses": "The user loses the certainty that the agent is actually tracking their specific package.",
+        "speak": "if-wrong",
+        "check": "Does the number in the tracking field match the number on the order, character for character?",
+        "say_example": "The number in the box is off by one digit from your order. Fixing it before I search."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Submit the lookup",
+      "questions": [
+       {
+        "question": "Is a CAPTCHA or human check stopping the search from running?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Carrier websites frequently use bot protection to prevent scraping, which can block an automated agent from actually executing the search.",
+        "whatTheAgentLoses": "The user loses the awareness that the tracking attempt failed due to a security block rather than a missing package.",
+        "speak": "gate",
+        "check": "Does the page show a CAPTCHA or verification challenge before the search will run?",
+        "say_example": "The site wants a human check before it searches. That one's yours. I'll wait."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Handle an empty result",
+      "questions": [
+       {
+        "question": "Did the search show results, or did the form just come back empty?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Carrier websites sometimes time out or fail silently when a tracking number is submitted, leaving you on the same page with an empty input box instead of showing an error.",
+        "whatTheAgentLoses": "The user loses the ability to notice that the search didn't actually process and that the tracking number needs to be submitted again.",
+        "speak": "if-wrong",
+        "check": "After pressing search, does the page show results for the number, or the same form again, either empty or with an inline error next to the field?",
+        "say_example": "I pressed search and the form came back blank. No error, no result. Trying once more."
+       },
+       {
+        "question": "Does the page show tracking details, or does it say there's no information yet?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly updated to show 'No information available yet', meaning no tracking history was found.",
+        "whatTheAgentLoses": "The user is falsely told their package tracking is successful, leaving them misinformed about its actual status.",
+        "speak": "on-event",
+        "check": "Does the page say no information is available or no scans yet, or does the order timeline show only Ordered with no Shipped step?",
+        "say_example": "The carrier has no record of this number yet. The label exists but nothing's been scanned. It probably hasn't left the sender."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Read the status",
+    "note": "5.1 and 5.2 on every run that reaches a page - the row in 2.3 already carried both on retailer runs. 5.3 where a bar or checklist exists. 5.4 where the page names the carrier; on Amazon-carried orders it names Amazon. 5.5 and 5.6 behind expanders on carrier sites, on the page on FedEx, behind See all updates on Amazon. 5.7 where the user wants a place - a map on Amazon-carried orders and in the tracker app, a city on carrier sites. 5.8 on delivered packages. 5.9 whenever the page carries a notice that needs the user - a hold, a banner, a validation gate; no keeper acts on one.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the headline status",
+      "questions": [
+       {
+        "question": "What is the package's status right now, with its time and place?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays the package as 'Delivered' along with the exact date, time, and service area in New Delhi, confirming the shipment is complete.",
+        "whatTheAgentLoses": "Delegating this means you miss the immediate reassurance of seeing the exact delivery timestamp and location details firsthand.",
+        "speak": "always",
+        "check": "What is the headline status, the time it was set, the delivery date or hourly window shown, and where the package was left if it says delivered?",
+        "say_example": "Delivered <Tuesday at 2:14 pm>. Left <in the mailbox>."
+       },
+       {
+        "question": "Are you tracking an incoming delivery or an outgoing return?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The order status page shows 'Your Returns Drop off at Post office', indicating this is a return shipment rather than a standard incoming purchase.",
+        "whatTheAgentLoses": "The agent might misinterpret the status as an incoming delivery, leaving the user confused about whether their return was successfully received by the retailer.",
+        "speak": "if-wrong",
+        "check": "Does the page label this shipment as a return or drop-off rather than a delivery to you?",
+        "say_example": "Heads up. This is the return you sent back. Nothing is coming to you on this one. Your other orders are on the list if you meant one of those."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Read the arrival estimate"
+     },
+     {
+      "id": "5.3",
+      "label": "Read the progress checklist"
+     },
+     {
+      "id": "5.4",
+      "label": "Identify the carrier",
+      "questions": [
+       {
+        "question": "Did the carrier hand the package to another carrier, with a new tracking number?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Economy shipping options (like UPS SurePost) hand the package off to USPS for the final mile, requiring the user to switch to tracking the new USPS number to see actual out-for-delivery updates.",
+        "whatTheAgentLoses": "The user loses visibility into the final, most important leg of the delivery because the agent stops at the initial carrier's 'Transferred to Post Office' milestone.",
+        "speak": "on-event",
+        "check": "Does the page say the package was handed to another carrier for final delivery, and does it show a second tracking number?",
+        "say_example": "<UPS> handed it to the post office for the last stretch. The new number ends in <9354>. I'll track that one from here."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Expand the shipment details",
+      "questions": [
+       {
+        "question": "The proof of delivery is behind an identity check. Do you want to go through it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen hides specific delivery details and the electronic proof of delivery behind a privacy validation step.",
+        "whatTheAgentLoses": "The user loses the ability to see exactly who signed for or received the package if the agent dismisses the prompt without retrieving the full proof of delivery.",
+        "speak": "gate",
+        "check": "Does the page hide delivery details or proof of delivery behind an identity check, and what does it ask for?",
+        "say_example": "The proof of delivery is behind an identity check. It wants <the last four of your phone number>. Give it, or say skip and I'll stop at the status."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Read the scan history",
+      "questions": [
+       {
+        "question": "Is the full scan history on the page, so it can go in the report?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays a detailed scan history with multiple dates and international locations like New Delhi, Dubai, and Bahrain.",
+        "whatTheAgentLoses": "The user misses out on understanding the complete journey and specific transit locations of their package if the agent only reports the final delivery status.",
+        "speak": "never",
+        "check": "Does the page show a scan history, and how many entries does it have?",
+        "say_example": "Saved the full scan history, <9> stops, to the report."
+       },
+       {
+        "question": "Does the latest scan say something different from the summary at the top?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main status often provides a generic summary, while the detailed scan history shows exactly where and when the package was last processed.",
+        "whatTheAgentLoses": "The user loses granular visibility into the package's exact geographic location and recent facility scans.",
+        "speak": "if-wrong",
+        "check": "Does the latest entry in the detailed scan history say something different from the summary line at the top?",
+        "say_example": "The top says in transit. The latest scan says held at <customs in Cincinnati> since <Monday>. I'm going by the scan."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Locate the package now",
+      "questions": [
+       {
+        "question": "If there's a live map, how many stops away is the driver?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a live map indicating you are the next stop, and zooming out helps visualize the truck's exact distance from your location.",
+        "whatTheAgentLoses": "Delegating this means you miss the immediate visual reassurance of seeing exactly where the delivery truck is in your neighborhood.",
+        "speak": "on-event",
+        "check": "Does the page show a live map, and does it state how many stops away the driver is or how many minutes until arrival?",
+        "say_example": "The driver is <3> stops away. About <20> minutes."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Read the delivery proof",
+      "questions": [
+       {
+        "question": "Who does the delivery record say signed for the package?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The results page displays the waybill number, origin, destination, and the final signature, which are necessary to verify the package completed its journey.",
+        "whatTheAgentLoses": "The user loses the peace of mind of personally reading the scan history and seeing exactly who signed for the delivery.",
+        "speak": "on-event",
+        "check": "Does the delivery record show a signature, and what name does it show?",
+        "say_example": "Signed for by <name> at <time>. If that's not you or a neighbor, say so."
+       },
+       {
+        "question": "Is there a delivery photo, and what does the page say it shows?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The status says delivered and provides a photo, but you must visually verify the background matches your property to ensure it wasn't left at a neighbor's house.",
+        "whatTheAgentLoses": "The user loses the visual confirmation that the package is actually at their house, which is crucial if they need to go look for it or report it misdelivered.",
+        "speak": "on-event",
+        "check": "Is a delivery photo shown, and what does its caption or alt text say about where the package was left?",
+        "say_example": "There's a delivery photo. The caption says <front door>. I can't tell if it's yours. Want me to describe it?"
+       },
+       {
+        "question": "If it went to a locker, is the pickup code or barcode on the page?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Packages delivered to smart lockers (like Amazon Hub or apartment parcel lockers) require a unique code or barcode to open the door, which the user must save before walking to the locker.",
+        "whatTheAgentLoses": "The user arrives at the physical locker knowing their package is inside but is completely unable to retrieve it because the agent didn't extract the necessary access code.",
+        "speak": "on-event",
+        "check": "Does the status say delivered to a locker, and does the page show a pickup code or barcode?",
+        "say_example": "It's in a locker at <location>. The pickup code is <1234>. I've put it in your report."
+       }
+      ]
+     },
+     {
+      "id": "5.9",
+      "label": "Read the exception notices",
+      "questions": [
+       {
+        "question": "Is there a service alert banner, and what does it say?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The DHL tracking page displays a warning about active alert messages that may affect service, which could provide crucial context about delays not visible in the individual package's scan history.",
+        "whatTheAgentLoses": "The user remains ignorant of broader network disruptions, like severe weather or strikes, that could impact their expected delivery date.",
+        "speak": "never",
+        "check": "Is a service alert banner shown, and what does it say?",
+        "say_example": "Noted a service alert for <region>. It's in your report."
+       },
+       {
+        "question": "Is there a notice saying the package is held, or needs something from you?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A package might be halted due to a bad address, unpaid duties, or weather, requiring the user to intervene or contact the carrier to get it moving again.",
+        "whatTheAgentLoses": "The user misses the critical window to correct an address or pay a fee before the carrier gives up and returns the package to the sender.",
+        "speak": "on-event",
+        "check": "Does the page show an exception, hold, action-required, or return-to-sender notice for this package, and what does it say?",
+        "say_example": "Heads up. The package is <held for a bad address>. It's not moving until that's fixed."
+       },
+       {
+        "question": "Does the package owe customs duties or taxes before it can be delivered?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "International shipments often get held at customs, and the tracking page will display a prompt or link to pay these fees before delivery can proceed.",
+        "whatTheAgentLoses": "The user loses the awareness that their package is blocked by unpaid fees, delaying delivery indefinitely if the agent only reports the status as 'in transit'.",
+        "speak": "gate",
+        "check": "Does the page say duties or taxes are owed before delivery, how much, and is there a pay button or link?",
+        "say_example": "It's stuck at customs. They want <$32> in duties before it moves. Pay it here, or say hold and I'll leave it."
+       },
+       {
+        "question": "Was a delivery missed, and do you want redelivery, pickup, or an address change?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a delivery fails due to an inaccessible location or missing signature, the carrier often updates the status to require user action rather than just a new delivery date.",
+        "whatTheAgentLoses": "The user misses the urgent requirement to intervene, risking the package being returned to the sender.",
+        "speak": "gate",
+        "check": "Does the page show a missed delivery attempt, and which options does it offer: redelivery, pickup, or an address change?",
+        "say_example": "They tried <Tuesday> and no one was there. The page offers redelivery or pickup at <location>. Which one? Or say leave it."
+       },
+       {
+        "question": "The delivery needs a signature. Do you want to let them leave it without one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "High-value packages often require a signature, and the tracking page may offer an option to digitally sign or authorize the driver to leave the package unattended.",
+        "whatTheAgentLoses": "You lose the opportunity to pre-sign for the package, which could result in a missed delivery if you are not home.",
+        "speak": "gate",
+        "check": "Does the page say a signature is required, and does it offer to authorize release without one?",
+        "say_example": "This needs a signature. You can tell them to leave it without one. That means it sits at the door. Say authorize, or say keep the signature."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Check the result",
+    "note": "6.1 wherever the number came from somewhere else - a waybill, a label, a document, another app. 6.2 wherever two screens state the same fact. 6.3 on in-transit runs and in the tracker app; nobody runs it on a delivered package.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Confirm the number matches",
+      "questions": [
+       {
+        "question": "Does the number on the status page match the one that was asked for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tracking ID initially provided in the Notes app is different from the tracking ID being viewed in the Amazon app.",
+        "whatTheAgentLoses": "The user receives a status update for the wrong order and remains uninformed about the package they actually wanted to track.",
+        "speak": "if-wrong",
+        "check": "Does the tracking number shown on the status page match the number from the ask or from the order?",
+        "say_example": "This page is showing a different number from the one you gave me. Going back to yours."
+       },
+       {
+        "question": "Do the destination and the dates on the tracking page fit the order?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Tracking numbers can be recycled or provided incorrectly by the seller, so verifying the destination city ensures the package is actually heading to you.",
+        "whatTheAgentLoses": "The user loses the chance to catch a misrouted package or a fraudulent tracking number early, before it gets delivered to the wrong state.",
+        "speak": "if-wrong",
+        "check": "Does the destination city on the tracking page match the order's address, and do its dates fit the expected delivery date?",
+        "say_example": "This number is going to <Phoenix>. Your order ships to <Menlo Park>. It's not your package. Ask the seller for the right number."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Compare the status across screens",
+      "questions": [
+       {
+        "question": "Does the listed carrier match between the retailer's app and the tracking site?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Amazon app stated the order was shipped with Amazon, but the third-party tracking site listed FedEx, creating confusion about who is actually handling the package.",
+        "whatTheAgentLoses": "If an agent misses this discrepancy, you lose the ability to know which carrier to actually trust or contact for accurate delivery updates.",
+        "speak": "if-wrong",
+        "check": "Which carrier does the retailer's page name, and which carrier does the tracking site name for the same number?",
+        "say_example": "<Amazon> says they're delivering it themselves. The other site says <FedEx>. I'm trusting <Amazon>'s page."
+       },
+       {
+        "question": "Do the tracking statuses from the retailer app and the carrier site match?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The retailer app showed recent scan history while the carrier site showed no information, requiring you to decide which source is currently accurate.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate conflicting tracking updates and decide which platform's status to trust.",
+        "speak": "if-wrong",
+        "check": "Does the status on the retailer's page match the status on the carrier's page for the same number?",
+        "say_example": "The store's page shows <out for delivery>. The carrier's page has nothing. I'm going with the store's page."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Check the data is current",
+      "questions": [
+       {
+        "question": "How recently was the tracking status last updated?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The page shows the package is in transit, but checking the timestamp of the last scan reveals if it is actively moving or if it has been stuck at a facility for days.",
+        "whatTheAgentLoses": "The user loses the ability to spot a stalled delivery that might require contacting customer service, as the agent might just report 'In Transit' without noting the stale date.",
+        "speak": "on-event",
+        "check": "What is the timestamp of the latest update shown, on the scan history or on the package list, and how long ago is that?",
+        "say_example": "The last scan was <5 days ago> in <Louisville>. Nothing since. It may be stuck."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Keep tracking afterwards",
+    "note": "any of 7.1 to 7.4 where the surface offers it; none is on the path to the status. pKsL is the only keeper that does more than read the options, and DbnH the only one that leaves the tracking page for help.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Set up the notifications",
+      "questions": [
+       {
+        "question": "Is the page asking to turn on notifications?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser displays a prompt asking for notification permissions, which dictates whether this site can send alerts directly to your device.",
+        "whatTheAgentLoses": "You lose the opportunity to decide your own privacy and notification preferences for this specific tracking website.",
+        "speak": "never",
+        "check": "Does the page show a prompt or toggle asking to turn on notifications for this shipment?",
+        "say_example": "Said no to the notifications prompt."
+       },
+       {
+        "question": "Which delivery alerts does the page have switched on?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides toggles to receive notifications at night, only on final delivery, or as email copies.",
+        "whatTheAgentLoses": "The user loses the opportunity to customize how and when they receive ongoing tracking updates.",
+        "speak": "never",
+        "check": "Which notification toggles does the page show, and which of them are on?",
+        "say_example": "Left alerts at <final delivery only>."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Save the package for tracking",
+      "questions": [
+       {
+        "question": "Do you want to save this shipment to your account or give it a name?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Tracking portals often provide a field to name the shipment so you don't have to remember the long tracking number next time you check.",
+        "whatTheAgentLoses": "You lose the convenience of easily identifying this specific package in a list of saved shipments during future visits.",
+        "speak": "never",
+        "check": "Does the page offer to save this shipment or give it a name?",
+        "say_example": "Left the shipment unsaved. You can name it from the report."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Read the manage options",
+      "questions": [
+       {
+        "question": "Which delivery options does the page offer, like changing instructions or tracking the driver?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers options to either view the driver's live location or modify the delivery instructions before the package arrives.",
+        "whatTheAgentLoses": "The user loses the ability to provide last-minute delivery instructions or cancel the delivery while the package is en route.",
+        "speak": "never",
+        "check": "Which manage options does the page offer for this delivery?",
+        "say_example": "Noted the manage options on this page, <change delivery instructions> and <track the driver>."
+       },
+       {
+        "question": "Should you share the tracking link with someone else expecting the package?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The tracking page features a 'Share tracking' button, allowing you to send the current delivery status and expected arrival time to a contact.",
+        "whatTheAgentLoses": "The user loses the convenience of directly sending a live tracking link to a roommate or family member who also needs to know when the package will arrive.",
+        "speak": "never",
+        "check": "Does the page have a share tracking control?",
+        "say_example": "Skipped the share button. Nothing was sent."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Reach customer service",
+      "questions": [
+       {
+        "question": "Which search result should you click to reach customer service?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results mix a dedicated 'amazon customer service' button with unrelated retail products like contact lens solution, requiring you to identify the correct link for account help.",
+        "whatTheAgentLoses": "You lose the assurance that the agent correctly bypassed unrelated product listings to access the official customer service channel.",
+        "speak": "if-wrong",
+        "check": "Which result is the retailer's own customer service page, rather than a product or a third-party site?",
+        "say_example": "The first result is a product, not help. Opening <Amazon>'s own customer service page instead."
+       },
+       {
+        "question": "Do you want to contact the carrier about where the package is?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The DHL tracking history includes a specific prompt offering personal assistance if the automated scan history is unsatisfactory or unclear.",
+        "whatTheAgentLoses": "The user loses the immediate, contextual opportunity to escalate a confusing tracking status to a human agent.",
+        "speak": "gate",
+        "check": "Does the page offer a link or number to speak with a representative about this shipment?",
+        "say_example": "The page offers a person to talk to about where it is. Want me to open that? Or say stop here."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

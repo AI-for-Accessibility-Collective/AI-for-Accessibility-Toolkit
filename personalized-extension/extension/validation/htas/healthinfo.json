@@ -1,0 +1,1024 @@
+{
+ "task": "look up specific health information online and judge its reliability (Mayo Clinic, WebMD, NIH/MedlinePlus, NHS): search a symptom, condition, or medication question, open results, distinguish reputable medical sources from ads and content farms, read the relevant section, and cross-check at least one second source; complete when the answer is on screen from an identified reputable source. Surface pinned: health-information websites reached through search. Variants: personal medical-record portals (that is a different task), telehealth appointment booking, health influencer/talking-head advice videos, and supplement marketing do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Look up reliable health information",
+  "note": "do 1 - 1.4 and 1.5 only where a tool is gated (XwDq); the reference sites have no gate, and the same checker on the current site has none (1ch0). then 2, which picks 3 or 4 on a reference site or 5 on a checker; repeat 2 until a page answers - pQKZ drops the index for the search twice, FjnL drops a search for the index, y127 drops the index for the search. then 6, with 7 on the same page where the keeper does it. 8 for a second reading - FjnL runs 3 and 4 again on a second site, hIZP runs 1, 2 and 3 or 4 again on three more sites, kK4R runs 3 again, 1ch0 runs 5.2 again on the same pair, XwDq re-reads in 8.3. 8.5 loops back to 2 for the next topic - pQKZ four times - or to 5.2.5 for the next drug pair - 1ch0 three times.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the health site",
+    "note": "1.1, 1.2 or 1.7 - every keeper arrives by address, by a library list, or by typing the site's name into Google (hIZP, three of its four sites); none types a symptom into a search engine. 1.3 whenever a banner sits on the entry page; 1.6 whenever a consent prompt, chat window or overlay covers the page - no keeper meets one. 1.4 then 1.5 only on the 2013 drugs.com (XwDq); the current drugs.com opens the same checker from a homepage tile with no registration and no terms page (1ch0). 1.5 alone where a form's Submit doubles as the terms (4Bl8).",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Enter the site address"
+     },
+     {
+      "id": "1.2",
+      "label": "Use the library's database list"
+     },
+     {
+      "id": "1.3",
+      "label": "Handle the alert banner"
+     },
+     {
+      "id": "1.4",
+      "label": "Register an account",
+      "note": "1.4.1, with 1.4.2 and 1.4.3 as the form raises them, then 1.4.4; 1.4.5 when the site asks for verification after the fact. one keeper (XwDq), on the 2013 site; the reference sites never ask, and the current drugs.com runs the checker signed out (1ch0).",
+      "children": [
+       {
+        "id": "1.4.1",
+        "label": "Fill the required fields",
+        "questions": [
+         {
+          "question": "The site wants an account with your age range before the tool runs. Should I create one?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a closed dropdown still displaying the 'Select Age' placeholder, indicating that an age range must be chosen to filter the health information.",
+          "whatTheAgentLoses": "The user loses the ability to provide their actual age, which is critical for receiving accurate and relevant medical information.",
+          "speak": "gate",
+          "check": "Does the page ask for an account, with an email and an age range, before the tool will open?",
+          "say_example": "<Drugs.com> wants an account before it will run the checker. It asks for your email and your age range. Want me to sign up with those, or use a checker that doesn't need an account?"
+         }
+        ]
+       },
+       {
+        "id": "1.4.2",
+        "label": "Set the professional flag",
+        "questions": [
+         {
+          "question": "Should you check the 'I am a Healthcare Professional' box?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen presents an optional checkbox that, if selected, requires you to specify a job title and medical specialization.",
+          "whatTheAgentLoses": "The user loses the ability to control the complexity of the medical content provided, as a professional profile might return highly technical clinical data instead of consumer-friendly explanations.",
+          "speak": "never",
+          "check": "Does the registration form show an optional healthcare-professional checkbox?",
+          "say_example": "Left the healthcare professional box unchecked."
+         }
+        ]
+       },
+       {
+        "id": "1.4.3",
+        "label": "Decline the newsletters",
+        "questions": [
+         {
+          "question": "Which newsletters or extras should be ticked when making the account?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The registration form includes optional checkboxes for healthcare professionals and various email newsletters that determine the type and volume of emails you will receive.",
+          "whatTheAgentLoses": "You lose control over your email inbox preferences and the accuracy of your user profile if an agent makes these selections for you.",
+          "speak": "never",
+          "check": "Which optional newsletter or marketing checkboxes does the registration form show, and are any pre-ticked?",
+          "say_example": "Said no to the <three> newsletters. One was ticked already, so I unticked it."
+         }
+        ]
+       },
+       {
+        "id": "1.4.4",
+        "label": "Clear the captcha and terms",
+        "questions": [
+         {
+          "question": "Should I read the Terms & Conditions and Privacy Policy before agreeing to them?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires checking a box to accept the site's terms and privacy policy, which dictate how your personal information will be handled.",
+          "whatTheAgentLoses": "The user loses the ability to make an informed decision about whether they are comfortable with how the site collects and uses their sensitive health data.",
+          "speak": "never",
+          "check": "Does the form require accepting terms and a privacy policy to continue?",
+          "say_example": "Accepted the site's terms to finish signing up."
+         }
+        ]
+       },
+       {
+        "id": "1.4.5",
+        "label": "Defer the email verification",
+        "questions": [
+         {
+          "question": "Does the site block the tool until the email is verified?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a membership verification warning that restricts forum posting, prompting a decision on whether completing account setup is necessary for your current task.",
+          "whatTheAgentLoses": "The user loses the opportunity to decide whether to fully activate their account for community features or bypass the interruption to quickly access the health tool.",
+          "speak": "on-event",
+          "check": "Does the page block the tool until the email address is verified, or does it only restrict forum posting?",
+          "say_example": "It won't run the checker until you click a link in the email it just sent you. Want to do that now, or should I use a checker that doesn't need an account?"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Agree to the tool's terms",
+      "questions": [
+       {
+        "question": "Do you agree to the checker's own terms so it will open?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The site presents a mandatory scrollable terms text box and an 'I Agree' button specifically for the Interactions Checker, separate from the account registration terms.",
+        "whatTheAgentLoses": "The user loses the opportunity to read and consent to the tool's specific medical limitations and liability waivers before relying on its health information.",
+        "speak": "never",
+        "check": "Does the tool show its own terms box with an agree button before it opens?",
+        "say_example": "Accepted the checker's terms. They say it's information, not medical advice."
+       },
+       {
+        "question": "Does the checker open after the terms are agreed to?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The site displays a mandatory terms of service prompt that must be accepted before granting access to the interaction checker.",
+        "whatTheAgentLoses": "You lose the opportunity to review the specific terms and conditions you are accepting before entering your health information.",
+        "speak": "if-wrong",
+        "check": "After the agree button, does the page show the checker's drug entry field, or is the terms prompt still showing?",
+        "say_example": "The checker didn't open after I agreed. The terms box is still up. Trying once more."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Dismiss the pop-up",
+      "questions": [
+       {
+        "question": "On the cookie pop-up, do you want non-essential cookies rejected so your health query is not tracked?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Health websites often use third-party trackers, and accepting all cookies can result in the user's sensitive medical condition being shared with data brokers and advertisers.",
+        "whatTheAgentLoses": "The user loses control over their medical privacy, risking targeted advertising based on a sensitive health condition because the agent blindly clicked 'Accept All'.",
+        "speak": "never",
+        "check": "Does the cookie banner offer a reject or manage option separate from accept all?",
+        "say_example": "Said no to tracking cookies, so this search stays off their ad profile."
+       },
+       {
+        "question": "Is a chat bubble, pop-up, or banner covering the article?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Health websites frequently use aggressive overlays that cover the main content, requiring the user to find and click a small 'X' to read the article.",
+        "whatTheAgentLoses": "The user cannot see if the agent is reading text that is actually hidden behind an overlay, or if the agent accidentally clicked a deceptive ad while trying to close the pop-up.",
+        "speak": "never",
+        "check": "Is there an overlay, chat bubble, or banner covering the article body?",
+        "say_example": "Closed a newsletter pop-up that was covering the article."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Search for the site by name",
+      "questions": [
+       {
+        "question": "Is the result being opened the real site, rather than an ad or a lookalike?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display multiple links, making it important to verify that the URL is exactly 'https://www.webmd.com' to avoid clicking on deceptive ads or unreliable content farms.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the search result URL to guarantee the information will come from an authentic, reputable medical source.",
+        "speak": "if-wrong",
+        "check": "Is the result's address the site's own domain, with no Ad label on it?",
+        "say_example": "The first <WebMD> result is a lookalike at <webmd-health.co>. Skipping it for the real one."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Choose the way in",
+    "note": "2.1 on any homepage, repeatedly when the keeper tours - y127 opens four sections before choosing one. then 2.2 picks 3, 4 or 5. 2.3 whenever a route lands wrong, and it sends the task back to 2.2 - pQKZ twice, FjnL once. 2.4 when the keeper opens a homepage feature instead of a way in - pQKZ six times, each closed with the back button, none leading to 3, 4 or 5. hIZP runs 2 once per site, four times, and gives a reason each time it picks the index or a section over the search bar.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Pick the site section",
+      "questions": [
+       {
+        "question": "Should I open the Interactions Checker to look up the medicine?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the 'Your Account' overview page with the pointer hovering over the 'Interactions Checker' link, indicating a choice of which tool to use for the query.",
+        "whatTheAgentLoses": "The user loses the ability to choose the specific tool or section of the health website they prefer to use for their research.",
+        "speak": "never",
+        "check": "Does the site navigation show an interactions checker link?",
+        "say_example": "Opened the interactions checker."
+       },
+       {
+        "question": "Do you want the guided symptom checker, or a plain search for the condition?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The WebMD homepage displays a dedicated 'WebMD symptomchecker' section with an orange 'Start Now' button to begin evaluating your health issue.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to use a guided symptom checker tool or simply search for your condition manually using a search bar.",
+        "speak": "always",
+        "check": "Does the site offer both a symptom checker and a topic search?",
+        "say_example": "You asked what could be behind <the headache>. <WebMD> has a symptom checker for that, so I'm using it. Say search if you'd rather just read the <headache> page."
+       },
+       {
+        "question": "Is this a condition question or a medicine question, so the right A to Z index gets used?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage explicitly separates 'Health A to Z' for conditions and symptoms from 'Medicines A to Z' for drug information, requiring you to choose the correct path for your query.",
+        "whatTheAgentLoses": "You lose the opportunity to specify whether you want to research a condition broadly or look up a specific medication.",
+        "speak": "never",
+        "check": "Does the site split its index into a conditions list and a medicines list?",
+        "say_example": "Used the medicines index, since <ibuprofen> is a drug."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Choose index or search",
+      "questions": [
+       {
+        "question": "Does the body-system section that was opened actually list the condition?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator points out that using the body systems menu 'assumes that I know diabetes is a dysfunction of the endocrine system,' highlighting a prerequisite knowledge check for this navigation path.",
+        "whatTheAgentLoses": "The user loses the realization that a specific navigation path requires medical knowledge they might not have, which could lead an agent to guess or get stuck.",
+        "speak": "if-wrong",
+        "check": "Does the body-system page that was opened list the condition asked about?",
+        "say_example": "<Diabetes> isn't under the section I opened. I'm switching to the search box instead."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Abandon a route that misses",
+      "questions": [
+       {
+        "question": "Does the index have a general entry for the term, or only narrow ones?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The alphabetical list displayed many specific magnesium compounds, indicating that a direct search might be better for finding a general overview.",
+        "whatTheAgentLoses": "The user loses the ability to recognize when a site's directory is too granular and pivot to a more efficient search method.",
+        "speak": "never",
+        "check": "Does the index page show a general overview entry for the term, or only narrow entries?",
+        "say_example": "The index only lists specific <magnesium compounds>, so I searched instead."
+       },
+       {
+        "question": "Does the site have a dedicated page for the topic, or only a passing mention?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The text only mentions leprosy in passing while focusing broadly on general mycobacterial infections, indicating it might lack the specific depth you need.",
+        "whatTheAgentLoses": "You lose the human judgment to quickly abandon a tangentially related article and pivot to a more focused search.",
+        "speak": "on-event",
+        "check": "Does the site have a page whose title is the topic asked about, or is the topic only mentioned inside a broader page?",
+        "say_example": "<MedlinePlus> has no page on <leprosy> itself. It only comes up inside a page on <mycobacterial infections>. I'll check <NHS> for a proper one."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Browse the homepage features"
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Search the topic",
+    "note": "3.1, then 3.2 when the box offers suggestions, then 3.3 and 3.4 on the results page. 3.4 goes back to 3.1 with a different term when the pick misses - pQKZ types the common name after the technical one failed in 4. hIZP runs 3 on three of its four sites with a partial name and takes the suggestion each time.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Enter the search term",
+      "questions": [
+       {
+        "question": "Did the search actually run, or is the term still sitting in the box?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows the MedlinePlus home page with the query typed in the search bar, indicating the search has not yet been executed.",
+        "whatTheAgentLoses": "The user loses the ability to review actual health information if the agent hallucinates being on a results page before actually submitting the search.",
+        "speak": "if-wrong",
+        "check": "Does the page show a results heading or result count for the term, rather than the home page with the term still in the search box?",
+        "say_example": "The search never ran. The word is still sitting in the box. Pressing search now."
+       },
+       {
+        "question": "What specific medical topic do you want to search for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering a precise topic into the MedlinePlus search box ensures the site retrieves the correct health information.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose the exact symptom or condition you want to investigate.",
+        "speak": "always",
+        "check": "What term is in the search box, and on which site?",
+        "say_example": "Got it. Looking up <warfarin and aspirin together> on <drugs.com>, then checking it against <MedlinePlus>."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Take or refuse the suggestion",
+      "questions": [
+       {
+        "question": "Which suggested search term should you choose?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown shows both broad terms and specific subtopics like \"diabetes medicines,\" which determines the scope of the medical information you will find.",
+        "whatTheAgentLoses": "You lose the ability to decide whether a broad overview or a specific subtopic best matches your actual health question.",
+        "speak": "on-event",
+        "check": "Does the suggestion dropdown list more than one entry containing the term, such as the plain term and subtopics?",
+        "say_example": "The site splits this into <diabetes>, <diabetes medicines>, and <diabetes in children>. You asked about <medicines>, so I'm taking that one. Say another if you meant something else."
+       },
+       {
+        "question": "Did the search swap the term for a similar-sounding condition?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Search engines often aggressively autocorrect complex drug names or medical conditions (e.g., changing 'hypothyroidism' to 'hyperthyroidism'), which completely changes the medical information returned.",
+        "whatTheAgentLoses": "The user loses the ability to notice that the search results are for the wrong disease or medication entirely before clicking into them.",
+        "speak": "if-wrong",
+        "check": "Does the results heading or a 'showing results for' line contain exactly the term typed, not a different one?",
+        "say_example": "It changed <hypothyroidism> to <hyperthyroidism>. Those are opposite conditions. Searching the one you asked for again."
+       },
+       {
+        "question": "On the second site, is the page for the same drug as the first, not one with a similar name?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 'Paracetamol' being selected from the Wikipedia search dropdown, which must perfectly align with the first source's topic to ensure a valid cross-check.",
+        "whatTheAgentLoses": "The user loses the peace of mind that the agent is consistently tracking and verifying the exact same medication across different sources without getting derailed by similar search suggestions.",
+        "speak": "if-wrong",
+        "check": "Does the second site's page title contain the same drug name as the first site's page?",
+        "say_example": "The second page is for <paroxetine>, not <paracetamol>. Wrong drug. Finding the right page before I compare anything."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Read the result count"
+     },
+     {
+      "id": "3.4",
+      "label": "Choose from the results",
+      "questions": [
+       {
+        "question": "Which kind of result should be opened, such as Health Topics or the encyclopedia?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results page displayed thousands of links and specific refinement categories like 'Health Topics' and 'Medical Encyclopedia', making it important to choose the most direct path to a reliable overview.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to start with a broad summary overview or filter for specific formats like medical tests or external health links.",
+        "speak": "never",
+        "check": "Which result categories does the results page offer, such as Health Topics or Medical Encyclopedia?",
+        "say_example": "Took the <Health Topics> result. It's the overview page."
+       },
+       {
+        "question": "Does the link chosen from the results lead to the full article on the reputable site, not an ad or a bare snippet?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display a brief summary of the condition, so you must identify the correct link to open the full article.",
+        "whatTheAgentLoses": "You lose the ability to verify that the chosen link leads to a comprehensive and reputable medical source instead of an ad or incomplete summary.",
+        "speak": "never",
+        "check": "Does the opened page show a full article with headings, rather than a snippet or an ad?",
+        "say_example": "Opened the full <MedlinePlus> article."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Browse the index",
+    "note": "4.1 then 4.3, or 4.2 in place of 4.1 where the site groups by body system. 4.3 lands on a page; when it is the wrong one, 2.3 takes over. pQKZ runs 4 three times and it works once; hIZP runs it once on MedlinePlus and the see-also row lands on the right page.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Pick the letter"
+     },
+     {
+      "id": "4.2",
+      "label": "Browse by body system"
+     },
+     {
+      "id": "4.3",
+      "label": "Pick the list entry",
+      "questions": [
+       {
+        "question": "When the index lists several entries for the term, which one matches what you asked?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a long list of health topics starting with 'D', requiring you to scroll past unrelated conditions like 'Dementia' and 'Depression' to find the exact match.",
+        "whatTheAgentLoses": "The user loses the opportunity to see if the site breaks the condition down into more specific sub-categories, like Type 1 or Type 2, before clicking.",
+        "speak": "on-event",
+        "check": "Does the index show more than one entry containing the term, such as variants for different body parts or sub-topics?",
+        "say_example": "The list has <angioplasty> for the <heart>, the <legs>, and the <kidneys>. You asked about the <heart>, so that's the one. Say another if you meant a different one."
+       },
+       {
+        "question": "Does the index entry send the term to a different name?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The A-Z index lists terms like 'Halitosis' with a cross-reference to 'see Bad Breath', requiring you to click the redirected common name to find the information.",
+        "whatTheAgentLoses": "You lose the ability to track how the medical site categorizes your specific symptom, which helps build your health literacy regarding clinical versus common terminology.",
+        "speak": "on-event",
+        "check": "Does the index entry for the term show a 'see' reference to another name?",
+        "say_example": "The site files <halitosis> under <bad breath>. Going there."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Query the interactive tool",
+    "note": "5.1 on a symptom checker, 5.2 on an interaction checker - the site decides which. 4Bl8 and XwDq run one check each; 1ch0 runs 5.2 four times, editing the list between runs. both end by handing a page to 6.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Describe the symptoms",
+      "note": "5.1.1, then 5.1.2 and 5.1.3, then 5.1.4 once per screen - nine screens for one symptom. 5.1.5 after the first list, which re-ranks it; then 5.1.6.",
+      "children": [
+       {
+        "id": "5.1.1",
+        "label": "Enter the patient profile",
+        "questions": [
+         {
+          "question": "What age and sex should go into the checker for the patient?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The WebMD symptom checker requires the patient's age and gender to provide relevant results, while fields like zip code and email are optional.",
+          "whatTheAgentLoses": "An agent might input incorrect patient demographics leading to irrelevant health information, or unnecessarily share your email address for marketing newsletters.",
+          "speak": "always",
+          "check": "Which profile fields does the symptom checker require before symptoms can be entered, and which are optional?",
+          "say_example": "The checker needs age and sex first. I'm putting in <6 years old>, <boy>, from what you told me. It also asks for a zip code and email. Those are optional, so I'm leaving them blank."
+         },
+         {
+          "question": "Does the header above the checker show the age and sex that were entered?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen displays a persistent header (e.g., 'Gender: Male', 'Age: 3-6 years') above the symptom body map, confirming the demographic filters currently applied to the tool.",
+          "whatTheAgentLoses": "The user loses the chance to catch a silent error where the agent defaulted to an adult profile while researching a child's symptoms, which would lead to completely wrong medical triage.",
+          "speak": "if-wrong",
+          "check": "Does the header above the symptom tool show the age range and sex that were entered?",
+          "say_example": "The checker is set to <adult female>, but this is for your <6-year-old son>. Fixing that before anything else, since the answers change with it."
+         }
+        ]
+       },
+       {
+        "id": "5.1.2",
+        "label": "Point to the body part"
+       },
+       {
+        "id": "5.1.3",
+        "label": "Pick the symptom",
+        "questions": [
+         {
+          "question": "Which entry in the symptom list matches what you described?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a long alphabetical list of symptoms, making it essential to select the exact match to ensure the resulting medical information is relevant.",
+          "whatTheAgentLoses": "You lose the ability to personally translate your nuanced physical feelings into the most accurate clinical term provided by the tool.",
+          "speak": "on-event",
+          "check": "Does the symptom list show more than one entry containing the word given?",
+          "say_example": "The list has <headache>, <headache, severe>, and <head pain>. I'm choosing <headache>. Say another one if that's closer to it."
+         },
+         {
+          "question": "Did the symptom just picked show up in the 'Your Choices' list?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The interface features a specific panel that tracks selected symptoms. If a click on the interactive body map or a checkbox fails to register, the symptom won't be added to this running list.",
+          "whatTheAgentLoses": "The user loses the ability to verify that all their intended symptoms were actually captured by the tool before it calculates the possible conditions.",
+          "speak": "if-wrong",
+          "check": "Does the selected-symptoms panel list the symptom that was just clicked?",
+          "say_example": "<Headache> didn't register. The list still says none chosen. Trying again."
+         }
+        ]
+       },
+       {
+        "id": "5.1.4",
+        "label": "Answer the refinement questions",
+        "questions": [
+         {
+          "question": "The checker asks follow-up questions about the symptom. What are the answers, or should they be skipped?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen offers a 'Skip Questions' button, but selecting specific options like 'about the same time of day' helps the tool narrow down the exact condition.",
+          "whatTheAgentLoses": "You lose the opportunity to provide nuanced personal details about the symptom's timing to get a highly tailored health assessment.",
+          "speak": "gate",
+          "check": "Which follow-up questions does the checker show for the symptom, and is there a skip option?",
+          "say_example": "The checker has a few questions about <the headache>. Did it start suddenly or slowly? Is it throbbing or sharp? Mild, moderate, or severe? Answer what you know, or say skip."
+         }
+        ]
+       },
+       {
+        "id": "5.1.5",
+        "label": "Add the further symptoms",
+        "questions": [
+         {
+          "question": "Should you add more symptoms to narrow the possible conditions?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows 49 possible conditions for a single headache symptom, which is too broad to pinpoint the actual health issue.",
+          "whatTheAgentLoses": "You lose the opportunity to provide additional, specific symptoms about the patient that an agent wouldn't know but are necessary to filter the list accurately.",
+          "speak": "on-event",
+          "check": "How many possible conditions does the results panel show for the symptoms entered?",
+          "say_example": "<Headache> alone gives <49> possible conditions. That's too many to mean much. Any other symptoms, like fever or vomiting? Or say that's all."
+         },
+         {
+          "question": "Is the condition list being read the new one from after the extra symptoms went in, not the long one from before?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen displays a narrowed list of three possible conditions alongside blue bars that visually indicate the probability of each ailment based on the symptoms entered.",
+          "whatTheAgentLoses": "You lose the ability to see how each additional symptom dynamically shifts the estimated probability of different underlying health conditions.",
+          "speak": "if-wrong",
+          "check": "Does the possible-conditions count on the page match the count after the last symptom was added?",
+          "say_example": "The list I was about to read is the old one. It's down to <three> now that <fever> is in. Reading the new one."
+         }
+        ]
+       },
+       {
+        "id": "5.1.6",
+        "label": "Pick from the condition list"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Check the drug list",
+      "note": "5.2.1 when the tool remembers an old list, then 5.2.2 once per drug - retyped when the box says No suggestions (1ch0). 5.2.3 only where the keeper is signed in (XwDq); 1ch0 runs every check on an Unsaved interactions list. then 5.2.4. for a follow-up question, 5.2.5 swaps one drug and returns to 5.2.4 - 1ch0 three times.",
+      "children": [
+       {
+        "id": "5.2.1",
+        "label": "Clear the leftover list",
+        "questions": [
+         {
+          "question": "Does the drug list still hold anything left over from an earlier check?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows an unsaved drug list populated with previously entered medications that must be cleared using the 'New list' button to prevent them from interfering with the current search.",
+          "whatTheAgentLoses": "You lose the assurance that the agent will correctly clear out old, irrelevant data before beginning a new health inquiry.",
+          "speak": "if-wrong",
+          "check": "Does the drug list on the page contain any drug that was not asked about?",
+          "say_example": "The list still had <metformin> from an earlier check. I've taken it out, so the report is only about <warfarin> and <aspirin>."
+         }
+        ]
+       },
+       {
+        "id": "5.2.2",
+        "label": "Add each drug",
+        "questions": [
+         {
+          "question": "After the drug is picked from the dropdown, does it actually show up in the list, or does the list still say it is empty?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows an empty drug name field and states your interactions list is empty, indicating that a medication must be successfully selected to proceed.",
+          "whatTheAgentLoses": "You lose the ability to verify that the exact medication and formulation you are taking is correctly entered into the safety checker.",
+          "speak": "if-wrong",
+          "check": "After the pick, does the list show the drug name, or does it still say the list is empty?",
+          "say_example": "<Warfarin> didn't go in. The list still says empty. Picking it again."
+         },
+         {
+          "question": "When the dropdown offers several versions of the drug, which one matches what you take?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search field suggests several different brands, dosages, and combination medications like Aspir 81 and Aspir-Mox, requiring a specific selection.",
+          "whatTheAgentLoses": "You lose the ability to specify the exact formulation or brand of the medication that matches your personal health inquiry.",
+          "speak": "on-event",
+          "check": "Does the dropdown show more than one entry for the drug name, such as brands, strengths, or combination products?",
+          "say_example": "The dropdown has plain <aspirin>, <Aspir 81>, and <Aspir-Mox>. The last one has an antacid mixed in. Which do you take? Say plain if it's just <aspirin>."
+         },
+         {
+          "question": "When the name gets no suggestions, is the spelling off rather than the drug missing?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Typing 'warfr' resulted in no matches, requiring the user to recognize the typo, backspace, and correct it to 'warf' to successfully locate 'warfarin'.",
+          "whatTheAgentLoses": "The user loses the assurance that the agent will recognize and correct a simple typo rather than falsely concluding the medication isn't in the database.",
+          "speak": "on-event",
+          "check": "Does the dropdown show no matches for the letters typed?",
+          "say_example": "No match for <warfr>. I'll try <warfarin>."
+         }
+        ]
+       },
+       {
+        "id": "5.2.3",
+        "label": "Save the list",
+        "questions": [
+         {
+          "question": "Should the drug list be saved to the account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The modal offers the choice to customize the list name and save it either as a basic list or a more detailed Mednotes profile.",
+          "whatTheAgentLoses": "The user loses the opportunity to organize their saved drug interactions using a custom name or an integrated health profile.",
+          "speak": "never",
+          "check": "Does the page offer to save the drug list to the account?",
+          "say_example": "Didn't save the drug list to the <drugs.com> account."
+         }
+        ]
+       },
+       {
+        "id": "5.2.4",
+        "label": "Run the interaction check",
+        "questions": [
+         {
+          "question": "Does the list show exactly the drugs asked about, before the check runs?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen showed a specific list of four medications, including Amoxil and Cymbalta, queued up for an interaction check.",
+          "whatTheAgentLoses": "The user loses the chance to verify that their exact medication list is complete and accurate before generating the interaction report.",
+          "speak": "always",
+          "check": "Which drug names does the list show before the check button?",
+          "say_example": "Checking <warfarin> and <aspirin>. Running it."
+         }
+        ]
+       },
+       {
+        "id": "5.2.5",
+        "label": "Edit the list for the next pair"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Read the answer page",
+    "note": "6.1 first on every page that has one; 6.2 where the page is long; 6.3 on the encyclopedia. then 6.4, and 6.5 where the page carries them - y127 scrolls past both red boxes, hIZP reads three of them aloud. 6.6 moves to a neighbouring page and back into 6; 6.7 is reached on two pages and taken on neither. on the interaction report 6.1 is the severity tally and 6.4 is the paragraph under the badge - 1ch0 reads MANAGEMENT on the second report after skipping it on the first.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Read the summary box"
+     },
+     {
+      "id": "6.2",
+      "label": "Use the page's contents box"
+     },
+     {
+      "id": "6.3",
+      "label": "Expand the full article"
+     },
+     {
+      "id": "6.4",
+      "label": "Read the relevant section",
+      "questions": [
+       {
+        "question": "What does the report say about this pair?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays a section with red exclamation marks labeled 'MAJOR' for specific drug pairs, highlighting critical safety warnings that require immediate attention.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate the specific risks and warnings associated with combining your exact medications.",
+        "speak": "always",
+        "check": "What severity label does the report give for the pair, and what does its management or advice paragraph say?",
+        "say_example": "<Drugs.com> says <major> for <warfarin> with <aspirin>. <Together they raise the risk of bleeding.> The advice is <avoid the pair, or get blood tests more often if both are needed>."
+       },
+       {
+        "question": "Which section of the page answers what was asked?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple detailed sections like 'Symptoms', 'Treatment', and 'When to See Your Doctor', requiring you to locate the exact information you need.",
+        "whatTheAgentLoses": "You lose the ability to personally absorb the nuances of the symptoms and self-care advice that might be uniquely relevant to your situation.",
+        "speak": "never",
+        "check": "Which section headings does the page show?",
+        "say_example": "Read the <Treatment> section, since that's what you asked about."
+       },
+       {
+        "question": "Does the text under the dosage table add a limit the table doesn't show?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a complete table of recommended magnesium amounts by life stage, making it necessary to decide if this data alone answers the query.",
+        "whatTheAgentLoses": "The user loses important context or warnings about the supplement if the agent exits the page without checking the detailed text.",
+        "speak": "on-event",
+        "check": "Does the text below the dosage table add an upper limit or condition that the table doesn't show?",
+        "say_example": "The table says <400 mg> a day for <adults>. The text under it adds a limit. No more than <350 mg from supplements>. That part isn't in the table."
+       },
+       {
+        "question": "Does the page show an illustration the text doesn't describe?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays both introductory text and a visual illustration of a wire mesh stent, which are crucial for fully understanding the medical procedure.",
+        "whatTheAgentLoses": "You lose the opportunity to personally examine the visual aid of the stent and ensure the medical explanation makes sense to you.",
+        "speak": "on-event",
+        "check": "Does the section include an illustration or diagram?",
+        "say_example": "There's a drawing here. It shows <a wire mesh tube inside the artery, holding it open>. The text doesn't say that, so that's from the picture."
+       },
+       {
+        "question": "Does the reported answer keep the report's caveats and monitoring advice, not just the severity label?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen details that while paracetamol is the drug of choice, the moderate interaction still requires caution and closer monitoring of INR.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the nuanced clinical caveats and monitoring recommendations provided in the interaction report.",
+        "speak": "if-wrong",
+        "check": "Does the reported answer contain the report's caveat or monitoring sentence, such as a line about caution or closer monitoring?",
+        "say_example": "One thing I nearly left out. It says <paracetamol> is the safer choice, but still wants your <INR> checked more often. That's part of the answer."
+       },
+       {
+        "question": "When the checker finds nothing, does the page add its own warning, and a food and alcohol section?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen explicitly warned that the absence of found interactions doesn't guarantee safety, and there was an ignored section for drug and food interactions.",
+        "whatTheAgentLoses": "The user loses critical safety warnings and full context, potentially leading to unsafe medical conclusions based on incomplete information.",
+        "speak": "on-event",
+        "check": "Does the report say no interactions were found for the drugs entered?",
+        "say_example": "No interactions found between <these two>. The site adds that none found doesn't mean none exist. There's also a food and alcohol section. It says <avoid grapefruit with this one>."
+       },
+       {
+        "question": "Is the passage being quoted part of the article, or an ad sitting between the paragraphs?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Health sites frequently interleave sponsored content or supplement ads directly within the article body, relying on subtle visual cues like a faint gray background or tiny 'Sponsored' text to distinguish them from the medical facts.",
+        "whatTheAgentLoses": "The user risks acting on biased marketing copy, mistaking a paid advertisement for objective medical advice because the agent failed to process the subtle visual boundaries.",
+        "speak": "if-wrong",
+        "check": "Is the quoted passage inside a block labeled Sponsored, Advertisement, or From our partners?",
+        "say_example": "The line I was about to read is an ad for a supplement, sitting between the paragraphs. Skipping it. The article itself goes on with <the next paragraph>."
+       },
+       {
+        "question": "Which row of the dosage table matches the age or weight, and what dose is on it?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Dosage instructions are often formatted in complex, multi-column tables where the relationship between a patient's weight and the correct dose is conveyed entirely through visual grid alignment.",
+        "whatTheAgentLoses": "The user risks administering a dangerous over- or under-dose if the agent extracts the table as flat text and misaligns the rows and columns.",
+        "speak": "on-event",
+        "check": "Which table row contains the weight or age given, and what dose is in that row?",
+        "say_example": "For a <30-pound> child the table says <5 mL> every <4 to 6 hours>. I read that off the row for <24 to 35 pounds>."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Read the when-to-get-help boxes",
+      "questions": [
+       {
+        "question": "What does the page say needs urgent medical help right away?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen explicitly lists severe symptoms like bloody stools and fever that require immediate medical intervention rather than just being common, mild reactions.",
+        "whatTheAgentLoses": "You lose the personal awareness of exactly which severe symptoms to watch out for in your own body.",
+        "speak": "on-event",
+        "check": "Does the page show a box or list saying when to get urgent help, such as call your doctor at once, call 111, or call 999?",
+        "say_example": "Before the rest, the page has a get-help-now box. It says call <999> if <the rash doesn't fade under a glass> or <breathing is hard>. After that I'll read the ordinary side effects."
+       },
+       {
+        "question": "Did the symptom checker trigger a 'seek emergency care immediately' red flag that halts the questionnaire?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Entering severe symptoms like chest pain or sudden weakness often causes triage tools to lock the interface and instruct the user to call 911 rather than providing informational conditions.",
+        "whatTheAgentLoses": "The user loses the critical triage context that their symptoms represent a medical emergency requiring immediate real-world action, not just further online reading.",
+        "speak": "on-event",
+        "check": "Does the checker show a stop or emergency message, such as seek emergency care now or call 911, in place of the conditions list?",
+        "say_example": "The checker stopped. With <chest pain>, it says call <911> now instead of going on. I'm stopping here too. Do you need help calling?"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Follow a related topic"
+     },
+     {
+      "id": "6.7",
+      "label": "Open the media or translation"
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Judge the source",
+    "note": "7.5 before 1 where the narrator names the sites in advance - hIZP and 1ch0. 7.1 to 7.3 on the page in hand, in any order and rarely more than one - pQKZ reads the date, kK4R reads the providers, y127 speaks the disclaimer; hIZP and 1ch0 read neither a date nor an author on five sites. 7.4 belongs before 3.4 on any search-engine entry with a symptom as the query and never happens in this corpus.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Check the review date",
+      "questions": [
+       {
+        "question": "How recently was this medical information reviewed or updated?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the review date in the article footer ensures the health advice is current and reflects the latest medical guidelines.",
+        "whatTheAgentLoses": "You lose the personal reassurance of seeing exactly when the medical information was last vetted by professionals.",
+        "speak": "on-event",
+        "check": "What review or update date does the page show, and is there a notice that the page is archived or no longer updated?",
+        "say_example": "This page was last reviewed in <2017>, and it says it's no longer being updated. I'll find a newer one."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Read who wrote it",
+      "questions": [
+       {
+        "question": "Who does the page credit for writing, reviewing, and funding it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page footer explicitly lists the organizations involved in development, production, and funding, such as the Santa Clara County Library and National Network of Libraries of Medicine.",
+        "whatTheAgentLoses": "The user loses the ability to personally evaluate the financial and institutional backing of the health information to judge its independence and reliability.",
+        "speak": "never",
+        "check": "Which organizations does the footer credit for writing, reviewing, or funding the page?",
+        "say_example": "Written by <MedlinePlus>, reviewed by <a doctor> in <2024>."
+       },
+       {
+        "question": "Who provides the links in the Start Here section?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Start Here' section with links to introductory materials from reputable organizations like the American Academy of Family Physicians.",
+        "whatTheAgentLoses": "The user loses the ability to decide which specific introductory resources or providing organizations they trust most to begin their research.",
+        "speak": "never",
+        "check": "Which organizations provide the links in the Start Here section?",
+        "say_example": "The starting links are from <the American Academy of Family Physicians> and <NIH>."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Read the site's own claim",
+      "questions": [
+       {
+        "question": "Does the site carry ads?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator highlights that MedlinePlus is recommended specifically 'because the site has no advertising and its information is reviewed by experts,' making ad-presence a key heuristic for reliability.",
+        "whatTheAgentLoses": "The user loses the ability to use the presence of advertising as a personal heuristic for judging the commercial bias and reliability of a medical source.",
+        "speak": "never",
+        "check": "Does the page carry advertisement labels or an ad-free statement?",
+        "say_example": "<WebMD> carries ads. <MedlinePlus> has none. Used both, trusted the second more."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Pick the reputable result",
+      "questions": [
+       {
+        "question": "Is the top of the search results an ad or an AI summary rather than a medical site?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Searches for specific drugs often trigger ads from law firms seeking plaintiffs for side-effect lawsuits, or ads for alternative medicine, which can look like legitimate health information.",
+        "whatTheAgentLoses": "The user loses the ability to spot the 'Sponsored' tag and avoid biased or alarmist content designed to sell a service rather than inform.",
+        "speak": "on-event",
+        "check": "Is the top of the results page an item labeled Sponsored or Ad, or an AI-generated overview, rather than a link to a medical site?",
+        "say_example": "The first result is an ad from a law firm about <this drug>. Skipping it. I'm also skipping the AI summary above the links. Going to <MedlinePlus>."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Pick the sites to trust",
+      "questions": [
+       {
+        "question": "Which website should you open to check for drug interactions?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing the right website matters because you need a dedicated, reliable tool like Drugs.com to accurately check interactions between Warfarin and Aspirin as instructed.",
+        "whatTheAgentLoses": "You lose the ability to select your preferred or most trusted medical database for evaluating specific medication interactions.",
+        "speak": "never",
+        "check": "Does the site have an interactions checker tool?",
+        "say_example": "Used <drugs.com> for the interaction check."
+       },
+       {
+        "question": "Is the page open on one of the reputable medical sites, not a general or crowd-written one?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The task explicitly requires using authoritative medical sources like the Mayo Clinic or NIH, whereas the screen shows a search for the crowdsourced site Wikipedia.",
+        "whatTheAgentLoses": "The user loses the guarantee of medical accuracy if the agent cross-checks health information using a user-edited encyclopedia instead of a verified medical institution.",
+        "speak": "if-wrong",
+        "check": "What site name or domain does the page header show?",
+        "say_example": "This is <Wikipedia>. You asked for medical sources, so I'm going to <MedlinePlus> instead."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Cross-check the answer",
+    "note": "8.1 or 8.2 or 8.3 as a second reading - two keepers each, and three keepers take none. hIZP is all 8.1: the same question on four sites, never compared. 1ch0 takes 8.3 as its first reading on every report and 8.2 once, to confirm a badge. 8.4 is offered on two sites and taken on neither; the one kept answer is typed onto a slide (1ch0). 8.5 closes every page and returns to 2 - pQKZ seven times - or to 5.2.5 for the next drug pair.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Repeat on a second site",
+      "questions": [
+       {
+        "question": "Does the answer rest on one page, or has a second reputable site been read too?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the user opening a new tab to navigate to MedlinePlus after reviewing the first source.",
+        "whatTheAgentLoses": "The user loses the assurance that the health information has been properly cross-checked against a second reputable source.",
+        "speak": "never",
+        "check": "What site does the page header show, and is it a different site from the one the answer was first read on?",
+        "say_example": "Checked on <drugs.com> and <MedlinePlus>. They agree."
+       },
+       {
+        "question": "Does the drug information you found on this second site match what you read on the first?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Comparing the facts between the two sources confirms whether the medical information is consistent and safe to trust.",
+        "whatTheAgentLoses": "The user loses the ability to personally evaluate any subtle differences or contradictions in the medical advice provided by different sources.",
+        "speak": "on-event",
+        "check": "Does the second site's severity label or dosage figure match the first site's for the same pair or topic?",
+        "say_example": "The two sites don't agree. <Drugs.com> calls it <moderate>. <MedlinePlus> says <serious>. I'm giving you the stricter one. This is worth asking your pharmacist."
+       },
+       {
+        "question": "Is the article on the second site actually just a syndicated copy of the exact same article from the first site?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Health websites often license content from the same central databases (like Cerner Multum or HealthDay), meaning two different URLs might host the exact same text.",
+        "whatTheAgentLoses": "The user loses the realization that they haven't actually cross-checked the information against an independent medical authority, just read the same source twice.",
+        "speak": "if-wrong",
+        "check": "Does the second page carry a source credit, such as Cerner Multum or HealthDay, that matches the first page's credit?",
+        "say_example": "Both pages come from the same supplier, <Multum>. So that's really one source. I'll check <NHS> instead."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Re-run the same search"
+     },
+     {
+      "id": "8.3",
+      "label": "Read the professional version",
+      "questions": [
+       {
+        "question": "Do you want the consumer version or the professional one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides explicit options to switch between consumer and professional interaction data, which determines the complexity and depth of the medical information displayed.",
+        "whatTheAgentLoses": "You lose the opportunity to choose the level of medical detail that best matches your personal health literacy and specific informational needs.",
+        "speak": "never",
+        "check": "Does the page offer a consumer view and a professional view?",
+        "say_example": "Read the consumer version of the interaction page."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Print or save the answer",
+      "questions": [
+       {
+        "question": "Should the report be saved or sent anywhere?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The results page displays Email, Print, and Save options that let you keep an accurate record of the drug list to discuss with a medical professional.",
+        "whatTheAgentLoses": "You lose the ability to choose the most convenient format, such as a physical printout, for sharing these specific health findings with your doctor.",
+        "speak": "never",
+        "check": "Does the results page offer Email, Print, or Save?",
+        "say_example": "Didn't print or email the report. Both buttons are on the page."
+       },
+       {
+        "question": "Is the quoted interaction for exactly the pair asked about, not another pair on the report?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The slide asks if Allopurinol is a good choice for a patient taking Captopril, making it crucial to confirm that the website's 'Major' interaction warning directly addresses this exact combination.",
+        "whatTheAgentLoses": "You lose the certainty that the final medical conclusion accurately reflects the specific patient scenario you originally needed to evaluate.",
+        "speak": "if-wrong",
+        "check": "Is the interaction entry being quoted between exactly the two drugs asked about, not a different pair on the same report?",
+        "say_example": "The <major> I read was for <aspirin> with <warfarin>. The pair you asked about, <allopurinol> and <captopril>, is further down and says <moderate>."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Return for the next topic"
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,2659 @@
+{
+ "task": "set up or join a video call (Zoom, Google Meet, Microsoft Teams): either create/schedule a meeting and invite someone, or join with a link or code; work through the audio/video device prompts and arrive in the live meeting; complete when the in-meeting screen with the user's own audio/video controls is shown. Surface pinned: the meeting product's own host/join flow — not webinar spectating, not call-quality reviews, not presentations ABOUT video calling.",
+ "tree": {
+  "id": "0",
+  "label": "Join a video call",
+  "note": "1 where the session is not already inside the product - most keepers start signed in; 1.6 on the four Zoom sign-ups. then either the host route or the guest route. host: 2 for a meeting now or a link for later, or 3 for a scheduled one, then 4 to get the joining information out - 4 can also run from inside the meeting after 5. guest: 5.1 to 5.7 to find the way in. both routes run 5.8 where the product asks about opening the app, then 5.10 and 5.11; a guest may stop in 5.12. 6 on the host side once a guest asks to join. 7 and 8 in any order while the meeting runs - every keeper that reaches 5.11 tours them. 9 to leave, and 9.4 loops back to 5.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the meeting product",
+    "note": "1.1 on every keeper that does not start inside the product. 1.2 once, where Meet is missing from Gmail. 1.3 where a sign-in is shown; 1.4 before joining where the narrator bothers; 1.5 where the account's right to host is in doubt. 1.6 in place of 1.3 on the four Zoom sign-ups. 1.7 where no client is installed - 6fIY enters it from 5.8 mid-join. 1.8 where the tutorial changes the name others will see - 0Qvm after the call, PQBe before scheduling.",
+    "questions": [
+     {
+      "question": "Do you want to sign in, sign up for a new account, or join a meeting directly?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The welcome screen requires choosing between signing in, signing up, or joining a meeting, which dictates whether you use an existing profile, create a new one, or proceed as a guest.",
+      "whatTheAgentLoses": "Letting an agent decide could result in it creating an unnecessary new account instead of using your existing credentials or joining anonymously.",
+      "speak": "gate",
+      "check": "Does the page offer sign in, sign up, and join-with-a-code, and does the header show a signed-in name?",
+      "say_example": "You can sign in, make a new account, or join as a guest with the code. Which one? For a new account, say Google or email."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Reach the meeting product",
+      "questions": [
+       {
+        "question": "Which app do you want to start the meeting from?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Google apps menu displays multiple communication tools like Meet and Hangouts, requiring a choice of which specific platform to use.",
+        "whatTheAgentLoses": "You lose the ability to dictate your preferred communication platform when multiple options are available in your account.",
+        "speak": "never",
+        "check": "Which meeting apps does the apps menu list, such as Meet, Chat, or Hangouts?",
+        "say_example": "Opened Meet from the apps menu."
+       },
+       {
+        "question": "Which class is this meeting for?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dashboard displays multiple class cards, and you must choose the correct one to access its specific Google Meet link.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent enters the specific class context you intended to join.",
+        "speak": "if-wrong",
+        "check": "What class name does the opened class card or header show, and does it match the class the person named?",
+        "say_example": "The class I opened is <Algebra 2>. You said <Biology>. Going back to find it."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Enable the meeting app",
+      "questions": [
+       {
+        "question": "Which apps do you want to turn on in Gmail?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen prompts you to choose whether to integrate Google Chat and Google Meet into your Gmail layout.",
+        "whatTheAgentLoses": "You lose the ability to decide which communication tools are visible in your personal email workspace.",
+        "speak": "never",
+        "check": "Does the Gmail settings page show Meet as hidden or shown in the sidebar?",
+        "say_example": "Turned on Meet in the Gmail sidebar so I can start from here."
+       },
+       {
+        "question": "Do you want to reload Gmail now so the change shows up?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a prompt stating Gmail needs to reload to change which apps are visible, which is necessary to access Google Meet but will briefly interrupt your current session.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to interrupt their current email session immediately or wait until they finish their current tasks before reloading.",
+        "speak": "never",
+        "check": "Does the page show a prompt saying Gmail needs to reload?",
+        "say_example": "Reloaded Gmail to show Meet. Nothing was lost."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Sign in",
+      "questions": [
+       {
+        "question": "Which account do you want to use to sign in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen asks to \"Choose an account\" and lists options like \"Sara Wanasek\" or \"Use another account\", which dictates the identity used to host or join the meeting.",
+        "whatTheAgentLoses": "The user loses the ability to control which of their personal or professional profiles is displayed to other participants on the call.",
+        "speak": "gate",
+        "check": "Which accounts does the 'Choose an account' list show?",
+        "say_example": "The site lists two accounts, <Sara Wanasek> and <sara@work.com>. Which one for this meeting?"
+       },
+       {
+        "question": "Do you want to type the password yourself, rather than give it to me?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a populated password field and a Next button, which is required to authenticate your account and access the meeting platform.",
+        "whatTheAgentLoses": "Delegating this step requires sharing your personal account password with an agent, which compromises your overall account security.",
+        "speak": "gate",
+        "check": "Does the page show a password field with a Next or Sign in button, and which sign-in methods are offered?",
+        "say_example": "The sign-in form is up. It offers <Google or email>. Which one? The password is yours to type. I'll wait here and carry on once you're in."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Check the signed-in account",
+      "questions": [
+       {
+        "question": "Are you logged into the correct account for this meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The profile picture in the top right corner shows the active account, which determines your displayed identity and access permissions for the call.",
+        "whatTheAgentLoses": "Delegating this means the agent might proceed with the wrong profile, potentially joining a professional meeting under a personal identity or failing to access a restricted call.",
+        "speak": "if-wrong",
+        "check": "What account name or email does the profile menu in the header show, and does it match the account the person named for this meeting?",
+        "say_example": "You're signed in as <personal@gmail.com>. The meeting is on your <work> account. I'll switch before I join, or the host may not let you in."
+       },
+       {
+        "question": "Is the meeting turning you away because it only lets in one organization's accounts?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many corporate meetings restrict access to users within their tenant, displaying an error if you try to join with a personal or external account.",
+        "whatTheAgentLoses": "The agent might fail to realize it needs to switch to your work profile or request guest access to enter the call.",
+        "speak": "on-event",
+        "check": "Does the page show a message that the meeting is restricted to members of an organization, or that this account can't join?",
+        "say_example": "This meeting only admits <Acme> accounts. You're on <personal@gmail.com>. Say switch and I'll sign in with your <work> account. The password is yours to type."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Check the account can host",
+      "questions": [
+       {
+        "question": "Can you start a meeting from this account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows that some accounts only display an option to join with a code, while others provide a button to start a new meeting.",
+        "whatTheAgentLoses": "The user loses the opportunity to realize their current account lacks hosting privileges and switch to an account that can actually create the meeting.",
+        "speak": "on-event",
+        "check": "Does the page show a 'New meeting' or 'Host' button, or only a join-with-a-code field?",
+        "say_example": "This account can join meetings but can't start one. To host, you'd need a different account here."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Create the account",
+      "note": "1.6.1 first on every Zoom sign-up - four keepers read the plans and all four pick free. then 1.6.2; 1.6.3 on the two that meet an age check; 1.6.4 only on the email route (PQBe), never on the Google route (JlRf, QOUw). then 1.6.5, 1.6.6 and 1.6.7 in the order Zoom presents them - 1h5z starts this goal and a cut skips the rest.",
+      "children": [
+       {
+        "id": "1.6.1",
+        "label": "Read the plans",
+        "questions": [
+         {
+          "question": "Which Zoom plan do you want?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen shows multiple subscription tiers, such as a free Basic plan with a 40-minute limit and a $14.99/month Pro plan, which determine your meeting capabilities and costs.",
+          "whatTheAgentLoses": "Letting an agent decide could result in paying for an unnecessary premium subscription or being restricted by the free plan's 40-minute time limit.",
+          "speak": "never",
+          "check": "Which plans and prices does the page list, and which one is marked free?",
+          "say_example": "Picked the free plan. It caps meetings at <40> minutes."
+         }
+        ]
+       },
+       {
+        "id": "1.6.2",
+        "label": "Choose the sign-up method"
+       },
+       {
+        "id": "1.6.3",
+        "label": "Verify the age",
+        "questions": [
+         {
+          "question": "What date of birth should I enter for the age check?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The platform requires a date of birth to confirm you are 16 or older before allowing you to proceed.",
+          "whatTheAgentLoses": "You lose the choice of whether to provide your real birth date or a placeholder to protect your privacy.",
+          "speak": "gate",
+          "check": "Does the page show a date of birth field with a minimum-age message?",
+          "say_example": "The sign-up wants your date of birth to check you're over <16>. I won't guess it. Type it in, or tell me and I'll enter it."
+         }
+        ]
+       },
+       {
+        "id": "1.6.4",
+        "label": "Activate by email",
+        "questions": [
+         {
+          "question": "Will you open the activation email yourself, rather than let me into your inbox?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The email from Zoom requires clicking the 'ACTIVATE ACCOUNT' button to verify your address and unlock full access to meetings and chat.",
+          "whatTheAgentLoses": "Letting an agent handle this step requires granting it access to your personal email inbox to find and click the activation link.",
+          "speak": "gate",
+          "check": "Does the page say to check the inbox for an activation email, and is a resend link shown?",
+          "say_example": "Zoom sent an activation email to <you@mail.com>. Open it and press activate, and I'll pick up from there. Or say open it and I'll go into your mail for it."
+         },
+         {
+          "question": "Did the activation email arrive in your inbox, or do you need to resend it?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The Zoom signup process requires email verification, and the confirmation page provides a 'Resend another email' link in case the initial automated message was caught by a spam filter or delayed.",
+          "whatTheAgentLoses": "The user loses the ability to troubleshoot a stalled registration process if the required activation email fails to appear in their inbox.",
+          "speak": "on-event",
+          "check": "Does the page still say to check the inbox, with a 'Resend' link, after the wait?",
+          "say_example": "The page is still waiting on the activation email after <two> minutes. Check your inbox and spam. Say resend and I'll ask for another."
+         }
+        ]
+       },
+       {
+        "id": "1.6.5",
+        "label": "Fill in the profile",
+        "questions": [
+         {
+          "question": "What name goes on the profile, and will you type the new password yourself?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The welcome screen requires your first and last name, plus a new password that meets the listed security requirements, to finish creating your account.",
+          "whatTheAgentLoses": "Letting an agent handle this step means you lose control over your professional display name and the exact password used to secure your account.",
+          "speak": "gate",
+          "check": "Does the page show name fields, a new-password field with its rules, and a continue button that mentions the terms?",
+          "say_example": "Last step for the account. The name goes in as <First Last>. The password is yours to choose and type. Pressing continue also agrees to their terms. Say go when you're ready."
+         }
+        ]
+       },
+       {
+        "id": "1.6.6",
+        "label": "Skip the invite-colleagues step",
+        "questions": [
+         {
+          "question": "Do you want to invite colleagues to Zoom, or skip this?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen presents a form to invite others to create free Zoom accounts, which could send unexpected promotional emails to coworkers.",
+          "whatTheAgentLoses": "The user loses control over whether their contacts receive promotional platform invitations on their behalf.",
+          "speak": "never",
+          "check": "Does the page show a form to invite colleagues with a skip option?",
+          "say_example": "Skipped the invite-your-colleagues step. Nobody was emailed."
+         }
+        ]
+       },
+       {
+        "id": "1.6.7",
+        "label": "Decline the test meeting",
+        "questions": [
+         {
+          "question": "Do you want to try a test meeting now, or go to your account page?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen presents a choice between starting the newly created meeting immediately or navigating to the account dashboard to manage settings.",
+          "whatTheAgentLoses": "The user loses the opportunity to choose whether to jump straight into the live meeting environment or review their account details first.",
+          "speak": "never",
+          "check": "Does the page offer a test meeting and a link to the account page?",
+          "say_example": "Skipped the test meeting and went to the account page."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Install the app",
+      "questions": [
+       {
+        "question": "Which app do you need to download to host meetings?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Download Center lists multiple options like the Zoom Client for Meetings and an Outlook plugin, requiring you to select the correct core application for your device.",
+        "whatTheAgentLoses": "The user loses control over which specific software packages and applications are installed on their personal device.",
+        "speak": "never",
+        "check": "Which download options does the Download Center list?",
+        "say_example": "Picked <Zoom Workplace> for <Mac>. Skipped the <Outlook plugin>."
+       },
+       {
+        "question": "Do you want to install this app, or join from the browser?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The system warns that you should only install software from a trusted source to keep your computer secure.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify the software's source and authorize the installation on your device.",
+        "speak": "gate",
+        "check": "Does the page show a download or install prompt, and is there a join-from-browser link?",
+        "say_example": "This site wants to install the <Zoom> app on your computer. There's a join-from-browser link, so I'll use that. Say install if you'd rather have the app."
+       },
+       {
+        "question": "Is this the real Google Meet app, made by Google?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Confirming the developer is Google LLC and checking the download stats ensures you are installing the legitimate app rather than a fake or unsupported version.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the app's authenticity and reviews before allowing it to be installed on your device.",
+        "speak": "if-wrong",
+        "check": "Does the store listing show the developer as the platform's maker, such as Google LLC or Zoom Video Communications?",
+        "say_example": "This listing says the maker is <Someone Else>. The real app is by <Google>. Not installing it. Looking for the real one."
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Set the display name",
+      "questions": [
+       {
+        "question": "What name do you want others to see in the meeting?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Personal info' page shows your current name is set to 'Charlies Lessons' and notes that anyone can see this information when communicating with you.",
+        "whatTheAgentLoses": "The user loses the opportunity to present themselves with a preferred professional or personal name to other meeting participants.",
+        "speak": "if-wrong",
+        "check": "What name does the profile or display-name field show, and does it match the person's name?",
+        "say_example": "The name others will see is <Charlies Lessons>. I'll change it to <your name> unless you say keep."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Create the meeting",
+    "note": "2.1 on every host that does not schedule - the choice is made in that menu. then 2.2 or 2.3. 2.4 only in the nickname era and on the Messenger room. 2.5 where the start dialog offers toggles - 1h5z reads them and starts anyway. 1h5z cancels 2.2 on its spinner and goes to 3 instead. from here to 4 or straight to 5.10.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Pick the creation route",
+      "questions": [
+       {
+        "question": "Do you want to start a new meeting, join with a code, or schedule one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dashboard presents distinct paths to start immediately, join, or schedule, which dictates the entire setup flow.",
+        "whatTheAgentLoses": "The user loses the ability to choose whether to start an impromptu meeting, schedule one for later, or configure their personal meeting ID.",
+        "speak": "never",
+        "check": "Which options does the page show: new meeting, join with a code, schedule?",
+        "say_example": "Used the join-with-a-code box, as you asked to join."
+       },
+       {
+        "question": "Which contact or group chat should this video room be started from?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The attachment menu within a specific chat contains a 'Room' icon that lets you instantly create a video call with that contact.",
+        "whatTheAgentLoses": "You lose the ability to personally select which specific contact or group chat to initiate the video room from.",
+        "speak": "if-wrong",
+        "check": "Which contact or group name does the open chat header show, and does it match the contact the person named?",
+        "say_example": "The chat I have open is with <Sam>. You said <Priya>. Switching to her chat before I start the room."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Start an instant meeting",
+      "questions": [
+       {
+        "question": "OK to make the room with your Facebook name and photo on it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly states that the room will be created using your Facebook name and profile picture, which will be visible to anyone who joins with the link.",
+        "whatTheAgentLoses": "You lose the ability to confirm whether you want your personal Facebook identity attached to this specific meeting space before it goes live.",
+        "speak": "on-event",
+        "check": "Does the page say the room will be created using the Facebook name and profile picture?",
+        "say_example": "This room shows your Facebook name and photo to anyone who has the link. Going ahead. Say stop if you'd rather not."
+       },
+       {
+        "question": "Should you wait for this instant meeting to connect or cancel it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a 'Please wait...' loading spinner and a 'Cancel' button, offering a brief window to abort the connection.",
+        "whatTheAgentLoses": "The user loses the ability to immediately back out of an accidental instant meeting before the connection completes.",
+        "speak": "never",
+        "check": "Does the page show a loading message with a cancel button?",
+        "say_example": "Waited <10> seconds for the room to connect."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Create a link for later",
+      "questions": [
+       {
+        "question": "Do you want a link to send out, or start the meeting now?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Share your new meeting' popup offers options to copy the link or send an invite, so skipping this means you will need to invite participants later from inside the meeting.",
+        "whatTheAgentLoses": "If the agent immediately starts the meeting without copying the link, you lose the chance to distribute the meeting details through your preferred communication channels beforehand.",
+        "speak": "never",
+        "check": "Does the popup show the meeting link with a copy button?",
+        "say_example": "Copied the meeting link. It's in the notes for you to share."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Name the meeting",
+      "questions": [
+       {
+        "question": "What nickname should you give the new meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dialog offers the choice to enter a custom nickname to identify your new meeting or leave the field blank to start one immediately.",
+        "whatTheAgentLoses": "Delegating this means the agent might leave the nickname blank or choose a generic name, losing your preferred way to identify and organize the session.",
+        "speak": "never",
+        "check": "Does the dialog show a nickname field, and is it empty?",
+        "say_example": "Left the nickname blank. The meeting has a code instead."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Set the start options",
+      "questions": [
+       {
+        "question": "Do you want to start the meeting with your video on, video off, or screen share only?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Host a Meeting' menu requires selecting an initial state for your camera and screen sharing before the room is created.",
+        "whatTheAgentLoses": "You lose the ability to control your initial privacy, which could result in your camera broadcasting before you are ready to be seen.",
+        "speak": "never",
+        "check": "Which start options does the host menu list, and which one is selected?",
+        "say_example": "Started with your video off."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Schedule the meeting",
+    "note": "3.1 opens the form - on Google Meet it is always a Calendar event and the homepage only hands off. then 3.2 to 3.6 in the form's order, skipping what the tool does not show; 3.6 is the whole reason for the Calendar route. 3.7 and 3.8 on Zoom, where half the form is security and entry defaults. 3.10 wherever a guests field exists - most keepers skip it and say they will share the link instead; 3.11 on the two that touch the checkboxes. 3.9 whenever the free plan interrupts - three times inside one form in 1h5z. then 3.12 and 3.13. IRZc runs 3.1 to 3.12 and ends on Discard with nothing saved.",
+    "questions": [
+     {
+      "question": "Do you want to adjust any of the default meeting settings before scheduling?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Leaving toggles for features like the waiting room, passcode, and host video in their default states determines the security and initial experience of your meeting.",
+      "whatTheAgentLoses": "You lose the ability to customize the meeting's security and participant experience based on your specific needs for this particular call.",
+      "speak": "never",
+      "check": "Which meeting options does the form show, and which are already on?",
+      "say_example": "Left the meeting options on their defaults. Waiting room on, passcode on."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Open the schedule form",
+      "questions": [
+       {
+        "question": "Does the time being set clash with anything already on the calendar?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Checking the calendar grid, which currently shows only one existing meeting block, ensures you understand your availability before scheduling a new call.",
+        "whatTheAgentLoses": "You lose the opportunity to personally assess your weekly workload and availability before committing to a new meeting time.",
+        "speak": "on-event",
+        "check": "Does the calendar grid show an existing event at the chosen date and time, and what is its title?",
+        "say_example": "That time already has <Team standup> on your calendar. Booking the new meeting over it. Say a different time if you'd rather."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Set the title",
+      "questions": [
+       {
+        "question": "What do you want to name the meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides a 'Topic' text field with a generic default name, and customizing it helps participants identify the purpose of the call.",
+        "whatTheAgentLoses": "You lose the opportunity to set a specific, recognizable title that clearly communicates the meeting's purpose to your invitees.",
+        "speak": "never",
+        "check": "What does the title or topic field show?",
+        "say_example": "Named it <Private class with Sarah>, from your note."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Set the date and time",
+      "questions": [
+       {
+        "question": "What date, time, and duration should I set for the meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The scheduling form requires a specific date, start time, and duration to ensure the meeting is booked for the correct window.",
+        "whatTheAgentLoses": "You lose the ability to select the specific date and time that best accommodates your personal schedule.",
+        "speak": "gate",
+        "check": "What date, start time and duration does the form show?",
+        "say_example": "You didn't say when. What day and time, and how long?"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Set the time zone",
+      "questions": [
+       {
+        "question": "Is the time zone on the form your own, not the platform's default?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Confirming the default '(GMT-5:00) Eastern Time' matches your location ensures the meeting time is accurate, as the platform will automatically adjust it for participants elsewhere.",
+        "whatTheAgentLoses": "You lose the ability to personally confirm that the agent correctly identified your local time zone instead of blindly accepting the default.",
+        "speak": "if-wrong",
+        "check": "What time zone does the form show, and does it match the person's location?",
+        "say_example": "The form is set to <Eastern Time>. You're in <Pacific>. Left as is, the meeting would land <three> hours off for you. Fixing it."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Set the repeat rule",
+      "questions": [
+       {
+        "question": "How often should this meeting repeat, and on which days?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The custom recurrence dialog requires selecting a frequency interval and toggling the exact days of the week the meeting will take place.",
+        "whatTheAgentLoses": "The user loses the ability to precisely tailor the meeting's recurring schedule to fit their personal or team availability.",
+        "speak": "never",
+        "check": "What repeat frequency and days does the recurrence dialog show?",
+        "say_example": "Set it to repeat <weekly on Tuesdays>, as you asked."
+       },
+       {
+        "question": "When should this recurring meeting series end?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must choose whether the series continues indefinitely, ends on a specific date, or stops after a set number of occurrences.",
+        "whatTheAgentLoses": "You lose the ability to align the meeting's lifespan perfectly with your real-world schedule or project duration.",
+        "speak": "never",
+        "check": "What does the 'Ends' setting show: never, a date, or a number of times?",
+        "say_example": "Set no end date on the series. It runs until you delete it."
+       },
+       {
+        "question": "Does the saved repeat rule match what was set, with the same days and the same end?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The custom recurrence dialog showed the event ending after 13 occurrences, but the saved details suddenly display 20 times without showing the change on screen.",
+        "whatTheAgentLoses": "The user loses the ability to verify how the meeting recurrence was actually configured since the final saved state contradicts the earlier setup.",
+        "speak": "if-wrong",
+        "check": "Does the saved event's repeat line show the same days and the same end, by date or by count, as was entered?",
+        "say_example": "I set it to end after <13> meetings. The saved event says <20>. Fixing it."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Attach the video link",
+      "questions": [
+       {
+        "question": "Is a link for the video platform you wanted attached to this event?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The event details page requires you to explicitly click 'Add conferencing' to generate a Hangouts Meet link for the invited guests.",
+        "whatTheAgentLoses": "You lose the ability to verify that the correct video conferencing platform was selected and attached to your calendar invite.",
+        "speak": "never",
+        "check": "Does the event form show a video link attached, or still an 'Add conferencing' button?",
+        "say_example": "Attached a Meet link to the event."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Secure the meeting",
+      "note": "Zoom only - Meet has no such section and Teams is never scheduled in the corpus. 3.7.1 then 3.7.2 then 3.7.3, in the order the form lists them; 3.7.4 is read and left off in every keeper. the corpus keeps the generated ID and the generated passcode every time and turns the waiting room on where it is off.",
+      "children": [
+       {
+        "id": "3.7.1",
+        "label": "Choose the meeting ID",
+        "questions": [
+         {
+          "question": "Do you want a fresh meeting ID with a passcode, or your Personal Meeting ID?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen provides options to either generate an automatic meeting ID with a password or use your permanent Personal Meeting ID, which dictates the security and privacy of the call.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to share their permanent personal meeting room link or create a temporary, secure link for this specific event.",
+          "speak": "never",
+          "check": "Which meeting ID option is selected: generate automatically, or personal meeting ID?",
+          "say_example": "Used a fresh meeting ID instead of your personal one. Old invitees can't wander in."
+         }
+        ]
+       },
+       {
+        "id": "3.7.2",
+        "label": "Set the passcode",
+        "questions": [
+         {
+          "question": "Do you want to keep the passcode the site made, or set your own?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The scheduling screen requires a passcode for security but allows you to change the auto-generated string to something else.",
+          "whatTheAgentLoses": "You lose the opportunity to set a custom, memorable passcode that might be easier for your invitees to type.",
+          "speak": "never",
+          "check": "Does the form show a passcode, and is the field filled?",
+          "say_example": "Kept the passcode the site made. It's in the invitation."
+         }
+        ]
+       },
+       {
+        "id": "3.7.3",
+        "label": "Turn on the waiting room"
+       },
+       {
+        "id": "3.7.4",
+        "label": "Restrict to signed-in users",
+        "questions": [
+         {
+          "question": "Do you want people to fill in a registration form before they can join?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The scheduling form includes a 'Registration Required' checkbox, which determines whether attendees must fill out a form with their name and email to receive the join link.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to collect attendee information upfront for security and tracking, or to allow frictionless entry for anyone with the link.",
+          "speak": "never",
+          "check": "Is the 'Registration required' box checked?",
+          "say_example": "Left registration off. Guests join from the link without filling in a form."
+         },
+         {
+          "question": "Do you want only signed-in users to be able to join?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The scheduling settings include an option to require participants to be signed into an account, which prevents anonymous guests from entering the room.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to enforce strict identity verification for attendees or allow frictionless access for guests who don't have an account.",
+          "speak": "never",
+          "check": "Is the option requiring participants to sign in checked?",
+          "say_example": "Left it open to guests without an account. Your list has people outside <Acme>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Set the entry defaults",
+      "questions": [
+       {
+        "question": "Should video start on for you and your guests when the meeting begins?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides options to set the default video state to 'on' or 'off' for both the host and participants upon joining.",
+        "whatTheAgentLoses": "The user loses the ability to control the initial privacy expectations for the meeting, potentially causing participants' cameras to activate before they are ready.",
+        "speak": "never",
+        "check": "What do the host video and participant video settings show: on or off?",
+        "say_example": "Set video to start off for you and for guests."
+       },
+       {
+        "question": "Which options do you want on, like a waiting room or mute on entry?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen presents several security and participant management checkboxes that dictate how attendees will experience joining the call.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to set specific security and entry rules for your attendees.",
+        "speak": "never",
+        "check": "Which of waiting room, mute on entry, and join before host are checked?",
+        "say_example": "Left the waiting room on. You'll admit people as they arrive."
+       },
+       {
+        "question": "Should the meeting record itself automatically as soon as it starts?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The scheduling form includes a checkbox to 'Record the meeting automatically on the local computer', which dictates whether the session is captured without needing to manually start it.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to record the meeting on a case-by-case basis or ensure it's captured from the very beginning automatically.",
+        "speak": "if-wrong",
+        "check": "Is the box to record the meeting automatically checked?",
+        "say_example": "The form has automatic recording switched on. You didn't ask for that, and every guest would be recorded. Turning it off."
+       },
+       {
+        "question": "Who should be the alternative host for this meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The advanced options allow you to enter email addresses for alternative hosts, granting them permission to start and manage the meeting if you are unavailable.",
+        "whatTheAgentLoses": "You lose the ability to delegate meeting control to a trusted colleague, potentially causing the meeting to be delayed if you are running late.",
+        "speak": "never",
+        "check": "Does the alternative host field show any email?",
+        "say_example": "Set no alternative host. Only you can start it."
+       }
+      ]
+     },
+     {
+      "id": "3.9",
+      "label": "Answer the plan-limit prompt",
+      "questions": [
+       {
+        "question": "Do you want to upgrade so the meeting isn't cut off at 40 minutes?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Zoom prompts free users to upgrade to Workplace Pro to avoid the 40-minute restriction on meetings.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether paying for an upgrade is worth having longer, uninterrupted meetings.",
+        "speak": "gate",
+        "check": "Does the page warn that the plan limits meetings to 40 minutes, and what price does the upgrade show?",
+        "say_example": "Free Zoom cuts meetings at 40 minutes. Yours is set for <1 hour 45>, so it would end early. Upgrading costs <14.99> a month. Say upgrade, or say keep it and I'll schedule it as is."
+       },
+       {
+        "question": "Phone dial-in may stop working on the free plan. Do you want to upgrade, use a different product, or carry on?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform displays a prominent banner stating that phone dial-in capabilities may be temporarily removed from free Basic accounts, meaning participants without computer audio will not be able to join.",
+        "whatTheAgentLoses": "The user loses the opportunity to read the warning and realize their participants might be locked out, preventing them from upgrading or switching platforms before scheduling.",
+        "speak": "on-event",
+        "check": "Does the page show a banner saying phone dial-in may be removed from free accounts?",
+        "say_example": "The site warns phone dial-in may stop working on free accounts. Anyone joining by phone might not get in. Computer and app joining still work."
+       }
+      ]
+     },
+     {
+      "id": "3.10",
+      "label": "Add the guests",
+      "questions": [
+       {
+        "question": "Should you add guests to the event, or just make a link to share yourself?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The event creation dialog provides options to \"Add guests\" for automated email invites or \"Add Google Meet video conferencing\" to generate and copy a link for manual sharing.",
+        "whatTheAgentLoses": "Delegating this step means the agent decides the method of distributing the meeting invitation to your intended participants.",
+        "speak": "never",
+        "check": "Does the dialog show an 'Add guests' field and an 'Add video conferencing' button?",
+        "say_example": "Added <Sarah> as a guest, so the invite goes out from the calendar."
+       },
+       {
+        "question": "Should you add guests to this calendar event before saving it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows the event details and a Zoom link, but saving it now means you must manually share the link instead of letting the calendar send invites.",
+        "whatTheAgentLoses": "The user loses the convenience of having the calendar automatically email the meeting invitation to the intended participants.",
+        "speak": "if-wrong",
+        "check": "Does the guest list on the event show the people the person named?",
+        "say_example": "The guest list is empty, and you named <Sarah and Tom>. Adding them before I save."
+       },
+       {
+        "question": "Who do you want to invite to this meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Add guests' field and contact dropdown determine exactly who will receive the invitation link to join your call.",
+        "whatTheAgentLoses": "You lose the ability to personally verify and select the correct email addresses from your contact list for the invitation.",
+        "speak": "never",
+        "check": "Which names or emails does the guest field show?",
+        "say_example": "Added guests <Sarah> and <Tom>, from your note."
+       }
+      ]
+     },
+     {
+      "id": "3.11",
+      "label": "Set the guest permissions",
+      "questions": [
+       {
+        "question": "Do you want to allow guests to invite others to this meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen provides checkboxes for guest permissions, which dictate whether attendees can modify the event, see the guest list, or forward the invitation to uninvited people.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally enforce the privacy and attendance boundaries of your specific meeting.",
+        "speak": "never",
+        "check": "Which guest permissions are checked: modify event, invite others, see guest list?",
+        "say_example": "Let guests see the list but not invite others."
+       }
+      ]
+     },
+     {
+      "id": "3.12",
+      "label": "Save the meeting",
+      "questions": [
+       {
+        "question": "Are you ready to save the meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Clicking 'Save' commits your entered details and generates the meeting confirmation, whereas 'Cancel' discards the setup.",
+        "whatTheAgentLoses": "You lose the final opportunity to review the date, time, and meeting settings before the event is officially created.",
+        "speak": "always",
+        "check": "What title, date, time, guests and video link does the event show before Save?",
+        "say_example": "Saving it. <Private class with Sarah>, <Thursday 3 to 4>, Meet link attached, guest <Sarah>. Nothing goes out until the send prompt."
+       },
+       {
+        "question": "Do you want to throw away the unsaved meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a confirmation dialog asking to discard unsaved changes, which determines whether the current meeting setup is permanently deleted.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to abandon the incomplete meeting invitation or return to finish scheduling it.",
+        "speak": "on-event",
+        "check": "Does the page show a dialog asking to discard unsaved changes?",
+        "say_example": "A box asked whether to throw away the meeting I was setting up. I kept it."
+       },
+       {
+        "question": "Do you want to save the meeting without any guests?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The prompt warns that saving without invitees means participants will not be able to see the group chat before and after the meeting.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to add invitees immediately to ensure they have full access to the meeting's chat history.",
+        "speak": "never",
+        "check": "Does the prompt warn about saving without invitees?",
+        "say_example": "Saved without guests, as you named none. You'll share the link yourself."
+       }
+      ]
+     },
+     {
+      "id": "3.13",
+      "label": "Check the saved details",
+      "questions": [
+       {
+        "question": "Is the Google Meet link actually on the saved calendar event?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the event details pop-up for the 'Join with Google Meet' button and link confirms that the meeting was properly generated for your invitees.",
+        "whatTheAgentLoses": "You lose the reassurance of personally verifying that the correct video call link is attached to your specific calendar invitation.",
+        "speak": "if-wrong",
+        "check": "Does the saved event show a 'Join with Google Meet' button or a meeting link?",
+        "say_example": "The saved event has no video link. Guests would get a calendar entry with nowhere to click. Adding one now."
+       },
+       {
+        "question": "Does the meeting link in the event details match the one you originally generated?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The meeting link shown for the birthday call at 08:00 is completely different from the link generated during the event creation at 11:05.",
+        "whatTheAgentLoses": "The user loses the guarantee that they and their invitees will actually end up in the same virtual meeting room.",
+        "speak": "if-wrong",
+        "check": "Does the link or meeting ID on the saved event match the one shown when it was created?",
+        "say_example": "The link on the saved event isn't the one I made a minute ago. I'll use the saved one, since that's what the guests got."
+       },
+       {
+        "question": "Do you want to check the meeting ID and passcode before starting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Tapping the scheduled meeting reveals its specific details, including the meeting ID and passcode, which might be needed for verification or sharing.",
+        "whatTheAgentLoses": "You lose the chance to verify the exact meeting credentials or retrieve the passcode before launching the call.",
+        "speak": "never",
+        "check": "Does the meeting detail page show the meeting ID and passcode?",
+        "say_example": "Noted meeting ID <123 456 789> and passcode <abc123>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Invite the participants",
+    "note": "the invite is almost never sent inside the product. 4.1 or 4.2 on nearly every host - before the meeting from the saved details, or inside it from the Add others dialog or the Invite button. 4.3 on the two that edit what they copied. then 4.4 or 4.5 outside the product, where the corpus shows it at all. 4.6 from inside the meeting on Meet and Zoom. 4.7 on the Calendar and Teams routes, where the product sends. 4.8 on 6Yc8 and the .ics offers. 4.9 wherever a dial-in block is on screen. 4.10 on the two that switch to the recipient's inbox.",
+    "questions": [
+     {
+      "question": "How do you want to invite participants to the meeting?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The dialog provides options to either copy the joining link to share manually or send an automated email invitation directly to specific contacts.",
+      "whatTheAgentLoses": "You lose control over the communication channel used to invite guests, as the agent might send an automated email instead of letting you share the link via your preferred messaging app.",
+      "speak": "never",
+      "check": "Which invite options does the dialog show, and did a 'Link copied' message appear after the copy?",
+      "say_example": "Copied the link to share. Nobody has been emailed."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Copy the joining link"
+     },
+     {
+      "id": "4.2",
+      "label": "Copy the full invitation",
+      "questions": [
+       {
+        "question": "Do you need the meeting passcode written down for your guests?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The invite dialog displays a meeting password, which you must share with participants so they can securely access the call.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the meeting's security settings and note the exact password your guests will need to join.",
+        "speak": "never",
+        "check": "Does the invitation show a meeting password or passcode?",
+        "say_example": "Noted the passcode from the invitation. Guests need it."
+       },
+       {
+        "question": "Are the meeting details in the invitation correct before you copy it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Checking the topic, time, and access details ensures you are sharing the correct meeting information with your invitees.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the meeting topic and schedule before the invitation is shared.",
+        "speak": "if-wrong",
+        "check": "Do the topic, date and time in the invitation text match the meeting that was scheduled?",
+        "say_example": "The invitation says <Wednesday 2pm>. You scheduled <Thursday 3pm>. I won't send it. Opening the right meeting."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Trim the invitation text",
+      "questions": [
+       {
+        "question": "Which parts of the invitation should you copy for guests?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The modal displays a long block of text, so selecting only the essential link, ID, and password prevents overwhelming your guests with unnecessary dial-in numbers.",
+        "whatTheAgentLoses": "You lose the ability to curate the invitation text to ensure it only includes the most relevant joining details for your specific guests.",
+        "speak": "never",
+        "check": "Does the invitation text include a link, a meeting ID, a passcode, and dial-in numbers?",
+        "say_example": "Trimmed the invite to the link, ID and passcode. Left out the dial-in numbers."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Send the invitation by email",
+      "questions": [
+       {
+        "question": "Does the email draft have the link, meeting ID and passcode in it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a Gmail compose window where you must choose how to paste the clipboard contents to share the meeting link with your invitees.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to manually place and review the pasted meeting details within your custom message.",
+        "speak": "if-wrong",
+        "check": "Does the email body show the meeting link, the meeting ID and the passcode?",
+        "say_example": "The email has the link but no passcode. Guests couldn't get in without it. Adding it."
+       },
+       {
+        "question": "Is the invitation email addressed and worded right before it goes out?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a new email draft with the pasted Zoom invitation, requiring a decision on the recipient address and subject line to successfully deliver the meeting details.",
+        "whatTheAgentLoses": "Delegating this means the agent chooses the communication channel and recipient addresses, potentially sending the invitation to the wrong person or using an inappropriate method.",
+        "speak": "gate",
+        "check": "What recipients, subject and body does the message show before send?",
+        "say_example": "Ready to send the invitation to <sarah@mail.com>. Subject <Private class Thursday>. Link and passcode inside. Say send."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Send the link by chat",
+      "questions": [
+       {
+        "question": "Are you ready to send the meeting link to the contact?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The WhatsApp input field contains the pasted Messenger room link, meaning the next step is to send the invitation.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the recipient or add a personal greeting to the invitation.",
+        "speak": "gate",
+        "check": "Does the chat box show the meeting link, and which contact's chat is open?",
+        "say_example": "The link is typed into your chat with <Priya>. Say send, and it goes."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Invite from inside the meeting",
+      "questions": [
+       {
+        "question": "Is anyone you want to invite blocked by the meeting's organization-only rule?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dialog displays the meeting link alongside a specific domain restriction, requiring you to decide if your intended guests meet the access criteria.",
+        "whatTheAgentLoses": "You lose the ability to evaluate whether the specific domain restriction on this meeting aligns with the people you actually need to invite.",
+        "speak": "on-event",
+        "check": "Does the 'Add people' dialog show a restriction, such as only people in a named domain can join?",
+        "say_example": "This meeting only lets in <acme.com> accounts. <Tom's> address is <gmail>, so he couldn't get in."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Send the calendar invitation",
+      "questions": [
+       {
+        "question": "Do you want to send invitation emails to the Google Calendar guests?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a prompt asking whether to send invitation emails to the added guests, offering options to send, not send, or dismiss.",
+        "whatTheAgentLoses": "The user loses control over whether their guests receive an immediate email notification about the newly scheduled meeting.",
+        "speak": "gate",
+        "check": "Does the page show a prompt asking whether to send invitation emails, and which guests are listed?",
+        "say_example": "The calendar wants to email the invite to <Sarah> and <Tom>. Say send, or say don't send and I'll save it quietly."
+       },
+       {
+        "question": "Is the outside email address spelled exactly right before the invite goes out?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The system initially shows 'No results found' while typing, requiring you to enter the full email address to trigger the specific 'Invite' dropdown option.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the exact spelling of the external email address before the invitation is sent.",
+        "speak": "if-wrong",
+        "check": "Does the typed address match the one the person gave, letter for letter, and does the page show 'No results found'?",
+        "say_example": "I typed <sarah@gmial.com>. You gave <sarah@gmail.com>. Fixing it before the invite goes out."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Export to a calendar",
+      "questions": [
+       {
+        "question": "Which calendar service do you want to add this meeting to?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The meeting details page offers options to add the event to Google, Outlook, or Yahoo calendars, which determines where your schedule and join link are saved.",
+        "whatTheAgentLoses": "Letting an agent choose the calendar service could result in the event being saved to an account you do not actively monitor.",
+        "speak": "never",
+        "check": "Which calendar options does the page list?",
+        "say_example": "Added it to your <Google> calendar, the one you use."
+       },
+       {
+        "question": "Do you want to give the meeting app the account access it's asking for?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen asks you to select an account and warns that you may be sharing sensitive information by granting Zoom access to your Google Account.",
+        "whatTheAgentLoses": "You lose control over which personal account is linked to the application and the opportunity to review or deny the requested data permissions.",
+        "speak": "gate",
+        "check": "Does the page ask to choose an account and grant the meeting app access, and what access does it list?",
+        "say_example": "Zoom wants access to your Google account, <you@gmail.com>. It lists <calendar and contacts>. Say allow, or say skip and I'll copy the link into your calendar by hand."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Note the dial-in details"
+     },
+     {
+      "id": "4.10",
+      "label": "Check the invitation landed"
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Enter the meeting",
+    "note": "guests run 5.1 to 5.7 - 5.1 always, 5.2 once, then one of 5.3 to 5.5, with 5.6 when the link did not carry the ID (6fIY) and 5.7 when there is no account (3Bje, 8bF-, QOUw). hosts of a scheduled meeting run 5.9; instant hosts arrive from 2. 5.8 on Zoom and Teams and Messenger - never on Meet. then 5.10 on every keeper that reaches the pre-join screen, then 5.11. 5.12 is where three guest joins end. 5.13 on the keepers that check what they are in - and in 8bF- guests cannot see the title before admission.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the invitation",
+      "questions": [
+       {
+        "question": "Do the sender and the link in this email look like the meeting you expect?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The email invitation provides both a prominent 'JOIN MEETING' button and a raw URL, requiring a choice of how to launch the call.",
+        "whatTheAgentLoses": "You lose the opportunity to visually verify the meeting's sender and URL details before launching the video call.",
+        "speak": "if-wrong",
+        "check": "Who is the email from, what domain does the join link point to, and does the mail app flag the sender as unknown?",
+        "say_example": "This invite is from <someone@odd-domain.com>, and the link isn't a <zoom.us> address. That's not the meeting you expected. Not opening it."
+       },
+       {
+        "question": "Which of the two time zones in this invitation is the real meeting time?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The email subject line specifies PST while the body specifies Philippine Standard Time, meaning the meeting could easily be scheduled for the wrong time.",
+        "whatTheAgentLoses": "The user loses the opportunity to clarify the actual meeting time before sending out an incorrectly scheduled invite.",
+        "speak": "on-event",
+        "check": "Do the subject line and the body give the meeting time in different time zones?",
+        "say_example": "The subject says <9am PST>. The body says <9am Philippine time>. Those are <15> hours apart. I'll take the calendar entry's time, <9am your time>. Ask <the organizer> if it matters."
+       },
+       {
+        "question": "How do you want to join from this invitation, the button, the link, or the code?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The email displays both a direct URL and a meeting ID with a passcode, offering different ways to access the call.",
+        "whatTheAgentLoses": "The user loses the choice of whether to join instantly via the provided link or manually through the app using the meeting credentials.",
+        "speak": "never",
+        "check": "Does the email show a join button, a link, and a meeting ID with a passcode?",
+        "say_example": "Opened the join link from the email."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Answer the RSVP",
+      "questions": [
+       {
+        "question": "Do you want to reply yes to this invitation?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays an email invitation for a 'Top secret meeting' from Kevin Stratvert, requiring you to verify the event details and confirm your attendance.",
+        "whatTheAgentLoses": "Delegating this step means an agent might accept an incorrect or unwanted meeting invitation without understanding your actual schedule and priorities.",
+        "speak": "never",
+        "check": "Does the invitation show Yes, No and Maybe buttons, and which is selected?",
+        "say_example": "Left the RSVP unanswered. You didn't ask me to."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Join from the calendar",
+      "questions": [
+       {
+        "question": "Which scheduled meeting on your calendar do you want to join?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The calendar displays multiple upcoming events like the 'Weekly check-in meeting' and 'Sales Team Meeting', so the exact meeting to attend must be identified.",
+        "whatTheAgentLoses": "You lose the ability to decide which specific meeting from your schedule to join at this moment.",
+        "speak": "gate",
+        "check": "Which events does the calendar show around the requested time, with titles and times?",
+        "say_example": "Two meetings near now. <Weekly check-in> at <2>, <Sales team> at <2:30>. Which one?"
+       },
+       {
+        "question": "Do the time and organizer on this calendar event match the meeting you meant to join?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The calendar event for the 'Demo Class' provides a specific 'Join with Google Meet' button to access the correct video call.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to verify the meeting details, like the time and organizer, before launching the call.",
+        "speak": "if-wrong",
+        "check": "What title, time and organizer does the opened event or meeting card show, and do they match the meeting the person named?",
+        "say_example": "The event I opened is <Demo class> from <Ms Lee> at <2:45>. You said the <3 o'clock with Dr Park>. Wrong one. Looking again."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Follow the invitation link",
+      "questions": [
+       {
+        "question": "Do you want to join the Teams meeting from this email invitation?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The email reading pane displays a 'Join' button for the weekly check-in Teams meeting, which is the direct path to entering the call.",
+        "whatTheAgentLoses": "You lose the chance to review the meeting's schedule and sender details before clicking the join link.",
+        "speak": "never",
+        "check": "Does the email show a Join button for the meeting?",
+        "say_example": "Pressed join in the email. It opened the pre-join screen."
+       },
+       {
+        "question": "Is the link in the browser exactly the one from the invitation?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Pasting the URL directly into the browser's address bar is the most direct way to initiate the meeting platform's join flow.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the exact meeting URL and choose which specific browser profile handles the link.",
+        "speak": "if-wrong",
+        "check": "Does the address bar show the same link as the invitation, or a shortened or different address?",
+        "say_example": "The page I landed on isn't the address in the invite. It went through <bit.ly>. Going back and opening the original."
+       },
+       {
+        "question": "There are two meeting links on the page. Which one is the right one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a Meet link in the class header banner as well as one in a specific post, presenting two different ways to access the meeting.",
+        "whatTheAgentLoses": "The user loses the ability to choose whether to join via the persistent class header link or the specific context of the instructor's post.",
+        "speak": "on-event",
+        "check": "Does the page show more than one meeting link, and are they different?",
+        "say_example": "This page has two meeting links. The banner one and the post one differ. Using the one in <today's post>. Say banner if that's wrong."
+       },
+       {
+        "question": "Does the page say the meeting link is invalid, expired, or cancelled?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the meeting was cancelled or the link is old, the platform will display an error instead of the pre-join screen, meaning you cannot proceed.",
+        "whatTheAgentLoses": "The agent might repeatedly try to join a non-existent meeting instead of notifying you to ask the organizer for a new link.",
+        "speak": "on-event",
+        "check": "Does the page say the meeting link is invalid, expired, ended, or cancelled?",
+        "say_example": "The page says this meeting <has ended>. The link won't get you in. Ask <the organizer> for a new one."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Enter the meeting code",
+      "questions": [
+       {
+        "question": "Does the code typed into the join field match the one in the invitation exactly?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Google Meet homepage provides a specific text field to paste the code from your email, noting that dashes are optional.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to verify the exact meeting code being used to access the call.",
+        "speak": "if-wrong",
+        "check": "Does the code in the join field match the meeting ID in the invitation, rather than the passcode or a dial-in number?",
+        "say_example": "The code I typed doesn't match the invite. I'd put the passcode where the meeting ID goes. Fixing it."
+       },
+       {
+        "question": "What meeting ID should I enter?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Join' button remains disabled until you input the specific identifier for the meeting you want to attend.",
+        "whatTheAgentLoses": "You lose the ability to securely retrieve the correct meeting credentials from your private calendar or email.",
+        "speak": "gate",
+        "check": "Is the meeting ID field empty, and is the Join button disabled?",
+        "say_example": "I need a meeting ID to join. There's none in your note or on your calendar. What's the ID, or where's the invite?"
+       },
+       {
+        "question": "What passcode do you need to enter to join the meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen prompts for a meeting passcode, which must be retrieved from the invitation email to successfully join the call.",
+        "whatTheAgentLoses": "The user loses the security of keeping their meeting access credentials and personal email inbox private.",
+        "speak": "never",
+        "check": "Does the page ask for a passcode, and does the invitation show one?",
+        "say_example": "Entered the passcode from the invite."
+       },
+       {
+        "question": "Is a whole web address sitting in the meeting code box instead of just the code?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If you paste an entire web address into a field that only expects a specific meeting code, the platform may silently reject it or leave the join button disabled until you manually delete the excess text.",
+        "whatTheAgentLoses": "The user loses the ability to recognize why the system is blocking their join attempt and to manually edit the pasted text down to just the valid code.",
+        "speak": "if-wrong",
+        "check": "Does the code field contain 'http' or a full address, and is the Join button disabled?",
+        "say_example": "The whole link got pasted into the code box, and join stayed grey. Trimming it to just the code."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Copy the meeting ID"
+     },
+     {
+      "id": "5.7",
+      "label": "Enter a guest name",
+      "questions": [
+       {
+        "question": "Does the display-name field show your name, not a leftover from someone else?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The pre-join screen requires a display name to identify you to others before you can click to enter the meeting.",
+        "whatTheAgentLoses": "You lose the ability to choose how your name appears to other attendees and to verify your own readiness before entering the waiting room.",
+        "speak": "if-wrong",
+        "check": "What does the name field on the pre-join screen show?",
+        "say_example": "The name box was filled in as <Charlies Lessons>. That's what everyone would see. Changing it to <your name>."
+       },
+       {
+        "question": "Do you want the browser to remember your display name for future Zoom meetings?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The name entry dialog includes a 'Remember my name for future meetings' checkbox, which saves your entered name locally so you don't have to type it again next time.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether their display name is stored in the browser's local data, which they might want to avoid on a shared computer.",
+        "speak": "never",
+        "check": "Is the 'Remember my name' box checked?",
+        "say_example": "Left the remember-my-name box unticked."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Choose app or browser",
+      "questions": [
+       {
+        "question": "Should the browser open the Teams desktop app?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser prompt asks for permission to open the meeting in the Teams application, which determines whether the call takes place in the dedicated app or the web browser.",
+        "whatTheAgentLoses": "You lose the ability to choose between using the installed desktop application or continuing the meeting directly within the web browser.",
+        "speak": "on-event",
+        "check": "Does the page show a prompt to open the meeting in the desktop app, with a continue-in-browser option?",
+        "say_example": "The site tried to open the <Teams> app. I stayed in the browser, where I can still see the call for you. Say app if you'd rather."
+       },
+       {
+        "question": "Should you download the desktop app or continue in the browser?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options to download the Teams app, open an existing app, or continue in the browser, which dictates whether new software must be installed.",
+        "whatTheAgentLoses": "The user loses the ability to choose whether to install a dedicated application on their device or proceed with the zero-installation browser route.",
+        "speak": "never",
+        "check": "Does the page offer 'Continue on this browser' alongside the app download?",
+        "say_example": "Continued in the browser. Nothing was downloaded."
+       }
+      ]
+     },
+     {
+      "id": "5.9",
+      "label": "Start the scheduled meeting",
+      "questions": [
+       {
+        "question": "Do you want to start the meeting from the card on the home screen?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your upcoming 'Private class with Sarah' synced from Google Calendar, offering a convenient one-click shortcut to enter the call.",
+        "whatTheAgentLoses": "The user loses the contextual awareness of seeing their daily schedule and upcoming meetings laid out on the homepage before joining.",
+        "speak": "never",
+        "check": "Does the home screen show the scheduled meeting with a Join or Start button?",
+        "say_example": "Started it from the card on the home screen."
+       }
+      ]
+     },
+     {
+      "id": "5.10",
+      "label": "Set up audio and video",
+      "note": "5.10.1 on nearly every keeper - most demo a toggle and leave both on, and the teachers join with both off. 5.10.2 where the narrator checks devices - a settings pane in 2020, dropdowns under the buttons by 2024. 5.10.3 on Teams and 2021 Meet and in the meeting on the rest. 5.10.4 on every Zoom entry and where a phone option is read. 5.10.5 wherever the browser or the OS asks - product prompt first then browser prompt on Meet.",
+      "children": [
+       {
+        "id": "5.10.1",
+        "label": "Set the microphone and camera",
+        "questions": [
+         {
+          "question": "Should the app always show a video preview before you join?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The Video Preview dialog includes a checkbox that determines whether you will be given the chance to check your camera feed before automatically entering future meetings.",
+          "whatTheAgentLoses": "You lose the ability to ensure you always have a moment to check your appearance and background before your video is broadcast to others in future calls.",
+          "speak": "never",
+          "check": "Is the 'Always show video preview' box checked?",
+          "say_example": "Left the preview-before-joining box ticked."
+         }
+        ]
+       },
+       {
+        "id": "5.10.2",
+        "label": "Check the devices",
+        "questions": [
+         {
+          "question": "How much noise suppression do you want on your mic?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The audio settings pane lets you choose between Auto, High, Low, or Off to control whether background sounds like music or household noise are filtered out.",
+          "whatTheAgentLoses": "You lose the ability to tailor the noise cancellation level to your specific environment or current activity, such as playing music.",
+          "speak": "never",
+          "check": "Which noise suppression level is selected?",
+          "say_example": "Left noise suppression on auto."
+         },
+         {
+          "question": "Do you want to run a test recording to check your camera and mic?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The interface provides a private 'Capture and diagnose' tool to record a short video sample, allowing you to verify your appearance and sound quality before others see you.",
+          "whatTheAgentLoses": "Letting an agent handle this means you lose the opportunity to personally check and adjust your own on-camera appearance and audio levels before the meeting begins.",
+          "speak": "never",
+          "check": "Does the page offer a capture-and-diagnose test?",
+          "say_example": "Skipped the test recording."
+         },
+         {
+          "question": "Does the pre-join screen show a microphone selected, rather than a no-microphone message?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Checking the dropdown menu and volume slider ensures you are using the correct input device and that others will be able to hear you.",
+          "whatTheAgentLoses": "The user loses the ability to personally verify their preferred hardware is selected and actively picking up their voice before entering the meeting.",
+          "speak": "if-wrong",
+          "check": "What does the microphone dropdown show, and does the page say 'No microphone found' or that the microphone is muted by the system?",
+          "say_example": "The page says no microphone found. You'd join silent. Checking the device list."
+         },
+         {
+          "question": "Does the video preview show your real camera, or a message where the video should be?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The camera preview displays the message 'Please start Iriun Webcam' instead of a live video feed, indicating that the browser has connected to a virtual webcam software that is not currently running.",
+          "whatTheAgentLoses": "The user loses the opportunity to realize their selected camera device is outputting an error screen rather than their face, which would result in them entering the meeting without a working video feed.",
+          "speak": "on-event",
+          "check": "Does the preview area show a message such as 'Please start <virtual webcam>', 'No camera found', or 'Camera is off' instead of the video?",
+          "say_example": "The camera preview says <Please start Iriun Webcam>. Others would see a blank box. Switching to <FaceTime camera>."
+         }
+        ]
+       },
+       {
+        "id": "5.10.3",
+        "label": "Set the video appearance",
+        "questions": [
+         {
+          "question": "Do you want to blur or replace your video background before joining?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The pre-join screen provides a background settings pane where you can select a blur effect, choose a preset thumbnail, or upload a custom image to hide your real surroundings.",
+          "whatTheAgentLoses": "Delegating this choice means you lose control over your personal privacy and how your environment is presented to other meeting participants.",
+          "speak": "never",
+          "check": "Which background option is selected: none, blur, or an image?",
+          "say_example": "Left the background as it was."
+         },
+         {
+          "question": "Which picture do you want as your background?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The file explorer displays several image options like 'animated.jpg' and 'beach.jpg', and this selection determines the visual environment others will see behind you.",
+          "whatTheAgentLoses": "Delegating this choice means losing the opportunity to curate the specific personal or professional aesthetic you want to present on the call.",
+          "speak": "never",
+          "check": "Which image file is selected in the picker?",
+          "say_example": "Set the background to <beach.jpg>, from your note."
+         },
+         {
+          "question": "Do you want to adjust your video appearance settings, such as soft focus or brightness?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The device settings pane includes specific toggles for mirroring your video, adjusting brightness, and applying a soft focus to optimize how you look on camera.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to personally fine-tune the soft focus slider and brightness to match your current lighting and aesthetic preferences.",
+          "speak": "never",
+          "check": "Which appearance toggles are on: soft focus, brightness, mirror?",
+          "say_example": "Left the appearance settings alone. Mirroring only changes what you see."
+         }
+        ]
+       },
+       {
+        "id": "5.10.4",
+        "label": "Choose the audio route",
+        "questions": [
+         {
+          "question": "Do you want to connect using computer audio or a phone call?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The dialog box requires selecting an audio source, such as computer audio or a phone call, to establish your connection for the meeting.",
+          "whatTheAgentLoses": "Letting an agent decide means you lose the ability to choose the audio connection method that best suits your current hardware setup.",
+          "speak": "never",
+          "check": "Which audio options does the dialog show, and which is selected?",
+          "say_example": "Joined with computer audio."
+         }
+        ]
+       },
+       {
+        "id": "5.10.5",
+        "label": "Allow the permissions",
+        "questions": [
+         {
+          "question": "Should you allow the browser to access your camera and microphone?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The browser requires explicit permission to use your camera and microphone so that other participants can see and hear you.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to trust this specific website with access to your computer's camera and microphone.",
+          "speak": "gate",
+          "check": "Does the browser show a permission prompt for the camera and microphone?",
+          "say_example": "The browser is asking to use your camera and microphone. That press is yours. Press allow and I'll carry on."
+         },
+         {
+          "question": "Are your camera and mic allowed and working?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The pre-join screen requires you to grant browser permissions and verify your video feed to ensure you can be seen and heard.",
+          "whatTheAgentLoses": "Delegating this step means you lose the opportunity to visually confirm your appearance and test your physical hardware before entering the call.",
+          "speak": "if-wrong",
+          "check": "Does the page say camera or microphone access is blocked, or that no device was found?",
+          "say_example": "The page says the microphone is blocked. Nobody would hear you. Open the lock icon by the address bar and allow it."
+         },
+         {
+          "question": "Should I allow the Zoom web app to show browser notifications?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The browser displayed a prompt asking if us05web.zoom.us can show notifications, which determines if you will receive desktop alerts for meeting events like chat messages.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether they want to receive or block potentially distracting desktop notifications from the meeting platform.",
+          "speak": "never",
+          "check": "Does the page show a banner asking to turn on notifications?",
+          "say_example": "Said no to browser notifications from <zoom.us>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.11",
+      "label": "Join the meeting",
+      "questions": [
+       {
+        "question": "Are you ready to join the meeting?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The pre-join screen displays your active camera and microphone settings, serving as the final check before others can see and hear you.",
+        "whatTheAgentLoses": "You lose the chance to personally verify your camera feed, background, and audio setup before entering the shared meeting space.",
+        "speak": "gate",
+        "check": "What do the pre-join controls show for camera and microphone, what name is set, and which names does the page list as already in the meeting?",
+        "say_example": "Ready to join <Weekly check-in>. Camera off, mic off, name <your name>. <Kevin and Sara> are already in. Say join, or say camera on first."
+       },
+       {
+        "question": "Do you want to join normally, or join already presenting your screen?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The pre-join screen offers distinct 'Join now' and 'Present' buttons that determine how you initially interact with the meeting.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to enter as a standard participant with audio and video or to join strictly to share your screen.",
+        "speak": "never",
+        "check": "Does the pre-join screen show both 'Join now' and 'Present'?",
+        "say_example": "Joined without presenting. Your screen stays private."
+       }
+      ]
+     },
+     {
+      "id": "5.12",
+      "label": "Wait in the lobby",
+      "questions": [
+       {
+        "question": "Should your microphone and camera be on or off while waiting to be let in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The waiting screen displays microphone and camera icons so you can set your privacy preferences before the host suddenly admits you to the live call.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally ensuring your audio and video are disabled during the unpredictable wait time before the meeting starts.",
+        "speak": "never",
+        "check": "What do the mic and camera icons on the waiting screen show?",
+        "say_example": "Waited with camera and mic off."
+       },
+       {
+        "question": "Are you in the live meeting yet, or are you in a waiting room?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Recognizing the 'Waiting for others to join...' message clarifies that you have not yet fully entered the live meeting and must wait for the host to admit you.",
+        "whatTheAgentLoses": "You lose the ability to personally gauge how long the host is taking to admit you and decide whether to reach out to them directly.",
+        "speak": "on-event",
+        "check": "Does the page say 'waiting for the host', 'you'll be admitted soon', or 'waiting for others to join'?",
+        "say_example": "You're in the waiting room. The host hasn't let you in yet. I'll tell you when you're through."
+       }
+      ]
+     },
+     {
+      "id": "5.13",
+      "label": "Check the meeting details",
+      "questions": [
+       {
+        "question": "Does the meeting have any documents attached?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The attachments tab indicates that any files added to the Google Calendar invite will be accessible here during the call.",
+        "whatTheAgentLoses": "You lose the chance to verify if any important reference materials were provided for the discussion.",
+        "speak": "never",
+        "check": "Does the meeting info panel list any attachments?",
+        "say_example": "Noted <agenda.pdf>, attached to the invite."
+       },
+       {
+        "question": "Do the meeting details in the live call match the link you originally clicked?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Confirming that the initial lookup link corresponds to the final meeting ID and nickname ensures you are in the correct room.",
+        "whatTheAgentLoses": "The user loses the immediate certainty of knowing the agent navigated the redirect correctly and entered the intended meeting.",
+        "speak": "if-wrong",
+        "check": "Does the meeting info panel show the same title or code as the invitation that was opened?",
+        "say_example": "The room I'm in is <Demo class>, not the <Weekly check-in> from your invite. Leaving and opening the right link."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Admit and manage the participants",
+    "note": "host side only, entered when a guest asks to join. 6.1 as each guest arrives - 8bF- runs it twice by two routes. 6.2 before or after, where the waiting room was not set at scheduling. 6.3 whenever the host wants to see who is in. 6.4 to 6.7 as the tutorial bothers - and most of them are read out and not committed: the Mute and Remove dialogs in 0Qvm are never confirmed.",
+    "questions": [
+     {
+      "question": "Do you want to create breakout rooms for the participants?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The screen shows a dialog to create breakout rooms with options to assign participants automatically, manually, or let them choose.",
+      "whatTheAgentLoses": "The user loses the choice of whether to divide the meeting into smaller groups and how those groups are organized.",
+      "speak": "never",
+      "check": "Does the page show a breakout rooms dialog?",
+      "say_example": "Made no breakout rooms."
+     }
+    ],
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Admit from the lobby",
+      "questions": [
+       {
+        "question": "Do you want to let this guest in? They aren't signed in.",
+        "cluster": "approve",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen warns that the person trying to join is not signed in to an account and might not be who they claim to be, requiring a choice to admit or deny entry.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally verify the identity of unknown participants before granting them access to the call.",
+        "speak": "gate",
+        "check": "Does the page show someone waiting to be admitted, with their name and whether they are signed in?",
+        "say_example": "<Alex> wants in. Not signed in, so the site can't vouch for the name. Let them in?"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Adjust the security settings",
+      "questions": [
+       {
+        "question": "Do you want to adjust any of the in-meeting security settings?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The security menu provides options to lock the meeting or restrict participant actions like screen sharing to prevent unwanted disruptions.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to customize participant permissions based on the specific privacy needs of your current call.",
+        "speak": "never",
+        "check": "Which security options does the menu show as on?",
+        "say_example": "Left the security settings as they were."
+       },
+       {
+        "question": "Do you want a chime when someone joins or leaves?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Enabling a chime provides an audio cue when participants join or leave, which is helpful for tracking attendance without constantly watching the participant list.",
+        "whatTheAgentLoses": "The user loses the ability to set an audio notification for arrivals and departures, which helps them manage the meeting while focusing on other content.",
+        "speak": "never",
+        "check": "Is the join-and-leave chime on?",
+        "say_example": "Turned on the join chime so you hear arrivals."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Review the participant list",
+      "questions": [
+       {
+        "question": "Who is in the meeting now, and has anyone joined or left?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Checking the participants pane reveals exactly who is already in the meeting and who has not yet responded to their invitation.",
+        "whatTheAgentLoses": "The user loses the situational awareness of knowing which specific colleagues are present and who might need a reminder to join.",
+        "speak": "on-event",
+        "check": "Which names does the participants panel list, and did the count change since the last look?",
+        "say_example": "<Tom> just joined. That makes <four> of you."
+       },
+       {
+        "question": "Do you want to open the people panel?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The People panel displays the current attendee list and provides options to add new people or pin specific participants to your screen.",
+        "whatTheAgentLoses": "You lose the ability to personally verify who is in the meeting or decide exactly who to pin or invite.",
+        "speak": "never",
+        "check": "Is the participants panel open, and what does it list?",
+        "say_example": "Opened the people panel. <Four> in the call."
+       },
+       {
+        "question": "Do you want to invite others or check the participant list?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a participant badge of '1', meaning you are currently alone and must decide whether to actively invite others or wait.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify who is in the room or decide exactly who receives an active invitation.",
+        "speak": "on-event",
+        "check": "Does the participant count show 1?",
+        "say_example": "It's just you in the call so far."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Mute a participant or everyone",
+      "questions": [
+       {
+        "question": "Should you mute this participant for everyone on the call?",
+        "cluster": "approve",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The confirmation dialog warns that muting the participant will silence them for everyone and only they will be able to unmute themselves.",
+        "whatTheAgentLoses": "The user loses the contextual judgment of whether forcibly silencing a specific participant is appropriate for the current meeting dynamics.",
+        "speak": "never",
+        "check": "Does the confirmation say the mute is for everyone and only they can unmute?",
+        "say_example": "Muted <Tom> for everyone. Only they can unmute themselves."
+       },
+       {
+        "question": "Do you want to mute all participants but allow them to unmute themselves?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The prompt asks to confirm muting current and new participants and includes a checkbox dictating whether they can unmute themselves.",
+        "whatTheAgentLoses": "The user loses the ability to decide how strictly to control the audio environment for their attendees.",
+        "speak": "never",
+        "check": "In the 'Mute all' confirmation, is the 'Allow participants to unmute themselves' box checked?",
+        "say_example": "Muted everyone. They can unmute themselves."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Rename or remove a participant",
+      "questions": [
+       {
+        "question": "When removing a participant, do you want to block them or report them for abuse?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The removal confirmation dialog includes checkboxes to fill out an abuse report or block the person from rejoining the call.",
+        "whatTheAgentLoses": "You lose the discretion to decide whether a participant should just be temporarily removed for technical reasons or permanently blocked for inappropriate behavior.",
+        "speak": "on-event",
+        "check": "Does the removal dialog show boxes for 'report' or 'block from rejoining', and are they checked?",
+        "say_example": "Removing <Tom>. There's a box to block them from rejoining. Leaving it unticked. Say block if you want that."
+       },
+       {
+        "question": "What should this person's name show as?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Participants panel listed the user as 'David - Cozy Grammar', and renaming them ensures their display name fits the context of the current meeting.",
+        "whatTheAgentLoses": "The user loses the ability to decide exactly how participants are identified to others during the live call.",
+        "speak": "never",
+        "check": "What name does the participant entry show?",
+        "say_example": "Renamed <David - Cozy Grammar> to <David>, as you asked."
+       },
+       {
+        "question": "Do you want to do anything to this participant, like send them to the waiting room or remove them?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a participant management menu with options to remove David or place him in the waiting room.",
+        "whatTheAgentLoses": "You lose the ability to exercise your own judgment on whether a specific attendee should be allowed to remain in the live meeting.",
+        "speak": "never",
+        "check": "Which actions does the participant menu offer?",
+        "say_example": "Moved <David> to the waiting room, as you asked."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Change a participant's role",
+      "questions": [
+       {
+        "question": "What role does the guest currently have, and do you want to change it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The context menu for the guest shows an option to 'Make an attendee', indicating they currently have a higher permission level.",
+        "whatTheAgentLoses": "The user loses the ability to decide the appropriate permission level and role for their meeting guests.",
+        "speak": "never",
+        "check": "What role does the participant menu show for this person?",
+        "say_example": "Left <Tom> as co-host."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Set what participants may do",
+      "questions": [
+       {
+        "question": "Should I turn off chat for this meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a toggle and a confirmation dialog to turn off chat, which determines whether participants can send text messages during the call.",
+        "whatTheAgentLoses": "You lose the ability to decide whether text-based communication is appropriate or potentially distracting for your specific audience.",
+        "speak": "never",
+        "check": "Does the page show the chat toggle and a confirmation to turn it off?",
+        "say_example": "Turned chat off, as you asked."
+       },
+       {
+        "question": "Are you okay that participants can't be stopped from sharing screens or unmuting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows warnings that teachers cannot prevent students from sharing screens or unmuting themselves.",
+        "whatTheAgentLoses": "The user loses the chance to evaluate if these limited host controls are acceptable for their specific session.",
+        "speak": "on-event",
+        "check": "Does the page warn that participants can't be stopped from sharing screens or unmuting?",
+        "say_example": "This site says you can't stop participants sharing their screens or unmuting. Anyone can share or unmute whenever they like."
+       },
+       {
+        "question": "Who do you want participants to be able to chat with?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The chat restriction menu under the '...' button lets you control whether attendees can message everyone, only the host, or no one.",
+        "whatTheAgentLoses": "You lose the ability to set the appropriate communication boundaries for your specific audience.",
+        "speak": "never",
+        "check": "Which chat option is selected: everyone, host only, no one?",
+        "say_example": "Left chat set to everyone."
+       },
+       {
+        "question": "Who should be allowed to share their screen during this meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The advanced sharing options dialog lets you restrict screen sharing to only the host or open it up to all participants.",
+        "whatTheAgentLoses": "You lose the ability to decide whether attendees need permission to present their own materials during the call.",
+        "speak": "never",
+        "check": "Which sharing option is selected: host only, or all participants?",
+        "say_example": "Set screen sharing to host only."
+       },
+       {
+        "question": "What do you want participants allowed to do?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The host controls panel lets you toggle screen sharing, chat, microphone, and video access, which manages attendee interaction but might disconnect users on outdated software.",
+        "whatTheAgentLoses": "You lose the ability to set the appropriate level of participant interaction and security based on the specific context of your meeting.",
+        "speak": "on-event",
+        "check": "Does the host controls panel warn that changing a permission may disconnect users on older versions?",
+        "say_example": "Changing that setting may drop anyone on an old version of the app. You asked for it, so I'm changing it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Use the call controls",
+    "note": "any order and any subset - this is the tour every keeper runs after 5.11. 7.1 and 7.2 nearly always; 7.3 and 7.5 where the narrator opens the menus; 7.6 on most; 7.7 and 7.4 where offered; 7.8 only on the Teams participant path; 7.9 once.",
+    "questions": [
+     {
+      "question": "After the mute, does the participant list actually show that person as muted, or is their audio still live?",
+      "cluster": "facts",
+      "moment": "On demand",
+      "moneyMoving": false,
+      "why": "The screen shows the mute dialog opening, but after a cut, the participant list still displays an active audio icon instead of a muted one.",
+      "whatTheAgentLoses": "An agent would be confused by the inconsistent state and fail to learn how to properly complete the action.",
+      "speak": "if-wrong",
+      "check": "After the mute, does the participant's entry show 'muted' or an unmute control?",
+      "say_example": "The mute didn't take. <Tom> still shows as live. Trying again."
+     }
+    ],
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Toggle the mic and camera",
+      "questions": [
+       {
+        "question": "After the toggle, do the mic and camera buttons show the state you asked for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays toggle buttons for the camera and microphone, allowing you to control your privacy and background noise.",
+        "whatTheAgentLoses": "Delegating this means the agent might leave your devices active by default, potentially broadcasting your private environment or background noise before you are ready.",
+        "speak": "if-wrong",
+        "check": "What do the mic and camera buttons read: mute, unmute, turn on, turn off?",
+        "say_example": "Your mic is still live. The mute didn't take. Pressing it again."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Turn on the captions",
+      "questions": [
+       {
+        "question": "Do you want live captions on?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen provides a 'Turn on captions' button that displays real-time text of the spoken conversation.",
+        "whatTheAgentLoses": "The user loses the ability to decide if they need real-time visual text support to follow the meeting.",
+        "speak": "never",
+        "check": "Does the pre-join screen or the call show a captions control, and is it on?",
+        "say_example": "Left captions off."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Change the layout",
+      "questions": [
+       {
+        "question": "How do you want to arrange the video feeds on your screen?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The menu provides multiple layout options like 'Gallery at top' and 'Together mode' to customize how you view the other participants.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to choose a visual layout that best suits your personal viewing preferences for the meeting.",
+        "speak": "never",
+        "check": "Which layout is selected in the view menu?",
+        "say_example": "Left the layout as it was. It only changes your own screen."
+       },
+       {
+        "question": "Do you want to hide everyone's video and show only the shared content?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Selecting 'Focus on content' from the 'More actions' menu removes the video gallery so the presentation can be viewed without visual distractions.",
+        "whatTheAgentLoses": "You lose the ability to customize your personal viewing layout to match your own focus preferences during the meeting.",
+        "speak": "never",
+        "check": "Is 'Focus on content' selected?",
+        "say_example": "Left the video gallery showing."
+       },
+       {
+        "question": "How do you want the Grid View extension set up?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays options like highlighting speakers and including yourself in the grid, which determine how participants are visually arranged during the call.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to customize your preferred visual layout and participant display for the meeting.",
+        "speak": "never",
+        "check": "Which grid view options are on?",
+        "say_example": "Left the grid view settings alone."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Pin a participant",
+      "questions": [
+       {
+        "question": "Do you want to pop out the shared content into a separate window?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The top menu bar includes a 'Pop out' button that allows you to separate the presentation from the main meeting window to better manage your screen space.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to customize your personal screen layout and window arrangement during the live meeting.",
+        "speak": "never",
+        "check": "Is there a 'Pop out' button on the shared content?",
+        "say_example": "Kept the shared content in the meeting window."
+       },
+       {
+        "question": "Do you want to pin your own share or camera to see what others see?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Clicking the 'Presentation (You)' or 'You' thumbnails lets you enlarge your own feeds to confirm exactly what is being broadcast to the meeting.",
+        "whatTheAgentLoses": "You lose the personal peace of mind that comes from visually confirming your camera and screen share look correct to others.",
+        "speak": "never",
+        "check": "Does the page show a 'Presentation (You)' thumbnail?",
+        "say_example": "Pinned your share. It shows as <Slides>."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Adjust the device settings",
+      "questions": [
+       {
+        "question": "What video resolution do you want to set for sending and receiving?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The video settings offer high definition (720p) or standard definition (360p) options, allowing you to balance video quality against your available internet bandwidth.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a high resolution that causes lag on a poor connection, or default to a lower quality when you actually have the bandwidth for high definition.",
+        "speak": "never",
+        "check": "Which video resolution is selected?",
+        "say_example": "Left video at <720p>."
+       },
+       {
+        "question": "Do you want to set the mic level yourself instead of letting it adjust automatically?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Unchecking the automatic adjustment checkbox unlocks the volume slider, allowing you to establish a specific baseline sensitivity for your microphone.",
+        "whatTheAgentLoses": "You lose the opportunity to manually calibrate your microphone's baseline volume for your specific voice and environment.",
+        "speak": "never",
+        "check": "Is 'Automatically adjust microphone volume' checked?",
+        "say_example": "Left the mic on automatic volume."
+       },
+       {
+        "question": "Which camera do you want to use for the video feed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The video settings menu displays multiple hardware and virtual camera options, such as 'Logitech BRIO' and 'XSplit VCam', requiring a choice for the active feed.",
+        "whatTheAgentLoses": "The user loses the ability to specify their preferred physical or virtual camera to control how they appear to others on the call.",
+        "speak": "never",
+        "check": "Which camera is selected, and is it a virtual webcam app rather than a real camera?",
+        "say_example": "Kept the camera on <Logitech BRIO>."
+       },
+       {
+        "question": "Which microphone and speaker do you want to use for the meeting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The menu lists multiple specific microphones and speakers, requiring you to confirm the correct hardware is active for the call.",
+        "whatTheAgentLoses": "You lose the ability to personally verify and select your preferred physical audio hardware for the best sound quality.",
+        "speak": "never",
+        "check": "Which microphone and speaker are selected, on the pre-join screen or in the settings menu?",
+        "say_example": "Switched the mic to <headset>, as you asked."
+       },
+       {
+        "question": "Did the speaker and mic test actually run and finish?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Opening the settings menu to use the test button ensures your microphone and speakers are functioning correctly before you start communicating.",
+        "whatTheAgentLoses": "Delegating this step prevents you from personally hearing the speaker test to confirm the audio output is working and at a comfortable volume.",
+        "speak": "never",
+        "check": "Did the test button show a result, such as a played tone or a recorded playback?",
+        "say_example": "Ran the sound test. The page showed the test finished."
+       },
+       {
+        "question": "Does the call show a connection or quality warning?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The Call health panel displays real-time technical metrics like the sent frame rate and latency to help you verify the quality of your connection.",
+        "whatTheAgentLoses": "You lose the opportunity to personally monitor the real-time technical quality of your connection and diagnose potential network or hardware issues.",
+        "speak": "on-event",
+        "check": "Does the meeting show a connection warning, such as 'your connection is unstable' or a poor call-quality label?",
+        "say_example": "The call says your connection is unstable. Others may hear you break up. Turning off incoming video to help."
+       },
+       {
+        "question": "Do you want to turn off incoming video?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The 'More actions' menu includes an option to disable incoming video, which is useful for saving bandwidth.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to prioritize saving bandwidth over seeing other participants.",
+        "speak": "never",
+        "check": "Is 'Turn off incoming video' selected?",
+        "say_example": "Turned off incoming video to save bandwidth."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Send a chat message",
+      "questions": [
+       {
+        "question": "What message, emoji, or GIF should I send in the meeting chat?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen shows the meeting chat pane with text input, emoji menus, and GIF search options for interacting with other participants.",
+        "whatTheAgentLoses": "The user loses the ability to personally express their tone and spontaneous reactions using specific text, emojis, or GIFs.",
+        "speak": "never",
+        "check": "What text is in the chat box, and what does the To field show?",
+        "say_example": "Sent <Running five minutes late> to everyone, as you asked."
+       },
+       {
+        "question": "Which reaction do you want to put on the message?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen shows a hover menu with multiple reaction icons like Heart and Laugh over the chat messages.",
+        "whatTheAgentLoses": "The user loses the ability to express their personal emotional response to specific messages in the chat.",
+        "speak": "never",
+        "check": "Which reactions does the hover menu list?",
+        "say_example": "Reacted with <a heart> to <Tom's> message, as you asked."
+       },
+       {
+        "question": "Do you want to open the chat panel to message everyone?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The bottom right control area contains a chat icon that opens a side panel for sending text messages to all participants.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to open the text chat panel to communicate with or monitor messages from other participants.",
+        "speak": "never",
+        "check": "Is the chat panel open?",
+        "say_example": "Opened the chat."
+       },
+       {
+        "question": "Who do you want to send this chat message to?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The chat panel's 'To:' dropdown allows you to broadcast a message to 'Everyone' or send it privately to a specific participant.",
+        "whatTheAgentLoses": "You lose control over whether your communication is shared publicly with the entire room or kept private with a specific individual.",
+        "speak": "if-wrong",
+        "check": "What does the chat's To field show, and does it match who the person named?",
+        "say_example": "The chat is set to everyone. You wanted this just for <Priya>. Switching before I send."
+       },
+       {
+        "question": "Where should the file for the chat come from, your computer or a cloud drive?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The file menu offers multiple storage options like Dropbox, Google Drive, and local computer storage, so you must specify where the document is located.",
+        "whatTheAgentLoses": "The user loses control over which of their personal cloud or local storage accounts is accessed to retrieve the file.",
+        "speak": "never",
+        "check": "Which file sources does the menu list?",
+        "say_example": "Attached <notes.pdf> from your computer."
+       },
+       {
+        "question": "Do you want to respond to the participant's question in the chat?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The chat panel displayed a message from a participant asking 'When is this due?', which might require an answer before you stop sharing or end the meeting.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether and how to answer the participant's specific question.",
+        "speak": "on-event",
+        "check": "Does the chat panel show a new message, and from whom?",
+        "say_example": "<Tom> asked in chat, <When is this due?>. Want to answer?"
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "React or raise a hand",
+      "questions": [
+       {
+        "question": "Do you want to raise your hand or send a reaction?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The Reactions menu displays emojis and a 'Raise hand' option that trigger visual feedback on your video feed to communicate silently with other participants.",
+        "whatTheAgentLoses": "You lose the ability to personally time your hand raise or select the most appropriate emotional reaction for the ongoing conversation.",
+        "speak": "never",
+        "check": "Which options does the reactions menu list?",
+        "say_example": "Raised your hand, as you asked."
+       },
+       {
+        "question": "Do you want to open the queue for the raised hand?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays a popup notification that a participant has raised their hand, offering a choice to either open the queue or dismiss the prompt.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to immediately acknowledge a participant's question or wait until a better time in the meeting.",
+        "speak": "on-event",
+        "check": "Does the page show a notice that a participant raised their hand, and who?",
+        "say_example": "<Tom> raised a hand."
+       },
+       {
+        "question": "Is the raised hand actually showing beside your name in the participant list?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Checking for the blue hand icon next to your name and the 'Lower Hand' button confirms your request to speak is visible and lets you reset it.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify your status in the participants list and time exactly when to lower your hand.",
+        "speak": "if-wrong",
+        "check": "Does your entry in the participant list show a raised-hand label, and does the button read 'Lower hand'?",
+        "say_example": "Your hand didn't go up. Pressing it again."
+       }
+      ]
+     },
+     {
+      "id": "7.8",
+      "label": "Navigate the shared presentation",
+      "questions": [
+       {
+        "question": "Do you want to take control of the shared presentation?",
+        "cluster": "approve",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen shows a shared presentation with a 'Take control' button and slide navigation controls.",
+        "whatTheAgentLoses": "An agent taking control without permission could disrupt the current presenter and the flow of the meeting.",
+        "speak": "never",
+        "check": "Does the page show a 'Take control' button on the shared presentation?",
+        "say_example": "Took control of the slides, as you asked."
+       },
+       {
+        "question": "Should I open the slide grid so you can move through the slides on your own?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays a grid view button that opens thumbnails of the slides, allowing you to jump to a specific slide on your end only.",
+        "whatTheAgentLoses": "You lose the ability to privately browse and review specific presentation slides at your own pace during the live meeting.",
+        "speak": "never",
+        "check": "Does the page show a grid view button for the slides?",
+        "say_example": "Opened the slide grid on your side only."
+       },
+       {
+        "question": "Should you sync your view back to the presenter?",
+        "cluster": "approve",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Sync to Presenter' button, which matters because it lets you instantly catch up to the live presentation after independently looking at other slides.",
+        "whatTheAgentLoses": "Letting an agent control the view means you lose the ability to independently browse the shared content at your own pace before deciding to return to the live presentation.",
+        "speak": "never",
+        "check": "Does the page show a 'Sync to presenter' button?",
+        "say_example": "Synced your view back to the presenter."
+       }
+      ]
+     },
+     {
+      "id": "7.9",
+      "label": "Take the meeting notes",
+      "questions": [
+       {
+        "question": "Do you want to open the meeting notes panel?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The in-call menu includes a 'Meeting notes' option to start capturing text notes directly within the meeting interface.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally format and record the initial discussion points for the team.",
+        "speak": "never",
+        "check": "Does the menu list 'Meeting notes'?",
+        "say_example": "Opened the notes panel."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Present and record",
+    "note": "8.1 on most keepers - and half of them open the share dialog and cancel. 8.2 where a whiteboard is demonstrated - three products and three kinds of board. 8.3 where recording is shown; on Meet's free tier 8.3.1 finds nothing and 8.3.2 goes outside the product. any order, while the meeting runs.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Share the screen",
+      "note": "8.1.1 first - the choice is made in that dialog and the tutorials read all three options. 8.1.2 where a tab or window is picked and sound matters. 8.1.3 on Teams only. then 8.1.4, or Cancel - ipyP and wGXI and 0Qvm and IRZc never share. 8.1.5 on A2Fa and inside 4Qyi's floating bar. 8.1.6 closes it, from the product or from the browser's banner.",
+      "children": [
+       {
+        "id": "8.1.1",
+        "label": "Choose what to share",
+        "questions": [
+         {
+          "question": "Do you want to enter a meeting ID to share your screen directly, or cancel?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The dialog requires a Sharing Key or Meeting ID to project your screen, so you must decide whether to provide the credentials or back out.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to proceed with the direct screen share or cancel the operation.",
+          "speak": "never",
+          "check": "Does the dialog ask for a sharing key or meeting ID?",
+          "say_example": "Closed the share-to-a-room box. It was for a meeting-room screen."
+         },
+         {
+          "question": "Do you want to share the whole screen, a window, or a tab?",
+          "cluster": "select",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The menu provides distinct sharing modes for your entire screen, a specific window, or a Chrome tab that is explicitly optimized for video and animation.",
+          "whatTheAgentLoses": "An agent might not understand the specific media format or privacy requirements of your content to choose the most appropriate and secure sharing mode.",
+          "speak": "gate",
+          "check": "Which choices does the share picker list: entire screen, a window, a tab, and which windows or tabs are named?",
+          "say_example": "Share the whole screen, or just the <Slides> window? Whole screen shows everything that pops up, including messages. Say window or whole screen."
+         },
+         {
+          "question": "Do you want to share a specific portion of your screen or just your computer audio?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The advanced share tab displays specific options like sharing only a portion of the screen or just the computer sound, allowing for precise control over what participants experience.",
+          "whatTheAgentLoses": "Letting an agent handle this means you lose the ability to restrict the shared content to a specific screen area or audio-only feed.",
+          "speak": "never",
+          "check": "Does the advanced tab offer 'portion of screen' or 'computer audio only'?",
+          "say_example": "Shared the whole <Slides> window rather than a cut-out."
+         },
+         {
+          "question": "Which cloud storage service do you want to connect to share files?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The share dialog shows options to connect to Dropbox, Microsoft OneDrive, Google Drive, and Box.",
+          "whatTheAgentLoses": "The user loses the ability to select their preferred cloud storage provider for sharing files during the meeting.",
+          "speak": "never",
+          "check": "Which cloud services does the share dialog list?",
+          "say_example": "Shared <deck.pdf> from your computer rather than a cloud drive."
+         }
+        ]
+       },
+       {
+        "id": "8.1.2",
+        "label": "Include the audio",
+        "questions": [
+         {
+          "question": "Do you need the sound to come through with the share?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The share dialog presents checkboxes for sharing system audio and optimizing video playback, which determines how participants will experience the shared media.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether their shared content requires system audio or video optimization for the best viewer experience.",
+          "speak": "never",
+          "check": "Is the 'Share computer sound' box checked?",
+          "say_example": "Turned on sound for the shared tab. Your video will be heard."
+         }
+        ]
+       },
+       {
+        "id": "8.1.3",
+        "label": "Set the presenter view",
+        "questions": [
+         {
+          "question": "Where should your video sit on the share, and how big?",
+          "cluster": "hand over",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The 'Edit your view' window provides a size slider and position icons so you can ensure your video feed doesn't block important shared content.",
+          "whatTheAgentLoses": "You lose the ability to personally fine-tune the exact placement and scale of your video feed over your presentation.",
+          "speak": "never",
+          "check": "What size and position does the video overlay setting show?",
+          "say_example": "Kept your video small in the <bottom right> of the share."
+         }
+        ]
+       },
+       {
+        "id": "8.1.4",
+        "label": "Start the share"
+       },
+       {
+        "id": "8.1.5",
+        "label": "Switch the shared source",
+        "questions": [
+         {
+          "question": "Do you want to switch your screen share to this newly opened tab?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The blue banner at the top of the browser offers a 'Share this tab instead' button, which controls exactly what content is currently being broadcast to the meeting.",
+          "whatTheAgentLoses": "Delegating this choice means the agent decides which specific browser tab is visible to the other meeting participants, risking the exposure of unintended or private information.",
+          "speak": "on-event",
+          "check": "Does the page show a 'Share this tab instead' offer, or say the shared tab is a different one from the one now open?",
+          "say_example": "I opened a new tab. The meeting still sees the old one. Say switch to share this one."
+         }
+        ]
+       },
+       {
+        "id": "8.1.6",
+        "label": "Stop sharing",
+        "questions": [
+         {
+          "question": "Are you ready to stop sharing your screen with the meeting participants?",
+          "cluster": "approve",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The presenter toolbar at the top of the screen displays a 'Stop presenting' icon, indicating that your screen is currently visible to everyone in the call.",
+          "whatTheAgentLoses": "You lose the ability to decide exactly when to end the broadcast, which could risk exposing private information if the agent leaves the screen share active.",
+          "speak": "never",
+          "check": "Does the toolbar show a 'Stop presenting' or 'Stop share' control?",
+          "say_example": "Stopped sharing. Your screen is private again."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Use a whiteboard",
+      "note": "8.2.1 opens one - Jamboard through Activities or the More menu on Meet, the Whiteboard tile in Zoom's share dialog, Miro as an add-on. 8.2.2 where the narrator draws. 8.2.3 on Meet only - the board is a separate tab or app and has to be presented back into the call, or started as a collaboration on Miro. Zoom's board is the share.",
+      "children": [
+       {
+        "id": "8.2.1",
+        "label": "Open a whiteboard",
+        "questions": [
+         {
+          "question": "Do you want to open a shared whiteboard?",
+          "cluster": "approve",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "Clicking the Activities icon reveals a 'Whiteboarding' option to collaboratively brainstorm and sketch ideas with other participants.",
+          "whatTheAgentLoses": "The user loses the ability to spontaneously initiate a shared visual workspace for brainstorming during the meeting.",
+          "speak": "never",
+          "check": "Does the activities menu list whiteboarding?",
+          "say_example": "Opened a whiteboard, as you asked."
+         },
+         {
+          "question": "Which activity or add-on do you want to open?",
+          "cluster": "hand over",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The screen presented built-in activities like breakout rooms and polls alongside third-party add-ons like Miro, requiring a choice of which collaboration tool to open.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to decide which specific collaboration tool or add-on best fits the current flow of the meeting.",
+          "speak": "never",
+          "check": "Which activities and add-ons does the panel list?",
+          "say_example": "Opened <Miro> from the activities list."
+         },
+         {
+          "question": "Should I sign in to Miro to pick an existing board, or make a new one without an account?",
+          "cluster": "select",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The setup panel requires choosing between creating a temporary whiteboard without an account or signing in to access your existing Miro boards.",
+          "whatTheAgentLoses": "The user loses the choice to connect their personal Miro account to access previously saved whiteboards for the meeting.",
+          "speak": "never",
+          "check": "Does the setup panel offer a board without an account and a sign-in option?",
+          "say_example": "Made a board without signing in to Miro."
+         },
+         {
+          "question": "Do you want to start a new whiteboard or choose an existing one from Drive?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The whiteboarding panel offers the choice to either create a blank Jamboard or select a pre-existing one from your Google Drive to share with the meeting.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might start a blank whiteboard instead of pulling up the specific pre-prepared document you intended to share.",
+          "speak": "never",
+          "check": "Does the panel offer a new board and a choose-from-Drive option?",
+          "say_example": "Started a blank board."
+         }
+        ]
+       },
+       {
+        "id": "8.2.2",
+        "label": "Draw on the board",
+        "questions": [
+         {
+          "question": "Should the Jamboard be saved or downloaded before closing it?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The 'More actions' menu displays options like 'Download as PDF' and 'Save frame as image', which dictate how the whiteboard content is preserved.",
+          "whatTheAgentLoses": "The user loses the ability to choose the specific format for exporting and saving their collaborative whiteboard work.",
+          "speak": "never",
+          "check": "Does the board's menu show download or save options?",
+          "say_example": "Left the board in your Drive."
+         }
+        ]
+       },
+       {
+        "id": "8.2.3",
+        "label": "Present the board",
+        "questions": [
+         {
+          "question": "Do you want everyone to see the board now?",
+          "cluster": "hand over",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "A blue pop-up offers a 'Start collaboration' button because the board is not automatically visible to the other people in the meeting.",
+          "whatTheAgentLoses": "You lose the choice of exactly when to reveal the collaborative workspace to your attendees.",
+          "speak": "never",
+          "check": "Does the page show a 'Start collaboration' prompt?",
+          "say_example": "Made the board visible to everyone, as you asked."
+         },
+         {
+          "question": "Should you accept the invitation to join the Miro collaboration board?",
+          "cluster": "approve",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The screen displays a prompt from Charlies Lessons inviting you to move the call to a Miro whiteboard in a new tab.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether to participate in the external whiteboard activity or remain solely in the main meeting interface.",
+          "speak": "on-event",
+          "check": "Does the page show an invitation from another participant to open a whiteboard in a new tab?",
+          "say_example": "<Charlie> invited everyone to a Miro board in a new tab. I'm staying in the call. Say open it if you want it."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Record the meeting",
+      "note": "8.3.1 first - and what it finds decides the rest: local or cloud on Zoom, an admin gate on G Suite, nothing on free Meet. 8.3.2 only in 0Qvm, outside the product. then 8.3.3, and 8.3.4 after the meeting ends where the tutorial follows the file.",
+      "children": [
+       {
+        "id": "8.3.1",
+        "label": "Find the recording option",
+        "questions": [
+         {
+          "question": "Do you want to record this meeting to the computer or to the cloud?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The menu offers distinct options to record locally or to the cloud, which determines how and where the final video file is saved.",
+          "whatTheAgentLoses": "Letting an agent decide means you lose control over where the recording is stored and the ability to manually pause it during sensitive moments.",
+          "speak": "never",
+          "check": "Which record options does the menu list, and is cloud recording available on this plan?",
+          "say_example": "Set recording to this computer. Cloud recording isn't on the free plan."
+         }
+        ]
+       },
+       {
+        "id": "8.3.2",
+        "label": "Install a recording extension",
+        "questions": [
+         {
+          "question": "Do you want to let this recording extension read and change your data on every website?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The browser popup explicitly warns that installing this extension gives it broad access to read and change your data across all websites.",
+          "whatTheAgentLoses": "You lose the opportunity to evaluate the privacy and security risks of giving a third-party extension broad access to your browsing data.",
+          "speak": "gate",
+          "check": "What permissions does the extension's install prompt ask for?",
+          "say_example": "This site has no built-in recording. The <tl;dv> extension would do it, but it asks to read and change your data on every website. Install it, or skip the recording?"
+         }
+        ]
+       },
+       {
+        "id": "8.3.3",
+        "label": "Start and stop the recording",
+        "questions": [
+         {
+          "question": "Do you want to start recording the meeting?",
+          "cluster": "approve",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The 'More actions' menu displays the 'Start recording' option, allowing you to capture the live meeting for future reference.",
+          "whatTheAgentLoses": "You lose the ability to decide whether the meeting's content is appropriate or necessary to record.",
+          "speak": "always",
+          "check": "Does the page show a recording indicator, and a notice that participants are being told?",
+          "say_example": "Recording started. Everyone in the call gets a notice that they're being recorded."
+         },
+         {
+          "question": "Do you want to stop recording the meeting?",
+          "cluster": "approve",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The system displays a confirmation dialog asking if you are sure you want to stop the active recording.",
+          "whatTheAgentLoses": "You lose the ability to decide exactly when the conversation should go off the official record.",
+          "speak": "never",
+          "check": "Does the dialog ask to confirm stopping the recording?",
+          "say_example": "Stopped the recording. The file is saving."
+         },
+         {
+          "question": "Do you want to pause or stop the active recording?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The recording controls display both 'Pause Recording' and 'Stop Recording' buttons, which dictate whether the current capture is temporarily suspended or permanently finalized.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to temporarily halt the recording or finalize the recording file completely.",
+          "speak": "never",
+          "check": "Does the page show 'Pause recording' and 'Stop recording' controls?",
+          "say_example": "Paused the recording, as you asked."
+         }
+        ]
+       },
+       {
+        "id": "8.3.4",
+        "label": "Find the recording file",
+        "questions": [
+         {
+          "question": "Where do you want to save the converted recording files?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen showed a 'Save my recordings at:' dialog asking to confirm or change the local destination path.",
+          "whatTheAgentLoses": "The user loses the ability to choose a specific folder for their recording, potentially making the file hard to find later.",
+          "speak": "never",
+          "check": "What path does the 'Save my recordings at' dialog show?",
+          "say_example": "Left recordings saving to <Documents/Zoom>."
+         },
+         {
+          "question": "Did the recording link actually appear in the meeting chat as the banner promised?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Checking the chat thread confirms that the system fulfilled the banner's promise to deliver the stopped recording.",
+          "whatTheAgentLoses": "The user loses the immediate reassurance of personally confirming that the meeting recording was successfully generated and saved.",
+          "speak": "if-wrong",
+          "check": "After the recording stopped, does the chat show a link to the recording?",
+          "say_example": "The banner promised the recording link in chat. It hasn't shown up after <two> minutes. Look in <Drive> for it later."
+         },
+         {
+          "question": "Do you want the recording downloaded, or just its link saved?",
+          "cluster": "hand over",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The tl;dv recording page displays the captured video, transcript, and icons to download or copy the link, requiring a choice on how to distribute the file.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to personally decide who receives the recording link or whether the file is downloaded for your own secure records.",
+          "speak": "never",
+          "check": "Does the recording page show download and copy-link options?",
+          "say_example": "Noted the recording link. It's in the notes for you."
+         },
+         {
+          "question": "Do you want to wait for the recording to finish converting and check the files?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen shows a conversion progress dialog, which must finish before the final video and audio files are accessible in your local file manager.",
+          "whatTheAgentLoses": "You lose the opportunity to immediately verify the recording files and organize them into your preferred local folder.",
+          "speak": "never",
+          "check": "Does the page show a conversion progress dialog, and has it finished?",
+          "say_example": "Waited for the recording to convert. Files are in <Documents/Zoom>."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Leave or end the meeting",
+    "note": "9.1 on every host that ends on camera - End meeting for all every time in the corpus. 9.2 where the product confirms - Zoom asks and Meet does not. 9.3 on Meet after any leave. 9.4 loops back to 5 - d8L2 from the left-screen and 3Og- and wGXI by starting over.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Choose leave or end all",
+      "questions": [
+       {
+        "question": "Do you want to leave the meeting now?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The meeting control bar features a prominent red 'Leave' button with a phone icon that immediately disconnects you from the live session.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to decide exactly when to conclude your presence and exit the conversation.",
+        "speak": "never",
+        "check": "Does the control bar show a Leave button?",
+        "say_example": "Left the meeting, as you asked."
+       },
+       {
+        "question": "Should you end the meeting for everyone or just leave?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dialog presents a choice between ending the meeting for all or just leaving, which determines if the session stays open for other participants.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might abruptly terminate the call for everyone instead of letting the remaining participants continue.",
+        "speak": "gate",
+        "check": "Does the dialog offer 'End meeting for all' and 'Leave meeting'?",
+        "say_example": "You're the host. Leave and let it keep running, or end it for everyone? Say leave or end."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Confirm the leave"
+     },
+     {
+      "id": "9.3",
+      "label": "Read the post-call screen",
+      "questions": [
+       {
+        "question": "Do you want to rate the call quality, or just return to the home screen?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The post-meeting screen displays a star rating prompt for audio and video quality alongside the option to return to the home screen.",
+        "whatTheAgentLoses": "The user loses the opportunity to provide feedback on their specific call experience to the platform.",
+        "speak": "never",
+        "check": "Does the post-call screen show a rating prompt and a home button?",
+        "say_example": "Skipped the rating and went back to the home screen."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Rejoin the meeting",
+      "questions": [
+       {
+        "question": "Do you want to rejoin after landing on the 'left the meeting' screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays options to rejoin, return to the home screen, or submit feedback, requiring a choice to recover from the interruption.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to immediately rejoin the meeting or abandon the attempt after being disconnected.",
+        "speak": "on-event",
+        "check": "Does the page show 'You left the meeting' or 'You've been disconnected' with a rejoin button?",
+        "say_example": "The call dropped. Rejoining now."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

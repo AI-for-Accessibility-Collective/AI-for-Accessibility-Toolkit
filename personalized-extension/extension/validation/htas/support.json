@@ -1,0 +1,1537 @@
+{
+ "task": "reach a live human at customer support (Amazon, airlines, banks): start from the help pages, navigate the bot and menu maze, choose the paths that lead to a person, and get connected; complete when a live agent is engaged — a human replying in the chat window, or a call/callback connected to a representative with the flow visible on screen. Surface pinned: the company's help/contact flow on web or app; audio-only phone calls with nothing on screen do not count. Variants: solving the issue through FAQ self-service, and the substantive dispute after the agent is reached, do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Reach a live support agent",
+  "note": "1, then 2 - except on Amazon India, where 3 comes first and 2 after it. 3 where the page offers a choice; the AliExpress, PlayStation and eBay bots offer none and 3 is skipped. then 4 on the platforms with an assistant, or 5 on the ticket platforms, or 6 straight from 3 where a callback is chosen. 7 when the platform hands over. 8 whenever a notice blocks the way - it can fire in 3, 4 or 7 - and it returns to 3 or to 1. 9 after the agent is engaged, which is past the ask's own end point.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the help area",
+    "note": "1.1 where the narrator bothers. then one of 1.2 to 1.6 - the app menu, the account dropdown, the footer, the header, or a search engine - and 1.7 where the first route was a decoy. 1.8 only on the subscription platform.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Check the signed-in account",
+      "questions": [
+       {
+        "question": "Is this page signed in to your account, not someone else's?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage displays a personalized greeting like 'Hi David!', which confirms the active profile that will be linked to your support request.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the support request is tied to your specific account rather than a shared or incorrect profile.",
+        "speak": "if-wrong",
+        "check": "What name does the signed-in greeting or account menu show?",
+        "say_example": "This page is signed in as <Sarah>. The case would go on their account, not yours. I'll sign out so you can sign in."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Open the app menu"
+     },
+     {
+      "id": "1.3",
+      "label": "Use the account dropdown",
+      "questions": [
+       {
+        "question": "Which link in the 'Account & Lists' dropdown goes to customer service?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the general 'Account' link opens the main dashboard where the primary help options are located, avoiding the narrower focus of specific sub-menus like 'Orders'.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to route their support inquiry through the general account dashboard or directly through a specific category like recent orders.",
+        "speak": "never",
+        "check": "Which entries does the account dropdown list?",
+        "say_example": "Took Customer Service from the Account & Lists dropdown"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Use the footer help link",
+      "questions": [
+       {
+        "question": "Do you click 'Help' or 'Contact Us' in the footer?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The footer presents both 'Help' and 'Contact Us' links, which may route you to different initial support flows.",
+        "whatTheAgentLoses": "You lose the opportunity to decide which entry point into the company's support system best fits your specific issue.",
+        "speak": "never",
+        "check": "Does the footer show a Help link, a Contact Us link, or both?",
+        "say_example": "Took the Contact Us link in the footer"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Use the header help link",
+      "questions": [
+       {
+        "question": "Does the site's status page already show an outage that explains the problem, so a person isn't needed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown presents both a general Support icon and a PSN Status icon, requiring a specific choice to enter the main help center.",
+        "whatTheAgentLoses": "You lose the visibility of the PSN Status option, which could quickly explain a service outage without needing to contact a live agent.",
+        "speak": "on-event",
+        "check": "Does the status page show any service marked down or degraded, and since when?",
+        "say_example": "The status page shows <PlayStation Store> is down since <2 pm>. That may be your whole problem. Still want a person, or wait it out?"
+       },
+       {
+        "question": "Which option in the help dropdown starts a new support request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu separates 'Get help and resources' for new inquiries from 'Manage support cases' for existing ones, dictating how the contact flow begins.",
+        "whatTheAgentLoses": "You lose the peace of mind that the agent is actually opening a new ticket rather than fruitlessly navigating your resolved case history.",
+        "speak": "never",
+        "check": "Which options does the help dropdown list?",
+        "say_example": "Started a new support request from the help dropdown"
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Search for the help page",
+      "questions": [
+       {
+        "question": "Is the help page that opened really the platform's own, not a look-alike?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first result lacks a description, making the second 'Help Center' link with a detailed snippet a more reliable starting point.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate the search result snippets and avoid potentially uninformative or broken links.",
+        "speak": "if-wrong",
+        "check": "What address does the page that opened show, and is it the platform's own site?",
+        "say_example": "This help page isn't <Amazon>'s. The address is <helpdesk-support.co>. Going back to the real site."
+       },
+       {
+        "question": "Does this support page or number ask for a card, or say help costs a fee?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Official customer support for major companies is almost always free; a paywall indicates you have likely navigated to a third-party scam site via a misleading search result.",
+        "whatTheAgentLoses": "The agent might blindly submit payment information to a scammer, believing it is a necessary step to reach the company's support.",
+        "speak": "on-event",
+        "check": "Does the page ask for a card number or say that support costs a fee?",
+        "say_example": "This page wants a card before it will help. <Amazon> doesn't charge for support. It's not them. Leaving it."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Skip the decoy routes",
+      "questions": [
+       {
+        "question": "Should you use the 'Ask me' bot pop-up or scroll down to the 'Customer Service' link in the footer?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents two distinct entry points for support, and choosing the footer link might bypass the initial automated bot prompts to reach a comprehensive support page.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to engage with the quick bot pop-up or navigate directly to the full customer service page.",
+        "speak": "never",
+        "check": "Does the page show an Ask me bot popup, a Customer Service footer link, or both?",
+        "say_example": "Skipped the Ask me popup and took the Customer Service link in the footer"
+       },
+       {
+        "question": "Should the delivery address in the 'Parece que estás lejos' popup stay as it is?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app detects you are far from the entered address and displays a modal asking to confirm the location, which must be addressed before navigating further.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their account location is set correctly, which might affect the availability of certain support options or regional routing.",
+        "speak": "never",
+        "check": "What address does the location popup show, and was it left unchanged after dismissing?",
+        "say_example": "Left the delivery address as <12 Main St> when the location popup asked"
+       },
+       {
+        "question": "Should you call the 'Account Management Service' number on the dashboard, instead of going through the help menus?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dashboard explicitly lists a direct phone number ([number]) for Account Management Service, offering a potential shortcut to bypass the entire automated support maze.",
+        "whatTheAgentLoses": "The user loses the opportunity to use a highly visible, direct phone number to reach support immediately, instead wasting time navigating through the standard automated menus.",
+        "speak": "on-event",
+        "check": "Does the page show a direct support phone number, and which department is it for?",
+        "say_example": "There's a direct number on this page for <Account Management>. I can't make the call. Want it read out, or should I keep going for chat?"
+       },
+       {
+        "question": "Should you use the Resolution Center to speak with a live agent?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Although the screen displays the Resolution Center for reporting order issues, this specific path is designed for self-service and will not lead to a human representative.",
+        "whatTheAgentLoses": "The user loses time if the agent gets trapped in an automated self-service loop that never actually offers a live connection.",
+        "speak": "never",
+        "check": "Does the page describe the Resolution Center as for reporting order problems?",
+        "say_example": "Skipped the Resolution Center, which is self-service only"
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Open the subscription support"
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Open the contact path",
+    "note": "2.1 on the hub. then either 2.2 and 2.3 - or 2.3 alone - down to an article, 2.4 on the article, and 2.5 under it; or 2.6 straight from the hub where a contact tile exists. 2.7 in place of 2.3 on the bots and the ticket forms that accept free text. in most keepers the topic picked in 2.3 is only there to make the contact link appear and does not describe the issue.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Read the help hub",
+      "questions": [
+       {
+        "question": "Do you want the order number from Your Orders before opening Customer Service?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Your Orders' tile alongside 'Customer Service', offering a quick way to grab an order number that will help explain your issue clearly.",
+        "whatTheAgentLoses": "An agent might bypass the orders page and initiate contact empty-handed, leading to delays when the representative inevitably asks for the order details.",
+        "speak": "never",
+        "check": "Does the help hub show a Your Orders tile?",
+        "say_example": "Copied order number <112-4432> from Your Orders before opening Customer Service"
+       },
+       {
+        "question": "Should you try searching the help articles for your issue, or scroll straight to the bottom to contact support?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page prominently displays suggested articles to deflect inquiries, placing the actual 'Contact us' button at the very bottom under a 'Need more help?' section.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent will bypass the company's deflection tactics and immediately prioritize initiating the live contact flow.",
+        "speak": "never",
+        "check": "Does the page show a Contact us button below the suggested articles?",
+        "say_example": "Skipped the suggested articles and pressed Contact us"
+       },
+       {
+        "question": "Do the order details about to go to support match what the order page shows?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Buy it again' panel at 00:22 displays the Nordic Naturals item at $72.21, and falsely claiming a unit price discrepancy misrepresents the actual order details.",
+        "whatTheAgentLoses": "The user loses the guarantee that the agent is acting on accurate order information when navigating the support menu.",
+        "speak": "if-wrong",
+        "check": "What item, price and quantity does the order page show for the order being raised?",
+        "say_example": "The order page shows <$72.21> for the <Nordic Naturals>, the same as you paid. I'll tell them the real problem, <the box arrived open>, and nothing else."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Pick the order",
+      "questions": [
+       {
+        "question": "Is there an order on this account for the form to use?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen requires selecting a past order to initiate the support flow, but displays 'No hay pedidos...aún', leaving no obvious path forward.",
+        "whatTheAgentLoses": "The user loses the actual connection to a live agent because the automated flow requires an existing order to proceed.",
+        "speak": "on-event",
+        "check": "Does the orders list show any orders, or a no-orders message?",
+        "say_example": "The form needs an order and this account has none. Is this the right account? Or say general and I'll try the plain contact page."
+       },
+       {
+        "question": "Which order or listing on the page is the one this case is about?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must navigate through the list of past purchases and potentially load older orders to select the exact item that requires customer service.",
+        "whatTheAgentLoses": "You lose the assurance that the agent will correctly identify and select the specific defective item from your order history to initiate the support claim.",
+        "speak": "on-event",
+        "check": "Which orders or listings does the list show, and does exactly one match the item in the request?",
+        "say_example": "Two orders have the <fleece>. One from <June 3>, one from <July 10>. Which one is this about?"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Pick the help topic",
+      "questions": [
+       {
+        "question": "Which category should you select for your issue?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page asks 'Can we help you with any of these?' and offers tabs like 'Orders' and 'Digital Content and Subscriptions' to properly route your inquiry.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact nature of their problem, which could lead the agent to select the wrong category and route the request to an incorrect department.",
+        "speak": "if-wrong",
+        "check": "Which category labels does the page offer, and which one describes the issue in the request?",
+        "say_example": "The topic picked was <Delivery problem>, but your issue is a <refund>. Choosing <Refunds> instead."
+       },
+       {
+        "question": "Does the 'Something else' list have a 'View All' control hiding more topics?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping 'View All' reveals the complete list of alternative topics, which is often necessary to find the specific path that bypasses the automated bot.",
+        "whatTheAgentLoses": "You lose the ability to personally review the expanded list of miscellaneous topics to find the exact category that fits your unique issue.",
+        "speak": "never",
+        "check": "Does the topic list show a View All control, and was it opened?",
+        "say_example": "Opened View All under Something else, <23> topics in all"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Read the self-service answer",
+      "questions": [
+       {
+        "question": "Does the refund rule's time limit still cover your purchase?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page details strict 14-day time limits and download restrictions for different content types that dictate whether a refund is even possible.",
+        "whatTheAgentLoses": "You lose the ability to personally verify if your specific situation qualifies for a refund under the stated policies before spending time engaging support.",
+        "speak": "on-event",
+        "check": "What time limit or condition does the refund rule state, and what purchase date does the order page show?",
+        "say_example": "The refund rule is <14 days>. Your purchase was <20 days> ago. A refund may be off the table. Still want a person, or stop here?"
+       },
+       {
+        "question": "Should you try the self-service links first, or go straight to customer service?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen suggests checking 'Your Orders' or the 'Refund policy' to answer your question, acting as a deflection from reaching a live agent.",
+        "whatTheAgentLoses": "The user loses the opportunity to instantly resolve their refund inquiry using the provided self-service options.",
+        "speak": "never",
+        "check": "Does the page suggest Your Orders or the Refund policy before the contact link?",
+        "say_example": "Skipped the Your Orders and Refund policy links"
+       },
+       {
+        "question": "Do you have what the help page says support will ask for, like the order number?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Lost gift cards' page explicitly lists the details you must provide to support, meaning you should gather this information before entering the chat queue.",
+        "whatTheAgentLoses": "The agent might initiate the chat empty-handed and waste the live connection time trying to find the required details while the human representative waits.",
+        "speak": "on-event",
+        "check": "Which details does the page say support will ask for, and which of them are not in the request?",
+        "say_example": "Before the chat, they'll want the <order number> and the <buyer's name>. I have the name. I don't have the number. What is it?"
+       },
+       {
+        "question": "Does the chat history already show a refund issued for this item, making a new return request a duplicate?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat history at 02:21 confirms a full refund of $43.16 was already issued for the Fruit of the Loom item, making the 'Start a return or replacement' button seen at 01:46 redundant.",
+        "whatTheAgentLoses": "The user loses time and risks complicating their account status by initiating a duplicate return process for an already refunded order.",
+        "speak": "on-event",
+        "check": "Does the chat history show a refund already issued for this item, and for how much?",
+        "say_example": "Hold on. The old chat says <$43.16> was already refunded for the <fleece> on <May 2>. Asking again would be a second request. Still want me to?"
+       },
+       {
+        "question": "Do any of the FAQs answer it, or do you need to contact the organizer?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal displayed a list of frequently asked questions alongside a 'Contact The Organizer' button, requiring a choice between self-service and escalation.",
+        "whatTheAgentLoses": "The user loses the opportunity to review the suggested FAQs to see if their issue could be resolved without needing to contact the organizer.",
+        "speak": "never",
+        "check": "Does the modal show a Contact The Organizer button below the FAQs?",
+        "say_example": "Went straight to Contact The Organizer past the FAQs"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Take the more-help link",
+      "questions": [
+       {
+        "question": "Try the tracking steps under View More, or press Chat Now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interface attempts to deflect the request with a self-help tracking method before offering the 'Chat Now' option to reach the 24/7 customer service team.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to attempt the potentially faster self-help tracking method before committing to a live support queue.",
+        "speak": "never",
+        "check": "Does the page show a Chat Now option?",
+        "say_example": "Pressed Chat Now instead of View More"
+       },
+       {
+        "question": "Should you accept the suggested articles or click 'No, I need more help'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The PayPal Assistant asks if the provided Help Center articles resolved your issue, offering buttons to either end the chat or request further assistance.",
+        "whatTheAgentLoses": "You lose the chance to personally review the suggested articles to see if they quickly resolve your specific issue without needing a live agent.",
+        "speak": "never",
+        "check": "Does the page or assistant show an I need more help option, however it is labelled?",
+        "say_example": "Pressed I need more help under the suggested articles"
+       },
+       {
+        "question": "Use the Prime membership buttons, or the link at the bottom for a representative?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents automated self-service buttons for managing Prime, but the text link at the bottom provides the direct path to a human representative.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent bypasses the automated self-service loops and directly selects the option to speak with a human.",
+        "speak": "never",
+        "check": "Does the page show a text link to a representative below the Prime buttons?",
+        "say_example": "Took the speak-to-a-representative link below the Prime buttons"
+       },
+       {
+        "question": "Should you take the suggestion to recreate the listing, or pick 'Contact an associate' to find out why it was removed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a quick workaround to recreate the missing listing, but it fails to explain why the original item was deactivated in the first place.",
+        "whatTheAgentLoses": "You lose the chance to evaluate whether the bot's proposed fix is actually safe or if it will just result in another unexplained deactivation.",
+        "speak": "never",
+        "check": "Does the page show a Contact an associate option beside the recreate suggestion?",
+        "say_example": "Skipped the recreate-listing shortcut and pressed Contact an associate"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Take the contact tile",
+      "questions": [
+       {
+        "question": "Start a new issue through the Go to Case Log link, or skip it and look for a callback?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Get Help' page explicitly offers a 'Go to Case Log' link for new issues, but you must decide if this path or a different one is better for reaching a live representative.",
+        "whatTheAgentLoses": "You lose the ability to prioritize your preferred communication method, such as choosing an immediate callback over a potentially asynchronous case log.",
+        "speak": "never",
+        "check": "Does the page show a Go to Case Log link?",
+        "say_example": "Went in through the Go to Case Log link"
+       },
+       {
+        "question": "Which option under 'More ways we can help' should you select to reach a real person?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents several specific help categories like the Resolution Center and Tax center, but the Message Center is the correct path to initiate a chat with a live agent.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if your specific issue might be resolved faster through the dedicated Resolution or Tax centers rather than waiting for a live agent.",
+        "speak": "never",
+        "check": "Does the page show a More ways we can help section below the suggested articles, and which options does it list?",
+        "say_example": "Found the contact options under More ways we can help and took the Message Center"
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Describe the issue in text",
+      "questions": [
+       {
+        "question": "Does the typed description leave out the personal details the form says not to include?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a description to continue but explicitly warns against including personal or sensitive data.",
+        "whatTheAgentLoses": "You lose control over how your problem is summarized, which could lead an AI to overshare sensitive details or trigger the wrong automated routing.",
+        "speak": "if-wrong",
+        "check": "Does the form warn against personal or sensitive data, and does the typed description contain a card number, password, or ID number?",
+        "say_example": "The form says no personal details. My draft had your <card number> in it. I took it out."
+       },
+       {
+        "question": "Are you OK with the service fee not coming back?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal requires a specific refund reason and message to proceed, and warns that the $5.09 Eventbrite fee is likely nonrefundable.",
+        "whatTheAgentLoses": "You lose the ability to personally articulate your refund justification to the organizer and decide whether forfeiting the fee is acceptable.",
+        "speak": "gate",
+        "check": "What fee does the refund modal say is nonrefundable, and how much is it?",
+        "say_example": "The refund request says the <$5.09> fee won't come back. You'd get <$40> of the <$45>. OK to send it?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Choose the channel",
+    "note": "3.1, then 3.2. 3.3 on Amazon India, where the language is chosen with the call. 3.4 wherever a chat is already open - five keepers meet it before the bot says a word. on Amazon India 3.2 is taken on the hub before any issue; on Amazon.com and Mexico it comes after 2.5.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Read the availability",
+      "questions": [
+       {
+        "question": "Which contact options are greyed out, marked offline, or shown with a warning right now?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Options like 'Request Callback' might be present on the screen but visually disabled due to being outside operating hours or experiencing high volume.",
+        "whatTheAgentLoses": "The immediate visual feedback that a specific contact channel is currently unavailable, preventing wasted interaction attempts on disabled elements.",
+        "speak": "on-event",
+        "check": "Which contact options are greyed out or marked offline, and what hours or reason does the page give?",
+        "say_example": "Phone is closed until <6 am>. Only chat is open right now."
+       },
+       {
+        "question": "Does the page warn of an 'agent assistance fee' for doing this with a person?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many airlines and financial institutions charge a premium fee (e.g., $25-$50) if you choose to book or modify something over the phone rather than using the self-service portal.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if speaking to a human is actually worth the monetary penalty compared to completing the task online.",
+        "speak": "on-event",
+        "check": "Does the page say a fee applies for handling this with an agent, and how much?",
+        "say_example": "Doing this with an agent costs <$25>. Doing it yourself online is free. Still want the agent?"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Pick the channel",
+      "questions": [
+       {
+        "question": "Should you check their linked social media profiles for a way to contact them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The organizer profile lacks direct contact details but displays Facebook and Twitter icons that might offer an alternative way to reach them.",
+        "whatTheAgentLoses": "You lose the opportunity to decide which of your personal social media accounts you prefer to use when initiating contact.",
+        "speak": "on-event",
+        "check": "Does the organizer page show an email, phone, or contact form, or only social media links?",
+        "say_example": "The organizer has no email or phone here. Just <Facebook> and <Twitter> links. Try one of those, or stop?"
+       },
+       {
+        "question": "Is the name entered to start the chat the one on your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a chat window requiring a first and last name to be entered before clicking the 'Start Chatting' button.",
+        "whatTheAgentLoses": "The user loses the ability to decide what name or alias to provide when starting the support chat.",
+        "speak": "on-event",
+        "check": "Does the chat require a first and last name before starting, and is the name entered the one shown on the account?",
+        "say_example": "The chat wants your name before it starts. Putting in <David Lin>, from your account."
+       },
+       {
+        "question": "Which of the contact options do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a choice between 'Chat with us' and 'Request a phone call' to initiate contact.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred channel for communicating with a live agent.",
+        "speak": "gate",
+        "check": "Which contact options does the page offer, and what wait time is shown for each?",
+        "say_example": "Two ways in. Chat is <3 minutes>. A call back is <20 minutes> and rings your phone. Which one? Say chat or call."
+       },
+       {
+        "question": "Is the email address entered the one shown on your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays options for a call or chat with their respective wait times, along with fields to input an email address and an optional phone number.",
+        "whatTheAgentLoses": "The user loses the ability to weigh the wait times against their preferred communication method and ensure their specific email address is used for the connection.",
+        "speak": "if-wrong",
+        "check": "What email is entered in the contact field, and what email does the account page show?",
+        "say_example": "The form has <old@example.com>. Your account uses <david@example.com>. Switching it."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Pick the call language",
+      "questions": [
+       {
+        "question": "Does the call language dropdown default to your language?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options to request a phone call and a dropdown to select the preferred language for the conversation.",
+        "whatTheAgentLoses": "The user loses the ability to specify their preferred contact method and spoken language for the live support session.",
+        "speak": "if-wrong",
+        "check": "Which language is selected in the call language dropdown?",
+        "say_example": "The call language defaulted to <Spanish>. Set it to <English>."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Resume or restart the chat",
+      "questions": [
+       {
+        "question": "Should you carry on the chat that's already open, or end it and start fresh?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The warning banner explicitly requires you to either complete the current conversation or click 'End Conversation' before a new message can be initiated.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to preserve the context of your ongoing support issue or force a fresh start.",
+        "speak": "on-event",
+        "check": "Does a banner say a conversation is already open and must be ended before a new one can start?",
+        "say_example": "There's already a chat open from <yesterday>. I'll continue it. Or say start fresh and I'll end that one first."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Get past the assistant",
+    "note": "4.1 or 4.2 or 4.3 - a category chain, a typed phrase, or a shortcut control - then 4.4 where the bot answers with a fix instead of a person. 4.5 when the bot re-asks the channel; it can reach back into 3 with a callback. 4.6 on the way to the handoff. 4.7 whenever the bot misreads, at any point. the AliExpress and PlayStation bots run 4.1 to the end; Amazon's is escaped by 4.2 or skipped by 4.3.",
+    "questions": [
+     {
+      "question": "Should you pick one of the bot's category buttons, or type the issue in?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The chat window presents automated options like 'An item I ordered', but typing directly into the 'Tell us more about what you need...' field allows you to bypass the bot's menu.",
+      "whatTheAgentLoses": "The user loses control over the specific phrasing and keywords used to bypass the automated system and trigger a transfer to a human.",
+      "speak": "never",
+      "check": "Does the chat window show category buttons and a free text field?",
+      "say_example": "Typed the issue into the chat instead of picking a category button"
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Answer the bot's categories",
+      "questions": [
+       {
+        "question": "Do you own the account that was charged?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chatbot explicitly requires confirmation of account ownership before it will evaluate your refund eligibility and transfer you to a live agent.",
+        "whatTheAgentLoses": "The agent lacks the personal knowledge of whether you are the actual owner of the account, which is required to correctly navigate this security prompt.",
+        "speak": "gate",
+        "check": "Does the bot ask to confirm that you own the account that was charged?",
+        "say_example": "It's asking if you own the account that was charged. I can't say that for you. Say yes or no."
+       },
+       {
+        "question": "Have you already streamed or downloaded the content?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chatbot requires you to specify if the digital content was used in order to determine refund eligibility and route your request.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report their usage status, which could directly impact their eligibility for a refund or specific support.",
+        "speak": "if-wrong",
+        "check": "Does the account or library page show this content as downloaded, played, or streamed?",
+        "say_example": "It asks if you've played it. Your library shows it downloaded on <June 1>. So I'm saying yes."
+       },
+       {
+        "question": "Does the number of days entered match the purchase date on the order page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chatbot asks how many days have passed since the purchase, and entering a number under 14 ensures the request meets the refund policy requirements.",
+        "whatTheAgentLoses": "The user loses the ability to strategically provide a timeframe that guarantees the automated system will accept the request and proceed to a live agent.",
+        "speak": "if-wrong",
+        "check": "What purchase date does the order page show, and how many days is that from today?",
+        "say_example": "It asks how many days since you bought it. The order says <June 1>, so <20>. That's past the <14 day> window. Entering <20>."
+       },
+       {
+        "question": "Do the bot's picks match what you asked for and what the order page shows?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 'Refund Eligibility' was selected in the chat menu, which dictates which specialized department the bot will route you to.",
+        "whatTheAgentLoses": "The user loses the ability to guarantee their specific problem is categorized correctly, risking frustrating transfers between different support queues.",
+        "speak": "if-wrong",
+        "check": "Which options are selected in the bot, and do they match the issue in the request and the status shown on the order page?",
+        "say_example": "The bot has <Refund eligibility> picked, but you asked about a <missing delivery>. Choosing <Where is my order>."
+       },
+       {
+        "question": "Did the bot guess the right topic?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing 'Yes' or 'No' to confirm the 'Verify Account' topic determines whether the system routes you to the correct department or traps you in an irrelevant troubleshooting loop.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the system's guessed topic accurately reflects the true reason for your contact before proceeding.",
+        "speak": "if-wrong",
+        "check": "What topic or item did the bot say it thinks this is about?",
+        "say_example": "The bot thinks this is about <verifying the account>. It isn't. Saying no so it asks again."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Type the human request",
+      "questions": [
+       {
+        "question": "Did the bot offer a button to reach a person, or say it needs a real question first?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The bot explicitly states that it requires a specific question about the issue before it will reveal the button to contact live support, rejecting the user's initial generic plea for an agent.",
+        "whatTheAgentLoses": "An AI might repeatedly type 'talk to human' and get stuck in a deflection loop, failing to realize it must provide a concrete issue description to unlock the handoff button.",
+        "speak": "on-event",
+        "check": "Did the bot show a button to reach a person, or did it reply that it needs a specific question first?",
+        "say_example": "The bot won't hand over until it hears a real question. Telling it your issue, then asking again."
+       },
+       {
+        "question": "What should you type to get handed to a person?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat input displays the placeholder 'Tell us more about what you need...', requiring you to input a specific command to bypass the automated system.",
+        "whatTheAgentLoses": "The user loses the ability to input specific bypass phrases they know will immediately escalate the chat to a live representative.",
+        "speak": "never",
+        "check": "What placeholder does the chat input show, and what was typed?",
+        "say_example": "Typed can I talk to a person into the chat"
+       },
+       {
+        "question": "Was the request for a real person actually sent, or is it still sitting typed in the input box?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The message 'can i talk to a real person?' is typed in the chat input, but the system will not process the request until the send button is clicked.",
+        "whatTheAgentLoses": "The user loses the final confirmation that the automated system actually routes the chat to a live human representative.",
+        "speak": "if-wrong",
+        "check": "Is the message asking for a person shown in the conversation as sent, or still sitting in the input box?",
+        "say_example": "The ask for a person was typed but never sent. Sending it."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Use the agent shortcut",
+      "questions": [
+       {
+        "question": "Are there more bot options hidden off the edge, in a row that scrolls sideways?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Chatbots frequently present selectable replies as a row of pill buttons where the 'Speak to an agent' option is intentionally pushed off-screen to the right to deflect users.",
+        "whatTheAgentLoses": "You lose the awareness of hidden bypass options, forcing the agent to select a visible but unhelpful self-service loop instead of scrolling to find the human handoff.",
+        "speak": "never",
+        "check": "Does the bot's option row scroll sideways, and are there options past the visible edge?",
+        "say_example": "Took the Speak to an agent option hidden off the edge of the row"
+       },
+       {
+        "question": "Press Chat with an agent, or Stop this?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The bot has already provided the direct links to a human agent, so clicking 'Stop this' would unnecessarily abort the successful flow and force you to start over.",
+        "whatTheAgentLoses": "An agent might misinterpret 'Stop this' as a way to bypass the bot, accidentally resetting the interaction just when the actual goal was reached.",
+        "speak": "never",
+        "check": "Does the bot show Chat with an agent alongside Stop this?",
+        "say_example": "Pressed Chat with an agent"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Refuse the bot's resolution",
+      "questions": [
+       {
+        "question": "Do you want the bot to just cancel the order, or keep going to a person?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking 'YES' on the bot's popup triggers an automated resolution, which ends the flow before you can successfully navigate past the bot to reach a live human.",
+        "whatTheAgentLoses": "The user loses the opportunity to speak directly with a human representative about their issue if the agent accepts the bot's automated workaround.",
+        "speak": "gate",
+        "check": "Does the bot offer to cancel the order, and which order?",
+        "say_example": "The bot wants to just cancel order <123>. That's not talking to anyone. Cancel it, or keep going to a person?"
+       },
+       {
+        "question": "Does the bot say you have to wait until a certain date before you can escalate?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The bot explicitly states you must wait until the 11th day after shipping to open a dispute, which dictates whether you can get help now or must set a reminder for later.",
+        "whatTheAgentLoses": "The user loses the knowledge of the exact date they become eligible to escalate their issue, potentially causing them to miss the dispute window or waste time trying to bypass the bot prematurely.",
+        "speak": "on-event",
+        "check": "Does the bot state a date or number of days you must wait before escalating?",
+        "say_example": "It says you can't open a dispute until <February 1>. Nothing to do today. Want a reminder, or keep trying for a person?"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Answer the bot's channel fork",
+      "questions": [
+       {
+        "question": "Does the bot offer the chat and phone options the contact tile promised?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking that the chatbot displays buttons to chat with an associate or request a call confirms that the initial 'Contact us' tile accurately described the available support channels.",
+        "whatTheAgentLoses": "The user loses the peace of mind of knowing the automated maze is actually leading to the specific live support channels they were promised.",
+        "speak": "if-wrong",
+        "check": "Which contact options does the bot offer, and are chat and phone both among them as the contact tile said?",
+        "say_example": "The contact page promised chat or a call. The bot only offers <email>. Looking for another way in."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Give the bot the details",
+      "questions": [
+       {
+        "question": "Should the assistant get your order number and the issue when it asks for them?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat interface prompts for details to help the associate, which could streamline the upcoming conversation once connected.",
+        "whatTheAgentLoses": "The user loses the ability to control exactly how much context the live agent receives before the human interaction begins.",
+        "speak": "never",
+        "check": "What details does the assistant ask for?",
+        "say_example": "Gave the assistant order <112-4432> and the issue, <box arrived open>"
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Repair the bot's misreading",
+      "questions": [
+       {
+        "question": "Is the bot showing the same menu it already showed, going in a circle?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the bot loops, continuing to select the same logical options will never reach a human, requiring you to type a bypass phrase like 'agent' or choose a completely different path.",
+        "whatTheAgentLoses": "The agent might endlessly click the same category, getting stuck in an infinite loop instead of recognizing the failure and changing tactics.",
+        "speak": "on-event",
+        "check": "Are the bot's current options or prompt the same as ones already shown earlier in this conversation?",
+        "say_example": "The bot is going in circles. It's showing the same menu as before. Typing agent instead of picking again."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "File the case form",
+    "note": "runs in place of 4 on the ticket platforms. 5.1, then 5.2 on the seller wizard, 5.3 and 5.4 in the form's order, 5.5 where a file field exists, 5.6, then 5.7 - and 5.7 is on screen in one keeper. the contact tab in 3.2 appears only after 5.2 on Seller Central.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Scope the case",
+      "questions": [
+       {
+        "question": "What error message are you seeing on the product page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Identifying the 'not a functioning page' error confirms the product is not live and establishes the specific reason for contacting seller support.",
+        "whatTheAgentLoses": "You lose the visual confirmation of the exact error state of your product listing before initiating the support request.",
+        "speak": "never",
+        "check": "What error text does the product page show?",
+        "say_example": "Quoted the listing error, <not a functioning page>, as the case subject"
+       },
+       {
+        "question": "Which account should you select for this support request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks you to choose between your linked Facebook and Instagram accounts to get a faster support experience.",
+        "whatTheAgentLoses": "The user loses the ability to choose which specific account to use for the support request based on their personal preferences or current account limitations.",
+        "speak": "if-wrong",
+        "check": "Which linked accounts does the page offer, and which one is selected?",
+        "say_example": "It's about to pick your <Facebook> account. The problem is on <Instagram>. Switching."
+       },
+       {
+        "question": "Are the preselected store and service the right ones for your issue?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 'United Kingdom' and 'Selling on Amazon' as the default selections, which must match your actual situation to route you to the correct support team.",
+        "whatTheAgentLoses": "You lose the ability to verify that your support request is being routed to the appropriate regional and departmental team.",
+        "speak": "if-wrong",
+        "check": "What store and service are preselected, and what marketplace does the account page show?",
+        "say_example": "The form defaulted to <United Kingdom>. Your store is <US>. That would go to the wrong team. Fixed it."
+       },
+       {
+        "question": "Do the role and issue category picked on the case form match the request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select a specific issue category, such as 'Listing not buyable' or 'Report a suspicious order,' to properly route your support request.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select an inaccurate issue category, potentially routing you to the wrong support department or delaying your resolution.",
+        "speak": "if-wrong",
+        "check": "Which role and issue options are selected on the case form, and which options describe the request?",
+        "say_example": "The form has <Attendee> picked, but you're the <organizer>. Changing it."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Answer the troubleshooter",
+      "questions": [
+       {
+        "question": "Is 'No' the right answer to the ASIN question, given how your orders are shipped?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly instructs to select 'No' only if you are an FBM seller, which ensures the automated system routes your troubleshooting path correctly.",
+        "whatTheAgentLoses": "You lose the assurance that the agent correctly applies your specific fulfillment method (FBM versus FBA) to navigate the automated maze.",
+        "speak": "on-event",
+        "check": "Does the page say to pick No only for sellers who ship orders themselves, and how does the account page say orders are shipped?",
+        "say_example": "It asks if you have an ASIN. That depends on whether you ship orders yourself. Do you?"
+       },
+       {
+        "question": "Is the SKU entered in the troubleshooter the one for the listing that has the problem?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the specific SKU and confirming whether you have ASIN search issues is necessary to advance through the automated troubleshooting flow.",
+        "whatTheAgentLoses": "The user loses the ability to accurately specify their exact listing problem, which could result in being routed to the wrong support queue.",
+        "speak": "if-wrong",
+        "check": "What SKU is entered, and what SKU does the affected listing show?",
+        "say_example": "The SKU typed in is <ABC1>. The broken listing is <ABC2>. Fixing it."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Gather the identifiers",
+      "questions": [
+       {
+        "question": "What does the account page say the status is, and the reason for it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Understanding that the account was disabled for violating Community Standards and is marked for permanent deletion determines the urgency and specific type of appeal required.",
+        "whatTheAgentLoses": "You lose the specific context of the violation and the severity of the penalty, which is crucial information for framing your appeal to a human representative.",
+        "speak": "never",
+        "check": "What status and reason does the account page state?",
+        "say_example": "Read the account page as disabled for <Community Standards>, deletion set for <March 3>"
+       },
+       {
+        "question": "Is the order number pasted in the one from the order's own details page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the completed order details, including the 19-digit Order No. that must be copied to reference the specific transaction.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is selecting the correct 7,200.00 NGN transaction ID to paste into the support chat.",
+        "speak": "if-wrong",
+        "check": "What order number is entered, and what order number does the order's own details page show?",
+        "say_example": "The order number pasted doesn't match the order page. It's <…351> there. Using that."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Fill the case fields",
+      "questions": [
+       {
+        "question": "Which required fields are missing a value, and do the filled ones match where they came from?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a form explicitly requiring your account UID, email address, P2P order ID, and a description to proceed.",
+        "whatTheAgentLoses": "You lose the ability to review and control the exact personal and transaction details submitted before connecting to a representative.",
+        "speak": "on-event",
+        "check": "Which required fields are empty, and does each filled value match the page it came from?",
+        "say_example": "The form needs your <account UID>. I don't have it. What is it?"
+       },
+       {
+        "question": "Should the urgent box be ticked before asking for the callback?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The callback form includes a checkbox to mark the issue as urgent, which could potentially affect how quickly the support system prioritizes the call.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether their specific situation warrants being flagged as an urgent priority.",
+        "speak": "never",
+        "check": "Is there an urgent checkbox, and is it ticked?",
+        "say_example": "Left the urgent box unticked"
+       },
+       {
+        "question": "Does the form say writing in a certain language gets a faster reply?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form displays a warning box stating that due to high volume, submitting the request in English will facilitate a faster response.",
+        "whatTheAgentLoses": "The user loses the opportunity to optimize their support request for the fastest possible resolution by translating their issue into the requested language.",
+        "speak": "on-event",
+        "check": "Does the form say a particular language gets a faster reply?",
+        "say_example": "The form says <English> gets a faster reply. Writing it in <English>."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Attach the evidence",
+      "questions": [
+       {
+        "question": "Should you attach any supporting screenshots or files to your request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The contact form includes an optional button to add files, allowing you to provide visual evidence of your issue right from the start.",
+        "whatTheAgentLoses": "You lose control over selecting the specific screenshots or files that most accurately prove your unique situation.",
+        "speak": "never",
+        "check": "Does the form show an add-files control?",
+        "say_example": "Attached the screenshot you gave me, <IMG_402>"
+       },
+       {
+        "question": "Does the attached screenshot show the error the case is about?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the specific screenshot that explicitly shows the 'We disabled your account' error provides the necessary visual proof to support your case.",
+        "whatTheAgentLoses": "You lose the ability to carefully select the exact screenshot from your personal gallery that proves your specific account issue without accidentally sharing unrelated photos.",
+        "speak": "if-wrong",
+        "check": "Does the attached image show the error message named in the case?",
+        "say_example": "The screenshot attached is <the login page>. The one showing <the disabled-account error> is <IMG_402>. Swapping it."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Review the case",
+      "questions": [
+       {
+        "question": "Does the pasted appeal still have placeholders or template text in it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a pasted appeal message in the 'Tell us about your issue' box, which needs to be carefully checked for completeness to ensure a successful review.",
+        "whatTheAgentLoses": "You lose the ability to personally tailor the tone and specific details of the appeal to make the strongest possible case for your account.",
+        "speak": "if-wrong",
+        "check": "Does the text in the issue box still contain bracketed placeholders, template labels, or empty lines?",
+        "say_example": "The appeal still says <[Your Name]> in it. Filling that in before it goes."
+       },
+       {
+        "question": "Is everything on the case form right before it is sent?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays fields for your email address, an optional phone number, and a text box to describe your issue.",
+        "whatTheAgentLoses": "You lose the chance to ensure the agent provides the correct contact information and accurately describes your problem to support.",
+        "speak": "gate",
+        "check": "What email, phone and issue text does the form show, and does the page say the request cannot be cancelled once submitted?",
+        "say_example": "Ready to send. To <Eventbrite support>, from <david@example.com>. It says <the fleece arrived torn>. The page says this can't be cancelled once sent. Press to send, or say change."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Submit the case",
+      "questions": [
+       {
+        "question": "Did a success banner confirm the message was submitted, or is the form still on screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen showed a green banner stating 'Your message was submitted successfully!', which confirms the message actually went through.",
+        "whatTheAgentLoses": "The user loses the certainty that their message was successfully delivered to the organizer.",
+        "speak": "always",
+        "check": "Does the page show a submitted confirmation banner or case number, or is the form still on screen?",
+        "say_example": "Sent. Case number <123456>. They'll reply to <david@example.com>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Request the callback",
+    "note": "6.1, then 6.2, then 6.3 while the app connects, then 6.4. 6.5 where an automated line answers first. 6.6 as the call runs. i3XW refuses at 6.1; 86Ay lets 6.4 ring out; the seller keepers cut before 6.2's result.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Enter the phone number"
+     },
+     {
+      "id": "6.2",
+      "label": "Tap Call me now",
+      "questions": [
+       {
+        "question": "Is the callback number, country code included, the right one?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the entered phone number and an enabled 'Call me now' button, making it critical to confirm the digits before initiating the connection.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that your actual personal phone number was provided for the callback.",
+        "speak": "gate",
+        "check": "What phone number and country code are entered in the callback field?",
+        "say_example": "They'll call <+1 650 555 0100>. That's the number from your account. Press to request the call, or say change."
+       },
+       {
+        "question": "Did the page take the number, or say it can't call that kind of number?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Callback forms frequently reject VoIP numbers (like Google Voice) or international country codes, forcing you to switch back to a live web chat instead.",
+        "whatTheAgentLoses": "You lose the awareness that your callback request was blocked by the system's phone number validation and that you are not actually in the queue.",
+        "speak": "on-event",
+        "check": "Did the page accept the number, or show an error about the number type or region?",
+        "say_example": "They won't call that number. The page says <VoIP numbers aren't supported>. Give me another, or switch to chat?"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Wait on the connecting screen",
+      "questions": [
+       {
+        "question": "Should you wait for the system to connect the call or press 'Cancel call'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Connecting...' message instructing you to wait for your phone to ring, alongside a button to cancel the request.",
+        "whatTheAgentLoses": "The user loses the ability to manually abort the callback request if they suddenly become unavailable to take the phone call.",
+        "speak": "never",
+        "check": "Does the page show a Connecting message and a Cancel call button?",
+        "say_example": "Waited on the Connecting screen for <40 seconds>"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Answer the call",
+      "questions": [
+       {
+        "question": "Is the callback showing on your screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The incoming call interface with the caller ID confirms that the automated system successfully processed your callback request.",
+        "whatTheAgentLoses": "You lose the ability to verify the caller ID and personally accept the incoming call to ensure it is the legitimate support channel.",
+        "speak": "never",
+        "check": "Does the screen show an incoming call from the support number?",
+        "say_example": "Got the callback at <3:07 pm>"
+       },
+       {
+        "question": "Is the callback ringing on your phone, and might it show a number you don't recognize?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "An incoming call banner with an 'ANSWER' button appears, and accepting it is required to finally speak with the live representative.",
+        "whatTheAgentLoses": "The user misses the actual connection with the human support agent if the incoming call is ignored or declined.",
+        "speak": "on-event",
+        "check": "Does the page say the call may come from an unfamiliar or foreign number, and does the screen show an incoming call?",
+        "say_example": "Your phone should ring any second. It may show as a <UK> number. That's them. Pick up."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Work the phone menu",
+      "questions": [
+       {
+        "question": "Is the number being dialed from the company's own site, not a search result?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the correct phone number on the dialer keypad is necessary to access the automated system that routes to a live person.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent is dialing the official and secure customer service number.",
+        "speak": "if-wrong",
+        "check": "What number is on the dialer, and what number does the company's own contact page show?",
+        "say_example": "The number being dialed came from a search result. The company's page says <1 888 280 4331>. Use that one."
+       },
+       {
+        "question": "Is the phone menu spoken only, with nothing on screen to read?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The automated system requires specific dialpad inputs, such as pressing '8' twice, to route the call to a live representative.",
+        "whatTheAgentLoses": "The user loses the ability to directly hear the automated prompts and ensure the correct dialpad inputs are entered to reach a human.",
+        "speak": "on-event",
+        "check": "Is the call screen active with no on-screen menu or transcript?",
+        "say_example": "The phone menu is spoken. I can't hear it. You'll need to press the keys yourself."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Set up the call audio"
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Reach the agent",
+    "note": "7.1 while waiting, then 7.2 - the commit. 7.3 as the first exchange. 7.4 where the agent or the platform asks; 7.5 is the one node the corpus cannot show. 7.6 where the narration or the user doubts it.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Read the wait notice",
+      "questions": [
+       {
+        "question": "Does the chatbot confirm it is transferring you to a live agent?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The chatbot initially states it will transfer you if eligible, and later the chat window shows a confirmation message that the transfer to a human is actually happening.",
+        "whatTheAgentLoses": "You lose the reassurance of seeing the automated system explicitly acknowledge your request and confirm the handoff to a real person.",
+        "speak": "on-event",
+        "check": "Does the chat show a message saying it is transferring to a person or placing you in a queue?",
+        "say_example": "It's handing you to a person now. Position <3> in line."
+       },
+       {
+        "question": "Does the bot say you have to keep the window open, or that you can close it and they'll get back to you?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The bot explicitly states that the reply may take a few hours and that you can close the window and return later, which changes whether you need to actively monitor the chat.",
+        "whatTheAgentLoses": "The user loses the freedom to close the window and do other things if the agent unnecessarily waits on an asynchronous chat, or conversely, closes a synchronous chat and loses their place in the queue.",
+        "speak": "on-event",
+        "check": "Does the bot say you can close the window and be notified, or that you must keep it open?",
+        "say_example": "They'll reply within a few hours by <email>. You don't have to wait here. I'll keep it open anyway."
+       },
+       {
+        "question": "Has the queue position stopped moving for longer than the wait they promised?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Web chats frequently drop connection in the background without showing an error. If the queue number freezes, you need to refresh or restart rather than waiting indefinitely.",
+        "whatTheAgentLoses": "The agent might wait forever in a dead chat window, failing the task because it does not recognize the silent disconnection.",
+        "speak": "on-event",
+        "check": "Has the queue position or status text stayed the same for longer than the wait the page stated?",
+        "say_example": "The queue number hasn't moved in <15 minutes>. The chat may have dropped. Refresh and rejoin the line, or keep waiting?"
+       },
+       {
+        "question": "Has the wait time on screen jumped up a lot since you joined the queue?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Queues often update dynamically without an alert sound, and a sudden jump from a 2-minute to a 45-minute wait should trigger a decision to abandon the chat and switch to a callback.",
+        "whatTheAgentLoses": "The user loses the real-time awareness needed to abandon a stalled queue and switch to a more efficient contact method rather than waiting indefinitely.",
+        "speak": "on-event",
+        "check": "What wait time is shown now, and what was shown when the queue was joined?",
+        "say_example": "The wait just jumped from <2> to <45> minutes. Keep waiting, or ask for a call back instead?"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Confirm the agent joined",
+      "questions": [
+       {
+        "question": "Has a real person joined the chat, so the opening message can go?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The narrator claims the chat connects to a live customer service agent, but the video does not actually show a human representative engaging in the window.",
+        "whatTheAgentLoses": "The user loses visual proof that this specific navigation path successfully bypasses the automated maze to reach a real person.",
+        "speak": "gate",
+        "check": "Does the chat show a message from a named representative, and what does it say?",
+        "say_example": "<Fabian> is here now, a real person. Want me to tell them about the <torn fleece>? Say go, or type it yourself."
+       },
+       {
+        "question": "Is the call connected, with a timer running?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The active call screen with an incrementing timer confirms that the connection to customer support is live.",
+        "whatTheAgentLoses": "The user loses the ability to personally explain the details of their issue to the human representative.",
+        "speak": "never",
+        "check": "Does the call screen show an active call with a running timer?",
+        "say_example": "Connected the call at <3:07 pm>, timer running"
+       },
+       {
+        "question": "Are the typing dots showing in the chat?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A silent delay can mean the agent is investigating or that the connection dropped; a typing indicator provides visual proof that the human is still actively engaged on the other end.",
+        "whatTheAgentLoses": "You lose the visual reassurance that the representative is actively working on your response, which could lead to prematurely abandoning a slow but active session.",
+        "speak": "on-event",
+        "check": "Is a typing indicator showing in the chat?",
+        "say_example": "They're typing."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Send the opening message",
+      "questions": [
+       {
+        "question": "Does the opening message leave out what the representative's greeting says not to share?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The agent has joined the chat and provided security instructions, prompting you to begin typing your issue.",
+        "whatTheAgentLoses": "The user loses the ability to personally frame their issue and ensure sensitive information is withheld as instructed.",
+        "speak": "if-wrong",
+        "check": "What does the representative's greeting say not to share, and does the opening message contain any of it?",
+        "say_example": "<Fabian> says never to share your <full card number>. My message had it. I took it out."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Pass the identity check",
+      "questions": [
+       {
+        "question": "What has the representative asked for, and is it in the request or on the account page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat transcript shows the representative requires specific details like your name, contact info, and partial credit card numbers to proceed with the support request.",
+        "whatTheAgentLoses": "The user loses direct control over the disclosure of sensitive personal and financial information during the verification process.",
+        "speak": "on-event",
+        "check": "What details did the representative ask for, and which of them appear in the request or on the account page?",
+        "say_example": "They want your <name>, <phone> and the <last four of the card>. I have the first two. I don't have the card. Can you give it?"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Enter the verification code"
+     },
+     {
+      "id": "7.6",
+      "label": "Distinguish bot from person",
+      "questions": [
+       {
+        "question": "Are you actually chatting with a live human rather than an AI assistant?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The chat window explicitly states it is an AI assistant powered by Generative AI, contradicting the claim that a live agent was reached.",
+        "whatTheAgentLoses": "The user is left interacting with an automated bot instead of receiving the live human support they requested.",
+        "speak": "if-wrong",
+        "check": "Does the chat window label the responder as an AI or virtual assistant?",
+        "say_example": "This isn't a person yet. The window says it's an <AI assistant>. Asking for a human again."
+       },
+       {
+        "question": "Did the representative actually answer your question with a yes, a no, or a next step?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat showed a generic set of instructions followed by a prompt to change the subject, avoiding a direct yes or no to the actual request.",
+        "whatTheAgentLoses": "An AI might accept the generic canned response and end the conversation instead of pressing the representative for a direct answer.",
+        "speak": "on-event",
+        "check": "Does the representative's reply answer the question with a yes, a no, or a next step?",
+        "say_example": "They sent steps but didn't say yes or no to <getting the account back>. Want me to ask them again for a plain yes or no?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Recover from a blocked channel",
+    "note": "entered from a notice, at any point in 3, 4 or 7. 8.1, then one of 8.2 to 8.4 - the fallback button, a different account or entry, or a later hour - and the task resumes at 3 or at 1. four keepers close the notice and stop.",
+    "questions": [
+     {
+      "question": "Does the chat say all agents are offline, and what hours does it give?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The chat window explicitly states that agents are disconnected and lists the specific operating hours, meaning you must choose to either use self-service or return during those active hours.",
+      "whatTheAgentLoses": "The user loses the specific knowledge of the support center's operating hours for their region and the understanding of why the live connection could not be completed at this time.",
+      "speak": "on-event",
+      "check": "Does the chat say agents are offline, and what hours does it list?",
+      "say_example": "No one's on right now. Chat opens at <8 am> your time. Try again then, or leave a message?"
+     }
+    ],
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the failure notice",
+      "questions": [
+       {
+        "question": "Did a chat window open, or is there an error where it should be, and what does the error say?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator states that the chat window opens for your input, but the screen actually displays an error message with no chat interface.",
+        "whatTheAgentLoses": "The user is misled into believing the support channel is active when a technical error has actually blocked the flow.",
+        "speak": "on-event",
+        "check": "Is a chat input shown, or an error message in its place, and what does the error say?",
+        "say_example": "The chat didn't open. It says <chat is unavailable>. There's a Connect with an associate button under it. Taking that."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Take the fallback channel",
+      "questions": [
+       {
+        "question": "Is there a 'Connect with an associate' button under the error, and was it taken?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displayed an error stating chat was unavailable but provided a 'Connect with an associate' button to continue the process.",
+        "whatTheAgentLoses": "The user loses the opportunity to reach a live representative if the agent fails to select the provided alternative connection option after an error.",
+        "speak": "never",
+        "check": "Does the error page show a Connect with an associate button, and was it clicked?",
+        "say_example": "Took the Connect with an associate button under the chat error"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Switch the account or entry"
+     },
+     {
+      "id": "8.4",
+      "label": "Return within the hours"
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Keep or close the session",
+    "note": "after 7.2, and past the ask's end point. 9.6 wherever the keeper runs on past the greeting - the issue itself. 9.1 whenever the agent tries to close; 9.2 where the user files more into the same chat. then 9.3, 9.4 where offered, and 9.5 where the user wants a record. every keeper that reaches 7.2 does at least one of these.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Keep the chat alive",
+      "questions": [
+       {
+        "question": "Is your issue fully resolved, or do you need to ask another question to keep the chat open?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The representative is asking to confirm if all concerns are addressed, so you must explicitly state if your core question remains unanswered to prevent them from disconnecting.",
+        "whatTheAgentLoses": "The user loses the opportunity to press the representative for a definitive answer if an AI prematurely agrees to close the chat.",
+        "speak": "on-event",
+        "check": "Does the representative's message ask whether everything is resolved or whether you are still there?",
+        "say_example": "<Fabian> is asking if that's everything. Their answer on the account was final, <it stays closed>. Say done, or tell me what to ask next."
+       },
+       {
+        "question": "Is the chat warning it will close for inactivity, and how long is left?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat interface displayed a warning that the case would be closed due to inactivity, requiring an immediate response to maintain the connection.",
+        "whatTheAgentLoses": "The user loses their hard-won connection to a live representative and must restart the entire navigation maze if the AI fails to respond before the timeout.",
+        "speak": "on-event",
+        "check": "Does the page show an inactivity warning, and what time limit does it state?",
+        "say_example": "The chat closes in <2 minutes> if nobody types. Type something to keep your place, or say hold and I'll send a short message."
+       },
+       {
+        "question": "How long since the representative's last message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows the user sending multiple consecutive messages ('hello?', '????????', 'would anyone reply?') because the live agent stopped responding after the initial greeting.",
+        "whatTheAgentLoses": "An agent might wait indefinitely for a reply from a stalled or disconnected representative instead of pinging them to force a response or realizing the session is dead.",
+        "speak": "on-event",
+        "check": "What is the time on the representative's last message, and how long ago is that?",
+        "say_example": "<Fabian> hasn't written in <8 minutes>. Want me to ask if they're still there?"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Raise a second case",
+      "questions": [
+       {
+        "question": "Are you OK with your account details going to an outside chat contact, not the platform's own support?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a long list of various Telegram contacts and groups, requiring you to identify the correct recipient to continue the interaction.",
+        "whatTheAgentLoses": "The user loses the ability to apply personal, off-screen context, such as knowing which specific individual has been persistently requesting the information.",
+        "speak": "gate",
+        "check": "Is the message being sent to a Telegram or other off-platform contact rather than the platform's own support?",
+        "say_example": "This would send your account details to a <Telegram> contact, not <Binance> support. They'd have your login. Sure? Say yes, or say stop."
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "End the session",
+      "questions": [
+       {
+        "question": "Is it time to press 'End this chat'?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The chat window displays an 'End this chat' link at the bottom, presenting a choice between explicitly terminating the connection or simply leaving the window open.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to formally close the support interaction or leave the session active in case further follow-up is needed.",
+        "speak": "gate",
+        "check": "Does the chat show an End this chat control?",
+        "say_example": "Done here? I'll end the chat. Getting back in means the queue again. Say end, or keep it open."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Rate the service",
+      "questions": [
+       {
+        "question": "How do you want to rate the service, and was it solved?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The feedback popup asks if your problem was resolved and how you rate the service, requiring you to choose satisfaction levels before confirming.",
+        "whatTheAgentLoses": "The user loses the ability to provide accurate feedback on whether their specific issue was actually resolved during the interaction.",
+        "speak": "gate",
+        "check": "What does the rating form ask, and what is filled in?",
+        "say_example": "They want a rating. Was it solved? Give me a number from 1 to 5 and a word or two, or say skip."
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Get the written record",
+      "questions": [
+       {
+        "question": "Does the chat show the representative saying the issue is resolved?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows the user highlighting the agent's message stating the account is now verified, proving the successful outcome of the interaction.",
+        "whatTheAgentLoses": "The user loses the visual confirmation that their specific issue was successfully resolved by the live representative.",
+        "speak": "never",
+        "check": "Does the chat show a representative message stating the account is verified or the issue resolved?",
+        "say_example": "Got <Fabian>'s confirmation at <3:20 pm> that <the account is verified>"
+       },
+       {
+        "question": "Do you want to ask for an email copy of what was agreed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "While the active call screen shows your ongoing conversation with Amazon, requesting an email provides a permanent written record of the verbal agreement.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally secure direct written proof of the resolution for their own records.",
+        "speak": "never",
+        "check": "Is the call still active, and has an email copy been asked for?",
+        "say_example": "Suggested asking for an email copy of what was agreed"
+       },
+       {
+        "question": "How much is the refund, and when does the money come back?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The email confirms the refund amount of $105.09 and provides a timeframe of up to 7 business days for the funds to process.",
+        "whatTheAgentLoses": "The user loses the direct verification of the refund amount and the expected timeline for receiving the money.",
+        "speak": "never",
+        "check": "What refund amount and timeframe does the representative's message or the on-screen confirmation state?",
+        "say_example": "Noted the refund, <$105.09>, due within <7 business days>"
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Resolve the issue",
+      "questions": [
+       {
+        "question": "Is it OK for this fix to close every app you have open?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that selecting the restore option will immediately close all applications currently in use.",
+        "whatTheAgentLoses": "The user loses the chance to save their game progress or finish their current tasks before the applications are forcibly closed.",
+        "speak": "gate",
+        "check": "Does the page warn that the fix will close all open applications?",
+        "say_example": "This fix closes every app you have open. Anything unsaved goes with it. Save first, then say go."
+       },
+       {
+        "question": "Should I ask the representative how a cash on delivery refund comes back to you?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clarifying the refund process for cash transactions ensures you know exactly how to receive your money back since there is no original digital payment method on file.",
+        "whatTheAgentLoses": "Delegating this means you miss the opportunity to ask specific follow-up questions about how to securely provide your bank account details for the refund.",
+        "speak": "on-event",
+        "check": "Does the order page show the payment method as cash on delivery?",
+        "say_example": "You paid cash on delivery, so there's no card to refund to. Want me to ask how the money comes back?"
+       },
+       {
+        "question": "What fix is the representative offering, and do you want to take it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat window displays a specific deadline of February 1st to wait for the package before opening a dispute, requiring you to decide if this timeline is acceptable.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate the proposed timeline and negotiate an immediate resolution if the delay is unacceptable to you.",
+        "speak": "on-event",
+        "check": "What solution or date does the representative's message propose?",
+        "say_example": "They say wait until <February 1> for the package, then open a dispute. OK with that, or push back?"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

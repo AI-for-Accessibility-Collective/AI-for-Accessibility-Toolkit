@@ -1,0 +1,2126 @@
+{
+ "task": "strike a deal on a peer-to-peer marketplace (Facebook Marketplace, eBay, Craigslist): browse listings, assess the item and the counterparty's trustworthiness, message or bid/make an offer, agree on price and handoff, and commit — platform checkout or an agreed pickup in the message thread; complete when a purchase confirmation, accepted offer, or agreed deal in messages is on screen. Selling — listing an item and closing with a buyer — is the same ask from the other side and belongs. Surface pinned: a marketplace website or app. Variants: booking a service visit (seeded variant), retail shopping on Amazon-style stores, and apartment hunting do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Strike a deal on a marketplace",
+  "note": "do 1. buyers then run 2, 3 and one of 4, 5 or 6 - repeat 2.7 and 3 until a listing passes the check (ruQX inspects three, DrZ5 leaves one for another). 4 on Facebook Marketplace; 5 on an eBay auction; 6 on an eBay fixed-price listing - DrZ5 runs 5 up to the payment wall and then 6 on a different listing. sellers run 7 where the item is in the room (dYz5, WwXj), then 8, then 9. tPLF runs 8 and 9 and then 4 on the same account. no keeper reaches a payment or a reply.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get onto the marketplace",
+    "note": "1.1 in every keeper. 1.2 only where the platform asks, and both keepers who hit it are cut past the form. 1.3 where the session starts signed in. 1.4 for eBay sellers, whose form lives in the Seller Hub. 1.5 is one keeper's tour and comes before anything else.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Reach the marketplace",
+      "questions": [
+       {
+        "question": "Is the listing on screen the one you asked for, or a leftover from before?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a specific Bosch rotary hammer listing, but clicking the eBay logo resets the view to the homepage to start a fresh search.",
+        "whatTheAgentLoses": "The user loses the ability to find their actual desired item if the agent mistakenly proceeds with purchasing the currently displayed product.",
+        "speak": "on-event",
+        "check": "Does the page show an item listing rather than the homepage search box, and does the item name match the requested item?",
+        "say_example": "The page opened on an old <Bosch rotary hammer> listing. That isn't what you asked for. I'm starting a fresh search."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Sign in or register",
+      "questions": [
+       {
+        "question": "Should you log in with your existing account or create a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen presents fields for existing credentials alongside a 'Create new account' button, forcing a choice that will impact your marketplace reputation.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might create a new, untrusted profile instead of leveraging your established account's reputation to secure better deals.",
+        "speak": "gate",
+        "check": "Does the page show a sign-in form with email and password fields, and a 'Create new account' option?",
+        "say_example": "The site wants you signed in. I don't type passwords. Sign in, then tell me to continue."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Confirm the signed-in account",
+      "questions": [
+       {
+        "question": "Is the name in the greeting at the top yours?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the 'Hi testing!' greeting ensures your account is active before you use the search bar to find items.",
+        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing their own name confirming a successful account setup before diving into the marketplace.",
+        "speak": "if-wrong",
+        "check": "What name does the greeting at the top of the page show, and does it match the account name given?",
+        "say_example": "The site says hi to <testing>. That's not you. I'm signing out before we go on."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Reach the selling dashboard",
+      "questions": [
+       {
+        "question": "Is the site blocking you from making a new listing?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A prominent red banner explicitly states that you are unable to create new listings until your Payoneer account is verified.",
+        "whatTheAgentLoses": "The user wastes time because the agent attempts a listing process that is guaranteed to fail due to the unresolved account restriction.",
+        "speak": "gate",
+        "check": "Does a banner say new listings are blocked, and what does it say has to happen first?",
+        "say_example": "The site says you can't list anything until <your Payoneer account is verified>. I can't do that part. Sort it out, then tell me to continue."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Tour the settings and inbox"
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Find a listing",
+    "note": "2.1 first on Facebook - the app keepers set the radius before typing anything. one of 2.2 to 2.4 raises candidates. 2.5 and 2.6 narrow where the strategy needs it - half the keepers open the filters and apply none. then 2.7; a rejected listing comes back here from 3.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Set the location and radius",
+      "questions": [
+       {
+        "question": "Are the search location and radius the ones you want?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a location label set to 'Derby - 10 km', which determines if the items shown are within a practical distance for you to pick up.",
+        "whatTheAgentLoses": "You lose the ability to personally decide exactly how far you are willing to travel for the right deal.",
+        "speak": "if-wrong",
+        "check": "What location and radius does the search label show, and do they match the location asked for?",
+        "say_example": "The search is set to <Derby>, <10 km>. You're in <Nottingham>. Changing it."
+       },
+       {
+        "question": "Are all the results inside your radius, or are some from further away?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Marketplaces frequently ignore strict distance filters when local inventory is low, silently inserting listings from outside your requested area.",
+        "whatTheAgentLoses": "The agent might initiate a purchase for an item that requires an impossibly long drive for local pickup because it trusted the filter to be absolute.",
+        "speak": "on-event",
+        "check": "Do any results show a distance greater than the set radius, or a label saying they come from further away?",
+        "say_example": "Some of these are outside your <10 km>. The <sofa> is <40 km> away. I'm skipping those."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Enter the search terms",
+      "questions": [
+       {
+        "question": "Should you take one of the site's search suggestions, or keep your own wording?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown showed specific categories like 'cd player' and 'cd lot', which narrow the results, whereas the broad term casts a wider net for items to bid on.",
+        "whatTheAgentLoses": "An agent might automatically select a specific suggestion, depriving you of the chance to browse a broad category for unexpected deals.",
+        "speak": "never",
+        "check": "Which search suggestions does the dropdown show under the typed term?",
+        "say_example": "Searched for <cd> - kept your wording over the suggested <cd player>"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Browse the categories",
+      "questions": [
+       {
+        "question": "Which subcategory should you open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays diverse industrial subcategories like Heavy Equipment and Light Equipment & Tools, so selecting the right one narrows the listings to the specific items you need.",
+        "whatTheAgentLoses": "Delegating this means the agent might select the wrong equipment category, wasting time browsing irrelevant listings instead of the specific tools you actually want.",
+        "speak": "never",
+        "check": "Which subcategories does the page list?",
+        "say_example": "Opened <Light Equipment & Tools>"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Return to a recent item",
+      "questions": [
+       {
+        "question": "Which of your recently viewed items do you want to revisit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage displays a history of items you've looked at, such as shoes, phones, and a Nintendo Switch, requiring you to select which one to pursue.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might guess incorrectly about which previously viewed item you are actually ready to buy.",
+        "speak": "never",
+        "check": "Which items does the recently viewed row show?",
+        "say_example": "Reopened the <Nintendo Switch> from your recently viewed"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Filter the results",
+      "questions": [
+       {
+        "question": "Do you want only auctions in the results?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays filter tabs like 'Auction' and 'Buy It Now', which determine whether you can bid on the item or must purchase it outright.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred buying format, which dictates whether you can hunt for a bargain through bidding or secure the item immediately.",
+        "speak": "never",
+        "check": "Which listing-format tabs does the page show, and which one is selected?",
+        "say_example": "Filtered to auctions only, since you asked to bid"
+       },
+       {
+        "question": "Do you want only items listed in the last day?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a 'Date listed' filter that lets you narrow the search to the freshest inventory.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to prioritize newly listed items or browse a wider, older selection.",
+        "speak": "never",
+        "check": "What does the 'Date listed' filter show as selected?",
+        "say_example": "Filtered to listings from the last day"
+       },
+       {
+        "question": "What maximum price should you set to stay within your budget?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering a limit in the maximum price filter ensures the search results only display items you can actually afford.",
+        "whatTheAgentLoses": "The user loses the ability to define their exact financial constraints and decide how strictly to enforce their budget.",
+        "speak": "never",
+        "check": "What value is in the maximum price field?",
+        "say_example": "Set the max price to <100>"
+       },
+       {
+        "question": "Which filters do you want on the results?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The filter dialog offers options like condition, price, and local pickup, which determine the relevance of the listings you will see.",
+        "whatTheAgentLoses": "You lose the ability to specify your exact preferences for item condition, price range, and delivery method.",
+        "speak": "always",
+        "check": "How many results does the page report, and which filters are applied?",
+        "say_example": "Found <2,400>. You asked for <local pickup>, so I'm filtering to that. That leaves <38>."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Sort by ending soonest",
+      "questions": [
+       {
+        "question": "Should you change the default sort order to find auctions ending soon?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The default 'Best Match' sort shows over 10 million results with sponsored 'Buy It Now' items at the top, which hides live auctions that are about to close.",
+        "whatTheAgentLoses": "You lose the ability to apply your preferred bidding strategy, such as targeting auctions that are ending soonest to snipe a good deal.",
+        "speak": "always",
+        "check": "Which sort order is selected, and are the top results marked Sponsored?",
+        "say_example": "The default sort puts sponsored Buy It Now items first. I'm sorting by ending soonest instead."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Choose from the results",
+      "questions": [
+       {
+        "question": "Which listing should you open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The grid displays diverse options like a phone, laptops, and a motorcycle, and your selection determines the specific product and price point you will pursue.",
+        "whatTheAgentLoses": "Letting an agent choose means you lose the ability to pick an item that genuinely interests you or fits your specific budget.",
+        "speak": "gate",
+        "check": "Which listings are shown, with title, price, condition, location and end time for each?",
+        "say_example": "Two that fit. The <LG 55 inch>, <150>, <used>, <5 km> away. The <Samsung 50 inch>, <120>, but the seller is new. Which one? Say <LG> or <Samsung>."
+       },
+       {
+        "question": "Do you still want this sponsored listing with its high delivery fee?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first result is a sponsored listing with a $27.55 delivery fee that nearly doubles the $28.99 item price.",
+        "whatTheAgentLoses": "The user ends up overpaying because the agent blindly clicked the first sponsored result without evaluating the exorbitant shipping cost.",
+        "speak": "on-event",
+        "check": "Is the first result marked Sponsored, and what delivery fee does it show against the item price?",
+        "say_example": "The first result is sponsored. Delivery is <27.55> on a <28.99> item. I'm skipping it."
+       },
+       {
+        "question": "Did the auction already close while you were browsing the search results?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search results page can become stale, displaying items that have just ended (e.g., 'Ended'), meaning any attempt to bid on them will fail.",
+        "whatTheAgentLoses": "The agent wastes time clicking into and attempting to bid on closed auctions instead of refreshing the page to find active listings.",
+        "speak": "on-event",
+        "check": "Does the listing show 'Ended' or a countdown at zero?",
+        "say_example": "That one ended while we were looking. Skipping it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Vet the listing and seller",
+    "note": "3.1 in every keeper. 3.2 and 3.3 where the buyer bothers - three keepers skip the description on purpose. 3.4 on every Facebook listing and on most eBay ones. 3.5 only on Facebook, where the handoff is a drive. 3.6 is a check nobody runs, and every eBay keeper needed it. 3.7 is one keeper, after the checkout attempt. a rejected listing sends the buyer back to 2.7.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Read the listing block",
+      "questions": [
+       {
+        "question": "Is this item actually free, or is the price misleading?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The listing shows a price of Rs0 for a new item at a business location, which often indicates a deceptive placeholder price rather than a genuinely free item.",
+        "whatTheAgentLoses": "You lose the intuition to spot bait-and-switch business listings that use fake zero-dollar prices to lure in buyers.",
+        "speak": "on-event",
+        "check": "Does the price show as 0 or Free, and is the listing from a business or marked new?",
+        "say_example": "It says <Rs0>, but it's a shop listing for a new item. That zero is a placeholder. The real price isn't on the page."
+       },
+       {
+        "question": "Does the listing carry the 'Authenticity Guarantee' badge?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "For high-value items like sneakers or watches, this visual badge is the only guarantee that the platform will physically inspect the item before forwarding it to you, mitigating the risk of fakes.",
+        "whatTheAgentLoses": "The user loses the critical risk-mitigation of platform verification, potentially spending hundreds on a counterfeit because the agent couldn't 'see' the badge.",
+        "speak": "on-event",
+        "check": "Does the listing show an 'Authenticity Guarantee' label?",
+        "say_example": "This one has the site's authenticity check. They inspect it before it ships to you."
+       },
+       {
+        "question": "Is the price in another currency, like C $ or AU $, instead of yours?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A tiny prefix before the dollar sign drastically changes the actual cost due to exchange rates and bank conversion fees, which is easy to miss if you aren't looking closely at the screen.",
+        "whatTheAgentLoses": "The user ends up paying unexpected foreign transaction fees and a different base price because the agent only parsed the numeric value and the dollar sign.",
+        "speak": "on-event",
+        "check": "What currency prefix appears before the price, and does it differ from the account's currency?",
+        "say_example": "The price is <C $250>. That's in <Canadian dollars>. Your bank may add a fee on top."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Read the description and specifics",
+      "questions": [
+       {
+        "question": "Are you OK with the condition and description the listing gives?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the item specifics ensures you know exactly what you are buying, such as the fact that the SNES bundle is used but tested.",
+        "whatTheAgentLoses": "The user loses the ability to personally judge if the specific used condition and included items meet their personal standards.",
+        "speak": "never",
+        "check": "What condition does the listing state, and what does the condition note say?",
+        "say_example": "Listed as <used>, <tested and working>"
+       },
+       {
+        "question": "Does the description mention flaws or missing parts that the title and condition line leave out?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides both image thumbnails and an item description section, and relying solely on photos might cause you to miss important flaws or missing parts noted in the text.",
+        "whatTheAgentLoses": "The user loses the ability to personally weigh the visual evidence against the seller's written disclosures to determine if the item meets their standards.",
+        "speak": "on-event",
+        "check": "Does the description mention flaws or missing parts that the title and condition line leave out?",
+        "say_example": "The description says <no charger included>. The title doesn't mention that."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Inspect the photos",
+      "questions": [
+       {
+        "question": "Do the close-up photos show damage the description leaves out?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Inspecting the enlarged gallery images of the console's screen and back helps verify the seller's claims about its condition before you commit to buying.",
+        "whatTheAgentLoses": "You lose the ability to personally judge the physical wear and tear visible in the photos to decide if the item meets your own standards.",
+        "speak": "on-event",
+        "check": "Do photo captions, alt text, or text visible in the photos mention damage that the condition line doesn't?",
+        "say_example": "The close-up photo shows <a crack on the screen>. The listing says <good condition>."
+       },
+       {
+        "question": "Do the specs in the images match the model listed in the title?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The listing title claimed the TV was a 65-inch Q60A, but the second image clearly showed specs for a 55-inch Q70C model.",
+        "whatTheAgentLoses": "The user risks purchasing a different, smaller TV than advertised or falling for a deceptive listing.",
+        "speak": "if-wrong",
+        "check": "Does the model or size printed in any photo match the model and size in the title?",
+        "say_example": "The title says <65 inch Q60A>. The label in the second photo says <55 inch Q70C>. That's a different TV."
+       },
+       {
+        "question": "Is there text like 'Cash only', 'Firm', or a phone number written on the photos?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sellers frequently overlay text on images to bypass platform rules or text filters, establishing strict payment or contact rules outside the machine-readable description.",
+        "whatTheAgentLoses": "The agent might commit to a transaction assuming standard platform payment is accepted, only to find out at handoff that the seller demands physical cash.",
+        "speak": "on-event",
+        "check": "Is there text written into the photos, such as 'Cash only', 'Firm', or a phone number?",
+        "say_example": "The photo has <Cash only, firm> written on it. That's not in the description. The seller won't take offers."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Check the seller's record",
+      "questions": [
+       {
+        "question": "Do the seller's recent feedback comments say anything the positive percentage hides?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reading the actual text of the reviews, such as 'Fast ship' and 'As described,' verifies that the 100% positive rating comes from genuine, satisfactory transactions.",
+        "whatTheAgentLoses": "You lose the ability to apply your own intuition to determine if the written reviews feel authentic and trustworthy.",
+        "speak": "on-event",
+        "check": "What do the seller's most recent feedback comments say?",
+        "say_example": "The seller is <98%> positive, but the last three comments say <item not as described>."
+       },
+       {
+        "question": "What feedback percentage and rating count does the seller show?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the seller's 98.9% positive rating, which is crucial for determining if they are a trustworthy counterparty.",
+        "whatTheAgentLoses": "You lose the ability to personally evaluate the seller's reputation and decide your own comfort level with the transaction risk.",
+        "speak": "always",
+        "check": "What feedback percentage and rating count does the seller show?",
+        "say_example": "Seller is <98.9%> positive from <1,200> ratings."
+       },
+       {
+        "question": "Is the seller named on the listing the same one the search results showed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the seller listed as 'wnymaets' in the search results but 'Party Zealot' on the product details page, which is a major red flag for a scam.",
+        "whatTheAgentLoses": "The user loses the ability to spot suspicious inconsistencies that suggest a fraudulent listing or untrustworthy counterparty.",
+        "speak": "if-wrong",
+        "check": "Does the seller name on the listing match the seller name shown in the search results?",
+        "say_example": "The results said the seller was <wnymaets>. The listing says <Party Zealot>. That's two names for one listing. I'd skip it."
+       },
+       {
+        "question": "Is this a new seller account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The seller profile shows they joined Facebook recently, which is a common red flag for scam accounts created solely to post fraudulent listings.",
+        "whatTheAgentLoses": "The user loses the ability to apply their street smarts to avoid scammers who spin up new accounts to defraud buyers.",
+        "speak": "on-event",
+        "check": "What join date does the seller profile show?",
+        "say_example": "This seller joined <last month>, so the account is new. Be careful with this one."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Check the meetup distance",
+      "questions": [
+       {
+        "question": "What pickup location and distance does the listing show?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a bottom sheet with options to open the item's location in a map application to evaluate the travel time.",
+        "whatTheAgentLoses": "An agent might skip checking the exact driving distance, committing you to a pickup location that is inconveniently far away.",
+        "speak": "never",
+        "check": "What pickup location and distance does the listing show?",
+        "say_example": "Pickup is in <Derby>, <12 km> away"
+       },
+       {
+        "question": "Is the item pickup only, and how big does the listing say it is?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The listing is for a 65-inch TV for local pickup, which will not fit in a standard car and requires a large SUV or van to transport safely.",
+        "whatTheAgentLoses": "The user might commit to a local pickup deal for an item they physically cannot transport, leading to a canceled transaction or unexpected rental costs.",
+        "speak": "on-event",
+        "check": "Is the item pickup only, and what size does the listing state?",
+        "say_example": "Pickup only, and it's a <65 inch TV>. That won't fit in most cars."
+       },
+       {
+        "question": "Does the area the map labels match the town named in the listing?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The text might just say a city name, but the visual map circle reveals if the seller is actually located in a neighborhood that requires a toll or heavy traffic routing to reach.",
+        "whatTheAgentLoses": "The user commits to a local pickup that is technically within their distance radius but practically a nightmare or expensive to drive to.",
+        "speak": "if-wrong",
+        "check": "Does the area the map labels match the town named in the listing?",
+        "say_example": "The listing says <Oakland>. The map puts it in <Alameda>, <across the bridge>."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Total the item and shipping",
+      "questions": [
+       {
+        "question": "Does the listing page show the delivery fee the search results showed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results displayed a $6.99 delivery fee that was absent on the item detail page, obscuring the true total cost.",
+        "whatTheAgentLoses": "The user loses financial predictability and might end up paying more than expected if hidden shipping fees are applied at checkout.",
+        "speak": "if-wrong",
+        "check": "Does the listing's pricing block show the same delivery fee the search result showed?",
+        "say_example": "The results showed <6.99> delivery. The listing page doesn't show it. The real total is closer to <35.98>."
+       },
+       {
+        "question": "What does shipping add to the item price?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The listing shows a $12.25 shipping fee, meaning your $75.00 maximum bid actually commits you to a potential total of $87.25.",
+        "whatTheAgentLoses": "The user loses the ability to strictly control their total out-of-pocket expenses if the agent fails to account for added shipping fees.",
+        "speak": "always",
+        "check": "What item price and shipping fee does the listing show, and what do they total?",
+        "say_example": "It's <75>, plus <12.25> shipping. So <87.25> total."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Read the buyer protection terms",
+      "questions": [
+       {
+        "question": "What buyer protection covers this listing?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the 'eBay Money Back Guarantee' and return details ensures you know your options if the item doesn't arrive or match the description.",
+        "whatTheAgentLoses": "You lose the ability to personally assess the platform's buyer protection policies and decide if the return conditions are acceptable for your risk tolerance.",
+        "speak": "never",
+        "check": "Does the listing show a money-back guarantee, and what return terms?",
+        "say_example": "Covered by the site's money-back guarantee, returns for <30 days>"
+       },
+       {
+        "question": "Who does the return policy say pays for return shipping?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The return policy explicitly states that while returns are accepted for 30 days, the buyer is responsible for the return shipping cost, which reduces the final refund amount.",
+        "whatTheAgentLoses": "The user might assume a '30-day return' means a full refund, losing the awareness that they will bear the financial cost of shipping it back.",
+        "speak": "on-event",
+        "check": "Who does the return policy say pays for return shipping, and what does return shipping cost?",
+        "say_example": "Returns are accepted for <30 days>, but you'd pay the return shipping. On this one that's about <130>, most of the refund."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Message or make an offer",
+    "note": "the Facebook commit, and eBay's Contact seller. 4.1 or 4.2 on the listing, then 4.3 where the platform confirms it. 4.4 where the sheet is offered; ruQX stages one and drops it. 4.5 is never on camera - every keeper stops at Send.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Send the availability message",
+      "questions": [
+       {
+        "question": "Should you send the seller the pre-filled message asking if it's still available?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a ready-to-send message prompt asking about availability, presenting the choice to either initiate contact or return to the search results.",
+        "whatTheAgentLoses": "You lose the ability to decide whether this specific listing is worth pursuing or if you should back out to keep browsing other options.",
+        "speak": "gate",
+        "check": "What message text is in the box, and who is it addressed to?",
+        "say_example": "Ready to message <seller> about the <TV>. It says <Is this still available?>. It's in <Derby>, <12 km> away. Send it, or change the wording?"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Ask the seller a question",
+      "questions": [
+       {
+        "question": "Does the message about to go out share a phone number, email, or payment app the site warns against?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The messaging window displays a strict warning against exchanging contact information or transacting outside the platform to prevent fraud.",
+        "whatTheAgentLoses": "You lose direct control over ensuring your messages strictly comply with the platform's safety warnings against sharing personal contact information.",
+        "speak": "if-wrong",
+        "check": "Does the message text contain a phone number, email address, or payment app name, and does the page show a warning against sharing those?",
+        "say_example": "The site warns not to share contact details here. I've taken <the phone number> out of the message."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Confirm the message went",
+      "questions": [
+       {
+        "question": "Does the thread show the seller as active now, or your message as seen?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "These subtle visual indicators tell you if the counterparty is currently online and looking at your message, dictating whether you should wait for an immediate reply or move on.",
+        "whatTheAgentLoses": "The user loses the situational awareness to negotiate in real-time, as the agent might fire off a message and close the session right as the seller starts typing.",
+        "speak": "on-event",
+        "check": "Does the thread show 'Active now' or 'Seen' next to the seller?",
+        "say_example": "The seller has seen your message. No reply yet."
+       },
+       {
+        "question": "Does the chat thread show the message as sent?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video cuts away to the marketplace grid without showing a standard sent confirmation in the chat thread, relying only on a teal checkmark next to the send button.",
+        "whatTheAgentLoses": "The user loses absolute certainty that their communication was successfully delivered to the seller, risking a missed connection on the item.",
+        "speak": "if-wrong",
+        "check": "Does the thread show the message with a sent or delivered mark?",
+        "say_example": "The message didn't go through. It's still in the box. Trying again."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Make an offer",
+      "questions": [
+       {
+        "question": "What amount should you offer for this item?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents preset offer amounts and a custom option, requiring a decision on how much to bid before sending the offer.",
+        "whatTheAgentLoses": "The user loses control over their negotiation strategy, including the exact amount to offer or the choice to back out before committing.",
+        "speak": "gate",
+        "check": "What offer amounts does the page present, and what is the asking price?",
+        "say_example": "Asking is <200>. The site suggests <180>, <170>, or <160>. How much do you want to offer?"
+       },
+       {
+        "question": "Did the site turn your offer down automatically?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sellers can configure hidden auto-decline thresholds, meaning your offer might be instantly rejected by the system rather than sent to the seller for review.",
+        "whatTheAgentLoses": "The user misses the opportunity to negotiate further because the agent assumes the proposal is pending and waits for a human response.",
+        "speak": "on-event",
+        "check": "Does the page say the offer was declined automatically or immediately after sending?",
+        "say_example": "Your <150> offer was declined automatically. It never reached the seller."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Agree the price and handoff",
+      "questions": [
+       {
+        "question": "Has the seller come back with a counter-offer?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "In negotiations, sellers often reject the initial offer and propose a higher price, which you must manually accept, decline, or counter again before the deal expires.",
+        "whatTheAgentLoses": "The agent might let a time-sensitive counter-offer expire, losing the item, or automatically accept a price higher than your actual limit.",
+        "speak": "gate",
+        "check": "Does the thread show a counter-offer from the seller, and what amount?",
+        "say_example": "The seller came back with <180>. That's <20> over your offer. Accept, counter, or walk away?"
+       },
+       {
+        "question": "Did the seller ask to talk or pay by text, Zelle, or CashApp instead?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Scammers frequently try to bypass platform protections by requesting direct wire transfers or phone numbers in the messaging thread.",
+        "whatTheAgentLoses": "The user loses their financial protection and could be scammed if the agent blindly complies with an off-platform payment request.",
+        "speak": "on-event",
+        "check": "Does the seller's message ask to pay or talk by text, Zelle, CashApp, or otherwise outside the site?",
+        "say_example": "The seller wants to be paid by <Zelle>. Outside the site you have no protection. I'm staying in the site's messages."
+       },
+       {
+        "question": "Has the seller seen your message and not replied for over a day?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "On peer-to-peer marketplaces, sellers frequently ghost buyers; recognizing this allows you to stop waiting and move on to a different listing.",
+        "whatTheAgentLoses": "The agent might indefinitely wait for a dead lead instead of pivoting to purchase a backup item.",
+        "speak": "on-event",
+        "check": "Does the thread show 'Seen' with a timestamp more than 24 hours old and no reply after it?",
+        "say_example": "The seller read your message <yesterday> and hasn't answered. I'll move to the next listing unless you say wait."
+       },
+       {
+        "question": "Did the seller mention a flaw or missing part in chat that the listing left out?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sellers sometimes wait until a buyer is actively negotiating or emotionally invested to reveal that an item is broken, locked, or missing its charger.",
+        "whatTheAgentLoses": "The user ends up overpaying for a damaged item because the agent failed to re-evaluate the deal based on new negative information revealed privately in the DMs.",
+        "speak": "on-event",
+        "check": "Does a seller message mention a defect or missing part that the listing does not?",
+        "say_example": "The seller just said <the charger is missing>. The listing didn't mention that."
+       },
+       {
+        "question": "Did the seller's last message change the pickup place or time you agreed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sellers often bait-and-switch the meetup spot to somewhere less convenient or less safe right before the handoff.",
+        "whatTheAgentLoses": "The user might be committed to traveling to an unsafe or distant location because the agent agreed to a last-minute logistics change.",
+        "speak": "if-wrong",
+        "check": "Does the seller's latest message name a different place or time from the one agreed earlier in the thread?",
+        "say_example": "The seller moved the meetup from <the mall> to <their apartment>. That's a change from what you agreed."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Bid in the auction",
+    "note": "5.1 before the modal in the keepers who reason about it, and inside it in the rest. 5.2 where the plan is to come back later. 5.3 opens the surface; 5.4 sits between it and the amount - accounts with no payment on file get the wall and none passes it. then 5.5 and 5.6; 5.7 decides when 5.6's button gets pressed - wqk0 fires at one second, the rest describe the wait. 5.8 replaces 5.3 to 5.7 for the one keeper who delegates. 5.9 whenever a status exists.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Decide the maximum",
+      "questions": [
+       {
+        "question": "How much will you bid, or will you use the Buy It Now option?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "With only 45 seconds left and zero bids, you must decide whether to risk a minimum $2.00 bid or secure the item immediately for $4.50.",
+        "whatTheAgentLoses": "The user loses control over their personal bidding strategy and risk tolerance for securing the item.",
+        "speak": "gate",
+        "check": "What current bid, minimum bid, time left, and Buy It Now price does the listing show?",
+        "say_example": "Current bid is <2>, with <45 seconds> left. Or buy it now for <4.50>. What's your maximum? Or say buy now."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Set a watch and alarm",
+      "questions": [
+       {
+        "question": "Should you add this item to your watchlist instead of placing a bid right now?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The auction has only 18 minutes left at $51.00, so adding it to a watchlist allows you to monitor the final bidding activity before committing your money.",
+        "whatTheAgentLoses": "The user loses the strategic choice of whether to monitor the auction's final minutes or place an immediate bid.",
+        "speak": "never",
+        "check": "Does the page have a watchlist button, and how long is left?",
+        "say_example": "Added to your watchlist - ends in <18 minutes>"
+       },
+       {
+        "question": "When should you come back to bid at the end?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the exact auction end time, which dictates when you need to be present to place a strategic last-minute bid without driving up the price early.",
+        "whatTheAgentLoses": "You lose the strategic control of deciding exactly when to intervene and the personal thrill of executing a last-second bid yourself.",
+        "speak": "always",
+        "check": "What auction end time does the page show?",
+        "say_example": "This auction ends <Thursday at 7:42 pm>. You'll know if you won then."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Open the bid form",
+      "questions": [
+       {
+        "question": "Does clicking 'Place bid' only open the bid form, or does it commit a bid straight away?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an eBay item page with a blue 'Place bid' button that must be clicked to open the bidding interface.",
+        "whatTheAgentLoses": "The user loses control over determining the exact maximum bid amount and the strategic timing of placing the bid.",
+        "speak": "never",
+        "check": "Does pressing 'Place bid' open a form with an amount box, or does it place the bid straight away?",
+        "say_example": "Opened the bid form - the button only opens it, nothing is bid yet"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Clear the payment gate",
+      "note": "5.4.1 as the prompts appear, then 5.4.2 for an account with nothing on file - both keepers who hit it back out. 5.4.3 is the pass-through case: the card is read inside the modal and no wall appears.",
+      "children": [
+       {
+        "id": "5.4.1",
+        "label": "Accept the bidding rules",
+        "questions": [
+         {
+          "question": "Does the page say the order will be charged automatically after you win?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The platform requires a payment method before bidding and warns that the order will process automatically one hour after winning.",
+          "whatTheAgentLoses": "Delegating this means the agent commits your payment method to an automatic charge upon winning without your explicit consent for these specific terms.",
+          "speak": "on-event",
+          "check": "Does the page say a payment method is required before bidding, and that the order processes automatically after winning?",
+          "say_example": "If you win, the site charges <your Mastercard> on its own, <an hour> later. You won't press pay."
+         },
+         {
+          "question": "When does the site say you can take a bid back?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The 'How bidding works' modal warns that bids are binding but notes they can be retracted in 'certain circumstances,' which dictates whether you can legally undo a typo or accidental bid.",
+          "whatTheAgentLoses": "The user loses the awareness of the strict rules and deadlines for taking back an accidental bid, potentially leaving them financially on the hook for an unwanted item.",
+          "speak": "on-event",
+          "check": "What does the pop-up say about taking a bid back, and by when?",
+          "say_example": "Bids here are binding. The site only lets you take one back for a typo, and only within <one hour>."
+         }
+        ]
+       },
+       {
+        "id": "5.4.2",
+        "label": "Provide a payment method",
+        "questions": [
+         {
+          "question": "Is the site refusing to ship this to your address?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The modal displays a red error stating the item cannot be shipped to your selected address, which prevents you from successfully placing a bid.",
+          "whatTheAgentLoses": "The user loses the opportunity to decide whether to provide an alternative shipping address or abandon the bid for this specific item.",
+          "speak": "on-event",
+          "check": "Does the pop-up show an error that the item cannot be shipped to the selected address?",
+          "say_example": "This seller doesn't ship to <your address>. Skipping this one."
+         },
+         {
+          "question": "Is the site missing a payment card or address before you can bid?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The payment preferences modal indicated that a payment method and shipping address were missing and required to proceed.",
+          "whatTheAgentLoses": "The user loses the chance to buy the item because the agent falsely assumes the bid was successfully placed without actually completing the required checkout details.",
+          "speak": "gate",
+          "check": "Does the pop-up say a payment method or shipping address is missing?",
+          "say_example": "The site needs a payment card before you can bid. I don't add cards. Add one, then tell me to continue."
+         }
+        ]
+       },
+       {
+        "id": "5.4.3",
+        "label": "Check the saved payment",
+        "questions": [
+         {
+          "question": "Is the card the site picked the one you want to use?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The bidding modal displays a default card (e.g., Mastercard ending in 7903) that will be automatically charged if you win, requiring you to verify it before confirming the bid.",
+          "whatTheAgentLoses": "The user loses the ability to choose which specific bank account or credit card will be debited, potentially causing overdrafts or using the wrong funds for the purchase.",
+          "speak": "if-wrong",
+          "check": "Which payment method is shown as selected, and does it match the card asked for?",
+          "say_example": "The site picked <Mastercard ending 7903>. You asked for <the Visa>. Switching it."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Enter the maximum bid",
+      "questions": [
+       {
+        "question": "Is your maximum bid at least the site's minimum?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The bid modal explicitly states to enter $670 or more against a $660 current bid, meaning any lesser amount will fail to process.",
+        "whatTheAgentLoses": "The user loses the ability to strategically choose their exact bid amount to balance winning the auction against saving money.",
+        "speak": "gate",
+        "check": "What minimum bid does the pop-up state, and is the maximum given below it?",
+        "say_example": "The minimum bid is <670>. Your max is <650>, so it can't go in. Go up to <670>, or skip?"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Review the commitment",
+      "questions": [
+       {
+        "question": "Are you ready to place the bid, knowing you have to buy it if you win?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The confirmation modal displays the bid amount plus shipping costs and warns that confirming is a binding commitment to buy if you win.",
+        "whatTheAgentLoses": "You lose the final opportunity to review the total cost and back out before making a binding financial commitment.",
+        "speak": "gate",
+        "check": "What bid amount, shipping, and total does the confirmation pop-up show?",
+        "say_example": "Ready to bid <680> on the <Bosch hammer>, plus <12.25> shipping. If you win, this is binding. Press to bid, or say change."
+       },
+       {
+        "question": "Did the auction end while the confirm window was open?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The confirmation modal displays a live countdown timer, and if it reaches zero before you click confirm, the auction ends and your bid fails.",
+        "whatTheAgentLoses": "The agent might attempt to click confirm on an auction that has already closed, failing to secure the item because it didn't monitor the live time remaining.",
+        "speak": "on-event",
+        "check": "Does the countdown on the confirmation pop-up show zero or 'Ended'?",
+        "say_example": "The auction ended while we were confirming. The bid didn't go in."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Time the confirm",
+      "questions": [
+       {
+        "question": "How late should the bid go in, so nobody has time to react?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a live countdown timer, and waiting until the final seconds prevents competing buyers from having time to place a counter-bid.",
+        "whatTheAgentLoses": "You lose control over your specific auction sniping strategy and the exact timing used to secure the item at the lowest price.",
+        "speak": "never",
+        "check": "How much time does the countdown show?",
+        "say_example": "Placed the bid with <5 seconds> left"
+       },
+       {
+        "question": "Should you reload the page to check the current top bid first?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Refreshing the page ensures you are basing your final bid on the true current price of US $660.00 and the exact remaining time.",
+        "whatTheAgentLoses": "You lose the adrenaline rush of manually timing the final seconds of the auction and the immediate control to adjust your bid based on last-second changes.",
+        "speak": "never",
+        "check": "After refresh, what current bid and time remaining does the page show?",
+        "say_example": "Refreshed - still <660>, <2 minutes> left"
+       },
+       {
+        "question": "Does the time left on the clock match the timing you chose for the bid?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The spoken instructions advised waiting until five to eight seconds remain, but the bid modal was opened while the on-screen timer still showed over five days left.",
+        "whatTheAgentLoses": "The user loses the strategic advantage of sniping the auction, potentially driving up the price prematurely or losing the item to counter-bidders.",
+        "speak": "if-wrong",
+        "check": "How much time does the countdown show, and does the plan say to bid only in the final seconds?",
+        "say_example": "The bid form is open, but there are <5 days> left. You wanted to bid at the end. Closing it and coming back later."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Delegate to a sniping service",
+      "note": "5.8.1, then 5.8.2, then 5.8.3; 5.8.4 read last, after the snipe is armed. one keeper; the eBay bid modal never appears on this path.",
+      "children": [
+       {
+        "id": "5.8.1",
+        "label": "Carry the item number across",
+        "questions": [
+         {
+          "question": "Are you adding the correct item number for your new snipe?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a specific item number entered into the 'Add a New Snipe' field, which must be accurate to ensure you bid on the intended listing.",
+          "whatTheAgentLoses": "You lose the opportunity to verify that the automated bidding tool is targeting the exact item you actually want to buy.",
+          "speak": "if-wrong",
+          "check": "Does the item number in the snipe field match the item number on the listing?",
+          "say_example": "The snipe is set for the item ending <4471>. The listing's number ends <9038>. Fixing it."
+         }
+        ]
+       },
+       {
+        "id": "5.8.2",
+        "label": "Set the lead time",
+        "questions": [
+         {
+          "question": "How many seconds before the end should the snipe fire?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Setting a sufficient lead time accounts for network slippage and ensures the bid is successfully received by the platform's servers before time runs out.",
+          "whatTheAgentLoses": "You lose the ability to balance your personal risk tolerance between bidding at the absolute last second and ensuring the bid actually goes through.",
+          "speak": "never",
+          "check": "What lead time is set?",
+          "say_example": "Set the lead time to <7 seconds>"
+         },
+         {
+          "question": "Should you set a backup bid in case your first one is outbid?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a 'Second Shot' dropdown that allows setting a backup bid if the initial maximum is exceeded.",
+          "whatTheAgentLoses": "The user loses control over their bidding strategy and how much they are ultimately willing to spend.",
+          "speak": "never",
+          "check": "What does the Second Shot dropdown show?",
+          "say_example": "Left the backup bid off"
+         }
+        ]
+       },
+       {
+        "id": "5.8.3",
+        "label": "Arm and check the snipe",
+        "questions": [
+         {
+          "question": "Are the snipe's max bid and lead time right before you arm it?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The popup displays a maximum bid of $17.25 and a 7-second lead time, which must be accurate to ensure the automated bid executes exactly as intended.",
+          "whatTheAgentLoses": "The user loses the ability to personally verify the final maximum bid amount, risking an accidental overpayment or a lost auction due to a typo.",
+          "speak": "gate",
+          "check": "What maximum bid, lead time, and item does the snipe popup show?",
+          "say_example": "Ready to arm the snipe. <17.25> max on the <Jordan card>, <7 seconds> before the end. If it wins, you pay. Press to arm, or say change."
+         },
+         {
+          "question": "Does the My Snipes tab list the item as 'Ready' with your max bid?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": true,
+          "why": "The screen displays the 'My Snipes' tab showing the Michael Jordan card snipe with a 'Ready' status and a max bid of $17.25.",
+          "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that their automated bid is correctly configured and active.",
+          "speak": "if-wrong",
+          "check": "Does the My Snipes tab list the item with status 'Ready' and the intended max bid?",
+          "say_example": "The snipe isn't showing as ready. It says <Pending>. Checking again."
+         }
+        ]
+       },
+       {
+        "id": "5.8.4",
+        "label": "Read the service fee",
+        "questions": [
+         {
+          "question": "Does the pricing page confirm the 'pay only when you win' promise from the homepage?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Verifying that the detailed pricing text matches the initial marketing claims ensures you aren't tricked by hidden fees.",
+          "whatTheAgentLoses": "An agent might take the homepage marketing at face value without cross-referencing the actual pricing page, risking unexpected charges.",
+          "speak": "if-wrong",
+          "check": "Does the pricing page state fees only on winning bids, matching the homepage claim?",
+          "say_example": "The homepage said pay only when you win. The pricing page says <a monthly fee> too."
+         },
+         {
+          "question": "What fee does the pricing page state for a winning bid?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen details a 1.75% fee on winning bids, which adds an extra cost to your final purchase price.",
+          "whatTheAgentLoses": "You lose the ability to decide if the additional sniping fees are worth the convenience for this specific item.",
+          "speak": "always",
+          "check": "What fee does the pricing page state for a winning bid?",
+          "say_example": "This service takes <1.75%> of the winning bid. On a <17> win that's <30 cents>."
+         },
+         {
+          "question": "Does the final charge match your winning bid plus the platform's service fee?",
+          "cluster": "receipts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The dashboard showed a $6 winning bid and the pricing table stated a $0.35 fee for items under $20, meaning the final cost should be exactly $6.35.",
+          "whatTheAgentLoses": "An agent might blindly accept the final checkout total without verifying that the platform's fee structure was applied correctly to the winning bid.",
+          "speak": "if-wrong",
+          "check": "Does the charge shown equal the winning bid plus the stated service fee?",
+          "say_example": "You won at <6>. The fee should be <35 cents>, but the charge is <7.10>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.9",
+      "label": "Check the bid status",
+      "questions": [
+       {
+        "question": "Did the bid go in, or is the confirm window still open?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The narrator promised to demonstrate placing a bid but repeatedly canceled at the confirmation modal, meaning a completed bid was never shown on screen.",
+        "whatTheAgentLoses": "An agent trained on this would learn to cancel at the last step instead of actually committing to a deal.",
+        "speak": "if-wrong",
+        "check": "Does the page show a bid confirmation or 'You're the highest bidder', rather than the confirmation pop-up?",
+        "say_example": "The bid didn't go in. The confirm window is still up. Nothing has been placed."
+       },
+       {
+        "question": "Did you win, and for how much under your max?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Confirming the 'You Won!' status and the $6 final price against your $11 maximum bid verifies that the sniping strategy successfully secured the deal at a favorable price.",
+        "whatTheAgentLoses": "Delegating this means you miss the satisfaction of seeing exactly how much money the automated bidding strategy saved you compared to your maximum willingness to pay.",
+        "speak": "on-event",
+        "check": "Does the page show 'You won' and the final price against the max bid?",
+        "say_example": "You won. <6>, under your <11> max."
+       },
+       {
+        "question": "Were you outbid right after your bid went in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Successfully submitting a bid does not guarantee you are winning; if another buyer has a higher maximum bid active, the system will instantly outbid you.",
+        "whatTheAgentLoses": "The user loses the auction because the agent sees the bid submission succeed and stops, unaware that it is not actually the highest bidder.",
+        "speak": "on-event",
+        "check": "Does the page say you've been outbid, and what is the new current bid?",
+        "say_example": "You've been outbid already. Someone had a higher maximum. It's at <700> now, over your <680>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Buy at the fixed price",
+    "note": "6.1 on the listing, 6.2 where the cart is used - both cart keepers find items they did not add. then 6.3 and 6.4 on the checkout page in any order, then 6.5. 6.6 is never on camera.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Pick the purchase path",
+      "questions": [
+       {
+        "question": "Which color and size do you want to select for this item?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The eBay listing requires choosing specific variations from the dropdowns before you can proceed to buy.",
+        "whatTheAgentLoses": "The agent might guess your preferred size or color, resulting in the purchase of an item you cannot use.",
+        "speak": "gate",
+        "check": "Which color and size options does the listing offer, and which are in stock?",
+        "say_example": "This comes in <black> or <navy>, sizes <M> to <XL>. You said <medium>. <Black> or <navy>?"
+       },
+       {
+        "question": "Do you want a fixed-price listing, or an auction?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Buy It Now' option for $279.99, which requires accepting the set price immediately rather than having the opportunity to bid for a lower cost.",
+        "whatTheAgentLoses": "The user loses the ability to dictate their preferred purchasing strategy, such as skipping immediate purchases to hunt for a better deal via auction.",
+        "speak": "never",
+        "check": "Does the listing show Buy It Now, Add to cart, bidding, or a mix?",
+        "say_example": "Fixed price at <279.99>, no bidding - went straight to checkout"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Check the cart",
+      "questions": [
+       {
+        "question": "Is the item in the cart the same one you looked at?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The cart displays a $199.95 Nintendo Switch instead of the $235.00 model reviewed previously, indicating a mismatch.",
+        "whatTheAgentLoses": "The user ends up purchasing a different item than the one they actually wanted and evaluated.",
+        "speak": "if-wrong",
+        "check": "Does the cart show the same item title and price as the listing just viewed?",
+        "say_example": "The cart has a <199.95 Switch>. The one we looked at was <235>. That's a different listing. Fixing it."
+       },
+       {
+        "question": "Is the cart holding only the item just added, or old items too?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The modal displays a \"Checkout 3 items\" button even though only one item was just added, indicating there are leftover items in the cart.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch and remove unintended items from the cart, potentially paying for things they did not mean to buy.",
+        "speak": "on-event",
+        "check": "How many items does the cart or checkout button say, compared to the one just added?",
+        "say_example": "The cart has <3> items, not just the one we added. The other two are from before. I'm taking them out."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Choose how to pay",
+      "questions": [
+       {
+        "question": "Was your card declined at checkout?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Bank fraud alerts or expired cards frequently cause payment failures at the final step, especially on unusually large peer-to-peer purchases.",
+        "whatTheAgentLoses": "The user loses the deal to a competing buyer because the agent gets stuck on a declined card error instead of resolving it or switching to a valid backup method.",
+        "speak": "on-event",
+        "check": "Does checkout show a payment declined or failed message?",
+        "say_example": "Your <Mastercard> was declined. I don't have another card. Stopping here."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Review the order total",
+      "questions": [
+       {
+        "question": "Are the address, payment, and total right before you pay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reviewing the checkout page ensures that the high $199.08 shipping fee, the selected PayPal method, and the destination address are exactly as you expect before committing funds.",
+        "whatTheAgentLoses": "Delegating this final review means you lose the chance to catch unexpected fees or incorrect shipping details before the payment is irrevocably processed.",
+        "speak": "gate",
+        "check": "What item, shipping address, payment method, shipping fee, delivery window, and total does the checkout page show?",
+        "say_example": "Ready to pay. <Bosch hammer>, <279.99> plus <199.08> shipping, <479.07> total. <PayPal>, to <Home>. Arrives <March 12 to April 1>. Press to pay, or say change."
+       },
+       {
+        "question": "Does the shipping charge at checkout match what the listing or search result showed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The quoted shipping cost for the item unexpectedly changed from $199.91 on the product page to $199.08 on the checkout page.",
+        "whatTheAgentLoses": "You lose the opportunity to catch and review unexpected price changes before committing your money to the deal.",
+        "speak": "if-wrong",
+        "check": "Does the shipping charge at checkout match what the listing or search result showed?",
+        "say_example": "The listing said <free shipping>. Checkout is charging <199.08>. That's not the deal you saw."
+       },
+       {
+        "question": "Do the items and total at checkout match what was in your cart?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The cart showed 6 items totaling $838.30, but the checkout page dropped to 5 items totaling $520.11.",
+        "whatTheAgentLoses": "The user loses the assurance that all intended items are included in the final purchase.",
+        "speak": "if-wrong",
+        "check": "Do the item count and total at checkout match the cart?",
+        "say_example": "The cart had <6> items at <838.30>. Checkout shows <5> at <520.11>. One dropped out. Checking which."
+       },
+       {
+        "question": "Does the delivery date work for you?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout page displays an estimated delivery window (e.g., Mar 12 - Apr 1), which dictates when you will actually receive the item.",
+        "whatTheAgentLoses": "The user loses the ability to abandon the transaction if the shipping timeline is too slow for their specific needs, such as needing the item for an upcoming event.",
+        "speak": "never",
+        "check": "What estimated delivery window does checkout show?",
+        "say_example": "Arrives <March 12 to April 1>"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Confirm and pay",
+      "questions": [
+       {
+        "question": "Did the payment go through to an order confirmation?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The recording ends on the checkout page without showing the final payment click, meaning the transaction was never officially completed.",
+        "whatTheAgentLoses": "The user fails to acquire the item because the agent abandoned the transaction right before the final commitment.",
+        "speak": "if-wrong",
+        "check": "Does the page show an order confirmation with an order number?",
+        "say_example": "Payment didn't go through. We're still on checkout. Nothing charged."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Read the order confirmation",
+      "questions": [
+       {
+        "question": "Did the site take the listing down after you bid or paid?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms sometimes delete fraudulent listings after a transaction has started, requiring you to actively open a dispute to get your money back.",
+        "whatTheAgentLoses": "The user loses their money if the agent ignores a listing removal alert and fails to initiate the buyer protection refund process.",
+        "speak": "on-event",
+        "check": "Does the page or a notice say the listing was removed?",
+        "say_example": "The site removed that listing after you paid. The notice says you can open a case to get the money back. I'm opening the dispute page so you can decide."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Prepare the item",
+    "note": "7.1 then 7.2 before the form opens, in the two keepers who sell a real object. 7.3 runs beside the form - dYz5 keeps the maker's page in a second tab and WwXj re-reads a tag photo mid-title.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Photograph the item"
+     },
+     {
+      "id": "7.2",
+      "label": "Measure and bin the item"
+     },
+     {
+      "id": "7.3",
+      "label": "Gather the specs"
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Create the listing",
+    "note": "8.1 then 8.2, then 8.3 on eBay only - a match taken as a template or Continue without match. 8.4 to 8.9 in the form's order - the Facebook form asks for photos, title, price, category and condition first and calls the rest More details; the eBay form asks for the catalog match first and the price last. 8.10 sets the price; 8.11 only for a multi-variant listing; 8.12 beside it. 8.13 and 8.14 on eBay, and on Facebook 8.13.3 and 8.14 as toggles. 8.15 on Facebook at the publish step. 8.16 where the seller re-reads before 8.17 - WwXj's review edits four fields. tPLF fills the four required fields and skips the rest; ACf0 and dyvQ stop before 8.17.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Start a new listing",
+      "questions": [
+       {
+        "question": "Which listing type lets you add variations like sizes?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown offers single and multiple listings, and selecting the single listing option is actually required to configure variations.",
+        "whatTheAgentLoses": "The user loses the opportunity to apply their specific knowledge of the platform's counterintuitive menu structure.",
+        "speak": "never",
+        "check": "Which listing types does the dropdown show?",
+        "say_example": "Chose single listing so sizes can be variations"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Choose the listing type",
+      "questions": [
+       {
+        "question": "What type of listing are you creating?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform requires you to categorize your listing as a general item, a vehicle, or a property to ensure it is routed to the correct marketplace section.",
+        "whatTheAgentLoses": "You lose the ability to personally ensure your item is placed in the correct top-level category for the right audience to find it.",
+        "speak": "never",
+        "check": "Which listing type options does the page show?",
+        "say_example": "Listed it as an item rather than a vehicle"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Pick a catalog match",
+      "questions": [
+       {
+        "question": "What should you search the catalog for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering specific details like \"graphic men's t-shirt\" instead of a generic term helps the platform suggest a much more accurate product template.",
+        "whatTheAgentLoses": "The user loses the ability to intuitively select the most descriptive keywords that ensure the listing is placed in the optimal category for buyers to find.",
+        "speak": "never",
+        "check": "What is typed in the catalog search field?",
+        "say_example": "Searched the catalog for <graphic men's t-shirt>"
+       },
+       {
+        "question": "Which catalog entry should you start from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing a template that matches the brand and size of the item being listed saves time and ensures accurate details.",
+        "whatTheAgentLoses": "The user loses the ability to select the most accurate starting template, which could lead to incorrect product details if the agent chooses a mismatched item.",
+        "speak": "never",
+        "check": "Which catalog matches does the page list, with brand and size?",
+        "say_example": "Started from the <Tultex XL> catalog entry"
+       },
+       {
+        "question": "Should you use the pre-filled catalog info and stock photo for this listing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a checked box to prefill the listing with catalog info and a generic stock photo, which might not accurately represent the specific item you are selling.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to use generic catalog details or their own authentic pictures to represent the item to potential buyers.",
+        "speak": "on-event",
+        "check": "Is the box to prefill the listing with catalog info and a stock photo ticked?",
+        "say_example": "The form wants to use the catalog's stock photo. That isn't your <shirt>. I'm unticking it."
+       },
+       {
+        "question": "Should you copy details from an existing listing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Pasting the title of a similar existing item into the search bar allows you to copy its details instead of starting from scratch.",
+        "whatTheAgentLoses": "The user loses the ability to choose exactly which existing listing is the most accurate and time-saving template for their specific item.",
+        "speak": "never",
+        "check": "Does the page offer to copy details from an existing listing?",
+        "say_example": "Copied details from a matching listing"
+       },
+       {
+        "question": "Does the page warn that photos won't copy over from the template listing?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform explicitly warns that photos from the original seller's listing cannot be reused, meaning the new draft will be created without any images.",
+        "whatTheAgentLoses": "The agent might blindly assume the template copied everything and publish a listing with no photos, making it impossible to sell the item.",
+        "speak": "on-event",
+        "check": "Does the page warn that photos from the template listing won't be copied?",
+        "say_example": "Photos don't carry over from the copied listing. Your draft has no photos yet."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Add and order the photos",
+      "questions": [
+       {
+        "question": "Which photos do you want in the listing?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting all seven available images of the shirt utilizes the empty placeholders to give potential buyers a comprehensive view of the item's condition.",
+        "whatTheAgentLoses": "You lose the ability to personally curate which specific angles and details of the item are highlighted to attract buyers.",
+        "speak": "never",
+        "check": "How many photos are uploaded and how many slots are free?",
+        "say_example": "Uploaded all <7> photos"
+       },
+       {
+        "question": "Which photo should you set as the main thumbnail for the listing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first slot labeled 'Main photo' dictates the primary image shown to buyers in search results, which is critical for attracting clicks.",
+        "whatTheAgentLoses": "You lose the ability to curate the first impression of your item by selecting the most visually appealing photo.",
+        "speak": "never",
+        "check": "Which photo is in the 'Main photo' slot?",
+        "say_example": "Set the front view as the main photo"
+       },
+       {
+        "question": "Does the form show any uploaded photos?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator advises adding photos and a description, but the on-screen form shows zero uploaded files and an empty description box.",
+        "whatTheAgentLoses": "The user loses the ability to effectively sell their item because an empty listing without photos or details will fail to attract buyers.",
+        "speak": "if-wrong",
+        "check": "Does the form show any uploaded photos?",
+        "say_example": "No photos are uploaded yet. The listing would go up blank. Adding them first."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Write the title",
+      "questions": [
+       {
+        "question": "What keywords should you include in the listing title?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Replacing the auto-generated text with a custom title containing specific brand, size, and material keywords helps buyers find your exact item in search results.",
+        "whatTheAgentLoses": "You lose the personal judgment of which specific item details and niche keywords are most important to highlight for potential buyers.",
+        "speak": "never",
+        "check": "What title is entered?",
+        "say_example": "Titled it <Tultex Vintage T-Shirt XL Black Cotton>"
+       },
+       {
+        "question": "Does the title agree with the item specifics and the variations you created?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a title containing '2XL' while the created variations were for sizes 'M' and 'XL', creating a direct contradiction.",
+        "whatTheAgentLoses": "The delegator loses potential buyers who might be confused or deterred by the conflicting size information in the listing.",
+        "speak": "if-wrong",
+        "check": "Does the title agree with the item specifics, such as size, brand spelling, and the variations created?",
+        "say_example": "The title says <2XL>, but the sizes you're selling are <M> and <XL>. Fixing the title."
+       },
+       {
+        "question": "Should you pay the extra fee to make the title bold in search results?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The title entry field includes an optional upgrade to stand out with a bold title for an additional $4.00 fee, which directly reduces your profit margin.",
+        "whatTheAgentLoses": "The user loses control over their listing expenses, as an agent might blindly accept the premium formatting fee without considering the cost.",
+        "speak": "on-event",
+        "check": "Is the bold title upgrade ticked, and what fee does it show?",
+        "say_example": "The form has the bold title add-on ticked. That's <4>. I'm unticking it."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Set the condition",
+      "questions": [
+       {
+        "question": "Which condition rating should you choose for the item?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting a conservative option from the condition dropdown helps manage buyer expectations and prevents future disputes.",
+        "whatTheAgentLoses": "You lose the ability to apply your own judgment to strategically under-promise on the item's condition.",
+        "speak": "gate",
+        "check": "Which condition options does the dropdown offer?",
+        "say_example": "What condition is it in? The choices are <New>, <Like new>, <Good>, or <Fair>."
+       },
+       {
+        "question": "What flaws or wear should you mention in the condition description?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form provides a dedicated 'Condition description' field for used items, which is critical for disclosing specific defects to prevent buyer disputes and returns.",
+        "whatTheAgentLoses": "The user loses the opportunity to explicitly document the item's exact physical flaws, leaving them vulnerable to 'not as described' claims from buyers.",
+        "speak": "gate",
+        "check": "Is there a condition description field, and what is in it?",
+        "say_example": "Any flaws to mention? Scuffs, stains, missing parts. Or say none."
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Pick the category",
+      "questions": [
+       {
+        "question": "Which category best fits the item you are listing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the most accurate category from the dropdown options, such as 'Electronics & computers' over 'Arts & Crafts', ensures the listing reaches the right potential buyers.",
+        "whatTheAgentLoses": "The user loses the ability to strategically position their item in the marketplace, potentially missing out on their target audience if the agent chooses a less intuitive category.",
+        "speak": "never",
+        "check": "Which category is selected?",
+        "say_example": "Filed under <Clothing, Men's T-Shirts>"
+       }
+      ]
+     },
+     {
+      "id": "8.8",
+      "label": "Fill the item specifics",
+      "questions": [
+       {
+        "question": "What SKU should you give this item?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering a custom SKU like a bin number in the provided field helps you easily locate the physical item once it sells.",
+        "whatTheAgentLoses": "An agent wouldn't know your physical storage system to assign the correct bin location for easy retrieval.",
+        "speak": "never",
+        "check": "What is in the SKU field?",
+        "say_example": "Set the SKU to <H2>"
+       },
+       {
+        "question": "Do the auto-filled item specifics match your item?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows required item specifics like brand, size, and color that the platform auto-filled, which must be accurate to properly categorize the listing.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify that the physical item's exact details, like its predominant color and true size, match the platform's strict requirements.",
+        "speak": "if-wrong",
+        "check": "What brand, size, and color did the form auto-fill, and do they match the item details given?",
+        "say_example": "The form filled in <size M>. You said <XL>. Changing it."
+       },
+       {
+        "question": "Which of the suggested details do you want to fill in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Providing detailed item specifics like fit, pattern, and neckline improves the listing's visibility to potential buyers.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which optional details are worth your time to include to optimize the listing's search performance.",
+        "speak": "never",
+        "check": "Which recommended specifics are still empty?",
+        "say_example": "Filled in <fit, pattern, and neckline>"
+       },
+       {
+        "question": "Is there a character to fill in for this item, or leave it blank?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen offers standard character checkboxes that aid searchability, but also allows custom text if the item features a unique or unlisted character.",
+        "whatTheAgentLoses": "The user loses the ability to inject personal humor or highly specific custom details into the listing's attributes.",
+        "speak": "never",
+        "check": "Which character boxes are ticked, or what is in the custom field?",
+        "say_example": "Left character blank"
+       },
+       {
+        "question": "What type of neckline should you select for this item?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting an accurate option like 'Crew Neck' from the dropdown menu adds detail to the listing, which improves its visibility and performance.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify that the item's specific physical traits are accurately categorized to attract the right buyers.",
+        "speak": "never",
+        "check": "Which neckline is selected?",
+        "say_example": "Set neckline to <Crew Neck>"
+       },
+       {
+        "question": "Should you tick one of the feature boxes, or add your own?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offered standard checkboxes like '1/2 Zip' and 'Breathable', but adding a custom feature ensures the listing accurately highlights the item's unique traits.",
+        "whatTheAgentLoses": "You lose the personal judgment of knowing which unlisted, custom details will make your specific item more appealing to buyers.",
+        "speak": "never",
+        "check": "Which feature boxes are ticked?",
+        "say_example": "Ticked <Breathable> under features"
+       },
+       {
+        "question": "Is the item you are listing considered vintage?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a 'Vintage' dropdown menu, which determines how the item is categorized and discovered by potential buyers.",
+        "whatTheAgentLoses": "Delegating this means losing the ability to accurately represent the item's age and appeal based on your personal knowledge of its history.",
+        "speak": "never",
+        "check": "What does the Vintage dropdown show?",
+        "say_example": "Marked vintage"
+       },
+       {
+        "question": "What material is the item made of?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of material checkboxes, and accurately selecting the correct fabric ensures potential buyers know exactly what they are purchasing.",
+        "whatTheAgentLoses": "The user loses the ability to physically check the garment's tag or feel the fabric to accurately determine its material.",
+        "speak": "never",
+        "check": "Which material boxes are ticked?",
+        "say_example": "Ticked <Cotton> for material"
+       },
+       {
+        "question": "Should you offer personalization for this item?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal allows you to collect up to 150 characters of custom text from the buyer, which is only necessary if you can actually engrave or customize the item.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over whether you commit to fulfilling custom personalization requests for the item you are selling.",
+        "speak": "never",
+        "check": "Is the personalization option on?",
+        "say_example": "Left personalization off"
+       },
+       {
+        "question": "Will you fill in 'Country/Region of Manufacture'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Country/Region of Manufacture' dropdown field for providing item specifics.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to disclose the item's manufacturing origin, which could influence buyer interest or search visibility.",
+        "speak": "never",
+        "check": "What does the Country of Manufacture dropdown show?",
+        "say_example": "Left country of manufacture blank"
+       },
+       {
+        "question": "What brand will you enter for the item?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Accurately filling out the brand text field ensures the listing is categorized correctly and reaches the right buyers.",
+        "whatTheAgentLoses": "The user gives up direct control over how their item is branded and marketed to potential buyers in search results.",
+        "speak": "never",
+        "check": "What is in the brand field?",
+        "say_example": "Entered brand <Tultex>"
+       },
+       {
+        "question": "What product tags should you add to help buyers find the item?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides an optional text field for up to 20 product tags, which determines how easily potential buyers can discover your listing through search keywords.",
+        "whatTheAgentLoses": "The user loses the opportunity to apply their personal knowledge of the item's niche and target audience to select the most effective search keywords.",
+        "speak": "never",
+        "check": "What is in the product tags field?",
+        "say_example": "Added tags <vintage, cotton, graphic tee>"
+       }
+      ]
+     },
+     {
+      "id": "8.9",
+      "label": "Write the description",
+      "questions": [
+       {
+        "question": "What details and measurements go in the description?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Including exact physical measurements like armpit-to-armpit alongside the title ensures buyers have crucial sizing information without cluttering the text area with details already covered in the item specifics.",
+        "whatTheAgentLoses": "The user loses the personal judgment of deciding exactly which physical measurements and formatting best represent their specific item to potential buyers.",
+        "speak": "never",
+        "check": "What is in the description field?",
+        "say_example": "Wrote the description, with the measurements"
+       },
+       {
+        "question": "Do the measurements in the description match the ones in the item specifics?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Ensuring the typed dimensions match the physical tape measurements prevents buyer disputes over sizing.",
+        "whatTheAgentLoses": "The user loses the physical verification that the garment's actual dimensions exactly match the numbers advertised to buyers.",
+        "speak": "if-wrong",
+        "check": "Do the measurements in the description match the ones in the item specifics?",
+        "say_example": "The description says <22 inches> across, but the size field says <24>. I'm using the number from your instructions, <22>."
+       }
+      ]
+     },
+     {
+      "id": "8.10",
+      "label": "Set the price and format",
+      "note": "8.10.1 on eBay first, because it decides which of 8.10.2 or 8.10.3 the form shows. Facebook has only 8.10.2. 8.10.4 where offered; dyvQ's form has it on by default.",
+      "children": [
+       {
+        "id": "8.10.1",
+        "label": "Choose auction or fixed price",
+        "questions": [
+         {
+          "question": "Do you want a fixed price or an auction?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays options for 'Auction' or 'Buy It Now', which determine how buyers will bid on or purchase the item.",
+          "whatTheAgentLoses": "The user loses control over their selling strategy, which could impact the final sale price or the speed of the transaction.",
+          "speak": "gate",
+          "check": "Which formats does the page offer, fixed price or auction, and which is selected?",
+          "say_example": "Sell it at a fixed price, or run an auction? Say fixed or auction."
+         },
+         {
+          "question": "How long should the auction run?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dropdown offers durations from three to ten days, requiring a tradeoff between selling the item quickly and maximizing its final price.",
+          "whatTheAgentLoses": "Delegating this choice means losing the ability to prioritize your own timeline and financial goals for the sale.",
+          "speak": "never",
+          "check": "Which duration is selected?",
+          "say_example": "Set the auction to run <7 days>"
+         }
+        ]
+       },
+       {
+        "id": "8.10.2",
+        "label": "Set the asking price",
+        "questions": [
+         {
+          "question": "How much should you list the item for?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Entering an appropriate amount in the 'Price' field balances your desired profit with the likelihood of attracting buyers.",
+          "whatTheAgentLoses": "The user loses the ability to strategically price the item based on their personal financial goals and willingness to negotiate.",
+          "speak": "gate",
+          "check": "What is in the price field, and does the page suggest a price?",
+          "say_example": "What price? The site suggests <18>, from similar ones that sold."
+         }
+        ]
+       },
+       {
+        "id": "8.10.3",
+        "label": "Set the auction prices",
+        "questions": [
+         {
+          "question": "Do you want to add a Buy It Now price above the site's minimum?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides an optional field to set a fixed price for immediate sale, noting that it must be at least $130.00 based on your starting bid.",
+          "whatTheAgentLoses": "Delegating this choice means the agent decides whether to allow an immediate purchase and at what price, which might not align with your selling strategy or item valuation.",
+          "speak": "never",
+          "check": "What Buy It Now minimum does the page state?",
+          "say_example": "Left Buy It Now off the auction"
+         },
+         {
+          "question": "Did the Buy It Now minimum update after you entered the starting bid?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Seeing the text change to '$130.00' after entering a '$100.00' starting bid confirms that the platform's 30% markup rule is accurately applied to your listing.",
+          "whatTheAgentLoses": "Delegating this means losing the direct visual confirmation that the platform's automated pricing rules correctly calculated the requirements for your specific item.",
+          "speak": "if-wrong",
+          "check": "After entering the starting bid, does the Buy It Now minimum text update to 30% above it?",
+          "say_example": "The Buy It Now minimum didn't update. It still says <100>. Re-entering the starting bid."
+         },
+         {
+          "question": "Does a reserve price cost a fee even if the item doesn't sell?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The listing form explicitly notes 'fees apply' next to the reserve price option, meaning you will be charged upfront just for setting a minimum sale threshold.",
+          "whatTheAgentLoses": "The user might incur unexpected, non-refundable listing fees if the agent sets a reserve price without understanding the immediate upfront cost.",
+          "speak": "on-event",
+          "check": "Does the reserve price option say fees apply, and what fee?",
+          "say_example": "A reserve price costs <5>, even if it doesn't sell. Leaving it off."
+         }
+        ]
+       },
+       {
+        "id": "8.10.4",
+        "label": "Allow offers",
+        "questions": [
+         {
+          "question": "Should you allow buyers to make offers on this listing?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides checkboxes to allow offers and set automatic accept or decline amounts, which dictates your level of manual control over negotiations.",
+          "whatTheAgentLoses": "You lose the opportunity to manually review lowball offers as a way to gauge buyer behavior and screen out difficult customers.",
+          "speak": "never",
+          "check": "Are the allow-offers and auto-accept or auto-decline boxes ticked, and with what amounts?",
+          "say_example": "Allowed offers, with no automatic accept or decline"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "8.11",
+      "label": "Set the variations",
+      "questions": [
+       {
+        "question": "Do you want to add variations like size and color to this listing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a variations section that allows you to save time by grouping multiple versions of an item into one multi-quantity listing.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over exactly which sizes, colors, and inventory quantities are offered together in a single listing.",
+        "speak": "never",
+        "check": "Does the form show a variations section, and is it in use?",
+        "say_example": "Listed one item with no variations"
+       },
+       {
+        "question": "What should the variations be, like size or color?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal offers predefined attributes like 'Player' or 'Capacity', but adding a custom attribute ensures the variations accurately reflect the actual differences in your items.",
+        "whatTheAgentLoses": "An agent might select an irrelevant predefined attribute instead of knowing exactly how you prefer to categorize your specific inventory.",
+        "speak": "never",
+        "check": "Which variation attributes are selected?",
+        "say_example": "Set variations by <size>"
+       },
+       {
+        "question": "How should you price and stock the different size variations?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The variation combinations table requires setting the available quantity and price for each size, while optional fields like SKU and UPC can be skipped.",
+        "whatTheAgentLoses": "You lose the ability to strategically set different prices for specific sizes or decide which optional product identifiers to ignore.",
+        "speak": "gate",
+        "check": "Which variation rows does the table show, and which quantity and price cells are empty?",
+        "say_example": "For each size, how many do you have, and is it the same price for all? The rows are <M> and <XL>."
+       }
+      ]
+     },
+     {
+      "id": "8.12",
+      "label": "Set the availability and quantity",
+      "questions": [
+       {
+        "question": "Is this one item, or do you have more in stock?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown requires choosing between showing buyers \"Only one\" or \"In Stock\" based on your actual inventory.",
+        "whatTheAgentLoses": "Delegating this means the agent might misrepresent your inventory, potentially causing fulfillment issues if multiple buyers try to purchase a unique item.",
+        "speak": "never",
+        "check": "Which quantity option is selected?",
+        "say_example": "Marked it as a single item"
+       }
+      ]
+     },
+     {
+      "id": "8.13",
+      "label": "Set the terms",
+      "note": "8.13.1 and 8.13.2 on eBay in the form's order; 8.13.3 on Facebook, where shipping does not exist and the handoff is a meetup. WwXj re-reads all of it at review.",
+      "children": [
+       {
+        "id": "8.13.1",
+        "label": "Set payment and return terms",
+        "questions": [
+         {
+          "question": "Should you require immediate payment when a buyer uses Buy It Now?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides a checkbox to require immediate payment, which ensures buyers cannot claim the item without paying upfront.",
+          "whatTheAgentLoses": "Delegating this decision means losing the ability to enforce your personal preference for immediate cash flow over accommodating delayed payments.",
+          "speak": "never",
+          "check": "Is 'require immediate payment' ticked?",
+          "say_example": "Required immediate payment on Buy It Now"
+         },
+         {
+          "question": "What return policy should you offer for this listing?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Configuring the checkboxes for domestic and international returns, along with the timeframe and shipping payer, balances buyer trust against your risk of handling reversed transactions.",
+          "whatTheAgentLoses": "Delegating this means losing the ability to apply your personal risk tolerance and past experience with buyer honesty to the terms of the sale.",
+          "speak": "gate",
+          "check": "What return options does the form show, and what is currently selected?",
+          "say_example": "The form defaults to <no returns>. Keep that, or accept returns for <30 days>?"
+         }
+        ]
+       },
+       {
+        "id": "8.13.2",
+        "label": "Set the shipping and package",
+        "questions": [
+         {
+          "question": "How will you charge the buyer for shipping?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The shipping rate table requires you to choose between a flat rate, calculated cost by location, or local pickup, which directly impacts your profit and the buyer's total cost.",
+          "whatTheAgentLoses": "An agent cannot physically weigh your item to accurately estimate shipping costs or decide whether you want to absorb the cost to attract more buyers.",
+          "speak": "gate",
+          "check": "Which shipping options does the form show, and what is selected?",
+          "say_example": "How should shipping work? Flat rate, charge by distance, or local pickup only? The site suggests <5.99> flat."
+         },
+         {
+          "question": "What package dimensions and weight will you enter?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts for the item's dimensions and weight to calculate accurate shipping costs for the listing.",
+          "whatTheAgentLoses": "The user loses the ability to physically measure and weigh the item to ensure accurate shipping estimates and avoid unexpected fees.",
+          "speak": "gate",
+          "check": "Which package size and weight fields are required and empty?",
+          "say_example": "The site needs the package size and weight to price shipping. How big is the box, and how heavy?"
+         }
+        ]
+       },
+       {
+        "id": "8.13.3",
+        "label": "Set the meetup preferences",
+        "questions": [
+         {
+          "question": "How do you want to hand the item over, a public meetup or door pickup?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows checkboxes for public meetup, door pickup, and door dropoff, which establish the logistics and safety of the physical exchange.",
+          "whatTheAgentLoses": "Delegating this choice means an agent might select a less secure handoff method, like door pickup, instead of prioritizing your physical safety.",
+          "speak": "never",
+          "check": "Which meetup options are ticked?",
+          "say_example": "Ticked public meetup, left door pickup off"
+         },
+         {
+          "question": "Do you want to use the pre-filled location for this listing?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen showed an optional location field pre-filled with North Vancouver, which determines where local buyers will see the item.",
+          "whatTheAgentLoses": "Letting an agent decide means they might expose your exact neighborhood or pick a location that makes local pickup inconvenient.",
+          "speak": "if-wrong",
+          "check": "What location is pre-filled, and does it match the location given?",
+          "say_example": "The listing location is set to <North Vancouver>. You're in <Burnaby>. Changing it, so nearby buyers see it."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "8.14",
+      "label": "Set the promotion",
+      "questions": [
+       {
+        "question": "Do you want to pay to promote the listing, and at what rate?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a checkbox to boost sales with a suggested 7.6% ad rate, which directly impacts your final profit margin.",
+        "whatTheAgentLoses": "Delegating this step means losing control over your profit margins, as an agent might accept the high suggested rate rather than manually lowering it to save money.",
+        "speak": "on-event",
+        "check": "Is the promote checkbox ticked, and what ad rate is shown?",
+        "say_example": "The form has promotion ticked at <7.6%>. That comes out of your sale. I'm unticking it."
+       },
+       {
+        "question": "Should you offer a volume pricing discount?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform provides a checkbox to offer tiered discounts for buying multiple items, which can drive store traffic but only makes sense if you have more than one item in stock.",
+        "whatTheAgentLoses": "The user loses the strategic choice of whether to incentivize bulk purchases to drive broader store traffic based on their specific inventory levels.",
+        "speak": "never",
+        "check": "Is the volume pricing box ticked?",
+        "say_example": "Left the volume discount off"
+       },
+       {
+        "question": "Does the ad fee charged match the rate you picked?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Checking that the $1.52 fee exactly matches the 7.6% rate on the $19.99 price ensures the platform applied your settings correctly.",
+        "whatTheAgentLoses": "The user loses the financial oversight of verifying the platform's final fee calculation against their initial input.",
+        "speak": "if-wrong",
+        "check": "Does the ad fee shown equal the selected rate times the price?",
+        "say_example": "The ad fee shows <2.10>, but <7.6%> of <19.99> is <1.52>."
+       }
+      ]
+     },
+     {
+      "id": "8.15",
+      "label": "Set the visibility",
+      "questions": [
+       {
+        "question": "Do you want to list this item in any specific groups besides the public Marketplace?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides the option to cross-post your listing to up to 20 specific groups to increase its visibility.",
+        "whatTheAgentLoses": "The user loses the ability to strategically target specific niche communities that might be more interested in buying the item.",
+        "speak": "never",
+        "check": "Which groups are selected?",
+        "say_example": "Listed to Marketplace only, no groups"
+       },
+       {
+        "question": "Does hiding the listing from friends turn off posting to groups?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform explicitly states that toggling 'Hide from friends' disables the feature to cross-post the listing to specific community groups, forcing a trade-off between privacy and visibility.",
+        "whatTheAgentLoses": "The user loses the strategic choice of whether keeping the sale private from their personal network is worth losing access to targeted buyer groups.",
+        "speak": "on-event",
+        "check": "Is 'Hide from friends' on, and does the page say that disables posting to groups?",
+        "say_example": "Hiding it from friends turns off posting to groups. It'll be in Marketplace only."
+       }
+      ]
+     },
+     {
+      "id": "8.16",
+      "label": "Review the form",
+      "questions": [
+       {
+        "question": "Is 'Relist automatically' already ticked on the form?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms often default to auto-relisting unsold items, which can silently drain your account with insertion fees if you only intended to try selling it once.",
+        "whatTheAgentLoses": "The user loses control over their listing budget and duration, potentially incurring recurring fees for an item that isn't selling.",
+        "speak": "on-event",
+        "check": "Is 'Relist automatically' ticked?",
+        "say_example": "Auto-relist is ticked. If it doesn't sell, the site relists it and may charge a fee each time. I'm unticking it."
+       }
+      ]
+     },
+     {
+      "id": "8.17",
+      "label": "Publish the listing",
+      "questions": [
+       {
+        "question": "Are you ready to publish the listing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The 'Publish' button at the bottom of the left panel finalizes the creation process and makes your item live on the marketplace.",
+        "whatTheAgentLoses": "You lose the final opportunity to review the price, description, and photos before the listing becomes visible to potential buyers.",
+        "speak": "gate",
+        "check": "What title, price, condition, category, shipping, returns, and fees does the review page show?",
+        "say_example": "Ready to publish. <Tultex T-shirt XL>, <20>, <good condition>, <free shipping>, <no returns>. The site takes <13%> when it sells. Press to publish, or say change."
+       },
+       {
+        "question": "Is the listing live, or is the form still open?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The narrator instructs you to click the button, but the video cuts off while the cursor is only hovering over it, leaving the final action unconfirmed.",
+        "whatTheAgentLoses": "The user loses the certainty that the item was successfully published to the marketplace since the final confirmation is never shown.",
+        "speak": "if-wrong",
+        "check": "Does the page show the listing as live, with a listing number?",
+        "say_example": "It didn't publish. We're still on the form. Nothing is live."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Manage the listing",
+    "note": "9.1 on every publish. 9.2 and 9.3 in one keeper; 9.4 whenever a buyer writes - the corpus shows the inbox empty and nothing arriving.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Check the published listing",
+      "questions": [
+       {
+        "question": "Does the live listing show the price, shipping, and condition from the form?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Checking the live listing page ensures that the images, condition, $19.99 price, and $3.99 shipping fee appear exactly as intended for potential buyers.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your item is presented perfectly to the public without any costly errors in the price or description.",
+        "speak": "if-wrong",
+        "check": "Does the live listing show the same price, shipping, and condition as the form?",
+        "say_example": "The live listing shows shipping as <3.99>. The form said free. Fixing it."
+       },
+       {
+        "question": "Does the seller dashboard show the listing as active?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The Seller Dashboard shows zero active or pending listings, revealing that the $[address] Microphone listing prepared earlier was never actually published.",
+        "whatTheAgentLoses": "The user fails to reach any potential buyers because the agent drafted the listing but never committed it to the marketplace.",
+        "speak": "if-wrong",
+        "check": "Does the seller dashboard show the listing under active listings?",
+        "say_example": "The dashboard shows no active listings. The <microphone> never went live."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Mark the item sold",
+      "questions": [
+       {
+        "question": "Did the item sell here, somewhere else, or not at all?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The platform prompts you to specify whether the item was sold on Facebook, elsewhere, or not at all to properly update the listing.",
+        "whatTheAgentLoses": "The user loses the choice of whether to disclose to the platform exactly where the final transaction took place.",
+        "speak": "gate",
+        "check": "Which options does the mark-as-sold prompt show?",
+        "say_example": "Marking it sold. Did it sell here, somewhere else, or not at all?"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Delete or relist",
+      "questions": [
+       {
+        "question": "Did the listing delete, or did an error come up?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen showed an 'Oops! Couldn't delete post.' modal after clicking 'Delete', indicating the deletion failed.",
+        "whatTheAgentLoses": "The user might assume their listing was removed and stop monitoring it, while it remains active and continues to attract unwanted messages.",
+        "speak": "on-event",
+        "check": "Does an error modal say the deletion failed?",
+        "say_example": "The site couldn't delete the listing. It's still up. Trying once more."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Answer the buyers",
+      "questions": [
+       {
+        "question": "Is the buyer who made the offer a brand-new account with no feedback?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Scammers frequently use fresh, burner accounts to make fraudulent offers, overpay with bad checks, or send fake payment confirmation emails.",
+        "whatTheAgentLoses": "The user loses the ability to screen out high-risk buyers, potentially sending their physical item to a scammer without actually getting paid.",
+        "speak": "on-event",
+        "check": "What join date and feedback count does the offering buyer's profile show?",
+        "say_example": "The offer is from an account made <this week> with no feedback. Be careful with this one."
+       },
+       {
+        "question": "Do you have any active chats in your inbox for buying or selling?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the buying and selling tabs in the inbox confirms whether there are any active negotiations or pending deals requiring your attention.",
+        "whatTheAgentLoses": "You lose the ability to personally verify your current negotiation pipeline and ensure no urgent messages were missed before moving on.",
+        "speak": "never",
+        "check": "Which chats appear under the Buying and Selling tabs?",
+        "say_example": "Found <2> open chats, one buyer waiting on you"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

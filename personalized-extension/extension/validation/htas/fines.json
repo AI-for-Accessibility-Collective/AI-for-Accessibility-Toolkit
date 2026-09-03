@@ -1,0 +1,1110 @@
+{
+ "task": "pay a fine or ticket on a government portal (city parking-ticket sites, court or toll-violation portals): look up the citation by number or plate, verify the details match the notice, pay; complete when the payment receipt or confirmation is on screen. Surface pinned: a city, court, or agency web payment portal. Variants: contesting or appealing a ticket, DMV renewals, and paying ordinary toll-account balances do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Pay a fine online",
+  "note": "1, then 2 - 2 repeats with another key, another portal, or a later day when nothing comes back (2.9). 3 reads what 2 returned; 3.2 ends the task when there is nothing to pay (cECv, yhEd, pHxr), and 3.8 sends it back to 1 on a different portal when the ticket has moved to a court (50yH). 4 commits to paying and reads the price; 5 is where the money moves, on a different site than 2 and 3 in every paid run. 6 closes it, and 6.5 loops until the portal shows the payment as received (AWyW). four keepers reach 6 (50yH, AWyW, tnm9, tphD); four stop inside 2 (SYZa, BNwA, 86Mt, XAXJ); a7t_ stops at 4.3 and ifHj inside 5.4.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the payment portal",
+    "note": "1.1 then 1.2 - or 1.1 alone where a sitelink, an SMS link, or a saved tab lands straight on the form (SYZa, AWyW, XAXJ). 1.3 wherever the site lists more than one way to pay. 1.4 as the banners appear, at any point. 1.5 where a terms page or a consent modal blocks the way. 1.6 is on screen in three keepers and taken in none.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Find the official site",
+      "questions": [
+       {
+        "question": "Is the result I'm opening the government's own site, not an ad or a look-alike?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first result displays the official courts.state.va.us URL, confirming it is the legitimate government portal.",
+        "whatTheAgentLoses": "You lose the chance to personally verify that the selected website is the authentic government portal and not a deceptive third-party site.",
+        "speak": "if-wrong",
+        "check": "Which result or suggestion is the agent about to open, and is its address a government domain (.gov, .state.xx.us, .gov.in, .nic.in, .gov.au) rather than a sponsored result or a look-alike domain?",
+        "say_example": "The top result is an ad for a ticket-paying service, not the court. I'm skipping it and opening <the court's own site>."
+       },
+       {
+        "question": "Does the site warn that it never sends tickets by text or email?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The portal explicitly states the city does not send text or email reminders, meaning if you received your citation that way, it is a phishing attempt.",
+        "whatTheAgentLoses": "You lose the chance to realize your initial notice was fraudulent before instructing the agent to hand over personal details to search for it.",
+        "speak": "on-event",
+        "check": "Does the page carry a warning that the agency does not send citations, reminders or payment links by text message or email?",
+        "say_example": "This site says <the city> never sends tickets by text. If yours came as a text, it's probably a scam. Want me to look up your plate here instead of using the link in the message?"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Navigate to the fines section",
+      "questions": [
+       {
+        "question": "Which court takes online payments for your ticket?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the navigation menu lists multiple court levels, but only the General District Court processes online payments for fines.",
+        "whatTheAgentLoses": "You lose the awareness of which specific court level has jurisdiction over your traffic violation.",
+        "speak": "never",
+        "check": "Which court or division does the page say handles online fine payments?",
+        "say_example": "Chose <General District Court>, the only one here that takes online payments"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Choose the online channel",
+      "questions": [
+       {
+        "question": "Do you want to pay online with the fee, or use a free way instead?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple payment options and explicitly states that online payments will incur an additional processing fee.",
+        "whatTheAgentLoses": "You lose the opportunity to avoid extra transaction fees by choosing to pay by mail or in person.",
+        "speak": "on-event",
+        "check": "Does the page state that paying online adds a fee, and what other payment methods does it list without one?",
+        "say_example": "Paying online here adds a <4%> fee, about <$5>. Paying <by phone> is free. Online is fine, or say phone."
+       },
+       {
+        "question": "Which menu entry goes to online payment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple payment methods like BPAY and phone, but expanding the 'Online' option reveals the direct link to the web payment portal.",
+        "whatTheAgentLoses": "You lose the opportunity to choose an alternative payment method like BPAY or paying by phone if you prefer not to use a credit card online.",
+        "speak": "never",
+        "check": "Which entry under the payment methods menu links to the online payment portal?",
+        "say_example": "Opened the online payment option from the menu"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Read the portal rules and alerts",
+      "questions": [
+       {
+        "question": "Does the page state a deadline for paying this fine?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "This matters because the screen outlines critical deadlines, like the 28-day limit, and lists various payment methods such as Online, BPAY, phone, or in person.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to review the payment deadlines and choose your preferred payment method from the available options.",
+        "speak": "on-event",
+        "check": "Does the page state a number of days or a date by which the fine must be paid, and what it says happens after that?",
+        "say_example": "You have <28 days> from the notice date to pay. After that it goes up."
+       },
+       {
+        "question": "Does the page say online payments will be down for maintenance?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The portal homepage displays a banner warning of upcoming scheduled maintenance during which online payments will be unavailable.",
+        "whatTheAgentLoses": "You lose the awareness of system downtime, which could explain why the agent fails to complete the task if they attempt it during the maintenance window.",
+        "speak": "on-event",
+        "check": "Does the page show a maintenance notice with a time window during which online payments are unavailable?",
+        "say_example": "The site says payments are down <tonight from 10 to 2>. I can try now, or wait until it's back."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Accept the portal terms",
+      "questions": [
+       {
+        "question": "Is there a CAPTCHA on this page that only you can solve?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a mandatory terms of use agreement and a visual CAPTCHA that must be completed to access the portal.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally review and legally consent to the government portal's terms of use.",
+        "speak": "gate",
+        "check": "Does the page show a CAPTCHA (image puzzle, text challenge, or an 'I'm not a robot' box) that must be completed before Continue works?",
+        "say_example": "The site wants a picture puzzle to prove you're a person. I'll hand it to you. Tell me when it's done."
+       },
+       {
+        "question": "Does the site make you accept its user agreement before you can go in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires checking a box to accept the user agreement before the 'Continue' button will let you access the citation system.",
+        "whatTheAgentLoses": "You lose the opportunity to review the specific legal terms and conditions you are bound to when using the government portal.",
+        "speak": "never",
+        "check": "Does the page require a checkbox accepting the user agreement before Continue is enabled?",
+        "say_example": "Accepted the site's user agreement to get in"
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Sign in to the account"
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Look up the ticket",
+    "note": "2.1 where the portal serves more than one authority. 2.2, then 2.3 where the form asks which notice this is, then 2.4 with 2.5 against it. 2.6 on every form that has one; 2.7 on the Indian portals, and again on every re-lookup. then 2.8. 2.9 when nothing comes back or the page does not respond, and back to 2.2 or 2.4 - or to a later day, since a new ticket may not be in the system yet. four keepers never get past 2.8 (SYZa, BNwA, 86Mt, XAXJ).",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Pick the issuing authority",
+      "questions": [
+       {
+        "question": "Which state is the ticket from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Vehicle Related Services' page requires you to choose a state from the dropdown to proceed to the correct regional system.",
+        "whatTheAgentLoses": "Delegating this means the agent might not know where your vehicle is registered, leading them to select the wrong state and fail the lookup.",
+        "speak": "never",
+        "check": "Which state is selected in the dropdown, and which state is printed on the notice?",
+        "say_example": "Picked <Virginia>, the state on your ticket"
+       },
+       {
+        "question": "Which transport office issued your notice?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires you to choose a specific local authority from the dropdown, such as Darrang or Barpeta, to route your request to the correct regional system.",
+        "whatTheAgentLoses": "You lose the ability to ensure the system searches the exact regional office where your vehicle is registered or where the citation was issued.",
+        "speak": "never",
+        "check": "Which authority is selected in the dropdown, and does it match the office named on the notice?",
+        "say_example": "Picked <Darrang>, the office on your notice"
+       },
+       {
+        "question": "Should the search go by your plate number, or by the office that issued it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing a lookup method via radio buttons to either enter a specific vehicle registration number or select a registering authority from a dropdown.",
+        "whatTheAgentLoses": "The user loses the ability to decide which piece of identifying information they prefer or have available to locate their records.",
+        "speak": "never",
+        "check": "Which search option is selected, and which one does the page require for the number the person gave?",
+        "say_example": "Searched by your plate number"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Pick the lookup key",
+      "questions": [
+       {
+        "question": "Which search method should you use to find your case?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu offers multiple search options like name, case number, or hearing date, and you must select the one that matches the information you have.",
+        "whatTheAgentLoses": "You lose the ability to decide which search method is the easiest or most accurate way to locate your specific ticket.",
+        "speak": "never",
+        "check": "Which search options does the page list, and which one is selected?",
+        "say_example": "Searched by the ticket number, since you have it"
+       },
+       {
+        "question": "Should the search use the payment-plan lookup instead of the plate?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an '- OR -' separator alongside a 'Payment Plan #' field, offering a different way to find your citation if you are not using the standard violation and plate numbers.",
+        "whatTheAgentLoses": "The user loses the ability to decide which set of personal credentials is most appropriate or convenient to use for retrieving their specific citation.",
+        "speak": "never",
+        "check": "Does the page offer a payment-plan-number lookup as an alternative to the violation and plate fields?",
+        "say_example": "Skipped the payment-plan lookup, your ticket isn't on a plan"
+       },
+       {
+        "question": "Does the site make out-of-state plates search by ticket number instead?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search page explicitly instructs non-local license plate holders to use the Violation Number rather than the license plate search option.",
+        "whatTheAgentLoses": "You lose the specific rule that dictates which search method must be used for out-of-state vehicles, potentially causing the agent's plate search to fail.",
+        "speak": "on-event",
+        "check": "Does the page instruct out-of-state or non-local plate holders to search by violation number instead of plate?",
+        "say_example": "This site can't look up an out-of-state plate. It needs the ticket number instead. What's the number on your notice?"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Match the notice to the form",
+      "questions": [
+       {
+        "question": "Does the page show where the ticket number is printed on the notice?",
+        "cluster": "photos",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The portal offers sample images of different violations with green arrows pointing to the required 10-digit number.",
+        "whatTheAgentLoses": "You lose the visual guidance that teaches you how to correctly identify the violation number on your physical documents.",
+        "speak": "on-event",
+        "check": "Does the page show a sample ticket image indicating where the required number is printed?",
+        "say_example": "The site wants the <10-digit> number. Its sample shows it at the <top right of the ticket, under the barcode>."
+       },
+       {
+        "question": "Which kind of notice shown on the page matches the one you got?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select the correct ticket type by comparing your citation to three sample images (Provincial Offences, Notice of Fine, or Red Light Camera).",
+        "whatTheAgentLoses": "An agent cannot physically examine your paper ticket to match its layout against the sample images provided on the screen.",
+        "speak": "on-event",
+        "check": "Which ticket types does the page ask you to choose between, and what does it say distinguishes them?",
+        "say_example": "The site has <three> kinds of notice. <A court ticket, a fine notice, or a red-light camera letter>. Which did you get? Say <court>, <fine>, or <camera>."
+       },
+       {
+        "question": "Are fields filled in on only one side of the '- OR -' line?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form explicitly uses an '- OR -' separator to show that only the violation/plate combination or the payment plan/email combination is needed, not both.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent understands mutually exclusive form fields, which could lead to search errors or failed lookups.",
+        "speak": "if-wrong",
+        "check": "Are fields on both sides of the '- OR -' separator filled in?",
+        "say_example": "The form wants either the ticket number or the plan number, not both. I'm clearing the plan field."
+       },
+       {
+        "question": "Which reason for paying matches your notice?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Choosing the correct option from the dropdown, such as 'Infringement Payments' instead of 'Payment Plans', ensures your money is directed to the right account.",
+        "whatTheAgentLoses": "You lose the ability to verify that the payment is being categorized correctly according to your specific notice.",
+        "speak": "if-wrong",
+        "check": "Which option is selected in the payment reason dropdown, and does it match the notice type shown on screen?",
+        "say_example": "The reason box was set to <Payment Plans>. Your notice is a <fine>. I'm switching it so the money goes to the right place."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Enter the identifiers",
+      "questions": [
+       {
+        "question": "Which required field on the form is still empty?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires the exact violation or toll bill number to locate your specific citation record.",
+        "whatTheAgentLoses": "Delegating this step requires sharing your specific citation number, which could expose details about your vehicle, location, or driving history to the agent.",
+        "speak": "on-event",
+        "check": "Which fields on the search form are marked required, and which of them are still empty?",
+        "say_example": "The form needs the ticket number. I don't have that yet. It's on the notice, <top right>. What is it?"
+       },
+       {
+        "question": "Which email should the receipt go to?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen includes an 'Email Address' field, which determines where your payment receipt and any follow-up communications will be sent.",
+        "whatTheAgentLoses": "If the agent skips this field or guesses an email, you might not receive the official payment receipt needed for your records.",
+        "speak": "never",
+        "check": "Is the email field filled with the address the person gave, and does the page say the receipt goes there?",
+        "say_example": "Entered <your email> for the receipt"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Check the identifier format",
+      "questions": [
+       {
+        "question": "Does the page mark the ticket number and plate as valid?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The green checkmarks next to the input fields confirm that the system recognizes your details as correctly formatted before you attempt to search.",
+        "whatTheAgentLoses": "You lose the immediate visual reassurance that your citation details were typed in the correct format before submitting the search.",
+        "speak": "if-wrong",
+        "check": "Does the page show a validation mark (green check, red mark, or error text) beside the entered fields, and which fields are flagged?",
+        "say_example": "The site is flagging the ticket number as the wrong shape. It wants <10 digits>. I typed <9>. Can you read it to me again?"
+       },
+       {
+        "question": "Does each value typed into the search fields match what you gave, character for character?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Citation numbers often contain mixed alphanumerics where a single misread character causes a 'no record found' error or pulls up the wrong ticket.",
+        "whatTheAgentLoses": "You lose the visual side-by-side comparison between the printed ticket font and the typed input, which is crucial for catching transcription errors.",
+        "speak": "if-wrong",
+        "check": "What is the value in each search field, and does it match the identifier the person gave, character for character, including zero versus the letter O and 8 versus B?",
+        "say_example": "I typed <ABC0123> with a zero. If it's the letter O on your ticket, say so and I'll fix it."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Pass the bot check",
+      "questions": [
+       {
+        "question": "Did the page come back with a new CAPTCHA and empty fields after submit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Government portals frequently handle incorrect CAPTCHA entries by silently reloading the form with a new image instead of displaying an explicit error message.",
+        "whatTheAgentLoses": "You lose the ability to recognize that the search didn't break, but merely rejected the CAPTCHA and requires you to re-enter your details.",
+        "speak": "on-event",
+        "check": "After submit, did the page reload with a new CAPTCHA image and empty search fields, without an error message?",
+        "say_example": "The page cleared itself and gave a new puzzle. That usually means the last one failed. I'll hand you the new one."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Enter the OTP",
+      "questions": [
+       {
+        "question": "Did the page send a code to your phone for you to type in yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The eChallan portal requires entering a time-sensitive OTP to securely access the vehicle's citation records.",
+        "whatTheAgentLoses": "Delegating this step requires you to actively monitor your phone and relay a time-sensitive OTP to the agent.",
+        "speak": "gate",
+        "check": "Does the page show a one-time code field and say a code was sent to a phone number?",
+        "say_example": "A code went to your phone ending <274>. Enter it yourself. I'll wait."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Submit the lookup",
+      "questions": [
+       {
+        "question": "Did the search actually go through to a results page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the 'Retrieve Ticket(s)' button is required to submit your search criteria and locate the citation.",
+        "whatTheAgentLoses": "You lose the ability to see exactly how the search was executed to access your citation records.",
+        "speak": "if-wrong",
+        "check": "Is the results page on screen, or is the search form still showing with the fields filled?",
+        "say_example": "The search didn't actually go through. The form is still here. I'm trying the button again."
+       }
+      ]
+     },
+     {
+      "id": "2.9",
+      "label": "Recover from a failed lookup",
+      "questions": [
+       {
+        "question": "Does the form offer other ways to search, like hearing date or officer name?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search form provides multiple optional fields like hearing date, time, and complainant name, requiring a decision on which specific details to combine to successfully locate the citation.",
+        "whatTheAgentLoses": "You lose the ability to reference your physical summons to strategically combine alternative search fields when a standard lookup fails.",
+        "speak": "on-event",
+        "check": "Does the search form offer additional optional fields (hearing date, time, officer name), and did the previous search return nothing?",
+        "say_example": "Nothing came up by name. The form can also search by hearing date. Do you have that on the notice?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Read the results",
+    "note": "3.1 on every lookup that returns - or 3.2, which ends the task. 3.3 on every row that carries a status, and 3.4 where the portal explains what the status costs. 3.5 when more than one row came back. then 3.6, and 3.7 where an image or a notice is offered. 3.8 restarts 1 and 2 on the court's portal when the row says this portal cannot take the payment (50yH).",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Read the ticket list",
+      "questions": [
+       {
+        "question": "Are the tickets folded into one summary line instead of listed one by one?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a collapsed summary of 99 violations, which must be expanded to verify the individual citation details.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the specific details of each ticket associated with your license plate before deciding which to pay.",
+        "speak": "on-event",
+        "check": "Does the results page show a single collapsed line with a count of violations rather than the individual tickets?",
+        "say_example": "This plate has <99> tickets folded into one line. I'm opening the list to read each one before picking yours."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Read the no-record result",
+      "questions": [
+       {
+        "question": "Did the search find any tickets?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a 'NO RECORD FOUND' message, making it important to verify the displayed plate and MV file numbers to ensure the search was accurate.",
+        "whatTheAgentLoses": "If an agent stops at a 'no record found' screen, you lose the ability to personally verify if the search inputs were typed correctly or if an alternative search method is needed.",
+        "speak": "on-event",
+        "check": "Does the page show 'no record found' text, and what plate or number does it show it searched? Does the page say new tickets take time to appear?",
+        "say_example": "No ticket found for <plate>. The site says new tickets can take a few days to show up. I'll try once more <without the dashes>."
+       },
+       {
+        "question": "Did the page show an error about the format, rather than a no-ticket result?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A sighted user instantly sees red text indicating a formatting error, whereas a delegating user might just be told 'no records found' and falsely assume they have no tickets.",
+        "whatTheAgentLoses": "You lose the ability to distinguish between a clean driving record and a simple typo in the search fields.",
+        "speak": "on-event",
+        "check": "Does the page show an error message beside a field or at the top of the form instead of a results list, and what does it say?",
+        "say_example": "It's not that you have no tickets. The site rejected the plate format. It wants <letters and numbers with no space>. I'm fixing it."
+       },
+       {
+        "question": "Does the plate or number on the results screen match the one you asked about?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The session begins with the intent to check a vehicle's challan and concludes by displaying the final status tables to confirm the search.",
+        "whatTheAgentLoses": "The user loses the assurance that the final displayed records actually fulfill their original request to check a specific vehicle's citation.",
+        "speak": "if-wrong",
+        "check": "What plate or ticket number does the results page display, and does it match the one the person gave?",
+        "say_example": "The results are for plate <ABC123>. You said <ABC128>. Something got mistyped. I'm searching again."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Check the ticket's status",
+      "questions": [
+       {
+        "question": "Is this ticket still open, or already paid?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The results table displays a status description for each ticket, allowing you to verify if a fine has already been paid before attempting to submit a new payment.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review your citation history and confirm that the system correctly recorded your past payments.",
+        "speak": "on-event",
+        "check": "What status does the page show for the ticket: open and payable, paid, pending, disposed, forwarded to a court, or guilty in absentia? If forwarded, which court?",
+        "say_example": "This ticket is marked <already paid on July 2>. There's nothing to pay. Want me to check for others?"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Read the consequence rules",
+      "questions": [
+       {
+        "question": "What happens if my ticket goes into judgment?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen warns that tickets unpaid for 100 days enter default judgment, which adds penalties and risks your vehicle being booted or towed if the debt exceeds $350.",
+        "whatTheAgentLoses": "You lose the chance to learn about the severe legal and financial risks, like vehicle booting, that apply to your overdue citations.",
+        "speak": "never",
+        "check": "Does the page state what happens when a ticket goes into judgment, including any amount threshold for towing or booting?",
+        "say_example": "Noted the site's rule, tickets over <100 days> old go into judgment and over <$350> the car can be towed"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Pick the ticket to pay",
+      "questions": [
+       {
+        "question": "Which of the tickets that came up should we open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search returned three different cases, requiring you to identify the active one with a pending hearing date and an available payment option.",
+        "whatTheAgentLoses": "You lose the chance to see your other past citations and verify the specific details of the pending charge before proceeding.",
+        "speak": "on-event",
+        "check": "How many tickets or cases does the results page list, and which of them show an open status with a pay option?",
+        "say_example": "<Three> came up for you. <Two> are closed. One from <May 3> is open and can be paid. I'll use that one, or want to hear all <three>?"
+       },
+       {
+        "question": "Does the name on the result match the full name you searched, middle initial included?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "You searched for a defendant with the middle initial 'A', but the system returned a case for 'KANE, THOMAS FRANCIS; JR'.",
+        "whatTheAgentLoses": "The user loses the chance to catch a mistaken identity issue before accidentally paying someone else's fine.",
+        "speak": "if-wrong",
+        "check": "Does the name on the result match the full name and middle initial that was searched for?",
+        "say_example": "The result is <Thomas Francis Kane Jr>. You gave me <Thomas A Kane>. This may be someone else's ticket. I won't pay it until you confirm."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Read the ticket details",
+      "questions": [
+       {
+        "question": "What charge and hearing date does the case page show?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays the case type as an infraction and lists upcoming hearing dates, which helps confirm the exact status of the citation.",
+        "whatTheAgentLoses": "You lose the chance to personally verify the exact nature of the charge and the schedule of upcoming hearings.",
+        "speak": "never",
+        "check": "What case type and hearing dates does the details page show?",
+        "say_example": "Read the case page, an <infraction> with a hearing set for <June 12>"
+       },
+       {
+        "question": "How does the total split between the fine and court costs?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The disposition information breaks down the total into a $50.00 fine and $87.00 in court costs, which you must verify before paying the past-due balance.",
+        "whatTheAgentLoses": "You lose visibility into exactly how the total amount is split between the original fine and the added court costs.",
+        "speak": "never",
+        "check": "What line items make up the total on the details page: fine, court costs, fees?",
+        "say_example": "Broke down the <$137>, a <$50> fine plus <$87> court costs"
+       },
+       {
+        "question": "Do the date, amount, and place on screen match your ticket?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the infraction date, ticket amount, and location code ensures you are paying the correct citation before confirming.",
+        "whatTheAgentLoses": "You lose the chance to personally verify the citation details to ensure you are paying the right ticket.",
+        "speak": "always",
+        "check": "What violation, date, location, plate, vehicle and amount does the ticket details page show?",
+        "say_example": "Found it. <Speeding> on <May 3> at <Main and 5th>, plate <ABC123>. <$164>. Match your notice?"
+       },
+       {
+        "question": "Is the car on the ticket the one you drive?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the officer transcribed the license plate incorrectly, the portal will show a violation for a car you don't own, which you must dispute rather than pay.",
+        "whatTheAgentLoses": "You lose the chance to catch a transcription error by the issuing officer that resulted in being billed for someone else's vehicle.",
+        "speak": "if-wrong",
+        "check": "What vehicle make, model and color does the citation show, and does it match the vehicle the person described?",
+        "say_example": "This ticket is for a <red Honda Civic>. You said you drive a <blue Corolla>. This may be someone else's plate. You may want to dispute this rather than pay it."
+       },
+       {
+        "question": "Does the total on screen match the fine on your notice, or has a late penalty been added?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a ticket is past due, the system automatically applies escalating penalties; noticing this allows you to decide whether to pay the inflated amount or contact the court to request a penalty waiver.",
+        "whatTheAgentLoses": "You lose the opportunity to realize you are being charged late fees and to evaluate if you have grounds to contest the added penalties before paying.",
+        "speak": "if-wrong",
+        "check": "Does the amount due on screen equal the fine amount on the person's notice, or does the page show added late penalties, interest or collection fees?",
+        "say_example": "The total is <$212>, not the <$164> on your notice. The site added a <$48> late penalty. Pay it, or want to ask the court about a waiver first?"
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "View the notice or summons",
+      "questions": [
+       {
+        "question": "Is there a photo of the ticket on file?",
+        "cluster": "photos",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The portal offers a 'View Ticket' option that might show photographic evidence of the violation, which can help verify the citation.",
+        "whatTheAgentLoses": "The user loses the chance to personally inspect any available photographic evidence of the violation before paying the fine.",
+        "speak": "never",
+        "check": "Does the page offer a link to view the ticket image or photo evidence?",
+        "say_example": "Found a photo of the ticket on file"
+       },
+       {
+        "question": "Does the page show a summons with a hearing date?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a PDF of the official summons containing complete information about the violated rules and the associated court case.",
+        "whatTheAgentLoses": "Delegating this means you miss the opportunity to personally read and retain the specific legal details of your violation before paying.",
+        "speak": "on-event",
+        "check": "Does the page display a summons or notice document, and what hearing date, court and charge does it show?",
+        "say_example": "There's a summons attached. Hearing <June 12> at <County Court>, charge <speeding>. Want me to read the whole thing?"
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Move to the paying portal"
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Commit to paying",
+    "note": "4.1 wherever the portal shows an alternative to paying - every portal does, and no keeper takes one. 4.2 then 4.3; a7t_ stops at 4.3, and ifHj reads 4.3 as a modal on the way to 5. 4.4 only on the Indian court portal. 4.5 where a consent stands between the amount and the gateway - the authorization clauses on the last screen belong to 5.6.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Weigh the alternatives",
+      "questions": [
+       {
+        "question": "Do you want to pay this violation or dispute it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides an option to 'Dispute this violation notice' instead of paying the $50.00 fine, requiring you to decide if the ticket is valid.",
+        "whatTheAgentLoses": "The person loses the opportunity to evaluate the circumstances of the ticket and potentially dispute the fine instead of automatically paying it.",
+        "speak": "on-event",
+        "check": "Besides paying in full, does the page offer dispute or contest, traffic school or defensive driving, a payment plan or partial payment? Does it state that paying is a guilty plea, waives a hearing, or adds points?",
+        "say_example": "You asked me to pay. This page says paying counts as pleading guilty and adds <2 points>. It also offers <traffic school> or a dispute. Still pay?"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Select the tickets to pay",
+      "questions": [
+       {
+        "question": "Does this payment bring what you owe under the towing limit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen warns that having more than $350 in judgment tickets risks your vehicle being booted or towed, meaning you must strategically select enough tickets to pay to drop below that specific threshold.",
+        "whatTheAgentLoses": "You lose the ability to ensure your selected payments are sufficient to remove the immediate legal threat of your vehicle being impounded.",
+        "speak": "on-event",
+        "check": "Does the page warn of towing or booting above a stated judgment amount, and what total in judgment does it show for this plate?",
+        "say_example": "You have <$420> in judgment tickets. Over <$350> the car can be towed. Paying the <$164> one brings you under. Pay that one, or all of them?"
+       },
+       {
+        "question": "Did the 'Add to cart' button turn into 'IN CART' after the click?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Clicking to stage a ticket for payment can fail to register, so you must verify the button's visual state changed to ensure the item is actually in your queue.",
+        "whatTheAgentLoses": "You lose the immediate visual confirmation that the citation was successfully added, which could result in proceeding to checkout with an empty cart.",
+        "speak": "if-wrong",
+        "check": "After clicking add to cart, did the button change to an in-cart state, and does the cart count show the ticket?",
+        "say_example": "The add button didn't take. The cart is still empty. I'm clicking again."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Read the amount and the fee",
+      "questions": [
+       {
+        "question": "Does the page offer a lower settlement amount than the full fine?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The on-screen graphic indicated the 1000 INR challan could be settled for just 200 INR, meaning you likely overpaid by missing the discount.",
+        "whatTheAgentLoses": "The user loses the financial savings they would have received if the agent had noticed and applied the discounted settlement offer.",
+        "speak": "on-event",
+        "check": "Does the page show a reduced, discounted or settlement amount alongside the full fine amount?",
+        "say_example": "The page offers to settle this for <200> instead of the full <1000>. I'll pay the lower one unless you say otherwise."
+       },
+       {
+        "question": "Does the fine on the payment screen, before the fee, match the amount on the details page?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The payment screen shows a $170.56 total including a 4% convenience fee, but the implied $164.00 base fine was not displayed on the previous case details screen.",
+        "whatTheAgentLoses": "You lose the chance to verify the accuracy of the underlying fine and dispute any unexpected discrepancies before the payment is finalized.",
+        "speak": "if-wrong",
+        "check": "Does the base amount on the payment screen (total minus the stated fee) equal the fine shown on the details page?",
+        "say_example": "The payment page comes to <$170.56>, which is <$164> plus the fee. The details page said <$137>. The numbers don't line up. I'm holding until we know why."
+       },
+       {
+        "question": "Did a new fee show up on the bank's page that the court site didn't mention?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Some government portals hand off the transaction to a third-party gateway which silently tacks on its own processing fee at the last second.",
+        "whatTheAgentLoses": "You lose the final chance to catch a hidden third-party fee that inflates the total cost beyond what the government portal initially quoted.",
+        "speak": "if-wrong",
+        "check": "Does the total on this payment screen equal the total on the previous screen, or has a fee line appeared or changed since?",
+        "say_example": "The bank page added a <$2.50> fee the court site didn't mention. Total is now <$166.50>. OK?"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Verify the identity to pay",
+      "questions": [
+       {
+        "question": "Did the page send a code to your phone to approve the payment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen prompts for a One Time Password sent to the registered mobile number ending in 274 to proceed with the transaction.",
+        "whatTheAgentLoses": "The user must share a time-sensitive security code sent to their personal device, requiring real-time coordination and compromising account security.",
+        "speak": "gate",
+        "check": "Does the page show a one-time code field and say a code was sent to the phone number ending shown?",
+        "say_example": "A code went to your phone ending <274> to approve the payment. Type it in yourself. I'll wait."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Accept the payment terms",
+      "questions": [
+       {
+        "question": "Which plea does the site make you enter to pay, guilty or no contest?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Paying a ticket online is a legal admission of guilt, and courts often require you to explicitly check a box waiving your right to a hearing before allowing payment.",
+        "whatTheAgentLoses": "You lose the awareness of the specific legal rights you are waiving and the formal plea being permanently attached to your record.",
+        "speak": "gate",
+        "check": "Does the page require selecting a plea (guilty, no contest) or checking a box waiving a hearing before payment is allowed?",
+        "say_example": "To pay, the site makes you enter a plea. Guilty or no contest. Both end the case. Which one? Or say stop if you'd rather go to the hearing."
+       },
+       {
+        "question": "Which boxes have to be ticked before you can pay?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The portal requires checking boxes to accept the Terms and Conditions and acknowledge the Special Summons before you can click Accept & Pay.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the summons document and understand the legal terms you are agreeing to by submitting the payment.",
+        "speak": "never",
+        "check": "Which checkboxes must be ticked before the pay button enables, and what do they say the person acknowledges?",
+        "say_example": "Ticked the terms box and the one saying you've seen the summons"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Pay at the gateway",
+    "note": "5.1 on every paid run - the money never moves on the site that found the ticket. 5.2 only on the Bihar treasury. 5.3 where more than one method exists, then 5.4 for a card or 5.5 for UPI. 5.6 on the card path is the last screen; on the UPI path the confirm is inside the app. 5.7 back to the portal - through a success popup, a remittance page with an auto-redirect, or an email with no page on the portal at all. ifHj ends inside 5.4 with nothing typed.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Hand off to the gateway",
+      "questions": [
+       {
+        "question": "After 'continue', is the card payment form actually on screen, or did the page land back on the search form?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The narrator claims the button leads to payment prompts, but the video abruptly cuts back to the search page without showing them.",
+        "whatTheAgentLoses": "The user loses critical visual guidance on how to navigate the actual payment form and complete the transaction.",
+        "speak": "if-wrong",
+        "check": "After continue, is a card or bank payment form on screen? If not, what is: the search form, a blocked pop-up notice, an error?",
+        "say_example": "The payment page didn't open. The browser blocked a pop-up. I'm allowing it and trying again."
+       },
+       {
+        "question": "Is the page about to leave the court site for an outside payment page?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The browser prompts you to confirm leaving the virtual court site to enter the external U.P. RAJKOSH payment gateway.",
+        "whatTheAgentLoses": "You lose the opportunity to verify the legitimacy of the external payment gateway before proceeding to enter your financial information.",
+        "speak": "always",
+        "check": "Does the page say it is leaving the court site for an external gateway, and what gateway name and address does it show?",
+        "say_example": "I'm leaving the court site now for the state's payment page, <RAJKOSH>."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Fill the treasury form",
+      "questions": [
+       {
+        "question": "Which financial year should you select for this payment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing a specific 'Period Year' from a dropdown to ensure the transaction is applied to the correct timeframe.",
+        "whatTheAgentLoses": "You lose the ability to verify that the payment is being credited to the exact financial year associated with your specific citation.",
+        "speak": "never",
+        "check": "Which period year is selected, and is it the current financial year?",
+        "say_example": "Set the year to <2025-26>"
+       },
+       {
+        "question": "Does the form send the money to the same department and district as your ticket?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying the department, district, and payment head on the OGRAS page ensures your money goes to the correct agency to clear the citation.",
+        "whatTheAgentLoses": "You lose the opportunity to catch routing errors that could send your payment to the wrong jurisdiction, leaving your ticket unpaid.",
+        "speak": "if-wrong",
+        "check": "Do the department, district and payment head on the form match the authority named on the ticket?",
+        "say_example": "The form has the money going to <Barpeta> district. Your ticket is from <Darrang>. I'm fixing that before paying."
+       },
+       {
+        "question": "Is this a one-time payment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The portal requires you to specify the payment period from a dropdown menu, such as selecting 'One Time' for a single citation.",
+        "whatTheAgentLoses": "The user loses the ability to confirm that this is a one-time penalty payment rather than a recurring charge.",
+        "speak": "never",
+        "check": "Which payment period option is selected?",
+        "say_example": "Set it to one-time"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Pick the payment method",
+      "questions": [
+       {
+        "question": "Which payment method do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents tabs for PayPal, eCheck, and Credit Card, specifically noting that the eCheck option has no additional fee.",
+        "whatTheAgentLoses": "You lose the ability to choose the most cost-effective or convenient payment method for your personal financial situation.",
+        "speak": "on-event",
+        "check": "Which payment methods does the page list, which cards does it accept, and which methods carry a fee and how much?",
+        "say_example": "<Three> ways to pay. Bank transfer is free. Card adds <2%>, about <$1>. PayPal adds <2%> too. I'll use bank transfer unless you say card."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Enter the card details",
+      "note": "5.4.1 where the processor asks for it first, then 5.4.2 on CityPay, then 5.4.3. ifHj stops on 5.4.3 with every field empty; tnm9 and tphD fill them with dummy values by jump cut.",
+      "children": [
+       {
+        "id": "5.4.1",
+        "label": "Enter the billing address",
+        "questions": [
+         {
+          "question": "Is the billing address on the form the one for your card, not the one on the ticket?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Government portals often pre-fill the payment form with the address where the ticket was mailed, which will cause a card decline if your billing address is different.",
+          "whatTheAgentLoses": "You lose the ability to prevent a declined transaction and a potential temporary lock-out from the payment gateway due to an Address Verification System (AVS) mismatch.",
+          "speak": "if-wrong",
+          "check": "Is the billing address on the payment form the address the person gave for the card, or the address printed on the citation?",
+          "say_example": "The form filled in the address from the ticket, <old street>. Your card is registered at <new street>. I'm changing it so the card isn't declined."
+         }
+        ]
+       },
+       {
+        "id": "5.4.2",
+        "label": "Confirm the card method"
+       },
+       {
+        "id": "5.4.3",
+        "label": "Enter the card numbers",
+        "questions": [
+         {
+          "question": "Are the card fields filled in before the form submits?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen shows the checkout form fields for cardholder name, card number, and CVV remain completely empty even as the payment processing modal appears.",
+          "whatTheAgentLoses": "The user loses the assurance that their fine was actually paid because the agent failed to input the required financial information before proceeding.",
+          "speak": "if-wrong",
+          "check": "Are the card name, number, expiry and security code fields filled before the submit button is pressed?",
+          "say_example": "The card fields are empty and the page is trying to submit. I'm stopping to fill them in first."
+         },
+         {
+          "question": "Which card should I use to pay?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The portal requires specific payment information, including a Visa or MasterCard number, expiry date, security code, and email address, to process the transaction.",
+          "whatTheAgentLoses": "Delegating this step means you lose control over which specific credit card is charged and where the payment receipt is emailed.",
+          "speak": "always",
+          "check": "Which card fields does the form require, and does it show the card the person gave, masked?",
+          "say_example": "I'm filling in your card ending <4821>, expiry and code now."
+         },
+         {
+          "question": "Is the box to save your card for next time unchecked?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Payment gateways often default to saving financial credentials, which a sighted user can quickly uncheck to protect their privacy.",
+          "whatTheAgentLoses": "You lose the visual awareness of pre-ticked consent boxes, potentially leaving your credit card stored on a government server without your explicit intent.",
+          "speak": "never",
+          "check": "Is there a checkbox to save the card for future payments, and is it checked?",
+          "say_example": "Said no to saving your card on this site"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Pay by UPI",
+      "note": "5.5.1, then 5.5.2 and 5.5.3 on the phone - or off camera, as in 50yH, where the scan and the authorization are never on screen. the gateway gives three minutes.",
+      "children": [
+       {
+        "id": "5.5.1",
+        "label": "Choose QR or UPI ID"
+       },
+       {
+        "id": "5.5.2",
+        "label": "Open the UPI app",
+        "questions": [
+         {
+          "question": "Is there a QR code for you to scan and approve in your own banking app?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen displays a QR code for a Rs 1000 remittance that must be scanned with an external mobile device to finalize the transaction.",
+          "whatTheAgentLoses": "The user loses the security and control of authorizing the payment directly through their own personal mobile banking app.",
+          "speak": "gate",
+          "check": "Does the page show a QR code or UPI request with an amount and a countdown timer?",
+          "say_example": "It wants you to scan a code with your phone and approve <1000 rupees>. You have <3 minutes>. Open your banking app and scan the screen. Tell me when it says paid."
+         }
+        ]
+       },
+       {
+        "id": "5.5.3",
+        "label": "Approve in the app"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Review and submit the payment",
+      "questions": [
+       {
+        "question": "Is the final total with the fee right before you pay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking 'Pay Now' legally authorizes the city to charge your account for the total amount, including any added service fees.",
+        "whatTheAgentLoses": "You lose the final opportunity to review the exact total charge, including unexpected convenience fees, before the funds are irrevocably withdrawn.",
+        "speak": "gate",
+        "check": "What ticket number, amount, fee, total, and card or method does the review screen show, and does it state a refund rule?",
+        "say_example": "Ready to pay. Ticket <ABC0123>, <$164> plus a <$3.28> fee, <$167.28> total, your card ending <4821>. The site says no refunds. Press to pay, or say stop."
+       },
+       {
+        "question": "If the card is declined, what reason does the page give?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Municipal payment processors frequently trigger fraud alerts or fail due to strict Address Verification System checks, requiring you to either approve the charge via text or fix your zip code.",
+        "whatTheAgentLoses": "You lose the ability to diagnose why a payment failed and take the necessary corrective action, such as confirming a fraud alert with your bank, to get the transaction to clear.",
+        "speak": "on-event",
+        "check": "Does the page show a decline or error message after submitting the card, and what reason does it give?",
+        "say_example": "The card was declined. The page says <the billing zip didn't match>. Check the zip with me, or say try another card."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Return to the portal",
+      "questions": [
+       {
+        "question": "Does the bank page say it will send us back to the court site on its own?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a successful transaction but states it is only a remittance form, offering a manual click or a 30-second wait for automatic redirection to the final site.",
+        "whatTheAgentLoses": "The user loses the peace of mind of knowing the payment process completed safely without prematurely interrupting the redirection to the final receipt.",
+        "speak": "on-event",
+        "check": "Does the page say it will redirect back to the portal automatically, and after how many seconds?",
+        "say_example": "Payment went through on the bank side. The page is sending itself back to the court site in <30 seconds>. I won't click anything until it lands."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Verify the payment",
+    "note": "6.1 on every paid run, on the gateway and again on the portal where the portal has one. 6.2 where the site says how long the record takes. 6.3 depends on the user - one saves, one is told to screenshot, one is emailed. 6.4 by running 2 again; 6.5 repeats until the portal agrees with the bank (AWyW, twice).",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Read the success message",
+      "questions": [
+       {
+        "question": "Does the receipt email match the ticket and amount on the site?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the email from NYC Finance ensures you have a permanent record of the receipt number and transaction details for the paid ticket.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the emailed receipt and having direct access to the transaction record in your own inbox.",
+        "speak": "never",
+        "check": "If a confirmation email is open on screen, do its receipt number and ticket number match the portal's?",
+        "say_example": "Matched the receipt email on screen to the portal, same ticket and amount"
+       },
+       {
+        "question": "Is a confirmation page with a reference number actually on screen?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The audio instructs you to download the receipt and note the reference number, but the screen never actually displays a payment confirmation page.",
+        "whatTheAgentLoses": "You lose the proof of payment needed to resolve future disputes if the agent cannot provide a valid confirmation number or receipt.",
+        "speak": "always",
+        "check": "Is a confirmation page on screen with a success message, an amount, and a reference or receipt number? Does it offer a print or download of the receipt?",
+        "say_example": "Paid. <$167.28>, reference <R-48812>. I saved the receipt to your downloads."
+       },
+       {
+        "question": "Does the receipt give a DMV code or steps to lift a registration hold?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the unpaid ticket caused a license suspension or registration hold, simply paying the fine might not automatically notify the DMV, requiring you to manually submit this specific clearance receipt.",
+        "whatTheAgentLoses": "You lose the awareness that your vehicle registration or license remains suspended until you take the extra step of providing the clearance document to the DMV.",
+        "speak": "on-event",
+        "check": "Does the receipt mention the DMV, a registration hold, a suspension, or a clearance code with instructions?",
+        "say_example": "The receipt has a DMV clearance code, <X123>. The site says the hold on your registration won't lift on its own. You'll need to send this code to the DMV."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Read the processing notice",
+      "questions": [
+       {
+        "question": "Will the payment post before your deadline, or does the page's cutoff time make it late?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The portal warns that payments made after 3:30 p.m. Eastern time take two business days to post, which could result in late penalties if you are paying on the due date.",
+        "whatTheAgentLoses": "You lose the awareness of the processing delay, risking a default judgment or late fee if the agent submits the payment after the daily cutoff on your deadline day.",
+        "speak": "on-event",
+        "check": "Does the page state a cutoff time or a number of days before the payment posts or reaches other agencies?",
+        "say_example": "The site says payments after <3:30 pm Eastern> post in <two business days>. Your due date is <today>. It may count as late. Pay anyway, or call the court first?"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Keep the receipt"
+     },
+     {
+      "id": "6.4",
+      "label": "Check the ticket status updated",
+      "questions": [
+       {
+        "question": "Does the ticket number now shown as paid match the one we just paid?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The portal displays a disposed challan ending in 210, but the citation you originally selected to pay ended in 041.",
+        "whatTheAgentLoses": "You lose certainty that your specific ticket was successfully paid, which could result in late fees or legal trouble for an unresolved citation.",
+        "speak": "if-wrong",
+        "check": "Does the ticket number shown as paid or disposed match the ticket number that was selected for payment?",
+        "say_example": "The site now shows ticket ending <210> as paid. The one we picked ends in <041>. The money may have gone to the wrong ticket. I'm not doing anything else until we sort this out."
+       },
+       {
+        "question": "Does the court site now show the ticket as paid, or still pending?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The portal displays a 'Pending' status and a 'verification is in process' message, leaving the actual success of the payment unconfirmed on screen.",
+        "whatTheAgentLoses": "The user loses the certainty that their citation is fully paid and risks late penalties if the pending transaction ultimately fails.",
+        "speak": "on-event",
+        "check": "After payment, what status does the portal show for the ticket: paid or disposed, pending, verification in process, an error, or a timeout? Does the page name a verify link, a pending-transaction module, or say to wait a stated time?",
+        "say_example": "The bank side said paid, but the court site still shows this as pending. The site says to wait <10 minutes> and press verify. I won't pay again. I'll check back then."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Re-verify a pending payment",
+      "questions": [
+       {
+        "question": "What does the confirmation popup say to do if the payment isn't confirmed?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The popup explains the specific steps to take, such as using the Verify Challan link, if funds are deducted from your account but the payment status does not show as successful.",
+        "whatTheAgentLoses": "The user loses the knowledge of how to manually verify their challan status or handle chargebacks if a payment error occurs.",
+        "speak": "never",
+        "check": "What instructions does the confirmation popup give for a payment that was deducted but not confirmed?",
+        "say_example": "Noted the popup's advice, use the verify link if the money leaves but the site doesn't say paid"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

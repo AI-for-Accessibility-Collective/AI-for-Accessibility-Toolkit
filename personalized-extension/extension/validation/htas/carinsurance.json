@@ -1,0 +1,2026 @@
+{
+ "task": "get a car-insurance quote online and proceed toward buying the policy: enter vehicle and driver details, choose coverage options and deductibles, review the quote price, and continue toward purchase; complete when a priced quote (or a purchase confirmation) is on screen. Surface pinned: an insurer's quote website or app (GEICO, Progressive, State Farm, Allstate, Root). Variants: insurance-agent sales training, \"cheapest insurance\" talking-head advice, and claims filing do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Quote and buy car insurance",
+  "note": "do 1, then 2 - the route in 2 decides how much of 3, 4 and 5 the site asks: BCare asks none of 3 and 4 after the sequence number, GEICO already holds the car and the licence. 3, 4 and 5 in the site's own order, one page each on Progressive and one question per screen on GEICO. 6 sits where the site puts the contact gate - before any price on PolicyBazaar and GEICO, after the whole form on Progressive and Compare the Market, nowhere on The Zebra and BCare. 7 and 8 loop on one page until the figure is right - on the aggregators 7.1, 7.4 and 7.7 are asked before the price and 8 follows once. then 9; 9.1 comes before 6 on BCare and Compare the Market. one keeper reaches 9.10, and eight stop at a different point in 9.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the quote site",
+    "note": "1.1 on the search entries - six keepers arrive through a search page and three of those click an ad. 1.2 is what one keeper does to keep the price from going up, before anything else. 1.3 whenever a prompt interrupts. 1.4 on the multi-product sites; 1.5 on the US insurer sites, where the ZIP is the first field. 1.6 wherever the bundle offer appears - on the landing form, as a popup after the ZIP, or as an interstitial before the quote, and vi4x meets it twice. 1.7 where the site already knows the user.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Search for the insurer",
+      "questions": [
+       {
+        "question": "Is the result I'm about to open the insurer's own site, or a sponsored ad?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top search results are ads for third-party sites like investingbytes.com rather than the official GEICO website.",
+        "whatTheAgentLoses": "You lose the ability to ensure your personal data is given directly to the official insurer rather than a third-party lead generation site.",
+        "speak": "on-event",
+        "check": "Which search results are marked Sponsored or Ad, and which result's domain is the insurer's own site or the comparison site named in the task?",
+        "say_example": "The top result is an ad for a different site. The real <GEICO> is two down, so I'm opening that one."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Open a private window"
+     },
+     {
+      "id": "1.3",
+      "label": "Answer the site prompts",
+      "questions": [
+       {
+        "question": "Should the site be switched to English?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen is currently displaying Arabic text, such as the greeting 'مساء الخير، عابد', and offers an 'EN' button to change the language.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the complex insurance terms and quote details are presented in your preferred language.",
+        "speak": "never",
+        "check": "What language is the page text in, and does the header show a language switch such as EN?",
+        "say_example": "Switched the site from <Arabic> to English."
+       },
+       {
+        "question": "Do you want to accept the cookies, or say no to the tracking ones?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a cookie consent banner asking you to manage preferences for performance and advertising tracking.",
+        "whatTheAgentLoses": "You lose the ability to enforce your personal privacy preferences regarding optional web tracking.",
+        "speak": "never",
+        "check": "Is a cookie consent banner shown, and does it offer a reject or manage option?",
+        "say_example": "Said no to the tracking cookies."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Pick the insurance product",
+      "questions": [
+       {
+        "question": "What headline price does the product page advertise for this cover?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen advertises a short-term learner driver policy starting at £1.23 per day with a 4.4/5 Trustpilot rating, which could influence your choice of provider.",
+        "whatTheAgentLoses": "You lose the chance to weigh the advertised starting price and customer reviews before deciding whether to proceed with this specific insurer.",
+        "speak": "never",
+        "check": "What starting price and unit, per day or per month, does the product page advertise, and is it marked 'from'?",
+        "say_example": "Noted the advertised price, from <£1.23> a day, to check the final quote against."
+       },
+       {
+        "question": "Are you insuring a car you already own, or are you transferring ownership of a car you are buying?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify the purpose of the insurance by choosing between 'New Insurance' and 'Transfer Ownership'.",
+        "whatTheAgentLoses": "You lose the ability to ensure the policy is set up correctly for your specific situation, which could cause administrative issues if you are actually transferring a vehicle's title.",
+        "speak": "on-event",
+        "check": "Does the page offer separate routes such as New Insurance and Transfer Ownership, and which one is selected?",
+        "say_example": "This site asks whether the car is already yours or you're buying it from someone. You said it's your car, so I'm taking the new insurance route. Say so if that's wrong."
+       },
+       {
+        "question": "Which kind of insurance do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed multiple insurance icons like Term Life, Health, and Car, requiring a choice to start the quote process.",
+        "whatTheAgentLoses": "The user loses the opportunity to see and potentially explore other insurance products offered on the site.",
+        "speak": "never",
+        "check": "Which product tile or link is being opened, and is it the car or auto insurance one?",
+        "say_example": "Opened the car insurance quote."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Enter the ZIP to start",
+      "questions": [
+       {
+        "question": "What ZIP code should I enter to start your quote?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The GEICO homepage requires a ZIP code in the \"ZIP Code Required\" field to begin generating your quote.",
+        "whatTheAgentLoses": "The agent might enter an incorrect or default ZIP code, resulting in an inaccurate insurance quote for your actual location.",
+        "speak": "never",
+        "check": "Which field does the start page require to begin the quote, and what value is entered in it?",
+        "say_example": "Started the quote with your ZIP, <94025>."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Answer the bundle offer",
+      "questions": [
+       {
+        "question": "Do you want auto only, or bundle it with a home or renters policy for a discount?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The landing page offers a 5% discount if you add a home, renters, or condo policy to your auto quote.",
+        "whatTheAgentLoses": "You lose the chance to decide whether to consolidate your insurance policies to secure a bundling discount.",
+        "speak": "never",
+        "check": "Does the page offer to add a home, renters or condo policy, and which option, auto only or bundle, is selected?",
+        "say_example": "Skipped the home and renters bundle offer. Auto only, like you asked."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Check the signed-in state",
+      "questions": [
+       {
+        "question": "Do you want to start a new quote or continue a saved one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage provides a red 'Start a quote' button for new inquiries and a 'Continue a saved quote' link for returning users.",
+        "whatTheAgentLoses": "You lose the ability to save time by picking up where you left off on a previously saved quote.",
+        "speak": "on-event",
+        "check": "Does the page show a Continue a saved quote link, and is a saved quote date, reference or signed-in name shown?",
+        "say_example": "There's a saved quote here already, from <March>. Pick that one up, or start fresh?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Identify the car",
+    "note": "one of 2.1 to 2.4 identifies the car: a plate on the UK and Indian sites, a sequence number on BCare, a VIN on Progressive when the user has one, otherwise menus. 2.5 where the site offers a car it already associates with the address. 2.6 to 2.8 follow a lookup or a menu pick as the site asks - the Indian wizard asks 2.7 and 2.8 in full, the US menus ask 2.7 only for body type. 2.9 where the site prices from a value. 2.10 last, and no keeper adds a second car. 2.8 is re-asked on the pay page by 0lz6 and LMqf.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Look up the plate",
+      "questions": [
+       {
+        "question": "Is the car brand new, with no number plate yet?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The landing page asks for a car number but provides a specific 'Brand new car? Click here >' link for unregistered vehicles.",
+        "whatTheAgentLoses": "You lose the ability to correctly bypass the registration number requirement by specifying that your vehicle is brand new.",
+        "speak": "on-event",
+        "check": "Does the page ask for a registration number and offer a separate link for a brand new or unregistered car?",
+        "say_example": "This page wants a number plate. Your car is brand new with no plate yet, so I'm using the brand new car link instead."
+       },
+       {
+        "question": "What is your car's registration number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires your car's registration number to look up the vehicle and generate a quote.",
+        "whatTheAgentLoses": "You lose the ability to provide your exact vehicle registration number to ensure the quote matches your specific car.",
+        "speak": "never",
+        "check": "Which field asks for the registration number, and what value is entered?",
+        "say_example": "Looked the car up by its plate, <AB12 CDE>."
+       },
+       {
+        "question": "If the registration number isn't to hand, do you want to look it up so the quote matches the exact car, or continue without it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a specific link to continue the quote process without entering a registration number.",
+        "whatTheAgentLoses": "The user loses the choice of whether to proceed without the registration number or to look it up for a more accurate quote.",
+        "speak": "on-event",
+        "check": "Does the page offer a link to continue without a registration number?",
+        "say_example": "I don't have your number plate. I can carry on without it, but the quote may not match your exact car. Read me the plate, or say carry on."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Enter the sequence number",
+      "questions": [
+       {
+        "question": "The form asks for your national ID or Iqama number and the car's sequence number from the registration card. Do you enter those yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires your National ID or Iqama and the vehicle's sequence number from the registration card to accurately fetch your records.",
+        "whatTheAgentLoses": "Delegating this step requires handing over highly sensitive personal identification and vehicle registration numbers to the agent.",
+        "speak": "gate",
+        "check": "Which identity and vehicle numbers does the form require, such as national ID or Iqama and the sequence number, and which of those fields are still empty?",
+        "say_example": "It needs your Iqama number and the sequence number from the car's registration card. I don't hold those. Read them to me, or type them in yourself."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Enter the VIN",
+      "questions": [
+       {
+        "question": "What is the VIN of the vehicle you want to insure?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the specific VIN for the [address] Rogue SV, which is necessary to accurately identify the exact car for the insurance quote.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify that the insurance quote is tied to the exact vehicle you intend to purchase.",
+        "speak": "never",
+        "check": "Which field asks for the VIN, and what value is entered?",
+        "say_example": "Entered the car by VIN, <1N4AL3AP8KC123456>. That gives the exact trim."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Pick the make and model",
+      "questions": [
+       {
+        "question": "What are the year, make, and model of the vehicle you want to insure?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select the specific year, make, and model of your automobile from dropdown menus to accurately identify the vehicle for the quote.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select the wrong vehicle model or trim, resulting in an inaccurate insurance quote.",
+        "speak": "never",
+        "check": "What year, make and model are selected in the vehicle dropdowns?",
+        "say_example": "Entered the car as a <2019 Nissan Rogue>."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Decide on the found car",
+      "questions": [
+       {
+        "question": "Is the car the site already has on file the one you want to insure, or a different car?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks what you would like to insure and provides a pre-filled [address] Avalon Sedan alongside an option to quote a different vehicle.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to confirm that the system correctly identified the exact vehicle you want to insure.",
+        "speak": "if-wrong",
+        "check": "What vehicle does the page show pre-filled or found at the address, and does it match the year, make and model in the task?",
+        "say_example": "The site already had a <2007 Toyota Avalon> on file for you. You asked about the <2019 Nissan Rogue>, so I'm choosing quote a different vehicle."
+       },
+       {
+        "question": "Should any other cars the site found at your address go on the quote?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a list of vehicles, such as a [address] Caravan and a [address] Pickup, found at your address, offering a one-click option to add them to your quote.",
+        "whatTheAgentLoses": "You lose the convenience of quickly adding your other household vehicles to the quote, or you risk an agent incorrectly adding a vehicle you no longer own just because it appeared in the registry.",
+        "speak": "on-event",
+        "check": "Does the page list vehicles found at the address with an option to add them, and what are they?",
+        "say_example": "The site found a <Dodge Caravan> and a <Ford pickup> at your address. You only mentioned the <Rogue>. Do those live with you and need cover, or leave them off?"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Confirm the looked-up car",
+      "questions": [
+       {
+        "question": "Is the car the site looked up from the plate the one you meant?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the retrieved details for the Peugeot 208 and entering an accurate monetary value ensures the quote covers the exact car you own.",
+        "whatTheAgentLoses": "You lose the ability to verify that the system pulled the correct vehicle trim and to specify a value that reflects its actual condition.",
+        "speak": "always",
+        "check": "What make, model, year, engine and colour does the page show for the looked-up registration?",
+        "say_example": "Your plate came back as a <2016 Peugeot 208, 1.2 petrol, blue>. Say stop if that's not your car."
+       },
+       {
+        "question": "How many seats does the car have?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for the 'Vehicle Load' from a dropdown menu to determine how many passengers the car can carry.",
+        "whatTheAgentLoses": "The user loses the chance to accurately state their vehicle's passenger capacity, which could impact the accuracy of the insurance quote.",
+        "speak": "never",
+        "check": "What does the Vehicle Load or seating dropdown ask for, and what value is selected?",
+        "say_example": "Set the seats to <5>, from the registration."
+       },
+       {
+        "question": "Does the car have any modifications from standard?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying retrieved details like the engine size, alarm status, and market value ensures the quote accurately reflects the specific vehicle being insured.",
+        "whatTheAgentLoses": "You lose the ability to catch inaccuracies in the registry data or declare specific aftermarket modifications that could otherwise invalidate your coverage.",
+        "speak": "on-event",
+        "check": "Does the form ask whether the car has modifications from standard, and what is selected?",
+        "say_example": "It asks if the car's been modified. I'm saying no, since you didn't mention any. Say so if it has, because an undeclared one can void a claim."
+       },
+       {
+        "question": "Did the site read the VIN, or is it asking for the trim by hand?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sites often perform an asynchronous VIN lookup that flashes a brief error or highlights manual fields in red if it fails, which dictates whether the exact vehicle trim is actually locked in.",
+        "whatTheAgentLoses": "You lose the ability to know if the quote is based on your exact vehicle specifications or a generic manual guess that could alter the premium.",
+        "speak": "on-event",
+        "check": "After the VIN was entered, does the page show a decoded year, make, model and trim, or an error, or manual trim fields highlighted?",
+        "say_example": "The VIN didn't decode. The site wants me to pick the trim by hand. Your car is the <SV> trim, right?"
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Pick the fuel and variant",
+      "questions": [
+       {
+        "question": "What is your car's fuel type?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify if your car runs on petrol, CNG, or an external CNG kit to accurately price the insurance quote.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select the wrong fuel type, which could lead to an inaccurate quote or an invalid policy.",
+        "speak": "never",
+        "check": "Which fuel type is selected, and does the form offer a CNG or external kit option?",
+        "say_example": "Set fuel to <petrol>."
+       },
+       {
+        "question": "Which variant of the car is yours, manual or automatic?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple variants with different engine capacities and transmission types like 'ZXi Plus AT (1462 cc)', which must match your vehicle's registration exactly to ensure an accurate quote.",
+        "whatTheAgentLoses": "Letting an agent guess your specific car variant could result in an inaccurate quote or an invalid policy if the details don't match your official registration.",
+        "speak": "on-event",
+        "check": "Does the page list more than one variant or transmission for the selected model, and which one is selected?",
+        "say_example": "The site lists <four> versions of the <Swift>. Which is yours, the <VXi>, or the <ZXi automatic>?"
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Set the registration details",
+      "questions": [
+       {
+        "question": "Which registration office, the RTO, is the car registered at?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to search and select the specific City and RTO where the vehicle will be registered to proceed with the quote.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select the wrong registration office, potentially leading to an inaccurate quote or an invalid policy.",
+        "speak": "never",
+        "check": "Which city and RTO are selected?",
+        "say_example": "Set the registration office to <TN22, Chennai>, from the plate."
+       },
+       {
+        "question": "Is the car registered in your name, and in this state?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks to confirm if your vehicles are registered in the state of the quote and in your name, which is required for accurate policy underwriting.",
+        "whatTheAgentLoses": "You lose the ability to accurately declare your vehicle's registration status, which could invalidate your coverage if answered incorrectly.",
+        "speak": "on-event",
+        "check": "Does the page ask whether the vehicles are registered in the quoting state and in the applicant's name, and what is answered?",
+        "say_example": "It asks if the car's registered in your name in <California>. I'm saying yes. Say so if it's registered somewhere else or to someone else."
+       },
+       {
+        "question": "In which month and year was the car registered?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select the car's registration year from a list of options to accurately price the insurance quote based on the vehicle's age.",
+        "whatTheAgentLoses": "Delegating this means the agent might select the wrong registration year, resulting in an inaccurate insurance quote or potential coverage issues.",
+        "speak": "never",
+        "check": "What registration month and year are selected?",
+        "say_example": "Entered the registration date as <March 2021>."
+       },
+       {
+        "question": "Does the selected RTO code match the letters on the registration plate?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The selected RTO code 'TN07-CHENNAI' contradicts the reference photo which clearly displays the license plate 'TN-22-S-2680'.",
+        "whatTheAgentLoses": "The user receives an inaccurate quote based on incorrect vehicle registration details.",
+        "speak": "if-wrong",
+        "check": "What RTO code is selected, and what registration number is shown on the page or given in the task? Do the letters agree?",
+        "say_example": "I picked the <Chennai TN07> office, but your plate starts <TN22>. Fixing that. The wrong office can make the policy invalid."
+       }
+      ]
+     },
+     {
+      "id": "2.9",
+      "label": "State the car's value",
+      "questions": [
+       {
+        "question": "What did the car cost new, before registration and road tax?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The insurer needs the exact ex-showroom price, excluding registration and road tax, to accurately calculate the right coverage for your vehicle.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact purchase value of your car, which could lead to incorrect coverage limits or inaccurate premium calculations.",
+        "speak": "on-event",
+        "check": "Does the form ask for the ex-showroom price, is the field empty, and does the page say what to exclude?",
+        "say_example": "It wants the car's showroom price, without registration and road tax. I don't have that. What did the car cost new?"
+       }
+      ]
+     },
+     {
+      "id": "2.10",
+      "label": "Decide on more vehicles",
+      "questions": [
+       {
+        "question": "Do you need to add another car to the quote?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented a popup asking if you need to add any additional vehicles, which determines if the policy will cover more than one car.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure all your household vehicles are covered under a single policy.",
+        "speak": "never",
+        "check": "Does the page ask whether to add another vehicle, and what is answered?",
+        "say_example": "Said no to adding another vehicle. Just the <Rogue>, like you asked."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Describe the car's use",
+    "note": "3.1 to 3.7 in the site's own order - all on one page on Progressive, one question per screen on GEICO. 3.4 only where the use is commute. 3.6 asks day and night separately on the UK site and once on the US ones. 3.7 where the site asks. BCare asks none of this goal.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "State the ownership",
+      "questions": [
+       {
+        "question": "Do you currently own, lease, or finance the vehicle?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select your vehicle's ownership status from the provided radio buttons to accurately calculate the quote.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong ownership status, which could result in inaccurate coverage requirements and an invalid quote.",
+        "speak": "on-event",
+        "check": "Does the page ask whether the car is owned, financed or leased, and what is selected?",
+        "say_example": "It asks if the car is owned outright, financed, or leased. You didn't say. Which is it? A loan changes what cover the lender will accept."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "State the purchase date",
+      "questions": [
+       {
+        "question": "When did you buy the car, or when is it being delivered?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires the exact month and year the car was purchased to accurately calculate the insurance quote.",
+        "whatTheAgentLoses": "You lose the ability to provide the correct purchase date, which could impact the accuracy of your final insurance premium.",
+        "speak": "never",
+        "check": "What purchase or delivery month and year is entered?",
+        "say_example": "Entered the purchase date as <June 2023>."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "State the primary use",
+      "questions": [
+       {
+        "question": "What's the car mainly used for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to specify if the car is used for commuting, pleasure, or business to calculate an accurate insurance rate.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might guess your driving habits incorrectly, which could lead to an inaccurate quote or future coverage issues.",
+        "speak": "on-event",
+        "check": "Does the page ask how the car is mainly used, commuting, pleasure or business, and what is selected?",
+        "say_example": "It asks what the car's mainly for. I'm putting commuting, since you drive to work. Say so if you use it for work itself. Business use on a personal policy gets claims refused."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Enter the commute",
+      "questions": [
+       {
+        "question": "How many days a week do you commute, and how many miles is it one way?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires the number of days driven to work or school and the one-way mileage to accurately calculate the quote based on your vehicle's usage.",
+        "whatTheAgentLoses": "Delegating this means the agent might guess your commute distance, which could lead to an inaccurate premium or future issues with your coverage.",
+        "speak": "never",
+        "check": "What days per week and one-way miles are entered for the commute?",
+        "say_example": "Set the commute to <5> days a week, <12> miles each way."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Estimate the annual mileage",
+      "questions": [
+       {
+        "question": "About how many miles a year does the car do?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for the annual mileage of the [address] Avalon, showing a default selection of 14,[number],000 miles.",
+        "whatTheAgentLoses": "The user loses the chance to specify their actual driving distance, which could result in an inaccurate insurance premium if they drive more or less than the default amount.",
+        "speak": "never",
+        "check": "What annual mileage is selected, and what did the page default it to?",
+        "say_example": "Left annual mileage at the site's default, <12,000>."
+       },
+       {
+        "question": "Is the annual mileage on the form at least what your commute adds up to?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a commute of 30 miles 5 days a week, which totals over 15,600 miles a year, but the selected annual mileage is only 14,[number],000.",
+        "whatTheAgentLoses": "The user loses the ability to prevent contradictory application data that could result in an inaccurate premium or future claim denial.",
+        "speak": "if-wrong",
+        "check": "What commute days per week and one-way miles are entered, and what annual mileage is selected? Does days times miles times two times fifty-two exceed the annual figure?",
+        "say_example": "You drive <30> miles each way, <5> days a week. That's over <15,000> a year, but the form says <12,000>. I'm raising it so the policy holds up."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "State the parking place",
+      "questions": [
+       {
+        "question": "Is the car kept at your home address?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to confirm if the vehicle is kept at your mailing address, which is used to determine your location-based risk and premium.",
+        "whatTheAgentLoses": "The user loses the opportunity to specify a different garaging address if they actually park the vehicle at a location other than their home.",
+        "speak": "never",
+        "check": "Does the page ask whether the car is kept at the mailing address, and what is answered?",
+        "say_example": "Said the car's kept at your home address."
+       },
+       {
+        "question": "Where do you park the vehicle overnight?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The overnight parking location affects the vehicle's risk of theft or vandalism, which directly impacts the insurance premium.",
+        "whatTheAgentLoses": "The user loses the ability to accurately state their car's overnight location, potentially leading to an inaccurate quote or a denied claim in the future.",
+        "speak": "on-event",
+        "check": "Where does the form say the car is parked overnight, and which options does it offer?",
+        "say_example": "It asks where the car sleeps. I'm saying <driveway>, from your address. Say so if it's on the street or in a garage. The price and the theft cover both follow this."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Declare the alarm and modifications",
+      "questions": [
+       {
+        "question": "Does your vehicle have an anti-theft device?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The quote form asks you to select whether or not your vehicle is equipped with an anti-theft device.",
+        "whatTheAgentLoses": "Delegating this means the agent might guess incorrectly, potentially causing you to miss out on a discount or providing inaccurate information to the insurer.",
+        "speak": "never",
+        "check": "Does the form ask about an anti-theft device or alarm, and what is selected?",
+        "say_example": "Said no alarm or tracker. You didn't mention one. Having one would be a discount."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Describe the driver",
+    "note": "4.1, then 4.2, then 4.3 to 4.7 in the site's order - one page on Progressive and Compare the Market, one question per screen on GEICO, a side panel on The Zebra. 4.5 is skipped, faked or partial in every US keeper. 4.8 wherever the site plays back what it prefilled or could not find. dummy data is the norm: five keepers invent the name or the address on purpose.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Enter the name and birthdate",
+      "questions": [
+       {
+        "question": "What name and date of birth should I enter to start the quote?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a first name, last name, and date of birth to begin the auto insurance quote process.",
+        "whatTheAgentLoses": "You lose the ability to ensure the quote is accurately tied to your specific identity and age.",
+        "speak": "always",
+        "check": "Which personal fields does the page require to start the quote, name, date of birth, address, and which are filled?",
+        "say_example": "I'm filling in your name, date of birth, and address now."
+       },
+       {
+        "question": "Are your name, birthdate, and mailing address correct before starting the quote?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your entered name, birthdate, and mailing address for a final review before initiating the quote.",
+        "whatTheAgentLoses": "You lose the opportunity to catch any typos in your personal details before the quote process begins.",
+        "speak": "if-wrong",
+        "check": "What name, date of birth and mailing address does the review screen show, and do they match the task or profile?",
+        "say_example": "The review shows your birthday as <April 2, 1991>, which isn't what you gave me. Fixing it before the quote runs."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Enter the address",
+      "questions": [
+       {
+        "question": "Is the city in the address box the one you live in, not a look-alike from the dropdown?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an empty city field with several dropdown suggestions appearing, requiring a choice on how to input the location.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to trust the autocomplete suggestions or manually type the city to ensure accurate address validation.",
+        "speak": "if-wrong",
+        "check": "What city is in the address field after the dropdown pick, and does it match the city in the task?",
+        "say_example": "The address box picked <Palo Alto> from its list, but you live in <East Palo Alto>. Fixing it. The price depends on where the car is kept."
+       },
+       {
+        "question": "Does the address the site accepted still have your apartment number?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "New builds or complex apartment layouts often fail automatic address validation, requiring manual override to ensure the policy is legally bound to the correct location.",
+        "whatTheAgentLoses": "The agent might accept an incorrect standardized address, which could lead to denied claims if the garaging location is deemed misrepresented.",
+        "speak": "if-wrong",
+        "check": "Does the address the site accepted or standardized still include the apartment or unit number from the task?",
+        "say_example": "The site dropped your apartment number when it tidied the address. Putting <E-027> back."
+       },
+       {
+        "question": "Is your flat or house number in the address list, or does it need typing by hand?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The postcode search returns a dropdown list of addresses, but if your specific unit or new build is missing, you must manually correct it to proceed.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure your exact legal residence is recorded, risking a denied claim or invalid policy if the agent selects a neighboring address just to bypass the dropdown.",
+        "speak": "on-event",
+        "check": "Does the postcode dropdown list the exact house or flat number from the task, or does the page offer a link to enter the address manually?",
+        "say_example": "Your flat isn't in the postcode list. There's a link to type the address by hand, so I'm doing that."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Enter the personal details",
+      "questions": [
+       {
+        "question": "What is your current marital status?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select your marital status from options like Single, Married, or Divorced to accurately calculate your insurance rate.",
+        "whatTheAgentLoses": "Delegating this means the agent might select the wrong marital status, which could result in an inaccurate quote or future issues with the policy.",
+        "speak": "never",
+        "check": "What marital status is selected?",
+        "say_example": "Set marital status to <married>."
+       },
+       {
+        "question": "Do you own or rent your home?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to select whether you own or rent your home to proceed with the quote.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their housing status is accurately reported, which could impact their eligibility for homeowner or renter discounts.",
+        "speak": "never",
+        "check": "Does the page ask whether the applicant owns or rents, and what is selected?",
+        "say_example": "Set home to <rented>."
+       },
+       {
+        "question": "What is your highest completed level of education?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires your education level to calculate the quote, providing specific options ranging from less than high school to various completed or in-progress degrees.",
+        "whatTheAgentLoses": "Allowing an agent to guess your education level could result in an inaccurate quote or a misrepresentation on your official insurance application.",
+        "speak": "never",
+        "check": "What education level is selected?",
+        "say_example": "Set education to <doctorate>."
+       },
+       {
+        "question": "What is your gender?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires selecting either male or female to accurately calculate the insurance premium.",
+        "whatTheAgentLoses": "Letting the agent guess your gender could lead to an inaccurate quote or issues with the validity of your policy.",
+        "speak": "never",
+        "check": "What gender option is selected, and which options does the form offer?",
+        "say_example": "Set gender to <male>."
+       },
+       {
+        "question": "Since when have you lived in the UK without a break of six months or more?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The insurer requires the exact date you became a permanent resident without any gaps in residency of six months or more to accurately calculate your quote.",
+        "whatTheAgentLoses": "Delegating this means the agent might guess your residency date or overlook gaps in your history, which could invalidate your insurance policy.",
+        "speak": "never",
+        "check": "What continuous-residency date does the form ask for, and what is entered?",
+        "say_example": "Entered UK residency from <September 2016>, as you gave it."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Enter the occupation",
+      "questions": [
+       {
+        "question": "What should I put for your job?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to type your occupation and select a matching job title from a dropdown to proceed with the quote.",
+        "whatTheAgentLoses": "You lose the ability to accurately represent your specific employment situation, which could affect your insurance rate.",
+        "speak": "on-event",
+        "check": "What was typed in the occupation field, which job titles does the dropdown offer, and does one match the task's title exactly? Is a Required to continue error shown?",
+        "say_example": "The job list doesn't have <UX researcher>. I won't guess one. Which of these fits: <Researcher, academic>, or <Lecturer>?"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Provide the identity number",
+      "questions": [
+       {
+        "question": "Is it OK for the insurer to check your credit to set the price?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states that proceeding allows the insurer to obtain a credit-based insurance score using your credit report.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to consent to a credit check for this insurance quote.",
+        "speak": "gate",
+        "check": "What does the page say about obtaining a credit-based insurance score or credit report if the applicant proceeds, and is a consent box or inquiry-rights checkbox shown?",
+        "say_example": "Going on from here lets <GEICO> pull your credit to set the price. It says it won't affect your score. OK to let them?"
+       },
+       {
+        "question": "What is your estimated credit score?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a collapsed credit score dropdown that requires an estimate of your credit rating to accurately calculate the insurance premium.",
+        "whatTheAgentLoses": "Letting the agent guess your credit score could result in an inaccurate quote that does not reflect your actual financial standing.",
+        "speak": "on-event",
+        "check": "Does the page ask for an estimated credit score or rating, and which bands does it offer?",
+        "say_example": "It asks you to rate your own credit, from <excellent> down to <poor>. Which band?"
+       },
+       {
+        "question": "What is your Social Security Number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requested a Social Security Number, which insurers typically use to verify identity and check credit or driving history for a more accurate quote.",
+        "whatTheAgentLoses": "Delegating this step requires sharing your highly sensitive Social Security Number with the agent, which poses a significant privacy and security risk.",
+        "speak": "gate",
+        "check": "Does the form ask for a Social Security number, for the applicant or any household member, is the field marked optional or recommended, and what does the page say it is used for?",
+        "say_example": "The form asks for your Social Security number. It says it's optional, for a more accurate price. I never hold that number. Type it in yourself, or say skip."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Describe the licence",
+      "questions": [
+       {
+        "question": "What type of driving license do you hold?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The type of driving license you hold, such as an international license, is a major factor in determining your insurance quote.",
+        "whatTheAgentLoses": "Delegating this step means the agent might guess your license type incorrectly, which could lead to an inaccurate quote or an invalid policy.",
+        "speak": "never",
+        "check": "Which licence type is selected, and which options does the form offer?",
+        "say_example": "Set licence type to <full US licence>."
+       },
+       {
+        "question": "Does the licence date entered agree with how long the form says you've held it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You selected 'Less than 1 Year' for your license duration but entered an acquisition date of February 20, 2022, creating a contradiction that could invalidate your quote.",
+        "whatTheAgentLoses": "The user loses the guarantee of an accurate quote because contradictory driver history details can lead to incorrect pricing or a rejected policy.",
+        "speak": "if-wrong",
+        "check": "What licence-held duration is selected, and what licence date is entered? Do they agree with each other and with today's date?",
+        "say_example": "The form says you've held your licence under a year, but the date entered is <February 2022>. Those don't match. Fixing the duration. Otherwise the quote can be thrown out."
+       },
+       {
+        "question": "When did you first obtain your driver's license?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires the month and year you first obtained your license in the U.S. or Canada to accurately assess your driving history.",
+        "whatTheAgentLoses": "Delegating this means the agent might guess your licensing date, which could result in an inaccurate insurance quote or an invalid policy.",
+        "speak": "never",
+        "check": "What licence start or first-obtained month and year is entered?",
+        "say_example": "Entered the licence date as <June 2015>."
+       },
+       {
+        "question": "The form asks for your driving licence number and offers a box to say you can't or won't give it. Do you give it, or tick the box?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form requests your exact driving licence number but provides a checkbox to explicitly state you cannot or do not want to provide it.",
+        "whatTheAgentLoses": "You lose the ability to legally bypass this field, risking a halted process or an invalid policy if the agent enters a fake number instead of using the provided opt-out.",
+        "speak": "gate",
+        "check": "Does the form ask for a driving licence number, and is there a checkbox to say the applicant cannot or does not want to provide it?",
+        "say_example": "It wants your driving licence number. There's a box to say you'd rather not give it. Read me the number, or say leave it out."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Declare the driving history",
+      "questions": [
+       {
+        "question": "Do you need to report any accidents, tickets, or other incidents on your driving record?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks if any drivers have had accidents, traffic tickets, DUIs, or license suspensions within the last 5 to 10 years.",
+        "whatTheAgentLoses": "Delegating this means the agent might fail to report your past driving incidents, resulting in an inaccurate quote or future coverage issues.",
+        "speak": "gate",
+        "check": "Does the page ask about accidents, tickets, claims, DUIs or suspensions over a stated number of years, is No pre-selected, and for which drivers?",
+        "say_example": "The form already ticked No for accidents and tickets in the last <5> years. Is that true? I'll only keep it if you say so."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Verify the prefilled record",
+      "questions": [
+       {
+        "question": "Are your pre-filled driver's license details correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a pre-filled Florida driver's license ending in 1400, which must be accurate to ensure a valid insurance quote.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify that their current and correct driver's license number is being used for the quote.",
+        "speak": "if-wrong",
+        "check": "What licence state and last digits does the page show pre-filled, and do they match the licence in the task or profile?",
+        "say_example": "The site pre-filled a <Florida> licence ending <1400>. Yours is <California>. Fixing it."
+       },
+       {
+        "question": "The site couldn't pull your credit. Do you want to lift a credit freeze first, or carry on without it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many users keep their credit frozen, which blocks the insurer's soft pull for an insurance score, often resulting in a default to the highest possible pricing tier or a hard stop.",
+        "whatTheAgentLoses": "The agent might proceed with a heavily penalized 'no-hit' credit tier quote instead of pausing so the user can temporarily lift their credit freeze for a better rate.",
+        "speak": "on-event",
+        "check": "Does the page say it could not obtain a credit history or report, and does it offer to continue without it?",
+        "say_example": "The site couldn't pull your credit, so it may price you as if it were poor. If you've got a credit freeze on, you could lift it and I'll retry. Lift it, or carry on without?"
+       },
+       {
+        "question": "Does the insurer's record show an accident or ticket you didn't mention?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Insurers run background checks (like CLUE or MVR) and will halt the quote or spike the price if they find unreported incidents, sometimes requiring you to dispute them if they belong to someone else.",
+        "whatTheAgentLoses": "You lose the opportunity to dispute an incorrect driving record pulled by the system, potentially accepting a drastically inflated premium for an accident that wasn't yours.",
+        "speak": "on-event",
+        "check": "Does the page list any accident, ticket or claim pulled from a record, and does the task or an earlier answer declare it?",
+        "say_example": "The insurer's record shows a <speeding ticket in 2024> you didn't mention. If it's not yours you can dispute it. Is it yours?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Describe the history and household",
+    "note": "5.1 on every US site and Compare the Market; 5.2 and 5.3 on the Indian renewal path, where they come before the contact gate on u1qm and after it on 6q4q and LMqf, and open the NCB question. 5.4 as the site asks - one keeper adds a spouse. 5.5 where asked. 5.6 on GEICO. 5.7 only on the learner product, where the owner is a second party to the policy.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Describe the current insurance",
+      "questions": [
+       {
+        "question": "Do you currently have an active auto insurance policy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to specify your current insurance status, offering specific options like having active insurance, a lapsed policy, or military deployment, which can affect your premium.",
+        "whatTheAgentLoses": "You lose the ability to accurately report your insurance history, which could result in missing out on continuous coverage discounts or receiving an inaccurate quote.",
+        "speak": "never",
+        "check": "Which current-insurance status is selected, and which carrier if one is asked for?",
+        "say_example": "Said you're insured now, with <Safeco>."
+       },
+       {
+        "question": "Have you been insured without a gap for the last 12 months?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the form requires you to declare your recent insurance history, which insurers use to determine your risk profile and premium.",
+        "whatTheAgentLoses": "You lose the ability to accurately report your personal insurance history, which could lead to an invalid quote or unexpected price changes later.",
+        "speak": "never",
+        "check": "What continuous-coverage answer is selected, and over what period does the page ask?",
+        "say_example": "Said you've been covered without a gap for the last <12> months."
+       },
+       {
+        "question": "How many years were you insured with your previous insurance company?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select your continuous coverage history to accurately calculate your insurance premium.",
+        "whatTheAgentLoses": "Delegating this step means the agent might guess your insurance history, potentially leading to an inaccurate quote or missed discounts for continuous coverage.",
+        "speak": "never",
+        "check": "How many years with the previous insurer is selected?",
+        "say_example": "Put <3> years with <Safeco>."
+       },
+       {
+        "question": "What were your previous bodily injury limits?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for your previous bodily injury limits to assess your insurance history and calculate an accurate quote.",
+        "whatTheAgentLoses": "The user loses the ability to accurately state their prior coverage levels, which could result in an inaccurate quote or missed discounts.",
+        "speak": "never",
+        "check": "What previous bodily injury limits are selected?",
+        "say_example": "Set previous injury limits to <50/100>, from your current policy."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "State the last policy's expiry",
+      "questions": [
+       {
+        "question": "When does your current policy end?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for the expiration date of your previous 'Own Damage' policy and provides a link to click if you do not know it.",
+        "whatTheAgentLoses": "Delegating this means the agent might guess the expiration date incorrectly or skip it, potentially affecting the accuracy of your quote or causing a lapse in coverage.",
+        "speak": "never",
+        "check": "What expiry date or approximate window is entered for the previous policy, and does the page offer an I don't know option?",
+        "say_example": "Entered the old policy's expiry as <October 15>."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Declare the claims and bonus",
+      "questions": [
+       {
+        "question": "Did you make a claim on your existing policy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for your previous policy's expiration date and claim history to accurately calculate your new premium.",
+        "whatTheAgentLoses": "You lose the ability to accurately report your claims history, which could result in an invalid or incorrectly priced quote.",
+        "speak": "never",
+        "check": "Does the page ask whether a claim was made on the previous policy, and what is answered?",
+        "say_example": "Said no claims on the old policy, as you told me."
+       },
+       {
+        "question": "Is the default No Claim Bonus correct, or do you need to change it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog defaults to a 50% No Claim Bonus, but provides a dropdown to select your actual percentage.",
+        "whatTheAgentLoses": "You lose the chance to specify your exact No Claim Bonus percentage, potentially resulting in an inaccurate quote.",
+        "speak": "if-wrong",
+        "check": "What No Claim Bonus percentage is selected or defaulted, and what does the task give?",
+        "say_example": "The site set your no-claims bonus at <50%>. You told me <35%>. Fixing it. A bonus you don't have can void the policy."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Add the other drivers",
+      "questions": [
+       {
+        "question": "Do you need to add any other drivers in your household to this quote?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks if you have another driver and requests that you add all drivers in your household before proceeding.",
+        "whatTheAgentLoses": "You lose the ability to ensure all relevant household members are properly included on the insurance policy.",
+        "speak": "on-event",
+        "check": "Does the page ask for other drivers or household members, and how many are listed so far?",
+        "say_example": "It wants every driver in your household listed. So far it's just you. Does anyone else drive the car?"
+       },
+       {
+        "question": "What does the site need to know about your spouse?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires your spouse's personal information, employment status, and driving history to accurately calculate the insurance quote.",
+        "whatTheAgentLoses": "You lose control over ensuring your spouse's specific driving record and employment details are accurately represented for the quote.",
+        "speak": "never",
+        "check": "Which fields does the page require for the added driver, and which are filled?",
+        "say_example": "Filled in <Jennifer>'s details as the second driver."
+       },
+       {
+        "question": "Did the site find people at your address and add them as drivers?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Insurers often use public records to surface potential roommates or family members in a visually distinct sidebar or popup, requiring you to explicitly exclude them to avoid premium hikes.",
+        "whatTheAgentLoses": "You lose the chance to catch and exclude auto-discovered drivers, which could result in them being silently added to your policy and inflating your rate.",
+        "speak": "on-event",
+        "check": "Does the page show household members it found from records, in a popup or sidebar, and are they marked to be added unless excluded?",
+        "say_example": "The site found <two> people it thinks live with you, <Maria> and <Tom>. They'll be added as drivers unless I exclude them. Do they drive your car?"
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Describe the household",
+      "questions": [
+       {
+        "question": "Have you lived at your current address for less than two years?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires knowing your recent residential history to accurately assess your insurance risk and generate a valid quote.",
+        "whatTheAgentLoses": "You lose the opportunity to provide your exact residential history, which could result in an inaccurate premium or an invalid quote if the agent guesses incorrectly.",
+        "speak": "never",
+        "check": "What is answered about time at the current address?",
+        "say_example": "Said you've lived at this address <under two years>."
+       },
+       {
+        "question": "How many cars are in your household?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application explicitly notes that the number of cars at your home can affect your quote, as some insurers offer discounts for multiple vehicles.",
+        "whatTheAgentLoses": "Delegating this means the agent might guess your household vehicle count or access to other cars, potentially causing you to miss out on discounts or invalidating your policy with incorrect information.",
+        "speak": "never",
+        "check": "What number of household cars is entered, what is answered about access to other vehicles, and what is answered about children under 16 living at the address?",
+        "say_example": "Put <1> car in the household."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Claim the affiliations",
+      "questions": [
+       {
+        "question": "Are you in any group, like the military or an employer, that gets a discount?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists categories like alumni associations, credit unions, and military organizations that can trigger special membership discounts on the quote.",
+        "whatTheAgentLoses": "You could miss out on a lower insurance premium if the agent skips selecting an organization you actually belong to.",
+        "speak": "never",
+        "check": "Which affiliation or membership discounts does the page offer, and which are selected?",
+        "say_example": "Said no to military, government and group discounts. You didn't mention one. One would cut the price."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Identify the car's owner",
+      "questions": [
+       {
+        "question": "Who owns the car you are insuring?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application requires you to specify the legal owner of the car, such as a parent or friend, to determine the correct policy structure.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the legal ownership of the vehicle is reported accurately, which is critical for the validity of the insurance contract.",
+        "speak": "on-event",
+        "check": "Does the page ask who owns the car, which options does it offer, and what is selected?",
+        "say_example": "It asks who owns the car. You said it's your <parent's>, so I'm putting that."
+       },
+       {
+        "question": "Do you want to give the car owner's email, knowing it'll be used for marketing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tooltip explicitly states that the requested email address will be used to contact the owner with marketing offers.",
+        "whatTheAgentLoses": "You lose the chance to protect the car owner's inbox from unwanted promotional emails.",
+        "speak": "on-event",
+        "check": "Does the page ask for the car owner's email, is it required, and does a tooltip or note say it will be used for marketing?",
+        "say_example": "It wants the car owner's email, and the small print says it'll be used for marketing. Give it, or leave it blank?"
+       },
+       {
+        "question": "Should the car's owner be allowed to renew or change the policy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a choice to allow the car owner to manage, renew, or amend the insurance policy.",
+        "whatTheAgentLoses": "Delegating this decision means the agent might incorrectly grant or withhold policy management permissions for the car owner.",
+        "speak": "on-event",
+        "check": "Does the page ask whether the car owner may renew or amend the policy, and what is selected?",
+        "say_example": "It asks whether <the car's owner> can renew or change this policy without you. Yes, or no?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Unlock the quote",
+    "note": "6.1 is the gate: before any price on PolicyBazaar and GEICO, after the whole form on Progressive and Compare the Market, absent on The Zebra and BCare. 6.2 when the site bounces a field. 6.3 and 6.4 where the site puts them in the way. 6.5 on the two sites with a captcha and on BCare's consent. 6.6 only on the aggregator that plays the form back before quoting. 6.7 where the bundle was accepted. then 6.8.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Give the contact details",
+      "questions": [
+       {
+        "question": "What contact details does the site need to show prices?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a name, email, and mobile number to unlock the prices, which determines the name on the final invoice and whether you will receive follow-up sales calls.",
+        "whatTheAgentLoses": "You lose the ability to strategically use a dummy phone number to avoid spam calls while ensuring the name exactly matches your vehicle registration.",
+        "speak": "always",
+        "check": "Which contact fields does the page require to show prices, and does it ask about marketing or contact preferences?",
+        "say_example": "To show prices it wants your name, email, and mobile. I'm filling those in, and saying no to sales calls."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Fix the form errors",
+      "questions": [
+       {
+        "question": "What's the right email, since the site says the one typed in isn't valid?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "An error popup states that the entered email address is not formatted correctly, preventing you from moving to the next step.",
+        "whatTheAgentLoses": "You lose the opportunity to choose which alternative email address to use when the system rejects your first entry.",
+        "speak": "on-event",
+        "check": "Does the page show an email format error, and what value is in the email field?",
+        "say_example": "The site says your email isn't valid as typed. I have <david.lin0424@gmail.com>. Is that right?"
+       },
+       {
+        "question": "Is any box outlined red with no message, stopping the form?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Validation errors are sometimes indicated only by changing a field's border to red without an explicit text message, which is obvious to a sighted user but easily missed if delegating.",
+        "whatTheAgentLoses": "You lose the ability to quickly identify which specific personal detail was rejected, potentially stalling the quote process if the agent doesn't notice the silent visual cue.",
+        "speak": "on-event",
+        "check": "After Continue was pressed and the page did not advance, which fields are outlined red or marked invalid with no text message?",
+        "say_example": "The page won't move on. The <phone> box is outlined red with no message, so that's what it wants fixed."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Decline the telematics",
+      "questions": [
+       {
+        "question": "Do you want the driving-tracking program for a discount?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a program that lowers your rate immediately but personalizes it over time based on driving habits tracked via an app or device, which requires evaluating if your actual driving style will benefit you.",
+        "whatTheAgentLoses": "An agent might enroll you to get the immediate discount, unknowingly subjecting you to tracking that could increase your rate if you struggle to maintain strict driving habits like following the speed limit.",
+        "speak": "on-event",
+        "check": "Does the page offer a telematics, tracking or safe-driving program, is it pre-enrolled, and what does it say about the discount and what it tracks?",
+        "say_example": "It's offering a tracking program. <Snapshot> cuts the price now, but tracks your driving on your phone and can raise it later. Enroll, or skip?"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Choose how coverage is chosen",
+      "questions": [
+       {
+        "question": "How do you want to pick your cover, its recommendation, a budget, or matching your current policy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The site requires you to choose a quoting method, offering options for a personalized recommendation, a budget-based price, or matching your current coverage.",
+        "whatTheAgentLoses": "You lose the ability to decide your quoting strategy, which could prevent you from using budget-focused tools or exactly matching your existing policy.",
+        "speak": "on-event",
+        "check": "Does the page ask how to build the coverage, recommendation, budget or match current, and which is selected?",
+        "say_example": "It asks how to pick your cover. Its recommendation, a budget, or matching your current policy. You said match my current policy, so that's what I'm choosing."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Pass the captcha and consent",
+      "questions": [
+       {
+        "question": "There's a captcha. If my try fails, will you enter it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires entering the displayed captcha code and checking the agreement box to proceed to the quotations.",
+        "whatTheAgentLoses": "The user loses the opportunity to review the specific terms of the inquiry agreement before legally consenting to it.",
+        "speak": "on-event",
+        "check": "Does the page show a captcha, and does it accept the entered code?",
+        "say_example": "There's a captcha. I'll try it. If it won't take mine, I'll hand it to you."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Check the summary before quoting",
+      "questions": [
+       {
+        "question": "Does the summary match what was entered earlier?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The final summary page lists a car value of £10,000, SDPC usage, and an annual payment, contradicting the £810 value, SDP usage, and monthly installments selected earlier.",
+        "whatTheAgentLoses": "An agent might proceed with the purchase without noticing these discrepancies, leaving you with an inaccurate policy and an unexpected payment schedule.",
+        "speak": "if-wrong",
+        "check": "What car value, usage class and payment frequency does the summary show, and do they match what was entered earlier in this run?",
+        "say_example": "The summary says the car's worth <£10,000> and you pay yearly. Earlier I entered <£810> and monthly. Something got reset, so I'm going back to fix it."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Answer the bundled product's questions",
+      "questions": [
+       {
+        "question": "Is the address you entered the same one you want to insure for your homeowners policy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks you to confirm if the previously provided address is the location for the bundled home insurance quote.",
+        "whatTheAgentLoses": "You lose the ability to specify whether the home you want to insure is at your primary mailing address or a different location.",
+        "speak": "never",
+        "check": "Does the bundled home quote ask whether the property address matches the address entered, and what is answered?",
+        "say_example": "Said the home to insure is the same address."
+       },
+       {
+        "question": "When do you want your homeowners coverage to start?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to confirm or select a start date for your homeowners policy within a specific two-month window.",
+        "whatTheAgentLoses": "You lose the ability to precisely align the policy's effective date with your actual move-in date or the expiration of your current coverage.",
+        "speak": "never",
+        "check": "What start date is selected for the bundled home policy?",
+        "say_example": "Set the home policy start to <October 15>."
+       },
+       {
+        "question": "Do you want to continue with just the auto quote since the homeowners quote is unavailable?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states that a homeowners quote cannot be completed right now, offering the option to proceed with auto insurance only.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to proceed with an auto-only policy or abandon the process to seek a bundled quote elsewhere.",
+        "speak": "on-event",
+        "check": "Does the page say the home or bundled quote cannot be completed, and does it offer to continue with auto only?",
+        "say_example": "The site can't quote the home policy right now. That means no bundle discount. Carry on with just the car, or stop here?"
+       },
+       {
+        "question": "Do you have home or renters insurance now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select whether you currently have property insurance on your home from a dropdown menu to proceed.",
+        "whatTheAgentLoses": "Delegating this step means the agent might guess your property insurance status, potentially missing out on bundling discounts or providing inaccurate background information.",
+        "speak": "never",
+        "check": "What current property-insurance status is selected?",
+        "say_example": "Said you currently have renters insurance."
+       },
+       {
+        "question": "When was the home built, and when did you buy it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for the year your home was built and its purchase date to complete your personal profile.",
+        "whatTheAgentLoses": "You lose the ability to provide accurate homeownership details, which could affect your eligibility for certain insurance discounts.",
+        "speak": "never",
+        "check": "What year built and purchase date are entered for the home?",
+        "say_example": "Entered the home as built <1998>, bought <2020>."
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Request the quotes"
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Choose the coverage",
+    "note": "on the aggregators 7.1, 7.4 and 7.7 are asked before any price; on the US insurer sites the price comes first and 7.2 to 7.6 edit it in place, each edit re-rendering the figure in 8.6. 7.1 where the site offers plan types. 7.3 wherever the user reads before choosing - vi4x reads thirteen definitions. 7.6 is the loop on PolicyBazaar: tick, watch every insurer move, tick again - 0lz6 eleven times. 7.7 on the learner product, where the price depends on how many days of cover you pick.",
+    "questions": [
+     {
+      "question": "The quote is over your budget. Which cover do you want to change first to bring it down?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen lists individual policy coverages with their costs and edit buttons, requiring a choice on which specific protection to modify to reach your target price.",
+      "whatTheAgentLoses": "You lose the ability to decide which specific coverages to reduce based on your personal risk tolerance and budget.",
+      "speak": "on-event",
+      "check": "What is the quoted total, what budget does the task give, and which itemized coverages carry the largest costs?",
+      "say_example": "It's <$140> a month, over your <$100>. The biggest piece is collision at <$45>. Drop it, raise the deductible, or keep it and pay more?"
+     },
+     {
+      "question": "Does this cover meet what your lender or lease requires?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "If you finance or lease the car, the lienholder typically requires higher liability limits and lower deductibles than the state minimums the agent might select to get the cheapest price.",
+      "whatTheAgentLoses": "You lose the ability to ensure your policy complies with your loan agreement, risking forced-placed insurance by your lender at a much higher cost.",
+      "speak": "on-event",
+      "check": "Does the page show the car as financed or leased, and does the selected plan include collision and comprehensive? What limits are selected? Does the page offer loan or lease payoff cover, and is it selected?",
+      "say_example": "Your car has a loan on it. The cheapest plan has no collision cover, and lenders normally require it. I'm keeping collision in. OK?"
+     }
+    ],
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Pick the cover type",
+      "questions": [
+       {
+        "question": "Which plan type do you want, third party or comprehensive?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose between comprehensive package plans and third-party plans to establish your baseline coverage.",
+        "whatTheAgentLoses": "You lose the ability to decide whether you need the extensive protection of a comprehensive plan or just basic third-party coverage.",
+        "speak": "on-event",
+        "check": "Does the page offer comprehensive and third-party plan types, and which is selected?",
+        "say_example": "Two kinds of plan. <Third party> at <₹2,900> only pays for damage you do to others. <Comprehensive> at <₹8,200> covers your car too. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Pick the package tier",
+      "questions": [
+       {
+        "question": "Which plan do you want, Basic, Standard, or Premium?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents three distinct pricing tiers with different monthly costs and liability limits to choose from.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the financial trade-offs between budget-friendly monthly premiums and higher liability protection limits.",
+        "speak": "gate",
+        "check": "Which coverage tiers does the page offer, and for each, what is the price per month or term, the bodily injury and property damage limits, and which of collision, comprehensive and uninsured motorist are included or missing?",
+        "say_example": "Three plans. <Basic> is <$192> a month, <$50,000> per person for injuries, and no cover for your own car. <Standard> is <$230> with <$100,000> and your car covered. <Premium> is <$317>. Which one? Say Basic, Standard, or Premium."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Read the coverage definitions",
+      "questions": [
+       {
+        "question": "Do you want me to read what any of the coverages means?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen provides detailed explanations of what specific coverages pay for, such as medical or funeral expenses regardless of fault.",
+        "whatTheAgentLoses": "You lose the opportunity to personally understand the exact protections, limits, and benefits included in your insurance policy.",
+        "speak": "never",
+        "check": "For each coverage line, what explanation does the tooltip or info panel give?",
+        "say_example": "Ask me what any of these covers means and I'll read you the site's explanation."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Set the limits",
+      "questions": [
+       {
+        "question": "What should the car's insured value, the IDV, be set to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a slider to customize your IDV, which dictates the maximum payout from the insurer in the event of total damage or theft.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose control over balancing your premium costs against the potential payout for a total loss.",
+        "speak": "on-event",
+        "check": "What Insured Declared Value is set, what range does the slider allow, and how does the premium change across it?",
+        "say_example": "The site set your car's insured value at <₹11,40,000>. That's the most it'd pay if the car's written off. Higher costs more each year. Keep it?"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Set the deductibles",
+      "questions": [
+       {
+        "question": "Which deductible do you want, given how much it changes the premium?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays how different deductible levels directly change your 6-month premium, requiring a trade-off between upfront costs and out-of-pocket risk for non-collision damage.",
+        "whatTheAgentLoses": "Delegating this choice means losing the opportunity to align the deductible with your personal risk tolerance and financial preference for lower premiums versus lower repair costs.",
+        "speak": "on-event",
+        "check": "Which deductible or excess options does the page offer, for which coverage, and how does the premium change for each?",
+        "say_example": "A <$500> deductible is <$40> more per six months than <$1,000>. Which do you want to pay if you have a crash, <500> or <1,000>?"
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Add or drop the add-ons",
+      "questions": [
+       {
+        "question": "Which recommended add-ons do you want to include in your policy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents optional coverages like Zero Depreciation and Roadside Assistance that provide extra protection for specific scenarios.",
+        "whatTheAgentLoses": "You lose the ability to weigh the value of specific extra protections against their additional cost based on your personal driving needs.",
+        "speak": "on-event",
+        "check": "Which optional add-ons does the page offer, at what price each, and which are selected? Does selecting one change the quoted premium?",
+        "say_example": "It's offering extras. <Zero depreciation> for <₹1,200>, <roadside help> for <₹150>, <key cover> for <₹90>. Want any? Say none, or name them."
+       },
+       {
+        "question": "Does the car have fitted extras to declare?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides optional checkboxes to declare the value of additionally-fitted electrical and non-electrical accessories so they are included in the policy.",
+        "whatTheAgentLoses": "Delegating this means the agent might not declare your aftermarket additions, leaving expensive upgrades like custom stereos or alloy wheels unprotected in a claim.",
+        "speak": "on-event",
+        "check": "Does the page ask for the value of fitted accessories, electrical or otherwise, and is anything entered?",
+        "say_example": "It asks whether the car has fitted extras, like a stereo or a CNG kit, to cover. You didn't mention any, so I'm leaving it blank. Say so if there are."
+       },
+       {
+        "question": "Before the add-ons get cleared, are there any of the checked ones you want to keep?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sidebar displays a 'Clear all' button alongside 11 individually checked add-on boxes, offering a choice between a single click and multiple manual clicks.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to save time by using the 'Clear all' button or to manually review and uncheck each add-on individually.",
+        "speak": "on-event",
+        "check": "How many add-on boxes are pre-checked, what are they, and is there a Clear all control?",
+        "say_example": "The site pre-ticked <11> extras. I'm clearing them all unless you want some. Say which to keep."
+       },
+       {
+        "question": "Do you want the no-fault option, which limits your right to sue?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tooltip explains that adding this benefit means you typically cannot sue another driver unless you are seriously injured.",
+        "whatTheAgentLoses": "You lose the chance to weigh the trade-off between this specific coverage and retaining your full legal rights in the event of an accident.",
+        "speak": "on-event",
+        "check": "Does the page offer a no-fault or limited-tort option, and what does its tooltip say about the right to sue?",
+        "say_example": "There's a <no fault> option that lowers the price. It means you mostly can't sue the other driver after a crash. Add it, or leave it?"
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Pick the policy duration",
+      "questions": [
+       {
+        "question": "How many days of cover do you need?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple policy durations ranging from 30 to 180 days, each with different total and per-day costs that need to be evaluated.",
+        "whatTheAgentLoses": "The user loses the opportunity to balance the upfront total cost against the per-day value based on their personal timeline and budget.",
+        "speak": "on-event",
+        "check": "Which policy durations does the page offer, and what is the total and per-day cost of each?",
+        "say_example": "Cover runs from <30> to <180> days. <90> days is <£150>, about <£1.67> a day. How long do you need it?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Compare the prices",
+    "note": "8.1 on arrival; 8.2 wherever the site prices a term two ways. 8.3 on the aggregators, where the pick is among insurers at one coverage; 8.4 and 8.5 where the user bothers to check - two Indian keepers do, and no US site offers it. 8.6 after every change made in 7, and 8.7 where the user changes something only to see the price move and then undoes it. 8.8 where a baseline exists. 8.9 whenever the numbers can be checked - they disagree in ten keepers and nobody says anything. then 8.10.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the quoted price",
+      "questions": [
+       {
+        "question": "Is this quote OK, the price and the cover?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the total 6-month premium, payment plan options, and specific liability limits that dictate your financial commitment and protection level.",
+        "whatTheAgentLoses": "Delegating this step removes your ability to evaluate whether the pay-in-full discount or the monthly payment plan best fits your personal budget.",
+        "speak": "always",
+        "check": "What total premium, term, payment amount, liability limits and deductibles does the quote page show?",
+        "say_example": "Here's the quote. <$640> for six months, or <$107> a month. <$100,000> per person for injuries, <$50,000> for damage, <$1,000> deductibles."
+       },
+       {
+        "question": "Is there a star or footnote mark next to the big price?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Insurers often display the monthly premium in huge text while hiding installment fees, down payment requirements, or conditions behind an asterisk in a much smaller, lighter font.",
+        "whatTheAgentLoses": "You lose the ability to spot visually downplayed conditions, potentially agreeing to a policy where the actual cost is higher than the boldly advertised number.",
+        "speak": "on-event",
+        "check": "Is there an asterisk, dagger or footnote marker beside the headline premium, and what does the footnote text say?",
+        "say_example": "The big <$107> a month has a star next to it. The small print says that's after a <$300> down payment first."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Compare the payment plans",
+      "questions": [
+       {
+        "question": "Are the quote and your current bill priced for the same period?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to showing monthly rates for the different coverage tiers, but you can switch to a six-month view to accurately compare the quote against your current policy.",
+        "whatTheAgentLoses": "An agent might just accept the default monthly view, depriving you of a direct six-month price comparison that matches how you currently budget for insurance.",
+        "speak": "on-event",
+        "check": "Is the displayed price per month or per term, does a toggle exist, and which period does the task's current-policy figure use?",
+        "say_example": "This quote shows a monthly rate. Your current bill is per six months, so I'm switching the view before comparing."
+       },
+       {
+        "question": "Do you want to pay in full upfront to get the discount, or choose the monthly payment plan?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a specific discount for paying in full upfront compared to the total cost of the monthly payment plan.",
+        "whatTheAgentLoses": "You lose the opportunity to balance your immediate cash flow needs against the total savings of paying the policy in full.",
+        "speak": "on-event",
+        "check": "Which payment plans does the page offer, what is due today and monthly for each, and what is the total of each plan?",
+        "say_example": "Paying all <$844> now saves <$194>. The monthly plan is <$173> a month and comes to <$1,038>. Pay in full, or monthly?"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Compare across the insurers"
+     },
+     {
+      "id": "8.4",
+      "label": "Check the claims record"
+     },
+     {
+      "id": "8.5",
+      "label": "Check the garage network",
+      "questions": [
+       {
+        "question": "Are there enough authorized cashless garages in your area?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal showed a list of 116 authorized dealer garages in Delhi, which confirms whether you will have convenient repair options if you need to file a claim.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify if your preferred local repair shops are included in the insurer's cashless network.",
+        "speak": "on-event",
+        "check": "How many cashless or network garages does the page list for the area, and how many for the other plans shown?",
+        "say_example": "This plan has <zero> cashless garages near you. You'd pay for repairs up front and claim the money back. <HDFC> has <116> nearby. Still this one?"
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Re-read the changed price",
+      "questions": [
+       {
+        "question": "Are these prices still estimates that will change once the car and drivers are in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays preliminary quotes starting at $14 per month, but the progress bar shows the profile is only 69% complete.",
+        "whatTheAgentLoses": "You lose the opportunity to observe how your driver details alone influence the preliminary rates before adding your vehicle.",
+        "speak": "on-event",
+        "check": "Does the page show preliminary or estimated prices alongside a progress indicator, and what percentage complete does it show?",
+        "say_example": "These prices are only <69%> done. They'll change once the car and drivers are in. I'm carrying on until they're final."
+       },
+       {
+        "question": "Has the price finished updating after the change?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Adjusting deductibles or limits often triggers an asynchronous price recalculation where the premium text temporarily grays out or shows a spinner before displaying the new cost.",
+        "whatTheAgentLoses": "If the agent scrapes the price too quickly, you might be quoted the old premium, leading to unexpected costs when you actually purchase the policy.",
+        "speak": "never",
+        "check": "After a coverage change, is the premium greyed out or showing a spinner, or has a new value settled?",
+        "say_example": "Waited for the price to finish updating before reading it."
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Try a what-if change"
+     },
+     {
+      "id": "8.8",
+      "label": "Compare against the current policy",
+      "questions": [
+       {
+        "question": "Do the quote's limits and deductibles match your current policy's?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that the quote's $50,000/$100,000 limits match the paper document ensures you are getting an accurate price comparison for the same level of coverage.",
+        "whatTheAgentLoses": "You lose the assurance that the new quote provides the exact same level of liability protection as your existing policy.",
+        "speak": "if-wrong",
+        "check": "What bodily injury, property damage, uninsured motorist and personal injury limits, what deductibles, and which extra lines such as rental or roadside does the quote show, and what does the task give for the current policy? Which lines differ?",
+        "say_example": "The quote has <$25,000> per person for injuries. Your current policy has <$50,000>. That's less protection, so it's not a like-for-like price. Raise it to match, or keep the cheaper cover?"
+       },
+       {
+        "question": "What do you pay now, for the same term?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Establishing your current premium provides a necessary financial benchmark to evaluate whether the new quote is actually a better deal.",
+        "whatTheAgentLoses": "The user loses the ability to factor in their personal, offline financial baseline to decide if the new quote is competitive enough to purchase.",
+        "speak": "never",
+        "check": "What current premium and term does the task give as the baseline?",
+        "say_example": "Took your current <$780> for six months as the baseline."
+       },
+       {
+        "question": "How much will you save over six months compared to your current policy?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Comparing the $640.00 six-month quote on the screen to your handwritten notes helps you determine if switching policies is financially worthwhile.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the exact savings against your offline records before committing to the new policy.",
+        "speak": "on-event",
+        "check": "What is the quoted total for the term, and what current premium for the same term does the task give? What is the difference?",
+        "say_example": "This quote is <$640> for six months. You're paying <$780> now, so that's <$140> less for the same cover."
+       }
+      ]
+     },
+     {
+      "id": "8.9",
+      "label": "Check the numbers add up",
+      "questions": [
+       {
+        "question": "Does the final quote work out to the advertised daily rate?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The final 180-day quote of £292.60 shown on screen contradicts both the narrator's estimate and the £1.23 daily rate displayed earlier.",
+        "whatTheAgentLoses": "The user loses the chance to notice the misleading pricing and reject a quote that is significantly higher than expected.",
+        "speak": "if-wrong",
+        "check": "What headline or 'from' daily rate did the product page advertise, and what total and duration does the final quote show? What is the quoted total divided by the days?",
+        "say_example": "The page advertised from <£1.23> a day. The <180>-day quote is <£292.60>, which is <£1.63> a day. The 'from' price isn't what you'd pay."
+       },
+       {
+        "question": "Do the itemized coverage costs match the savings shown when you try to remove them?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The itemized list priced roadside assistance at $5, but the edit screen stated removing it saves $26.89, revealing a significant pricing discrepancy.",
+        "whatTheAgentLoses": "You lose the ability to catch contradictory pricing information that might change which optional coverages you decide to buy.",
+        "speak": "if-wrong",
+        "check": "What price does the itemized list give for a coverage, and what saving does the edit or remove screen state for taking it off? Do they agree?",
+        "say_example": "Roadside shows as <$5> on the list, but removing it says it saves <$26.89>. The list isn't telling the whole price."
+       },
+       {
+        "question": "Do the itemized coverages and fees add up to the total quoted price?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that the itemized coverages for the [address] Rogue and the associated fees equal the final quoted price ensures there are no hidden costs or discrepancies.",
+        "whatTheAgentLoses": "You lose the opportunity to personally audit the quote's math to ensure the itemized costs accurately reflect the final pay-in-full price.",
+        "speak": "if-wrong",
+        "check": "What itemized coverage costs and fees does the quote list, and what total does it show? Does the sum equal the total?",
+        "say_example": "The lines on the quote add up to <$612>, but the total says <$640>. There's <$28> in there the list doesn't show."
+       },
+       {
+        "question": "Do the deposit and installments add up to the quoted total, and does each match the advertised monthly amount?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The payment screen warns that monthly installments typically incur interest, so checking the math confirms whether you are actually being charged extra.",
+        "whatTheAgentLoses": "You lose the opportunity to verify if the monthly payment plan is effectively a zero-percent interest offer despite the warning.",
+        "speak": "if-wrong",
+        "check": "What deposit and installments does the payment schedule list, what is the advertised monthly amount, and what is the quoted total? Do the installments match the advertised figure, and does the sum equal the total?",
+        "say_example": "The schedule adds up to <$1,038>. The quote said <$844>. That's <$194> of interest and fees for paying monthly."
+       },
+       {
+        "question": "Do the discount amounts shown on the quote agree with each other and with the payment schedule?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Discount Savings' box stated $237.00 in savings, but a banner below claimed $350.00 in discounts.",
+        "whatTheAgentLoses": "An agent might ignore the conflicting discount amounts, leaving you uncertain about the actual savings applied to your policy.",
+        "speak": "if-wrong",
+        "check": "What discount or credit amounts does the page state, in the savings box, any banner, and the payment schedule? Do they agree?",
+        "say_example": "The savings box says <$237> in discounts. A banner just below says <$350>. One of those isn't real, so I'm going by the schedule."
+       }
+      ]
+     },
+     {
+      "id": "8.10",
+      "label": "Pick the plan",
+      "questions": [
+       {
+        "question": "Which insurer do you want?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays 10 different plans based on your ₹11,40,000 IDV, requiring you to weigh premium prices against metrics like claim settlement rates.",
+        "whatTheAgentLoses": "You lose the ability to personally evaluate the trade-offs between premium costs and insurer reliability to find the best fit for your budget.",
+        "speak": "gate",
+        "check": "Which insurers or plans does the results page list, and for each, what premium, insured value, claim settlement ratio and cover type does it show?",
+        "say_example": "Two that fit. <HDFC ERGO> at <₹3,863>, insured value <₹11,40,000>, <98%> of claims paid. <Bajaj> at <₹4,400>, same value, <96%>. Which one? Say HDFC or Bajaj."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Review and commit",
+    "note": "9.1 before the quote on BCare and Compare the Market, after it everywhere else. 9.2 with 9.3 and 9.4 against it. 9.5 as the site asks - the Indian sites take a name at the gate and the rest after the price, Progressive demands a phone and a licence number here, and vi4x stops at exactly that. 9.6 and 9.7 where offered. 9.8 on the one keeper the platform refuses. 9.9 is the most common way a keeper stops - they ask a person, or just do not click, before paying anything. then 9.10, which one keeper enters and none completes.",
+    "questions": [
+     {
+      "question": "Do you want the quote reference saved?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The confirmation screen displays a specific quote reference number that is essential for retrieving this exact quote later if you don't purchase immediately.",
+      "whatTheAgentLoses": "You lose the ability to easily retrieve and resume this specific quote if the session times out or you decide to complete the purchase later.",
+      "speak": "never",
+      "check": "Does the page show a quote reference number, and what is it?",
+      "say_example": "Saved quote reference <Q-48213> in case you come back to it."
+     }
+    ],
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Set the start date",
+      "questions": [
+       {
+        "question": "When should the cover start?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates your old policy expires on a specific date, meaning the default choice of starting today results in overlapping coverage and an immediate charge.",
+        "whatTheAgentLoses": "You lose the ability to align the new policy's start date with your current policy's expiration to avoid paying for double coverage.",
+        "speak": "gate",
+        "check": "What start date is selected or defaulted, what does the page say about the old policy's expiry or an advanced-shopper discount, and what expiry does the task give for the current policy?",
+        "say_example": "It's asking when cover should start. Your current policy runs to <the 15th>. Starting today would mean paying for two. Start on <the 15th>?"
+       },
+       {
+        "question": "Is it OK that the card is charged today, even with a later start date?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that your payment method will be charged today regardless of whether your coverage begins immediately or at a later date.",
+        "whatTheAgentLoses": "You lose the awareness that the funds will be deducted from your account immediately, which could impact your current cash flow or cause overdrafts if you expected the charge to align with the future start date.",
+        "speak": "on-event",
+        "check": "Does the page say the payment method will be charged today regardless of the start date?",
+        "say_example": "One thing. Even with a start date of <the 15th>, it charges your card today. OK?"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Review the summary",
+      "questions": [
+       {
+        "question": "Are the vehicle details, plan summary, and final premium correct before you pay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the final premium of ₹25,074 plus GST and the vehicle details, which must be double-checked before making the final payment.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the vehicle details and final premium amount before committing your money.",
+        "speak": "if-wrong",
+        "check": "What vehicle, plan type, cover, and total does the pay screen show, and do they match the plan and car selected earlier in this run?",
+        "say_example": "The pay screen says <third party only>. You picked <comprehensive>. Stopping before we buy the wrong cover."
+       },
+       {
+        "question": "Are the pre-filled contact and bank details yours?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen displays your email, mobile number, and IBAN, which must be accurate to ensure you receive policy documents and are billed correctly.",
+        "whatTheAgentLoses": "A person delegating this task loses the chance to verify or correct their personal contact and payment information before finalizing the purchase.",
+        "speak": "if-wrong",
+        "check": "What email, phone and bank account or IBAN does the checkout show pre-filled, and do they match the task or profile?",
+        "say_example": "The pay page has an account ending <4821> pre-filled. That's not the one you gave me. Fixing it before anything's charged."
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Correct the vehicle facts"
+     },
+     {
+      "id": "9.4",
+      "label": "Compare the final total",
+      "questions": [
+       {
+        "question": "Does the base premium on the final summary match the quote you selected on the results page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming that the base premium remains consistent between the results and summary pages ensures no hidden fees were added before the final taxes were applied.",
+        "whatTheAgentLoses": "You lose the chance to verify that the final price is calculated correctly from the original quote without unexpected base rate changes.",
+        "speak": "if-wrong",
+        "check": "What premium did the selected quote show on the results page, and what base premium does the summary or checkout show? Do they match?",
+        "say_example": "The price was <$640> when you picked it. The checkout now says <$712>. That usually means the insurer just ran your driving record. Stopping so you can see it before it's paid."
+       },
+       {
+        "question": "Does the checkout total equal the listed premium plus tax, less any discount shown?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying that the ₹3,415 premium and ₹615 GST equal the ₹4,030 final charge ensures no hidden fees were added before payment.",
+        "whatTheAgentLoses": "You lose the opportunity to verify the final math yourself and ensure you aren't being overcharged at checkout.",
+        "speak": "if-wrong",
+        "check": "What premium, tax and any discount does the checkout list, and what total does it show? Is there a collapsed taxes, fees or breakdown section near the total, and when expanded, what does it list? Does premium plus tax minus discount plus those fees equal the total?",
+        "say_example": "The checkout total is <$677>. The premium plus tax come to <$640>. The rest is in a folded-up fees section under the total, a <$25> installment fee and a <$12> state surcharge."
+       },
+       {
+        "question": "Does the No Claim Bonus percentage on the proposal form match what you selected on the quotes page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The quotes page showed a Previous NCB of 35%, but the subsequent proposal form listed an Eligible NCB of 45%, which could result in an invalid policy if left uncorrected.",
+        "whatTheAgentLoses": "The user loses the chance to correct a mismatched No Claim Bonus, risking future claim denials or unexpected premium adjustments due to inaccurate information.",
+        "speak": "if-wrong",
+        "check": "What No Claim Bonus percentage does the proposal form show, and what did the quotes page show?",
+        "say_example": "The quotes page had your no-claims bonus at <35%>. The proposal form now says <45%>. Fixing it, or the policy's built on a bonus you don't have."
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Fill the policyholder details",
+      "questions": [
+       {
+        "question": "Is the optional marketing opt-in left unticked?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks to confirm the learner driver's email and phone number, and offers an optional marketing opt-in that enters you into a draw for a new Ford Fiesta.",
+        "whatTheAgentLoses": "You lose the ability to control your inbox preferences and the opportunity to decide if you want to enter the promotional giveaway.",
+        "speak": "never",
+        "check": "Does the page offer a marketing opt-in, prize draw or similar, and is it left unticked?",
+        "say_example": "Left the prize draw and marketing box unticked."
+       },
+       {
+        "question": "The form won't go on without a phone number or email I don't have. What should I put?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a warning that a primary phone number is required to continue toward the final purchase.",
+        "whatTheAgentLoses": "You lose the opportunity to halt the process before committing your final contact details and payment information.",
+        "speak": "on-event",
+        "check": "Which required contact field, phone or email, is the page blocked on, and does the task or profile supply a value for it?",
+        "say_example": "It won't go on without a phone number, and I don't have one for you. What number should I put?"
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Choose the document delivery",
+      "questions": [
+       {
+        "question": "Do you want your policy documents by email or by post?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides checkboxes for paperless billing, electronic policy documents, and text alerts, which dictate how the insurer will deliver your information.",
+        "whatTheAgentLoses": "You lose the ability to choose whether you receive physical mail or digital copies for your insurance bills and ID cards.",
+        "speak": "never",
+        "check": "Which delivery options does the page offer, paperless, electronic documents, text alerts, and which are selected? Does it state a price difference?",
+        "say_example": "Chose paperless documents. It's <$8> cheaper."
+       }
+      ]
+     },
+     {
+      "id": "9.7",
+      "label": "Accept the declarations",
+      "questions": [
+       {
+        "question": "Do you require an SR-22 certificate of financial responsibility?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application asks if any driver requires a Certificate of Financial Responsibility or SR-22, which is typically mandated by the state Motor Vehicle Department.",
+        "whatTheAgentLoses": "If the agent incorrectly assumes you do not need an SR-22, you could receive an invalid quote or fail to meet your state's legal driving requirements.",
+        "speak": "never",
+        "check": "Does the page ask whether any driver needs an SR-22 or certificate of financial responsibility, and what is answered?",
+        "say_example": "Said no to needing an SR-22."
+       },
+       {
+        "question": "Are the things the site asks you to confirm all true?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Blindly agreeing to the confirmation statements risks invalidating your coverage if your circumstances do not match the specific conditions listed on the screen, such as the policy ending once you pass your driving test.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify that their personal situation actually complies with the strict legal and eligibility criteria required for the insurance policy to be valid.",
+        "speak": "gate",
+        "check": "Which confirmation statements, eligibility rules or terms does the page require agreeing to before purchase, and what does each say?",
+        "say_example": "Before it'll sell the policy it needs you to confirm a few things. That the car isn't used for business. That it has a valid <PUC> certificate. That the cover ends when you pass your test. Are all of those true?"
+       },
+       {
+        "question": "Is it OK for the insurer to send automated calls and texts?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout screen includes a checkbox agreeing to receive automated calls and texts regarding your policy and billing status to the provided mobile number.",
+        "whatTheAgentLoses": "You lose the ability to protect your phone number from automated robocalls and texts by opting out of this specific communication agreement.",
+        "speak": "never",
+        "check": "Is there a checkbox consenting to automated or prerecorded calls and texts, is it required, and is it left unticked?",
+        "say_example": "Left the automated calls box unticked."
+       }
+      ]
+     },
+     {
+      "id": "9.8",
+      "label": "Resolve the account notice",
+      "questions": [
+       {
+        "question": "Are there any outstanding balances from a previous policy that must be paid first?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a previous balance of $382.52 that must be collected before a new policy can be issued, which adds an unexpected upfront cost.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to pay off an old debt or abandon the quote and look for a different insurer.",
+        "speak": "on-event",
+        "check": "Does the page show a previous balance or outstanding amount that must be paid before the policy is issued, and how much?",
+        "say_example": "There's a <$382.52> balance from an old policy with them. It has to be paid before they'll start this one. Pay it, or stop here?"
+       }
+      ]
+     },
+     {
+      "id": "9.9",
+      "label": "Ask a human before paying",
+      "questions": [
+       {
+        "question": "Which support number should you call if you have questions before paying?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays different toll-free numbers depending on whether you are still in the sales process or have already paid.",
+        "whatTheAgentLoses": "You lose the opportunity to directly call the pre-sales support line to clarify your specific concerns before finalizing the purchase.",
+        "speak": "never",
+        "check": "Which support numbers does the page list, and which one is for before purchase?",
+        "say_example": "Noted the sales line, <1-800-555-0100>, for questions before paying."
+       }
+      ]
+     },
+     {
+      "id": "9.10",
+      "label": "Pay for the policy",
+      "note": "9.10.1, then 9.10.2 - lD3t is the only keeper through it, and its outcome is a bill to pay at a bank, not a policy. 9.10.3 after payment on the Indian sites, stated on screen and never shown. 9.10.4 is unwitnessed.",
+      "children": [
+       {
+        "id": "9.10.1",
+        "label": "Choose the payment method",
+        "questions": [
+         {
+          "question": "Which payment method do you want to use to pay for the policy?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The Sage Pay screen requires you to choose from several payment options, such as PayPal, Visa, or MasterCard, to complete the purchase.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might select a payment method that does not align with your current financial preferences or rewards strategy.",
+          "speak": "gate",
+          "check": "Which payment methods does the page offer, and which card or account fields does it show?",
+          "say_example": "It's ready for payment. Card, or PayPal? Then enter the details yourself. I don't take card numbers."
+         }
+        ]
+       },
+       {
+        "id": "9.10.2",
+        "label": "Submit the payment",
+        "questions": [
+         {
+          "question": "After the pay button, does the page show a confirmation with a policy number?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The video ends at the 'Confirm & Pay' screen without executing the transaction, leaving the earlier promise to show the final payment step unfulfilled.",
+          "whatTheAgentLoses": "The user loses the opportunity to see the actual payment execution and any subsequent confirmation screens required to finalize the policy purchase.",
+          "speak": "always",
+          "check": "After the pay or confirm button, does the page show a confirmation, policy number, amount and start date, or is it still on the payment screen?",
+          "say_example": "Paid. Policy <POL-48213>, <$640>, cover starts <the 15th>. Check your email for the confirmation. That's your proof."
+         },
+         {
+          "question": "Do you want to buy the policy now?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen shows the final payment form with the total amount to pay and a button to confirm the card details.",
+          "whatTheAgentLoses": "The user loses the opportunity to review the final charge and securely enter their own payment information before completing the transaction.",
+          "speak": "gate",
+          "check": "What total, payment method, car, plan and start date does the final pay screen show, and what is the button labelled?",
+          "say_example": "Ready to buy. <Progressive>, <Standard> plan, the <Rogue>, from <the 15th>. <$640> for six months, on your <Visa ending 4821>. Press to buy, or say change."
+         },
+         {
+          "question": "What are the SADAD details to pay through your bank?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen displays a specific Biller ID, SADAD number, and exact amount required to successfully route your payment and activate the policy.",
+          "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the exact invoice amount and payment routing numbers before transferring funds.",
+          "speak": "on-event",
+          "check": "Does the page show bank-transfer or SADAD payment details, a biller ID, number and exact amount, and does it say the policy starts only once paid?",
+          "say_example": "This one's paid through your bank. Biller <015>, SADAD number <1234567890>, amount <808.45>. The policy only starts once that's paid, and that payment has to come from you."
+         }
+        ]
+       },
+       {
+        "id": "9.10.3",
+        "label": "Complete the KYC after payment"
+       },
+       {
+        "id": "9.10.4",
+        "label": "Save the policy documents"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

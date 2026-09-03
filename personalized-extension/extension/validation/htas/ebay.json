@@ -4,16 +4,6 @@
   "id": "0",
   "label": "Win an eBay auction",
   "note": "1 where the account demands it - most keepers arrive signed in. 2 unless the listing is already at hand - ten keepers open on the target. then 3, then 4; T5mb runs 3.5 before anything else. 5 stages the bid - 5.2 replaces the bid box for the three accounts with no payment on file, and none of them ever bids. 6 owns the clock: snipers hold inside it, immediate bidders fall straight through to 6.6 (08WT, s_CE, B7Zu, fAtx). 7 whenever the outbid notice lands - it can interrupt 6 or follow it. 8 when the clock resolves; a loss ends there. 9 after a win, and 9.4 loops the whole task back to 2 - six times in Zkom. fx1m runs 5 and 6 across four windows at once.",
-  "questions": [
-   {
-    "question": "How much should you set as your maximum bid, and exactly when should you confirm it?",
-    "cluster": "hand over",
-    "moment": "Now",
-    "moneyMoving": true,
-    "why": "The bidding popup provides quick-select amounts alongside a manual keypad, and the exact timing of your confirmation impacts your chances of winning.",
-    "whatTheAgentLoses": "You lose the strategic advantage of executing a last-second custom bid to prevent other buyers from outbidding you."
-   }
-  ],
   "children": [
    {
     "id": "1",
@@ -21,20 +11,26 @@
     "note": "only two keepers touch 1.1 to 1.3 - one demos registration without submitting (s_CE), one signs in for real (08WT). the rest arrive signed in, and several run 1.4 as their first act.",
     "questions": [
      {
-      "question": "Do you want to review your eBay Bucks balance and recent sales, or proceed directly to searching for an auction listing?",
+      "question": "What eBay Bucks balance does the My eBay page show?",
       "cluster": "select",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays your current eBay Bucks balance and recent sales history, which could inform your bidding budget.",
-      "whatTheAgentLoses": "The user loses the opportunity to check their available eBay Bucks or recent sales activity before starting a new search."
+      "whatTheAgentLoses": "The user loses the opportunity to check their available eBay Bucks or recent sales activity before starting a new search.",
+      "speak": "never",
+      "check": "What eBay Bucks balance does the My eBay page show?",
+      "say_example": "eBay Bucks balance <$4.12> - not touched"
      },
      {
-      "question": "Which regional eBay website should you navigate to in order to start finding an auction?",
+      "question": "Which regional eBay site should you go to, to start finding an auction?",
       "cluster": "hand over",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The browser is currently on a search engine, so you must explicitly enter the correct regional eBay domain to find relevant local listings.",
-      "whatTheAgentLoses": "The user loses the ability to specify their preferred regional marketplace, which directly impacts shipping costs and item availability."
+      "whatTheAgentLoses": "The user loses the ability to specify their preferred regional marketplace, which directly impacts shipping costs and item availability.",
+      "speak": "on-event",
+      "check": "Which eBay regional domains do the search results show?",
+      "say_example": "The search shows more than one eBay site. I'll use ebay.com, the US one, so prices come in dollars."
      }
     ],
     "children": [
@@ -43,12 +39,15 @@
       "label": "Open the registration",
       "questions": [
        {
-        "question": "Should you fill out this registration form with your personal information?",
+        "question": "Is this the new-account registration form rather than the sign-in page?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a blank registration form requesting extensive personal details like your address and date of birth, which is unnecessary if you already have an account.",
-        "whatTheAgentLoses": "The user loses control over their personal data privacy if the agent unnecessarily creates a new account using their sensitive information."
+        "whatTheAgentLoses": "The user loses control over their personal data privacy if the agent unnecessarily creates a new account using their sensitive information.",
+        "speak": "on-event",
+        "check": "Does the page show a new-account registration form asking for address and date of birth?",
+        "say_example": "This is the new-account page. It wants your address and birth date. You already have an account, so I'm going to sign in instead."
        }
       ]
      },
@@ -57,12 +56,15 @@
       "label": "Activate the account",
       "questions": [
        {
-        "question": "How do you activate your newly registered account?",
+        "question": "Does the eBay email show an 'Activate Now' button?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The email from eBay displays an 'Activate Now' button that must be clicked to complete registration and enable bidding.",
-        "whatTheAgentLoses": "The user loses the certainty that their account is fully activated and actually capable of placing bids."
+        "whatTheAgentLoses": "The user loses the certainty that their account is fully activated and actually capable of placing bids.",
+        "speak": "never",
+        "check": "Does the eBay email show an 'Activate Now' button?",
+        "say_example": "Clicked Activate Now in the eBay email - account live"
        }
       ]
      },
@@ -76,15 +78,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a 'Sign in to your account' form that requires a User ID and password to authenticate the session before proceeding.",
-        "whatTheAgentLoses": "The user loses the ability to decide which specific account and identity will be tied to the auction bid and its potential financial obligation."
-       },
-       {
-        "question": "What is the password for your eBay account?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a 'Password' input field that must be filled to sign in and proceed with the bid.",
-        "whatTheAgentLoses": "You lose the security of keeping your eBay account password private."
+        "whatTheAgentLoses": "The user loses the ability to decide which specific account and identity will be tied to the auction bid and its potential financial obligation.",
+        "speak": "gate",
+        "check": "Does the page show the sign-in form, and which saved accounts does it offer?",
+        "say_example": "eBay wants a sign-in before any bidding. Which account should I use? You'll type the password yourself."
        },
        {
         "question": "Do you want to save your eBay credentials in the VeriSoft password manager?",
@@ -92,7 +89,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The VeriSoft Single Sign On dialog box appeared with a prompt asking to record your logon information for ebay.com.",
-        "whatTheAgentLoses": "You lose the ability to decide whether your sensitive eBay password is saved to this third-party credential manager."
+        "whatTheAgentLoses": "You lose the ability to decide whether your sensitive eBay password is saved to this third-party credential manager.",
+        "speak": "on-event",
+        "check": "Does a dialog ask to save the eBay password?",
+        "say_example": "A box popped up asking to save your password. I'm saying no, so nothing gets stored."
        }
       ]
      },
@@ -101,12 +101,15 @@
       "label": "Confirm the signed-in state",
       "questions": [
        {
-        "question": "Are you successfully signed into your account?",
+        "question": "Does the header show your username, confirming the sign-in?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "Seeing your personalized greeting and username in the header confirms you are authenticated and able to place bids.",
-        "whatTheAgentLoses": "You lose the reassurance of confirming firsthand that the agent is operating under your specific identity."
+        "whatTheAgentLoses": "You lose the reassurance of confirming firsthand that the agent is operating under your specific identity.",
+        "speak": "if-wrong",
+        "check": "Does the page header show the account greeting or username?",
+        "say_example": "The page doesn't show you signed in. I'm signing in again before we go further."
        }
       ]
      }
@@ -122,28 +125,15 @@
       "label": "Enter the search terms",
       "questions": [
        {
-        "question": "Should you select a specific category suggestion or stick with your broad search term?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search bar offers specific category suggestions like 'pcs in Fashion Jewelry', which would narrow your results instead of showing the widest variety of items.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether to cast a wide net for potential items or narrow your search to a specific suggested category."
-       },
-       {
-        "question": "What keywords should you enter in the search bar to find the item?",
+        "question": "What search term is entered in the search bar?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays an empty search bar on the My eBay Summary page, which requires specific terms to locate the auction listing you want.",
-        "whatTheAgentLoses": "The user loses the ability to specify the exact item, brand, or model they are interested in bidding on."
-       },
-       {
-        "question": "Should you select a more specific auto-complete suggestion to narrow down the results?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search dropdown offered more specific queries like \"watch men automatic\" that could help filter the results sooner.",
-        "whatTheAgentLoses": "You lose the ability to refine the search upfront based on specific preferences like an automatic watch."
+        "whatTheAgentLoses": "The user loses the ability to specify the exact item, brand, or model they are interested in bidding on.",
+        "speak": "always",
+        "check": "What term does the search bar contain?",
+        "say_example": "Got it. Searching eBay for <a men's automatic watch>, auctions only."
        },
        {
         "question": "Did the search return zero exact matches and automatically show results for a different, autocorrected keyword?",
@@ -151,71 +141,50 @@
         "moment": null,
         "moneyMoving": false,
         "why": "eBay will automatically swap your search term if it finds no exact matches, which can lead to browsing and bidding on items that are similar but not exactly what you specified.",
-        "whatTheAgentLoses": "The user loses the ability to realize the agent is evaluating the wrong items because the platform silently altered the search query."
+        "whatTheAgentLoses": "The user loses the ability to realize the agent is evaluating the wrong items because the platform silently altered the search query.",
+        "speak": "on-event",
+        "check": "Does the results page say it found no exact matches and is showing results for a different term?",
+        "say_example": "eBay found nothing for <your word>, so it's showing <another word> instead. These aren't exactly what you asked for."
        }
       ]
      },
      {
       "id": "2.2",
-      "label": "Reuse a recent search",
-      "questions": [
-       {
-        "question": "Should I type a new search term or select a recent search like 'headphones'?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays 'headphones' under recent searches, offering a quicker alternative to typing a new query on the blank keyboard.",
-        "whatTheAgentLoses": "The user loses the opportunity to specify a brand new item of interest if the agent defaults to reusing a past search term."
-       }
-      ]
+      "label": "Reuse a recent search"
      },
      {
       "id": "2.3",
-      "label": "Search by seller",
-      "questions": [
-       {
-        "question": "Which seller ID should you search for, and do you want to adjust any of the default search parameters?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides a field to enter a specific seller ID along with checkboxes for completed listings and exact matches, which dictates the exact items you will find.",
-        "whatTheAgentLoses": "You lose the ability to choose a specific seller to buy from and how to filter or sort their available items."
-       }
-      ]
+      "label": "Search by seller"
      },
      {
       "id": "2.4",
-      "label": "Browse to a listing",
-      "questions": [
-       {
-        "question": "Which of your recently viewed items should you select to bid on?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple recently viewed products like a washing machine and charging cables, requiring you to choose the specific item you intend to bid on.",
-        "whatTheAgentLoses": "The user loses the ability to choose exactly which product they want to attempt to purchase or practice bidding on."
-       }
-      ]
+      "label": "Browse to a listing"
      },
      {
       "id": "2.5",
       "label": "Filter to auctions",
       "questions": [
        {
-        "question": "Do you want to filter these search results to only show auctions?",
+        "question": "Is the Auction buying-format filter applied to the results?",
         "cluster": "refine",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search results currently display over 1,100 items with mixed buying formats, so selecting the 'Auction' filter ensures you only see listings you can actually bid on.",
-        "whatTheAgentLoses": "The user loses the opportunity to browse 'Buy It Now' options that might offer a better or faster deal before committing to the auction format."
+        "whatTheAgentLoses": "The user loses the opportunity to browse 'Buy It Now' options that might offer a better or faster deal before committing to the auction format.",
+        "speak": "always",
+        "check": "Does the results page show the Auction filter as applied, and how many results remain?",
+        "say_example": "Found <1,100> listings, but most are Buy It Now. You want an auction, so I'm keeping auctions only. That leaves <214>."
        },
        {
-        "question": "Should you filter these initial search results to find an actual auction listing?",
+        "question": "Are the top results marked Sponsored?",
         "cluster": "refine",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The current search results are dominated by sponsored bulk lots with 'or Best Offer' pricing rather than the required auction format.",
-        "whatTheAgentLoses": "You lose control over refining the search criteria to ensure you are bidding on a single item rather than a wholesale lot."
+        "whatTheAgentLoses": "You lose control over refining the search criteria to ensure you are bidding on a single item rather than a wholesale lot.",
+        "speak": "on-event",
+        "check": "Which of the top results carry a Sponsored label?",
+        "say_example": "The first <two> results are ads, so I'm skipping those."
        }
       ]
      },
@@ -224,12 +193,15 @@
       "label": "Sort by ending soonest",
       "questions": [
        {
-        "question": "How do you want to sort the search results to find auctions that are about to close?",
+        "question": "What sort order is selected on the results page?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The sort menu offers options like 'Best Match' and 'Ending Soonest', which determines whether you prioritize item relevance or finding auctions that are in their final seconds.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to prioritize bidding on auctions ending immediately over waiting for better-matched items that close later."
+        "whatTheAgentLoses": "You lose the ability to decide whether to prioritize bidding on auctions ending immediately over waiting for better-matched items that close later.",
+        "speak": "always",
+        "check": "What sort order does the results page show as selected?",
+        "say_example": "The sort was Best Match, which is partly promoted. I'm sorting by ending soonest instead."
        }
       ]
      },
@@ -238,44 +210,37 @@
       "label": "Tighten the filters",
       "questions": [
        {
-        "question": "Do you require free shipping for the item?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The shipping options menu allows toggling 'Free Shipping' or 'Expedited Shipping', which determines the final cost and delivery speed of the item.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to restrict your search to free shipping or pay extra for expedited delivery."
-       },
-       {
-        "question": "What is the maximum price you want to set for the search filter?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays minimum and maximum price fields, and setting a maximum value ensures the search results only show items within your specific budget.",
-        "whatTheAgentLoses": "You lose the ability to define your exact budget constraints to filter out items that are too expensive."
-       },
-       {
-        "question": "Are the search results actually reflecting your price filter, or is the app still loading?",
+        "question": "Does the results page show the price filter applied?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen shows the keypad with a partial entry and a 'Searching' state, meaning the results haven't actually loaded yet to confirm if the filter worked.",
-        "whatTheAgentLoses": "The user loses the ability to accurately narrow down items within their budget if the agent misinterprets a loading screen as a failed filter."
+        "whatTheAgentLoses": "The user loses the ability to accurately narrow down items within their budget if the agent misinterprets a loading screen as a failed filter.",
+        "speak": "if-wrong",
+        "check": "Does the results page show the price cap as applied, with results loaded?",
+        "say_example": "The price cap didn't take. I'm setting it again before we pick."
        },
        {
-        "question": "How should you filter the search results by size?",
+        "question": "Does the applied size filter match the size you asked for?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search results page showed over 1,100 results for the shoe, making it necessary to apply a size filter to find relevant listings.",
-        "whatTheAgentLoses": "The user loses the ability to specify their exact shoe size to narrow down the search results."
+        "whatTheAgentLoses": "The user loses the ability to specify their exact shoe size to narrow down the search results.",
+        "speak": "if-wrong",
+        "check": "What size filter does the results page show as applied?",
+        "say_example": "The size filter is on <12>, but you asked for <5>. Fixing it."
        },
        {
-        "question": "Should you filter the search results by item condition to exclude used or damaged items?",
+        "question": "Do the results match the condition you asked for?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The search results include a mix of brand new, certified refurbished, and pre-owned items, and applying a condition filter ensures you only spend time evaluating items that meet your quality standards.",
-        "whatTheAgentLoses": "The user loses the ability to automatically weed out used or broken items that they have no intention of bidding on."
+        "whatTheAgentLoses": "The user loses the ability to automatically weed out used or broken items that they have no intention of bidding on.",
+        "speak": "if-wrong",
+        "check": "What condition labels do the shown listings carry?",
+        "say_example": "You asked for new, but these mix in used ones. I'm filtering to new only."
        }
       ]
      },
@@ -289,7 +254,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search results display multiple options, such as an owl pendant ending in 29 seconds, and selecting one determines which specific auction you will evaluate.",
-        "whatTheAgentLoses": "You lose the chance to browse the other search results and choose the item that best fits your personal taste and budget."
+        "whatTheAgentLoses": "You lose the chance to browse the other search results and choose the item that best fits your personal taste and budget.",
+        "speak": "gate",
+        "check": "Which auction listings, prices and end times do the results show?",
+        "say_example": "Three fit. <The owl pendant>, <$4.20>, ends in <29 seconds>. <The silver chain>, <$6>, ends <tonight at 9>. <The bracelet>, <$5.50>, ends <tomorrow>. Which one?"
        },
        {
         "question": "Are these the expected items from the seller you searched for?",
@@ -297,39 +265,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen displays 82 results for 'kiwanis_club_of_fort_frances', so you must confirm you are viewing the correct inventory before selecting an item.",
-        "whatTheAgentLoses": "You lose the ability to personally browse the seller's specific inventory and choose the exact item that interests you."
-       },
-       {
-        "question": "How do you view more search results?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed a list of seller listings that continued past the bottom edge, meaning more items were available by scrolling.",
-        "whatTheAgentLoses": "The user loses the opportunity to browse additional listings that might be a better match or have a lower starting bid."
-       },
-       {
-        "question": "Which listing offers the best combination of price, condition, and shipping cost?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results displayed multiple pre-owned options with varying starting bids and high shipping fees, such as $83.54 for the first item versus $75.28 for the second.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh the total cost of the item against its condition and seller reputation to find the best overall deal."
-       },
-       {
-        "question": "Do you want to attempt placing a bid on this item with less than 20 seconds remaining?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the auction has only 17 seconds left, requiring an immediate decision on whether the low price and free shipping make it worth a last-minute bid.",
-        "whatTheAgentLoses": "The user loses the ability to personally weigh their actual need for the item against the urgency and feasibility of a last-second bid."
-       },
-       {
-        "question": "Which of these listings has the most favorable current bid and time remaining for your strategy?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Comparing the 'Current bid' and 'Time left' across multiple windows helps determine which auction is most likely to close below your maximum price.",
-        "whatTheAgentLoses": "You lose the ability to strategically prioritize which auction to bid on based on real-time price and countdown comparisons."
+        "whatTheAgentLoses": "You lose the ability to personally browse the seller's specific inventory and choose the exact item that interests you.",
+        "speak": "if-wrong",
+        "check": "Does the results header name the seller you asked for?",
+        "say_example": "These results are for <kiwanis_club_of_fort_frances>, but you asked for a different seller. I'm searching again."
        }
       ]
      },
@@ -343,7 +282,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed 'Buy It Now' and 'Add to cart' options rather than a bid input, indicating this is a fixed-price item rather than an auction.",
-        "whatTheAgentLoses": "The user risks an unintended outright purchase or a stalled task if the agent cannot distinguish between fixed-price and auction listings."
+        "whatTheAgentLoses": "The user risks an unintended outright purchase or a stalled task if the agent cannot distinguish between fixed-price and auction listings.",
+        "speak": "if-wrong",
+        "check": "Does the page show a Place bid button, or only Buy It Now and Add to cart?",
+        "say_example": "This one is Buy It Now only. There's nothing to bid on, so I'm going back to the auctions."
        }
       ]
      }
@@ -355,60 +297,37 @@
     "note": "3.1 in every keeper; 3.2 where the photos decide; 3.3 to 3.6 where the user bothers - the corpus mostly reads the panel and skips the rest, and C6qx reads the terms only after winning.",
     "questions": [
      {
-      "question": "Are you comfortable placing a bid without checking the seller's rating or the return policy?",
-      "cluster": "facts",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows you are about to bid on the $0.16 item with only 19 seconds left, but you haven't scrolled down to verify the seller's reputation or the detailed item description.",
-      "whatTheAgentLoses": "The user loses the ability to set their own risk tolerance for unvetted sellers and potentially restrictive return policies."
-     },
-     {
-      "question": "Should you skip checking the seller rating and item description to ensure you can bid before the 34-second timer runs out?",
+      "question": "Is there enough time on the countdown to check the seller and the description before bidding?",
       "cluster": "facts",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen shows only 34 seconds remaining, forcing a trade-off between verifying the seller's reliability and successfully placing a bid in time.",
-      "whatTheAgentLoses": "The user loses the ability to apply their personal risk tolerance regarding unverified sellers when an auction is closing rapidly."
+      "whatTheAgentLoses": "The user loses the ability to apply their personal risk tolerance regarding unverified sellers when an auction is closing rapidly.",
+      "speak": "on-event",
+      "check": "How much time does the countdown show?",
+      "say_example": "Only <34> seconds left. That's not enough time to check the seller or the returns policy. Bid anyway, or let this one go?"
      },
      {
-      "question": "Are you ready to skip the full description and shipping details to prepare your bid?",
-      "cluster": "facts",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "With only two minutes left and the current bid at GBP 13.16, you must decide if you have enough information to commit to bidding without reviewing the full description or shipping costs.",
-      "whatTheAgentLoses": "You lose the ability to weigh the risk of bidding without reading the full item description against the urgency of the auction's final minutes."
-     },
-     {
-      "question": "Are you comfortable with the item condition, shipping cost, and the seller's no-return policy?",
+      "question": "Does the listing say the seller accepts returns?",
       "cluster": "facts",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The listing specifies a $5.50 shipping fee and a strict no-returns policy that you must accept if you win the auction.",
-      "whatTheAgentLoses": "You lose the opportunity to weigh the total cost and the risk of the no-returns policy against your personal preferences before committing to buy."
+      "whatTheAgentLoses": "You lose the opportunity to weigh the total cost and the risk of the no-returns policy against your personal preferences before committing to buy.",
+      "speak": "on-event",
+      "check": "What does the listing's returns line say?",
+      "say_example": "This seller takes no returns. If you win it, it's yours, even if it's wrong."
      },
      {
-      "question": "Do you need to ask the seller any questions about the item description or the no-returns policy?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows that no returns are accepted, making it crucial to review the item specifics and use the 'Ask a question' link if anything is unclear.",
-      "whatTheAgentLoses": "The user loses the chance to personally evaluate the item details and ask the seller specific questions before committing to a non-refundable purchase."
-     },
-     {
-      "question": "Do you need to ask the seller any questions before bidding?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The 'Seller info' box includes an 'Ask a question' link that lets you clarify item details before committing to a bid.",
-      "whatTheAgentLoses": "You lose the opportunity to personally ask specific questions about the item before committing your money."
-     },
-     {
-      "question": "Are you satisfied with the item condition, seller feedback, and shipping terms before placing a bid?",
+      "question": "Does the listing state a shipping cost, or does it say 'Shipping not specified'?",
       "cluster": "facts",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen indicated 'Shipping not specified' and a truncated description, which must be investigated to avoid unexpected costs or errors.",
-      "whatTheAgentLoses": "The user loses the ability to avoid bidding on an item with unknown shipping costs or undisclosed defects."
+      "whatTheAgentLoses": "The user loses the ability to avoid bidding on an item with unknown shipping costs or undisclosed defects.",
+      "speak": "on-event",
+      "check": "What does the listing's shipping line say?",
+      "say_example": "The listing doesn't say what shipping costs. It could be anything on top of the bid. Skip it, or ask the seller?"
      }
     ],
     "children": [
@@ -422,7 +341,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "eBay mixes international listings into search results, and small visual currency prefixes drastically change the actual financial commitment due to exchange rates.",
-        "whatTheAgentLoses": "The user loses the ability to accurately gauge the item's true cost if the agent reads the raw number but misses the visual currency indicator."
+        "whatTheAgentLoses": "The user loses the ability to accurately gauge the item's true cost if the agent reads the raw number but misses the visual currency indicator.",
+        "speak": "on-event",
+        "check": "What currency prefix does the price carry?",
+        "say_example": "Careful, that price is in Canadian dollars. <C $13.16> is about <$9.70> for you."
        },
        {
         "question": "What is the current bid and how much time remains on the auction?",
@@ -430,31 +352,32 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Monitoring the current bid of $33.00 and the countdown timer helps determine the optimal moment to place your maximum bid.",
-        "whatTheAgentLoses": "You lose the opportunity to personally time your bid at the last possible second to maximize your chances of winning at the lowest price."
+        "whatTheAgentLoses": "You lose the opportunity to personally time your bid at the last possible second to maximize your chances of winning at the lowest price.",
+        "speak": "always",
+        "check": "What current bid and time remaining does the listing show?",
+        "say_example": "Here's the one you picked. The bid is at <$33>, and it ends in <2 hours and 10 minutes>."
        },
        {
-        "question": "Did you verify the seller's rating and shipping restrictions before proceeding to bid?",
+        "question": "Does the listing say it may not ship to your country?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displayed a warning that the item 'May not ship to Philippines', meaning you could win the auction but be unable to receive the item.",
-        "whatTheAgentLoses": "You lose the ability to avoid committing money to an auction that cannot actually be fulfilled and delivered to your location."
+        "whatTheAgentLoses": "You lose the ability to avoid committing money to an auction that cannot actually be fulfilled and delivered to your location.",
+        "speak": "on-event",
+        "check": "What does the shipping section say about delivering to your country?",
+        "say_example": "This one says it may not ship to <the Philippines>. You could win it and never get it. I'd let it go."
        },
        {
-        "question": "Should you proceed to place a bid on this item, or look for an auction with less competition?",
+        "question": "How many bids and watchers does the listing show?",
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows 4 bids and 10 watchers, indicating high interest that might make winning difficult.",
-        "whatTheAgentLoses": "The user loses the ability to strategically avoid highly competitive auctions to increase their chances of winning."
-       },
-       {
-        "question": "Do you want to proceed with bidding despite the shipping restrictions and no-return policy?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen warns that the item may not ship to the Philippines and that the seller does not accept returns.",
-        "whatTheAgentLoses": "You lose the opportunity to decide if the risks of uncertain shipping and a strict no-return policy are acceptable for this purchase."
+        "whatTheAgentLoses": "The user loses the ability to strategically avoid highly competitive auctions to increase their chances of winning.",
+        "speak": "never",
+        "check": "How many bids and watchers does the listing show?",
+        "say_example": "<4> bids, <10> watchers on this one"
        },
        {
         "question": "Does the estimated delivery window align with when you actually need the item?",
@@ -462,7 +385,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The listing displays an estimated delivery date range, and winning the auction means you must be willing to wait that long for the item to arrive.",
-        "whatTheAgentLoses": "The user loses the ability to pass on an auction if the shipping timeline is too slow for their personal needs."
+        "whatTheAgentLoses": "The user loses the ability to pass on an auction if the shipping timeline is too slow for their personal needs.",
+        "speak": "if-wrong",
+        "check": "What estimated delivery dates does the listing show?",
+        "say_example": "Delivery is <March 3 to 14>, and you said you need it by <the 1st>. Winning this one won't make it."
        },
        {
         "question": "Does the listing display a 'Reserve not met' notice, indicating that the seller has a hidden minimum price?",
@@ -470,7 +396,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "In a reserve auction, simply being the highest bidder is not enough to win; your bid must exceed the hidden reserve price, which changes how you value and bid on the item.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to avoid reserve auctions entirely or adjust their maximum bid to try and uncover the hidden threshold."
+        "whatTheAgentLoses": "The user loses the ability to decide whether to avoid reserve auctions entirely or adjust their maximum bid to try and uncover the hidden threshold.",
+        "speak": "on-event",
+        "check": "Does the listing show 'Reserve not met'?",
+        "say_example": "This one has a hidden minimum price, and it hasn't been met. Even the top bid doesn't win until it clears that."
        },
        {
         "question": "Does the shipping section indicate the item is 'Local Pickup Only' rather than offering delivery?",
@@ -478,7 +407,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Bidding on a local pickup item by mistake means you will be contractually obligated to buy an item you cannot physically retrieve if you live far away.",
-        "whatTheAgentLoses": "The user loses the protection against accidentally committing to purchase an item that the seller refuses to ship."
+        "whatTheAgentLoses": "The user loses the protection against accidentally committing to purchase an item that the seller refuses to ship.",
+        "speak": "on-event",
+        "check": "Does the shipping section say Local Pickup Only, and from where?",
+        "say_example": "This one is pickup only, from <Fort Frances>. Nobody ships it. Can you get there, or should I skip it?"
        },
        {
         "question": "Does the listing display the visual 'Authenticity Guarantee' blue checkmark?",
@@ -486,7 +418,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "For high-value items, this visual badge is the only guarantee that the item will be physically authenticated by eBay before delivery.",
-        "whatTheAgentLoses": "The user loses the security of knowing their expensive purchase is protected against counterfeits if the agent cannot verify the visual badge."
+        "whatTheAgentLoses": "The user loses the security of knowing their expensive purchase is protected against counterfeits if the agent cannot verify the visual badge.",
+        "speak": "never",
+        "check": "Does the listing show the Authenticity Guarantee badge?",
+        "say_example": "No Authenticity Guarantee badge on this listing"
        }
       ]
      },
@@ -495,12 +430,15 @@
       "label": "Inspect the photos",
       "questions": [
        {
-        "question": "Does the item in the photos appear to be authentic?",
+        "question": "Is the photo labeled 'Stock photo' rather than the seller's own picture?",
         "cluster": "photos",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Inspecting the item's photos allows you to verify its authenticity and avoid bidding on a counterfeit product.",
-        "whatTheAgentLoses": "You lose the ability to apply your personal expertise to spot subtle signs of a fake item before committing your money."
+        "whatTheAgentLoses": "You lose the ability to apply your personal expertise to spot subtle signs of a fake item before committing your money.",
+        "speak": "on-event",
+        "check": "Does the image carry a 'Stock photo' label?",
+        "say_example": "The picture is a stock photo. It's not the seller's own item, so you'd be bidding without seeing the real one."
        }
       ]
      },
@@ -509,28 +447,26 @@
       "label": "Read the description and terms",
       "questions": [
        {
-        "question": "Which payment method should you plan to use if you win this seller's auction?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Although the item descriptions mention PayPal, choosing to pay with cash at pickup helps the seller avoid transaction fees.",
-        "whatTheAgentLoses": "You lose the opportunity to select a mutually beneficial payment method based on the seller's local pickup context."
-       },
-       {
-        "question": "Do the publication dates in the subtitle and item specifics match?",
+        "question": "Do the details in the title match the item specifics table?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The subtitle states the book is the 2009 sixth edition, but the item specifics list the publication year as 2008, creating uncertainty about the exact item being sold.",
-        "whatTheAgentLoses": "The user loses the chance to notice the conflicting publication years and clarify which edition they are actually buying before committing to a bid."
+        "whatTheAgentLoses": "The user loses the chance to notice the conflicting publication years and clarify which edition they are actually buying before committing to a bid.",
+        "speak": "if-wrong",
+        "check": "What does the title say, and what does the item specifics table say, for the same detail?",
+        "say_example": "The title says <2009, sixth edition>, but the specifics say <2008>. Those don't match, so it's not clear which one you'd get."
        },
        {
-        "question": "Did you review the full description for strict payment terms and item discrepancies?",
+        "question": "Does the description add terms the top of the page doesn't show, like a payment deadline or a restocking fee?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The description contains a red warning about a strict 24-hour payment deadline with a restocking fee, as well as a discrepancy in the hard drive size.",
-        "whatTheAgentLoses": "You lose the ability to catch punitive seller terms and item discrepancies before committing to a binding bid."
+        "whatTheAgentLoses": "You lose the ability to catch punitive seller terms and item discrepancies before committing to a binding bid.",
+        "speak": "on-event",
+        "check": "What extra terms does the full description state that the listing panel doesn't?",
+        "say_example": "Down in the description it says pay within 24 hours or there's a restocking fee. The top of the page never mentions that."
        }
       ]
      },
@@ -539,20 +475,26 @@
       "label": "Check the seller's record",
       "questions": [
        {
-        "question": "Should you review the seller's detailed feedback before placing a bid?",
+        "question": "What feedback score and percentage does the seller show?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Although the screen shows a 99.6% positive feedback score for the seller, checking the detailed reviews helps ensure there are no hidden red flags before committing your money.",
-        "whatTheAgentLoses": "You lose the opportunity to personally assess the seller's reliability and read specific buyer experiences before trusting them with your purchase."
+        "whatTheAgentLoses": "You lose the opportunity to personally assess the seller's reliability and read specific buyer experiences before trusting them with your purchase.",
+        "speak": "never",
+        "check": "What feedback percentage and rating count does the seller info box show?",
+        "say_example": "Seller record - 99.6% positive, <2,341> ratings"
        },
        {
-        "question": "Are you comfortable bidding on this item given the seller's zero feedback rating?",
+        "question": "Does the seller's feedback score read zero?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows the seller 'guanweidianzi' has a feedback score of 0, which could indicate a higher risk for a buyer.",
-        "whatTheAgentLoses": "The user loses the ability to apply their own risk tolerance when evaluating an unestablished seller."
+        "whatTheAgentLoses": "The user loses the ability to apply their own risk tolerance when evaluating an unestablished seller.",
+        "speak": "on-event",
+        "check": "What feedback score does the seller info box show?",
+        "say_example": "This seller has zero feedback. Nobody has bought from them before. Want me to find the same thing from a seller with a record?"
        }
       ]
      },
@@ -561,12 +503,15 @@
       "label": "Compare the fixed-price twin",
       "questions": [
        {
-        "question": "Should you check out similar listings before placing your bid?",
+        "question": "Is the same item listed at a fixed price, and for how much?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The listing includes a link to see more of this specific HP laptop model, which could help ensure you are getting the best deal.",
-        "whatTheAgentLoses": "The user loses the chance to compare alternatives and potentially find a better price or condition for the desired item."
+        "whatTheAgentLoses": "The user loses the chance to compare alternatives and potentially find a better price or condition for the desired item.",
+        "speak": "on-event",
+        "check": "Does the page link a fixed-price listing of the same model, and at what price?",
+        "say_example": "The same laptop is Buy It Now for <$18.96>. If the bidding gets near that, the auction stops being a deal."
        },
        {
         "question": "Did your winning bid save you money compared to the fixed-price option you considered earlier?",
@@ -574,15 +519,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Comparing the final $14.60 bid to the initial $18.96 fixed-price listing confirms that participating in the auction was financially worthwhile.",
-        "whatTheAgentLoses": "You lose the satisfaction of verifying that your bidding strategy successfully secured a better deal than the immediate purchase price."
-       },
-       {
-        "question": "Do you notice that the audio suggests viewing 'buy it now' listings while the screen continues to show an auction?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The spoken instruction to avoid auctions contradicts the visual evidence of the user staying on the washing machine auction page.",
-        "whatTheAgentLoses": "The user loses clarity on the intended purchasing strategy when the spoken instructions and on-screen actions conflict."
+        "whatTheAgentLoses": "You lose the satisfaction of verifying that your bidding strategy successfully secured a better deal than the immediate purchase price.",
+        "speak": "never",
+        "check": "What was the final price, and what did the fixed-price twin cost?",
+        "say_example": "Won at <$14.60> - the Buy It Now twin was <$18.96>"
        }
       ]
      },
@@ -591,20 +531,15 @@
       "label": "Total the item and shipping",
       "questions": [
        {
-        "question": "Are you comfortable with the $83.54 shipping fee and the item's pre-owned condition before placing a bid?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a very high international shipping cost of $83.54 for a pre-owned item, which significantly increases the total financial commitment.",
-        "whatTheAgentLoses": "The user loses the opportunity to decide if the steep shipping fees and used condition are acceptable for their budget before committing to the auction."
-       },
-       {
-        "question": "Are you willing to pay a shipping fee that is significantly higher than the current bid price?",
+        "question": "Is the shipping fee bigger than the current bid?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a shipping cost of US $163.22, which is nearly double the current US $91.00 bid for the used washing machine.",
-        "whatTheAgentLoses": "You lose the opportunity to reject an auction where the shipping fees make the total cost unreasonably high."
+        "whatTheAgentLoses": "You lose the opportunity to reject an auction where the shipping fees make the total cost unreasonably high.",
+        "speak": "on-event",
+        "check": "What are the current bid and the shipping fee?",
+        "say_example": "The bid is <$91>, but shipping is <$163>. Shipping costs more than the machine. All in, it's <$254>."
        },
        {
         "question": "Are there mandatory import charges or customs duties listed below the standard shipping fee?",
@@ -612,23 +547,21 @@
         "moment": null,
         "moneyMoving": false,
         "why": "For international listings, customs duties and import charges are often calculated and billed separately from the item price and standard shipping, significantly increasing the total cost.",
-        "whatTheAgentLoses": "The user loses the ability to factor in steep, non-negotiable cross-border fees that might make a domestic listing a better deal."
+        "whatTheAgentLoses": "The user loses the ability to factor in steep, non-negotiable cross-border fees that might make a domestic listing a better deal.",
+        "speak": "on-event",
+        "check": "Does the listing show an import charges line, and for how much?",
+        "say_example": "There are import charges too, <$12.40> on top of shipping. That's part of what you'd pay."
        },
        {
-        "question": "Did you calculate your total financial commitment by adding the previously displayed shipping fee to your bid?",
+        "question": "What do the current bid and shipping add up to?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The bidding screen only shows the bid amount and omits the shipping fee from the listing screen, which hides the actual total cost of the transaction.",
-        "whatTheAgentLoses": "The user loses the ability to strictly control their total spending if the agent ignores shipping fees omitted from the active bidding screen."
-       },
-       {
-        "question": "Are you comfortable with the total amount due, including shipping, before proceeding to payment?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays a winning bid of $227.50 and a shipping cost of $6.12, which must be combined to understand the actual final cost.",
-        "whatTheAgentLoses": "The user loses the opportunity to manually calculate and approve the final total cost before initiating the payment process."
+        "whatTheAgentLoses": "The user loses the ability to strictly control their total spending if the agent ignores shipping fees omitted from the active bidding screen.",
+        "speak": "always",
+        "check": "What current bid and shipping cost does the listing show?",
+        "say_example": "All in, this one is <$15.50> plus <$0.73> shipping right now, about <$16.23>."
        }
       ]
      }
@@ -649,15 +582,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Evaluating the current bid of $42.00 ensures you do not waste time or money on an item that already exceeds your spending limit.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally weigh the current price against your own strict or flexible budget constraints."
-       },
-       {
-        "question": "Based on the current price and shipping, what should your maximum bid be?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays a current price of $15.50 and $0.73 shipping, which are essential figures for calculating your total acceptable cost before bidding.",
-        "whatTheAgentLoses": "Delegating this decision means an agent might choose a maximum bid that results in a final total cost higher than you are comfortable paying once taxes and shipping are added."
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally weigh the current price against your own strict or flexible budget constraints.",
+        "speak": "if-wrong",
+        "check": "What is the current bid, against the budget you gave?",
+        "say_example": "The bid's at <$42> now. That's past the <$35> you gave me. Go higher, or let this one go?"
        }
       ]
      },
@@ -667,31 +595,11 @@
      },
      {
       "id": "4.3",
-      "label": "Leave headroom for rivals",
-      "questions": [
-       {
-        "question": "What is the maximum amount you are willing to bid above the minimum requirement?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen shows a minimum required bid of $1.04, so you must decide your absolute financial limit before placing the bid.",
-        "whatTheAgentLoses": "Delegating this means you lose control over deciding your maximum financial commitment for the auction."
-       }
-      ]
+      "label": "Leave headroom for rivals"
      },
      {
       "id": "4.4",
-      "label": "Engineer the cents",
-      "questions": [
-       {
-        "question": "What exact amount should you enter as your maximum bid to avoid round numbers?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Entering a specific, non-round number like 21.87 pounds gives you a strategic edge over other bidders who tend to bid in flat increments.",
-        "whatTheAgentLoses": "You lose the opportunity to apply personal bidding strategies, such as choosing specific non-round numbers to edge out competitors."
-       }
-      ]
+      "label": "Engineer the cents"
      }
     ]
    },
@@ -706,38 +614,21 @@
       "moment": null,
       "moneyMoving": false,
       "why": "Automated agents or unusual browsing patterns can trigger anti-bot protections, which will completely block the bid submission until a human solves the challenge.",
-      "whatTheAgentLoses": "The user loses the auction because they are not alerted to step in and solve the security check before the clock runs out."
+      "whatTheAgentLoses": "The user loses the auction because they are not alerted to step in and solve the security check before the clock runs out.",
+      "speak": "on-event",
+      "check": "Does the page show a CAPTCHA or verification challenge?",
+      "say_example": "eBay put up a human check before it takes the bid. I can't do that part. It's yours."
      }
     ],
     "children": [
      {
       "id": "5.1",
-      "label": "Open the bid form",
-      "questions": [
-       {
-        "question": "Are you sure you want to bid now given the high shipping cost and the amount of time left?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a shipping cost of C $125.00 and over 17 hours remaining, making an immediate bid potentially costly and strategically poor.",
-        "whatTheAgentLoses": "The user loses the opportunity to avoid excessive shipping fees and the strategic advantage of waiting until the auction's final moments to bid."
-       }
-      ]
+      "label": "Open the bid form"
      },
      {
       "id": "5.2",
       "label": "Provide a payment method",
       "note": "5.2.1 as the prompts appear, then 5.2.2, with 5.2.3 stacked on top for dh72. 5.2.4 is the pass-through case - pre-wired accounts read their card inside the modal and never see the wall. no keeper who hits the wall gets past it.",
-      "questions": [
-       {
-        "question": "How do you resolve the shipping address error and missing payment method to confirm your bid?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The payment preferences modal shows a red error stating the item cannot be shipped to the selected address and requires a payment method before you can proceed.",
-        "whatTheAgentLoses": "You lose the ability to choose a valid alternative shipping address or decide to abandon the auction entirely if shipping is unavailable."
-       }
-      ],
       "children": [
        {
         "id": "5.2.1",
@@ -748,20 +639,15 @@
         "label": "Pick a payment method",
         "questions": [
          {
-          "question": "How do you proceed when prompted to select a payment method for auctions?",
+          "question": "Does the page ask you to add or pick a payment method before bidding?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": true,
           "why": "The screen shows a 'Select payment method' modal that requires you to add a payment method before the system will process your auction bids.",
-          "whatTheAgentLoses": "You lose the ability to choose exactly which personal credit card or financial account is kept on file for automatic charges if you win."
-         },
-         {
-          "question": "Are your payment and shipping details ready for bidding?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen shows a disabled Confirm button because a payment method must be selected before the bid can be finalized.",
-          "whatTheAgentLoses": "If an agent cancels this modal without providing payment details, you lose the chance to actually place your bid on the auction."
+          "whatTheAgentLoses": "You lose the ability to choose exactly which personal credit card or financial account is kept on file for automatic charges if you win.",
+          "speak": "on-event",
+          "check": "Does a modal ask for a payment method, and which saved methods does it list?",
+          "say_example": "eBay needs a card on file before it takes bids. You have a <Mastercard ending 4821>. Use that one?"
          }
         ]
        },
@@ -770,12 +656,15 @@
         "label": "Resolve the address error",
         "questions": [
          {
-          "question": "What should you do if the bid fails because the item cannot be shipped to your location?",
+          "question": "Does the page show an error that the item can't ship to your address?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": true,
           "why": "The screen displays an error stating the item cannot be shipped to your country, meaning this specific transaction cannot proceed.",
-          "whatTheAgentLoses": "The user loses the opportunity to provide an alternative shipping address or personally select which alternative seller to buy from."
+          "whatTheAgentLoses": "The user loses the opportunity to provide an alternative shipping address or personally select which alternative seller to buy from.",
+          "speak": "on-event",
+          "check": "What does the red error text say about shipping to the selected address?",
+          "say_example": "eBay says this seller doesn't ship to <your country>, so the bid can't go through. Want me to find the same thing from one who does?"
          }
         ]
        },
@@ -789,7 +678,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "The confirmation screen often includes terms stating that the selected payment method will be automatically charged upon winning, changing when the money actually moves.",
-          "whatTheAgentLoses": "The user loses the ability to prepare for an immediate, automatic deduction from their account versus having a window of time to manually complete the payment."
+          "whatTheAgentLoses": "The user loses the ability to prepare for an immediate, automatic deduction from their account versus having a window of time to manually complete the payment.",
+          "speak": "never",
+          "check": "Does the confirmation say the payment method will be charged automatically if you win?",
+          "say_example": "Card gets charged automatically on a win - no separate checkout"
          }
         ]
        }
@@ -800,52 +692,15 @@
       "label": "Enter the max amount",
       "questions": [
        {
-        "question": "Are you ready to submit this bid amount and proceed to the confirmation step?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Clicking the 'Place bid' button submits your entered maximum amount and advances you to the final review screen.",
-        "whatTheAgentLoses": "You lose the opportunity to personally decide the exact maximum amount you are willing to pay before advancing to the final confirmation."
-       },
-       {
-        "question": "How much should you enter for your maximum bid, or should you use a quick bid button?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen offers quick bid buttons for specific amounts alongside a custom input field, requiring you to decide your bidding strategy based on your budget.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to decide exactly how much of your personal budget you are willing to risk on this auction."
-       },
-       {
-        "question": "Do you want to use a suggested bid amount or enter a custom maximum bid?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen offers quick bid buttons alongside a custom maximum bid field, which dictates how eBay's proxy bidding system will automatically bid on your behalf.",
-        "whatTheAgentLoses": "You lose the ability to define your true maximum willingness to pay, which could result in losing the auction to a slightly higher bidder or overpaying."
-       },
-       {
-        "question": "Should you select a quick bid amount or enter a custom maximum bid?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen offers quick bid buttons like $190 alongside a custom max bid field, requiring you to decide your absolute limit for proxy bidding.",
-        "whatTheAgentLoses": "You lose the ability to strategically determine your exact maximum willingness to pay based on the current auction price and increments."
-       },
-       {
         "question": "How much should you set as your maximum bid?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen shows the 'Your max bid' field where entering an amount activates the 'Bid' button, establishing the absolute limit you are willing to pay.",
-        "whatTheAgentLoses": "The user loses the ability to personally determine their true maximum willingness to pay based on their own valuation of the item."
-       },
-       {
-        "question": "What maximum bid do you want to enter for this item?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The Place bid modal displays the current bid, shipping costs, and suggested bids to help determine a maximum bid amount.",
-        "whatTheAgentLoses": "The user loses the ability to decide their exact maximum financial commitment for the auction."
+        "whatTheAgentLoses": "The user loses the ability to personally determine their true maximum willingness to pay based on their own valuation of the item.",
+        "speak": "gate",
+        "check": "What current bid, shipping cost and suggested amounts does the bid form show?",
+        "say_example": "The bid's at <$15.50>, with <$0.73> shipping. What's the most you'll pay, all in? I'd make it an odd number like <$18.37>. Round numbers tie with other people's bids, and ties go to whoever bid first."
        },
        {
         "question": "Is the bid input field expecting the amount in the listing's native currency rather than your local converted currency?",
@@ -853,7 +708,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "International listings display your local currency as an approximation, but the actual bid input field often requires the amount in the seller's native currency, making it easy to accidentally overbid by a huge margin if you enter the converted number.",
-        "whatTheAgentLoses": "The user loses the ability to prevent a catastrophic overbid caused by entering a local currency value into a foreign currency input field."
+        "whatTheAgentLoses": "The user loses the ability to prevent a catastrophic overbid caused by entering a local currency value into a foreign currency input field.",
+        "speak": "on-event",
+        "check": "What currency symbol does the bid field carry?",
+        "say_example": "The bid box takes <pounds>. <£21.87> here is about <$27.50> of your money."
        },
        {
         "question": "Is the bid input field pre-filled with eBay's suggested minimum bid, requiring it to be cleared before typing your maximum?",
@@ -861,7 +719,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "eBay often auto-populates the text box with the next minimum increment, which can lead to appended numbers (e.g., typing '50' into a box holding '15' makes '1550') or accidental minimum bids if not explicitly cleared.",
-        "whatTheAgentLoses": "The user risks placing a drastically incorrect bid amount if the agent types into a field that already contains pre-filled numbers."
+        "whatTheAgentLoses": "The user risks placing a drastically incorrect bid amount if the agent types into a field that already contains pre-filled numbers.",
+        "speak": "if-wrong",
+        "check": "Does the bid field show exactly the amount that was approved?",
+        "say_example": "The box came pre-filled, so it read <1550> instead of <50>. I cleared it and typed it fresh. It shows <50> now."
        }
       ]
      },
@@ -875,23 +736,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a current bid of C $7.99 and explicitly states that you must enter C $8.49 or more to place a valid bid.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally evaluate the current price and minimum bid requirement against your own budget."
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally evaluate the current price and minimum bid requirement against your own budget.",
+        "speak": "never",
+        "check": "What minimum bid does the page state?",
+        "say_example": "Minimum accepted bid <C $8.49>"
        },
        {
-        "question": "How much should you set as your maximum bid?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen specifies a minimum required bid amount, so you must choose a value equal to or higher than that to successfully participate in the auction.",
-        "whatTheAgentLoses": "Delegating this step means you lose control over the exact maximum amount of money you are willing to spend on the item."
-       },
-       {
-        "question": "What amount should you enter to meet the minimum bid requirement?",
+        "question": "Is the entered amount at least the minimum the page requires?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays helper text stating you must enter US $14.01 or more, and entering a lower amount triggers a red error message that blocks the bid.",
-        "whatTheAgentLoses": "If the agent enters an invalid amount, the bid will be rejected and you risk losing the auction while precious seconds tick away."
+        "whatTheAgentLoses": "If the agent enters an invalid amount, the bid will be rejected and you risk losing the auction while precious seconds tick away.",
+        "speak": "if-wrong",
+        "check": "What minimum does the helper text state, and what is in the field?",
+        "say_example": "eBay wants <$14.01> or more, and your max is <$14>. It won't take the bid. Go to <$14.01>, or let this one go?"
        }
       ]
      },
@@ -905,47 +764,21 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "Verifying the $40 max bid, the selected Mastercard, and the shipping address ensures you do not overpay or send the item to the wrong location.",
-        "whatTheAgentLoses": "You lose the chance to verify your exact maximum bid limit and ensure the correct payment method and shipping address are used if you win."
+        "whatTheAgentLoses": "You lose the chance to verify your exact maximum bid limit and ensure the correct payment method and shipping address are used if you win.",
+        "speak": "gate",
+        "check": "What max bid, payment method and delivery address does the confirm screen show?",
+        "say_example": "Ready to bid. Max <$40>, your <Mastercard ending 4821>, shipping to <Home>. If you win, it's binding and the card is charged. Press to bid, or say change."
        },
        {
-        "question": "Are your maximum bid and shipping costs correct before you commit to buy?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The confirmation screen displays your maximum bid and shipping costs, which you must verify because clicking the button commits you to purchase the item if you win.",
-        "whatTheAgentLoses": "You lose the opportunity to double-check your total financial commitment before making a binding offer on the item."
-       },
-       {
-        "question": "Are the bid details correct, and should you confirm the bid now?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The 'Review and Confirm Bid' screen displays your maximum bid, current bid, and shipping costs, requiring a final check before committing.",
-        "whatTheAgentLoses": "The user loses the ability to verify the final bid amounts and strategically time the confirmation."
-       },
-       {
-        "question": "Are you comfortable committing to this bid knowing that the displayed import duties and taxes are only estimates that could change at checkout?",
+        "question": "Does the review screen mark duties or taxes as an estimate?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The review screen explicitly marks the duties as an 'Estimate, final at checkout,' meaning the actual amount you are legally committing to pay if you win could be higher than the total currently shown.",
-        "whatTheAgentLoses": "The user loses the ability to factor in the risk of fluctuating import fees and taxes before making a binding financial commitment."
-       },
-       {
-        "question": "Are you certain you want to place this bid, given that it cannot be easily canceled or retracted if you change your mind?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "eBay bids are binding contracts, and unlike a standard retail purchase, you cannot simply cancel the order or retract the bid without the seller's permission or a valid exception like a typo.",
-        "whatTheAgentLoses": "The user loses the chance to pause and reconsider before making a commitment that is strictly enforced and difficult to reverse."
-       },
-       {
-        "question": "Are you willing to accept the exchange rate risk when bidding on an item listed in a foreign currency?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays the bid and shipping in a foreign currency alongside an 'approximate' conversion to your local currency, meaning the exact final charge will depend on your bank's exchange rate.",
-        "whatTheAgentLoses": "The user loses the chance to reject the transaction based on the uncertainty of the final exchange rate and potential foreign transaction fees."
+        "whatTheAgentLoses": "The user loses the ability to factor in the risk of fluctuating import fees and taxes before making a binding financial commitment.",
+        "speak": "on-event",
+        "check": "Does the duties line say 'Estimate, final at checkout'?",
+        "say_example": "The duties line says estimate, final at checkout. The real total can land higher than the <$54.20> showing now."
        }
       ]
      },
@@ -959,15 +792,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The search results showed the current bid as $0.25, but the item details page immediately displayed $0.55.",
-        "whatTheAgentLoses": "An agent might fail to notice the sudden price jump and place a bid that no longer aligns with your expectations."
-       },
-       {
-        "question": "Do you notice the discrepancy between the spoken shipping cost and the exact amount shown on screen?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The narrator states the shipping is 9 dollars, but the screen clearly displays the exact cost as $8.99.",
-        "whatTheAgentLoses": "The user loses precise cost tracking if the agent relies on rounded spoken amounts instead of the exact on-screen figures."
+        "whatTheAgentLoses": "An agent might fail to notice the sudden price jump and place a bid that no longer aligns with your expectations.",
+        "speak": "on-event",
+        "check": "Does the current bid on the listing match the price shown in the results?",
+        "say_example": "The results said <$0.25>, but the listing says <$0.55> now. Bids are landing while we look."
        },
        {
         "question": "Does the auction end time remain consistent across the different moments of the task?",
@@ -975,7 +803,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "A consistent auction end time confirms that the same listing is being viewed and that the countdown timer is functioning correctly.",
-        "whatTheAgentLoses": "The delegator loses the ability to verify that the agent is interacting with a single, stable auction listing throughout the task."
+        "whatTheAgentLoses": "The delegator loses the ability to verify that the agent is interacting with a single, stable auction listing throughout the task.",
+        "speak": "if-wrong",
+        "check": "Is the end time shown now the same as when the listing was first read?",
+        "say_example": "The end time changed since I first read it. That can mean a different listing, so I'm re-checking before anything else."
        },
        {
         "question": "Do you see the exact total cost of the bid and postage explicitly stated on the screen?",
@@ -983,7 +814,10 @@
         "moment": "After",
         "moneyMoving": true,
         "why": "Confirming only the explicitly stated amounts prevents errors from assuming or calculating an unshown total.",
-        "whatTheAgentLoses": "If the agent hallucinates an unstated total cost, the user loses accurate visibility into the actual financial commitment."
+        "whatTheAgentLoses": "If the agent hallucinates an unstated total cost, the user loses accurate visibility into the actual financial commitment.",
+        "speak": "never",
+        "check": "Does the page itself state a combined bid-plus-postage total?",
+        "say_example": "No combined total on screen - bid <£13.16> and postage <£3.35> shown separately"
        }
       ]
      },
@@ -1004,39 +838,10 @@
       "moment": "Now",
       "moneyMoving": true,
       "why": "With 5 minutes and 53 seconds left on the auction, waiting to bid can prevent driving up the price prematurely.",
-      "whatTheAgentLoses": "You lose the ability to apply personal bidding strategies, like waiting until the last moment to avoid bidding wars."
-     },
-     {
-      "question": "Should you place your bid now or wait until the final seconds of the auction?",
-      "cluster": "watch",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "Placing a bid while there is still over a minute left on the timer gives competing bidders time to react and drive up the price.",
-      "whatTheAgentLoses": "The user loses the ability to employ a last-second bidding strategy to secure the item at the lowest possible price."
-     },
-     {
-      "question": "Will you place your bid immediately or wait to snipe the auction in its final seconds?",
-      "cluster": "watch",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The screen shows a countdown of 1 minute and 47 seconds, which makes a last-second sniping strategy viable to avoid counterbids.",
-      "whatTheAgentLoses": "You lose the strategic control of manually timing a last-second snipe bid using your preferred browser setup."
-     },
-     {
-      "question": "Should you place your bid now or wait until the auction is about to end?",
-      "cluster": "watch",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The screen shows the auction still has over five days remaining, meaning an immediate bid gives automatic bidders ample time to react and drive up the price.",
-      "whatTheAgentLoses": "The user loses the strategic advantage of timing the bid at the last minute to avoid triggering automatic counter-bids."
-     },
-     {
-      "question": "Should you place your maximum bid earlier rather than later in case someone else bids the exact same amount?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "In the event of a tie where two bidders enter the identical maximum amount, eBay's system awards the win to the bid that was placed first.",
-      "whatTheAgentLoses": "The user loses the strategic knowledge that placing a bid earlier can act as a tiebreaker against competing bidders with the same budget."
+      "whatTheAgentLoses": "You lose the ability to apply personal bidding strategies, like waiting until the last moment to avoid bidding wars.",
+      "speak": "gate",
+      "check": "How much time does the countdown show?",
+      "say_example": "Everything's staged at <$40> max. Bid now, or hold it and press in the last <ten> seconds? Bidding early gives rivals time to push the price."
      },
      {
       "question": "Did the system reject your bid confirmation with an error stating you do not meet the seller's buyer requirements?",
@@ -1044,31 +849,16 @@
       "moment": null,
       "moneyMoving": false,
       "why": "Sellers can configure their listings to automatically block bids from users with unpaid item strikes or low feedback, stopping the transaction at the final step.",
-      "whatTheAgentLoses": "The user loses the immediate understanding that they are explicitly blocked by this seller and must abandon the listing to search for another."
+      "whatTheAgentLoses": "The user loses the immediate understanding that they are explicitly blocked by this seller and must abandon the listing to search for another.",
+      "speak": "on-event",
+      "check": "Does the page show an error that you don't meet the seller's buyer requirements?",
+      "say_example": "eBay refused the bid. It says this account doesn't meet the seller's buyer rules. That's the seller's setting, and I can't change it."
      }
     ],
     "children": [
      {
       "id": "6.1",
-      "label": "Pick the firing second",
-      "questions": [
-       {
-        "question": "How many seconds should be left on the countdown timer before you tap 'Place bid'?",
-        "cluster": "watch",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen shows the auction timer ticking down rapidly, and timing your bid for the final seconds minimizes the chance of competitors reacting.",
-        "whatTheAgentLoses": "You lose the ability to execute a precise last-second sniping strategy to win the auction at the lowest possible price."
-       },
-       {
-        "question": "How many seconds should be left on the countdown timer before you switch back to the confirmation tab?",
-        "cluster": "watch",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Waiting until the on-screen timer reaches 10 seconds ensures your bid is submitted at the last possible moment to prevent others from reacting.",
-        "whatTheAgentLoses": "You lose the ability to strategically time the exact second your bid is executed based on your personal risk tolerance."
-       }
-      ]
+      "label": "Pick the firing second"
      },
      {
       "id": "6.2",
@@ -1079,28 +869,15 @@
       "label": "Hold the staged confirm",
       "questions": [
        {
-        "question": "Should I wait on the confirmation screen to submit my bid at the last second?",
-        "cluster": "watch",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The 'Review and confirm your bid' modal allows you to stage your maximum bid and watch the auction timer count down before committing.",
-        "whatTheAgentLoses": "The user loses the strategic advantage of manually timing their final confirmation to snipe the auction at the last possible moment."
-       },
-       {
-        "question": "How can you stage your bid to submit it at the very last second?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Clicking 'Place bid' with time still remaining on the clock safely opens a confirmation window without finalizing the transaction, letting you prepare a last-second snipe.",
-        "whatTheAgentLoses": "The user loses the strategic advantage and precise timing control of manually executing the final confirmation click to outmaneuver competing bidders."
-       },
-       {
-        "question": "Are you holding on the confirmation page to time your bid for the final seconds?",
+        "question": "What does the countdown show while the confirm is staged?",
         "cluster": "watch",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen shows 46 seconds left, and waiting to confirm until the last moment prevents other bidders from having time to react.",
-        "whatTheAgentLoses": "You lose the strategic advantage of bid sniping if the agent confirms the bid too early."
+        "whatTheAgentLoses": "You lose the strategic advantage of bid sniping if the agent confirms the bid too early.",
+        "speak": "always",
+        "check": "What does the countdown on the confirmation screen show?",
+        "say_example": "I'm holding on the confirm screen. <46> seconds left. I'll press at <ten>."
        }
       ]
      },
@@ -1109,20 +886,15 @@
       "label": "Watch the countdown",
       "questions": [
        {
-        "question": "How much time is left before the auction ends?",
-        "cluster": "watch",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays the countdown timer ticking down from 59 seconds, which is critical information for timing a last-second bid.",
-        "whatTheAgentLoses": "The user loses the strategic advantage of manually timing their bid at the exact last moment to prevent competitors from reacting."
-       },
-       {
         "question": "Is the countdown timer on the confirmation screen actively ticking down, or has it frozen?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Network lag or a stale page state can cause the on-screen timer to freeze, meaning if you wait for it to reach the final seconds, the auction will actually end in the background before you click confirm.",
-        "whatTheAgentLoses": "The user loses the ability to detect a stalled interface and switch to a backup tab or refresh before they miss the chance to submit their snipe bid."
+        "whatTheAgentLoses": "The user loses the ability to detect a stalled interface and switch to a backup tab or refresh before they miss the chance to submit their snipe bid.",
+        "speak": "if-wrong",
+        "check": "Has the countdown value changed between two reads?",
+        "say_example": "The countdown hasn't moved in a while. The page looks frozen, so I'm refreshing before it costs us the ending."
        }
       ]
      },
@@ -1131,20 +903,15 @@
       "label": "Track the live price",
       "questions": [
        {
-        "question": "Is the current bid still below your planned maximum, and is it the right time to confirm?",
-        "cluster": "watch",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Waiting until the final seconds prevents counter-bids, but you must monitor the rising current bid to ensure it hasn't exceeded your entered maximum before confirming.",
-        "whatTheAgentLoses": "You lose the ability to strategically time the final bid submission and dynamically abandon the auction if the price exceeds your limit at the last second."
-       },
-       {
         "question": "Did the screen refresh to show your bid is no longer high enough to meet the new minimum?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "In the seconds between staging and confirming a bid, another buyer's proxy bid might have raised the current price past your staged maximum amount.",
-        "whatTheAgentLoses": "The user loses the chance to realize their staged bid is already dead and immediately enter a higher amount before the clock runs out."
+        "whatTheAgentLoses": "The user loses the chance to realize their staged bid is already dead and immediately enter a higher amount before the clock runs out.",
+        "speak": "on-event",
+        "check": "Does the page say the current bid is now at or above the staged maximum?",
+        "say_example": "Someone just pushed the price past your <$40>. The staged bid won't count now. Go higher, or let it go?"
        },
        {
         "question": "Are the bid amounts and total number of bids consistent throughout the process?",
@@ -1152,7 +919,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen shows the current bid logically increasing from $42.00 with 11 bids to a final winning bid of $46.00 with 16 bids.",
-        "whatTheAgentLoses": "The user loses the ability to monitor the live competitiveness and logical progression of the auction."
+        "whatTheAgentLoses": "The user loses the ability to monitor the live competitiveness and logical progression of the auction.",
+        "speak": "never",
+        "check": "Do the bid count and price rise consistently across the screens?",
+        "say_example": "Bids climbed <$42> to <$46>, <11> to <16> bids - consistent"
        }
       ]
      },
@@ -1161,20 +931,15 @@
       "label": "Fire the confirm",
       "questions": [
        {
-        "question": "Did you enter a bid amount and click 'Place bid' before the auction countdown reached zero?",
+        "question": "Did the auction end with no bid recorded from this account?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": true,
         "why": "The screen showed the auction countdown reaching zero and ending before any bid amount was entered or the Place bid button was clicked.",
-        "whatTheAgentLoses": "The user loses the opportunity to win the item because the agent failed to submit the bid before the auction ended."
-       },
-       {
-        "question": "Do the moments of this task agree with each other?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen at 2:28 showed a pre-submission 'Review and confirm your bid' modal, meaning the final status at 2:40 must logically follow an actual submission rather than contradicting a hallucinated early success state.",
-        "whatTheAgentLoses": "The user loses accurate tracking of their auction if the agent misinterprets a pre-submission screen as a confirmed high bid."
+        "whatTheAgentLoses": "The user loses the opportunity to win the item because the agent failed to submit the bid before the auction ended.",
+        "speak": "if-wrong",
+        "check": "Does the page show the auction ended with no bid recorded from this account?",
+        "say_example": "The clock hit zero before the bid went in. It didn't count, and nothing was spent."
        }
       ]
      }
@@ -1199,23 +964,21 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "A red exclamation mark in the input field indicates that the entered value of '208.1' has an invalid format or increment.",
-        "whatTheAgentLoses": "You lose the chance to correct a formatting error before submission, which could cause your bid to be rejected by the system."
+        "whatTheAgentLoses": "You lose the chance to correct a formatting error before submission, which could cause your bid to be rejected by the system.",
+        "speak": "if-wrong",
+        "check": "Does the bid field show an error mark against the entered value?",
+        "say_example": "The box flagged <208.1> as invalid, so I retyped it as <208.10>. No error now."
        },
        {
-        "question": "Were you immediately outbid, and if so, how much are you willing to increase your maximum bid to try again?",
+        "question": "Does the page say another bidder's maximum is above yours?",
         "cluster": "hand over",
         "moment": "After",
         "moneyMoving": true,
         "why": "The screen shows a warning that another bidder's maximum bid exceeded yours, requiring a decision on whether to submit a higher amount.",
-        "whatTheAgentLoses": "You lose the ability to personally evaluate your budget limit in real-time when deciding if the item is still worth the higher price."
-       },
-       {
-        "question": "Should you increase your maximum bid before the auction ends?",
-        "cluster": "hand over",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "The screen warned that you were close to getting outbid with only 7 seconds left, requiring a final decision on whether to risk losing the item or spend more money.",
-        "whatTheAgentLoses": "The user loses the opportunity to make a final, split-second financial decision based on their true maximum willingness to pay."
+        "whatTheAgentLoses": "You lose the ability to personally evaluate your budget limit in real-time when deciding if the item is still worth the higher price.",
+        "speak": "on-event",
+        "check": "Does the page show an outbid notice?",
+        "say_example": "You've been outbid already. Someone's max was over your <$40>. Go higher, or stop here?"
        }
       ]
      },
@@ -1224,20 +987,15 @@
       "label": "Confirm the lead",
       "questions": [
        {
-        "question": "Did your bid successfully place you in the lead, and what is the current price?",
+        "question": "Did your bid put you in the lead, and what's the current price?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": true,
         "why": "Verifying the confirmation message and current bid amount ensures your maximum bid was accepted and you are currently winning the auction.",
-        "whatTheAgentLoses": "You lose the immediate reassurance of seeing your winning status and knowing exactly how much of your maximum bid is currently being used."
-       },
-       {
-        "question": "How does the current bid compare to your maximum bid, and what are the final terms of the item you are winning?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "The screen displays your $51.00 maximum bid alongside the $46.00 current bid, which determines how much room you have left before being outbid.",
-        "whatTheAgentLoses": "You lose the reassurance of personally verifying your proxy bid buffer and reviewing the final shipping and return terms of the item."
+        "whatTheAgentLoses": "You lose the immediate reassurance of seeing your winning status and knowing exactly how much of your maximum bid is currently being used.",
+        "speak": "always",
+        "check": "Does the page say you're the highest bidder, and at what current bid?",
+        "say_example": "Your bid's in. You're the high bidder at <$46>, and your max is <$51>."
        }
       ]
      }
@@ -1249,12 +1007,15 @@
     "note": "8.1 while seconds remain, 8.2 at zero - the won state often needs a reload to appear. 8.3 whenever the auction resolves; 8.4 is one keeper's full audit. a loss ends the task here (T5mb, dh72, GYkw).",
     "questions": [
      {
-      "question": "Did you accidentally confirm a bid with a massive typo (e.g., $1000 instead of $10), requiring an immediate bid retraction?",
+      "question": "Does the maximum recorded on the page match the amount that was approved?",
       "cluster": "",
       "moment": null,
       "moneyMoving": false,
       "why": "If an agent or user inputs an extra digit, the resulting proxy bid could be financially ruinous, and eBay only allows retractions for obvious typos if done quickly before the auction ends.",
-      "whatTheAgentLoses": "The user loses the critical, time-sensitive opportunity to use the platform's emergency reversal process to cancel a disastrously high bid."
+      "whatTheAgentLoses": "The user loses the critical, time-sensitive opportunity to use the platform's emergency reversal process to cancel a disastrously high bid.",
+      "speak": "if-wrong",
+      "check": "Does the max bid recorded on the page match the amount that was approved?",
+      "say_example": "The page shows your max as <$1,000>, but you approved <$10>. That's wrong, so I'm starting a retraction now, while the rules still allow it."
      }
     ],
     "children": [
@@ -1263,20 +1024,15 @@
       "label": "Read the high-bidder status",
       "questions": [
        {
-        "question": "Are you the highest bidder with only seconds left on the auction?",
-        "cluster": "receipts",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "The screen shows you are the highest bidder with just 4 seconds remaining, confirming your last-second bidding strategy was successful.",
-        "whatTheAgentLoses": "The user misses the thrill and strategic satisfaction of executing a successful last-second snipe bid themselves."
-       },
-       {
         "question": "Does the status explicitly say 'Reserve not met' next to your winning bid amount?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Even if you are the highest bidder, a small visual indicator stating 'Reserve not met' means you will not actually win the item when the auction ends unless you bid higher.",
-        "whatTheAgentLoses": "The user falsely believes they have secured the item because they are the highest bidder, completely missing that the hidden reserve price blocks the sale."
+        "whatTheAgentLoses": "The user falsely believes they have secured the item because they are the highest bidder, completely missing that the hidden reserve price blocks the sale.",
+        "speak": "on-event",
+        "check": "Does the status line show 'Reserve not met' beside your bid?",
+        "say_example": "You're the top bid, but it says reserve not met. At this price, you still don't win it."
        }
       ]
      },
@@ -1290,15 +1046,10 @@
         "moment": "After",
         "moneyMoving": true,
         "why": "The screen shows a 'SOLD' badge and a final price, contradicting the narrator's claim that a bid was confirmed.",
-        "whatTheAgentLoses": "The user would falsely believe they have an active bid on the item when it has actually already been sold to someone else."
-       },
-       {
-        "question": "Did you check the final outcome now that the auction has ended?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays a 'Bidding has ended' banner and the final winning bid amount, which confirms the ultimate result of your participation.",
-        "whatTheAgentLoses": "The user loses the immediate closure of knowing whether they ultimately won the item or were outbid at the last second."
+        "whatTheAgentLoses": "The user would falsely believe they have an active bid on the item when it has actually already been sold to someone else.",
+        "speak": "if-wrong",
+        "check": "Does the page show a SOLD or ended state with no bid from this account?",
+        "say_example": "This auction already ended. It sold for <$14.60>, and no bid of ours is on it. Nothing was spent."
        },
        {
         "question": "Do you see the exact phrase 'You won this auction' on the screen?",
@@ -1306,7 +1057,10 @@
         "moment": "After",
         "moneyMoving": true,
         "why": "Assuming the auction is won when the screen only confirms you are the highest bidder misrepresents the actual outcome shown.",
-        "whatTheAgentLoses": "The user loses accurate tracking of their auction if the agent falsely reports a final win instead of a pending highest-bidder status."
+        "whatTheAgentLoses": "The user loses accurate tracking of their auction if the agent falsely reports a final win instead of a pending highest-bidder status.",
+        "speak": "if-wrong",
+        "check": "Does the page literally say you won, not just that you're the highest bidder?",
+        "say_example": "The page only says highest bidder. It doesn't say you won, so I'm not calling it won yet."
        }
       ]
      },
@@ -1315,12 +1069,15 @@
       "label": "Check the winning price",
       "questions": [
        {
-        "question": "Did you verify that you won the auction and check the final price?",
+        "question": "Does the page say you won, and what is the final price?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen displays a 'Congratulations! You won this item' banner along with the final price of US $0.31.",
-        "whatTheAgentLoses": "The user loses confirmation of their auction victory and the knowledge of the final purchase price."
+        "whatTheAgentLoses": "The user loses confirmation of their auction victory and the knowledge of the final purchase price.",
+        "speak": "always",
+        "check": "What does the ended-auction banner say, and at what final price?",
+        "say_example": "It's over, and you won. <$0.31>, plus <$5.50> shipping."
        },
        {
         "question": "Does the final bid price logically follow from your maximum bid and the previous current bid?",
@@ -1328,7 +1085,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The final price of $0.31 is consistent with a maximum bid of $0.66 and a previous high bid of $0.30, confirming the automatic bidding system worked correctly.",
-        "whatTheAgentLoses": "The user loses the ability to verify that the platform's automatic bidding system executed their bid correctly without overcharging."
+        "whatTheAgentLoses": "The user loses the ability to verify that the platform's automatic bidding system executed their bid correctly without overcharging.",
+        "speak": "if-wrong",
+        "check": "Is the final price at or below the approved maximum?",
+        "say_example": "Something's off. The final price is <$48>, but your max was <$46>. I'm opening the bid history to see what happened."
        },
        {
         "question": "Which auctions did you win, and did your sniping strategy keep the prices under your target?",
@@ -1336,7 +1096,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Checking the four windows confirms that you won three auctions near your $120 goal while safely losing the one that exceeded it.",
-        "whatTheAgentLoses": "You lose the satisfaction of seeing your multi-window sniping strategy succeed and knowing exactly which items you secured within your budget."
+        "whatTheAgentLoses": "You lose the satisfaction of seeing your multi-window sniping strategy succeed and knowing exactly which items you secured within your budget.",
+        "speak": "never",
+        "check": "Which of the watched auctions show a won banner, and at what final prices?",
+        "say_example": "Won <3> of <4> - <$118>, <$112>, <$119.50>; lost the one that passed <$120>"
        },
        {
         "question": "Does the final total cost, including shipping, align with your initial budget?",
@@ -1344,7 +1107,10 @@
         "moment": "After",
         "moneyMoving": true,
         "why": "The screen shows a $9.99 winning bid and $8.99 shipping, which totals $18.98 and successfully stays under the $20 budget.",
-        "whatTheAgentLoses": "The user loses the financial reassurance of manually calculating that the final combined costs respect their maximum budget."
+        "whatTheAgentLoses": "The user loses the financial reassurance of manually calculating that the final combined costs respect their maximum budget.",
+        "speak": "if-wrong",
+        "check": "What do the winning bid and shipping add up to, against the budget you gave?",
+        "say_example": "The bid and shipping come to <$18.98>. That's over the <$15> you gave me. You should know before paying."
        }
       ]
      },
@@ -1358,7 +1124,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Comparing the recorded bid time of 10:12:17 to the auction end time of 10:12:20 confirms exactly how narrow your margin of victory was.",
-        "whatTheAgentLoses": "The user loses the strategic insight and personal satisfaction of knowing exactly how close to the final deadline their successful bid was recorded."
+        "whatTheAgentLoses": "The user loses the strategic insight and personal satisfaction of knowing exactly how close to the final deadline their successful bid was recorded.",
+        "speak": "never",
+        "check": "What bid time and end time does the bid history show?",
+        "say_example": "Winning bid landed at <10:12:17>, three seconds before the close"
        }
       ]
      }
@@ -1371,51 +1140,26 @@
     "children": [
      {
       "id": "9.1",
-      "label": "Read the post-win options",
-      "questions": [
-       {
-        "question": "Should you proceed to the payment flow?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen indicates you won the auction and displays a 'Pay now' button, prompting a decision on whether to initiate checkout immediately.",
-        "whatTheAgentLoses": "Delegating this decision means you lose control over exactly when the payment is initiated for the won item."
-       },
-       {
-        "question": "How will you know if you win or get outbid?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "Although the screen remains on the search results, understanding the email notification system is essential for tracking the auction's outcome and knowing when to pay.",
-        "whatTheAgentLoses": "You lose the direct reminder to monitor your personal email for time-sensitive outbid alerts and final payment instructions."
-       }
-      ]
+      "label": "Read the post-win options"
      },
      {
       "id": "9.2",
-      "label": "Vet the won item",
-      "questions": [
-       {
-        "question": "Is this the correct auction listing you intend to bid on?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed a 'Buy It Now' listing for an HP Folio laptop rather than an active auction, meaning you cannot place a bid here.",
-        "whatTheAgentLoses": "You lose the ability to recognize navigation errors and prevent the agent from interacting with or purchasing the wrong item."
-       }
-      ]
+      "label": "Vet the won item"
      },
      {
       "id": "9.3",
       "label": "Review the combined checkout",
       "questions": [
        {
-        "question": "Is the final combined cost of $347.64 for the three hard drives acceptable to you?",
+        "question": "Is the checkout total shown, with shipping, the amount you want to pay?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The checkout screen displays a total of $347.64 for the three items, which represents your final financial commitment.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally verify that the final combined cost aligns with their budget before the order is confirmed."
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify that the final combined cost aligns with their budget before the order is confirmed.",
+        "speak": "gate",
+        "check": "What order total does the checkout page show?",
+        "say_example": "Checkout says <$347.64> for <the three drives> together. Only you can pay. Press to pay, or say stop."
        },
        {
         "question": "Do you actually see a checkout page displaying the total order amount, or just multiple item pages?",
@@ -1423,7 +1167,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "This matters because the screen at 1:39 only shows four panes of eBay item pages, contradicting the claim that a checkout page with a $347.64 total is visible.",
-        "whatTheAgentLoses": "The user loses accurate verification of their final costs if the agent hallucinates a checkout page and order total that do not actually exist on the screen."
+        "whatTheAgentLoses": "The user loses accurate verification of their final costs if the agent hallucinates a checkout page and order total that do not actually exist on the screen.",
+        "speak": "if-wrong",
+        "check": "Does the page show a checkout order total?",
+        "say_example": "I don't see a checkout total on this page yet, so I'm not quoting one."
        }
       ]
      },
@@ -1437,7 +1184,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "Refreshing the search results for 'pcs' ensures you are looking at the most current listings and accurate time remaining, as auction statuses change rapidly.",
-        "whatTheAgentLoses": "You lose the ability to guarantee the agent is acting on real-time auction data rather than stale search results."
+        "whatTheAgentLoses": "You lose the ability to guarantee the agent is acting on real-time auction data rather than stale search results.",
+        "speak": "never",
+        "check": "What time-left values do the refreshed results show?",
+        "say_example": "Refreshed the results before the next auction - countdowns current"
        },
        {
         "question": "Should you confirm this bid for a fourth item, or cancel it since you have already won three?",
@@ -1445,7 +1195,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The confirmation popup shows your $120.55 max bid, providing a final opportunity to click the 'X' and cancel if you have already acquired enough of these items.",
-        "whatTheAgentLoses": "An agent might automatically confirm the bid without realizing you already won enough of this item, resulting in unnecessary spending."
+        "whatTheAgentLoses": "An agent might automatically confirm the bid without realizing you already won enough of this item, resulting in unnecessary spending.",
+        "speak": "on-event",
+        "check": "How many wins does the page show against the number you asked for, with another bid staged?",
+        "say_example": "You've already won <three>, and that's what you asked for. A fourth bid is still staged. I'm closing it, unless you say bid."
        }
       ]
      }

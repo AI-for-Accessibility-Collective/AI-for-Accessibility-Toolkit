@@ -11,13 +11,16 @@
     "note": "1.1 then 1.2, with 1.10 on a first run before anything else. 1.3 and 1.4 as prompts and cross-border needs arise - 1.3 can fire mid-task too, gating whatever needed the permission (DLy4). then 1.5 to 1.9 as the account state demands - three keepers arrive signed in and skip all of it, and DLy4 skips sign-in outright.",
     "questions": [
      {
-      "question": "Are you logged into the right account and is the shipping destination set correctly?",
+      "question": "Is the shipping destination shown in the site's banner the one this order actually ships to?",
       "cluster": "facts",
       "moment": "Now",
       "moneyMoving": false,
       "why": "Verifying the 'Deliver to Malaysia' banner and account greeting ensures that product availability and shipping costs will be accurate for your location.",
       "whatTheAgentLoses": "You lose the ability to verify that the agent is using your preferred account and regional settings before it starts filtering products.",
-      "kind": "intent-check"
+      "kind": "intent-check",
+      "speak": "if-wrong",
+      "check": "What location does the 'Deliver to' banner show, and does it match the delivery address in the task?",
+      "say_example": "The page says it's delivering to <another country>. Your order goes to <your address>, so I'm fixing that before we look at prices."
      }
     ],
     "children": [
@@ -32,7 +35,10 @@
         "moneyMoving": false,
         "why": "The screen showed a sponsored third-party app at the top of the results, requiring you to bypass it and identify the official Amazon app to continue.",
         "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the legitimate Amazon application rather than a sponsored ad.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Which results are marked Sponsored or Ad, and which result's developer or site name is Amazon's own?",
+        "say_example": "The first result is an ad for a different app. The real Amazon one is just below it, so that's the one I'm opening."
        }
       ]
      },
@@ -41,22 +47,16 @@
       "label": "Open the app or site",
       "questions": [
        {
-        "question": "How do you launch the Amazon app to begin shopping?",
+        "question": "Is the app being opened Amazon's own listing for your region, and not a lookalike?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The Play Store search results display an 'Open' button next to 'Amazon India Shop, Pay, miniTV', confirming the app is already installed and ready to launch.",
         "whatTheAgentLoses": "The user loses the opportunity to verify that the correct regional version of the Amazon app is being opened for the purchase.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Which search result do you click to reach the main Amazon homepage?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Selecting the main organic title ensures you land on the general storefront instead of a specific department sitelink or a sponsored ad.",
-        "whatTheAgentLoses": "You lose the assurance that the agent is entering the authentic site through the main homepage rather than clicking a sponsored ad or a narrow category link.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the store listing show an 'Open' button, meaning the app is already installed?",
+        "say_example": "Amazon was already installed, so I opened it."
        }
       ]
      },
@@ -65,24 +65,17 @@
       "label": "Answer the device prompts",
       "questions": [
        {
-        "question": "Should you grant the app permission to access your camera to scan items, and do you want to save this preference?",
+        "question": "Should the app get the device permission it is asking for, and should that answer be remembered?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The app requests camera access to scan barcodes or products and offers a checkbox to remember your permission choice for the future.",
         "whatTheAgentLoses": "Delegating this step means you lose direct control over your device's privacy settings and whether the app receives temporary or permanent camera access.",
         "kind": "decision",
-        "verify_form": "The agent answered the camera-permission prompt - check what it granted and whether it ticked the remember-this-choice box; that box makes the access permanent, not one-time."
-       },
-       {
-        "question": "Should you allow the app to send you notifications?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "This choice dictates whether you receive push alerts on your device and, in this instance, interacting with the prompt bypasses the background language selection screen.",
-        "whatTheAgentLoses": "The user loses the ability to manage their own device interruption preferences and privacy settings for app alerts.",
-        "kind": "decision",
-        "verify_form": "The agent answered the notification prompt for u - check whether it allowed or denied push alerts; that choice sets how often this app can interrupt your device from now on."
+        "verify_form": "The agent answered the camera-permission prompt - check what it granted and whether it ticked the remember-this-choice box; that box makes the access permanent, not one-time.",
+        "speak": "on-event",
+        "check": "Does the page show a device permission prompt, which permission does it name, and is there a remember-this-choice checkbox?",
+        "say_example": "The app wants to use your camera. I said no, we don't need it to shop. And I left the remember box unticked."
        },
        {
         "question": "Should you allow the browser to save your login information?",
@@ -92,17 +85,10 @@
         "why": "The browser prompt offers options to save, ignore, or password-protect your credentials, which dictates how securely your account is accessed in the future.",
         "whatTheAgentLoses": "You lose the opportunity to personally decide your preferred balance between security and convenience for storing sensitive passwords.",
         "kind": "decision",
-        "verify_form": "The agent answered the browser's save-password prompt - check which option it took; saved, your login sits in this browser for anyone who opens it next."
-       },
-       {
-        "question": "Should you grant the app access to your device's location to auto-fill your shipping address?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The app is requesting permission to use your current physical location to assist in adding a new address to your address book.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to share your real-time physical location data with the application.",
-        "kind": "decision",
-        "verify_form": "The agent answered the location-permission prompt - check which way; granted, the app reads your device's physical location, not just this once for the address form."
+        "verify_form": "The agent answered the browser's save-password prompt - check which option it took; saved, your login sits in this browser for anyone who opens it next.",
+        "speak": "on-event",
+        "check": "Does the page show a prompt offering to save the password, with save, never, or not-now options?",
+        "say_example": "The browser offered to remember your Amazon password. I said no. Your password stays with you."
        }
       ]
      },
@@ -118,7 +104,10 @@
         "why": "The \"Choose your location\" popup lets you enter a US zip code or select a country, which determines whether you see the full catalog or only items that ship to your specific region.",
         "whatTheAgentLoses": "You lose the ability to decide whether to browse the complete US inventory or strictly filter for products that can be delivered to your international address.",
         "kind": "decision",
-        "verify_form": "The agent answered the 'Choose your location' popup - check whether it set a US zip to see the full catalog or kept your real address; that choice decided which items and shipping costs u were ever shown."
+        "verify_form": "The agent answered the 'Choose your location' popup - check whether it set a US zip to see the full catalog or kept your real address; that choice decided which items and shipping costs u were ever shown.",
+        "speak": "never",
+        "check": "What location or zip code does the 'Choose your location' popup show as selected?",
+        "say_example": "Kept delivery set to your real address, so everything you heard about ships to you."
        }
       ]
      },
@@ -138,17 +127,10 @@
         "why": "The homepage displays a 'Sign in' button under the Account & Lists menu, which determines whether the purchase will be linked to an existing profile with saved payment and shipping details.",
         "whatTheAgentLoses": "Delegating this step means losing control over which specific Amazon account is used for the purchase, potentially resulting in the use of incorrect payment methods or shipping addresses.",
         "kind": "decision",
-        "verify_form": "The agent decided whether to sign in before searching - check whether the session is on your account or signed out; signed out it cannot see your saved addresses, payment methods, or Prime pricing."
-       },
-       {
-        "question": "Should you sign in to an existing account, create a new one, or skip sign-in?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen presents options to sign in, create an account, or skip, which dictates whether your saved addresses, payment methods, and order history will be accessible during the shopping session.",
-        "whatTheAgentLoses": "The user loses the ability to leverage their saved account details, Prime benefits, and payment methods if the agent defaults to skipping the sign-in process.",
-        "kind": "decision",
-        "verify_form": "The agent chose between signing in, creating an account, and skipping - check which it did; skipping means no saved addresses, no Prime benefits, and no order history for this purchase."
+        "verify_form": "The agent decided whether to sign in before searching - check whether the session is on your account or signed out; signed out it cannot see your saved addresses, payment methods, or Prime pricing.",
+        "speak": "never",
+        "check": "Does the header show 'Sign in' or an account greeting?",
+        "say_example": "Signed in first, so your addresses and your prices load from the start."
        },
        {
         "question": "Are you signed into the correct Amazon account?",
@@ -157,7 +139,10 @@
         "moneyMoving": false,
         "why": "Checking the 'Hello, johnsavvy' greeting in the top right corner ensures the purchase will be billed to and tracked under the intended user profile.",
         "whatTheAgentLoses": "The user loses the peace of mind of personally confirming that their own account, rather than a shared or incorrect one, is being used for the transaction.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "What name does the 'Hello, <name>' greeting in the header show?",
+        "say_example": "The page greets <a name that isn't yours>. Wrong account, so I'm signing out before anything goes in a cart."
        },
        {
         "question": "Which account should you log into, or should you create a new one?",
@@ -167,17 +152,10 @@
         "why": "The login screen displays an autocomplete dropdown with multiple saved emails and a button for new customers, requiring a choice of which profile to use for the order.",
         "whatTheAgentLoses": "The user loses the ability to decide which specific account's payment methods and order history are used for this purchase.",
         "kind": "decision",
-        "verify_form": "The agent signed in with one of the saved emails or created a new account - check which; that account's cards and order history are what fund and record this purchase."
-       },
-       {
-        "question": "Do you want to create a new account, or click the link to sign in to an existing one?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays a registration form for a new account along with an 'Already have an account? Sign in' link, requiring a choice between registering or logging in.",
-        "whatTheAgentLoses": "Delegating this decision means the agent might create a redundant new account instead of using your existing profile with its saved payment and shipping details.",
-        "kind": "decision",
-        "verify_form": "The agent registered a fresh account instead of signing in - check whether you already had one; a duplicate account starts with no saved addresses, no cards, and no order history."
+        "verify_form": "The agent signed in with one of the saved emails or created a new account - check which; that account's cards and order history are what fund and record this purchase.",
+        "speak": "on-event",
+        "check": "Which saved emails does the sign-in screen's autocomplete list?",
+        "say_example": "The sign-in page remembers more than one account. I'll use <the one your task names>. OK, or pick a different one?"
        }
       ]
      },
@@ -193,7 +171,10 @@
         "why": "The registration form requires a name, email confirmation, and a new password to create an account and proceed with the checkout.",
         "whatTheAgentLoses": "You lose the ability to choose the specific name and secure password associated with your new shopping account.",
         "kind": "decision",
-        "verify_form": "The agent registered the account with a name and password it chose - get both from it now; without that password the account, and any order inside it, is locked to you."
+        "verify_form": "The agent registered the account with a name and password it chose - get both from it now; without that password the account, and any order inside it, is locked to you.",
+        "speak": "gate",
+        "check": "Does the page show a create-account form asking for name, email, and password?",
+        "say_example": "This needs a brand-new account, and the password has to be yours, not mine. Can you set one, or is there an account I should sign in to instead?"
        },
        {
         "question": "Are your registration details complete and correct before creating the account?",
@@ -202,7 +183,10 @@
         "moneyMoving": true,
         "why": "Verifying that the name, email, and password fields are filled correctly ensures the account can be created without errors to proceed with checkout.",
         "whatTheAgentLoses": "The user loses the opportunity to verify that their personal information and chosen password were typed correctly for their new account.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Are the name and email fields filled, and does the email shown match the one in the task?",
+        "say_example": "The form has your email with one letter off. Fixing it, or the confirmation mail never reaches you."
        }
       ]
      },
@@ -218,7 +202,10 @@
         "why": "The sign-in screen requires entering either a mobile number or an email address in the text field to continue.",
         "whatTheAgentLoses": "The user loses control over which personal contact method and associated account is used for the transaction.",
         "kind": "decision",
-        "verify_form": "The agent signed in with either your mobile number or your email - check which it used; each maps to a different contact channel and possibly a different account."
+        "verify_form": "The agent signed in with either your mobile number or your email - check which it used; each maps to a different contact channel and possibly a different account.",
+        "speak": "never",
+        "check": "Does the sign-in field accept an email or a phone number, and which was entered?",
+        "say_example": "Signed in with your email."
        }
       ]
      },
@@ -227,22 +214,28 @@
       "label": "Enter the password or code",
       "questions": [
        {
-        "question": "How do you authenticate your account to proceed with the purchase?",
+        "question": "Checkout is asking for your password again - is it your account being re-authenticated, and does the sign-in go through?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The 'Iniciar sesión' page requires you to re-enter your password to verify your identity before allowing you to continue to checkout.",
         "whatTheAgentLoses": "You lose the security of keeping your password private, as the agent would need your exact credentials to bypass this authentication step.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the page ask for the password to be entered again before continuing?",
+        "say_example": "Amazon wants your password again before it takes the order. That field is yours. I'll wait."
        },
        {
-        "question": "Is the displayed email correct, and what password should you enter to sign in?",
+        "question": "Is the email shown on the password screen the account you meant to use?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
         "why": "Verifying the displayed email '[email]' and entering the correct password ensures you are accessing the right account to complete the purchase.",
         "whatTheAgentLoses": "The user loses the ability to verify that the purchase is being made under their preferred account.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "What email does the password page display above the password field?",
+        "say_example": "The password box is for <a different email> than the account you named. Stopping the sign-in before it lands in the wrong account."
        }
       ]
      },
@@ -258,7 +251,10 @@
         "why": "The screen presents multiple language options like English, Hindi, and Tamil, determining the language used for all subsequent navigation and product details.",
         "whatTheAgentLoses": "The user loses the opportunity to set the app to their preferred native language for a more comfortable shopping experience.",
         "kind": "decision",
-        "verify_form": "The agent set the app language from the English/Hindi/Tamil screen - check which one it picked; every menu and product page from here on renders in it."
+        "verify_form": "The agent set the app language from the English/Hindi/Tamil screen - check which one it picked; every menu and product page from here on renders in it.",
+        "speak": "never",
+        "check": "Which language options does the screen list, and which one is selected?",
+        "say_example": "Kept the app in <your language>."
        }
       ]
      }
@@ -275,18 +271,7 @@
      },
      {
       "id": "2.2",
-      "label": "Read the voucher details",
-      "questions": [
-       {
-        "question": "What is the exact voucher code you need to capture for redemption?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays multiple alphanumeric strings including a transaction ID, so you must carefully isolate the specific voucher code to successfully apply the ₹500 balance.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the correct code was identified and applied to fund your purchase.",
-        "kind": "state-check"
-       }
-      ]
+      "label": "Read the voucher details"
      },
      {
       "id": "2.3",
@@ -299,7 +284,10 @@
         "moneyMoving": true,
         "why": "Verifying the exact code ensures the funds are successfully added to your existing ₹9570.25 balance.",
         "whatTheAgentLoses": "The user loses the chance to personally verify that the correct gift card code is being applied to their account.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the code typed in the entry field match the string the voucher screen labels as the gift card or claim code, not the transaction ID?",
+        "say_example": "The code in the box doesn't match the one on your voucher. One block is off, so I'm re-entering it before applying."
        }
       ]
      },
@@ -308,40 +296,28 @@
       "label": "Verify the balance moved",
       "questions": [
        {
-        "question": "Did the applied gift card correctly add ₹200.00 to your initial balance of ₹30.01, resulting in ₹230.01?",
+        "question": "Did the balance go up by exactly the gift card's value?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "Confirming that the ₹200.00 gift card correctly updated the initial ₹30.01 balance to ₹230.01 ensures you are receiving the exact credit expected before paying.",
         "whatTheAgentLoses": "The user loses the assurance of personally verifying that the gift card funds were accurately calculated and applied to their account balance.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What were the balance before, the gift card value, and the balance after, as shown on screen?",
+        "say_example": "The card was <200> but the balance only went up <150>. Those should match. Holding here until we know where the rest went."
        },
        {
-        "question": "Was the gift card added successfully, what is your new balance, and do you want to view the statement?",
+        "question": "Did the gift card money land in your balance?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": true,
         "why": "Confirming the success message and updated balance ensures your funds were applied correctly, and checking the statement verifies the transaction details.",
         "whatTheAgentLoses": "You lose the immediate reassurance of seeing your updated balance and the ability to personally verify the transaction history.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does my transaction history correctly reflect the ₹500 gift card I just added?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Verifying the '+₹500' entry under recent activities ensures the funds were successfully credited to your account before you proceed to checkout.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your money was safely and accurately deposited into your account balance.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did you notice the discrepancy in your Amazon Pay balance between the dashboard and the gift card screen?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen showed a balance of ₹9670.07 on the dashboard but only ₹9570.25 on the gift card screen, indicating a potential error or hidden deduction.",
-        "whatTheAgentLoses": "You lose the ability to catch an unexplained deduction in your available funds before finalizing the payment.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the page show a success message and the updated balance?",
+        "say_example": "The gift card went through. Your balance is now <230>."
        },
        {
         "question": "Does your Amazon Pay balance at checkout match the amount confirmed earlier?",
@@ -350,7 +326,10 @@
         "moneyMoving": true,
         "why": "The available balance at checkout shows ₹11,978.07, which contradicts the ₹[number].25 balance confirmed just after adding the gift card.",
         "whatTheAgentLoses": "The user loses financial transparency and trust in the transaction if the agent ignores an unexplained discrepancy in their funds.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What balance does this screen show, and what did the last screen that showed the balance say?",
+        "say_example": "The balance here reads <a hundred more> than it did a minute ago. I want to know why before we spend from it."
        }
       ]
      },
@@ -359,23 +338,29 @@
       "label": "Pick the top-up amount and method",
       "questions": [
        {
-        "question": "How do you want to handle the insufficient balance warning to proceed with the purchase?",
+        "question": "Your balance cannot cover the order - do you top it up via 'Add Now' or switch to another payment method?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays an insufficient balance warning with an 'Add Now' button, requiring a decision on how to cover the remaining cost.",
         "whatTheAgentLoses": "The user loses the ability to control exactly how much money is added to their account balance or whether to use an alternative payment method.",
         "kind": "decision",
-        "verify_form": "The agent either topped up your balance via Add Now or switched payment methods - check which, and if it topped up, how much it moved into the balance; that money leaves your bank either way."
+        "verify_form": "The agent either topped up your balance via Add Now or switched payment methods - check which, and if it topped up, how much it moved into the balance; that money leaves your bank either way.",
+        "speak": "on-event",
+        "check": "Does the page show an insufficient-balance warning, the shortfall amount, and an 'Add Now' option?",
+        "say_example": "Your balance is <57> short of the total. I can top it up from your bank, or charge the rest to your card. Which?"
        },
        {
-        "question": "Did you verify that the requested top-up amount exactly covers the difference between the product price and your available balance?",
+        "question": "Does the top-up match the shortfall, or does it park extra money in the balance?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "Verifying the math ensures the ₹57.03 top-up exactly covers the shortfall between the ₹287.04 product price and the ₹230.01 available balance shown on screen.",
         "whatTheAgentLoses": "The user loses the financial oversight of confirming that only the exact required amount is being added to their account.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What are the product total, the available balance, and the top-up amount shown on screen?",
+        "say_example": "The top-up it suggests is more than the gap. That parks extra money in the balance, so I'm topping up just the difference."
        }
       ]
      },
@@ -397,26 +382,22 @@
       "moneyMoving": false,
       "why": "Navigating directly to the specific wishlist URL ensures you are selecting the exact pre-approved items without having to search for them manually.",
       "whatTheAgentLoses": "The user loses the guarantee that the agent is purchasing from their specifically curated wishlist rather than relying on a generic search.",
-      "kind": "intent-check"
+      "kind": "intent-check",
+      "speak": "if-wrong",
+      "check": "Whose name and which list title does the wishlist page header show, and do they match the list named in the task?",
+      "say_example": "This list belongs to <a different name> than the one in your task. Finding the right one before picking anything."
      },
      {
-      "question": "Which item from the wishlist should you select based on its price, rating, and availability?",
-      "cluster": "compare",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The wishlist displays multiple gift options like the FITTOO Leggings with varying prices and ratings, requiring a choice on which specific item to buy.",
-      "whatTheAgentLoses": "You lose the opportunity to personally weigh the prices and ratings of the wishlist items to select the perfect birthday gift.",
-      "kind": "decision",
-      "verify_form": "The agent chose one wishlist item as the gift - check which one and its price and rating; the FITTOO leggings were only one of several saved options."
-     },
-     {
-      "question": "Should you continue scrolling down the wishlist to view more saved items?",
+      "question": "Does the wish list continue below the current view, with saved items not yet on screen?",
       "cluster": "refine",
       "moment": "Now",
       "moneyMoving": false,
       "why": "Exploring further down the list reveals previously saved options like the Saucony socks and PUMA running shoes, allowing for a broader comparison before deciding.",
       "whatTheAgentLoses": "You lose the chance to personally rediscover and evaluate older saved items that might better suit your current needs than the top results.",
-      "kind": "state-check"
+      "kind": "state-check",
+      "speak": "never",
+      "check": "Does the list show more items below the current view, or a load-more control?",
+      "say_example": "Read the whole list, all <12> items, before comparing."
      },
      {
       "question": "When were these items originally added to your list?",
@@ -426,7 +407,10 @@
       "why": "Checking the 'added on' dates shown on the screen helps you evaluate if the items are still relevant to your current needs.",
       "whatTheAgentLoses": "You lose the personal context of knowing how long an item has been saved and whether your desire for it has faded over time.",
       "kind": "decision",
-      "verify_form": "The agent shopped from items saved long ago - check the 'added on' dates of what it picked; only u know whether something saved months back is still wanted."
+      "verify_form": "The agent shopped from items saved long ago - check the 'added on' dates of what it picked; only u know whether something saved months back is still wanted.",
+      "speak": "never",
+      "check": "What 'added on' dates does the list show beside each item?",
+      "say_example": "The pick was saved to the list <two years> ago, in case that changes anything. It's in the report."
      }
     ],
     "children": [
@@ -442,7 +426,10 @@
         "why": "Selecting a specific category from the dropdown, such as 'Electronics & Photo' or 'Books', prevents irrelevant results from other departments from cluttering your search.",
         "whatTheAgentLoses": "The user loses the opportunity to intuitively narrow the search scope based on their personal understanding of which department best fits the desired item.",
         "kind": "decision",
-        "verify_form": "The agent picked a department from the search dropdown - check whether the one it chose, like Electronics & Photo or Books, actually covers the item; the wrong department hides every right result."
+        "verify_form": "The agent picked a department from the search dropdown - check whether the one it chose, like Electronics & Photo or Books, actually covers the item; the wrong department hides every right result.",
+        "speak": "never",
+        "check": "Which department is selected in the search dropdown?",
+        "say_example": "Searched inside <Electronics> so the results stay on topic."
        }
       ]
      },
@@ -462,26 +449,10 @@
         "why": "The screen displayed a default image instead of the selected plant photo, indicating the upload failed and an alternative method like the live camera was needed.",
         "whatTheAgentLoses": "The user loses the ability to troubleshoot the failed image upload and manually decide how to capture the item's visual information.",
         "kind": "decision",
-        "verify_form": "The upload failed and a default image loaded instead of the plant photo - the agent picked a recovery on its own; check whether it retried the upload, switched to the live camera, or searched something else entirely."
-       },
-       {
-        "question": "Is the artificial plant framed clearly enough within the brackets to capture for the search?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Aligning the plant properly within the on-screen brackets ensures the visual search tool can accurately identify the item.",
-        "whatTheAgentLoses": "You lose the physical control over adjusting the camera angle and framing to ensure the visual search captures the exact item you want.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Which of these search results best matches the item I photographed and offers the best value?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Comparing the visual match, ratings, and prices of the results, such as the ₹215 DECOGREEN plant versus the ₹229 SATYAM KRAFT plant, ensures you select the exact item you want at the best value.",
-        "whatTheAgentLoses": "You lose the ability to visually verify which search result most accurately matches the physical item you originally photographed.",
-        "kind": "decision",
-        "verify_form": "The agent picked one visual-search match - check it against the item u photographed and the near-duplicate ₹215 vs ₹229 plants; only u can say which result is actually yours."
+        "verify_form": "The upload failed and a default image loaded instead of the plant photo - the agent picked a recovery on its own; check whether it retried the upload, switched to the live camera, or searched something else entirely.",
+        "speak": "on-event",
+        "check": "Does the visual search show the uploaded photo, or a default or placeholder image in its place?",
+        "say_example": "Your photo didn't upload - the search ran on a placeholder, so these matches mean nothing. Trying the upload again."
        }
       ]
      },
@@ -498,54 +469,30 @@
       "label": "Choose from the results",
       "questions": [
        {
-        "question": "Which t-shirt from the search results best fits your preferences for price, rating, and style?",
+        "question": "Which of these results should I pick?",
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search results display a mix of sponsored items, best sellers, and combo packs with varying prices and ratings, requiring you to weigh these factors to find the right match.",
         "whatTheAgentLoses": "An agent might default to the first sponsored result or best seller instead of scrolling to find a combo pack that better aligns with your specific style and value preferences.",
         "kind": "decision",
-        "verify_form": "The agent picked a t-shirt from a page mixing sponsored items, best sellers, and combo packs - check what it chose and what it passed over; the default failure is taking the first sponsored result instead of the combo pack that better fits your style and budget."
+        "verify_form": "The agent picked a t-shirt from a page mixing sponsored items, best sellers, and combo packs - check what it chose and what it passed over; the default failure is taking the first sponsored result instead of the combo pack that better fits your style and budget.",
+        "speak": "gate",
+        "check": "Which results are shown, with title, price, rating, review count, and any Sponsored tag?",
+        "say_example": "Three that fit. The <first> at <12>, rated <4.6> by <two thousand> people. The <second> at <9>, fewer reviews. The <third> is a two-pack at <15>. Which one?"
        },
        {
-        "question": "Which search result should you select for the Apple gift card?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The top row displays multiple identical options for the Apple eGift Card, including three marked as previously viewed, requiring a choice of which listing to explore.",
-        "whatTheAgentLoses": "The user loses the opportunity to apply their own judgment when selecting among seemingly identical search results.",
-        "kind": "decision",
-        "verify_form": "The results showed several near-identical Apple eGift Card listings, three marked previously viewed - check which listing the agent opened; identical-looking cards can differ in design and delivery options."
-       },
-       {
-        "question": "Which specific product variant from the search results should you select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results display multiple options, including a sponsored Titanium Gray 256GB model, so you must select the exact storage and color variant you intend to buy.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that the clicked search result matches your exact preferences for color and storage capacity.",
-        "kind": "decision",
-        "verify_form": "The agent clicked a specific variant - check the storage and color it landed on; the sponsored Titanium Gray 256GB was only one configuration, and the wrong variant ships in the wrong spec."
-       },
-       {
-        "question": "Which search result should you select to inspect further?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed a highly-rated, affordable Amazon Essentials shirt for $12.23, highlighting the need to evaluate price and reviews rather than clicking randomly.",
-        "whatTheAgentLoses": "You lose the ability to apply your own preferences for price, brand, and review quality when filtering through the initial search results.",
-        "kind": "decision",
-        "verify_form": "The agent picked one result to inspect - check what it opened and what it skipped; the $12.23 highly-rated Amazon Essentials shirt was the standout on price and rating, and clicking past it costs both."
-       },
-       {
-        "question": "Which smartwatch from these search results should you select based on price, ratings, and features?",
+        "question": "Is that huge discount real, or is the 'was' price just the seller's own claim?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The search results show multiple options with varying ratings, review counts, and massive discounts like the 93% off Fire-Boltt, requiring a careful comparison to find the best value.",
         "whatTheAgentLoses": "You lose the ability to apply your personal preferences regarding brand trust, aesthetic appeal, and skepticism toward heavily discounted sponsored items when choosing which product to investigate further.",
         "kind": "decision",
-        "verify_form": "The agent picked a smartwatch from results full of steep sponsored discounts - check what it chose and whether it bought the 93%-off Fire-Boltt discount story; only u can weigh brand trust against a too-good number."
+        "verify_form": "The agent picked a smartwatch from results full of steep sponsored discounts - check what it chose and whether it bought the 93%-off Fire-Boltt discount story; only u can weigh brand trust against a too-good number.",
+        "speak": "on-event",
+        "check": "What discount percentage and struck-through reference price does the listing show?",
+        "say_example": "That one says <93> percent off. The old price is the seller's own claim, not something the site checked, so judge it by the <7 dollar> price, not the discount."
        }
       ]
      },
@@ -561,7 +508,10 @@
         "why": "The top result is a sponsored listing for the Meta Quest 3 at $499.00, and organic results might offer better prices or alternative bundles.",
         "whatTheAgentLoses": "You lose the opportunity to find a better deal or a more suitable bundle by not reviewing all available search results.",
         "kind": "decision",
-        "verify_form": "The top result was a sponsored Meta Quest 3 at $499.00 - check whether the agent took it or scrolled to the organic listings; the sponsored slot is bought, not earned, and a cheaper bundle may sit below it."
+        "verify_form": "The top result was a sponsored Meta Quest 3 at $499.00 - check whether the agent took it or scrolled to the organic listings; the sponsored slot is bought, not earned, and a cheaper bundle may sit below it.",
+        "speak": "on-event",
+        "check": "Which of the top results are labeled Sponsored, and what organic results sit below them?",
+        "say_example": "The top result is an ad. The same thing sits lower without the badge, so I'm comparing both before picking."
        }
       ]
      }
@@ -573,14 +523,17 @@
     "note": "4.1 to 4.6 in any order and depth - the corpus mostly reads 4.1 and skips 4.3. 4.7 whenever the item has variants; 4.8 and 4.9 where formats and fit make it matter. 4.7 re-prices the page, so 4.5 and 4.6 are re-read after it.",
     "questions": [
      {
-      "question": "Are you satisfied with the specific details of this product, such as the color, price, and delivery time?",
+      "question": "Does the product page still show the item, price, and date you agreed to?",
       "cluster": "approve",
       "moment": "Now",
       "moneyMoving": false,
       "why": "This matters because you need to confirm that the selected variant, such as the Black color, and the deal price of ₹ 5,299.00 meet your preferences before proceeding.",
       "whatTheAgentLoses": "The user loses the opportunity to personally evaluate and choose between different color variants based on their own aesthetic preferences.",
       "kind": "decision",
-      "verify_form": "The agent settled on the Black variant at the ₹5,299 deal price - check the color against what you actually wanted; the other colorways sat on the same page, and this is the one that ships."
+      "verify_form": "The agent settled on the Black variant at the ₹5,299 deal price - check the color against what you actually wanted; the other colorways sat on the same page, and this is the one that ships.",
+      "speak": "if-wrong",
+      "check": "Do the variant, price, and delivery date now shown on the product page match what the person approved at the pick?",
+      "say_example": "The page now shows <a different color> at <a higher price> than the one you said yes to. Squaring that before it goes in the cart."
      },
      {
       "question": "Do you want to use a third-party freight forwarder since this item doesn't ship directly to your location?",
@@ -590,17 +543,10 @@
       "why": "The screen explicitly states that the item does not ship to Malaysia, meaning an alternative shipping method must be arranged to complete the purchase.",
       "whatTheAgentLoses": "The user loses the ability to decide whether the extra cost and hassle of setting up a freight forwarder are worth it for this specific product.",
       "kind": "decision",
-      "verify_form": "The item doesn't ship to Malaysia, and the agent decided how to handle that - check whether it committed to a freight forwarder or dropped the item; only you can say if the forwarder's extra cost and handling is worth it for this product."
-     },
-     {
-      "question": "Should you select these specific patterned leggings as the gift?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows the specific 'Perfect Paws' color and size 'G' for $282.77, which must be verified as suitable for the recipient before adding to the cart.",
-      "whatTheAgentLoses": "The user loses the personal intuition required to judge whether this specific quirky pattern matches the gift recipient's unique taste and style.",
-      "kind": "decision",
-      "verify_form": "The agent picked the 'Perfect Paws' pattern in size G at $282.77 as the gift - look at the pattern yourself; only you know the recipient's taste, and at that price a wrong guess is an expensive return."
+      "verify_form": "The item doesn't ship to Malaysia, and the agent decided how to handle that - check whether it committed to a freight forwarder or dropped the item; only you can say if the forwarder's extra cost and handling is worth it for this product.",
+      "speak": "gate",
+      "check": "Does the page state that the item does not ship to the selected address or country?",
+      "say_example": "This one won't ship to <your country>. A forwarding service could relay it, but that's extra cost, extra weeks, and an account you'd have to set up. Want that, or should I find one that ships direct?"
      },
      {
       "question": "Which brand is the old phone you are trading in?",
@@ -610,145 +556,22 @@
       "why": "Selecting the correct brand from the list ensures you receive the accurate trade-in value for your specific device.",
       "whatTheAgentLoses": "The user loses the ability to specify exactly which old device they are trading in, potentially resulting in an incorrect discount or a rejected exchange.",
       "kind": "decision",
-      "verify_form": "The agent declared your old phone's brand to the trade-in wizard - only you know what's actually in your drawer; a wrong brand means the doorstep inspector rejects the exchange and the discount vanishes."
+      "verify_form": "The agent declared your old phone's brand to the trade-in wizard - only you know what's actually in your drawer; a wrong brand means the doorstep inspector rejects the exchange and the discount vanishes.",
+      "speak": "gate",
+      "check": "Does the page show the trade-in wizard asking for the device's brand, model, storage, condition, or IMEI?",
+      "say_example": "The trade-in wants facts about the phone in your hand - brand, model, storage, condition, its IMEI. I can't answer those, and a wrong answer kills the credit at the doorstep. Take these few questions, or skip the trade-in?"
      },
      {
-      "question": "Which specific Samsung phone model are you exchanging?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displayed a long, scrollable list of similar Samsung models like the Galaxy A34 5G and M35 5G, making it crucial to select the exact match to receive the correct trade-in value.",
-      "whatTheAgentLoses": "Delegating this means you lose the ability to ensure your exact older device is selected from the dense list, which could lead to an inaccurate exchange valuation or a rejected trade-in.",
-      "kind": "decision",
-      "verify_form": "The agent picked your device's model out of a dense list of lookalike Samsung names - check it against the model shown in your actual phone's settings; an A34 declared as an M35 gets revalued or refused at pickup."
-     },
-     {
-      "question": "What is the RAM and storage configuration of the old phone you are trading in?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Accurately selecting from the provided options like '8GB | 256GB' ensures you receive the correct trade-in value for your specific device.",
-      "whatTheAgentLoses": "The user loses the guarantee that their exact device specifications are entered, which could result in a rejected trade-in or a lower discount.",
-      "kind": "decision",
-      "verify_form": "The agent declared your old phone's RAM and storage - open About Phone and check; '8GB | 256GB' claimed for a 6GB | 128GB device means the quoted trade-in value evaporates at inspection."
-     },
-     {
-      "question": "Are the details of your old phone correct, and do you want to proceed to select its condition for the estimated exchange value?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Confirming the selected Samsung Galaxy M35 5G details and the potential ₹6,500 value ensures the trade-in is accurate before moving forward.",
-      "whatTheAgentLoses": "You lose the chance to verify your old device's specifications and decide if the estimated trade-in value is worth proceeding with the exchange.",
-      "kind": "decision",
-      "verify_form": "The agent confirmed the Galaxy M35 5G details and moved on toward the ₹6,500 estimate - check the summary against the phone in your hand, and decide whether ₹6,500 is enough to give it up; past this screen the declaration starts binding."
-     },
-     {
-      "question": "Which physical condition accurately describes the old phone you are trading in?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen requires you to select the applicable damage category, such as 'No damage' or 'Body damage', to proceed with the device exchange.",
-      "whatTheAgentLoses": "You lose the opportunity to personally inspect your old phone and truthfully report its condition based on the specific damage criteria provided.",
-      "kind": "decision",
-      "verify_form": "The agent declared your phone's physical condition - pick the phone up and look; 'No damage' claimed over a cracked body doesn't survive the doorstep inspection, and the whole exchange credit goes with it."
-     },
-     {
-      "question": "How will you retrieve the required IMEI number for the exchange offer?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen requires an IMEI number to validate the exchange offer and instructs you to dial *#06#, which requires navigating away from the app.",
-      "whatTheAgentLoses": "You lose the ability to securely retrieve and verify the exact IMEI of the specific device you intend to trade in.",
-      "kind": "decision",
-      "verify_form": "The agent entered an IMEI for the exchange - dial *#06# on the phone you're actually handing over and compare digit for digit; a guessed or reused number fails validation and the trade-in dies at pickup."
-     },
-     {
-      "question": "Is your old phone's IMEI successfully verified, and are you ready to proceed to the condition test?",
+      "question": "Is your old phone's IMEI verified, and are you ready for the condition test?",
       "cluster": "facts",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The green checkmark confirms your specific device is eligible for the exchange offer up to ₹6500 before you initiate the required diagnostic test.",
       "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your exact old phone was accepted for the trade-in value.",
-      "kind": "state-check"
-     },
-     {
-      "question": "Are any specific features of your old phone not working?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Accurately reporting broken features like the camera or GPS ensures the trade-in valuation is correct and prevents issues during the doorstep inspection.",
-      "whatTheAgentLoses": "The user loses the ability to truthfully declare their own device's condition, which could lead to a rejected trade-in or unexpected charges if the agent guesses incorrectly.",
-      "kind": "decision",
-      "verify_form": "The agent answered the broken-features checklist on your behalf - only you know whether the camera or GPS actually works; an undeclared fault surfaces at the doorstep inspection as a rejected trade-in or a clawed-back discount."
-     },
-     {
-      "question": "Have you applied the available coupon and verified the size recommendation before adding to cart?",
-      "cluster": "facts",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays an unapplied 3% discount coupon and a specific warning that size S will fit better than the currently selected size L.",
-      "whatTheAgentLoses": "The user loses the opportunity to save money and risks receiving an ill-fitting item if the agent ignores available coupons and personalized size warnings.",
-      "kind": "decision",
-      "verify_form": "The agent left size L selected on a page that says size S will fit you better, with a 3% coupon sitting unclipped - check both before checkout; shoppers in the corpus ignore exactly this personalized fit note and pay full price for a garment that doesn't fit."
-     },
-     {
-      "question": "Have you selected the correct size and verified the price and delivery details before clicking Buy Now?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Confirming the specific size like XL, the ₹503 price, and the December 29 delivery date ensures you are purchasing the right variant without unexpected delays.",
-      "whatTheAgentLoses": "You lose the opportunity to personally ensure the selected size is correct for you and that the delivery timeline meets your needs.",
-      "kind": "intent-check"
-     },
-     {
-      "question": "Are you sure the selected size, color, and price are correct, and are you ready to buy without reading any reviews?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Confirming the '6 UK' size, 'Pink' color, and ₹442 price ensures you are getting the exact item you want before the limited stock runs out.",
-      "whatTheAgentLoses": "You lose the chance to personally evaluate customer reviews and expanded product details to ensure quality before rushing the purchase.",
-      "kind": "decision",
-      "verify_form": "The agent is heading to Buy Now with '6 UK' in Pink at ₹442 and zero reviews read - check the size and color against what you meant, and say whether skipping the reviews is fine; the limited-stock banner is pressure, not permission."
-     },
-     {
-      "question": "Are you satisfied with the discounted price, ratings, and available sizes for this shoe?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Evaluating the $41.99 discounted price, 4.6 rating, and selecting size 8 ensures the item fits both your budget and physical needs.",
-      "whatTheAgentLoses": "You lose the opportunity to personally verify that the selected size 8 and the specific discount align with your exact preferences.",
-      "kind": "decision",
-      "verify_form": "The agent settled on size 8 at the $41.99 sale price - check the size against what you actually wear; the 4.6 rating and the discount don't help if the shoe doesn't fit."
-     },
-     {
-      "question": "Should you verify the default 128GB selection and check the 3.9-star reviews before adding this to your cart?",
-      "cluster": "facts",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows a relatively low 3.9-star rating and multiple variant options, which warrants a closer look before committing to the default selection.",
-      "whatTheAgentLoses": "You lose the chance to uncover potential product flaws in the reviews or choose a storage variant that better fits your needs.",
-      "kind": "decision",
-      "verify_form": "The agent kept the pre-selected 128GB and moved past a 3.9-star rating - decide whether that's the storage you need, and whether a rating that low deserves a read of the actual complaints before the phone lands in the cart."
-     },
-     {
-      "question": "Which size and color do you need, and should you apply any available coupons?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The default size was set to 4X-Large and there were unselected coupon checkboxes, so you must select your actual size and decide whether to claim the discount.",
-      "whatTheAgentLoses": "You lose the ability to ensure the garment will actually fit you and to manually clip coupons for extra savings.",
-      "kind": "decision",
-      "verify_form": "The page defaulted to size 4X-Large and the coupon boxes started unchecked - check what size the agent actually selected and whether the coupons got clipped; the default is almost nobody's size, and unclipped coupons are money left on the page."
-     },
-     {
-      "question": "Are you satisfied with the price, savings, and delivery terms shown for this item?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "Confirming the £7.20 price, the 60% savings, and the free delivery option ensures you understand the exact cost and value before purchasing.",
-      "whatTheAgentLoses": "You lose the ability to personally evaluate if the specific discount and delivery terms represent a good enough value for your money.",
-      "kind": "decision",
-      "verify_form": "The agent judged £7.20 at 60% off with free delivery to be a good deal - the numbers are real, but 'worth it' is yours to answer; a savings percentage is the seller's framing, not your budget."
+      "kind": "state-check",
+      "speak": "never",
+      "check": "Does the page show the IMEI accepted and the exchange eligibility confirmed?",
+      "say_example": "Your phone passed the IMEI check. The exchange credit shows <6,500>."
      }
     ],
     "children": [
@@ -758,18 +581,7 @@
      },
      {
       "id": "4.2",
-      "label": "Study the pictures",
-      "questions": [
-       {
-        "question": "Which product images and angles do you want to inspect in detail?",
-        "cluster": "photos",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Zooming in on the image thumbnails allows you to verify the physical appearance and design details of the phone's front and back.",
-        "whatTheAgentLoses": "You lose the personal reassurance of visually verifying the product's fine physical details and aesthetics yourself.",
-        "kind": "state-check"
-       }
-      ]
+      "label": "Study the pictures"
      },
      {
       "id": "4.3",
@@ -783,17 +595,23 @@
         "why": "Although the screen displays the manufacturer's material and care details, checking the reviews tab reveals actual customer experiences with the item.",
         "whatTheAgentLoses": "You lose the opportunity to personally weigh the customer feedback and decide if the product's real-world quality meets your specific standards.",
         "kind": "decision",
-        "verify_form": "The agent judged the product from the listing's own details - the review tab with real customer experiences went unread. Only you can say whether stranger feedback matters for this buy; if it does, open the reviews before the order, not after the package arrives."
+        "verify_form": "The agent judged the product from the listing's own details - the review tab with real customer experiences went unread. Only you can say whether stranger feedback matters for this buy; if it does, open the reviews before the order, not after the package arrives.",
+        "speak": "never",
+        "check": "What rating, review count, and top review excerpts does the page show?",
+        "say_example": "Read the reviews. The repeated complaint is <the strap breaking>, worth knowing before it ships."
        },
        {
-        "question": "Are you comfortable trusting a 4-star rating that is based on only two customer reviews?",
+        "question": "How many people is this rating actually based on?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a 4-star rating but notes there are only two customer reviews, meaning the rating might not be a reliable indicator of quality.",
         "whatTheAgentLoses": "You lose the opportunity to read the specific reviews and decide for yourself if the limited feedback justifies the purchase.",
         "kind": "decision",
-        "verify_form": "The agent treated the 4-star badge as good enough - it rests on exactly two reviews; only you can say whether two strangers' opinions clear your bar, and two reviews is few enough to read yourself before buying."
+        "verify_form": "The agent treated the 4-star badge as good enough - it rests on exactly two reviews; only you can say whether two strangers' opinions clear your bar, and two reviews is few enough to read yourself before buying.",
+        "speak": "on-event",
+        "check": "What rating does the page show, and from how many reviews?",
+        "say_example": "It's rated <4 stars>, but that's from just <2> people. Thin ground. Both are short enough to read out, want them?"
        },
        {
         "question": "Does the number of ratings on the product page match what you saw in the search results?",
@@ -802,7 +620,10 @@
         "moneyMoving": false,
         "why": "The search results displayed 12,534 ratings for the Bare Home Fleece Blanket, but the product detail page shows 12,392 ratings.",
         "whatTheAgentLoses": "The user loses the ability to notice discrepancies in product metrics that could indicate a glitch or an unexpected change in the selected item variation.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What rating counts do the search result and the product page each show?",
+        "say_example": "The listing's review count differs slightly from the search page. Logged it, it's usually just the site's own lag."
        }
       ]
      },
@@ -811,14 +632,17 @@
       "label": "Check the seller and fulfillment",
       "questions": [
        {
-        "question": "Are you comfortable with the listed seller, warranty terms, and quantity before proceeding to buy?",
+        "question": "Is this sold by Amazon, or by a third-party seller you'd have to trust?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen displays specific fulfillment details like \"Sold by Clicktech Retail Private Ltd\" and a \"1 Year Warranty\" that determine the reliability and protection of your purchase.",
         "whatTheAgentLoses": "You lose the opportunity to personally vet the third-party seller and confirm the warranty terms before committing to the checkout process.",
         "kind": "decision",
-        "verify_form": "The agent proceeded with 'Sold by Clicktech Retail Private Ltd' - a third party, not Amazon - check the seller's record and who actually issues the 1-year warranty; the seller you accept is who you'll chase when something breaks."
+        "verify_form": "The agent proceeded with 'Sold by Clicktech Retail Private Ltd' - a third party, not Amazon - check the seller's record and who actually issues the 1-year warranty; the seller you accept is who you'll chase when something breaks.",
+        "speak": "on-event",
+        "check": "What do the 'Sold by' and 'Ships from' lines say, and is the seller Amazon or a third party?",
+        "say_example": "This one is sold by <a third-party shop>, not Amazon. If something breaks, they're who you chase, and the warranty is theirs too."
        }
       ]
      },
@@ -827,13 +651,16 @@
       "label": "Check the price and the offers",
       "questions": [
        {
-        "question": "Did you check the box to apply the available $2 coupon before adding the item to your cart?",
+        "question": "Is the coupon on this page clipped before the item goes in the cart?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed a $2 coupon that required checking a box to apply the discount at checkout.",
         "whatTheAgentLoses": "The user misses out on an available discount and ends up paying more than necessary.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the page show a coupon checkbox, and is it checked?",
+        "say_example": "Clipped the <2 dollar> coupon before adding to cart."
        },
        {
         "question": "Do you want to trade in your old phone to get a discount on this purchase?",
@@ -843,27 +670,23 @@
         "why": "The screen displayed an 'Exchange Your Old Phone' option offering up to ₹25,000 in savings, which significantly impacts the final price.",
         "whatTheAgentLoses": "Delegating this step means losing the opportunity to evaluate if the trade-in value offered for your specific old device is worth the exchange.",
         "kind": "decision",
-        "verify_form": "The agent answered the trade-in prompt for you - check whether it opened the exchange or skipped it; the offer is worth up to ₹25,000 off, and only you know if you have a device you're willing to part with."
+        "verify_form": "The agent answered the trade-in prompt for you - check whether it opened the exchange or skipped it; the offer is worth up to ₹25,000 off, and only you know if you have a device you're willing to part with.",
+        "speak": "on-event",
+        "check": "Does the page show a trade-in or exchange offer, and what maximum value does it state?",
+        "say_example": "There's a trade-in option here - up to <25,000> off if you hand over an old phone. Want to go through its questions, or skip it?"
        },
        {
-        "question": "Do you want to exchange your old phone for a discount?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen offers a trade-in option that can save up to ₹25,000 on your purchase.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether trading in your specific old device is worth the offered discount.",
-        "kind": "decision",
-        "verify_form": "The agent either engaged the exchange offer or passed on it - check which; up to ₹25,000 of the final price hangs on that, and it's your old phone that has to be handed over at the door."
-       },
-       {
-        "question": "Should you accept the ₹6,500 exchange value and the Rs. 225 service fee for your old device?",
+        "question": "Is the exchange value they offer, minus their fee, worth more than keeping the phone?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Applying the exchange provides a ₹6,500 discount for your old Samsung Galaxy M35 5G but requires paying a Rs. 225 service fee and confirming the device has no damage.",
         "whatTheAgentLoses": "The user loses the opportunity to decide whether the offered exchange value is fair and worth trading in their old device.",
         "kind": "decision",
-        "verify_form": "The agent accepted ₹6,500 for your device minus a ₹225 service fee - that nets ₹6,275, and only you can say whether the phone is worth more to you sold elsewhere or simply kept."
+        "verify_form": "The agent accepted ₹6,500 for your device minus a ₹225 service fee - that nets ₹6,275, and only you can say whether the phone is worth more to you sold elsewhere or simply kept.",
+        "speak": "gate",
+        "check": "What exchange value and service fee does the page show for the declared device?",
+        "say_example": "They'll give <6,500> for your phone, minus a <225> fee, so <6,275> net. Take it, or keep the phone?"
        },
        {
         "question": "Does the final price correctly reflect your expected exchange discount and fees?",
@@ -872,7 +695,10 @@
         "moneyMoving": false,
         "why": "The screen shows a ₹6,500 discount and a ₹225 exchange fee, so checking the ₹53,720 total ensures the math aligns with your expectations before buying.",
         "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your specific trade-in discount was properly calculated into the final cost.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What are the item price, the exchange discount, the exchange fee, and the total shown, and do they add up?",
+        "say_example": "The total doesn't move by the <6,500> the exchange promised. Holding until the discount actually shows in the number."
        },
        {
         "question": "Does the price on the product page match the price shown in the search results?",
@@ -881,16 +707,10 @@
         "moneyMoving": false,
         "why": "The search results showed the 128GB phone at ₹59,995, but the product page lists it at ₹45,990, which could indicate a listing error or a different product condition.",
         "whatTheAgentLoses": "The user loses the opportunity to investigate a major price discrepancy that might reveal they are looking at a refurbished model or a different seller.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did you check the box to apply the available coupon before adding the item to your cart?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displayed a 'Coupon price $38.35' option that must be manually selected to receive the discount.",
-        "whatTheAgentLoses": "The user loses out on financial savings because the agent failed to apply a clearly visible discount.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What price did the search result show for this item, and what price does the product page show?",
+        "say_example": "The list said <59,995> but this page says <45,990>. A gap that size usually means a different version - renewed, other storage, other seller. Checking it's the same thing before going on."
        },
        {
         "question": "Should you check the third-party sellers for a cheaper new copy?",
@@ -900,26 +720,22 @@
         "why": "The product page lists alternative options like '17 new' and '9 used', meaning you might find a better deal if you compare base prices and delivery fees.",
         "whatTheAgentLoses": "You lose the chance to personally weigh the trade-off between a cheaper third-party base price and potential extra shipping fees.",
         "kind": "decision",
-        "verify_form": "The agent stayed with the default offer without opening the '17 new / 9 used' seller list - decide whether a possibly cheaper third-party copy is worth the compare; base price alone misleads, since each seller's delivery fee gets added back."
+        "verify_form": "The agent stayed with the default offer without opening the '17 new / 9 used' seller list - decide whether a possibly cheaper third-party copy is worth the compare; base price alone misleads, since each seller's delivery fee gets added back.",
+        "speak": "never",
+        "check": "Does the page show an other-offers link (counts of new and used), and what do those offers price at with delivery?",
+        "say_example": "Looked at the other sellers too. With delivery added, the default offer stays cheapest."
        },
        {
-        "question": "Did you calculate the total cost including delivery to choose the cheapest seller?",
+        "question": "Which seller's offer is cheapest once delivery is added?",
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed an Amazon offer for £7.20 with free delivery and a third-party offer for £5.50 plus £2.80 delivery, making the Amazon option cheaper overall.",
         "whatTheAgentLoses": "You lose the financial savings that come from manually calculating and comparing the true total costs across different sellers.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Are you satisfied with the price, delivery date, and warranty terms to proceed with the purchase?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Confirming the ₹1,399 price, free delivery date, and 1-year warranty ensures the terms are acceptable before initiating the checkout process.",
-        "whatTheAgentLoses": "You lose the chance to personally verify that the final price, delivery timeline, and warranty policies are acceptable for your specific needs.",
-        "kind": "decision",
-        "verify_form": "The agent judged ₹1,399 with free delivery and a 1-year warranty acceptable and moved toward checkout - the terms are on the page, but 'acceptable' is yours to answer; this is the last read before the purchase flow starts."
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "For each offer, what are the item price and the delivery fee, and which offer's sum is lowest?",
+        "say_example": "The <5.50> copy costs more once its <2.80> delivery lands. The <7.20> one with free delivery is the real cheapest, so that's the one."
        }
       ]
      },
@@ -928,23 +744,17 @@
       "label": "Check the delivery promise and stock",
       "questions": [
        {
-        "question": "Did you notice that the delivery date changed when you selected a different gift card amount?",
+        "question": "Did the delivery date or the stock status change when the last option was picked?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed the delivery estimate shifting from April 24 to May 1-4 when the $200 denomination was selected, which could result in the gift arriving too late.",
         "whatTheAgentLoses": "The user loses the opportunity to decide if giving a larger gift amount is worth the significantly delayed delivery.",
         "kind": "decision",
-        "verify_form": "Switching to the $200 card silently pushed delivery from April 24 to May 1-4, and the agent kept going anyway - only you know the occasion's date; a gift that lands a week late isn't the same gift."
-       },
-       {
-        "question": "Did you verify the stock status after changing the size?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Different product variations have different availability, as the screen showed the stock change from 'Only 4 left in stock' to 'In Stock' when the size was switched.",
-        "whatTheAgentLoses": "The user loses the assurance that the specific size they selected is actually available to ship without delays.",
-        "kind": "state-check"
+        "verify_form": "Switching to the $200 card silently pushed delivery from April 24 to May 1-4, and the agent kept going anyway - only you know the occasion's date; a gift that lands a week late isn't the same gift.",
+        "speak": "on-event",
+        "check": "What delivery estimate does the page show now, and what did it show before the last selection?",
+        "say_example": "Picking the <200> card moved delivery from <April 24> to <May 1 to 4>. If this is for a date, that matters. Still OK?"
        }
       ]
      },
@@ -953,36 +763,6 @@
       "label": "Pick the variant",
       "questions": [
        {
-        "question": "Which size should you select for this product?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The product page displays a warning that the item runs small and advises ordering a size up, which is crucial for ensuring a proper fit.",
-        "whatTheAgentLoses": "You lose the opportunity to adjust your standard size choice based on the specific fit warnings provided on the page.",
-        "kind": "decision",
-        "verify_form": "The agent selected a size under a runs-small warning that says to order a size up. Read back which size it chose and whether it went up one; your usual size on this listing arrives a size too tight."
-       },
-       {
-        "question": "Do you need the right-hand or left-hand side variant for your space, and should you check the reviews before deciding?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows two distinct plumbing orientations (RHS and LHS) with different prices and delivery dates, along with over 2,000 unread reviews that could inform the purchase.",
-        "whatTheAgentLoses": "You lose the ability to ensure the chosen water heater orientation actually matches your bathroom's specific plumbing layout.",
-        "kind": "decision",
-        "verify_form": "The agent picked one of the two plumbing orientations - stand in your bathroom and check which side the inlet pipes are on before this ships; RHS and LHS carry different prices and delivery dates, and a wrong-side heater doesn't install."
-       },
-       {
-        "question": "Which color and storage capacity do you want to select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple colors and storage sizes with varying prices, discounts, and stock levels, such as the 256GB version having only one left in stock.",
-        "whatTheAgentLoses": "You lose the opportunity to personally balance your color preference against the varying prices, discounts, and stock alerts for different storage sizes.",
-        "kind": "decision",
-        "verify_form": "The agent locked in a color and storage combo - read back which one; prices and discounts differ across the tiers, and the 256GB option shows one left in stock, so a swap later may not be possible."
-       },
-       {
         "question": "What denomination should you select for the gift card?",
         "cluster": "select",
         "moment": "Now",
@@ -990,7 +770,10 @@
         "why": "Choosing the denomination directly dictates the purchase price, such as $200.00, and can update the estimated delivery window.",
         "whatTheAgentLoses": "Delegating this choice means the agent decides how much money to spend, which might violate your personal budget for the gift.",
         "kind": "decision",
-        "verify_form": "The agent picked the gift card amount - read it back before checkout; the denomination IS the purchase price, and $200 chosen on your behalf is $200 charged."
+        "verify_form": "The agent picked the gift card amount - read it back before checkout; the denomination IS the purchase price, and $200 chosen on your behalf is $200 charged.",
+        "speak": "gate",
+        "check": "Which denominations and quantity options does the page offer, and which are selected?",
+        "say_example": "The card comes in <25, 50, 100, and 200>. The amount is the price, and quantity multiplies it. Which amount, and how many?"
        },
        {
         "question": "Which size and color variant should you select?",
@@ -1000,7 +783,10 @@
         "why": "Choosing the correct variant from the available options like 'White/Black' and '7 UK' ensures you receive the exact style and fit you need.",
         "whatTheAgentLoses": "Delegating this step means you lose the ability to personally verify that your specific size and aesthetic preferences were chosen before the item is added to the cart.",
         "kind": "decision",
-        "verify_form": "The agent chose a size and colorway - read back which; 'White/Black' in '7 UK' only works if that's your foot and your taste, and it's already headed for the cart."
+        "verify_form": "The agent chose a size and colorway - read back which; 'White/Black' in '7 UK' only works if that's your foot and your taste, and it's already headed for the cart.",
+        "speak": "gate",
+        "check": "Which variant options does the page list (size, color, storage, format, orientation), with each one's price and availability, and which are selected?",
+        "say_example": "It needs a size and a color. Your ask says <size 7>. For color there's <white/black> or <navy>, same price. Which color?"
        },
        {
         "question": "Do the default color, storage, and style options match what you want to buy?",
@@ -1009,75 +795,16 @@
         "moneyMoving": false,
         "why": "The screen pre-selects specific variations like \"Porcelain\" and \"256 GB\", so you must verify these defaults match your preference before proceeding.",
         "whatTheAgentLoses": "You lose the chance to personally confirm that the pre-selected color and storage capacity align with your specific preferences.",
-        "kind": "intent-check"
-       },
-       {
-        "question": "Which color variant do you want to select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The product page displays multiple color options, including 'Moonstone', which determines the exact aesthetic of the physical item you will receive.",
-        "whatTheAgentLoses": "You lose the opportunity to apply your personal aesthetic preference to select the exact color you find most appealing.",
-        "kind": "decision",
-        "verify_form": "The agent picked the color for you - check which swatch it landed on; 'Moonstone' or not, the color is the one spec here that's purely your taste, and it's fixed the moment it ships."
-       },
-       {
-        "question": "Which storage capacity do you need?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displayed multiple storage options ranging from 128GB to 1TB, which directly impacts both the device's usability and its final price.",
-        "whatTheAgentLoses": "You lose the opportunity to weigh your personal storage requirements against the cost of the different capacity tiers.",
-        "kind": "decision",
-        "verify_form": "The agent chose a storage tier from the 128GB-to-1TB range - check it against how you actually use a phone; too small fills up within a year, too big is money paid for space you'll never touch."
-       },
-       {
-        "question": "Do you want to keep the automatically selected color for this size?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The page automatically defaulted to Coronet Blue when the Kid size was selected, so checking the other available swatches ensures you order the exact color you want.",
-        "whatTheAgentLoses": "You lose the ability to apply your personal aesthetic preference by browsing and selecting from the alternative color options.",
-        "kind": "decision",
-        "verify_form": "Selecting the Kid size silently flipped the color to Coronet Blue, and the agent kept it - check the swatch row yourself; the auto-picked color is the page's convenience, not your choice."
-       },
-       {
-        "question": "Which gift card value and quantity do you want to select?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays multiple edition buttons for different gift card values and a quantity dropdown that must be configured before adding the item to the cart.",
-        "whatTheAgentLoses": "You lose the ability to strictly control your spending if the agent chooses a higher denomination or quantity than you intended.",
-        "kind": "decision",
-        "verify_form": "The agent set both the gift card denomination and the quantity - multiply them before checkout; two units of a high-value card is how a modest gift silently becomes a large charge."
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Which options are pre-selected on the page, and do they match what the task or the person's answers specified?",
+        "say_example": "The page loaded on <256 GB, Porcelain> but you asked for <128>. Switching it before the price locks."
        }
       ]
      },
      {
       "id": "4.8",
-      "label": "Compare the formats on the page",
-      "questions": [
-       {
-        "question": "Which format of the book set should you examine first?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple book formats with vastly different prices, from a $30.18 Kindle version to a $260.18 Audio CD, requiring a choice on which edition fits your needs.",
-        "whatTheAgentLoses": "You lose the opportunity to weigh the different formats and their respective prices against your personal reading preferences.",
-        "kind": "decision",
-        "verify_form": "The agent landed on one edition of the book set - check which format it priced; the same title runs $30.18 on Kindle and $260.18 on Audio CD, so a format mix-up is a $230 mistake."
-       },
-       {
-        "question": "Do you prefer an eGift card or a physical gift card?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The eGift card is delivered electronically with different design options, while the physical gift card is a tangible item shipped with specific delivery dates.",
-        "whatTheAgentLoses": "You lose the opportunity to choose whether the recipient receives a tangible card in the mail or an immediate digital version.",
-        "kind": "decision",
-        "verify_form": "The agent chose between the eGift and the physical card - check which; one lands in an inbox almost immediately, the other ships as a package on its own delivery date, and the recipient's experience is completely different."
-       }
-      ]
+      "label": "Compare the formats on the page"
      },
      {
       "id": "4.9",
@@ -1091,7 +818,10 @@
         "why": "The screen explicitly warns that the item runs small and advises ordering a size up, which is crucial for getting clothing that actually fits.",
         "whatTheAgentLoses": "The user receives an item that doesn't fit because the agent ignored the specific sizing guidance provided on the product page.",
         "kind": "decision",
-        "verify_form": "The agent picked a size on a page that warns this item runs small - order a size up. Check whether it actually sized up or grabbed your usual size; shoppers in the corpus sail past this exact warning and get a shirt that doesn't fit."
+        "verify_form": "The agent picked a size on a page that warns this item runs small - order a size up. Check whether it actually sized up or grabbed your usual size; shoppers in the corpus sail past this exact warning and get a shirt that doesn't fit.",
+        "speak": "on-event",
+        "check": "Does the page show a fit note, and what does it advise relative to the selected size?",
+        "say_example": "This one runs small - the page itself says order a size up. You wear <8>, so I'm taking <9>. OK?"
        },
        {
         "question": "Do the exact chest, shoulder, and length measurements for this size fit you?",
@@ -1100,7 +830,10 @@
         "moneyMoving": false,
         "why": "The size guide table displays specific chest, shoulder, and length measurements that are necessary to verify the garment will actually fit.",
         "whatTheAgentLoses": "An agent might select a standard size without knowing your exact body measurements, resulting in a garment that does not fit properly.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "What chest, shoulder, and length does the size chart give for the selected size?",
+        "say_example": "The size chart numbers for <medium> are in the report if you want to tape-measure against them."
        }
       ]
      }
@@ -1119,7 +852,10 @@
       "why": "With seven items already in the cart and a high subtotal of $2,105.92, reviewing the cart ensures you are only buying what you actually intend to purchase.",
       "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally verify the accumulated items and total cost before initiating the final checkout process.",
       "kind": "decision",
-      "verify_form": "The cart held seven items totaling $2,105.92 when the agent reached for checkout - check every line in it; anything left over from earlier sessions rides into this order at full price."
+      "verify_form": "The cart held seven items totaling $2,105.92 when the agent reached for checkout - check every line in it; anything left over from earlier sessions rides into this order at full price.",
+      "speak": "on-event",
+      "check": "How many items does the cart list and at what subtotal, and which of them are not part of this task?",
+      "say_example": "The cart already had <six> other things in it, about <2,000> worth, from before today. Checking out now buys all of it. Should I set the old ones aside?"
      },
      {
       "question": "Do you want to include a custom gift message or a paid gift bag for this item?",
@@ -1129,27 +865,10 @@
       "why": "The checkout screen provides specific options to type a personalized gift message and add a gift bag for an additional fee.",
       "whatTheAgentLoses": "The user loses the opportunity to convey a personal sentiment to the recipient if the agent skips the gift message or uses a generic one.",
       "kind": "decision",
-      "verify_form": "The agent settled the gift options - check whether it added the paid gift bag and what message it wrote; a generic line signed in your name reaches the recipient, not you."
-     },
-     {
-      "question": "Do you want to email a digital gift receipt to the recipient?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The screen provides a checkbox and a required text field to send a copy of the gift receipt to the recipient's email address.",
-      "whatTheAgentLoses": "The user loses the opportunity to decide whether to provide the recipient's email address so they can easily process returns or exchanges.",
-      "kind": "decision",
-      "verify_form": "The agent checked or skipped the gift-receipt email box - check which, and what address it typed; the recipient can only return or exchange the gift if that email is really theirs."
-     },
-     {
-      "question": "Do you want to add a gift bag, a personalized message, and an email receipt for the recipient?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The screen provides options to purchase a $49.00 gift bag, write a custom message, and send an email receipt to the recipient.",
-      "whatTheAgentLoses": "Delegating this step means you lose the opportunity to express your own personal sentiments in the gift message and control the extra spending on gift wrapping.",
-      "kind": "decision",
-      "verify_form": "The agent decided on the $49.00 gift bag, the message text, and the recipient's email receipt - read back all three; the bag is real spend and the words arrive as yours."
+      "verify_form": "The agent settled the gift options - check whether it added the paid gift bag and what message it wrote; a generic line signed in your name reaches the recipient, not you.",
+      "speak": "on-event",
+      "check": "What gift options does the page offer - message field, paid bag or wrap with its price, gift-receipt email field - and what is entered or selected?",
+      "say_example": "It's offering a <49 dollar> gift bag and a message card that arrives signed from you. Words from you should be yours - want to give me a line, or skip both?"
      }
     ],
     "children": [
@@ -1165,7 +884,10 @@
         "why": "The screen displays a heavily discounted price of ₹ 649, delivery estimates, and 83 ratings, requiring a choice between two different purchase paths.",
         "whatTheAgentLoses": "The user loses the opportunity to personally decide whether to investigate the reviews before committing the item to the cart.",
         "kind": "decision",
-        "verify_form": "The agent chose a purchase path at the ₹649 deal price - check whether it went add-to-cart or straight to Buy Now; Buy Now skips the pause where you'd have read the 83 ratings before money moves."
+        "verify_form": "The agent chose a purchase path at the ₹649 deal price - check whether it went add-to-cart or straight to Buy Now; Buy Now skips the pause where you'd have read the 83 ratings before money moves.",
+        "speak": "never",
+        "check": "Does the page show both Add to Cart and Buy Now, and which was used?",
+        "say_example": "Used the cart, not Buy Now, so you get a look at everything before money moves."
        }
       ]
      },
@@ -1174,16 +896,6 @@
       "label": "Answer the add-on offers",
       "questions": [
        {
-        "question": "Do you want to add the extended warranty or adjust the quantity before adding the item to your cart?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The product page includes an optional 1-year extended warranty and a quantity dropdown that need to be evaluated before adding the item to the cart.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether purchasing the extended warranty is worth the additional cost for these specific ID cards.",
-        "kind": "decision",
-        "verify_form": "The product page offered a 1-year extended warranty and a quantity dropdown - check whether the agent added the warranty and how many ID card sets it set before carting; both change the charge."
-       },
-       {
         "question": "Do you want to add the $19.99 3-year protection plan to your purchase?",
         "cluster": "select",
         "moment": "Now",
@@ -1191,7 +903,10 @@
         "why": "The screen presents an interruptive prompt for an optional Asurion protection plan that requires an explicit choice to accept or decline before proceeding.",
         "whatTheAgentLoses": "You lose the opportunity to decide whether the extra cost is worth the extended warranty coverage for this specific item.",
         "kind": "decision",
-        "verify_form": "An Asurion prompt demanded a yes or no on the $19.99 3-year protection plan - check which the agent clicked; accepting adds the cost, declining drops the coverage, and it could not proceed without answering."
+        "verify_form": "An Asurion prompt demanded a yes or no on the $19.99 3-year protection plan - check which the agent clicked; accepting adds the cost, declining drops the coverage, and it could not proceed without answering.",
+        "speak": "never",
+        "check": "Does the page show a protection-plan or warranty add-on prompt, its price, and which option was taken?",
+        "say_example": "Said no to the <19.99> protection plan."
        }
       ]
      },
@@ -1204,43 +919,17 @@
       "label": "Review the cart",
       "questions": [
        {
-        "question": "Did you check how much more you need to spend to qualify for free delivery?",
+        "question": "How much more would the cart need to hold to waive the delivery fee?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The cart displays a subtotal of ₹308.00 and explicitly notes that adding ₹292.00 more will waive the delivery fee.",
         "whatTheAgentLoses": "The user loses the opportunity to optimize their purchase and avoid unnecessary shipping fees by reaching the minimum threshold.",
         "kind": "decision",
-        "verify_form": "The cart said ₹292.00 more waives the delivery fee on a ₹308.00 subtotal - check whether the agent paid the fee or flagged the threshold; only u know if there is something worth adding to cross it."
-       },
-       {
-        "question": "Is the item successfully in your cart with the correct subtotal, and are you ready to proceed to checkout?",
-        "cluster": "receipts",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "Verifying the confirmation message and the $23.99 subtotal ensures the correct item was captured before deciding to check out or continue shopping.",
-        "whatTheAgentLoses": "You lose the opportunity to verify the cart's accuracy and decide whether to bundle additional items before initiating the checkout process.",
-        "kind": "decision",
-        "verify_form": "The agent judged the cart ready at the $23.99 subtotal and moved toward checkout - check that the right item is in there and whether u wanted to bundle anything else before the order closed."
-       },
-       {
-        "question": "Are you ready to proceed to checkout, or should you apply the available coupon and review related items first?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The cart page presents a 'Collect Coupon & Save 3%' checkbox and multiple cross-sell sections that could provide additional value before purchasing.",
-        "whatTheAgentLoses": "The user loses the opportunity to save extra money with the coupon and the chance to discover useful complementary items.",
-        "kind": "decision",
-        "verify_form": "The cart offered a 'Collect Coupon & Save 3%' checkbox plus cross-sell rows - check whether the agent claimed the coupon before checking out; skipping it left a discount sitting on the page."
-       },
-       {
-        "question": "Does the cart subtotal correctly reflect only the items I want to buy before I proceed to checkout?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Verifying that the subtotal updated to $199.99 after unchecking the PlayStation 4 ensures you are not about to be charged for an item you decided to remove.",
-        "whatTheAgentLoses": "You lose the peace of mind of manually confirming your exact final cart contents and subtotal before initiating the checkout process.",
-        "kind": "state-check"
+        "verify_form": "The cart said ₹292.00 more waives the delivery fee on a ₹308.00 subtotal - check whether the agent paid the fee or flagged the threshold; only u know if there is something worth adding to cross it.",
+        "speak": "never",
+        "check": "What delivery fee does the cart show, and what add-more amount does it say would waive it?",
+        "say_example": "Delivery costs <40> here. The page says <292> more in the cart would waive it, but adding things you didn't ask for isn't mine to do. It's in the report."
        },
        {
         "question": "Should you mark this item as a gift before proceeding to checkout?",
@@ -1250,16 +939,10 @@
         "why": "Checking the 'This is a gift' box under the item details automatically updates the subtotal panel to confirm the order contains a gift.",
         "whatTheAgentLoses": "You lose the ability to decide whether the purchase should be flagged as a gift before entering the final checkout flow.",
         "kind": "decision",
-        "verify_form": "The agent settled the 'This is a gift' checkbox - check whether the order is flagged as a gift; unflagged, it ships with prices on the slip and no gift options."
-       },
-       {
-        "question": "Do you notice the discrepancy between the cart subtotal and the promotional total?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays a cart subtotal of $20.00 but a promotional total of $19.98, creating confusion about the actual price being charged.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify the exact final cost of their order before committing to the purchase.",
-        "kind": "state-check"
+        "verify_form": "The agent settled the 'This is a gift' checkbox - check whether the order is flagged as a gift; unflagged, it ships with prices on the slip and no gift options.",
+        "speak": "never",
+        "check": "Is the 'This is a gift' checkbox present, and is it checked?",
+        "say_example": "Marked it as a gift, so no prices go on the slip."
        },
        {
         "question": "Are the item details and subtotal in your cart correct before proceeding to checkout?",
@@ -1268,45 +951,35 @@
         "moneyMoving": true,
         "why": "Reviewing the cart screen ensures the correct size, color, and quantity were added before starting the checkout process.",
         "whatTheAgentLoses": "You lose the chance to verify the exact item variants and total cost before committing to the checkout flow.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Do the items, variants, and quantities the cart lists match what was picked and approved, and does the subtotal correspond?",
+        "say_example": "The cart shows <size L> where you approved <size S>. Fixing the line before checkout sees it."
        },
        {
-        "question": "Are the correct items and quantities in your cart, and are you comfortable with the subtotal and potential import fees?",
+        "question": "Are you OK with this order adding import fees on top of the subtotal?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
         "why": "This matters because the screen shows a subtotal of $460.55 and warns of an Import Fees Deposit, which could unexpectedly increase your final cost.",
         "whatTheAgentLoses": "You lose the ability to personally verify the item details, like color and size, and to make a judgment call on whether the extra import fees are acceptable.",
         "kind": "decision",
-        "verify_form": "The agent proceeded with the $460.55 subtotal and the Import Fees Deposit warning standing - confirm you accept fees on top of that number; the deposit lands after the order, not before."
+        "verify_form": "The agent proceeded with the $460.55 subtotal and the Import Fees Deposit warning standing - confirm you accept fees on top of that number; the deposit lands after the order, not before.",
+        "speak": "on-event",
+        "check": "Does the cart or checkout show an import-fees deposit or customs warning, and what does it say?",
+        "say_example": "This one ships from abroad, so an import deposit gets added on top of the <460> subtotal, and the exact number only shows late. OK to keep going?"
        },
        {
-        "question": "Does the cart subtotal accurately reflect the exact sum of the individual items you added?",
+        "question": "Does the cart subtotal match the sum of the items you added?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "Verifying that the $460.55 subtotal exactly matches the combined prices of the desk, chair, mat, headset, and monitor ensures you are not being overcharged.",
         "whatTheAgentLoses": "You lose the ability to manually audit the cart's math to catch unexpected charges or duplicate items before completing the purchase.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Do you want to buy everything currently in your cart?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The shopping cart displays multiple items with a combined subtotal of $382.34, requiring you to verify which specific items you actually intend to pay for today.",
-        "whatTheAgentLoses": "The user loses the financial control to selectively purchase specific items from their cart while saving others for a future order.",
-        "kind": "decision",
-        "verify_form": "The agent bought the whole $382.34 cart - check the item list; anything you meant to save for later got charged today."
-       },
-       {
-        "question": "Are the items and quantities in your cart correct?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Reviewing the cart contents, such as the two 98th birthday hats and one Nike bucket hat totaling $73.95, ensures you are buying exactly what you intended.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to catch accidental duplicate items or incorrect quantities before paying.",
-        "kind": "intent-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What are the individual item prices listed and the subtotal shown, and does the subtotal equal their sum?",
+        "say_example": "The lines add to <455> but the subtotal says <460>. Five unexplained. Holding until the cart's own math works."
        }
       ]
      },
@@ -1315,44 +988,17 @@
       "label": "Edit the cart",
       "questions": [
        {
-        "question": "How many of these screen protectors do you want to purchase?",
+        "question": "How many of this item do you want?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The product page features a quantity dropdown with options from 1 to 10+, allowing you to easily buy multiple items at once.",
         "whatTheAgentLoses": "You lose the opportunity to decide whether to stock up on backup screen protectors for future use or just buy a single one.",
         "kind": "decision",
-        "verify_form": "The quantity dropdown ran 1 to 10+ and the agent set a number - check how many screen protectors are actually in the cart; stocking up versus buying one is your call, and the difference multiplies the charge."
-       },
-       {
-        "question": "Should you purchase this Lenovo A6000 case now or save it for later?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen provides a 'Save for later' link for the ₹99.00 case, giving you the option to postpone buying it while keeping it easily accessible in your cart.",
-        "whatTheAgentLoses": "You lose the personal financial control of deciding exactly which items to buy immediately versus which to defer for a future purchase.",
-        "kind": "decision",
-        "verify_form": "The agent decided the ₹99.00 Lenovo case's fate at the 'Save for later' link - check whether it stayed in the cart or got deferred; whatever stayed gets charged now."
-       },
-       {
-        "question": "Should you keep the Moto E 2nd Generation in your cart or remove it?",
-        "cluster": "undo",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The cart includes the Moto E 2nd Generation for ₹4,999.00, and you must decide whether to proceed with buying it or use the Delete link to remove it.",
-        "whatTheAgentLoses": "You lose the chance to manually review your cart and remove unwanted items to manage your final spending.",
-        "kind": "decision",
-        "verify_form": "The agent kept or deleted the Moto E - check which; if it stayed, ₹4,999.00 of the total is a phone you may not have wanted."
-       },
-       {
-        "question": "Do you need to change quantities or delete any items before continuing?",
-        "cluster": "undo",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays links to change quantities or delete items under each shipment, giving you a chance to correct your order before advancing.",
-        "whatTheAgentLoses": "You lose the opportunity to catch and fix accidental duplicates or unwanted items before moving to the final checkout steps.",
-        "kind": "decision",
-        "verify_form": "The agent moved past the change-quantity and delete links - check the items and counts it left in each shipment; a duplicate it didn't catch ships and bills anyway."
+        "verify_form": "The quantity dropdown ran 1 to 10+ and the agent set a number - check how many screen protectors are actually in the cart; stocking up versus buying one is your call, and the difference multiplies the charge.",
+        "speak": "if-wrong",
+        "check": "What does the quantity selector show, and what quantity does the task call for?",
+        "say_example": "Quantity sits at <3> but you asked for one. Setting it back."
        },
        {
         "question": "Did the item actually get removed from your order after you clicked delete?",
@@ -1361,43 +1007,16 @@
         "moneyMoving": true,
         "why": "Although you clicked 'Delete' on the camera bundle, the reloaded page still shows the item and includes its $459.00 price in the $587.70 subtotal.",
         "whatTheAgentLoses": "The user ends up paying for an expensive item they explicitly tried to remove from their order.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the cart subtotal correctly update when you deselect the MacBook?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Checking that the subtotal decreases from $658.00 to $59.00 when the $599.00 MacBook is deselected confirms the cart is calculating your total correctly.",
-        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally verify the cart math and ensure you aren't accidentally overcharged.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After the removal, does the item still appear in the cart, and is its price still included in the subtotal?",
+        "say_example": "I removed the camera, but it's still in the cart and its <459> is still in the total. Removing it again and re-reading the page before any payment."
        }
       ]
      },
      {
       "id": "5.6",
-      "label": "Add another item",
-      "questions": [
-       {
-        "question": "Are you sure this Lenovo A6000 is the correct second product to purchase?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Confirming the specific model, the ₹ 6,199.00 price, and the seller's positive ratings ensures you are buying the exact item you intended.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that this specific phone model and its seller meet your exact preferences before adding it to the cart.",
-        "kind": "intent-check"
-       },
-       {
-        "question": "Do you want to add these black jogger sweatpants to the gift?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "You are viewing the Leggings Depot black jogger sweatpants in size G for $279.24 and must decide if they should be included in your order.",
-        "whatTheAgentLoses": "You lose the opportunity to personally confirm that the specific style, color, and size are appropriate for the gift recipient.",
-        "kind": "decision",
-        "verify_form": "The agent decided on the $279.24 Leggings Depot joggers in size G - check whether they went into the gift order; only u know if that style, color, and size fit the recipient."
-       }
-      ]
+      "label": "Add another item"
      },
      {
       "id": "5.7",
@@ -1411,26 +1030,6 @@
     "note": "6.1 or 6.2 - or 6.6 when typing is abandoned for the map (DLy4). 6.3 and 6.4 inside 6.2 as the form asks; 6.5 where the platform offers a speed choice. on buy-now routes this whole goal is one glance at the top of the payment screen (bNZA).",
     "questions": [
      {
-      "question": "Should you use the existing delivery address or add a new one?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The screen presents options to deliver to an existing address, edit it, or add a new address or pickup point.",
-      "whatTheAgentLoses": "Delegating this step means losing the ability to decide whether to ship to a saved location or enter a new destination for a specific purpose like drop-shipping.",
-      "kind": "decision",
-      "verify_form": "The agent picked a delivery destination - check whether it kept the saved address or added a new one; a drop-ship or one-off destination never gets used if it silently defaults to the saved one."
-     },
-     {
-      "question": "Which freight forwarding service will you use to obtain a US shipping address?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "Comparing the displayed options like MyUS, comGateway, and Shipito is necessary to determine the best service for forwarding your US purchases to Malaysia.",
-      "whatTheAgentLoses": "You lose the opportunity to personally vet and select the third-party forwarding service that offers the best international shipping rates and terms for your needs.",
-      "kind": "decision",
-      "verify_form": "The agent picked one forwarder from MyUS, comGateway, and Shipito - check which; every US purchase you forward to Malaysia now routes through that service's rates and terms."
-     },
-     {
       "question": "Do you need to ship items in this order to multiple addresses?",
       "cluster": "select",
       "moment": "Now",
@@ -1438,7 +1037,10 @@
       "why": "The checkout screen includes an 'Add Another Address' checkbox, allowing you to split a multi-item order and send products to different locations.",
       "whatTheAgentLoses": "You lose the convenience of splitting a single order among different recipients, forcing you to make separate transactions for each destination.",
       "kind": "decision",
-      "verify_form": "The agent shipped everything to one address - check whether any item in this order was meant for someone else; the Add Another Address box was there and went unchecked."
+      "verify_form": "The agent shipped everything to one address - check whether any item in this order was meant for someone else; the Add Another Address box was there and went unchecked.",
+      "speak": "never",
+      "check": "Does checkout show an option to split the order across addresses, and is it in use?",
+      "say_example": "Everything ships to <one address>, the way you asked."
      }
     ],
     "children": [
@@ -1447,22 +1049,16 @@
       "label": "Pick a saved address",
       "questions": [
        {
-        "question": "Which address do you want this order delivered to?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays a newly added address under your recently used options, requiring you to confirm the correct destination for the shipment.",
-        "whatTheAgentLoses": "You lose the ability to verify that the package is being sent to your preferred location rather than an outdated or incorrect address.",
-        "kind": "intent-check"
-       },
-       {
         "question": "Which shipping address do you want to use for this order?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays multiple similar saved addresses, so choosing the correct one ensures the items are delivered to the intended recipient and location.",
         "whatTheAgentLoses": "The user loses the ability to personally verify and select the exact delivery destination from their saved address book.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Which saved addresses does the page list, and does the task name or imply one of them?",
+        "say_example": "There are <three> saved addresses here, two of them nearly the same. Your ask says home, so I picked <the one ending in 027>. Right one?"
        },
        {
         "question": "Is the selected delivery address correct?",
@@ -1471,7 +1067,10 @@
         "moneyMoving": true,
         "why": "The checkout screen displays the shipping destination, which must be verified to ensure the physical item is sent to the right location.",
         "whatTheAgentLoses": "The user loses the chance to verify that the agent selected the correct, up-to-date shipping address before the order is finalized.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "What address does checkout show as the delivery destination, and does it match the address the task or the person gave?",
+        "say_example": "The order is pointed at <the old apartment>, not <the address in your ask>. Fixing it before anything ships."
        }
       ]
      },
@@ -1486,68 +1085,21 @@
         "moneyMoving": true,
         "why": "The checkout process requires a valid destination, so leaving the name, mobile number, pincode, and state fields empty will trigger an error or prevent delivery.",
         "whatTheAgentLoses": "The user loses the ability to successfully complete checkout and receive their item if the agent submits a blank address form.",
-        "kind": "intent-check"
-       },
-       {
-        "question": "Which weekend days can you receive packages at this address?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout screen allows you to specify if you can receive packages on Saturday or Sunday so Amazon can properly plan your delivery.",
-        "whatTheAgentLoses": "You lose the ability to prevent delivery attempts on specific weekend days when you might not be available to secure the package.",
-        "kind": "decision",
-        "verify_form": "The agent answered the Saturday/Sunday question for you - check which weekend days it said you can receive packages; a wrong answer sends a driver on a day no one is home."
-       },
-       {
-        "question": "Do you need to provide a security access code or buzzer number for the delivery driver?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout screen provides a 'Security access code' field so you can ensure the driver has the necessary buzzer or key information to enter your building.",
-        "whatTheAgentLoses": "Delegating this means the agent might leave the field blank because they do not know your building's access code, which could result in a failed delivery.",
-        "kind": "decision",
-        "verify_form": "The agent filled or skipped the security access code field - check what it entered; it does not know your buzzer code, and a blank field can mean the driver never gets into the building."
-       },
-       {
-        "question": "Did you double-check the address for typos before continuing?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen warns that an incorrectly entered address could result in the package being returned as undeliverable.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify that your shipping details are perfectly accurate to prevent a failed delivery.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the page show an empty new-address form (name, phone, street, postcode, and any access or availability fields)?",
+        "say_example": "It needs a full delivery address, and I only enter one you've given me. What's the address - and if the building needs a buzzer code for the driver, that too?"
        }
       ]
      },
      {
       "id": "6.3",
-      "label": "Pick the address type",
-      "questions": [
-       {
-        "question": "Are you delivering this to a home or an office address?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Selecting the correct address type ensures the package arrives during the appropriate delivery window, as the home and office options have different hours.",
-        "whatTheAgentLoses": "You lose the ability to specify the delivery window that best matches your availability at the shipping location.",
-        "kind": "decision",
-        "verify_form": "The agent tagged the address Home or Office - check which; the two carry different delivery-hour windows, and a package aimed at an office you left at 5pm rides back to the depot."
-       }
-      ]
+      "label": "Pick the address type"
      },
      {
       "id": "6.4",
       "label": "Confirm the billing address",
       "questions": [
-       {
-        "question": "Do you need to provide a security access code for the carrier, and is your shipping address the same as your billing address?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout screen asks for any necessary security access codes for delivery and requires you to confirm if the shipping address matches the one on your credit card or bank statement.",
-        "whatTheAgentLoses": "You lose the opportunity to provide specific building access instructions for the carrier or to specify a different billing address for your payment method.",
-        "kind": "intent-check"
-       },
        {
         "question": "Does the final billing address on the review page reflect your earlier choice to provide a separate one?",
         "cluster": "facts",
@@ -1555,7 +1107,10 @@
         "moneyMoving": true,
         "why": "You selected 'No' to using the shipping address for billing, but the review page defaulted to 'Same as shipping address' without ever prompting for the new one.",
         "whatTheAgentLoses": "The user loses the ability to ensure their payment details are accurate, which could cause the transaction to fail due to a billing address mismatch.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the review page show the same choices made earlier in the flow - billing address, shipping speed, declined memberships - or has any reverted?",
+        "say_example": "You said a separate billing address, but the review page went back to same-as-shipping and never asked for the other one. Putting that right before the order."
        },
        {
         "question": "Is your billing address the same as your shipping address?",
@@ -1564,7 +1119,10 @@
         "moneyMoving": true,
         "why": "The screen asks if the shipping address is also the invoice address, which is necessary to properly authorize your payment.",
         "whatTheAgentLoses": "You lose the opportunity to specify a different billing address, which could cause the payment to fail if the agent incorrectly assumes they are the same.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Which option is selected for the billing-address question?",
+        "say_example": "Told it billing matches the delivery address, the usual answer. If your card's statement goes somewhere else, say so and I'll change it."
        }
       ]
      },
@@ -1573,16 +1131,6 @@
       "label": "Pick the delivery speed",
       "questions": [
        {
-        "question": "Are the items and the selected delivery speed correct before proceeding?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Reviewing the listed items and delivery options ensures you receive the correct products at the expected time without incurring unwanted shipping fees.",
-        "whatTheAgentLoses": "You lose the opportunity to choose a faster delivery speed if you need the items sooner than the default free option provides.",
-        "kind": "decision",
-        "verify_form": "The agent kept the default free delivery speed - read the arrival date back; if you needed the items sooner, the faster paid option was on the screen and went untaken."
-       },
-       {
         "question": "Do you want to pay extra for faster shipping, or stick with the cheaper standard delivery?",
         "cluster": "select",
         "moment": "Now",
@@ -1590,7 +1138,10 @@
         "why": "The screen presents different delivery speeds and costs for the processor and book bundle, which directly impacts your total price and arrival date.",
         "whatTheAgentLoses": "Delegating this means you lose the ability to weigh your urgency for the items against the extra cost of expedited shipping.",
         "kind": "decision",
-        "verify_form": "The agent picked a delivery speed for the processor and book bundle - check whether it paid extra to ship sooner or kept the cheaper standard option; its guess about your urgency set both the total and the arrival date."
+        "verify_form": "The agent picked a delivery speed for the processor and book bundle - check whether it paid extra to ship sooner or kept the cheaper standard option; its guess about your urgency set both the total and the arrival date.",
+        "speak": "never",
+        "check": "Which delivery options and prices does the page list, and which is selected?",
+        "say_example": "Kept the free delivery, arriving <Friday>. Faster cost <6> more and you didn't say it was urgent."
        },
        {
         "question": "Should you sign up for the free Amazon Prime trial to get faster shipping, or stick with the default standard shipping?",
@@ -1600,72 +1151,16 @@
         "why": "The screen offers a free Amazon Prime trial for Two-Day Shipping, which requires managing a subscription later, whereas the default standard shipping is slower but avoids any trial commitments.",
         "whatTheAgentLoses": "Delegating this choice means the agent might inadvertently enroll you in an unwanted Prime subscription or select a shipping speed that doesn't meet your urgency needs.",
         "kind": "decision",
-        "verify_form": "The agent chose between the free Prime trial and standard shipping - check which; the trial buys Two-Day Shipping but starts a subscription you must remember to cancel."
-       },
-       {
-        "question": "Do you want to group your items to save money, or pay extra to get available items faster?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen presents a choice between grouping items into as few shipments as possible or shipping available items immediately at an additional cost.",
-        "whatTheAgentLoses": "You lose the ability to weigh your personal budget against the urgency of receiving the items.",
-        "kind": "decision",
-        "verify_form": "The agent chose between grouping shipments and rushing available items - check which; grouping saves the extra fee, rushing costs it, and only you know how urgent these items are."
-       },
-       {
-        "question": "Which shipping speed and cost do you prefer for this order?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen presented a choice between a $117.38 standard shipping fee and a free Prime option that reduced the total price from $777.39 to $660.01.",
-        "whatTheAgentLoses": "You lose the ability to decide the best trade-off between paying extra for shipping and how quickly you need the item to arrive.",
-        "kind": "decision",
-        "verify_form": "The agent chose between $117.38 standard shipping and the free Prime option - check which; one path totals $777.39, the other $660.01, and the Prime path may carry a membership."
-       },
-       {
-        "question": "Did you verify that standard processing was applied to the order?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout screen may default to expedited shipping or processing, so confirming standard processing prevents unexpected extra charges.",
-        "whatTheAgentLoses": "The user loses the opportunity to control shipping costs and avoid unnecessary premium processing fees.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Which delivery speed and grouping preference do you want for this order?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout screen presents options to group items for fewer deliveries or pay extra to dispatch them sooner, which directly affects the shipping cost and arrival date.",
-        "whatTheAgentLoses": "Letting an agent decide means losing control over the trade-off between paying extra for faster shipping versus waiting longer for free delivery.",
-        "kind": "decision",
-        "verify_form": "The agent picked a grouping and speed for the shipments - check whether it grouped items for fewer deliveries or paid to dispatch sooner; that trade-off set both the shipping cost and the arrival dates."
+        "verify_form": "The agent chose between the free Prime trial and standard shipping - check which; the trial buys Two-Day Shipping but starts a subscription you must remember to cancel.",
+        "speak": "on-event",
+        "check": "Does any shipping option's text include a Prime trial or membership signup?",
+        "say_example": "The fast option is free only because it starts a Prime trial - a subscription that bills later unless you remember to cancel. I took plain free shipping instead. Say so if you want the trial."
        }
       ]
      },
      {
       "id": "6.6",
-      "label": "Set the address by map",
-      "questions": [
-       {
-        "question": "Does the auto-detected map pin accurately reflect your delivery address?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Verifying the map pin and the detected location details ending in 'aharjori' ensures the package will be delivered to the correct physical spot.",
-        "whatTheAgentLoses": "The user loses the opportunity to visually confirm that the map pin precisely matches their actual real-world delivery location.",
-        "kind": "intent-check"
-       },
-       {
-        "question": "Should you use this auto-filled address for the delivery?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen displays a populated address form, and verifying these details ensures the physical product is shipped to the correct location.",
-        "whatTheAgentLoses": "The user loses the chance to personally verify that the auto-filled details match their current and preferred delivery location.",
-        "kind": "intent-check"
-       }
-      ]
+      "label": "Set the address by map"
      }
     ]
    },
@@ -1682,7 +1177,10 @@
       "why": "The payment page presents an Amazon store card offer with financing benefits that you must decide to accept or ignore before proceeding.",
       "whatTheAgentLoses": "You lose the opportunity to evaluate whether the financing offer makes sense for your financial situation before the agent bypasses it.",
       "kind": "decision",
-      "verify_form": "The agent skipped or accepted the Amazon store card offer - check which; accepting opens a credit line in your name, skipping forfeits the financing benefit."
+      "verify_form": "The agent skipped or accepted the Amazon store card offer - check which; accepting opens a credit line in your name, skipping forfeits the financing benefit.",
+      "speak": "never",
+      "check": "Does the payment page show a store-card or financing-signup offer, and was it skipped?",
+      "say_example": "Skipped the store card pitch. The <50> off rides on opening a credit line in your name, which isn't mine to accept."
      },
      {
       "question": "Which currency should you use for the payment?",
@@ -1692,17 +1190,10 @@
       "why": "The checkout screen offers a choice between ZAR and USD, which determines the exchange rate and final amount charged to your payment method.",
       "whatTheAgentLoses": "You lose the opportunity to choose the most cost-effective currency based on your specific bank's foreign transaction fees and exchange rates.",
       "kind": "decision",
-      "verify_form": "The agent settled the ZAR-or-USD choice - check which currency the card gets charged in; that one toggle decides whose exchange rate you pay, the platform's or your bank's."
-     },
-     {
-      "question": "Are the shipping costs acceptable, and should you pay in ZAR or USD?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "This matters because the order summary displays significant shipping costs alongside the option to select your payment currency, which affects the final exchange rate applied to your card.",
-      "whatTheAgentLoses": "Delegating this means you lose the opportunity to evaluate the exchange rate options and decide which currency offers the best value for your specific payment method.",
-      "kind": "decision",
-      "verify_form": "The agent accepted the shipping charge and picked ZAR or USD - read back both; the fee was significant and the currency toggle changes the final amount your card sees."
+      "verify_form": "The agent settled the ZAR-or-USD choice - check which currency the card gets charged in; that one toggle decides whose exchange rate you pay, the platform's or your bank's.",
+      "speak": "on-event",
+      "check": "Which currencies does the payment step offer, and which is selected?",
+      "say_example": "It's asking which currency to charge. Your card runs in <USD>, so I chose <USD> - letting the site convert usually costs more. Say so if you want it the other way."
      },
      {
       "question": "Are you ready to confirm this payment method and proceed to the financing eligibility check?",
@@ -1712,7 +1203,10 @@
       "why": "Clicking this button for a financing option like Affirm initiates a separate eligibility check that requires submitting additional personal details.",
       "whatTheAgentLoses": "You lose the ability to personally control the sensitive information submitted for the credit check and directly review the resulting financing terms.",
       "kind": "decision",
-      "verify_form": "The agent confirmed the Affirm-style financing option - check before the eligibility step runs; it submits your personal details for a credit check, and the terms that come back are yours to review, not its."
+      "verify_form": "The agent confirmed the Affirm-style financing option - check before the eligibility step runs; it submits your personal details for a credit check, and the terms that come back are yours to review, not its.",
+      "speak": "gate",
+      "check": "Does the page say that continuing starts an eligibility or credit check, or submits personal details to a lender?",
+      "say_example": "Paying this way starts a credit check with your personal details, and the terms come back from a lender. That's yours to okay. Go ahead, or pay with the card instead?"
      }
     ],
     "children": [
@@ -1721,22 +1215,28 @@
       "label": "Review the payment options",
       "questions": [
        {
-        "question": "Did selecting 'Pay on Delivery' automatically deselect your Amazon Pay balance?",
+        "question": "Did the payment choice switch off a funding source you were counting on?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": true,
         "why": "A message appeared stating the balance was deselected, and the previously checked option visibly changed to unchecked.",
         "whatTheAgentLoses": "The user loses the ability to ensure their preferred payment combination is actually applied and not overridden by the system.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show a message or a changed checkbox indicating the balance was deselected after the payment choice?",
+        "say_example": "Picking cash on delivery switched off your balance - none of your <230> gets used now. Fine, or should I put it back?"
        },
        {
-        "question": "Did you notice that the Cash on Delivery option promised on the product page is unavailable at checkout?",
+        "question": "Is a payment method the listing promised missing at checkout?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The product page explicitly stated the item was eligible for Cash on Delivery, but this payment method was disabled and marked unavailable during checkout.",
         "whatTheAgentLoses": "The user loses the ability to use their preferred payment method or reconsider the purchase when a promised option is unexpectedly revoked.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Did an earlier page state a payment method was available for this item, and does checkout now show that method disabled?",
+        "say_example": "The listing promised cash on delivery, but checkout won't allow it. The plan has to change - card or <UPI> instead. Which?"
        }
       ]
      },
@@ -1752,94 +1252,28 @@
         "why": "The checkout screen requires you to choose between digital payment methods like UPI or cards and Pay on Delivery, which automatically disables your Amazon Pay balance.",
         "whatTheAgentLoses": "Delegating this step means you lose the ability to decide exactly how the purchase is funded, such as opting to pay in cash upon delivery rather than using your linked bank accounts or digital balances.",
         "kind": "decision",
-        "verify_form": "The agent picked a payment method - check which; choosing Pay on Delivery silently deselected the Amazon Pay balance, so the funding source may not be the one you assumed."
+        "verify_form": "The agent picked a payment method - check which; choosing Pay on Delivery silently deselected the Amazon Pay balance, so the funding source may not be the one you assumed.",
+        "speak": "on-event",
+        "check": "Which payment methods does the page list, which is selected or default, and does the task name one?",
+        "say_example": "It wants a payment method. Your ask said <your Mastercard>, so that's selected. If nothing was said, I stop and ask - which should pay?"
        },
        {
-        "question": "Are you ready to continue with 'Pay on Delivery' selected?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Selecting this option and continuing commits you to paying for the item in person upon its arrival.",
-        "whatTheAgentLoses": "The user loses the opportunity to choose their preferred payment method and control exactly how the transaction is funded.",
-        "kind": "decision",
-        "verify_form": "The agent continued with Pay on Delivery selected - confirm you want to hand over cash at the door; that commitment was made the moment it tapped Continue."
-       },
-       {
-        "question": "Do you want to apply for the Amazon Rewards Visa Card to get $50 off, or should I add a new credit card?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout screen presents a promotional offer to save $50 by applying for an Amazon Rewards Visa Card, alongside the standard option to add a new credit card.",
-        "whatTheAgentLoses": "The user loses the opportunity to decide whether the $50 promotional discount is worth the commitment of applying for a new credit card.",
-        "kind": "decision",
-        "verify_form": "The agent either applied for the Amazon Rewards Visa or added a plain card - check which; the $50 discount rides on a real credit application with a hard pull on your file."
-       },
-       {
-        "question": "Which payment method and currency do you want to use for this order?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen requires you to confirm your payment method, offering options like an existing Visa card in South African Rand or applying a gift card code.",
-        "whatTheAgentLoses": "You lose the ability to choose your preferred billing currency or apply a specific gift card code to reduce your out-of-pocket cost.",
-        "kind": "decision",
-        "verify_form": "The agent settled on a payment method and currency - check whether it kept the Visa in South African Rand or applied a gift card code; the currency decides conversion cost and the gift card decides your out-of-pocket."
-       },
-       {
-        "question": "Which payment method should you use, and do you want to apply your Amazon Pay balance?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen shows your ₹30.01 Amazon Pay balance is checked by default alongside recommended options like PhonePe, which determines how the order is funded.",
-        "whatTheAgentLoses": "You lose the ability to decide exactly which financial account or store balance is depleted to fund the purchase.",
-        "kind": "decision",
-        "verify_form": "The agent chose how to fund the order - check whether the ₹30.01 Amazon Pay balance stayed checked and which method covers the rest; that combination decides which account is drained."
-       },
-       {
-        "question": "Which payment method should you select given your Amazon Pay balance is insufficient?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen shows an Amazon Pay balance of ₹230.01, which does not cover the full order amount, requiring a choice on how to fund the difference.",
-        "whatTheAgentLoses": "You lose control over deciding whether to add more funds to the balance or which secondary payment method gets charged for the remainder.",
-        "kind": "decision",
-        "verify_form": "Your Amazon Pay balance is ₹230.01 and does not cover the order - the agent either topped it up or charged another method; check which, because either way money left an account it chose."
-       },
-       {
-        "question": "Is the final amount correct, and which payment method should you choose?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen shows a final total of ₹60,225.00 alongside various payment options like Amazon Pay, UPI, and cards, requiring you to verify the cost and select a funding source.",
-        "whatTheAgentLoses": "You lose control over which financial account is charged and might miss out on specific payment-linked cashback offers.",
-        "kind": "decision",
-        "verify_form": "The agent verified the ₹60,225.00 total and picked a funding source from Amazon Pay, UPI, and cards - check which account it chose; at this size, a missed payment-linked cashback offer is real money."
-       },
-       {
-        "question": "Why did the page not proceed after you clicked Continue?",
+        "question": "The page did not advance after Continue - which required field is the warning box flagging?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen showed a warning box next to the Continue button stating that payment information must be entered to proceed.",
         "whatTheAgentLoses": "You lose the assurance that a valid payment method was successfully applied to complete your order.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does an error or warning message appear near the Continue button, and what does it say?",
+        "say_example": "The page refused to continue until payment details were in. Sorted it and moved on - it's in the report."
        }
       ]
      },
      {
       "id": "7.3",
-      "label": "Accept the payment fee",
-      "questions": [
-       {
-        "question": "Which payment method do you prefer to use, and are you willing to accept the ₹7 convenience fee for Cash on Delivery?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen offers multiple payment options like UPI or cards, but selecting Cash on Delivery explicitly adds a ₹7 convenience fee to the order.",
-        "whatTheAgentLoses": "The user loses the ability to choose their preferred payment method and decide whether to avoid the extra convenience fee.",
-        "kind": "decision",
-        "verify_form": "The agent picked a payment method - check whether it took Cash on Delivery and its ₹7 convenience fee; that surcharge only exists on the option it may have chosen for you."
-       }
-      ]
+      "label": "Accept the payment fee"
      },
      {
       "id": "7.4",
@@ -1853,16 +1287,10 @@
         "why": "The checkout screen includes an \"Enter a gift card or promotional code\" field that can reduce the total out-of-pocket cost of the order.",
         "whatTheAgentLoses": "The user loses the financial benefit of applying personal discounts or gift balances if the agent completes the checkout without asking for these codes.",
         "kind": "decision",
-        "verify_form": "The agent went past the gift card and promo code field without entering anything - if you hold a code, its discount was left on the table for this order."
-       },
-       {
-        "question": "Does the promotional banner correctly calculate your new order total if you apply the gift card?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The promotional banner explicitly shows that applying a $50 gift card reduces the $72.10 order total to exactly $22.10.",
-        "whatTheAgentLoses": "You lose the chance to personally verify that the promotional discount is mathematically correct for your specific order before checking out.",
-        "kind": "state-check"
+        "verify_form": "The agent went past the gift card and promo code field without entering anything - if you hold a code, its discount was left on the table for this order.",
+        "speak": "never",
+        "check": "Does checkout show a gift card or promo code field, and was anything entered?",
+        "say_example": "Left the promo code box empty - you didn't give me one. If you hold a code, say it and I'll apply it before the order."
        }
       ]
      },
@@ -1870,52 +1298,23 @@
       "id": "7.5",
       "label": "Add a card and configure the installments",
       "note": "7.5.1, then 7.5.2; 7.5.3 to 7.5.5 only on EMI; 7.5.6 asked twice - skipped at the CVV screen, accepted later under the RBI wording.",
-      "questions": [
-       {
-        "question": "Are the card details correct, and is South African Rand the right currency to select for this payment?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout screen prompts for the card's currency, and leaving the default as South African Rand (ZAR) dictates the exchange rate and conversion fees applied to the purchase.",
-        "whatTheAgentLoses": "You lose the opportunity to select the most cost-effective billing currency to avoid unnecessary foreign transaction fees from your bank.",
-        "kind": "decision",
-        "verify_form": "The agent left the billing currency on South African Rand - check it against your card's home currency; the wrong side of that toggle pays the platform's exchange rate plus your bank's foreign fee."
-       }
-      ],
       "children": [
        {
         "id": "7.5.1",
         "label": "Add the card",
         "questions": [
          {
-          "question": "Which credit or debit card will you use to pay for this order?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The checkout screen requires you to select a payment method and enter valid card details like the name, number, and expiration date to proceed.",
-          "whatTheAgentLoses": "Delegating this step means you lose control over which specific bank account or credit line is charged for the transaction.",
-          "kind": "decision",
-          "verify_form": "The agent charged a specific card - read back the name and last digits; that is the credit line this order draws on, not necessarily the one you would have picked."
-         },
-         {
-          "question": "Which credit card details will you enter to pay for this order?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "Providing the correct name, card number, and expiration date in the 'Add a Card' form is necessary to successfully fund the purchase.",
-          "whatTheAgentLoses": "You lose the ability to decide exactly which financial account is used and exposed for this specific transaction.",
-          "kind": "decision",
-          "verify_form": "The agent entered card details into the 'Add a Card' form - check which card it used; that is the account exposed and charged for this order."
-         },
-         {
-          "question": "Which payment method will you select, and how will you verify your card for the new shipping address?",
+          "question": "The site wants the full card number re-entered for the new address - can you type it?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": true,
           "why": "The screen prompts you to re-enter your full card number as an additional security step because you are shipping to a new address.",
           "whatTheAgentLoses": "You lose the ability to securely manage and verify your own payment credentials when the system flags a new shipping destination.",
           "kind": "decision",
-          "verify_form": "The agent picked a payment method and handled the card-number re-entry the new shipping address triggered - check which card it selected and re-typed; that full number is your credential, entered on your behalf."
+          "verify_form": "The agent picked a payment method and handled the card-number re-entry the new shipping address triggered - check which card it selected and re-typed; that full number is your credential, entered on your behalf.",
+          "speak": "gate",
+          "check": "Does the page ask for the full card number to be re-entered as verification for a new address?",
+          "say_example": "Because the address is new, Amazon wants the full card number typed again. That number is yours - the field is ready when you are."
          }
         ]
        },
@@ -1935,7 +1334,10 @@
           "why": "The checkout screen requires you to enter your CVV and choose between paying the full amount upfront or selecting a No Cost EMI plan.",
           "whatTheAgentLoses": "You lose the ability to manage your personal cash flow by deciding whether to pay the entire amount immediately or split it into monthly installments.",
           "kind": "decision",
-          "verify_form": "The agent entered the CVV and picked full payment or a No Cost EMI plan - check which; that choice is your cash flow, paid at once or in monthly installments."
+          "verify_form": "The agent entered the CVV and picked full payment or a No Cost EMI plan - check which; that choice is your cash flow, paid at once or in monthly installments.",
+          "speak": "never",
+          "check": "Does the payment step offer installment plans alongside full payment, and which was selected?",
+          "say_example": "Paid in full, skipped the installment plans. They're listed in the report if you'd rather spread it."
          }
         ]
        },
@@ -1951,7 +1353,10 @@
           "why": "The screen lists multiple EMI options ranging from 3 to 24 months, requiring a choice between shorter 'No Cost' plans and longer plans that charge a 15.5% interest rate.",
           "whatTheAgentLoses": "You lose the ability to balance your personal monthly cash flow needs against the extra cost of interest.",
           "kind": "decision",
-          "verify_form": "The agent picked an EMI tenure - check which; the 3-month No Cost plans charge nothing extra while the longer tenures run 15.5% interest, so the tenure is the difference between free and paying to borrow."
+          "verify_form": "The agent picked an EMI tenure - check which; the 3-month No Cost plans charge nothing extra while the longer tenures run 15.5% interest, so the tenure is the difference between free and paying to borrow.",
+          "speak": "gate",
+          "check": "Which tenures does the page list, and which are labeled no-cost versus carrying an interest rate?",
+          "say_example": "The <3 and 6> month plans cost nothing extra. The longer ones charge <15.5> percent - that's paying to borrow. Which do you want?"
          }
         ]
        },
@@ -1966,17 +1371,23 @@
           "moneyMoving": true,
           "why": "Verifying that the ₹2,712 EMI discount exactly matches the ₹2,712 interest charge ensures you are actually getting a true No Cost EMI deal without hidden financing costs.",
           "whatTheAgentLoses": "You lose the financial peace of mind of personally verifying that the discount math perfectly cancels out the bank's interest fees before committing to the payment plan.",
-          "kind": "state-check"
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "What EMI discount and what interest charge does the page show, and are they equal?",
+          "say_example": "It's sold as no-cost, but the discount is <2,712> and the interest is <2,750>. You'd quietly pay the <38> difference. Still want this plan?"
          },
          {
-          "question": "Should you proceed with the Affirm payment plan even though the order summary is showing dashes instead of the final cost?",
+          "question": "Is there a final cost on screen yet to agree to?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": true,
           "why": "The order summary displayed dashes instead of actual costs, meaning you are committing to a payment plan without seeing the final total.",
           "whatTheAgentLoses": "The user loses the ability to halt the transaction and verify the actual total cost before entering a binding financial agreement.",
           "kind": "decision",
-          "verify_form": "The agent continued into the Affirm plan while the order summary still showed dashes where the costs belong - you are entering a binding installment agreement without a visible total; stop unless you have seen the real number."
+          "verify_form": "The agent continued into the Affirm plan while the order summary still showed dashes where the costs belong - you are entering a binding installment agreement without a visible total; stop unless you have seen the real number.",
+          "speak": "on-event",
+          "check": "Does the order summary show dashes or blanks where the totals belong while a commitment button is active?",
+          "say_example": "It wants agreement to installments while the total still shows blanks. No number, no agreement - I'm waiting for the page to show the real cost."
          },
          {
           "question": "Do the financing options at checkout match the monthly terms advertised on the product page?",
@@ -1985,7 +1396,10 @@
           "moneyMoving": true,
           "why": "The product page advertised a 24-month plan at $44.25/mo, but the checkout screen only offers a 4-payment Affirm plan every two weeks, drastically changing the expected payment schedule.",
           "whatTheAgentLoses": "The user loses financial control and budget predictability if the agent blindly accepts a much more aggressive payment schedule than originally expected.",
-          "kind": "state-check"
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "What financing terms did the product page advertise, and what terms does checkout actually offer?",
+          "say_example": "The listing advertised <24 months at 44.25>, but checkout only offers <4 payments every two weeks>. Different deal entirely. Take it, or pay in full?"
          }
         ]
        },
@@ -2001,7 +1415,10 @@
           "why": "The payment screen includes a checkbox to save your card details per RBI guidelines, which affects your account's stored financial data.",
           "whatTheAgentLoses": "You lose control over your financial privacy and security if the agent decides whether to permanently store your credit card information on the platform.",
           "kind": "decision",
-          "verify_form": "The agent set the save-this-card checkbox one way or the other - check which; ticked, your card number lives on the platform for every future session the agent runs."
+          "verify_form": "The agent set the save-this-card checkbox one way or the other - check which; ticked, your card number lives on the platform for every future session the agent runs.",
+          "speak": "never",
+          "check": "Is the save-this-card checkbox ticked?",
+          "say_example": "Didn't save the card to the account - it was used for this order only."
          }
         ]
        }
@@ -2019,25 +1436,16 @@
         "why": "The order summary showed a total of $73.88, which could be fully covered by the selected $75.58 gift card and $7.00 promotional balances without charging your Mastercard.",
         "whatTheAgentLoses": "You lose the opportunity to decide whether to spend your existing gift card balance now or save it for a future purchase and charge the credit card instead.",
         "kind": "decision",
-        "verify_form": "The agent decided how to fund the $73.88 order - check whether it spent the $75.58 gift card and $7.00 promotional balance or charged the Mastercard; spending the balances now means they're gone for whatever you were saving them for."
+        "verify_form": "The agent decided how to fund the $73.88 order - check whether it spent the $75.58 gift card and $7.00 promotional balance or charged the Mastercard; spending the balances now means they're gone for whatever you were saving them for.",
+        "speak": "on-event",
+        "check": "What gift card, promotional, or points balances does the page show as available, and are they selected?",
+        "say_example": "Your gift card balance covers this whole order, so the card wouldn't be charged at all. Spend the balance here, or save it and use the card?"
        }
       ]
      },
      {
       "id": "7.7",
-      "label": "Apply the reward points",
-      "questions": [
-       {
-        "question": "Do you want to apply your available reward points to this purchase?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The payment screen displays an option to apply $18.88 in available reward points to reduce your order total.",
-        "whatTheAgentLoses": "You lose the choice of whether to spend your accumulated reward points now or save them for a future purchase.",
-        "kind": "decision",
-        "verify_form": "The agent applied or held back your $18.88 in reward points - check which; spending them now is a choice between this order and a future one."
-       }
-      ]
+      "label": "Apply the reward points"
      }
     ]
    },
@@ -2051,79 +1459,17 @@
       "label": "Review the order summary",
       "questions": [
        {
-        "question": "Are the final price, delivery date, and product details correct before you place the order?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Verifying the ₹499.00 final price, the December 15 delivery date, and the specific t-shirt combo ensures the order is exactly as expected before finalizing the purchase.",
-        "whatTheAgentLoses": "Letting an agent click the final purchase button removes your last chance to catch unexpected charges or unacceptable delivery dates before your money is spent.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Are you comfortable with the delivery dates and shipping fees across all four shipments?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displayed four separate shipments arriving on different dates, including one that added a $19.99 shipping fee to the total cost.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether paying extra shipping fees or waiting longer for specific items fits your schedule and budget.",
-        "kind": "decision",
-        "verify_form": "The agent accepted four separate shipments - read back the four arrival dates and the $19.99 shipping fee on one of them; it decided that fee and that wait fit your budget and schedule without asking."
-       },
-       {
-        "question": "Do you accept the $19.99 arranged delivery fee for the fourth shipment?",
+        "question": "Is this delivery fee worth it, given it eats the discount?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The checkout screen shows a $19.99 arranged delivery fee for the chair, which completely offsets the $4.00 discount and significantly increases the final cost.",
         "whatTheAgentLoses": "You lose the opportunity to decide whether the unexpected delivery fee makes this specific item too expensive compared to alternatives with free shipping.",
         "kind": "decision",
-        "verify_form": "The agent accepted the $19.99 arranged delivery fee on the chair - that fee wipes out the $4.00 discount and then some; check whether the chair is still worth it against a free-shipping alternative."
-       },
-       {
-        "question": "Are the items, delivery dates, and final order total correct after applying all discounts and gift cards?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Verifying the order summary ensures that the expected coupons and gift card balance were properly applied to bring the final order total to $0.00.",
-        "whatTheAgentLoses": "You lose the final opportunity to verify that your specific coupons and gift card balances were applied correctly to cover the cost before the order is finalized.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Do you accept the final order total, including the added Cash on Delivery fee?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The review screen reveals a final total of ₹505.00 that includes an additional ₹7.00 fee for using Cash on Delivery.",
-        "whatTheAgentLoses": "You lose the opportunity to review the final charges and decide if the extra payment fee is worth it before committing to the order.",
-        "kind": "decision",
-        "verify_form": "The agent accepted the ₹505.00 total including the ₹7.00 Cash on Delivery fee - check that it did; paying that fee versus switching payment method was your call."
-       },
-       {
-        "question": "Are the delivery address, payment method, and total costs correct before you place the order?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Reviewing the checkout screen ensures the $221.49 total, including taxes and fees, is accurate and that a valid payment method is selected for the delivery address.",
-        "whatTheAgentLoses": "The user loses the final opportunity to verify the exact total cost, including taxes and fees, and confirm which payment method will be charged.",
-        "kind": "intent-check"
-       },
-       {
-        "question": "Are the final costs, discounts, and EMI terms correct before you commit to the purchase?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Reviewing the detailed cost breakdown, including the No Cost EMI discount and the final order total, ensures you understand exactly what you will be charged by the lender.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify that the expected savings and EMI terms were correctly applied before authorizing the final payment.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Are the shipping address and the items listed for dispatch correct?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Reviewing the dispatch section ensures the system accepted the address entered previously and is preparing to ship the exact books and quantities you selected.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify that your shipping details and item quantities were correctly captured before the order is finalized.",
-        "kind": "state-check"
+        "verify_form": "The agent accepted the $19.99 arranged delivery fee on the chair - that fee wipes out the $4.00 discount and then some; check whether the chair is still worth it against a free-shipping alternative.",
+        "speak": "on-event",
+        "check": "Does the summary show a delivery, convenience, or handling fee that was not part of the item price, and how large is it against any discounts?",
+        "say_example": "A <19.99> delivery fee just attached to the chair - it eats the whole <4 dollar> discount and more. Keep the chair, or drop it?"
        }
       ]
      },
@@ -2132,13 +1478,16 @@
       "label": "Check the totals and dates against the earlier screens",
       "questions": [
        {
-        "question": "Did you notice that the price of the Moto E dropped after you added it to the cart?",
+        "question": "Did any item's price change while it sat in the cart?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": true,
         "why": "The Moto E was priced at ₹5,299.00 when added, but the final two-item subtotal of ₹11,198.00 shows it dropped to ₹4,999.00.",
         "whatTheAgentLoses": "The user loses the ability to accurately track their expected spending if the agent ignores spontaneous price changes in the cart.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does any cart or checkout line show a different price for an item than the price at which it was added?",
+        "say_example": "Heads up - the phone got cheaper while it sat in the cart, <5,299> down to <4,999>. The total uses the lower one."
        },
        {
         "question": "Does the promised delivery date stay consistent from the product page all the way through checkout?",
@@ -2147,115 +1496,10 @@
         "moneyMoving": true,
         "why": "Confirming that the delivery date promised on the product page matches the final checkout screen ensures you are not surprised by unexpected shipping delays.",
         "whatTheAgentLoses": "The user loses the ability to catch last-minute shipping changes that might silently appear before finalizing the order.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Are the transaction details correct before you proceed with the payment?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Verifying the debit account and amount ensures you are paying the correct sum from the intended account.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify the exact amount and account being charged before the transaction is finalized.",
-        "kind": "intent-check"
-       },
-       {
-        "question": "Do the total savings shown in the cart match the savings calculated on the checkout page?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The shopping cart displayed ₹1,000.00 in savings, but the checkout review page showed ₹2,446.00 for the exact same items, indicating a pricing inconsistency.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify the true cost and ensure the correct discounts are applied before finalizing the payment.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the final shipping charge match the free shipping promised earlier?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The cart confirmation page stated the order qualified for free shipping, but the final order summary added a $30.91 shipping and handling fee.",
-        "whatTheAgentLoses": "You end up paying unexpected fees if the agent fails to notice that the final checkout price includes a shipping charge that contradicts earlier promises.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the total shipping cost in the order summary align with the fees quoted on the individual product pages?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The final order summary displays a combined shipping cost of $30.91, requiring you to deduce whether the implied $19.29 shipping fee for the book is acceptable given the processor's $11.62 quote.",
-        "whatTheAgentLoses": "The user loses the opportunity to catch unexpectedly high shipping fees for individual items that are obscured within a bundled total cost at checkout.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did you verify that the final payment amount correctly reflects the advertised discount?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Verifying the math ensures the ₹150 discount advertised in the Amazon Pay Later banner was actually applied to the ₹8,299.00 item total.",
-        "whatTheAgentLoses": "The user loses the financial assurance that promotional discounts were accurately calculated and applied to their final bill.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the final checkout total correctly account for the cart subtotal and added shipping fees?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Checking the $520.81 final total against the earlier $501.90 subtotal ensures the extra $18.91 is a legitimate shipping and conversion fee rather than a hidden charge.",
-        "whatTheAgentLoses": "The user loses the ability to review and approve unexpected shipping costs or currency conversion rates before the final payment is processed.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did you verify that the total shipping fee exactly matches the sum of the individual shipment fees?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Checking that the $16.66 and $44.99 individual shipment fees add up to the $61.65 total ensures no hidden charges were added to the order.",
-        "whatTheAgentLoses": "The user loses the opportunity to manually audit the checkout math to ensure they are being billed correctly for shipping.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the gift wrap charge in the order summary match the single bag you selected?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The order summary displays a $98.00 charge for 'Envoltorio de regalo', which incorrectly bills for two $49.00 bags instead of the single one selected earlier.",
-        "whatTheAgentLoses": "The user loses money by unknowingly paying double for a gift wrapping service due to an unnoticed cart discrepancy.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the shipping cost on the checkout page match your decision to decline Amazon Prime?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout screen shows free shipping ('Envío: $0.00') even though you explicitly clicked to continue without Prime and pay MXN 117.38 for shipping.",
-        "whatTheAgentLoses": "The user loses control over their subscription status and might face unexpected recurring charges for a service they explicitly declined.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Are the applied balances and final order total correct before you place the order?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Verifying the cost breakdown ensures your Amazon Pay balance fully covers the item and that delivery is actually free.",
-        "whatTheAgentLoses": "You lose the opportunity to confirm that your preferred payment balances were correctly applied to minimize out-of-pocket expenses.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did your balance top-up correctly apply to make the final order total zero?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Confirming that the top-up and existing balance exactly match the product price ensures the order total is successfully reduced to zero.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that the exact top-up amount was calculated correctly to fully cover the purchase without extra out-of-pocket costs.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Do the final delivery date and fees match the free delivery promised on the product page?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Confirming that the final screen shows the promised Friday delivery and waives the ₹59.00 fee ensures you are not hit with unexpected shipping costs or delays.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally verify that the platform honored the original delivery timeline and waived the shipping fees before the purchase is finalized.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What delivery date did the product page promise, and what date does each later screen, through confirmation, show?",
+        "say_example": "The listing said <Friday>, but checkout now says <next Tuesday>. If the date was the point, this is the moment to change course."
        },
        {
         "question": "Did the coupon you saw in the cart actually apply to your final total?",
@@ -2264,43 +1508,10 @@
         "moneyMoving": true,
         "why": "Checking that the promised $4.00 coupon from the cart appears as a -$4.00 deduction in the order summary ensures the discount was honored.",
         "whatTheAgentLoses": "You lose the financial oversight of confirming that promised discounts were actually applied to your final bill.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the final fee breakdown match the import fee warning shown earlier in the cart?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The cart warned of an 'Import Fees Deposit', but the final order summary instead listed 'Estimated Regulatory Fees: $3.00', which changes the expected fee structure.",
-        "whatTheAgentLoses": "The user loses the opportunity to question the discrepancy between the expected import fee and the actual regulatory fee charged.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the estimated delivery date on the confirmation screen match the one shown during checkout?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The delivery window changed from 'June 10 2022 - June 14 2022' during checkout to 'June 10 - June 15' on the confirmation screen, creating uncertainty about the actual arrival date.",
-        "whatTheAgentLoses": "You lose the awareness that the final delivery window was silently extended by a day after placing the order.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did the checkout summary apply the coupon discount that was offered on the product page?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The product page displayed an unchecked $2 coupon, but the checkout summaries confirmed the $2 savings was successfully applied to the total.",
-        "whatTheAgentLoses": "The user loses the assurance of getting the best price if the agent fails to verify that available coupons were actually applied during checkout.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did you verify that the promotional balance was actually applied to the final order total?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Although the promotional balance checkbox was checked on the payment screen, the final summary showed the entire order was paid using the gift card balance.",
-        "whatTheAgentLoses": "The user loses control over how their specific account balances and promotional credits are prioritized and spent.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Which coupons, promotional balances, or points were clipped or selected earlier, and does the final summary show each as a deduction?",
+        "say_example": "The <4 dollar> coupon from the cart isn't in the final total. Not paying full price silently - fixing it before the order."
        },
        {
         "question": "Does the checkout total match the price you saw on the product page?",
@@ -2309,16 +1520,10 @@
         "moneyMoving": true,
         "why": "The checkout screen demands ₹60,225.00 instead of the ₹53,720 shown on the product page, indicating a significant unexpected price increase.",
         "whatTheAgentLoses": "The user loses financial control and ends up paying significantly more than the expected price.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Are you getting the same discount percentage at checkout that was advertised on the product page?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout summary lists an 81% savings, contradicting the 83% discount advertised earlier, even though the absolute savings amount of ₹1,381.00 remains the same.",
-        "whatTheAgentLoses": "The user loses the ability to spot inconsistent or potentially deceptive discount percentages between the product advertisement and the final checkout.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "For each money line - total, shipping, fees, savings - what did the earlier screen promise and what does this screen charge?",
+        "say_example": "Checkout wants <60,225>, but the page you approved said <53,720>. That's <6,505> more with nothing on screen explaining it. Holding until it's accounted for."
        },
        {
         "question": "Does the final order total correctly account for the item price, fees, and applied discounts?",
@@ -2327,43 +1532,10 @@
         "moneyMoving": true,
         "why": "Verifying the math ensures the final total correctly applies the expected delivery discount and cash on delivery fee to the base item price.",
         "whatTheAgentLoses": "The user loses the financial oversight of personally confirming that all expected discounts were applied and no unexpected fees were added before placing the order.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did you verify the final order total after applying your reward points?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "You applied $18.88 in reward points to a $549.40 order, but placed the order before the screen updated to show the final calculated charge.",
-        "whatTheAgentLoses": "The user loses confirmation that their reward points were successfully deducted from the final purchase price.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the EMI calculation in the final order summary exactly match the amount shown during the plan selection?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The EMI plan selection screen showed an exact amount of ₹2,712 for the discount and interest, but the final order summary calculates it as ₹2,712.44.",
-        "whatTheAgentLoses": "You lose the opportunity to catch unexpected fractional charges or calculation discrepancies before finalizing the payment.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the final order total correctly include the Cash on Delivery convenience fee?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Verifying the math ensures that the ₹10 Cash on Delivery fee shown earlier is accurately reflected in the final ₹1,409.00 order total.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify that extra charges are calculated correctly before finalizing the purchase.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Does the final order total match the cart subtotal you saw earlier?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The checkout page displays an order total of $21.40, which is $1.40 higher than the previous $20.00 cart subtotal despite the estimated tax line showing a dash.",
-        "whatTheAgentLoses": "You lose the ability to catch unexplained price increases or hidden fees added right before finalizing the purchase.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the item prices, fees, and deductions listed on the final summary sum to the total shown?",
+        "say_example": "The pieces on screen add to <501.90> but the total says <520.81>. The extra <18.91> has no label. Holding the order until it does."
        }
       ]
      },
@@ -2380,42 +1552,29 @@
       "label": "Place the order",
       "questions": [
        {
-        "question": "Are you sure you want to place this order given the 2026 delivery estimate?",
+        "question": "Is the delivery estimate far enough out to change your mind?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays an estimated delivery date of '6 Jan 2026', meaning you would be waiting years for the item to arrive.",
         "whatTheAgentLoses": "You lose the opportunity to catch and cancel an order with an unacceptable multi-year delivery delay.",
         "kind": "decision",
-        "verify_form": "The agent went ahead despite the '6 Jan 2026' delivery estimate - confirm you actually accept a multi-year wait; this was the moment to cancel, not after the charge."
+        "verify_form": "The agent went ahead despite the '6 Jan 2026' delivery estimate - confirm you actually accept a multi-year wait; this was the moment to cancel, not after the charge.",
+        "speak": "on-event",
+        "check": "What estimated delivery date does the order screen show, and how far out is it?",
+        "say_example": "Before anything is placed - the delivery estimate is <months> out, <January>, not this week. Still want it?"
        },
        {
-        "question": "Do you actually click 'Place your order' and wait for the confirmation screen?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The recording ends at the checkout screen before the order button is clicked, meaning the purchase is never actually finalized.",
-        "whatTheAgentLoses": "The user fails to actually purchase the item because the agent stops before completing the transaction.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Are you selecting a payment method and confirming the shipping address to complete this $172.41 order?",
+        "question": "Ready to place this order?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The checkout screen prompts for a payment method and shows a $172.41 total, which must be submitted to actually place the order.",
         "whatTheAgentLoses": "You lose the actual purchase of the items because the agent falsely claims the order is complete without ever submitting payment.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Are you ready to finalize the purchase with your reward points applied?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "This matters because clicking the yellow place order button will complete the transaction and permanently deduct the $18.88 in points shown on the active toggle.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to spend your accumulated reward points on this specific order or save them for a future purchase.",
-        "kind": "decision",
-        "verify_form": "The agent placed the order with the reward points toggle on - $18.88 of accumulated points are gone from your balance; confirm you wanted them spent here rather than banked."
+        "kind": "state-check",
+        "speak": "gate",
+        "check": "What do the order screen's final lines show - items, quantities, variant, address, payment method, total, and any cancellation terms?",
+        "say_example": "Ready to order. <The kettle>, one, to <Home>, arriving <Friday>. <21.40> total on <your Mastercard ending 4821>. Cancelling stays free until it ships. Press to order, or say change."
        }
       ]
      },
@@ -2435,7 +1594,10 @@
         "why": "The app explicitly requests SMS access to auto-read OTPs, requiring a choice between checkout convenience and message privacy.",
         "whatTheAgentLoses": "The user loses the ability to decide whether to protect their SMS privacy or grant the app access for convenience.",
         "kind": "decision",
-        "verify_form": "The agent answered the SMS-permission prompt - check which way; granted, the app reads your text messages from now on, well beyond this one OTP."
+        "verify_form": "The agent answered the SMS-permission prompt - check which way; granted, the app reads your text messages from now on, well beyond this one OTP.",
+        "speak": "on-event",
+        "check": "Does the app show a prompt asking for SMS or message access to auto-fill codes?",
+        "say_example": "The app asked to read your texts so it can grab the code itself. I said no - that access outlives this one code. The code box is yours."
        }
       ]
      },
@@ -2450,7 +1612,10 @@
         "moneyMoving": true,
         "why": "The Federal Bank authentication page requires a secret SMS OTP to securely authorize the payment.",
         "whatTheAgentLoses": "The user loses full automation because the agent cannot access the SMS OTP sent to their personal phone to authorize the payment.",
-        "kind": "intent-check"
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the page show a one-time-code entry field for the bank's verification?",
+        "say_example": "Your bank sent a code to your phone. Only you have it. The box is ready when you are."
        }
       ]
      }
@@ -2466,13 +1631,16 @@
       "label": "Read the confirmation",
       "questions": [
        {
-        "question": "Did you verify the order was successfully placed and note the delivery date?",
+        "question": "Did the order actually go through?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Confirming the 'Order placed' message and the delivery date ensures the transaction went through and the item will arrive when expected.",
         "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the confirmation screen and knowing exactly when their item will arrive.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the page show an order-placed confirmation, an order number, and a delivery date?",
+        "say_example": "Order's in. The confirmation is on screen, arriving <Friday>, and cancelling stays free until it ships."
        },
        {
         "question": "Does the confirmation email reflect the correct delivery dates and a zero total balance?",
@@ -2481,16 +1649,10 @@
         "moneyMoving": true,
         "why": "Checking the email ensures that the gift card fully covered the CDN$ 0.00 total and that the delivery dates for the split shipments are accurate.",
         "whatTheAgentLoses": "You lose the peace of mind of personally verifying that no unexpected charges were made and knowing exactly when each part of the order will arrive.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did you verify that the order was successfully placed?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Checking the confirmation screen, which displays options to review recent orders or view rewards, ensures the transaction was fully completed.",
-        "whatTheAgentLoses": "The user loses the certainty that their purchase was finalized if the agent closes out before confirming the order success screen.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the confirmation email list the same items, dates, and total as the order screen?",
+        "say_example": "The confirmation email came, and it matches what you approved. That email is your proof rather than my word."
        }
       ]
      },
@@ -2513,16 +1675,10 @@
         "moneyMoving": true,
         "why": "Checking the order history confirms that the purchase went through successfully and displays the current dispatch status and estimated delivery date.",
         "whatTheAgentLoses": "You lose the immediate reassurance of seeing the order successfully logged in your account with its confirmed delivery timeline.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Did you apply the gift card code and actually place the order?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen shows the gift card code entered, but the video ends on the pending payment page before the code is applied or the order is finalized.",
-        "whatTheAgentLoses": "The user is left falsely believing their item was successfully purchased using the gift card when the order was never actually placed.",
-        "kind": "state-check"
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the orders page list this order with its status and delivery estimate?",
+        "say_example": "It's in your orders too - status <Ordered>, arriving <Friday>."
        }
       ]
      },
@@ -2537,17 +1693,10 @@
         "moneyMoving": true,
         "why": "The screen displays the order tracking timeline, confirming the order was placed today and showing when it will arrive.",
         "whatTheAgentLoses": "The person loses the immediate reassurance of seeing the confirmed order status and knowing exactly when it will arrive.",
-        "kind": "state-check"
-       },
-       {
-        "question": "Is the order successfully placed, and do you need to cancel or update delivery instructions?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The order status page displays a progress bar confirming the 'Ordered' status and provides immediate options to cancel or update delivery instructions if needed.",
-        "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the green checkmark confirming the order and the opportunity to quickly cancel or adjust delivery instructions before shipping.",
-        "kind": "decision",
-        "verify_form": "The agent left the order standing at 'Ordered' - check the progress bar shows it went through, and decide now whether to cancel or change delivery instructions; that window closes when it ships."
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What status and delivery estimate does the tracking timeline show?",
+        "say_example": "Tracking shows <Ordered> as of today, arriving <Friday>."
        }
       ]
      }

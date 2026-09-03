@@ -16,7 +16,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "Reviewing the daily itinerary showing existing plans like the Prime Time Cafe and Sci-Fi Dinner ensures you do not double-book or create scheduling conflicts.",
-      "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally review your schedule and ensure the new reservation perfectly complements your existing trip plans."
+      "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally review your schedule and ensure the new reservation perfectly complements your existing trip plans.",
+      "speak": "if-wrong",
+      "check": "Which reservations and times does the itinerary page list for the target day?",
+      "say_example": "Your itinerary already has <Sci-Fi Dine-In> at <6> that night. This new booking would overlap it. Keep both, or move one?"
      }
     ],
     "children": [
@@ -30,7 +33,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The Disney Dining Plan Calculator provides a suggested booking order to maximize your chances of getting reservations.",
-        "whatTheAgentLoses": "The user loses the strategic advantage of prioritizing the hardest-to-book restaurants first."
+        "whatTheAgentLoses": "The user loses the strategic advantage of prioritizing the hardest-to-book restaurants first.",
+        "speak": "never",
+        "check": "What booking order does the planning tool's page recommend?",
+        "say_example": "Followed the planner's order: <California Grill> first, hardest to get."
        },
        {
         "question": "Do you want to book the hardest-to-get reservation first, as recommended by the dining calculator?",
@@ -38,7 +44,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dining calculator recommended booking California Grill first based on difficulty, but the booking process started with Topolino's Terrace instead.",
-        "whatTheAgentLoses": "The user loses the ability to override automated recommendations and prioritize a specific restaurant based on their own personal preference."
+        "whatTheAgentLoses": "The user loses the ability to override automated recommendations and prioritize a specific restaurant based on their own personal preference.",
+        "speak": "if-wrong",
+        "check": "Which restaurant does the planner's page rank hardest to get, and which restaurant is the current booking page for?",
+        "say_example": "The planner says <California Grill> goes first because it's the hardest to get. We're booking <Topolino's> ahead of it. Grab <California Grill> first instead?"
        }
       ]
      },
@@ -52,7 +61,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Knowing the exact 6 AM ET opening time and the 60-day rule ensures you log on at the right moment to secure highly competitive reservations.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to personally strategize your booking timeline based on your specific hotel accommodations."
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally strategize your booking timeline based on your specific hotel accommodations.",
+        "speak": "on-event",
+        "check": "What does the page state about when the booking window opens and how far ahead reservations can be made?",
+        "say_example": "Reservations for your dates open <June 1> at <6 AM Eastern>. I can't book anything until then."
        }
       ]
      },
@@ -66,7 +78,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Reviewing the presentation slide with your planned itinerary ensures you know exactly which locations and dates to search for before starting the reservation process.",
-        "whatTheAgentLoses": "You lose the ability to personally review and finalize your curated itinerary of vacation meals before initiating the bookings."
+        "whatTheAgentLoses": "You lose the ability to personally review and finalize your curated itinerary of vacation meals before initiating the bookings.",
+        "speak": "gate",
+        "check": "Which restaurants, dates, and meal times does the itinerary or planning page list as targets?",
+        "say_example": "Which places am I booking, and when? Give me the restaurants, the days, and the meal times, and I'll take it from there."
        }
       ]
      }
@@ -82,12 +97,15 @@
       "label": "Pick the channel",
       "questions": [
        {
-        "question": "Which app should you open to start making the reservation?",
+        "question": "Which reservation platform should this booking go through, given each one carries its own restaurant inventory and gift card policy?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Selecting the green TheFork app icon from the home screen determines which platform's restaurant inventory and specific gift card policies you will use.",
-        "whatTheAgentLoses": "The user loses the ability to choose their preferred reservation platform based on personal factors like having a specific gift card to redeem."
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred reservation platform based on personal factors like having a specific gift card to redeem.",
+        "speak": "never",
+        "check": "Which booking platforms does the page or app list the restaurant on?",
+        "say_example": "Booked through <TheFork>. That's where <the restaurant> takes reservations."
        }
       ]
      },
@@ -101,15 +119,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The home screen shows the OpenTable app icon, indicating that the app must be downloaded and configured with an account before starting the reservation process.",
-        "whatTheAgentLoses": "The user loses the chance to decide which third-party reservation service to download and share their personal account details with."
-       },
-       {
-        "question": "Is the reservation app already installed, and from where should you launch it?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays an 'Open' button for the Eatigo app, confirming it is already downloaded and ready to use.",
-        "whatTheAgentLoses": "The user loses the ability to decide their preferred workflow for launching the app, such as navigating to the home screen instead of opening it directly from the app store."
+        "whatTheAgentLoses": "The user loses the chance to decide which third-party reservation service to download and share their personal account details with.",
+        "speak": "never",
+        "check": "Does the store page show 'Open' for the app, or an install button?",
+        "say_example": "The app wasn't set up, so I used the website instead."
        }
       ]
      },
@@ -123,7 +136,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Choosing the official Universal Orlando link from the search results ensures you are booking directly through the venue's legitimate reservation system.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that the agent selected the authentic, official website instead of a potentially unreliable third-party booking platform."
+        "whatTheAgentLoses": "You lose the ability to personally verify that the agent selected the authentic, official website instead of a potentially unreliable third-party booking platform.",
+        "speak": "never",
+        "check": "Which result's shown address is the venue's own domain?",
+        "say_example": "Went in through the official <Universal Orlando> site, not a third-party page."
        }
       ]
      },
@@ -132,12 +148,15 @@
       "label": "Find the reservations section",
       "questions": [
        {
-        "question": "How do you initiate a new reservation when your upcoming list is empty?",
+        "question": "Is there already a booking for this restaurant in the upcoming-reservations list before a new one is started?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows that you have no upcoming reservations, requiring you to tap the 'Reserve a Table' button to begin searching.",
-        "whatTheAgentLoses": "The user loses the immediate visual confirmation that they currently have no other upcoming reservations scheduled."
+        "whatTheAgentLoses": "The user loses the immediate visual confirmation that they currently have no other upcoming reservations scheduled.",
+        "speak": "never",
+        "check": "Does the page show a button to start a new reservation?",
+        "say_example": "Started a new booking from the empty reservations screen."
        }
       ]
      },
@@ -151,7 +170,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The map displays numerous yellow pins for dining locations, but it isn't immediately clear if these pins link to a reservation system or just provide location information.",
-        "whatTheAgentLoses": "You lose the opportunity to realize this map is merely a directory and quickly switch to a platform that actually supports reservations."
+        "whatTheAgentLoses": "You lose the opportunity to realize this map is merely a directory and quickly switch to a platform that actually supports reservations.",
+        "speak": "never",
+        "check": "Do the map pins open pages with a reserve button, or only location details?",
+        "say_example": "The map only shows locations. There's no booking there, so I went back to search."
        },
        {
         "question": "Is the specific restaurant you want actually available on this platform, or do you need to check a different booking site?",
@@ -159,7 +181,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Restaurants typically partner with only one reservation system (like Resy, OpenTable, or Yelp), so if it doesn't appear in the search results, you may need to switch apps rather than change your dining plans.",
-        "whatTheAgentLoses": "The user loses the opportunity to dine at their preferred restaurant because the agent might settle for an alternative instead of checking the correct booking platform."
+        "whatTheAgentLoses": "The user loses the opportunity to dine at their preferred restaurant because the agent might settle for an alternative instead of checking the correct booking platform.",
+        "speak": "on-event",
+        "check": "Does the platform's search show a result matching the requested restaurant's name?",
+        "say_example": "<Carbone> isn't on <OpenTable>. It looks like they take bookings on <Resy>, so I'm switching over."
        }
       ]
      },
@@ -173,7 +198,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a 'RESERVE NOW' button for 'Hard Rock Cafe® Orlando', which redirects to its own independent booking system rather than the platform's native one.",
-        "whatTheAgentLoses": "You lose the ability to specifically choose or avoid restaurants based on whether they require navigating a different third-party reservation interface."
+        "whatTheAgentLoses": "You lose the ability to specifically choose or avoid restaurants based on whether they require navigating a different third-party reservation interface.",
+        "speak": "on-event",
+        "check": "Does the reserve button state it goes to the restaurant's own booking site rather than the platform's?",
+        "say_example": "<Hard Rock Cafe> books on its own site, not through <the app>. I'm following the reserve button over there."
        }
       ]
      },
@@ -187,7 +215,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a system dialog asking for location access, which determines if the app can automatically search for restaurants near you.",
-        "whatTheAgentLoses": "You lose control over whether your precise physical location is shared with the reservation platform."
+        "whatTheAgentLoses": "You lose control over whether your precise physical location is shared with the reservation platform.",
+        "speak": "never",
+        "check": "Does the page show a system prompt asking for location access?",
+        "say_example": "Said no to location access. I searched by the city you gave me instead."
        },
        {
         "question": "Do you want to allow the app to access your calendar?",
@@ -195,7 +226,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen displayed a system prompt asking for permission to access the device's calendar.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether a third-party app can view and modify their personal calendar."
+        "whatTheAgentLoses": "The user loses the ability to decide whether a third-party app can view and modify their personal calendar.",
+        "speak": "never",
+        "check": "Does the page show a system prompt asking for calendar access?",
+        "say_example": "Said no to calendar access. The booking doesn't need it."
        }
       ]
      }
@@ -216,7 +250,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dashboard shows your linked plans and tickets, which are required to book dining 60 days ahead of your visit.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally confirming your itinerary is properly linked before the highly competitive booking window opens."
+        "whatTheAgentLoses": "You lose the peace of mind of personally confirming your itinerary is properly linked before the highly competitive booking window opens.",
+        "speak": "on-event",
+        "check": "Does the account dashboard list the linked tickets or plans the booking window requires?",
+        "say_example": "Your park tickets aren't linked to the account. Without that, the <60-day> booking window doesn't open for you."
        }
       ]
      },
@@ -225,20 +262,15 @@
       "label": "Decide login, guest, or new account",
       "questions": [
        {
-        "question": "Should you log in to an account first, or proceed as a guest to set your search location?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides options to find tables by location or restaurant name, and deciding whether to log in now affects how your reservation is tracked.",
-        "whatTheAgentLoses": "You lose the ability to decide if the reservation should be linked to your personal account for rewards and easy tracking."
-       },
-       {
         "question": "Do you want to log in, create an account, or continue as a guest?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen prompts you to log in, create a new account, or continue as a guest to reserve your dining experience.",
-        "whatTheAgentLoses": "Delegating this means the agent might book as a guest, causing you to miss out on having the reservation linked to your personal account and loyalty profile."
+        "whatTheAgentLoses": "Delegating this means the agent might book as a guest, causing you to miss out on having the reservation linked to your personal account and loyalty profile.",
+        "speak": "never",
+        "check": "Which options does the page offer: log in, create an account, or continue as guest?",
+        "say_example": "Used your account so the booking lands in your reservations list."
        }
       ]
      },
@@ -252,15 +284,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "You need to use the specific email associated with your wine club membership to ensure your benefits are applied to the reservation.",
-        "whatTheAgentLoses": "The agent might use a standard autofill email instead of your specific club-associated email, causing you to lose your membership benefits."
-       },
-       {
-        "question": "Which login method should you use?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents multiple authentication options like Facebook, Google, Apple, or a standard email and password, which determines how your identity is verified.",
-        "whatTheAgentLoses": "The user loses control over which personal account or third-party identity provider is linked to their dining profile and reservation history."
+        "whatTheAgentLoses": "The agent might use a standard autofill email instead of your specific club-associated email, causing you to lose your membership benefits.",
+        "speak": "gate",
+        "check": "Does the page state that benefits or membership apply only to a specific account or email?",
+        "say_example": "Which email should this booking go under? You mentioned the <wine club>. If I use that email, your member benefits count."
        }
       ]
      },
@@ -269,12 +296,15 @@
       "label": "Enter the credentials",
       "questions": [
        {
-        "question": "What is the password for your MyDisney account?",
+        "question": "The password for this account is your credential - do you take over entering it rather than handing it to the agent?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a MyDisney login dialog that requires a password to continue the reservation process.",
-        "whatTheAgentLoses": "The user loses the security of keeping their MyDisney account password private."
+        "whatTheAgentLoses": "The user loses the security of keeping their MyDisney account password private.",
+        "speak": "gate",
+        "check": "Does the page show a sign-in form asking for a password?",
+        "say_example": "The site wants your password to sign in. The field is yours. I don't need to see it. Tell me when you're in."
        },
        {
         "question": "Are these the correct login credentials to access your account?",
@@ -282,7 +312,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a sign-in modal with a pre-filled email and password, so you must confirm they belong to the intended account before proceeding.",
-        "whatTheAgentLoses": "You lose the ability to choose which specific account is used to book and track this reservation."
+        "whatTheAgentLoses": "You lose the ability to choose which specific account is used to book and track this reservation.",
+        "speak": "if-wrong",
+        "check": "What email does the sign-in form show pre-filled?",
+        "say_example": "The sign-in box is pre-filled with <j.smith@mail.com>. That's not the email you gave me. Check it before it goes through."
        }
       ]
      }
@@ -299,7 +332,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen shows a broad list of available restaurants like '10 Degrees South' and '4th & Swift', so refining the search helps narrow down the options to better match your preferences.",
-      "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally filter the broad list of restaurants by specific criteria like price or cuisine."
+      "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally filter the broad list of restaurants by specific criteria like price or cuisine.",
+      "speak": "never",
+      "check": "How many results does the page say the search returned?",
+      "say_example": "Narrowed <715> results with your <budget> and <area> before picking."
      }
     ],
     "children": [
@@ -308,36 +344,15 @@
       "label": "Set the search area",
       "questions": [
        {
-        "question": "Should you try refreshing the current location results or tap the Search tab to start a new search?",
+        "question": "The home screen returned no restaurants for the detected current location - is the detected area wrong, or should the search move somewhere else?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The home screen shows no results for your current location and offers a refresh button, but tapping the search tab allows you to manually enter new criteria.",
-        "whatTheAgentLoses": "The user loses the opportunity to decide whether to retry finding nearby restaurants or to manually search for a different area."
-       },
-       {
-        "question": "What specific location or restaurant type do you want to search for?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a search input field with options like 'Current Location' and a text field for custom queries.",
-        "whatTheAgentLoses": "The user loses the ability to specify their exact desired dining location or cuisine."
-       },
-       {
-        "question": "Is the app set to the correct location before you start your search?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen displays the current location as Bologna, which is crucial to verify so you don't accidentally search for restaurants in the wrong city.",
-        "whatTheAgentLoses": "You lose the ability to personally confirm the starting location and apply your own specific knowledge, such as knowing to watch out for gift card acceptance."
-       },
-       {
-        "question": "Which geographical area do you want to search for a restaurant in?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displayed a location dropdown with specific metros and regions like the Caribbean and Puerto Rico, which dictates where the search will be focused.",
-        "whatTheAgentLoses": "You lose the ability to specify the exact city or region you want to dine in, potentially resulting in a reservation in the wrong location."
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to retry finding nearby restaurants or to manually search for a different area.",
+        "speak": "never",
+        "check": "Does the page show zero results for the current location?",
+        "say_example": "Nothing near the detected spot, so I searched <your city> by name."
        },
        {
         "question": "How should I define the search area?",
@@ -345,7 +360,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The interface provides options to use the current location, select a recent location, or choose from a list of featured metropolitan areas.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to search near their physical location or browse restaurants in a specific city."
+        "whatTheAgentLoses": "The user loses the ability to decide whether to search near their physical location or browse restaurants in a specific city.",
+        "speak": "never",
+        "check": "Which area options does the page offer: current location, recent, or listed metros?",
+        "say_example": "Searched <Rome>. That's the area you gave me."
        }
       ]
      },
@@ -354,12 +372,15 @@
       "label": "Search by name",
       "questions": [
        {
-        "question": "Should you select 'California Grill' from the search suggestions?",
+        "question": "Is the autocomplete suggestion being taken the exact restaurant and location you meant to book?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displayed 'California Grill' as an auto-complete suggestion, and clicking it saves time and ensures you navigate to the correct restaurant's page.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify that the auto-suggested restaurant is the exact location they intended to book."
+        "whatTheAgentLoses": "The user loses the opportunity to verify that the auto-suggested restaurant is the exact location they intended to book.",
+        "speak": "never",
+        "check": "Does a search suggestion match the requested restaurant's name?",
+        "say_example": "Took the suggestion straight to <the restaurant's> page."
        }
       ]
      },
@@ -373,7 +394,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search tab displays top categories like sushi, Italian, and top-rated to help narrow down the restaurant choices.",
-        "whatTheAgentLoses": "You lose the opportunity to spontaneously browse and discover new restaurants based on what catches your eye."
+        "whatTheAgentLoses": "You lose the opportunity to spontaneously browse and discover new restaurants based on what catches your eye.",
+        "speak": "never",
+        "check": "Which category tabs does the search page list?",
+        "say_example": "Browsed <Italian>. That's the cuisine you asked for."
        },
        {
         "question": "Which location category do you want to browse for your dining reservation?",
@@ -381,15 +405,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The page organizes restaurants by location tabs like CityWalk, Theme Park, and Hotel, requiring you to choose an area to see the relevant dining options.",
-        "whatTheAgentLoses": "You lose the opportunity to browse and select a restaurant based on its specific location within the resort."
-       },
-       {
-        "question": "Which of your previously visited restaurants do you want to book again?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The profile's recent activity list displays past reservations like Gaucho Piccadilly, providing a convenient way to recall and select a familiar favorite.",
-        "whatTheAgentLoses": "You lose the opportunity to browse your own dining history and spontaneously choose a favorite past experience to revisit."
+        "whatTheAgentLoses": "You lose the opportunity to browse and select a restaurant based on its specific location within the resort.",
+        "speak": "never",
+        "check": "Which location tabs does the page organize restaurants under?",
+        "say_example": "Looked under <Theme Park>, where your restaurant is."
        },
        {
         "question": "Do you want to filter your restaurant search by a specific geographic area?",
@@ -397,7 +416,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displayed a list of locations like BGC, Makati, and Ortigas to narrow down the restaurant options.",
-        "whatTheAgentLoses": "The user loses the ability to specify their preferred neighborhood for the reservation."
+        "whatTheAgentLoses": "The user loses the ability to specify their preferred neighborhood for the reservation.",
+        "speak": "never",
+        "check": "Which area filters does the page list?",
+        "say_example": "Filtered to <Makati>, the area you named."
        }
       ]
      },
@@ -406,12 +428,15 @@
       "label": "Filter the results",
       "questions": [
        {
-        "question": "How would you like to filter the 239 available restaurants to narrow down your choices?",
+        "question": "How would you like to narrow the results down?",
         "cluster": "refine",
         "moment": "Now",
         "moneyMoving": false,
         "why": "With 239 restaurants showing various ratings and discounts on the map, applying filters helps narrow down the overwhelming number of options.",
-        "whatTheAgentLoses": "You lose the ability to prioritize specific preferences like higher discounts or specific cuisines when narrowing down the large list of options."
+        "whatTheAgentLoses": "You lose the ability to prioritize specific preferences like higher discounts or specific cuisines when narrowing down the large list of options.",
+        "speak": "never",
+        "check": "How many results does the page show, and which filters does it offer?",
+        "say_example": "Filtered <239> places down with your <budget> and <cuisine>."
        },
        {
         "question": "Do you want to filter the search to only show restaurants that accept gift cards?",
@@ -419,7 +444,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Toggling the 'Gift Card accettata' filter ensures you can pay with a gift card but reduces the available options from 239 to 161 restaurants.",
-        "whatTheAgentLoses": "You lose the ability to decide whether using a gift card is worth limiting your dining options."
+        "whatTheAgentLoses": "You lose the ability to decide whether using a gift card is worth limiting your dining options.",
+        "speak": "never",
+        "check": "Does the page offer a gift-card filter, and how many results remain with it on?",
+        "say_example": "You're paying with the gift card, so I kept the filter on. <161> places take it."
        },
        {
         "question": "Which price tier do you want to filter the restaurant results by?",
@@ -427,7 +455,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Selecting a specific price tier like the '$' option ensures the search results match your budget constraints.",
-        "whatTheAgentLoses": "You lose the ability to strictly enforce your personal budget preferences for the meal."
+        "whatTheAgentLoses": "You lose the ability to strictly enforce your personal budget preferences for the meal.",
+        "speak": "never",
+        "check": "Which price tiers does the filter list?",
+        "say_example": "Kept it to <$$> and under, for your budget."
        },
        {
         "question": "Which neighborhood do you want to search in?",
@@ -435,15 +466,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a list of specific neighborhoods like Buckhead and Downtown that can be used to narrow down the restaurant options.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might select a restaurant in an inconvenient or undesirable part of the city."
-       },
-       {
-        "question": "Does tapping 'Cancel' on the filter menu discard your active search or just close the menu?",
-        "cluster": "facts",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "Knowing how the cancel button behaves prevents you from accidentally losing your current list of refined results and having to start the search over.",
-        "whatTheAgentLoses": "The user loses time and search progress if the agent accidentally wipes out the active search by misunderstanding the cancel button's behavior."
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a restaurant in an inconvenient or undesirable part of the city.",
+        "speak": "never",
+        "check": "Which neighborhoods does the filter list?",
+        "say_example": "Searched <Buckhead>, the neighborhood you gave."
        },
        {
         "question": "How do you want to sort the list of restaurants?",
@@ -451,7 +477,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Dining' page displays 140 options with a 'Sort By' dropdown currently set to 'Suggested for you'.",
-        "whatTheAgentLoses": "The user loses the ability to choose how the restaurants are ordered to best find what they are looking for."
+        "whatTheAgentLoses": "The user loses the ability to choose how the restaurants are ordered to best find what they are looking for.",
+        "speak": "on-event",
+        "check": "What is the sort dropdown set to?",
+        "say_example": "The list is sorted by <Suggested for you>, which is partly paid placement. I'm sorting by <rating and distance> instead."
        }
       ]
      },
@@ -464,44 +493,15 @@
       "label": "Choose from the results",
       "questions": [
        {
-        "question": "Which restaurant should you choose to view in detail?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays 715 available restaurants with varying ratings, cuisines, and timeslots, requiring you to pick one that matches your preferences.",
-        "whatTheAgentLoses": "You lose the opportunity to personally weigh factors like exceptional ratings, specific cuisines, and exact timeslot availability when picking a dining spot."
-       },
-       {
-        "question": "Which restaurant should you select from the map based on the available ratings and discount offers?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The map displays multiple restaurant pins with varying ratings and discounts up to 50%, making it important to weigh these factors before selecting a place to dine.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally balance the trade-off between a restaurant's rating and its discount offer when making a selection."
-       },
-       {
-        "question": "Which restaurant do you want to select for the reservation?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a list of available restaurants like Bigfire, and selecting one dictates the location of your dining experience.",
-        "whatTheAgentLoses": "The user loses the ability to choose a restaurant based on their specific cuisine preferences or past experiences."
-       },
-       {
         "question": "Which restaurant do you choose from the list of available options?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays multiple restaurants with varying cuisines, prices, distances, and available time slots, requiring you to weigh these factors to pick the best option.",
-        "whatTheAgentLoses": "You lose the ability to personally balance the subjective trade-offs between a restaurant's rating, distance, price, and exact time slot availability."
-       },
-       {
-        "question": "Do any of these trending restaurants and their discounted time slots appeal to you, or should you go back to look elsewhere?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays highly rated trending options like Brasserie on 3 and Vikings with time-based discounts up to 30%, so deciding whether to select one or keep searching impacts both the dining experience and cost.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally evaluate the trade-offs between specific restaurant ratings, locations, and discount offers before deciding to abandon the current list."
+        "whatTheAgentLoses": "You lose the ability to personally balance the subjective trade-offs between a restaurant's rating, distance, price, and exact time slot availability.",
+        "speak": "gate",
+        "check": "Which restaurants does the results list show, with their ratings, prices, distances, and available times?",
+        "say_example": "Two good fits. <Bigfire>: <4.7> stars, <10 minutes> away, has your <7 pm>. <Vivo>: <4.5> stars, closer, only <8:15> left. Which one?"
        },
        {
         "question": "Is the selected restaurant a 'Sponsored' or 'Ad' result rather than the best organic match for your search?",
@@ -509,15 +509,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Platforms often pin paid advertisements to the top of the search results, which may not actually match your preferred location, cuisine, or rating.",
-        "whatTheAgentLoses": "The user loses the ability to filter out paid placements and might end up booking a suboptimal restaurant simply because it was listed first."
-       },
-       {
-        "question": "Which restaurant and time slot should you choose for your reservation?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple restaurants like 50's Prime Time Café alongside various time slots, so this choice dictates your dining location and schedule.",
-        "whatTheAgentLoses": "Delegating this decision means you lose the ability to personally weigh the restaurant options and reviews against the convenience of the available times."
+        "whatTheAgentLoses": "The user loses the ability to filter out paid placements and might end up booking a suboptimal restaurant simply because it was listed first.",
+        "speak": "on-event",
+        "check": "Does the result carry a Sponsored or Ad label?",
+        "say_example": "The top result is a sponsored ad, so I'm skipping it."
        }
       ]
      },
@@ -531,15 +526,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search dropdown shows multiple locations for the same restaurant name, such as Washington DC and Chicago, requiring you to pick the correct city.",
-        "whatTheAgentLoses": "The user loses the ability to ensure the reservation is booked in their actual city rather than a distant branch of the same restaurant."
-       },
-       {
-        "question": "Which search suggestion matches the business you want to reserve?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Choosing the correct suggestion from the dropdown ensures you navigate to the specific Atwater Vineyards page rather than unrelated businesses located in Atwater Village.",
-        "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the exact intended business rather than a similarly named location."
+        "whatTheAgentLoses": "The user loses the ability to ensure the reservation is booked in their actual city rather than a distant branch of the same restaurant.",
+        "speak": "gate",
+        "check": "Which locations does the page list under the same restaurant name?",
+        "say_example": "There's more than one <Founding Farmers>. One in <Washington DC>, one in <Chicago>. Which city is yours?"
        }
       ]
      },
@@ -554,7 +544,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen displays tabs for photos, menus, and reviews, which help verify the restaurant's vibe and food quality before committing to a reservation.",
-        "whatTheAgentLoses": "You lose the opportunity to visually inspect the dishes and read recent customer feedback to ensure the restaurant meets your expectations."
+        "whatTheAgentLoses": "You lose the opportunity to visually inspect the dishes and read recent customer feedback to ensure the restaurant meets your expectations.",
+        "speak": "never",
+        "check": "Which detail tabs does the venue page offer?",
+        "say_example": "Checked the menu and reviews before booking. Both are fine for what you asked."
        }
       ],
       "children": [
@@ -568,7 +561,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen shows the reservation page for Topolino's Terrace at Disney's Riviera Resort, so confirming this ensures you are booking the correct dining location.",
-          "whatTheAgentLoses": "You lose the opportunity to verify the specific restaurant and its resort location before initiating the booking process."
+          "whatTheAgentLoses": "You lose the opportunity to verify the specific restaurant and its resort location before initiating the booking process.",
+          "speak": "if-wrong",
+          "check": "Which restaurant does the page title name?",
+          "say_example": "This page is for <Topolino's Terrace>, but you asked for <California Grill>. Going back."
          },
          {
           "question": "Do you want to expand and read the full restaurant description?",
@@ -576,15 +572,21 @@
           "moment": "On demand",
           "moneyMoving": false,
           "why": "The screen shows a truncated description ending with 'Read more', and expanding it reveals complete details about the dining experience.",
-          "whatTheAgentLoses": "You lose the chance to personally evaluate the full restaurant description to ensure the venue matches your specific expectations."
+          "whatTheAgentLoses": "You lose the chance to personally evaluate the full restaurant description to ensure the venue matches your specific expectations.",
+          "speak": "never",
+          "check": "Does the description end in a Read more control?",
+          "say_example": "Read the full description. Nothing in it changes your booking."
          },
          {
-          "question": "Does the restaurant accept your dining plan, and are there special menu events that change the pricing?",
+          "question": "Does the restaurant accept your dining plan for the dates you are booking?",
           "cluster": "",
           "moment": null,
           "moneyMoving": false,
           "why": "The screen explicitly notes that starting May 15, 2025, California Grill has special menu offerings and Dining Plans are not accepted.",
-          "whatTheAgentLoses": "The user might end up booking a restaurant where they cannot use their prepaid dining plan, resulting in unexpected out-of-pocket costs."
+          "whatTheAgentLoses": "The user might end up booking a restaurant where they cannot use their prepaid dining plan, resulting in unexpected out-of-pocket costs.",
+          "speak": "on-event",
+          "check": "What does the page state about Dining Plan acceptance for the selected dates?",
+          "say_example": "The page says <California Grill> stops taking the Dining Plan on <May 15>. Your dinner would be full price, out of pocket."
          }
         ]
        },
@@ -598,15 +600,21 @@
           "moment": "On demand",
           "moneyMoving": false,
           "why": "The screen displays a 'View Menu' link under the restaurant description, allowing you to check the food options before committing to a reservation.",
-          "whatTheAgentLoses": "You lose the chance to personally review the dishes and prices to ensure they fit your party's tastes."
+          "whatTheAgentLoses": "You lose the chance to personally review the dishes and prices to ensure they fit your party's tastes.",
+          "speak": "never",
+          "check": "Does the page show a View Menu link?",
+          "say_example": "Looked at the menu before booking."
          },
          {
-          "question": "Which menu should you view for your desired reservation time?",
+          "question": "Which menu should you look at for your reservation time?",
           "cluster": "select",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displays a 'Meal Period' dropdown, and selecting the correct option ensures you are reviewing the actual food available during your visit.",
-          "whatTheAgentLoses": "You lose the opportunity to personally review the correct menu to ensure the restaurant serves appealing food during your specific mealtime."
+          "whatTheAgentLoses": "You lose the opportunity to personally review the correct menu to ensure the restaurant serves appealing food during your specific mealtime.",
+          "speak": "never",
+          "check": "Which meal periods does the menu dropdown list?",
+          "say_example": "Checked the <dinner> menu. That's the one for your time."
          },
          {
           "question": "Does the menu have suitable options for everyone in your party?",
@@ -614,7 +622,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "Reviewing menu sections like \"Kids' Create-Your-Own Entrées\" ensures that there are appealing choices for children or picky eaters before committing to a reservation.",
-          "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify that the specific dishes offered will satisfy your family's unique tastes."
+          "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify that the specific dishes offered will satisfy your family's unique tastes.",
+          "speak": "if-wrong",
+          "check": "Which menu sections does the page list?",
+          "say_example": "You asked for <kid-friendly food>, and this menu has no kids' section. Keep this place anyway, or look elsewhere?"
          },
          {
           "question": "What do you do when the requested menu page fails to load?",
@@ -622,7 +633,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displayed an HTTP 404 error instead of the menu, requiring a decision on how to return to the active reservation flow.",
-          "whatTheAgentLoses": "The user loses the opportunity to verify the food options before committing to the reservation if the agent simply ignores the broken link and books anyway."
+          "whatTheAgentLoses": "The user loses the opportunity to verify the food options before committing to the reservation if the agent simply ignores the broken link and books anyway.",
+          "speak": "never",
+          "check": "Does the page show an error instead of the menu?",
+          "say_example": "The menu link was broken, so I couldn't check it. Booked anyway, as you asked."
          },
          {
           "question": "Are you comfortable with the special anniversary menu replacing the standard offerings during your visit?",
@@ -630,7 +644,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "The restaurant's page prominently displays a notice that special menu offerings will be in place for their 30-year anniversary during the selected dates.",
-          "whatTheAgentLoses": "The user might arrive expecting their favorite standard dishes and be disappointed to find a limited or altered anniversary menu instead."
+          "whatTheAgentLoses": "The user might arrive expecting their favorite standard dishes and be disappointed to find a limited or altered anniversary menu instead.",
+          "speak": "on-event",
+          "check": "What does the page state about special menu offerings during the selected dates?",
+          "say_example": "Heads up, during your dates they're serving a special <anniversary> menu, not the regular one. Different dishes, different prices."
          }
         ]
        },
@@ -644,7 +661,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displays specific diner feedback about food, service, and ambiance that could change your mind about booking this restaurant.",
-          "whatTheAgentLoses": "You lose the chance to personally weigh the nuances of customer reviews to decide if specific flaws are dealbreakers for your occasion."
+          "whatTheAgentLoses": "You lose the chance to personally weigh the nuances of customer reviews to decide if specific flaws are dealbreakers for your occasion.",
+          "speak": "never",
+          "check": "What rating and review count does the page show?",
+          "say_example": "<4.6> stars over <900> reviews. That's solid."
          }
         ]
        },
@@ -658,23 +678,16 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen shows details for a quick-service restaurant but lacks any reservation options, meaning a table cannot be booked here.",
-          "whatTheAgentLoses": "The user loses the chance to successfully book a table if the agent wastes time trying to reserve a spot at a location that does not accept reservations."
+          "whatTheAgentLoses": "The user loses the chance to successfully book a table if the agent wastes time trying to reserve a spot at a location that does not accept reservations.",
+          "speak": "on-event",
+          "check": "Does the venue page show a reserve button or state that reservations are taken?",
+          "say_example": "<This place> doesn't take reservations. It's walk-up only. Nothing to book here. Want somewhere that does?"
          }
         ]
        },
        {
         "id": "4.8.5",
-        "label": "Read the discount conditions",
-        "questions": [
-         {
-          "question": "Do you want to check the restaurant's reviews or promotional terms before adjusting the reservation details?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays specific discount times and promotional warnings that could influence your booking decision.",
-          "whatTheAgentLoses": "The user loses the chance to read customer reviews or understand specific promotional conditions before the agent proceeds with the booking."
-         }
-        ]
+        "label": "Read the discount conditions"
        },
        {
         "id": "4.8.6",
@@ -686,7 +699,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "The screen shows a 'Sapphire Reserve Exclusive Tables' banner, indicating that certain reservations are hidden or reserved for specific cardholders.",
-          "whatTheAgentLoses": "The user loses access to exclusive or hard-to-get reservations that they are entitled to through their premium credit card perks."
+          "whatTheAgentLoses": "The user loses access to exclusive or hard-to-get reservations that they are entitled to through their premium credit card perks.",
+          "speak": "never",
+          "check": "Does the page show tables or times restricted to a card program?",
+          "say_example": "Some tables were <Sapphire Reserve> only. I noted that in case you have one."
          },
          {
           "question": "Which specific reservation experience do you want to book?",
@@ -694,31 +710,21 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displays multiple reservation types, such as a Curated Wine Tasting and a Valentines & Wine package, each with different pricing and party size rules.",
-          "whatTheAgentLoses": "You lose the opportunity to browse and select the specific tasting experience or event package that best suits your occasion."
+          "whatTheAgentLoses": "You lose the opportunity to browse and select the specific tasting experience or event package that best suits your occasion.",
+          "speak": "gate",
+          "check": "Which reservation types does the page list, with each one's price, prepayment, and party rules?",
+          "say_example": "This place books experiences, not just tables. The <wine tasting> is <$15> a person, prepaid. The <standard visit> is free to book. Which one?"
          },
          {
-          "question": "Do you want to book the standard curated wine tasting for $15 per person, or explore other event options?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays a prepaid curated wine tasting option, but scrolling down reveals alternative experiences that might be preferred.",
-          "whatTheAgentLoses": "You lose the ability to choose a specialized tasting experience or apply membership benefits instead of defaulting to the standard option."
-         },
-         {
-          "question": "Do you want to book a standard reservation or an educational tasting event?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays distinct tabs for 'Reservations' and 'Events', indicating that special tastings are booked separately from standard visits.",
-          "whatTheAgentLoses": "The user misses the opportunity to discover and choose a specialized educational tasting rather than a standard table reservation."
-         },
-         {
-          "question": "Do you notice the contradiction between the event description and the pricing label?",
+          "question": "Does the event description's statement of what the price covers match the per-person price label?",
           "cluster": "facts",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The event description explicitly states the price covers a two-person package, which contradicts the '$40 per person' label displayed directly below it.",
-          "whatTheAgentLoses": "The user loses the opportunity to catch and clarify confusing pricing discrepancies, potentially leading to unexpected charges or booking the wrong party size."
+          "whatTheAgentLoses": "The user loses the opportunity to catch and clarify confusing pricing discrepancies, potentially leading to unexpected charges or booking the wrong party size.",
+          "speak": "if-wrong",
+          "check": "What does the description say the price covers, and what does the price label under it say?",
+          "say_example": "The description says the price covers <two people>. The label under it says <$40 per person>. Those disagree by double. I'll check the real total before anything is paid."
          }
         ]
        }
@@ -732,44 +738,15 @@
     "note": "5.1 first wherever a form opens pre-set. 5.2 to 5.4 in whatever order the surface asks - as search criteria before 4 on aggregator routes, on the venue's booking panel after 4 on venue routes, and re-entered inside the widget after the pick (l-eC resets all three). Op82 does 5.2 to 5.4 in one spoken sentence via 5.5. then, against the chosen venue: 5.6 where slots hide, 5.7 - with 5.8 wherever discounts ride the slots - and 5.9 and 5.10 as the platform interjects.",
     "questions": [
      {
-      "question": "What party size and date are you booking for?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen requires selecting a party size and a specific date from the calendar to check dining availability at the chosen restaurant.",
-      "whatTheAgentLoses": "The user gives up the ability to spontaneously adjust their party size or pick an alternate date if their preferred day is fully booked."
-     },
-     {
       "question": "What location, date, time, and party size should you use for your search?",
       "cluster": "hand over",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen requires you to set a location, date, time, and party size to find available restaurants that match your dining plans.",
-      "whatTheAgentLoses": "You lose the ability to specify exactly where, when, and for how many people you want to dine."
-     },
-     {
-      "question": "What party size, date, and specific time slot would you like to select for your reservation?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen requires you to choose the number of guests, a date from the calendar, and an available dinner time slot to proceed with the booking.",
-      "whatTheAgentLoses": "Delegating this step means you lose the ability to strategically pick a time slot that coincides with special experiences, like watching the evening fireworks."
-     },
-     {
-      "question": "Which available date and time slot should you select?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The calendar displays multiple available dates in April and May with various breakfast and dinner time slots to choose from.",
-      "whatTheAgentLoses": "Delegating this step means losing the ability to pick the exact date and meal time that best fits your personal schedule."
-     },
-     {
-      "question": "Should you set an availability alert for your ideal time instead of settling for one of the currently available slots?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The interface provides a 'Notify me' option, which allows you to wait for a cancellation rather than immediately booking a less convenient time.",
-      "whatTheAgentLoses": "The user loses the opportunity to potentially secure their preferred dining time if the agent just picks whatever is currently available."
+      "whatTheAgentLoses": "You lose the ability to specify exactly where, when, and for how many people you want to dine.",
+      "speak": "gate",
+      "check": "Which of the search form's fields — location, date, time, party size — show no value yet?",
+      "say_example": "Where and when am I booking, and for how many? Give me the place or area, the date, the time, and how many of you."
      },
      {
       "question": "Does the button for the desired time slot say 'Join Waitlist' instead of 'Reserve'?",
@@ -777,7 +754,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "Restaurants without guaranteed availability often display waitlist times that look visually similar to standard reservation slots.",
-      "whatTheAgentLoses": "The user loses the guarantee of a table, mistakenly believing they have a confirmed booking when they are only on a standby list."
+      "whatTheAgentLoses": "The user loses the guarantee of a table, mistakenly believing they have a confirmed booking when they are only on a standby list.",
+      "speak": "on-event",
+      "check": "What does the button for the requested time slot say?",
+      "say_example": "The <7 pm> button says Join Waitlist, not Reserve. That's a maybe, not a table. Waitlist, or a real table at <8:15>?"
      }
     ],
     "children": [
@@ -786,20 +766,15 @@
       "label": "Accept or adjust the defaults",
       "questions": [
        {
-        "question": "Do you want to adjust the party size, date, or time before selecting a restaurant?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The top bar currently defaults to '2 - 19:00 Tonight', which dictates the availability of the restaurants listed below.",
-        "whatTheAgentLoses": "You lose the flexibility to adjust your preferred dining time or party size based on the initial availability shown."
-       },
-       {
         "question": "Should you specify a booking time and party size now, or skip this step?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a modal asking for your preferred date, time, and party size with options to either apply these filters or skip them.",
-        "whatTheAgentLoses": "You lose the choice of whether to browse restaurants freely first or immediately restrict your search to places with specific availability."
+        "whatTheAgentLoses": "You lose the choice of whether to browse restaurants freely first or immediately restrict your search to places with specific availability.",
+        "speak": "never",
+        "check": "Does the page show a modal asking for date, time, and party size with a skip option?",
+        "say_example": "Set your date, time, and party in the first popup so the times shown are real for you."
        },
        {
         "question": "Are the auto-detected location and default search parameters correct for your reservation?",
@@ -807,7 +782,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The homepage automatically sets a detected location and default parameters like '2 people' at '7:00 PM' that dictate which restaurants are initially suggested.",
-        "whatTheAgentLoses": "You lose the opportunity to browse curated local suggestions or correct an inaccurate auto-detected location before initiating a search."
+        "whatTheAgentLoses": "You lose the opportunity to browse curated local suggestions or correct an inaccurate auto-detected location before initiating a search.",
+        "speak": "if-wrong",
+        "check": "What location, party size, date, and time does the search bar currently show?",
+        "say_example": "The search is set to <2 people, tonight at 7> in <Bologna>. You asked for <4 on Friday> in <Rome>. Fixing it before I search."
        }
       ]
      },
@@ -816,20 +794,15 @@
       "label": "Pick the party size",
       "questions": [
        {
-        "question": "How many guests will be in your party?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires selecting a party size from 1 to 12, with some options offering a 30% discount.",
-        "whatTheAgentLoses": "You lose the opportunity to specify the exact number of diners or adjust your party size to qualify for the promotional discount."
-       },
-       {
         "question": "Does the platform indicate that your party size is too large for online booking and requires calling the restaurant directly?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Restaurants often cap online reservations at 6 to 8 people, showing 'no availability' for larger groups even if they actually have space.",
-        "whatTheAgentLoses": "The user might falsely believe the restaurant is fully booked and give up, instead of making the required phone call to secure a large table."
+        "whatTheAgentLoses": "The user might falsely believe the restaurant is fully booked and give up, instead of making the required phone call to secure a large table.",
+        "speak": "on-event",
+        "check": "What does the page state as the largest party size bookable online?",
+        "say_example": "Online booking here stops at <6> people. For your <10>, the page says to call the restaurant. I can't call. That part is yours."
        }
       ]
      },
@@ -843,67 +816,42 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search bar displays a default date of 'Jul 20, 2023', requiring you to open the calendar to select your actual desired dining day.",
-        "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to visually review the calendar and pick the date that best fits your schedule."
+        "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to visually review the calendar and pick the date that best fits your schedule.",
+        "speak": "never",
+        "check": "What date does the search bar currently show?",
+        "say_example": "Set the date to <Friday June 12>, the day you gave me."
        },
        {
-        "question": "Which date should you select for the reservation?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows multiple upcoming dates like today and tomorrow that offer a 30% discount on food.",
-        "whatTheAgentLoses": "You lose the opportunity to personally decide which discounted day best fits your schedule."
-       },
-       {
-        "question": "Which date do you want to select to check for available reservation times?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows multiple dates with a 50% discount, making the date selection important for both scheduling and savings.",
-        "whatTheAgentLoses": "The user loses the ability to choose the specific date that best fits their schedule while taking advantage of the discount."
-       },
-       {
-        "question": "Which date do you want to make the reservation for?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays interactive calendars for upcoming months, requiring a specific day to be selected before checking available time slots.",
-        "whatTheAgentLoses": "You lose the ability to choose the exact day you want to dine and to see how far in advance the restaurant accepts reservations."
-       },
-       {
-        "question": "Are you checking if the on-screen calendar contradicts the stated last available date?",
+        "question": "Does the calendar offer selectable dates beyond the stated last available date?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The narrator claims January 4 is the last available date, but the screen shows January 5 as an active, selectable option.",
-        "whatTheAgentLoses": "The user loses out on potential booking options if the agent relies on incorrect audio cues rather than the actual on-screen availability."
+        "whatTheAgentLoses": "The user loses out on potential booking options if the agent relies on incorrect audio cues rather than the actual on-screen availability.",
+        "speak": "if-wrong",
+        "check": "What does the page state as the last available date, and what is the latest date the calendar offers as selectable?",
+        "say_example": "The page says <January 4> is the last day, but the calendar lets me pick <January 5> too. I'll try it and believe whatever the times list shows."
        }
       ]
      },
      {
       "id": "5.4",
-      "label": "Pick the time window",
-      "questions": [
-       {
-        "question": "What time do you want the reservation for?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed the homepage search bar with the time set to 7:00 PM.",
-        "whatTheAgentLoses": "The user loses control over the specific time they will be dining."
-       }
-      ]
+      "label": "Pick the time window"
      },
      {
       "id": "5.5",
       "label": "Speak the request",
       "questions": [
        {
-        "question": "Did Siri correctly transcribe your request for a table for four on Wednesday, December 26 at 7 PM?",
+        "question": "Did the assistant transcribe your party size, date, and time correctly?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Verifying the on-screen transcription ensures the voice assistant is searching for the correct party size, date, and time.",
-        "whatTheAgentLoses": "You lose the ability to instantly catch and correct a voice transcription error before the system retrieves incorrect restaurant options."
+        "whatTheAgentLoses": "You lose the ability to instantly catch and correct a voice transcription error before the system retrieves incorrect restaurant options.",
+        "speak": "if-wrong",
+        "check": "What party size, date, and time does the on-screen transcription show?",
+        "say_example": "The screen heard <a table for two on Tuesday>. You said <four on Wednesday>. Fixing it before it searches."
        }
       ]
      },
@@ -912,12 +860,15 @@
       "label": "Expand the hidden slots",
       "questions": [
        {
-        "question": "Do you need to click 'Load More' because your desired evening time slot is hidden from the initial list?",
+        "question": "Does the times list end in a 'Load More' control, with later slots still hidden behind it?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The initial time selection screen only displays afternoon slots up to 5:15 PM, and you must actively click 'Load More' to reveal the later dinner times.",
-        "whatTheAgentLoses": "The agent might incorrectly report that the restaurant has no dinner availability if it fails to realize the later times are hidden behind a pagination button."
+        "whatTheAgentLoses": "The agent might incorrectly report that the restaurant has no dinner availability if it fails to realize the later times are hidden behind a pagination button.",
+        "speak": "never",
+        "check": "Does the times list end in a Load More control?",
+        "say_example": "Expanded the times list before concluding anything. The evening slots were behind Load More."
        }
       ]
      },
@@ -931,71 +882,27 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen lists multiple available dinner slots between 5:00 PM and 10:00 PM, requiring a selection that fits your specific schedule.",
-        "whatTheAgentLoses": "You lose the ability to perfectly coordinate the meal time with other specific evening events or personal preferences."
+        "whatTheAgentLoses": "You lose the ability to perfectly coordinate the meal time with other specific evening events or personal preferences.",
+        "speak": "never",
+        "check": "Which time slots does the page list as available?",
+        "say_example": "Your <7 pm> was there, so I took it."
        },
        {
-        "question": "Which of the available lunch time slots do you prefer?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays numerous available lunch times between 11:00 AM and 3:45 PM, requiring a specific selection.",
-        "whatTheAgentLoses": "You lose the ability to pick the exact reservation time that best fits your schedule for the day."
-       },
-       {
-        "question": "Which alternative timeslot do you select when your preferred time is unavailable?",
+        "question": "Which alternative timeslot should you pick since your time isn't available?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed that the requested 7:00 PM slot was unavailable, requiring a choice between the available 5:00 PM, 8:00 PM, or 8:15 PM options.",
-        "whatTheAgentLoses": "You lose the ability to weigh your personal schedule flexibility to decide whether eating significantly earlier or later is better for your plans."
-       },
-       {
-        "question": "Which of the available time slots do you want to select for your reservation?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple available time slots between 13:30 and 14:30, requiring you to pick the exact one that fits your schedule.",
-        "whatTheAgentLoses": "You lose the opportunity to adjust your reservation to a slightly earlier or later available slot based on your personal schedule flexibility."
-       },
-       {
-        "question": "Which available time slot should you select for your reservation?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays available slots at 5:45 PM, 6:00 PM, and 6:15 PM, requiring you to pick the one that best fits your schedule.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to check the menu or read diner reviews before committing to the reservation."
-       },
-       {
-        "question": "Which of the available time slots do you want to select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The details pop-up shows specific available times like 6:45 PM, 7:00 PM, and 7:15 PM to choose from.",
-        "whatTheAgentLoses": "The user loses the ability to pick the exact time that best fits their schedule from the available options."
+        "whatTheAgentLoses": "You lose the ability to weigh your personal schedule flexibility to decide whether eating significantly earlier or later is better for your plans.",
+        "speak": "gate",
+        "check": "Which time slots does the page list as available, and is the requested time among them?",
+        "say_example": "No <7 pm> left. There's <5>, <8>, and <8:15>. I can also join the waitlist or watch for a cancellation. Which do you want?"
        }
       ]
      },
      {
       "id": "5.8",
-      "label": "Trade the discount against the time",
-      "questions": [
-       {
-        "question": "Which discounted time slot best fits your dinner plans?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple time slots with a 30% discount, requiring you to balance the promotional savings with your preferred dining time.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-off between eating at your ideal time and taking advantage of the specific promotional discounts offered."
-       },
-       {
-        "question": "Should you prioritize a larger discount or a more convenient dining time?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays time slots with varying discounts from 30% up to 50%, requiring a choice between maximizing savings and picking a preferred schedule.",
-        "whatTheAgentLoses": "The user loses the ability to weigh their personal schedule preferences against the financial benefit of a larger discount."
-       }
-      ]
+      "label": "Trade the discount against the time"
      },
      {
       "id": "5.9",
@@ -1007,7 +914,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen prompts you to select a seating option, showing that Standard and Outdoor are available while High top is marked unavailable.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose your preferred dining atmosphere, such as opting to sit indoors rather than outdoors."
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose your preferred dining atmosphere, such as opting to sit indoors rather than outdoors.",
+        "speak": "on-event",
+        "check": "Which seating options does the page list as available and unavailable?",
+        "say_example": "No standard tables at that time, only <outdoor> and <bar> seats. Which is fine for you?"
        },
        {
         "question": "If you selected outdoor seating, does the restaurant guarantee an indoor table if it rains, or will the reservation be cancelled?",
@@ -1015,7 +925,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Many restaurants do not have backup indoor space for patio reservations, meaning bad weather could ruin the dining plans.",
-        "whatTheAgentLoses": "The user loses the opportunity to check the weather policy and decide if the risk of a cancelled meal is acceptable."
+        "whatTheAgentLoses": "The user loses the opportunity to check the weather policy and decide if the risk of a cancelled meal is acceptable.",
+        "speak": "on-event",
+        "check": "What does the page state happens to outdoor reservations in bad weather?",
+        "say_example": "The page says patio bookings <aren't moved inside if it rains>. Bad weather and the table is gone."
        },
        {
         "question": "Does the selected time slot have a visual icon, such as an umbrella or barstool, indicating a non-standard seating area?",
@@ -1023,7 +936,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Platforms often use small visual icons instead of text labels to indicate that a specific time slot is for outdoor, high-top, or bar seating.",
-        "whatTheAgentLoses": "The user might arrive expecting a standard dining room table but be seated outside in poor weather or at the bar because they could not see the visual-only cue."
+        "whatTheAgentLoses": "The user might arrive expecting a standard dining room table but be seated outside in poor weather or at the bar because they could not see the visual-only cue.",
+        "speak": "on-event",
+        "check": "Does the selected slot carry a seating label other than standard?",
+        "say_example": "That <7:15> slot has a little <umbrella> mark. It's an outdoor table, not a regular one."
        }
       ]
      },
@@ -1037,7 +953,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays a 'Conflicting Reservations' modal warning that keeping the new reservation will automatically cancel the existing one.",
-        "whatTheAgentLoses": "The user loses the opportunity to decide which reservation is more important to keep when a scheduling conflict occurs."
+        "whatTheAgentLoses": "The user loses the opportunity to decide which reservation is more important to keep when a scheduling conflict occurs.",
+        "speak": "gate",
+        "check": "What does the conflict warning say happens to the existing reservation if this one is kept?",
+        "say_example": "Booking this cancels your <existing 6 pm> reservation. The site won't keep both. Keep the old one, or swap it for this?"
        }
       ]
      }
@@ -1054,7 +973,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The 'My Dining Party' page requires assigning specific names to Guest 2, Guest 3, and Guest 4 from a dropdown menu.",
-      "whatTheAgentLoses": "You lose the ability to specify exactly which family members or friends are attending the reservation."
+      "whatTheAgentLoses": "You lose the ability to specify exactly which family members or friends are attending the reservation.",
+      "speak": "gate",
+      "check": "Which guest slots does the party page show, and which names does the dropdown offer?",
+      "say_example": "The form wants names for the other <three> seats. Who's coming? I'll pick them from your contacts."
      },
      {
       "question": "What phone number and special requests do you want to include?",
@@ -1062,15 +984,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The reservation form requires a phone number to proceed and provides an optional field for special requests.",
-      "whatTheAgentLoses": "The user loses the ability to specify their preferred contact number and communicate any specific needs or preferences to the restaurant."
-     },
-     {
-      "question": "What contact details will you provide, and do you have any special requests or occasions to include?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows a five-minute timer to enter your personal information and review important dining policies like the 15-minute grace period.",
-      "whatTheAgentLoses": "You lose the opportunity to add personalized special requests and to directly review the restaurant's specific dining rules before booking."
+      "whatTheAgentLoses": "The user loses the ability to specify their preferred contact number and communicate any specific needs or preferences to the restaurant.",
+      "speak": "always",
+      "check": "Which contact fields does the form show, and which are already filled?",
+      "say_example": "I'm putting in your name and <mobile> number now. You didn't ask for any special requests, so that stays blank."
      },
      {
       "question": "Do you need to add any dietary restrictions, accessibility requests, or celebration cakes?",
@@ -1078,23 +995,10 @@
       "moment": "Now",
       "moneyMoving": true,
       "why": "The screen offered options to add a Mickey Mouse Celebration Cake, dietary requests, or accessibility requests to the reservation.",
-      "whatTheAgentLoses": "You lose the opportunity to customize the dining experience with special cakes or ensure your dietary and accessibility needs are accommodated."
-     },
-     {
-      "question": "Are your contact details and credit card guarantee information correct, and do you agree to the guest policies?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The checkout screen requires a credit card guarantee and explicit agreement to the restaurant's guest policies to secure the reservation.",
-      "whatTheAgentLoses": "You lose the ability to verify which credit card is being used for the guarantee and to review the specific cancellation or guest policies you are agreeing to."
-     },
-     {
-      "question": "Do you want to add a special request, select an occasion, or opt into updates before finalizing the booking?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The confirmation screen provides optional fields to specify occasions, add custom requests, and toggle communication preferences before tapping the Book button.",
-      "whatTheAgentLoses": "Delegating this step means you lose the chance to personalize the reservation with specific occasions or custom requests that the restaurant should know about."
+      "whatTheAgentLoses": "You lose the opportunity to customize the dining experience with special cakes or ensure your dietary and accessibility needs are accommodated.",
+      "speak": "on-event",
+      "check": "Which request fields — dietary, accessibility, add-ons — does the form offer?",
+      "say_example": "You mentioned the <nut allergy>, so I'm putting it in the dietary box, in your words. The <celebration cake> costs extra and you didn't ask, so I'm skipping it."
      },
      {
       "question": "Did an error message appear stating that the selected time slot was taken by someone else while you were filling out the details?",
@@ -1102,7 +1006,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "Reservation systems do not always hold a table while you type, and highly sought-after slots can be booked by another user simultaneously.",
-      "whatTheAgentLoses": "The user loses the chance to immediately select an alternative time before the remaining slots are also gone."
+      "whatTheAgentLoses": "The user loses the chance to immediately select an alternative time before the remaining slots are also gone.",
+      "speak": "on-event",
+      "check": "Does the page show an error saying the selected time is no longer available?",
+      "say_example": "Someone took that table while we were filling the form. I'm back at the times list, and <8:15> is still open."
      },
      {
       "question": "How much time is currently remaining on the visual hold timer?",
@@ -1110,7 +1017,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "Reservation systems often hold the table for a strict window, displaying a ticking visual timer that dictates how fast the user must provide their details.",
-      "whatTheAgentLoses": "The user loses the awareness of urgency and might take too long deciding on special requests or finding their credit card, causing the table to be released."
+      "whatTheAgentLoses": "The user loses the awareness of urgency and might take too long deciding on special requests or finding their credit card, causing the table to be released.",
+      "speak": "never",
+      "check": "What does the hold timer on the page show?",
+      "say_example": "The form had a <5-minute> hold timer. That was plenty of time."
      }
     ],
     "children": [
@@ -1124,7 +1034,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays a reservation summary with the restaurant name, date, and time, which must be verified before clicking Next.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify the exact reservation details before the agent proceeds to finalize the booking."
+        "whatTheAgentLoses": "The user loses the opportunity to verify the exact reservation details before the agent proceeds to finalize the booking.",
+        "speak": "if-wrong",
+        "check": "What restaurant, date, time, and party size does the summary show?",
+        "say_example": "The summary says <Saturday> at <7:15> for <2>. You asked for <Friday> at <7> for <4>. Fixing it before we go on."
        }
       ]
      },
@@ -1138,7 +1051,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dining plan calculator shown earlier was configured for a trip in March 2026 for 1 adult, but the actual reservations are for April 2026 for 2 guests.",
-        "whatTheAgentLoses": "The user loses the assurance that the reservations are being made for the correct trip dates and party size."
+        "whatTheAgentLoses": "The user loses the assurance that the reservations are being made for the correct trip dates and party size.",
+        "speak": "if-wrong",
+        "check": "What dates and party sizes do the planning page and the booking page each show?",
+        "say_example": "Your planner was set up for <March, 1 adult>, but this booking says <April, 2 guests>. One of them is off. Which is right?"
        },
        {
         "question": "Does the phone number on the booking page match the official restaurant website?",
@@ -1146,7 +1062,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The Universal Orlando website and the Zomato booking page displayed different phone numbers for Antojitos, suggesting a possible mismatch in the location.",
-        "whatTheAgentLoses": "You lose the ability to catch conflicting contact details that might indicate a reservation is being made at the wrong location."
+        "whatTheAgentLoses": "You lose the ability to catch conflicting contact details that might indicate a reservation is being made at the wrong location.",
+        "speak": "if-wrong",
+        "check": "What phone number does the booking page show, and what number does the restaurant's own site show?",
+        "say_example": "The phone number on this booking page doesn't match the restaurant's own site. This might be a different location, or a stale listing. Let me check before booking."
        },
        {
         "question": "Do the available time slots on the restaurant's detail page match the ones shown in the search results?",
@@ -1154,15 +1073,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search results displayed one set of available times, but the restaurant's detail page offered a different and expanded list of options.",
-        "whatTheAgentLoses": "The user loses the opportunity to select a more convenient time slot that was only revealed after clicking through to the restaurant's detail page."
-       },
-       {
-        "question": "Does the confirmed reservation time exactly match the time you requested?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The transcribed voice request specified 7 PM, but the final confirmation screen shows a reservation for 7:15 PM.",
-        "whatTheAgentLoses": "The user loses control over their exact schedule when the agent books an alternative time slot without explicit approval."
+        "whatTheAgentLoses": "The user loses the opportunity to select a more convenient time slot that was only revealed after clicking through to the restaurant's detail page.",
+        "speak": "never",
+        "check": "Which times does the search result card list, and which does the detail page list?",
+        "say_example": "The detail page showed more times than the search card. I went by the detail page."
        }
       ]
      },
@@ -1171,44 +1085,26 @@
       "label": "Enter the contact details",
       "questions": [
        {
-        "question": "Are the reservation details correct, and what contact information should I provide?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a reservation summary, a countdown timer, and a form requiring a phone number and email to secure the table.",
-        "whatTheAgentLoses": "The person loses the chance to verify the reservation details and choose which contact information is associated with the booking."
-       },
-       {
-        "question": "What happens if you leave the required first name field blank?",
+        "question": "A red 'first name is required' error is blocking the reservation - take over the field and enter it?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a red error message stating the first name is required, which will prevent the reservation from being completed.",
-        "whatTheAgentLoses": "You lose the ability to ensure your personal details are correctly entered to successfully secure the booking."
+        "whatTheAgentLoses": "You lose the ability to ensure your personal details are correctly entered to successfully secure the booking.",
+        "speak": "never",
+        "check": "Does the page show a required-field error on the name?",
+        "say_example": "The form flagged the empty name field. I filled it and moved on."
        },
        {
-        "question": "Do you need to manually enter your contact information, or is the form already populated?",
+        "question": "Is the form pre-filled with the right person's contact details?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The narrator instructs you to enter your name, phone number, and email, but the screen shows these fields are already filled with Sophia Cruz's details.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent can recognize when a form is already auto-filled and avoid redundant data entry."
-       },
-       {
-        "question": "What phone number do you want to use for the reservation?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a phone number input field with the numeric keypad open, which is required to complete the reservation details.",
-        "whatTheAgentLoses": "You lose the ability to choose which specific phone number is associated with the booking and receives the confirmation messages."
-       },
-       {
-        "question": "Does the phone number you provided belong to a mobile device?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The form explicitly specifies 'Mobile Only' for the phone number field, likely because the restaurant sends SMS confirmations or updates.",
-        "whatTheAgentLoses": "The user might provide a landline number, causing them to miss crucial text message updates or fail the form validation."
+        "whatTheAgentLoses": "The user loses the assurance that the agent can recognize when a form is already auto-filled and avoid redundant data entry.",
+        "speak": "if-wrong",
+        "check": "What name, phone, and email does the form show pre-filled?",
+        "say_example": "The form came pre-filled for <Sophia Cruz>. That's not you. I'm replacing it with your details."
        },
        {
         "question": "Is the reservation being booked under the name of the person who will actually be arriving at the restaurant?",
@@ -1216,7 +1112,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The form often auto-fills with the account holder's name, but if you are booking on behalf of someone else, the restaurant needs the actual diner's name to seat them.",
-        "whatTheAgentLoses": "The user risks the actual diner being turned away or delayed if the agent books the table under the account holder's name instead."
+        "whatTheAgentLoses": "The user risks the actual diner being turned away or delayed if the agent books the table under the account holder's name instead.",
+        "speak": "if-wrong",
+        "check": "What name does the booking form show?",
+        "say_example": "The form put the booking under <your> name, but <your mom> is the one going. The restaurant seats by the name on the booking. Book it under hers?"
        },
        {
         "question": "Did the form reject your phone number because it requires a mobile number or a specific country code format?",
@@ -1224,55 +1123,16 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The phone input field specifies 'Mobile Only' and includes a country code selector, meaning an incorrectly formatted number or a landline will trigger a validation error and block the reservation.",
-        "whatTheAgentLoses": "The agent might get stuck on a validation error if it tries to input a landline or a number without the correct country code, failing to complete the booking."
-       },
-       {
-        "question": "Is the auto-filled contact information, such as the phone number or email, actually up to date?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Browsers and reservation apps frequently auto-fill contact forms with old or default data saved to the profile, which the restaurant will use to confirm the booking.",
-        "whatTheAgentLoses": "The user misses critical SMS updates or email confirmations because the agent submitted the form without verifying the pre-filled data."
+        "whatTheAgentLoses": "The agent might get stuck on a validation error if it tries to input a landline or a number without the correct country code, failing to complete the booking.",
+        "speak": "on-event",
+        "check": "Does the page show a validation error on the phone field, and what does it say is required?",
+        "say_example": "The form won't take that number. It wants a mobile with a country code. Is there a mobile I should use instead?"
        }
       ]
      },
      {
       "id": "6.4",
-      "label": "Add requests and the occasion",
-      "questions": [
-       {
-        "question": "Do you want to specify a special occasion for this reservation?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays an optional dropdown for occasions like a birthday or anniversary, which lets the restaurant know if you are celebrating something special.",
-        "whatTheAgentLoses": "The user loses the chance to have the restaurant acknowledge their specific celebration and potentially provide special service."
-       },
-       {
-        "question": "Do you want to add an occasion or special request before completing the reservation?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen provides optional fields to select an occasion or add a special request before you finalize the booking.",
-        "whatTheAgentLoses": "You lose the opportunity to communicate a special occasion or specific seating preference to the restaurant."
-       },
-       {
-        "question": "Do you want to note a special occasion or add any special requests before confirming?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen provides options to specify a birthday, anniversary, or other special requests before agreeing to the terms and finalizing the reservation.",
-        "whatTheAgentLoses": "You lose the chance to inform the restaurant of a celebration or specific seating preference that could enhance your dining experience."
-       },
-       {
-        "question": "Do you need to add any special requests before confirming the reservation?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays an \"Add Special Request\" option right above the \"Confirm\" button, giving you a final chance to note dietary restrictions or seating preferences.",
-        "whatTheAgentLoses": "Delegating this means the agent might skip adding important personal preferences, special occasions, or dietary needs to the reservation."
-       }
-      ]
+      "label": "Add requests and the occasion"
      },
      {
       "id": "6.5",
@@ -1284,7 +1144,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen presents optional add-on food items like charcuterie boards and olives that can be purchased before finalizing the booking.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether to purchase specific snacks in advance or rely on complimentary food options."
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to purchase specific snacks in advance or rely on complimentary food options.",
+        "speak": "never",
+        "check": "Which optional add-on items does the page offer, and at what prices?",
+        "say_example": "Skipped the add-ons (<charcuterie board>, <olives>). You didn't ask for them."
        }
       ]
      },
@@ -1298,7 +1161,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen presents checkboxes for receiving dining offers, news, and text updates that must be decided on before clicking the complete reservation button.",
-        "whatTheAgentLoses": "You lose the ability to control whether your contact information is used for marketing emails and text message reminders."
+        "whatTheAgentLoses": "You lose the ability to control whether your contact information is used for marketing emails and text message reminders.",
+        "speak": "never",
+        "check": "Which marketing checkboxes does the page show, and are any pre-ticked?",
+        "say_example": "Said no to marketing emails and texts. Kept the booking-confirmation messages on."
        }
       ]
      },
@@ -1307,20 +1173,15 @@
       "label": "Read the policies and fees",
       "questions": [
        {
-        "question": "Does the screen actually state a $10 per person cancellation fee for your party of 4?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Assuming a specific cancellation fee without it being explicitly shown on the screen can lead to unexpected charges if the actual policy differs.",
-        "whatTheAgentLoses": "The user loses financial predictability if the agent hallucinates or assumes a cancellation policy that the restaurant does not actually state."
-       },
-       {
         "question": "What are the restaurant's specific dining policies?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays important dining information like a 15-minute grace period, party size limits, and age restrictions that you need to know before going.",
-        "whatTheAgentLoses": "Delegating this means you miss seeing crucial restrictions or fees, such as a strict grace period or a cake fee, that could negatively impact your dining experience."
+        "whatTheAgentLoses": "Delegating this means you miss seeing crucial restrictions or fees, such as a strict grace period or a cake fee, that could negatively impact your dining experience.",
+        "speak": "never",
+        "check": "What policies does the page state — grace period, party limits, age rules?",
+        "say_example": "They hold the table <15 minutes> past your time, then release it."
        },
        {
         "question": "What is the exact deadline to cancel this reservation without being charged the penalty fee?",
@@ -1328,15 +1189,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The guest policies state a specific timeframe (like 24 hours or 2 hours prior) by which the reservation must be cancelled to avoid the per-person credit card guarantee fee.",
-        "whatTheAgentLoses": "The user loses the critical knowledge of how long they have to change their mind or adjust their plans without suffering a financial penalty."
-       },
-       {
-        "question": "Is the credit card being charged immediately for the meal, or is it only being held to enforce a cancellation policy?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The checkout screen dictates whether this is a prepaid experience requiring upfront payment or just a guarantee that only charges a fee if you no-show.",
-        "whatTheAgentLoses": "The user loses financial predictability if the agent commits them to an immediate charge when they only expected a card hold."
+        "whatTheAgentLoses": "The user loses the critical knowledge of how long they have to change their mind or adjust their plans without suffering a financial penalty.",
+        "speak": "on-event",
+        "check": "What does the policy text state about charges: how much, charged when or only held, and free cancellation until when?",
+        "say_example": "You can cancel free until <Friday 7 pm>. After that they charge <$10> a person. That's <$40> for the four of you."
        },
        {
         "question": "Does the booking policy state a strict time limit for your table, such as 90 minutes or 2 hours?",
@@ -1344,7 +1200,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Many restaurants enforce dining duration limits during peak hours, which might not suit a long, leisurely celebration.",
-        "whatTheAgentLoses": "The user loses the chance to realize their meal will be rushed and decide to book elsewhere for a more relaxed experience."
+        "whatTheAgentLoses": "The user loses the chance to realize their meal will be rushed and decide to book elsewhere for a more relaxed experience.",
+        "speak": "never",
+        "check": "Does the policy text state a table time limit?",
+        "say_example": "The table is yours for <90 minutes>. It's in their policy."
        }
       ]
      },
@@ -1353,68 +1212,32 @@
       "label": "Check the discount and total",
       "questions": [
        {
-        "question": "Which specific saved credit card, indicated by its last four digits, is visually pre-selected for the reservation hold?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The platform often defaults to the last used card, showing only a visual mask (e.g., 'Visa ending in 1234') that must be confirmed before proceeding.",
-        "whatTheAgentLoses": "The user might accidentally place a hold or cancellation liability on the wrong account, such as a corporate card instead of a personal one."
-       },
-       {
-        "question": "Are the reservation details correct, and do you understand the discount exclusions and rewards?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays specific conditions for the 30% discount, noting it excludes drinks and set menus, alongside a notification that you will earn [address].",
-        "whatTheAgentLoses": "You lose the ability to personally verify the exact terms of the promotional discount or add a specific special request before the reservation is finalized."
-       },
-       {
         "question": "Is your club member discount correctly applied to the final price?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The order summary lists a $10 club discount, so you must verify it is actually deducted from the $65 subtotal before paying.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your membership perks are correctly reducing the final cost."
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your membership perks are correctly reducing the final cost.",
+        "speak": "if-wrong",
+        "check": "What discount line does the summary show, and what is the total?",
+        "say_example": "The page shows your <$10 club discount>, but the total still reads <$65>. It wasn't taken off. I'm not going ahead until the math is right."
        },
        {
-        "question": "Did the summary screen warn you that your selected time slot does not actually include any promotional offers?",
+        "question": "Does the discount actually apply to this booking, and what does it exclude?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "A blue banner explicitly states 'Esta reserva não inclui ofertas' (This reservation does not include offers), alerting you that the specific time you picked does not qualify for the expected discount.",
-        "whatTheAgentLoses": "The agent might complete a full-price booking, failing to catch that the selected time slot silently dropped the promotional discount."
+        "whatTheAgentLoses": "The agent might complete a full-price booking, failing to catch that the selected time slot silently dropped the promotional discount.",
+        "speak": "on-event",
+        "check": "Does the summary show a notice that offers don't apply, or state what the discount excludes?",
+        "say_example": "Heads up, the page says this slot doesn't include the offers. The <30% off> you saw won't apply to this booking."
        }
       ]
      },
      {
       "id": "6.9",
-      "label": "Accept the terms",
-      "questions": [
-       {
-        "question": "Are the reservation details correct, and are you ready to agree to the guest policies to book the table?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen requires you to review the final booking details, acknowledge the credit card guarantee, and explicitly agree to the guest policies before confirming.",
-        "whatTheAgentLoses": "You lose the opportunity to verify the final reservation details and review the specific guest policies tied to your credit card guarantee before the booking is finalized."
-       },
-       {
-        "question": "Do you agree to the guest policies to proceed with the reservation?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout page requires checking a box to accept the guest policies before clicking next to finalize the booking.",
-        "whatTheAgentLoses": "You lose the opportunity to review the restaurant's specific guest policies, such as cancellation fees or dress codes, before agreeing to them."
-       },
-       {
-        "question": "Are you comfortable agreeing to the guest policies to finalize the reservation?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen requires entering a mobile number and checking a box to agree to the Guest Policies before the reservation can be confirmed.",
-        "whatTheAgentLoses": "The user loses the chance to read the actual guest policies, which might contain important rules or cancellation fees, before legally accepting them."
-       }
-      ]
+      "label": "Accept the terms"
      },
      {
       "id": "6.10",
@@ -1426,7 +1249,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "Tapping the reserve button finalizes the booking and constitutes your agreement to receive text messages and accept Yelp's terms of service and privacy policy.",
-        "whatTheAgentLoses": "The user loses the opportunity to read and evaluate the terms of service and privacy policy before legally consenting to them."
+        "whatTheAgentLoses": "The user loses the opportunity to read and evaluate the terms of service and privacy policy before legally consenting to them.",
+        "speak": "gate",
+        "check": "What restaurant, date, time, party size, name, card, and cancellation terms does the final page show?",
+        "say_example": "Ready to book. <The Zen Bistro>, <Friday June 12> at <7>, table for <4>, under <your name>. They'll hold your <Visa ending 4821>. There's no charge unless you don't show, then <$40>. Free to cancel until <Thursday>. Press to book, or say change."
        },
        {
         "question": "Did you complete the reservation before the hold timer expired?",
@@ -1434,7 +1260,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen shows a five-minute hold timer, but the recording ends before the reservation is actually finalized.",
-        "whatTheAgentLoses": "The user loses the guarantee of a reserved table because the booking process was never fully completed."
+        "whatTheAgentLoses": "The user loses the guarantee of a reserved table because the booking process was never fully completed.",
+        "speak": "on-event",
+        "check": "Does the page show the hold expired or the slot released?",
+        "say_example": "The hold ran out while we filled the form. The table went back to everyone. <8:15> still shows. Grab it?"
        }
       ]
      }
@@ -1444,16 +1273,6 @@
     "id": "7",
     "label": "Verify and manage the reservation",
     "note": "7.1, then 7.2 where the platform offers next steps. 7.3 on email engines; 7.4 closes the loop in the account. 7.5 unwinds a booking entirely - Op82 only; XFZo never needs it because 5.10 auto-cancelled the old ones.",
-    "questions": [
-     {
-      "question": "Are the confirmed reservation details correct, and what should you do next?",
-      "cluster": "receipts",
-      "moment": "Completion",
-      "moneyMoving": true,
-      "why": "The screen displays the final reservation details for Gaucho Piccadilly, including date, time, and party size, along with options to modify or cancel.",
-      "whatTheAgentLoses": "The user loses the ability to personally verify the exact reservation details or decide whether to take immediate follow-up actions like sending an email or getting directions."
-     }
-    ],
     "children": [
      {
       "id": "7.1",
@@ -1465,31 +1284,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Seeing the green checkmark and \"Booking Confirmed\" message alongside the specific date, time, and party size ensures the reservation was successfully processed exactly as requested.",
-        "whatTheAgentLoses": "Delegating this step means you miss the immediate peace of mind of verifying the final booking details yourself and the chance to instantly use the on-screen options to invite your guests."
-       },
-       {
-        "question": "Is the reservation successfully confirmed and what is the confirmation number?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Verifying the 'Congratulations!' message and the specific confirmation number ensures the booking was successfully processed and provides a reference for your records.",
-        "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the success message and securing the confirmation number for their own records."
-       },
-       {
-        "question": "Did you wait for the confirmation screen to appear instead of stopping at the loading spinner?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The video ends with the 'Complete reservation' button still showing a loading spinner, so the final confirmation screen is never shown.",
-        "whatTheAgentLoses": "The user cannot be certain if the reservation actually went through or if the booking failed during processing."
-       },
-       {
-        "question": "Did you verify that the reservation was successfully processed?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays a 'Reservation Confirmed' pop-up, which serves as the definitive proof that the booking is complete.",
-        "whatTheAgentLoses": "The user loses the immediate reassurance and peace of mind of seeing the final confirmation message themselves."
+        "whatTheAgentLoses": "Delegating this step means you miss the immediate peace of mind of verifying the final booking details yourself and the chance to instantly use the on-screen options to invite your guests.",
+        "speak": "if-wrong",
+        "check": "What restaurant, date, time, party size, and name does the confirmation show?",
+        "say_example": "The confirmation says <7:15>, but you asked for <7>. It shifted without saying so. Keep <7:15>, or change it?"
        },
        {
         "question": "Does the confirmation screen indicate that you have a guaranteed table, or have you merely been added to a standby waitlist?",
@@ -1497,15 +1295,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Some platforms allow you to join a waitlist when reservations are full, which does not guarantee a specific dining time.",
-        "whatTheAgentLoses": "The user might arrive at the restaurant expecting immediate seating, only to discover they are on a waitlist and face a long delay."
-       },
-       {
-        "question": "Did a transient error or success banner appear and disappear before the page fully loaded?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Sometimes a booking fails but the only indicator is a brief red toast notification, or it succeeds with a quick green banner before redirecting to the homepage.",
-        "whatTheAgentLoses": "The user is left in a state of uncertainty about whether the booking actually succeeded if the agent misses the brief visual cue."
+        "whatTheAgentLoses": "The user might arrive at the restaurant expecting immediate seating, only to discover they are on a waitlist and face a long delay.",
+        "speak": "on-event",
+        "check": "Does the confirmation say booked, or waitlist?",
+        "say_example": "This isn't a booked table. The confirmation says standby waitlist. You'd only get seats if someone cancels. Want me to keep hunting for a real table?"
        },
        {
         "question": "Does the confirmation screen state that the reservation is 'pending' or 'awaiting restaurant approval'?",
@@ -1513,7 +1306,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Some smaller or exclusive restaurants manually review bookings before confirming, meaning the table is not guaranteed immediately.",
-        "whatTheAgentLoses": "The user might mistakenly assume their plans are set and fail to check back for the actual approval or book a backup."
+        "whatTheAgentLoses": "The user might mistakenly assume their plans are set and fail to check back for the actual approval or book a backup.",
+        "speak": "on-event",
+        "check": "Does the confirmation say pending or awaiting approval?",
+        "say_example": "The booking is pending. The restaurant still has to approve it. Not guaranteed yet. I'll watch for their answer."
        }
       ]
      },
@@ -1531,7 +1327,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The confirmation email displays your final booking details alongside buttons to immediately modify or cancel the reservation.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify the emailed booking details and immediately use the provided links to make changes if your plans shifted."
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the emailed booking details and immediately use the provided links to make changes if your plans shifted.",
+        "speak": "never",
+        "check": "Does the confirmation email show modify and cancel links?",
+        "say_example": "The confirmation email has the change and cancel links. Cancelling stays free until <Thursday>."
        },
        {
         "question": "If the booking screen hangs on a loading spinner, did you receive a confirmation email to prove the reservation actually succeeded?",
@@ -1539,7 +1338,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The submission button might spin indefinitely without showing a success screen, making the confirmation email the only proof that the step didn't silently fail.",
-        "whatTheAgentLoses": "The agent might assume the booking failed and try to book again, accidentally creating a duplicate reservation, or assume it succeeded when it actually dropped."
+        "whatTheAgentLoses": "The agent might assume the booking failed and try to book again, accidentally creating a duplicate reservation, or assume it succeeded when it actually dropped.",
+        "speak": "on-event",
+        "check": "Does the page show a confirmed state, and does a confirmation email exist for this booking?",
+        "say_example": "The page hung and never confirmed, and no email has come. I can't say this went through. I'll check your reservations list before trying again, so you don't end up with two tables."
        }
       ]
      },
@@ -1548,28 +1350,15 @@
       "label": "Find the booking in the account",
       "questions": [
        {
-        "question": "Is the reservation correctly listed in your itinerary with options to change or cancel it?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Checking the itinerary confirms the booking was saved to your account with the correct details and provides access to the change and cancel buttons.",
-        "whatTheAgentLoses": "You miss the reassurance of seeing the reservation successfully added to your personal itinerary and knowing exactly where to manage it later."
-       },
-       {
-        "question": "Do the reservation details and confirmation number match what was added to your itinerary?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "This ensures that the booking for Mama Melrose's at 6:45 PM and its specific confirmation number were successfully recorded in your December 7 itinerary.",
-        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that the reservation system correctly saved the booking to their schedule."
-       },
-       {
         "question": "Is the new reservation listed under your upcoming reservations?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Checking the 'Upcoming Reservations' section in the profile ensures the booking for Gaucho Piccadilly was successfully saved to the account.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally seeing the reservation appear in your account's upcoming list."
+        "whatTheAgentLoses": "You lose the peace of mind of personally seeing the reservation appear in your account's upcoming list.",
+        "speak": "never",
+        "check": "Does the upcoming-reservations list show the new booking with matching details?",
+        "say_example": "Found it under your reservations too. That's a second proof, matching the email."
        }
       ]
      },
@@ -1583,7 +1372,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen shows a prompt asking to confirm the cancellation, which will permanently release the booked table.",
-        "whatTheAgentLoses": "The user loses the final opportunity to change their mind and keep the reservation before it is permanently deleted."
+        "whatTheAgentLoses": "The user loses the final opportunity to change their mind and keep the reservation before it is permanently deleted.",
+        "speak": "gate",
+        "check": "What does the cancel dialog say about the fee and the deadline, and which reservation does it name?",
+        "say_example": "Only you can cancel this. <The Zen Bistro>, <Friday at 7>. Cancelling now is free. The fee starts <Thursday>. Press to cancel, or say keep."
        },
        {
         "question": "Do you see the alert confirming the reservation was cancelled?",
@@ -1591,7 +1383,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen displays a 'Reservation cancelled' alert dialog that confirms the action was successful and must be acknowledged.",
-        "whatTheAgentLoses": "The user misses the definitive visual reassurance of seeing the system confirm that the cancellation was successfully processed."
+        "whatTheAgentLoses": "The user misses the definitive visual reassurance of seeing the system confirm that the cancellation was successfully processed.",
+        "speak": "on-event",
+        "check": "Does the page show a cancellation-confirmed message, and does it state whether a charge applies?",
+        "say_example": "Cancelled. The alert confirms it and the table is released. The email is your proof you weren't charged."
        }
       ]
      }
@@ -1616,7 +1411,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays your current payment methods, past transaction history, and options to buy gift cards that might offer promotional discounts.",
-        "whatTheAgentLoses": "You lose the opportunity to review your transaction history and decide if buying a discounted gift card is a better financial choice for your reservations."
+        "whatTheAgentLoses": "You lose the opportunity to review your transaction history and decide if buying a discounted gift card is a better financial choice for your reservations.",
+        "speak": "never",
+        "check": "What payment methods and gift-card offers does the page list?",
+        "say_example": "Saw the gift-card offers. I didn't buy anything, since you didn't ask."
        },
        {
         "question": "Do you want to add a gift card to your payment methods?",
@@ -1624,7 +1422,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays an option to add a gift card under the payment settings, which could be used to cover costs associated with the reservation.",
-        "whatTheAgentLoses": "You lose the opportunity to utilize your prepaid gift card balances if the agent proceeds with a default payment method."
+        "whatTheAgentLoses": "You lose the opportunity to utilize your prepaid gift card balances if the agent proceeds with a default payment method.",
+        "speak": "never",
+        "check": "Does the page offer adding a gift card to the payment methods?",
+        "say_example": "Added your gift card to the account, like you asked. The balance is <P500>."
        },
        {
         "question": "Do you want to add a payment card or gift card at this step?",
@@ -1632,7 +1433,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen displays a prompt for 'TheFork PAY' and fields for a card number, requiring a decision on whether to link a payment method now.",
-        "whatTheAgentLoses": "The user loses control over whether their personal credit card or a specific gift card is saved to the platform for this meal."
+        "whatTheAgentLoses": "The user loses control over whether their personal credit card or a specific gift card is saved to the platform for this meal.",
+        "speak": "gate",
+        "check": "Does the page require a card number before continuing?",
+        "say_example": "The form wants a card number to go further. The field is yours. Or say the word and I'll use your <Visa ending 4821>."
        }
       ]
      },
@@ -1646,7 +1450,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen shows your current Yums balance, how close you are to a discount, and the specific expiration dates for your points.",
-        "whatTheAgentLoses": "An agent might ignore your loyalty account details, causing you to miss out on applying available discounts or to lose points that are about to expire."
+        "whatTheAgentLoses": "An agent might ignore your loyalty account details, causing you to miss out on applying available discounts or to lose points that are about to expire.",
+        "speak": "never",
+        "check": "What points balance and expiry dates does the page show?",
+        "say_example": "You have <700> points; <250> expire <end of March>."
        },
        {
         "question": "Does the total Yums balance at the top of the screen match the sum of the individual expiring amounts below it?",
@@ -1654,7 +1461,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "Verifying that the 700 total Yums matches the sum of the four expiring amounts ensures your loyalty points are accurately tracked.",
-        "whatTheAgentLoses": "You lose the opportunity to catch calculation errors in your rewards balance, which could cost you earned dining discounts."
+        "whatTheAgentLoses": "You lose the opportunity to catch calculation errors in your rewards balance, which could cost you earned dining discounts.",
+        "speak": "if-wrong",
+        "check": "What total does the page show, and what do the listed expiring amounts add up to?",
+        "say_example": "The page says <700> points, but the amounts below add up to <650>. The page disagrees with itself. That's worth a look before you spend them."
        }
       ]
      },
@@ -1668,15 +1478,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a limited-time promo code to earn up to [address] on reservations, which adds extra value to the booking.",
-        "whatTheAgentLoses": "The user loses the opportunity to accumulate bonus loyalty points that could be redeemed for future dining discounts."
-       },
-       {
-        "question": "Do you want to learn more about the voucher promotion or use the displayed promo code?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a promotional pop-up offering up to P600 in vouchers and a specific promo code that could provide discounts.",
-        "whatTheAgentLoses": "You lose the opportunity to opt into the rewards program or save the promo code for potential discounts on your reservation."
+        "whatTheAgentLoses": "The user loses the opportunity to accumulate bonus loyalty points that could be redeemed for future dining discounts.",
+        "speak": "never",
+        "check": "What promo code and terms does the page display?",
+        "say_example": "Applied the free promo code. It adds extra points on this booking, and nothing was charged."
        }
       ]
      },
@@ -1690,7 +1495,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen showed the total balance remained at 1200 points despite the new reservation listing a 100-point reward, indicating points are not awarded until after the meal.",
-        "whatTheAgentLoses": "The user loses the understanding of when their loyalty rewards are actually credited if the agent does not communicate this delay."
+        "whatTheAgentLoses": "The user loses the understanding of when their loyalty rewards are actually credited if the agent does not communicate this delay.",
+        "speak": "never",
+        "check": "What does the page state about when reward points are credited?",
+        "say_example": "The <100> points post after you dine, the page says. The balance updating later is normal."
        }
       ]
      }

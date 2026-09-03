@@ -1,0 +1,1037 @@
+{
+ "task": "leave a review or rating (Amazon, Google Maps, Yelp): find the product or business, open the review flow, set the star rating, write the text and optionally add photos, submit, and verify it is live or pending; complete when the submitted review — or its under-review acknowledgment — is on screen. Surface pinned: the review flow of a shopping site or a maps/local-reviews platform. Variants: responding to reviews as a business owner and rating without any submitted review flow do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Leave a review or rating",
+  "note": "1 where the platform demands it: before the form on Google+ Local and Tripadvisor sign-in (LmWS, Fnko, oIgn), at the post button on Yelp web (PBEy, Fc7L, 6Ra9), at the star tap on a signed-out device (uL72), and never for the 20 keepers who arrive signed in. then 2, or 3 first where the platform's own menu starts the flow and the search comes after (Dj8s, Si7h, Fnko, 6Ra9, UAf3). then 4 - on Google the star tap is 3.2 and 4.1 at once. 5 where the platform asks. 6 unless the review is rating-only (1h-S, uL72). 7 where offered. then 8, in two stages on Booking.com. 9 after any submit; 9.6 for an existing review (6VLg, Snsr, ylMn).",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get in as the reviewer",
+    "note": "1.2 wherever an account is already open. 1.3 at the gate, then 1.4 or 1.5 by the choice, and 1.6 after a new account or a first sign-in. the gate's position is set by the root plan, not by this goal.",
+    "children": [
+     {
+      "id": "1.2",
+      "label": "Check the signed-in account",
+      "questions": [
+       {
+        "question": "Does the name the review will post under match yours?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The pop-up explicitly displays the active profile name that will be publicly attached to the review, so you must verify it is the identity you want to use.",
+        "whatTheAgentLoses": "You lose the chance to ensure the public review is tied to your preferred personal or professional identity rather than whichever account happens to be active.",
+        "speak": "if-wrong",
+        "check": "What name does the page show the review will post under, and is it <the person's name>?",
+        "say_example": "This would post under the name <Christine H.>. That isn't you. I've stopped. Say sign out, or tell me it's yours."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Choose sign-in or sign-up",
+      "questions": [
+       {
+        "question": "The page needs an account to post. Do you want to sign in, create one, or stop?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a sign-in prompt because an active account is required to proceed with publishing a rating.",
+        "whatTheAgentLoses": "The user loses control over whether to link their personal email account to a public review.",
+        "speak": "on-event",
+        "check": "Does the page say an account is needed to post, and which sign-in options does it show?",
+        "say_example": "You need an account to post here. I can't sign in for you. Sign in yourself, or say new account, or say stop. Going ahead also accepts the site's terms."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Fill the registration form",
+      "questions": [
+       {
+        "question": "Does the name in the sign-up form match your own?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Mac system menu bar shows the user name 'Jay Campbell', but the Yelp account creation form is filled out with the name 'Christine Heffner'.",
+        "whatTheAgentLoses": "The user loses control over their digital identity if the agent creates accounts using fabricated or mismatched personal details.",
+        "speak": "if-wrong",
+        "check": "What name is typed in the sign-up form's name fields, and is it <the person's name>?",
+        "say_example": "The sign-up form has the name <Christine Heffner> in it. That's not you. I've cleared it. Type your own name."
+       },
+       {
+        "question": "Which details does the sign-up form need from you?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a Yelp sign-up form requiring a first name, last name, email, and password, along with an alternative option to sign up using Facebook.",
+        "whatTheAgentLoses": "Delegating this step means the agent might use an unwanted email address, provide a fake name, or link a social media account you prefer to keep private.",
+        "speak": "on-event",
+        "check": "Which fields does the sign-up form mark as required?",
+        "say_example": "Creating the account needs your first name, last name, email, and a password. I won't make any of those up. Type them in, then say done."
+       },
+       {
+        "question": "Does the sign-up form end in a robot check?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a registration form requiring sensitive details like your birthday and phone number, along with a reCAPTCHA challenge that must be passed to proceed.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over exactly what personal data is handed over to the platform and the ability to manually solve the security challenge.",
+        "speak": "on-event",
+        "check": "Does the page show a reCAPTCHA or an 'I'm not a robot' challenge?",
+        "say_example": "There's a robot check on this form. That one's yours to do. Tell me when it's done."
+       },
+       {
+        "question": "Is a personalization or ads setting pre-checked on the sign-up form?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen requires accepting the Terms of Service to proceed and includes a default-checked option allowing Google to use your account information for personalized ads.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to opt out of having your account information used for personalized ads on non-Google websites.",
+        "speak": "never",
+        "check": "Which optional boxes on the sign-up form are pre-checked, and what do they say?",
+        "say_example": "Said no to personalized ads on the sign-up form"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Enter the credentials",
+      "questions": [
+       {
+        "question": "Should you check the 'Stay signed in' box when logging into your account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen includes a 'Stay signed in' checkbox that determines whether your session remains active after you close the browser.",
+        "whatTheAgentLoses": "You lose the ability to decide whether your account remains persistently logged in, which impacts your privacy and security on this device.",
+        "speak": "never",
+        "check": "Is the 'Stay signed in' box checked?",
+        "say_example": "Left 'Stay signed in' unchecked"
+       },
+       {
+        "question": "Is the sign-in form asking for your email and password?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The sign-in page requires an email and password to authenticate your identity before granting access to the review flow.",
+        "whatTheAgentLoses": "You lose the privacy of your personal login credentials and the ability to choose which specific account is associated with the public review.",
+        "speak": "on-event",
+        "check": "Does the page show a sign-in form asking for an email or password, or have 'Sign Up' and 'Log In' links appeared where the account name was?",
+        "say_example": "The sign-in form is up. Type your email and password yourself. I don't take passwords. Say done when you're in."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Finish the onboarding prompts",
+      "questions": [
+       {
+        "question": "Do you want to set a profile photo before posting?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a profile picture placeholder with a camera icon, indicating an option or requirement to set a public avatar before posting.",
+        "whatTheAgentLoses": "The user loses the ability to select a specific personal photo to represent their public identity on the review platform.",
+        "speak": "never",
+        "check": "Does the page ask for a profile photo, and is it marked optional or required?",
+        "say_example": "Skipped the profile photo"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Reach the thing to review",
+    "note": "2.1, 2.2, or 2.3 raises candidates on the public platforms; 2.5 replaces all three on the shopping and travel platforms, where the item is picked from the user's own list. then 2.4 and 2.6. 2.7 where the user bothers - two keepers read the existing reviews, one before visiting the place.",
+    "questions": [
+     {
+      "question": "Which app should you open to leave your review?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows a folder with multiple navigation and food-related apps, requiring you to select the correct platform for your review.",
+      "whatTheAgentLoses": "Delegating this choice means you lose control over which specific platform or community receives your public feedback.",
+      "speak": "never",
+      "check": "Which site is the review being written on?",
+      "say_example": "Chose <Google Maps> for the review"
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Search by name",
+      "questions": [
+       {
+        "question": "What business name and location do you want to search for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Yelp search bar requires both a business name and a specific location to accurately find the place you want to review.",
+        "whatTheAgentLoses": "You lose the ability to specify exactly which branch or location of a business you intend to review.",
+        "speak": "never",
+        "check": "What does the results page say it searched for?",
+        "say_example": "Searched <Tacorea> in <San Francisco>"
+       },
+       {
+        "question": "Did the search return no results?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen might show no results or irrelevant places if the search query isn't formatted exactly as the platform expects, requiring a manual correction.",
+        "whatTheAgentLoses": "The user loses the ability to notice a failed search and manually correct the query to successfully locate the business.",
+        "speak": "on-event",
+        "check": "Does the results page say no results were found?",
+        "say_example": "Nothing came up for <Tacorea San Francisco>. I'll try <Tacorea> on its own."
+       },
+       {
+        "question": "Should you turn on 'Use precise location' for the search?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Google search results for a 'near me' query include a 'Use precise location' link, which asks for device-level location permissions to find closer businesses.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to grant the search engine access to their exact physical coordinates.",
+        "speak": "never",
+        "check": "Does the page offer a 'Use precise location' link?",
+        "say_example": "Didn't turn on precise location"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Browse to the place"
+     },
+     {
+      "id": "2.3",
+      "label": "Follow the supplied link"
+     },
+     {
+      "id": "2.4",
+      "label": "Pick from the results",
+      "questions": [
+       {
+        "question": "Which of these search results is the exact business you want to review?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple businesses with different addresses in St. Paul, so you must select the correct location to ensure your review is applied accurately.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the address and ensure the review is attached to the exact location you visited.",
+        "speak": "on-event",
+        "check": "How many results carry the business name, and what address does each show?",
+        "say_example": "There are three <KFC>s near <St. Paul>. One on <University Ave>, one on <Snelling>, one on <Grand>. Which one did you go to?"
+       },
+       {
+        "question": "Which specific product from the search results do you want to review?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search for '100% aloe vera jel' returned 294 results across multiple brands and sizes, requiring you to identify the exact item you actually used.",
+        "whatTheAgentLoses": "Delegating this selection means the agent might leave a review on a similar but incorrect product that you never actually purchased.",
+        "speak": "on-event",
+        "check": "How many results match the product name, and what brand, size or edition does each show?",
+        "say_example": "Two versions of <Love You Forever> came up. Hardcover, and board book. Which one did you buy?"
+       },
+       {
+        "question": "Which results are ads, and which is the real listing?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search results display a mix of sponsored ads from various retailers and organic links, requiring you to identify the actual Amazon listing.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the exact product listing you purchased rather than clicking a sponsored competitor.",
+        "speak": "on-event",
+        "check": "Which results are marked Sponsored or Ad, and which is the first plain link to <the site>?",
+        "say_example": "The first two results are ads from other shops. I'm skipping them. The <Amazon> page is the one below."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Pick from your own list",
+      "questions": [
+       {
+        "question": "Is the stay you're about to review marked cancelled?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays multiple past trips, including a completed stay at Leisure Hub and a canceled booking, so you must identify the correct one to rate.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select the wrong property or attempt to review a canceled booking instead of your actual completed stay.",
+        "speak": "on-event",
+        "check": "Does the booking card say Cancelled, or Completed?",
+        "say_example": "The <Leisure Hub> booking from <March> shows as cancelled. There's no stay to review there. Using the completed one from <May>."
+       },
+       {
+        "question": "Which product from your order history do you want to review?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'My Orders' page displays multiple past purchases, such as the VERDIOZ beds and NOBELITE sports gear, requiring you to select the specific item you intend to rate.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which of your past purchases receives a review.",
+        "speak": "on-event",
+        "check": "How many orders or bookings match <the item>, and what date and details does each show?",
+        "say_example": "You've ordered <the aloe gel> twice. <March 3> and <July 19>. Which one is this review about?"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Confirm the listing",
+      "questions": [
+       {
+        "question": "What review count and rating does the listing show before you post?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing the existing four-star rating and 368 reviews provides context on the restaurant's established reputation before you contribute your own feedback.",
+        "whatTheAgentLoses": "You lose the chance to gauge the community's consensus and frame your own review in response to the general opinion.",
+        "speak": "never",
+        "check": "What review count and star rating does the listing show?",
+        "say_example": "Noted <4.2> stars and <368> reviews on <Tacorea> before posting"
+       },
+       {
+        "question": "Does the page say reviews are turned off for this business right now?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms lock pages that are being review-bombed in the news, meaning you cannot leave feedback at this time and must abandon the task.",
+        "whatTheAgentLoses": "The agent might fail repeatedly trying to find a missing review button, wasting time on a task that is currently impossible.",
+        "speak": "on-event",
+        "check": "Does the page show a notice that reviews are turned off, paused, or temporarily disabled?",
+        "say_example": "Reviews are turned off for this place right now. I can't post here. Say stop, or tell me what you'd like instead."
+       },
+       {
+        "question": "Is the business marked 'Permanently closed' or 'Temporarily closed'?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A sighted user instantly notices a red or high-contrast banner stating a business is closed, which usually means leaving a new review is pointless, even if the 'Write a Review' button is still technically present in the DOM.",
+        "whatTheAgentLoses": "The user wastes time and effort crafting a review for a defunct business because the agent blindly followed the happy path and ignored the visual warning.",
+        "speak": "on-event",
+        "check": "Does the listing show a 'Permanently closed' or 'Temporarily closed' label?",
+        "say_example": "This place is marked permanently closed. A review would still post, but almost nobody will read it. Go ahead, or stop?"
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Read the existing reviews"
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Open the review form",
+    "note": "one of 3.1 to 3.4 opens the form. 3.1 on the listing, and one page can have three buttons that reach the same form. 3.2 on Google and the shopping apps, where the star row is inline and the tap is the entry. 3.3 where the flow starts from the user's own menu and the place is picked after. 3.4 where the platform prompts. 3.5 where a notice interrupts.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Use the listing's review button",
+      "questions": [
+       {
+        "question": "Do you want a full written review, or only the quick recommendation prompt the page offers first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page presents several ways to interact, such as answering a quick recommendation prompt or adding a photo, so you must identify the specific 'Add review' button to proceed.",
+        "whatTheAgentLoses": "You lose the chance to decide whether to write a full review or simply answer the quick recommendation prompt.",
+        "speak": "never",
+        "check": "Does the page show a quick 'Do you recommend' prompt as well as a write-a-review button?",
+        "say_example": "Skipped the quick yes/no prompt and used the full review form"
+       },
+       {
+        "question": "Do the address and phone number on this page match the branch you visited?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the address and phone number ensures you are reviewing the correct Trader Joe's location before clicking the 'Write a Review' button.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the store's address to guarantee your review is posted to the exact location you visited.",
+        "speak": "if-wrong",
+        "check": "What address and phone number does the listing show, and do they match <the branch in the instruction>?",
+        "say_example": "This page is the <Trader Joe's> on <El Camino>. You said the one on <University>. I've stopped before the review button. Which is it?"
+       },
+       {
+        "question": "Does the page say this account can't post reviews yet?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms like Amazon require a minimum historical spend (e.g., $50 in the past year) to leave non-verified reviews, and failing to meet this means you cannot proceed.",
+        "whatTheAgentLoses": "The agent might fail the task without understanding why, whereas a human would read the eligibility policy and realize they cannot complete the review with this account.",
+        "speak": "on-event",
+        "check": "Does the page say why reviews can't be left, such as a minimum spend or activity rule?",
+        "say_example": "The site says this account can't post reviews yet. It needs <$50> of purchases in the last year. I can't get around that. Say stop, or tell me what you'd like instead."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Tap the inline stars",
+      "questions": [
+       {
+        "question": "Did tapping the star post a rating on its own?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays five grey stars next to the item card, allowing you to start the review process immediately from the purchases page.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred navigation path for initiating a review.",
+        "speak": "on-event",
+        "check": "After the star was tapped, does the page say the rating was posted or thank you for rating?",
+        "say_example": "Heads up, tapping that star already posted a <4>-star rating. The written part isn't posted yet. Keep going, or stop?"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Start from your own menu"
+     },
+     {
+      "id": "3.4",
+      "label": "Take the platform's prompt"
+     },
+     {
+      "id": "3.5",
+      "label": "Dismiss the visibility notice",
+      "questions": [
+       {
+        "question": "Does the notice say the review posts publicly under your profile name?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a tooltip titled 'Posting publicly across Google' that details the privacy implications of your submission.",
+        "whatTheAgentLoses": "You lose the chance to understand exactly what personal profile information will be visible to the public alongside your review.",
+        "speak": "never",
+        "check": "What does the posting notice say about who can see the review and under what name?",
+        "say_example": "Noted the review posts publicly under <Alana L.>"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Rate the experience",
+    "note": "4.1 in every keeper that reaches the form - it is the first control everywhere and on Google it is the entry. 4.2 where the platform has aspect rows, before the text on Booking.com and Etsy and after the submit on Tripadvisor web. 4.3 where a yes-or-no exists. 4.4 on Google's service listings.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Set the overall rating",
+      "questions": [
+       {
+        "question": "How many stars do you want to give?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping one of the five uncolored stars in the 'Rate & review' section sets your overall rating and opens the detailed review form.",
+        "whatTheAgentLoses": "You lose the ability to decide the exact star rating that reflects your personal experience with the product or business.",
+        "speak": "gate",
+        "check": "Which star rating does the form show as selected, if any?",
+        "say_example": "How many stars for <Tacorea>? You didn't say."
+       },
+       {
+        "question": "Does the rating the form shows selected match the one you asked for?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Custom UI controls like star ratings often suffer from click-interception or glitches where the underlying value changes but the visual state doesn't, or vice versa. A sighted user relies on the stars turning yellow or solid to know the click worked.",
+        "whatTheAgentLoses": "The user risks submitting a zero-star or default-star review because the agent assumed a click event succeeded without verifying the visual state change.",
+        "speak": "if-wrong",
+        "check": "How many stars does the form show as selected?",
+        "say_example": "The form shows <3> stars, and you asked for <4>. I'm fixing that before anything posts."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Rate the aspects",
+      "questions": [
+       {
+        "question": "Which extra scores or yes/no answers does the form still need from you?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed form fields for sub-categories like Food, Service, and Atmosphere, each with five empty stars.",
+        "whatTheAgentLoses": "The person loses the ability to provide nuanced feedback on specific aspects of their experience.",
+        "speak": "on-event",
+        "check": "Which rating or recommend fields does the form mark as required, and which are still empty?",
+        "say_example": "The form also wants scores for <staff>, <cleanliness>, and <comfort>, plus a yes or no on recommending it. You haven't told me those. What should I put?"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Answer the recommend question"
+     },
+     {
+      "id": "4.4",
+      "label": "Pick the praise tags"
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Describe the visit",
+    "note": "the platform's questionnaire, in whatever order it asks: 5.1 and 5.2 on Tripadvisor and Booking.com before the text, 5.3 and 5.4 on Google after it, 5.5 and 5.6 last and optional. absent on Yelp, Amazon, Flipkart, and Walmart.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Set the visit type",
+      "questions": [
+       {
+        "question": "Do the visit details already set on the form match your visit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen defaults to 'Other' and 'Couple', which you must verify or change before proceeding to write the actual review.",
+        "whatTheAgentLoses": "You lose the ability to accurately categorize the context of your trip, which helps other readers understand your perspective.",
+        "speak": "on-event",
+        "check": "What values do the visit fields show, such as trip type, who you went with, date, or meal, and which are pre-selected?",
+        "say_example": "The form has this down as a <couple's> trip, type <other>, in <August>. Is that right? Tell me what to change."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Set the visit date"
+     },
+     {
+      "id": "5.3",
+      "label": "Answer the meal questions",
+      "questions": [
+       {
+        "question": "How much did you spend per person on your meal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The review form asks for the specific price range per person to provide better context for future customers.",
+        "whatTheAgentLoses": "An agent guessing the price range might misrepresent the actual cost of your experience.",
+        "speak": "never",
+        "check": "Does the form ask for spend per person, and is it marked optional?",
+        "say_example": "Skipped the spend-per-person question"
+       },
+       {
+        "question": "Does the spend per person on the form match the restaurant's listed price range?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The KFC listing indicated a typical price range of ₹200–400, but the selected spend amount was ₹600–800.",
+        "whatTheAgentLoses": "The user risks publishing a misleading review that contradicts the expected pricing of the business.",
+        "speak": "if-wrong",
+        "check": "What price range does the listing show, and what spend bracket is selected on the form?",
+        "say_example": "The form says you spent <600 to 800> a head. The listing says <200 to 400>. Keep it, or change it?"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Pick the dishes or features",
+      "questions": [
+       {
+        "question": "Which specific dishes do you want to recommend?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The review form prompts for specific dish recommendations, such as 'Chicken Bucket with Drinks', to add granular detail to the feedback.",
+        "whatTheAgentLoses": "The user loses the ability to accurately endorse the exact items they actually ordered and enjoyed.",
+        "speak": "never",
+        "check": "Which dishes are selected in the recommend list?",
+        "say_example": "Picked <Chicken Bucket> in the dish list"
+       },
+       {
+        "question": "Are the dishes you named in the recommend list?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Google Maps review form provides a pre-populated list of dishes to recommend, requiring a decision on what to do if your specific meal isn't included in the options.",
+        "whatTheAgentLoses": "You lose the ability to accurately highlight an unlisted menu item, potentially settling for recommending something you didn't actually eat just to complete the form.",
+        "speak": "on-event",
+        "check": "Is <the dish from the instruction> in the recommend list?",
+        "say_example": "The dish list doesn't have <carnitas>. I'll leave the dish pick empty. It's still in your text."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Answer the bonus questions",
+      "questions": [
+       {
+        "question": "Do you want to answer the optional follow-up prompts on the form?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a submission confirmation alongside optional questions about the hotel's staff and amenities that you can choose to answer or skip.",
+        "whatTheAgentLoses": "The user loses the opportunity to share specific details about their experience, such as staff languages or amenities, if the agent automatically skips these optional questions.",
+        "speak": "never",
+        "check": "Does the form show optional follow-up prompts, such as topic questions or extra scores, and are they marked optional?",
+        "say_example": "Skipped the optional follow-up prompts"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Add the travel tips",
+      "questions": [
+       {
+        "question": "Do you want to provide any helpful tips for future travelers?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows an optional text box for adding helpful tips for future travelers.",
+        "whatTheAgentLoses": "The user loses the chance to share specific advice or to decide whether to skip this optional field.",
+        "speak": "never",
+        "check": "Is the tips box marked optional?",
+        "say_example": "Left the tips box empty"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Write the review",
+    "note": "6.1, or 6.2 or 6.3 in its place. 6.4 where the platform counts characters - it bounces one keeper and stops nothing else. 6.5 where a title field exists. 6.6 on Booking.com and in the one templated review. 6.7 where the platform wants a public name that is not the account name.",
+    "questions": [
+     {
+      "question": "Which of the rating, title, and text does the form need from you?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen requires a star rating and a title to submit the review, while also offering optional fields for text and media.",
+      "whatTheAgentLoses": "You lose the ability to express your authentic opinion and personal experience with the product.",
+      "speak": "always",
+      "check": "Which of the rating, title, and text fields does the form mark as required?",
+      "say_example": "Got it. A <4>-star review for <Tacorea> on <Google>, saying <the tacos were great>. The form also wants a title, and you gave me one."
+     },
+     {
+      "question": "Is the text in the review box the text you gave, or did the page fill it in?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The review section includes a 'Help me write' button that auto-fills the text box, letting you choose between crafting a personalized message and using generated text.",
+      "whatTheAgentLoses": "Delegating this choice means you lose control over whether the review reflects your authentic voice or relies on generic, auto-generated praise.",
+      "speak": "if-wrong",
+      "check": "What text is in the review box, and does it match <the text supplied>?",
+      "say_example": "The review box filled itself with words you didn't give me. I'm clearing it and typing yours."
+     }
+    ],
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Type the text",
+      "questions": [
+       {
+        "question": "What do you want the review to say?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The text box prompts you to share details of your experience, which will become your public feedback for this place.",
+        "whatTheAgentLoses": "Letting an AI write the review means losing the authentic, personal details of your actual experience at the business.",
+        "speak": "gate",
+        "check": "Is the review text box empty, and is it marked required?",
+        "say_example": "What do you want the review to say? I won't write it for you."
+       },
+       {
+        "question": "Do you want to add a written review to accompany your star rating?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Thanks for rating!' dialog provides an optional text field to explain why you loved the place, allowing for more detailed feedback than just a star rating.",
+        "whatTheAgentLoses": "If the agent skips the text field, you lose the opportunity to share specific details about your experience with other potential customers.",
+        "speak": "never",
+        "check": "Is the text box after the rating marked optional?",
+        "say_example": "Added your text after the rating"
+       },
+       {
+        "question": "Did the page warn that your text has a restricted word or breaks its rules?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Automated filters may flag profanity, personal information, or links while you type, requiring you to edit the text before the platform will accept it.",
+        "whatTheAgentLoses": "The user loses the opportunity to rephrase their authentic feedback to comply with rules, as the agent might just delete the flagged sections or fail to submit.",
+        "speak": "on-event",
+        "check": "Does the page show a warning that the text has a restricted word or breaks the guidelines, and which word does it name?",
+        "say_example": "The site won't post this as written. It flagged <the word>. I won't change your words. Give me new text, or say stop."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Paste text from elsewhere"
+     },
+     {
+      "id": "6.3",
+      "label": "Let the platform write it"
+     },
+     {
+      "id": "6.4",
+      "label": "Meet the length rule",
+      "questions": [
+       {
+        "question": "Does your review text meet the minimum length the page shows?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a character counter indicating a minimum of 200 characters is required, which the current text of 63 characters does not yet meet.",
+        "whatTheAgentLoses": "The user loses the assurance that their review will be accepted by the platform if the agent attempts to submit it without satisfying the stated minimum length.",
+        "speak": "if-wrong",
+        "check": "What minimum length does the page state, and what count does it show for the text?",
+        "say_example": "The site wants at least <200> characters. Yours is <63>. Add some more, or say stop. I won't pad it."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Title the review",
+      "questions": [
+       {
+        "question": "What title should you give this review?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen prompts you to 'Give your review a title' to summarize your feedback.",
+        "whatTheAgentLoses": "The user loses the ability to choose a specific title that reflects their unique experience.",
+        "speak": "gate",
+        "check": "Is the title field required or limited, and what does it show?",
+        "say_example": "The form needs a title. What should it be? Short, <50> characters at most."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Fill the negative box",
+      "questions": [
+       {
+        "question": "Does the form have a separate box for negatives, and is it required?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Addressing potential downsides in the review text box provides a more balanced and helpful perspective for future customers.",
+        "whatTheAgentLoses": "The user loses the opportunity to share their personal, nuanced perspective on any specific drawbacks they experienced.",
+        "speak": "never",
+        "check": "Does the form have a separate box for negatives, and is it required?",
+        "say_example": "Left the 'what could be better' box empty"
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Enter the reviewer nickname",
+      "questions": [
+       {
+        "question": "What nickname do you want to use for your public review?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The submission failed because the site requires a display name, indicated by the red error message above the nickname field.",
+        "whatTheAgentLoses": "You lose the ability to control the specific public persona or name attached to your review.",
+        "speak": "gate",
+        "check": "Does the form require a public display name, and what does it show or say?",
+        "say_example": "The site needs a public name for the review. What name?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Add the media",
+    "note": "7.1 wherever the button exists - most keepers skip. 7.2 for the four who open the picker, two of whom back out empty. 7.3 on Yelp's app and Google's desktop uploader.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Decide whether to add photos",
+      "questions": [
+       {
+        "question": "Do you want to attach any photos or videos to this review?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The review composition screen includes a button to upload media, which can provide helpful visual context for other customers.",
+        "whatTheAgentLoses": "The user loses the opportunity to share visual proof of the product's condition or their experience at the business.",
+        "speak": "never",
+        "check": "Does the form offer a photo upload, and how many are attached?",
+        "say_example": "Attached <2> photos"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Pick the photos",
+      "questions": [
+       {
+        "question": "Did every photo you gave me show up as attached?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Uploads can silently fail or hang, so verifying the thumbnail is visible ensures the image is actually attached to the draft before you submit.",
+        "whatTheAgentLoses": "The user loses the assurance that their visual evidence was successfully attached rather than lost to a silent upload failure.",
+        "speak": "if-wrong",
+        "check": "How many photo thumbnails does the attachment area show, and does the page show an upload error or a spinner still running?",
+        "say_example": "One of the two photos didn't attach. The site said <file too large>. I'm going on with one photo. I'll say so again before posting, and you can stop then."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Caption the photos",
+      "questions": [
+       {
+        "question": "What caption should you provide for the first photo?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to describe the photo's contents to help others understand what is pictured.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally identify and highlight the specific dishes or details shown in your photo.",
+        "speak": "never",
+        "check": "Is the caption field marked optional?",
+        "say_example": "Left the photo captions empty"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Submit the review",
+    "note": "8.3 first on Booking.com, before the text step. 8.1 where a preview or a last look exists. 8.2 where the platform puts a certification or policy in the way. then 8.4; 8.5 when it bounces. 8.6 on every confirmation dialog, 8.7 where the platform asks for more on the way out.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Review the draft",
+      "questions": [
+       {
+        "question": "Does the page say you've already reviewed this item?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a fully composed review with a 'Submit' button, requiring a check against past actions to avoid posting a duplicate.",
+        "whatTheAgentLoses": "The user loses the personal context of knowing they already reviewed this book, which prevents accidental duplicate submissions.",
+        "speak": "on-event",
+        "check": "Does the page say a review from you already exists, or show a review of yours on this item?",
+        "say_example": "You already reviewed this on <June 2>. Posting again would make two. Edit the old one, or stop?"
+       },
+       {
+        "question": "Is the form set to share this review somewhere else too?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms often use subtle visual toggles to encourage cross-posting; a sighted user easily spots and disables them, but a delegated agent might overlook them.",
+        "whatTheAgentLoses": "The user unintentionally broadcasts their review to connected social networks because the agent ignored the visual cross-posting toggles.",
+        "speak": "on-event",
+        "check": "Which share or cross-post boxes on the form are pre-checked, and what do they say?",
+        "say_example": "The form is set to post this to <Goodreads> too. You only asked for <Amazon>. I'm unchecking it."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Accept the certification and terms"
+     },
+     {
+      "id": "8.3",
+      "label": "Submit the scores first"
+     },
+     {
+      "id": "8.4",
+      "label": "Press the post button",
+      "questions": [
+       {
+        "question": "Are you ready to submit the review?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The review form is filled out with a Post button visible at the top right, but the video ends before the submission is finalized.",
+        "whatTheAgentLoses": "You lose the chance to verify that the written text and star rating accurately reflect your experience before the review goes live.",
+        "speak": "gate",
+        "check": "Is the button about to be pressed the one that posts the review, and what does the form show for rating, text, name, and photos?",
+        "say_example": "Ready to post. <4> stars for <Tacorea>, under <Alana L.>, with <one> photo. It starts '<the tacos were great>'. Posting also says this is your own, unpaid visit. Press to post, or say change."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Fix the rejected submit",
+      "questions": [
+       {
+        "question": "Did a robot check come up after pressing submit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "To prevent automated spam, platforms often intercept the submission with a security challenge that must be solved before the review is actually recorded.",
+        "whatTheAgentLoses": "The user loses the chance to manually intervene and solve the challenge, resulting in the review never being published.",
+        "speak": "on-event",
+        "check": "Does the page show a CAPTCHA or human verification challenge?",
+        "say_example": "The site wants a robot check before it takes the review. That one's yours. Tell me when it's done."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Close the confirmation dialog",
+      "questions": [
+       {
+        "question": "Do you want to join the reviewer programme the confirmation offers?",
+        "cluster": "approve",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen offers the option to join the Local Guides program to earn points and track views, which you must decide to accept or skip.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to enroll in the platform's rewards program to earn points for your contributions.",
+        "speak": "never",
+        "check": "Does the confirmation offer to join a program, and what does it say?",
+        "say_example": "Said no to <Local Guides>"
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Answer the follow-up prompts",
+      "questions": [
+       {
+        "question": "Do you want to share the posted review with anyone?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays a post-submission dialog offering to share the review with specific social circles, email contacts, and a text field for a custom message.",
+        "whatTheAgentLoses": "You lose the ability to control exactly which friends, family, or email contacts receive a direct notification and personal message about your new review.",
+        "speak": "never",
+        "check": "Does the page offer to share the review with contacts?",
+        "say_example": "Skipped the share prompt"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Verify the review landed",
+    "note": "9.1 after every submit. then 9.2 and 9.3 as the user bothers - on Google a refresh is needed before 9.2 says anything. 9.4 where the platform has a contributions page. 9.6 for an existing review, entered from 9.3 or 9.4. 9.7 is the one leaf no video is long enough to show.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Read the confirmation",
+      "questions": [
+       {
+        "question": "Does the page confirm the review posted, with no error?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing the 'Your review has been posted' text alongside the thumbs-up icon confirms that the platform successfully processed your submission.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of seeing the visual confirmation that your feedback was successfully published.",
+        "speak": "if-wrong",
+        "check": "Does the page show a posted confirmation, is there any error banner beside it, or is the form still showing with its post button?",
+        "say_example": "The review didn't go through. The page says there was a problem posting it. Your text is still in the box. Try again, or stop?"
+       },
+       {
+        "question": "Does the confirmation say the review is live now, or held for a check first?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen indicates whether the review is publicly visible right away or if it is temporarily held in a pending state for platform moderation.",
+        "whatTheAgentLoses": "The user loses the exact status of their submission and the knowledge of whether their feedback is currently visible to the public.",
+        "speak": "on-event",
+        "check": "Does the confirmation say the review is live, or that it will show after a check?",
+        "say_example": "It's in, but held for a check before it shows. Nobody else can see it yet."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Check the review count"
+     },
+     {
+      "id": "9.3",
+      "label": "Find it on the listing",
+      "questions": [
+       {
+        "question": "Is your new review showing in the public list, without a pending or hidden mark?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing your specific review and star rating under the 'All Reviews' section confirms the submission was successful and is now public.",
+        "whatTheAgentLoses": "You lose the direct confirmation of seeing your own words and rating successfully published on the public listing.",
+        "speak": "if-wrong",
+        "check": "With the list sorted by newest, is there a review under <the person's name> dated today, and does it carry a 'Pending' or 'Not visible to others' label?",
+        "say_example": "Your review is on the page, but it's marked not visible to others. Only you can see it for now."
+       },
+       {
+        "question": "Does the published review show the exact star rating you selected when submitting?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Confirming that the published review displays the 4-star rating selected during submission ensures the platform recorded the feedback accurately.",
+        "whatTheAgentLoses": "The user loses the certainty that their specific rating was correctly applied if the agent does not check the final published review.",
+        "speak": "if-wrong",
+        "check": "What star rating does the published review show?",
+        "say_example": "The posted review shows <3> stars, and you asked for <4>. Want me to edit it?"
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Check your contributions",
+      "questions": [
+       {
+        "question": "Is the review whose menu is open the one you just posted?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Locating the review for Club Angelina marked 'just now' and clicking its three-dot menu ensures you are targeting the correct recent submission.",
+        "whatTheAgentLoses": "The user loses the chance to personally verify the exact text and rating of their newly submitted review before opening its options menu.",
+        "speak": "if-wrong",
+        "check": "Does the review whose menu is open show <the business name> and 'just now' or today's date?",
+        "say_example": "That menu belongs to your older review of <Club Angelina> from <March>. I'm closing it. The one from just now is below."
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Manage the review",
+      "note": "9.6.1 or 9.6.2 from either entry point - the listing's Edit your review button or the contributions page's three-dot menu. 9.6.3 from the owner's dashboard, which only ylMn has. 9.6.2 needs a confirm and the public count moves only after a refresh.",
+      "questions": [
+       {
+        "question": "Which action do you want to take on this existing review?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displayed a dropdown menu with options to edit, delete, or add a photo, requiring a decision on how to manage the current feedback.",
+        "whatTheAgentLoses": "You lose the ability to decide the fate of your own feedback, risking the permanent deletion of a review you may have only wanted to update.",
+        "speak": "never",
+        "check": "Which options does the review's menu show?",
+        "say_example": "Used edit on the new review"
+       }
+      ],
+      "children": [
+       {
+        "id": "9.6.1",
+        "label": "Edit the review"
+       },
+       {
+        "id": "9.6.2",
+        "label": "Delete the review",
+        "questions": [
+         {
+          "question": "Should you permanently delete this review?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen displays a warning that deleted reviews cannot be recovered, making this an irreversible action.",
+          "whatTheAgentLoses": "The user loses the opportunity to preserve their previous review or back out of a permanent deletion.",
+          "speak": "gate",
+          "check": "Does the page warn that deleting can't be undone?",
+          "say_example": "Deleting this can't be undone. It's your review of <Tacorea> from <today>. Press to delete, or say keep."
+         }
+        ]
+       },
+       {
+        "id": "9.6.3",
+        "label": "Reply as the owner"
+       }
+      ]
+     },
+     {
+      "id": "9.7",
+      "label": "Check back after moderation"
+     }
+    ]
+   }
+  ]
+ }
+}

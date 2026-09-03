@@ -1,0 +1,1785 @@
+{
+ "task": "order food for delivery or takeout on a food delivery service (DoorDash, Uber Eats, Grubhub): pick a restaurant, build the order with item options, review fees and tip, check out; complete when the order-placed confirmation or live order tracker is on screen. Surface pinned: the web or mobile-app interface of a food delivery service — not a phone-call order or a cooking video. Variants: reserving a table, grocery delivery, and receiving/verifying the arrived order do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Order food for delivery or pickup",
+  "note": "1 where the app demands it - most keepers arrive signed in; on Talabat the gate sits after the basket and MCE3 stops there. 2 sets where and how the food arrives; VCYA picks pickup and then 6 and 7.1 never happen. 3 only on the aggregators - the five chain-app keepers open on the menu. then 4, repeating 4.1 to 4.10 per item, then 5; 5.2 sends the user back into 4, and 5.8 hands the bag to a second app in LCB3. 6 and 7 are the checkout - one scrolling screen on the US aggregators, two or three pages elsewhere - and 7.7 is the commit; 7.8 loops back to 7.7 in T8iD and mAYq and neither gets out; 7.9 follows 7.7 on Foodpanda. 8 once the confirmation or tracker is up. 9 whenever the user wanders into deals or rewards - before 4 in VCYA, after 8 in NHBc.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the app",
+    "note": "1.1 where the video starts outside the app. 1.2 as the prompts arrive - they keep firing through the task. 1.3 only where an account is missing: lvuc registers, TPVQ and aevO sign in, MCE3 meets it after the basket and stops. 1.4 after a registration.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Install or open the app",
+      "questions": [
+       {
+        "question": "Is this the real customer app, not an ad and not the driver app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display the official Grubhub app alongside sponsored ads for other delivery services like Taco Bell and GoPuff.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent installs the correct official app rather than a sponsored competitor.",
+        "speak": "if-wrong",
+        "check": "Which result is the official <service> customer app, by its developer name? Is the one about to be tapped marked Ad or Sponsored, or named Driver, Courier or Merchant?",
+        "say_example": "The first result is an ad for a different service. I'm installing the real <app> app, the one by <developer>."
+       },
+       {
+        "question": "Which country should the site be set to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Foodpanda homepage requires choosing a specific country from the provided flags or the 'MORE COUNTRIES' button to access the correct regional restaurants.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the correct country portal for your actual delivery location.",
+        "speak": "if-wrong",
+        "check": "Which country or region is selected on the page, and does it match the country of the delivery address?",
+        "say_example": "The site opened on <country>. Your address is in <country>, so I'm switching it."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Answer the launch prompts",
+      "questions": [
+       {
+        "question": "Do you want to give the app your location?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app displayed a modal asking to share your location to ensure accurate delivery, giving you the option to enable it or decide later.",
+        "whatTheAgentLoses": "You lose the ability to protect your device's privacy by deciding whether or not to share your exact GPS location with the app.",
+        "speak": "never",
+        "check": "Does the page show a location permission prompt, and what options does it give?",
+        "say_example": "Skipped the location prompt - typing your address instead"
+       },
+       {
+        "question": "Do you want promo notifications on?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app presents a popup asking if you want to receive notifications for exclusive promotions.",
+        "whatTheAgentLoses": "You lose the choice of keeping your device free from unwanted marketing alerts or opting in for potential discounts.",
+        "speak": "never",
+        "check": "Does the page show a notifications prompt, and which toggles are on?",
+        "say_example": "Said no to promo notifications"
+       },
+       {
+        "question": "Do you want the zero delivery fee offer, or should I close the popup?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app presents a full-screen advertisement offering a zero delivery fee promotion that must be accepted or dismissed before accessing the home screen.",
+        "whatTheAgentLoses": "The user loses the opportunity to claim a promotional zero delivery fee or to quickly bypass an unwanted advertisement.",
+        "speak": "never",
+        "check": "Does a full-screen offer block the home screen, and what does it say?",
+        "say_example": "Closed a <zero delivery fee> popup to get to the menu"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Sign in or register",
+      "questions": [
+       {
+        "question": "How do you want to sign in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The authentication page requires you to choose between using Google, Facebook, Apple, or a standard email to access the service.",
+        "whatTheAgentLoses": "You lose the ability to decide which of your personal third-party accounts or email addresses gets linked to your delivery profile.",
+        "speak": "gate",
+        "check": "Which sign-in options does the page show, and is an account already signed in?",
+        "say_example": "This site wants you signed in. Google, Apple, or email? The password is yours to type. I'll hold the page."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Verify the account was created",
+      "questions": [
+       {
+        "question": "Does the new account show the email address you meant to use?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "A green banner appeared stating the account was successfully created, presenting an opportunity to verify the setup.",
+        "whatTheAgentLoses": "The user loses the reassurance of personally checking their inbox to confirm the account is fully set up and linked to the correct email address.",
+        "speak": "if-wrong",
+        "check": "What email address does the success banner or confirmation page show for the new account?",
+        "say_example": "The new account says <email>. Yours is <email>. I'll fix it before going on."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Set the delivery context",
+    "note": "2.1 first on the apps that ask - the toggle sits on the home screen, the store page, or the checkout; ten keepers touch it and only VCYA leaves pickup on. 2.2 or 2.3 sets the address - before browsing in opjd, NHBc, LCB3 and MCE3, at checkout in lvuc and T8iD, never on the pickup order. 2.4 where a fee notice gates the menu.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Choose delivery or pickup",
+      "questions": [
+       {
+        "question": "Delivery or pickup?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that pickup has no fees and takes 15 minutes, while delivery costs $1.99 and takes 46 minutes.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh the convenience of delivery against the faster, cheaper option of picking the food up yourself.",
+        "speak": "gate",
+        "check": "Is Delivery or Pickup selected? What fee, time and discount does the page show for each?",
+        "say_example": "Delivery is <fee> and about <time>. Pickup is free, but you'd go to <street> for it. Delivery, or pickup?"
+       },
+       {
+        "question": "Is the order set to delivery or pickup, the way you asked?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays toggles for Pickup and delivery alongside a location setting that determine how and where you will receive your food.",
+        "whatTheAgentLoses": "You lose the ability to ensure the food is ordered from the correct location and set to your preferred delivery or pickup method.",
+        "speak": "if-wrong",
+        "check": "Which mode does the page show as selected, Delivery or Pickup, including any banner reading 'This is a Pickup order'?",
+        "say_example": "This switched to <pickup>. You asked for <delivery>. I'm putting it back."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Confirm the detected location",
+      "questions": [
+       {
+        "question": "Is the delivery address at the top the one you asked for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The current delivery address displayed at the top of the screen determines which nearby restaurants will appear in your search results.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the food will be delivered to your actual current location rather than a previously saved address.",
+        "speak": "if-wrong",
+        "check": "What delivery address does the page show at the top, and does it match the address in the request?",
+        "say_example": "The address up top is <address>. You asked for <address>. I'm fixing that first. Otherwise the restaurants will be wrong."
+       },
+       {
+        "question": "They don't deliver to your address. Pickup, or a different place?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app warns that your current location is unserviceable and presents options for delivery, takeaway, dine-in, or train delivery.",
+        "whatTheAgentLoses": "The user loses the ability to provide a valid address or choose an alternative way to receive their food.",
+        "speak": "gate",
+        "check": "Does the page say the location is unserviceable or out of range, and which options does it offer instead?",
+        "say_example": "They don't deliver to <address>. You could pick it up from <street>, or I can try another place. Which?"
+       },
+       {
+        "question": "Is checkout allowing delivery to an address an earlier screen said they don't serve?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "An earlier banner stated the location was unserviceable, but the checkout screen allowed delivery to Castairs Town, creating uncertainty about whether the order will actually be fulfilled.",
+        "whatTheAgentLoses": "The user loses the assurance that their food will successfully arrive if the agent proceeds despite conflicting system messages about delivery availability.",
+        "speak": "if-wrong",
+        "check": "Did an earlier screen say this address was unserviceable, and does checkout now show delivery to the same address?",
+        "say_example": "Earlier it said no delivery to <address>. Now checkout is letting it through. I'm not trusting that until the order confirms."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Enter a new address",
+      "questions": [
+       {
+        "question": "Which of the matching addresses is yours?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing 'cvs' in the search bar returned multiple different CVS locations in Grand Prairie, TX, requiring you to choose the exact one.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify that the correct specific location is selected from a list of similarly named options.",
+        "speak": "gate",
+        "check": "How many results does the address search return, and what are they?",
+        "say_example": "There are three <name> addresses near you. I'll use the one on <street>. OK, or pick a different one?"
+       },
+       {
+        "question": "What goes in the new address form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a new address form with fields for specific details like a phone number and driver notes to ensure an accurate delivery.",
+        "whatTheAgentLoses": "The user loses the ability to provide specific delivery instructions or cross streets that help the driver find their exact location.",
+        "speak": "never",
+        "check": "Which fields does the new address form show, and which are marked required?",
+        "say_example": "Saved your address with the phone and door note from your request"
+       },
+       {
+        "question": "The form needs a building or floor number. What is it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The address form remained on the screen because the mandatory building or floor number field was left blank.",
+        "whatTheAgentLoses": "The user loses the opportunity to provide precise delivery details, risking a delayed or failed delivery if the driver cannot find the exact unit.",
+        "speak": "gate",
+        "check": "Does the form show a required field left empty, and which field is it?",
+        "say_example": "The form won't save without a floor or unit number. What's yours?"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Accept the delivery terms",
+      "questions": [
+       {
+        "question": "Does this place add a service fee on top of the delivery fee?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The delivery details modal explicitly warns that a Service Fee will be added at checkout, meaning the advertised fee is not the only extra cost.",
+        "whatTheAgentLoses": "The user loses transparency about upcoming hidden fees before they spend time building an order.",
+        "speak": "on-event",
+        "check": "Does the page say a service fee will be added at checkout on top of the delivery fee, and what amounts does it show?",
+        "say_example": "Heads up, this place adds a service fee at checkout. The <fee> delivery fee isn't the whole cost."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Choose a restaurant",
+    "note": "3.1 on arrival; then one of 3.2 to 3.5 raises a list, or 3.8 skips the list. 3.6 picks, 3.7 where the user bothers - lvuc reads Reviews and Info, most read the header line and scroll to the menu. aevO runs 3.6 and 3.7 on IHOP, drops it, and picks again from 3.5. f2z_ backs out of one menu and rewords the search. the chain apps skip this goal.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Read the home feed"
+     },
+     {
+      "id": "3.2",
+      "label": "Pick a category",
+      "questions": [
+       {
+        "question": "Which category do you want to order from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app's home screen offers multiple delivery categories like restaurant food, groceries, and flowers, which dictates the types of merchants available to browse.",
+        "whatTheAgentLoses": "The user loses the opportunity to spontaneously decide to browse alternative categories like groceries or sweets instead of a standard restaurant meal.",
+        "speak": "never",
+        "check": "Which categories does the home page show, and which is selected?",
+        "say_example": "Went to restaurants, skipped the grocery and flower tabs"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Search by name or cuisine",
+      "questions": [
+       {
+        "question": "What restaurant or cuisine do you want to search for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an empty search bar and a list of cuisines, requiring a decision on how to narrow down the dining options.",
+        "whatTheAgentLoses": "The user loses the ability to specify their exact craving or preferred restaurant name.",
+        "speak": "never",
+        "check": "What is in the search box?",
+        "say_example": "Searched for <Taco Bell>"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Filter and sort the list",
+      "questions": [
+       {
+        "question": "Do you want any filters on the restaurant list?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen offers multiple categories like 'Burgers' or 'Grocery' and secondary filters for ratings and price that drastically change the available choices.",
+        "whatTheAgentLoses": "You lose the chance to spontaneously discover new dining options by browsing through different categories and adjusting price or rating filters.",
+        "speak": "never",
+        "check": "Which filters does the page offer, and which are on?",
+        "say_example": "Left the filters off"
+       },
+       {
+        "question": "How should I sort the list of restaurants?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides sorting options like Rating, Fastest, and Price that change the order of the displayed restaurants.",
+        "whatTheAgentLoses": "You lose the ability to prioritize the restaurant list based on your immediate preference for quality, speed, or cost.",
+        "speak": "on-event",
+        "check": "What is the list sorted by, and does the page mark any results Sponsored, Promoted or Featured?",
+        "say_example": "The list here is sorted by promoted places. I'm sorting by distance instead."
+       },
+       {
+        "question": "Is a leftover filter or search term hiding restaurants?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app might remember filters like 'Under 30 min' or specific price tiers from a previous order, hiding perfectly good restaurants from your current search results.",
+        "whatTheAgentLoses": "You lose the opportunity to browse the complete set of available restaurants because the agent is choosing from an artificially restricted list.",
+        "speak": "on-event",
+        "check": "Does the page show any active filter chips or a search term in the box, and what result count does it show?",
+        "say_example": "A filter from last time is still on. It says <under 30 minutes>. I'm clearing it. That brings back <12> more places."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Browse the offers"
+     },
+     {
+      "id": "3.6",
+      "label": "Choose from the list",
+      "questions": [
+       {
+        "question": "Which restaurant do you want to order from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home feed displays multiple options like McDonald's and Burger King with varying ratings, delivery fees, and wait times.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred restaurant based on their current cravings, budget, or acceptable delivery time.",
+        "speak": "gate",
+        "check": "Which restaurants does the list show, with each one's rating, delivery fee, time, and any Closed or Sponsored mark?",
+        "say_example": "Two places look good. <Name A>, <fee> delivery, about <time>, rated <rating>. <Name B>, cheaper but 50 minutes. Which one? Say <A> or <B>."
+       },
+       {
+        "question": "Which nearby location is currently open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists several nearby stores marked as 'Closed' in red text, requiring you to find one that is actually available to take your order.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to order from a further location right now or wait for your preferred, closer store to open.",
+        "speak": "on-event",
+        "check": "Which results are marked Closed, and which are open?",
+        "say_example": "<Three> of the <five> are closed right now. I'm skipping them."
+       },
+       {
+        "question": "Is the top listing a paid ad?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the KFC card is explicitly marked as 'Sponsored', meaning it is an ad and might not be the most optimal choice for your budget or schedule compared to organically sorted options.",
+        "whatTheAgentLoses": "The user loses the opportunity to discover cheaper, faster, or higher-rated dining options by settling for the first sponsored advertisement.",
+        "speak": "on-event",
+        "check": "Is the listing marked Sponsored, Ad or Promoted?",
+        "say_example": "The top one is a paid ad. I'm skipping it."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Vet the restaurant page",
+      "questions": [
+       {
+        "question": "What are the delivery fee and wait for this restaurant?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a R9 delivery fee and a 10-minute estimated arrival time, which determine the extra cost and wait for your food.",
+        "whatTheAgentLoses": "You lose the chance to back out and choose a different restaurant if the delivery fee is too high or the wait is too long.",
+        "speak": "always",
+        "check": "What delivery fee and estimated time does the restaurant page show?",
+        "say_example": "<Restaurant>. Delivery is <fee>, about <time>."
+       },
+       {
+        "question": "Is this the branch you want?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the specific street address and cross streets for this branch, which matters because ordering from the wrong location could result in a much longer trip for pickup or delivery.",
+        "whatTheAgentLoses": "You lose the chance to verify the exact street address against your preferred location before committing to this specific restaurant branch.",
+        "speak": "gate",
+        "check": "How many locations of this restaurant does the page show near the address, and what street is each on?",
+        "say_example": "There are two <chain> branches nearby. I'll use the one on <street>, it's closest. OK, or the other one?"
+       },
+       {
+        "question": "Is this a ghost kitchen cooking out of another restaurant?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Virtual brands are often just rebranded versions of lower-tier chain restaurants (e.g., Pasqually's Pizza is actually [name]) operating out of the same kitchen.",
+        "whatTheAgentLoses": "You might overpay for food from a chain you would normally avoid if you knew its true physical origin.",
+        "speak": "on-event",
+        "check": "Does the restaurant page show a parent brand, the word virtual, or an address that another restaurant on the app also uses?",
+        "say_example": "<Name> isn't a real storefront. It's cooked at <other restaurant> down the street."
+       },
+       {
+        "question": "Is the restaurant about to stop taking orders?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Apps often flag restaurants that are about to stop taking orders; if you take too long to browse and customize, the checkout will fail.",
+        "whatTheAgentLoses": "The agent might take too long evaluating options, causing the restaurant to close before the order is placed and forcing a complete restart of the task.",
+        "speak": "on-event",
+        "check": "Does the page show a notice that the restaurant is closing soon, closed, or not taking orders, and what time does it give?",
+        "say_example": "This place stops taking orders at <time>. That's in <8> minutes, so I'm moving fast."
+       },
+       {
+        "question": "Is there a busy or surge badge on this place?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Delivery apps often use subtle banners or small icons (like a lightning bolt or an upward arrow) to indicate that dynamic 'surge' pricing is in effect, temporarily inflating delivery fees.",
+        "whatTheAgentLoses": "The user loses the opportunity to delay their order by 15 minutes to avoid a temporary surge fee that was only communicated via a subtle visual cue.",
+        "speak": "on-event",
+        "check": "Does the page show a surge, busy or high demand badge or icon, and what does its tooltip say?",
+        "say_example": "There's a busy badge on this place. Delivery fees are higher than usual right now."
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Reorder from history",
+      "questions": [
+       {
+        "question": "Do you want to reorder a past meal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of completed orders and an 'Order it again' section, offering a shortcut to select a familiar restaurant and item.",
+        "whatTheAgentLoses": "You lose the convenience of leveraging your personal order history to quickly reorder a known favorite.",
+        "speak": "never",
+        "check": "Does the page show past orders or an Order it again section?",
+        "say_example": "Started fresh instead of reordering"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Build the order",
+    "note": "4.1 and 4.2 per item, then 4.3 to 4.8 as the item's sheet demands - 4.3 blocks the add until every Required group is filled, and VIC3 hits that block three times. 4.9 commits the item; 4.10 answers whatever the add triggers; 4.11 decides the loop - repeat from 4.1 until the order is done. gjGe runs it three times, mAYq twice, most once. 4.12 and 4.13 are side branches: favorites in gjGe and opjd, a group order started and abandoned in opjd.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Navigate the menu"
+     },
+     {
+      "id": "4.2",
+      "label": "Pick the item",
+      "questions": [
+       {
+        "question": "Which menu item do you want to add to your order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displayed a full menu with various categories and specific dishes like Carne Asada Super Nachos, requiring a decision on what food to purchase.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally select the specific dish you are craving.",
+        "speak": "gate",
+        "check": "Which items does the menu show, with each one's name and price?",
+        "say_example": "They have three kinds of <nachos>. <Carne asada> is <price>, <chicken> <price>, <veggie> <price>. Which one?"
+       },
+       {
+        "question": "Is there a bundle that's cheaper than the items one by one?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The menu lists a three-taco bundle for $10.00, which is $0.80 cheaper than adding three individual $3.60 tacos to the cart.",
+        "whatTheAgentLoses": "You lose the financial savings of menu bundles if the agent simply adds individual items without comparing prices.",
+        "speak": "on-event",
+        "check": "Does the menu show a bundle or combo containing the same items, and is its price lower than the sum of the single items?",
+        "say_example": "<Three tacos> one at a time is <price>. The <three taco> bundle is <price>. I'm using the bundle, same food."
+       },
+       {
+        "question": "Is the item available at this hour?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The menu displays a 'Not available after midnight' badge on certain items, meaning you cannot order them if it is too late.",
+        "whatTheAgentLoses": "The agent might try to add a time-restricted item to the cart after hours, resulting in an error and a failed order.",
+        "speak": "on-event",
+        "check": "Does the item show a badge about hours, like not available after a time or lunch only?",
+        "say_example": "The <item> is off the menu after <midnight>. It's <12:10> now, so it's out. I'll look for something close."
+       },
+       {
+        "question": "Does the item's allergen note mention anything you said you can't have?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The item page includes a specific 'FOOD ALLERGY?' warning and a link to nutrition and ingredients, which is critical if you have dietary restrictions.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify that the item is safe for them to eat if they have severe food allergies.",
+        "speak": "if-wrong",
+        "check": "Does the item page show an allergen line or a food allergy warning, and what does it list?",
+        "say_example": "The <item> lists peanuts in its allergen note. You said no peanuts. I'm not adding it."
+       },
+       {
+        "question": "What does the icon next to the item, like a leaf or chili, mean?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Menus frequently use small, purely visual icons to communicate crucial information like 'vegan', 'gluten-free', or 'spicy' instead of writing it out in the text description.",
+        "whatTheAgentLoses": "The user might receive food they cannot eat due to dietary restrictions or spice intolerance because the agent failed to parse a purely visual icon.",
+        "speak": "on-event",
+        "check": "Does the item show an icon next to its name, like a leaf, chili or wheat symbol, and what does the legend or tooltip say it means?",
+        "say_example": "The <item> has a chili icon. The legend says that means spicy."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Fill the required options",
+      "questions": [
+       {
+        "question": "Is a required choice still missing before it can go in the cart?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen states that choosing two sauces is required, so the item cannot be added to the cart without selecting them.",
+        "whatTheAgentLoses": "The user misses out on their desired food item because the agent failed to select the required options and mistakenly thought the item was successfully added.",
+        "speak": "if-wrong",
+        "check": "Is the Add to cart button disabled, or does the page say a required choice is missing, and which one?",
+        "say_example": "It won't add. The page says <a sauce> still needs picking."
+       },
+       {
+        "question": "This item has required choices. Which ones do you want?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a gray 'Required' badge under the 'Select Option' section, meaning a meal size must be chosen before the add-to-cart button will work.",
+        "whatTheAgentLoses": "If the agent fails to select the required options and ignores the resulting error, you will not actually receive the item you wanted in your final order.",
+        "speak": "gate",
+        "check": "Which options are marked Required, and which are still unpicked? What choices and added prices does each one show?",
+        "say_example": "The <fries> need a <sauce>. <Ranch, honey mustard, or BBQ>, no charge. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Pick the size or meal",
+      "questions": [
+       {
+        "question": "Which size or meal version do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The item details screen requires choosing between the standard meal and a large version for an extra $0.90.",
+        "whatTheAgentLoses": "The user loses the ability to decide if the larger portion is worth the additional cost and calories.",
+        "speak": "gate",
+        "check": "Which size or meal options does the page show, with each one's price?",
+        "say_example": "<Regular> is <price>. <Large> is <90 cents> more. Which one?"
+       },
+       {
+        "question": "Is a bigger size or a paid extra already selected by default?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The size dropdown defaults to \"Grande 35 cm,\" which might be more or less food than you actually want.",
+        "whatTheAgentLoses": "You lose the ability to choose the exact portion size, potentially resulting in ordering and paying for more food than necessary.",
+        "speak": "if-wrong",
+        "check": "Which options are preselected on the item page, and does any preselected option carry a price above the base price?",
+        "say_example": "The size came up as <large>, <price>. You asked for <regular>. I'm switching it down."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Add or remove ingredients",
+      "questions": [
+       {
+        "question": "Do you want anything taken off or added?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displayed optional customizations to remove ingredients from the melt before adding it to the cart.",
+        "whatTheAgentLoses": "The user loses the ability to customize the item to their exact taste preferences by removing unwanted ingredients.",
+        "speak": "never",
+        "check": "Does the page offer ingredient removals, and which are ticked?",
+        "say_example": "Kept the <patty melt> as it comes"
+       },
+       {
+        "question": "Do you want less ice, or the regular amount?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides an option to increase or decrease the default quantity of ice for the Large Diet Coke before saving the item.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to customize the beverage to your exact temperature and dilution preferences.",
+        "speak": "never",
+        "check": "What ice level is selected for the drink?",
+        "say_example": "Left the ice on regular"
+       },
+       {
+        "question": "Do you want any extra toppings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The customization sheet offers various crusts and extra toppings like Crisp Capsicum for an additional ₹35, allowing you to tailor the pizza to your exact preferences.",
+        "whatTheAgentLoses": "You lose the opportunity to customize the pizza with specific extra toppings that match your current cravings.",
+        "speak": "never",
+        "check": "Which extra toppings does the sheet offer, and which are ticked?",
+        "say_example": "Skipped the extra toppings"
+       },
+       {
+        "question": "Do you want an extra patty?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offers optional patty additions like a 1/3lb patty for an extra $4.04, which changes the size and cost of the burger.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might skip the extra patty or choose a size you didn't want, affecting your meal's portion and total price.",
+        "speak": "never",
+        "check": "Which patty additions does the page offer, and which are ticked?",
+        "say_example": "Skipped the extra patty"
+       },
+       {
+        "question": "Do you want extra cheese?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The interface offers optional cheese additions like American, Swiss, or Pepper Jack for an extra $0.57 each.",
+        "whatTheAgentLoses": "The user loses the ability to customize their meal's flavor profile and control the extra costs of add-ons.",
+        "speak": "never",
+        "check": "Which cheese additions does the page offer, and which are ticked?",
+        "say_example": "Skipped the extra cheese"
+       },
+       {
+        "question": "Do you still want the change if it drops the item's promotion?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "A pop-up warned that changing the ingredients of the Fan Favorite Chicken Bowl might make the meal ineligible for bonuses or promotions.",
+        "whatTheAgentLoses": "An agent might automatically proceed with the customization, inadvertently causing you to lose out on special promotions.",
+        "speak": "on-event",
+        "check": "Does a popup say changing this item may make it ineligible for a promotion or bonus, and which promotion?",
+        "say_example": "Changing the <item> drops its <promo>. That's <amount> more. I'm keeping your change."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Write the item instructions",
+      "questions": [
+       {
+        "question": "Do you want to add any special instructions to this item?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The item page includes an \"Add Special Instructions\" field to request specific modifications before adding it to the order.",
+        "whatTheAgentLoses": "The user loses the ability to customize the dish to their specific taste or dietary preferences.",
+        "speak": "never",
+        "check": "Does the item page show a special instructions box, and what is in it?",
+        "say_example": "Wrote <no ice> in the instructions box"
+       },
+       {
+        "question": "Does the item page list every change you asked for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen lists 'Extra Bacon' under your changes but is missing the 'Plain' request, meaning the restaurant will likely prepare the item with unwanted ingredients.",
+        "whatTheAgentLoses": "You lose the chance to verify that all your specific taste preferences were successfully applied to the item before it is added to the order.",
+        "speak": "if-wrong",
+        "check": "Which changes does the item page list under your changes or customizations, and does it include each one asked for?",
+        "say_example": "The page shows the <extra bacon> but lost the <plain> you asked for. I'm adding it back before it goes in the bag."
+       },
+       {
+        "question": "Whose name goes on this meal?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The app presents a \"Who's this meal for?\" modal with a pre-filled name that might not match the intended recipient.",
+        "whatTheAgentLoses": "The user loses the ability to correctly label the meal for the specific person eating it.",
+        "speak": "never",
+        "check": "Does the page show a Who's this meal for field, and what name is in it?",
+        "say_example": "Named the meal for you"
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Set the sold-out preference",
+      "questions": [
+       {
+        "question": "What should the restaurant do if something sells out?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a bottom sheet asking for a preference, such as 'Refund Item' or 'Contact me', in case the requested item is unavailable.",
+        "whatTheAgentLoses": "The user loses the ability to decide their preferred backup plan, which could lead to receiving an unwanted substitution or having the order canceled.",
+        "speak": "on-event",
+        "check": "Does the page show a sold-out preference sheet, and which option is selected?",
+        "say_example": "If something sells out, they'll contact you first instead of swapping it. That's what I picked."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Set the quantity",
+      "questions": [
+       {
+        "question": "How many of this item do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The quantity selector on the screen allows you to adjust the exact number of portions for an item before adding it to your cart.",
+        "whatTheAgentLoses": "You lose the control to specify exactly how much of a particular item you need for your meal.",
+        "speak": "if-wrong",
+        "check": "What quantity does the selector show for the item?",
+        "say_example": "Quantity is set to <2>. You asked for <one>. I'm setting it to <1>."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Add the item to cart",
+      "questions": [
+       {
+        "question": "Does the price on the Add to Cart button match the item plus the options picked?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the Add to Cart button updating to $15.15 when the 1/3lb. Patty modifier is selected, so the total must match the chosen options.",
+        "whatTheAgentLoses": "The user loses financial transparency and might overpay if the agent ignores unexplained price increases before adding an item to the cart.",
+        "speak": "if-wrong",
+        "check": "What price does the Add to cart button show, and does it equal the item's base price plus the selected options' added prices?",
+        "say_example": "The button says <price>. The item plus the <patty add-on> should be <price>. Something's off. I'm re-reading it."
+       },
+       {
+        "question": "Did the item actually land in the cart?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When adding an item, the app often provides a brief visual toast or a subtle animation on the cart icon rather than a persistent, focus-stealing text confirmation.",
+        "whatTheAgentLoses": "The user loses the immediate certainty that their button press actually worked, potentially causing them to accidentally add duplicate items by pressing it again.",
+        "speak": "if-wrong",
+        "check": "After tapping add, does the cart icon count go up by one, or does the page show the item in the cart?",
+        "say_example": "The add didn't take. The cart still says 0. I'm trying once more."
+       }
+      ]
+     },
+     {
+      "id": "4.10",
+      "label": "Answer the add-on suggestions",
+      "questions": [
+       {
+        "question": "Do you want any of the suggested add-ons?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen prompts you to add optional sides like potatoes, wings, or dessert before continuing with the order.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to include extra items like wings or dessert with their main meal.",
+        "speak": "never",
+        "check": "Which add-on suggestions does the page show, with prices?",
+        "say_example": "Skipped the suggested drinks and sides"
+       }
+      ]
+     },
+     {
+      "id": "4.11",
+      "label": "Add more or check out"
+     },
+     {
+      "id": "4.12",
+      "label": "Favorite the item or store",
+      "questions": [
+       {
+        "question": "Do you want to favorite this restaurant?",
+        "cluster": "select",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Clicking the heart icon in the header saves the store to your favorites, triggering a confirmation popup.",
+        "whatTheAgentLoses": "The user loses the opportunity to curate their personal list of go-to restaurants for quicker ordering later.",
+        "speak": "never",
+        "check": "Does the page show a heart or favorite button, and is it filled?",
+        "say_example": "Didn't favorite anything"
+       }
+      ]
+     },
+     {
+      "id": "4.13",
+      "label": "Start a group order",
+      "questions": [
+       {
+        "question": "Do you want to leave the group order page?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a warning modal asking you to confirm leaving the group order page.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to participate in a shared group order or place an individual order.",
+        "speak": "on-event",
+        "check": "Does a modal warn that leaving the page ends or leaves the group order?",
+        "say_example": "Leaving this page would end the group order. I'm staying on it."
+       },
+       {
+        "question": "Do you want to start a group order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The restaurant page displays a Group Order button, offering a way to share a link so multiple people can add items to the same cart.",
+        "whatTheAgentLoses": "Delegating this decision means the agent might default to an individual order, losing the convenience of coordinating a shared cart with others.",
+        "speak": "never",
+        "check": "Does the page show a Group order button?",
+        "say_example": "Ordered solo - the group order button is there if you ever want it"
+       },
+       {
+        "question": "How much can each person spend on the group order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires selecting a per-person spending limit, such as $10, $15, or None, before starting the group order.",
+        "whatTheAgentLoses": "Delegating this decision means you lose the ability to control the budget for each participant in your group.",
+        "speak": "gate",
+        "check": "Which per-person spending limits does the page offer for the group order?",
+        "say_example": "The group order wants a limit per person. <10, 15, 20>, or none. Which?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Review the cart",
+    "note": "5.1 on every cart. 5.2 sends the user back into 4 - gjGe, T8iD and MCE3 each remove a line. 5.3 then 5.4 to 5.7 as the surface carries them: the promo, utensils and membership prompts sit in the cart on the US aggregators and at checkout on McDelivery and Foodpanda - same nodes either way. 5.8 only in LCB3, where the bag leaves the McDonald's app for Uber Eats and 6 and 7 continue there.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Check the cart lines",
+      "questions": [
+       {
+        "question": "Did the cart empty out after the address or delivery mode changed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Menus and item availability vary by location and fulfillment type; changing these settings mid-order often triggers a cart reset.",
+        "whatTheAgentLoses": "The agent might proceed to checkout with an empty or partial cart, resulting in you not receiving the food you wanted.",
+        "speak": "on-event",
+        "check": "After the address or delivery mode changed, is the cart empty, or does the page say items were removed?",
+        "say_example": "Switching the address wiped the cart. I'm adding the <items> back."
+       },
+       {
+        "question": "Is a credit being applied to this cart?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This matters because the screen shows a $21.00 credit applied to your order, significantly reducing the final cost to $2.30.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that your promotional credits were correctly applied to the final balance before committing to the checkout process.",
+        "speak": "on-event",
+        "check": "Does the cart show a credit, balance or discount line, and what amount?",
+        "say_example": "A <amount> credit on your account is covering most of this. It comes to <total>."
+       },
+       {
+        "question": "Do the cart lines add up to the subtotal?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying that the $17.98 subtotal equals the $10.99 nachos and $6.99 tacos ensures no extra items or hidden markups were added to the cart.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to catch pricing discrepancies or unwanted items added to the cart before paying.",
+        "speak": "if-wrong",
+        "check": "Does each cart line show the price it had on the item page, and does the subtotal equal the sum of the lines?",
+        "say_example": "The lines add up to <sum>. The subtotal says <subtotal>. I'm not going on until that matches."
+       },
+       {
+        "question": "Do the items in your cart match the ones you just selected?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a $13.50 Birria Chips item being added to the bag, but the cart later contains a Two Tacos Combo and a Jarritos totaling $21.75.",
+        "whatTheAgentLoses": "The user ends up paying for and receiving completely different food items than what they intended to order.",
+        "speak": "if-wrong",
+        "check": "Which items and quantities does the cart list, and do they match what was asked for, nothing missing and nothing extra?",
+        "say_example": "The cart has <a two taco combo and a soda>. You asked for <the birria chips>. I'm fixing that."
+       },
+       {
+        "question": "Does each cart line still carry the changes you asked for?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the bag ensures that specific customizations like extra sauce and no onions were correctly applied to the Big Mac Meal before paying.",
+        "whatTheAgentLoses": "You lose the chance to personally verify that your specific dietary preferences and customizations were accurately captured.",
+        "speak": "if-wrong",
+        "check": "Which modifiers does each cart line show under it, and do they match what was asked for?",
+        "say_example": "The <Big Mac> in the cart lost the <no onions>. I'm going back to put it in."
+       },
+       {
+        "question": "Did something in the cart sell out and get removed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Inventory can change between adding an item and checking out; the app will remove the unavailable item and usually display a brief warning.",
+        "whatTheAgentLoses": "The user receives a delivery missing their main meal because the agent ignored the out-of-stock alert and checked out with a partially empty cart.",
+        "speak": "on-event",
+        "check": "Does the page show an alert that an item sold out and was removed, and which item?",
+        "say_example": "The <item> just sold out and got pulled from the cart. That leaves <items>."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Edit or remove a line",
+      "questions": [
+       {
+        "question": "Do you want to take anything out of the basket?",
+        "cluster": "undo",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The basket page listed all your selected items, including Chicken Noodles, giving you a chance to review and remove anything you no longer wanted.",
+        "whatTheAgentLoses": "You lose the opportunity to review the basket contents and remove unwanted items before finalizing the order.",
+        "speak": "never",
+        "check": "Which items does the basket list, each with a remove control?",
+        "say_example": "Removed nothing"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Read the fee stack",
+      "questions": [
+       {
+        "question": "Is the total with fees over the limit you gave me?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen breaks down the final $17.74 cost, revealing additional charges like taxes, a delivery fee, and a fuel surcharge.",
+        "whatTheAgentLoses": "You lose the chance to decide if the accumulated extra fees make the delivery too expensive compared to the food's base price.",
+        "speak": "if-wrong",
+        "check": "What is the final total, and what lines make it up?",
+        "say_example": "With fees it comes to <total>. That's <amount> over the <budget> you gave me. OK to go up, or should I trim the order?"
+       },
+       {
+        "question": "Do the subtotal, fees, tax and tip add up to the total shown?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The cart showed a ₹350 total for a ₹300 item, so the ₹50 difference needs to be confirmed in the fee breakdown.",
+        "whatTheAgentLoses": "The user loses transparency over what they are paying for if the agent ignores the fee breakdown.",
+        "speak": "if-wrong",
+        "check": "Expand any Taxes and fees line. Do the subtotal, each fee, tax and tip add up to the total shown?",
+        "say_example": "The subtotal, fees and tip come to <sum>. The total says <total>. I'm re-reading the breakdown."
+       },
+       {
+        "question": "Has a fee shown up at checkout that wasn't on the restaurant listing?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms dynamically apply surge fees when couriers are scarce, and this fee often only appears in the final cost breakdown at checkout.",
+        "whatTheAgentLoses": "The user is forced to pay a hidden premium because the agent didn't notice the sudden addition of a surge fee right before payment.",
+        "speak": "on-event",
+        "check": "Which fee lines does checkout show, and was each one shown on the restaurant listing or menu?",
+        "say_example": "Checkout added a <fee name> of <amount>. It wasn't on the listing."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Apply a promo or voucher",
+      "questions": [
+       {
+        "question": "Do you want to apply a promo code to this order?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The cart screen displays a 'Promo code' row, offering an opportunity to reduce the total cost of the order.",
+        "whatTheAgentLoses": "Delegating this step means the agent might skip applying a personal discount code, causing you to pay more than necessary.",
+        "speak": "never",
+        "check": "Does the page show a promo code field, and is a code applied?",
+        "say_example": "Applied no promo code - you didn't give me one"
+       },
+       {
+        "question": "Is there a coupon or deal on the page for this order?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed a Delivery Coupons section indicating no coupons were currently available, which dictates whether you can reduce the total cost.",
+        "whatTheAgentLoses": "You lose the chance to decide whether to proceed at full price or hunt for external promo codes when the app shows no available discounts.",
+        "speak": "on-event",
+        "check": "Does the page show available coupons, rewards or deals for this order, and what are their conditions?",
+        "say_example": "There's a <amount> off coupon for this order. It has no conditions. I'm applying it."
+       },
+       {
+        "question": "Did the promo code take anything off, or did it apply for zero?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Apps sometimes accept a promo code and display an 'Applied' message, but deduct nothing if the specific cart items don't meet the promotion's hidden criteria.",
+        "whatTheAgentLoses": "The user pays full price because the agent trusted the 'Applied' success message without verifying that the discount math actually reduced the total.",
+        "speak": "if-wrong",
+        "check": "After the code is applied, what discount line does the cart show, and is it more than zero?",
+        "say_example": "The code says applied, but it took off nothing. It doesn't cover these items."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Answer the membership upsell",
+      "questions": [
+       {
+        "question": "Is a paid extra like a subscription trial, priority or a donation already ticked at checkout?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a total of $25.76 with various fees and an unchecked box offering to save $5.62 by subscribing to DashPass.",
+        "whatTheAgentLoses": "Delegating this step means the agent might accept high fees or sign you up for an unwanted recurring subscription without your explicit consent.",
+        "speak": "if-wrong",
+        "check": "Which optional boxes at checkout are checked, and does any carry a charge or an auto-renewing subscription?",
+        "say_example": "The <DashPass> trial box was already ticked. It renews at <price> a month. I've unticked it."
+       },
+       {
+        "question": "Do you want the free membership trial?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offers a Grubhub+ trial with free delivery on orders over $12, but it requires agreeing to an auto-renewing subscription.",
+        "whatTheAgentLoses": "The user loses the chance to weigh the immediate delivery fee savings against the risk of being charged for an unwanted ongoing subscription.",
+        "speak": "never",
+        "check": "Does the page offer a membership trial, and is it opted in?",
+        "say_example": "Said no to the <Grubhub+> trial"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Request the utensils",
+      "questions": [
+       {
+        "question": "Do you want utensils and napkins included with your order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The order review screen includes a specific checkbox to request utensils and napkins before proceeding to checkout.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might not request utensils, which could leave you without a way to eat your meal if you are away from home.",
+        "speak": "never",
+        "check": "Is the utensils box ticked?",
+        "say_example": "Left utensils off"
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Check the spend thresholds",
+      "questions": [
+       {
+        "question": "Is the cart close to a threshold that gets something free?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displayed a promotional banner for a free item, but the video navigated away before any items were added to the cart to claim it.",
+        "whatTheAgentLoses": "The user misses out on advertised free items and discounts because the agent fails to build a qualifying order.",
+        "speak": "on-event",
+        "check": "Does the page show a spend threshold promotion, what is the threshold, and what is the current subtotal?",
+        "say_example": "You're at <subtotal>. Another <amount> and delivery would be free. I'm leaving the cart as you asked."
+       },
+       {
+        "question": "Does the free item show its normal menu price in the cart?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Confirming that the $7.91 value of the promotional Big Mac in the cart matches its earlier menu price ensures the promotion accurately reflects the true savings.",
+        "whatTheAgentLoses": "An agent might blindly accept the promotion without cross-referencing the item's actual menu price to verify the true value of the deal.",
+        "speak": "never",
+        "check": "What price does the cart show on the promotional free item?",
+        "say_example": "Checked the free <side salad>. It's listed at <$4.99>, its normal menu price."
+       },
+       {
+        "question": "Is checkout locked because the cart is under the delivery minimum?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Some restaurants enforce a hard minimum spend for delivery orders, and the app will block the checkout process until you add more items to reach that threshold.",
+        "whatTheAgentLoses": "The agent gets stuck on the cart screen unable to proceed, failing the task because they don't realize they need to add a small item to clear the minimum.",
+        "speak": "gate",
+        "check": "Is the checkout button disabled, does the page say the subtotal is under a minimum, and what is the minimum?",
+        "say_example": "This place needs <minimum> for delivery. The cart is <subtotal>, so checkout is locked. Add something, or switch to pickup?"
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Hand off to another app",
+      "note": "5.8.1 then 5.8.2 on the first try; the handoff errors, the Uber Eats app is installed off camera, and 5.8.1 runs again on a smaller bag; then 5.8.3 and 5.8.4. after 5.8.4 the checkout is the partner's - 6 and 7 continue in Uber Eats with its own fees.",
+      "children": [
+       {
+        "id": "5.8.1",
+        "label": "Grant the sign-in consent"
+       },
+       {
+        "id": "5.8.2",
+        "label": "Grant the data access",
+        "questions": [
+         {
+          "question": "Do you allow the restaurant app to share your account data with the delivery app?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen asks for permission to share your cart, pricing, and delivery address data between the apps.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether they are comfortable sharing their personal data between the restaurant and the delivery platform.",
+          "speak": "gate",
+          "check": "What does the consent screen say will be shared between the two apps?",
+          "say_example": "<Restaurant app> wants to hand your cart, price and address to <delivery app> to finish. OK to share those?"
+         }
+        ]
+       },
+       {
+        "id": "5.8.3",
+        "label": "Leave for the partner app"
+       },
+       {
+        "id": "5.8.4",
+        "label": "Verify the cart transferred",
+        "questions": [
+         {
+          "question": "Did the items come across into the delivery app's cart?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "Verifying that the Medium Coke and its price appear on the screen ensures the app correctly registered your selection before you proceed to checkout.",
+          "whatTheAgentLoses": "Delegating this step means you lose the chance to personally confirm that the correct items and options were added to your order before paying.",
+          "speak": "if-wrong",
+          "check": "After the handoff, does the delivery app's cart show the same items and prices?",
+          "say_example": "The cart didn't come across. <Delivery app> shows it empty. I'm trying the handoff again."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Set the delivery details",
+    "note": "6.1 on every delivery checkout - the warnings on it are ignored in three keepers. 6.2 where the form asks. 6.3 where the user cares; 6.4 where the app prices the speed or offers a schedule. 6.5 and 6.6 where offered. the whole goal is skipped on the pickup order.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Confirm the delivery address",
+      "questions": [
+       {
+        "question": "Is the map pin on the right spot for your address?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a map with the address and an 'Adjust pin' option, which ensures the delivery driver is routed to the exact correct location.",
+        "whatTheAgentLoses": "You lose the opportunity to visually confirm the exact drop-off spot on the map and decide whether to permanently save this address to your account.",
+        "speak": "if-wrong",
+        "check": "What address label does the pin or map show, and does it match the address text?",
+        "say_example": "The pin dropped a block away from <address>. I'm moving it onto your building."
+       },
+       {
+        "question": "Is the address still right, even though the app says you're far from it?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a warning that you seem far away from the entered delivery address, which could indicate an accidental or outdated selection.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify if the flagged delivery address is actually where they intend to receive the food.",
+        "speak": "on-event",
+        "check": "Does the page warn that you seem far from the delivery address?",
+        "say_example": "The app says you're far from <address>. I'm keeping the address you gave me."
+       },
+       {
+        "question": "Is the unit number the app flagged as invalid actually right?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout screen displays a warning that the entered apartment or suite number might be invalid, which could prevent the driver from finding your exact door.",
+        "whatTheAgentLoses": "The user's food might be delivered to the wrong unit or returned if the agent ignores the address validation warning.",
+        "speak": "on-event",
+        "check": "Does the page flag the apartment or unit number as possibly invalid, and what is entered?",
+        "say_example": "It's flagging unit <unit> as maybe invalid. I'm keeping it as you gave it to me."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Enter the contact details",
+      "questions": [
+       {
+        "question": "What name and phone number go in the contact fields?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen includes fields for your name and phone number, along with a disclaimer that providing a number means consenting to text messages about the order.",
+        "whatTheAgentLoses": "You lose the choice of whether to share your personal phone number and opt into text message updates regarding your delivery.",
+        "speak": "always",
+        "check": "Which name and phone fields does the page show, and what is in them?",
+        "say_example": "I'm filling in your name and phone number now."
+       },
+       {
+        "question": "Is the pre-filled contact number correct?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen displays a contact number that the restaurant or delivery driver will use if they need help with your order or location.",
+        "whatTheAgentLoses": "Delegating this step means the agent might accept an outdated phone number, preventing the driver from reaching you if there is a delivery issue.",
+        "speak": "if-wrong",
+        "check": "What phone number is in the contact field, and does it match yours?",
+        "say_example": "The phone number here ends in <digits>. Yours ends in <digits>. I'm replacing it."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Set the drop-off instructions",
+      "questions": [
+       {
+        "question": "Is the old note for the driver still right?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen displayed an old note about a broken doorbell that needed to be removed so the driver wouldn't follow outdated instructions.",
+        "whatTheAgentLoses": "An agent might leave the outdated delivery instructions in place, causing the driver to follow unnecessary or incorrect steps.",
+        "speak": "on-event",
+        "check": "Does the page show saved delivery instructions, and what do they say?",
+        "say_example": "There's an old note for the driver. It says <the doorbell is broken>. I'm leaving it on."
+       },
+       {
+        "question": "Hand it to you, or leave it at the door?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires choosing between handing the order to you or leaving it at the door, and provides a text box for specific placement instructions.",
+        "whatTheAgentLoses": "You lose the opportunity to provide custom delivery instructions, which might result in your food being left on the floor instead of a preferred spot.",
+        "speak": "always",
+        "check": "Which drop-off option is selected, hand to me or leave at door?",
+        "say_example": "It's set to leave at the door."
+       },
+       {
+        "question": "Does the driver need a note to find your door?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides an \"Add delivery instructions\" field where you can specify details like yard signs or gate codes to ensure the driver finds your house easily.",
+        "whatTheAgentLoses": "Delegating this means the agent might not know the unique visual cues or gate codes needed to guide the driver directly to your door.",
+        "speak": "never",
+        "check": "Does the page show a delivery instructions box, and what is in it?",
+        "say_example": "Added your <gate code> to the driver note"
+       },
+       {
+        "question": "Does this order have alcohol, so you'd have to meet the driver with ID?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Orders containing alcohol legally require an in-person ID check and cannot be left at the door, overriding any 'contactless delivery' preferences.",
+        "whatTheAgentLoses": "The driver will be forced to return the order to the store if you are not available at the door with your ID, resulting in a cancelled order.",
+        "speak": "gate",
+        "check": "Does the page say the order contains alcohol and needs an ID check at the door?",
+        "say_example": "There's alcohol in this order. The driver has to see your ID in person. They won't leave it at the door. Still want it in?"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Pick the delivery time",
+      "questions": [
+       {
+        "question": "As soon as possible, or a scheduled time?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The interface offers a choice between the default ASAP delivery, estimated at 44 to 54 minutes, or scheduling a specific time slot later in the day.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to perfectly time the food's arrival with your personal schedule.",
+        "speak": "never",
+        "check": "Which delivery time is selected, ASAP or a slot, and what estimate does it show?",
+        "say_example": "Set for as soon as possible, <about 35 minutes>"
+       },
+       {
+        "question": "Do you want to pay extra for priority delivery?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presented Priority delivery for an extra $1.99, Standard, or Scheduled delivery, requiring a tradeoff between cost and a slightly faster arrival time.",
+        "whatTheAgentLoses": "Delegating this choice means losing the ability to decide if saving five minutes is worth paying an extra fee based on your immediate hunger and budget.",
+        "speak": "never",
+        "check": "Is priority delivery offered, at what price, and is it selected?",
+        "say_example": "Skipped priority - <$2.99> for a few minutes faster"
+       },
+       {
+        "question": "Does the page want a pickup time picked?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a 'Looks like you missed something' error because a required pickup time option was not selected.",
+        "whatTheAgentLoses": "The user loses control over their preferred pickup schedule, which can lead to an inconvenient collection time or a failed checkout.",
+        "speak": "on-event",
+        "check": "Does the page show an error about the pickup time, missing or expired, and which slots does it offer?",
+        "say_example": "It needs a pickup time. The soonest is <time>. I'm taking that one."
+       },
+       {
+        "question": "Is the delivery set for today, or did it slip to tomorrow?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a restaurant is closed or closing soon, the app might automatically switch the fulfillment time to the next day without a prominent warning.",
+        "whatTheAgentLoses": "You end up paying for and waiting for food that won't arrive until tomorrow, leaving you hungry tonight.",
+        "speak": "gate",
+        "check": "What delivery date and time does checkout show, and is it today?",
+        "say_example": "The kitchen is closed, so this would come tomorrow at <time>. Still order it, or find somewhere open?"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Decide on the gift option",
+      "questions": [
+       {
+        "question": "Do you want to send this order as a gift?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides an option to send the order as a gift by adding a digital card, a personalized note, and recipient details.",
+        "whatTheAgentLoses": "The user loses the ability to surprise someone else with a food delivery and a personalized digital note.",
+        "speak": "never",
+        "check": "Is send as gift ticked?",
+        "say_example": "Left send as gift off"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Write the restaurant message",
+      "questions": [
+       {
+        "question": "Do you have any special instructions for the restaurant?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a text box for adding a message to the order, which allows you to request specific preparations like a medium spice level.",
+        "whatTheAgentLoses": "You lose the opportunity to communicate specific taste preferences or dietary needs directly to the kitchen.",
+        "speak": "never",
+        "check": "Does the page show a message box for the restaurant, and what is in it?",
+        "say_example": "Told the kitchen <medium spice>, like you asked"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Pay and place the order",
+    "note": "7.1 where a tip exists - in the cart on Grubhub, on the checkout on DoorDash, on its own screen after the fees on Uber Eats; none on Foodpanda, Domino's or the pickup order. 7.2, or 7.3 when nothing is on file - VIC3 and mAYq open 7.3, back out, and 7.7 then cannot complete. 7.4 on a cash order. 7.5 with 7.6 against it, then 7.7. 7.8 loops back to 7.7 - T8iD twice on a promo, mAYq twice on payment, neither resolved. 7.9 after 7.7 on Foodpanda. the commit itself is cut or never shown in six keepers.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Set the tip",
+      "questions": [
+       {
+        "question": "How much do you want to tip the driver?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen presents preset tip amounts like $3, $4, and $5, alongside an option to enter a custom tip.",
+        "whatTheAgentLoses": "Delegating this decision means losing the ability to choose an appropriate gratuity based on your personal budget or the order total.",
+        "speak": "gate",
+        "check": "Which tip options does the page show, which one is highlighted as selected, and what does the total come to with it?",
+        "say_example": "The tip is preset to <amount>, that's <20> percent. The buttons are <3, 4 and 5> dollars. Which?"
+       },
+       {
+        "question": "Is the preset tip figured on the subtotal alone, or on fees and tax too?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Apps often default to a percentage tip that silently includes taxes and platform fees in its calculation, inflating the tip amount without explicit warning.",
+        "whatTheAgentLoses": "The user unknowingly pays a higher tip than intended because they couldn't visually verify the math behind the pre-filled default percentage.",
+        "speak": "if-wrong",
+        "check": "What does the page say the tip percentage is based on, and does the preset amount equal that percent of the subtotal?",
+        "say_example": "The <20> percent tip here is figured on fees and tax too. That's <amount> instead of <amount>."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Choose the payment method",
+      "questions": [
+       {
+        "question": "Which payment method do you want to use for this order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The payment screen lists saved options like a Visa card and Google Pay, along with options to add a new card or PayPal account.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which credit card or digital wallet is charged for the meal.",
+        "speak": "gate",
+        "check": "Which payment methods does the page list, which is selected, and does any show a cashback offer or a balance shortfall?",
+        "say_example": "Two ways to pay saved here. <Visa ending 4821>, or <Google Pay>. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Add a payment method",
+      "questions": [
+       {
+        "question": "Does the page need a card typed in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays empty fields for a card number, expiration date, CVC, and zip code, which are required to process the payment for the order.",
+        "whatTheAgentLoses": "Delegating this step means the agent might use an incorrect or unauthorized payment method instead of your preferred credit card.",
+        "speak": "gate",
+        "check": "Does the page show empty card number, expiry and security code fields?",
+        "say_example": "It wants a card typed in. That's yours to enter. I'll hold the page while you do it."
+       },
+       {
+        "question": "Is the billing country set correctly for your new credit card?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Save Card' form defaults the billing country to the United States, which must be changed if your credit card has an international billing address.",
+        "whatTheAgentLoses": "The user experiences a payment failure because the agent blindly accepted the default country instead of matching it to the card's actual billing address.",
+        "speak": "if-wrong",
+        "check": "Which billing country is selected on the card form?",
+        "say_example": "The card form has the country on <United States>. Your card is from <country>. I'm changing it."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Prepare the cash change"
+     },
+     {
+      "id": "7.5",
+      "label": "Review the order summary"
+     },
+     {
+      "id": "7.6",
+      "label": "Check the totals across screens",
+      "questions": [
+       {
+        "question": "Is the delivery fee at checkout the same one the listing showed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying that the $1.99 delivery fee quoted on the search results matches the final cart breakdown ensures you aren't hit with unexpected charges.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to catch bait-and-switch pricing and cancel the order if the final delivery fee is higher than initially expected.",
+        "speak": "if-wrong",
+        "check": "What delivery fee does checkout show, and what fee did the restaurant listing show?",
+        "say_example": "The listing said <fee> delivery. Checkout says <fee>."
+       },
+       {
+        "question": "Is the delivery time at checkout the one the listing promised?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The 25-35 minute delivery time advertised on the restaurant listing requires paying a $1.99 priority fee at checkout, while the free standard delivery takes longer.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to pay an unexpected priority fee to get the originally advertised delivery time or accept a slower delivery.",
+        "speak": "if-wrong",
+        "check": "What delivery time does checkout show for standard delivery, and what did the listing and the restaurant page show?",
+        "say_example": "The listing promised <time>. At checkout that speed costs <fee> extra. Standard is <time>."
+       },
+       {
+        "question": "Is the total on the confirmation the same as at checkout?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The checkout screen displayed a total of $30.76 with a $5.00 tip, but the final confirmation showed a different total of $26.82 with a $3.00 tip.",
+        "whatTheAgentLoses": "The user loses control over their spending and intended tip amount if the final order differs from what was approved.",
+        "speak": "if-wrong",
+        "check": "What total and which items does the confirmation show, and do they match the checkout screen?",
+        "say_example": "Checkout said <total>. The confirmation says <total> with a <amount> tip. Those don't match."
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Place the order",
+      "questions": [
+       {
+        "question": "Do you want to place this order?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a final total of $17.74 and a 'Place order' button, meaning the next action will finalize the purchase.",
+        "whatTheAgentLoses": "You lose the final opportunity to cancel the transaction before real money is charged to your payment method.",
+        "speak": "gate",
+        "check": "What does the place order screen show for items, total, address, arrival estimate, and payment method?",
+        "say_example": "Ready to order. <Items>, from <restaurant>. <Total> with tip. Your Visa ending <digits>. To <address>, about <time>. Press to order, or say change."
+       }
+      ]
+     },
+     {
+      "id": "7.8",
+      "label": "Clear the commit error",
+      "questions": [
+       {
+        "question": "Is the page saying a promo code is invalid?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed a 'Promo code MOTHERSTREAT is invalid' warning that needed to be cleared to successfully process the payment.",
+        "whatTheAgentLoses": "The user experiences a failed order attempt and delayed food delivery because the agent ignored an active on-screen error.",
+        "speak": "on-event",
+        "check": "Does the page show an error that a promo code or offer is invalid, and which one?",
+        "say_example": "The code <code> didn't work. The page says it's invalid. I'm removing it so the order can go through."
+       }
+      ]
+     },
+     {
+      "id": "7.9",
+      "label": "Enter the verification code",
+      "questions": [
+       {
+        "question": "What's the code they texted to your phone?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires an SMS verification code sent to your phone to finalize the order.",
+        "whatTheAgentLoses": "The agent cannot access the SMS verification code sent to your personal device, preventing them from completing the order independently.",
+        "speak": "gate",
+        "check": "Does the page ask for a code sent by SMS, and to which number?",
+        "say_example": "They texted a code to your phone ending <digits>. Read it to me, or type it in. I'll wait."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Track the order",
+    "note": "8.1 on every completed order; 8.2 as the prompts fire - three in a row in opjd. then 8.3 and 8.4 in any order and as often as the user checks - gjGe reads both and they disagree; 8.5 once a driver is assigned. 8.6 where opened. 8.7 is never taken. 8.8 after delivery - four keepers rate.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the confirmation",
+      "questions": [
+       {
+        "question": "Does the confirmation show your special instructions?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The special instructions entered earlier were missing from the order details on the confirmation screen, which could mean the restaurant did not receive them.",
+        "whatTheAgentLoses": "The user loses the ability to verify that their custom food modifications were successfully submitted with the order.",
+        "speak": "if-wrong",
+        "check": "Does the confirmation show the special instructions that were entered, word for word?",
+        "say_example": "The confirmation doesn't show your <no onions> note. The kitchen may not have it. I'd call them."
+       },
+       {
+        "question": "Did the order go through?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen confirms the order was received and provides a specific order code, which is essential to keep for tracking or contacting customer support.",
+        "whatTheAgentLoses": "Delegating this step means you miss seeing the exact order code required to follow up with the restaurant or customer service if there is an issue with your delivery.",
+        "speak": "always",
+        "check": "Does the page show an order placed message, an order number, and an arrival estimate?",
+        "say_example": "It went through. Order <code>. Arriving about <time>."
+       },
+       {
+        "question": "Does the confirmation say pickup when you asked for delivery?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly states 'This is a Pickup order. You'll need to go to Julioberto's... to pick up this order', which means you have to travel instead of waiting for delivery.",
+        "whatTheAgentLoses": "The user might wait at home for food that is sitting at the restaurant because the agent accidentally finalized a pickup order instead of delivery.",
+        "speak": "if-wrong",
+        "check": "Does the confirmation say it is a pickup order, and from where?",
+        "say_example": "The confirmation says pickup. You asked for delivery. You'd have to go to <street> for it. I can cancel it if you say so."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Answer the post-order prompts",
+      "questions": [
+       {
+        "question": "Is the app warning that an item is running low?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a popup warning that K-Burgers are running low, which could affect your item selection.",
+        "whatTheAgentLoses": "An agent might automatically dismiss the notification without alerting you that a specific promotional item is almost out of stock.",
+        "speak": "on-event",
+        "check": "Does a popup say an item is low or limited, and which item?",
+        "say_example": "The app says <item> is running low. The order's in, so it may get swapped or refunded."
+       },
+       {
+        "question": "Do you want to add items from a nearby store to your order?",
+        "cluster": "select",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen offers the option to add items from a second nearby store with no extra delivery fees, noting it will add 5 to 10 minutes to the delivery time.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if the convenience of adding extra items from a second store is worth the slight delay to your original delivery.",
+        "speak": "never",
+        "check": "Does the page offer adding items from another store?",
+        "say_example": "Skipped the offer to add items from a nearby store"
+       },
+       {
+        "question": "Do you want to save this as your default restaurant?",
+        "cluster": "approve",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The app displays a pop-up asking if you want to automatically use the closest or most recent restaurant when starting future orders.",
+        "whatTheAgentLoses": "The user loses the ability to control their account settings and decide whether future orders should automatically default to this specific location.",
+        "speak": "never",
+        "check": "Does a popup ask to save a default restaurant preference?",
+        "say_example": "Said no to saving a default restaurant"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Watch the status tracker",
+      "questions": [
+       {
+        "question": "Does the tracker say the order is delivered?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Confirming the delivery time and specific drop-off instructions ensures you know exactly when and where to retrieve your food.",
+        "whatTheAgentLoses": "Delegating this means you miss the immediate confirmation of exactly when and where your food was left.",
+        "speak": "on-event",
+        "check": "Does the tracker say delivered, at what time, and where it was left?",
+        "say_example": "It's here. Left at the door at <time>."
+       },
+       {
+        "question": "Does the confirmation show the address you gave at checkout?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The delivery confirmation screen shows a different address than the one requested for the order.",
+        "whatTheAgentLoses": "The user's food will be delivered to the wrong location, resulting in a lost meal and wasted money.",
+        "speak": "if-wrong",
+        "check": "What delivery address does the confirmation show, and does it match the one entered?",
+        "say_example": "The confirmation shows <address>. That's not where we sent it. I'd call support now."
+       },
+       {
+        "question": "Is the tracker showing a later arrival than the confirmation promised?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The SMS notification stated the order was on its way, but the app displayed the home screen instead of the live order tracker.",
+        "whatTheAgentLoses": "You lose the ability to actively monitor your delivery if the agent navigates away from the live tracker.",
+        "speak": "if-wrong",
+        "check": "What status and arrival time does the app's tracker show, and is that time later than the estimate the confirmation gave?",
+        "say_example": "The tracker now says <time>. The confirmation said <time>. It's running late."
+       },
+       {
+        "question": "Did the restaurant cancel the order after you paid?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Even if the app accepts the payment, the restaurant's local tablet can auto-reject the order if the kitchen is overwhelmed, resulting in an immediate cancellation.",
+        "whatTheAgentLoses": "The user waits for food that is never coming because the agent saw the 'payment successful' screen and stopped looking before the restaurant's rejection came through.",
+        "speak": "on-event",
+        "check": "Does the tracker or an in-app alert say the order was cancelled or refunded, and by whom?",
+        "say_example": "The restaurant cancelled it. The page says the <total> is being refunded. Nothing is coming."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Read the SMS and email",
+      "questions": [
+       {
+        "question": "Which address does the page say the confirmation email went to?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Seeing the foodpanda confirmation email in the inbox verifies that the order was successfully processed by the service.",
+        "whatTheAgentLoses": "You lose the immediate peace of mind of personally verifying the email receipt in your own inbox.",
+        "speak": "never",
+        "check": "Does the confirmation page say a confirmation email was sent, and to which address?",
+        "say_example": "Page says the confirmation email went to <email>"
+       },
+       {
+        "question": "Is there a message from the restaurant in the app asking you something?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen showed an SMS notification from McDelivery stating they might need to clarify order details, making it important to read the full message to ensure no further action is required.",
+        "whatTheAgentLoses": "The user loses the immediate reassurance of personally verifying the restaurant's confirmation and understanding exactly how future updates will be communicated.",
+        "speak": "gate",
+        "check": "Does the app show a message from the restaurant or driver about this order, and does it ask for a reply?",
+        "say_example": "The restaurant sent a message in the app. They're asking <question>. What should I say back?"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Track the driver"
+     },
+     {
+      "id": "8.6",
+      "label": "Get help mid-order",
+      "questions": [
+       {
+        "question": "Do you want to cancel this order?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The help menu displays immediate options like checking the Dasher status, getting a delivery ETA, or canceling the order.",
+        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with how to get help or cancel the order if an issue arises.",
+        "speak": "gate",
+        "check": "Which help options does the page show, and is Cancel order one of them?",
+        "say_example": "This is the cancel button. Once pressed the order is gone. Cancel it?"
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Cancel the order"
+     },
+     {
+      "id": "8.8",
+      "label": "Rate the order",
+      "questions": [
+       {
+        "question": "How should I rate the food and the delivery service?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen shows the order is complete along with the Dasher's name, marking the moment to decide what feedback to leave for the restaurant and the driver.",
+        "whatTheAgentLoses": "The user loses the opportunity to provide authentic feedback based on their actual enjoyment of the meal and their personal experience with the delivery driver.",
+        "speak": "never",
+        "check": "Does the page ask for a rating?",
+        "say_example": "Left the rating for you"
+       },
+       {
+        "question": "Does the restaurant on the rating screen match the one you just ordered from?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The rating screen asks to review 'Bar Louie' but the order just delivered was from 'Chipotle', showing an unexplained jump to a different order.",
+        "whatTheAgentLoses": "The user loses a continuous, reliable record of their transaction when the agent mixes up unrelated orders.",
+        "speak": "if-wrong",
+        "check": "Which restaurant and order does the rating screen name, and is it the one just delivered?",
+        "say_example": "The rating screen is asking about <other restaurant>. That isn't tonight's order. I'm skipping it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Use the rewards and deals",
+    "note": "9.1 and 9.2 where a rewards tab exists - VCYA reads both before the cart, NHBc after the order. 9.3 in the store. nothing here is applied to an order in the corpus; the code and voucher fields are 5.4.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Read the rewards balance",
+      "questions": [
+       {
+        "question": "Do you have rewards points to use?",
+        "cluster": "hand over",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Checking the Rewards tab on the bottom navigation bar before browsing the listed restaurants might reveal available discounts that influence where you order.",
+        "whatTheAgentLoses": "You lose the chance to prioritize restaurants where you have existing loyalty perks or free items.",
+        "speak": "never",
+        "check": "Does the page show a Rewards tab or a points balance?",
+        "say_example": "Left your <420> points unspent"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Browse the deals",
+      "questions": [
+       {
+        "question": "Do you want the bonus points offer, or should I close the popup?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Long Time No Eat' promotion offering 350 extra points if you start an order.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to activate a limited-time rewards promotion or ignore it.",
+        "speak": "never",
+        "check": "Does a popup offer bonus points for starting an order?",
+        "say_example": "Closed a bonus points popup"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Get the in-store points code"
+     }
+    ]
+   }
+  ]
+ }
+}

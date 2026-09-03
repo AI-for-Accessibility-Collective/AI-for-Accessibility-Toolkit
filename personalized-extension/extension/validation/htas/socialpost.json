@@ -16,7 +16,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "The login screen prominently offers a 'Use QR code' option, which allows you to bypass entering a password if you are already logged in on another device.",
-      "whatTheAgentLoses": "You lose the convenience and security of a passwordless login, forcing the agent to handle your raw credentials."
+      "whatTheAgentLoses": "You lose the convenience and security of a passwordless login, forcing the agent to handle your raw credentials.",
+      "speak": "never",
+      "check": "Does the login screen show a 'Use QR code' option?",
+      "say_example": "Signed in with your saved details. Skipped the QR option."
      }
     ],
     "children": [
@@ -25,12 +28,15 @@
       "label": "Choose the device",
       "questions": [
        {
-        "question": "Do you want to proceed on the desktop website or switch to the mobile app?",
+        "question": "Does the page push you toward the mobile app instead of continuing on the web?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays the TikTok desktop login options, prompting a choice between continuing on the web or switching to the mobile app where the platform is primarily designed to be used.",
-        "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide which device interface offers the best tools and workflow for your specific post."
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide which device interface offers the best tools and workflow for your specific post.",
+        "speak": "on-event",
+        "check": "Does the page show a prompt such as 'Get the app' or 'Continue in browser'?",
+        "say_example": "The site keeps offering its phone app. I'm staying on the web. Posting works fine from here."
        }
       ]
      },
@@ -39,12 +45,15 @@
       "label": "Install the app",
       "questions": [
        {
-        "question": "Which app should you open to download the required social media platform?",
+        "question": "The required social media app is missing - do you approve installing a new app on your device at all?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The home screen displays numerous icons, and you must specifically select the App Store to install the missing social media application.",
-        "whatTheAgentLoses": "The user loses the opportunity to decide whether they want a new application downloaded and installed on their personal device."
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether they want a new application downloaded and installed on their personal device.",
+        "speak": "never",
+        "check": "Is an 'App Store' icon or label shown on the screen?",
+        "say_example": "Opened the App Store to get the app."
        },
        {
         "question": "Which search result is the correct TikTok app to open?",
@@ -52,7 +61,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search results display unrelated apps like TurnLive at the top, so you must carefully identify the official TikTok app with the OPEN button to proceed.",
-        "whatTheAgentLoses": "You lose the ability to ensure the agent opens the official, secure social media app rather than a sponsored third-party knockoff."
+        "whatTheAgentLoses": "You lose the ability to ensure the agent opens the official, secure social media app rather than a sponsored third-party knockoff.",
+        "speak": "on-event",
+        "check": "Which search result shows the app's official name and developer, such as 'TikTok' by 'TikTok Pte. Ltd.'?",
+        "say_example": "The top of the search is an ad for a lookalike app. The real <TikTok> is further down, made by <TikTok Pte. Ltd.>. I'm opening that one."
        },
        {
         "question": "Is the correct social media app already installed and ready to open?",
@@ -60,7 +72,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'OPEN' button next to the official X app by X Corp confirms it is already installed on the device.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that the official app is installed rather than a sponsored imitation."
+        "whatTheAgentLoses": "You lose the ability to personally verify that the official app is installed rather than a sponsored imitation.",
+        "speak": "never",
+        "check": "Does the store listing for the official app show an 'OPEN' button?",
+        "say_example": "The app was already installed. Opened it from the store page."
        }
       ]
      },
@@ -74,7 +89,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The home screen displays multiple app icons, requiring you to select the specific platform where the post will be published.",
-        "whatTheAgentLoses": "Delegating this choice means you lose control over which specific social media platform your content is shared on."
+        "whatTheAgentLoses": "Delegating this choice means you lose control over which specific social media platform your content is shared on.",
+        "speak": "never",
+        "check": "Is the <platform> app icon or name shown on the screen?",
+        "say_example": "Opened <Instagram>, the platform you asked for."
        }
       ]
      },
@@ -88,7 +106,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides multiple sign-up options like phone, email, and social logins, which determines how your new account will be linked and accessed.",
-        "whatTheAgentLoses": "Delegating this choice means losing control over which of your personal contact methods or existing social accounts are tied to the new profile."
+        "whatTheAgentLoses": "Delegating this choice means losing control over which of your personal contact methods or existing social accounts are tied to the new profile.",
+        "speak": "gate",
+        "check": "Which sign-up methods does the screen list?",
+        "say_example": "This platform wants a new account. It can sign up with a phone number, an email, or your <Google> login. Which should it be tied to?"
        }
       ]
      },
@@ -101,12 +122,15 @@
       "label": "Choose the username",
       "questions": [
        {
-        "question": "Which alternative username should you select since your desired one is taken?",
+        "question": "Which alternative username should you pick since the one you wanted is taken?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a warning that your desired username is unavailable and disables the sign-up button until a valid option is chosen.",
-        "whatTheAgentLoses": "You lose the ability to decide which specific variation of your desired username best fits your brand identity."
+        "whatTheAgentLoses": "You lose the ability to decide which specific variation of your desired username best fits your brand identity.",
+        "speak": "gate",
+        "check": "Which usernames does the page suggest as available?",
+        "say_example": "The name <you wanted> is taken. The site offers <name_2024> and <name.official>, or you can give me a different one. What should your handle be?"
        }
       ]
      },
@@ -120,7 +144,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The app is requesting microphone access to record audio for your post, which requires your explicit consent for privacy.",
-        "whatTheAgentLoses": "Delegating this means losing the ability to personally control which applications have access to your device's microphone."
+        "whatTheAgentLoses": "Delegating this means losing the ability to personally control which applications have access to your device's microphone.",
+        "speak": "gate",
+        "check": "Does the screen show a microphone permission request?",
+        "say_example": "The app is asking to use the microphone. Recording needs it, and the app keeps that access afterward. OK to allow?"
        }
       ]
      }
@@ -137,7 +164,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "The dashboard displays a notification that 'You have new monetization tools that need to be set up,' which could affect the revenue potential of the content you are about to publish.",
-      "whatTheAgentLoses": "You lose the opportunity to ensure your account is fully configured to earn money from the post before it goes live."
+      "whatTheAgentLoses": "You lose the opportunity to ensure your account is fully configured to earn money from the post before it goes live.",
+      "speak": "never",
+      "check": "Does the dashboard show a notice such as 'You have new monetization tools that need to be set up'?",
+      "say_example": "Skipped a banner about new monetization tools. It's still there when you want it."
      }
     ],
     "children": [
@@ -146,28 +176,37 @@
       "label": "Switch to the posting identity",
       "questions": [
        {
-        "question": "Which account should you navigate to in order to make the post?",
+        "question": "Which account should you post from?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The account menu displays multiple profiles like Moonward Media and Andy Knode, so you must select the correct identity before posting.",
-        "whatTheAgentLoses": "The user loses the ability to choose which specific brand or personal profile will author the post."
+        "whatTheAgentLoses": "The user loses the ability to choose which specific brand or personal profile will author the post.",
+        "speak": "gate",
+        "check": "Which account names does the account menu list?",
+        "say_example": "You have more than one profile here, <the brand page> and <your personal account>. Which one is this post from?"
        },
        {
-        "question": "Do you see the standard posting box available on the current screen?",
+        "question": "Posting is not available from the current view - should the agent switch into the page's profile before composing the post?",
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
         "why": "This matters because the interface prompts you to switch into the page's profile to take more actions, indicating you cannot create a post from the current view.",
-        "whatTheAgentLoses": "The user loses the understanding that they must explicitly switch profiles to unlock the page's posting capabilities."
+        "whatTheAgentLoses": "The user loses the understanding that they must explicitly switch profiles to unlock the page's posting capabilities.",
+        "speak": "never",
+        "check": "Does the page show a create-post box, or a prompt to switch into the page profile first?",
+        "say_example": "Had to switch into the page profile before the composer appeared."
        },
        {
-        "question": "Is the tiny profile avatar next to the 'Post' button definitely your intended brand account, rather than your personal one?",
+        "question": "Is the avatar next to the 'Post' button your brand account, not your personal one?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The only indicator of which account is actively posting is often a small avatar in the corner of the screen, making it easy to accidentally publish corporate content to a personal feed if not visually verified.",
-        "whatTheAgentLoses": "You lose the critical visual double-check that prevents embarrassing cross-posting between personal and professional identities right before the irreversible action of publishing."
+        "whatTheAgentLoses": "You lose the critical visual double-check that prevents embarrassing cross-posting between personal and professional identities right before the irreversible action of publishing.",
+        "speak": "if-wrong",
+        "check": "Does the account name or avatar shown beside the Post button match <the account you chose to post from>?",
+        "say_example": "Hold on. The composer is set to post from <your personal account>. This belongs on <the brand page>. I'll switch it before anything goes out."
        }
       ]
      },
@@ -176,12 +215,15 @@
       "label": "Pick the posting tool",
       "questions": [
        {
-        "question": "Are your target accounts connected and are you in the right place to create a post?",
+        "question": "Are the accounts you mean to post to connected in the dashboard?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Confirming that the Meta Business Suite dashboard displays your Facebook and Instagram profiles ensures you are posting to the correct linked accounts before clicking 'Create post'.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to review your recent audience metrics and verify the correct profiles are linked before initiating the post."
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to review your recent audience metrics and verify the correct profiles are linked before initiating the post.",
+        "speak": "if-wrong",
+        "check": "Which profiles does the dashboard list as connected?",
+        "say_example": "Business Suite only shows your <Facebook page>. The <Instagram> account isn't connected, and this would go out to <Facebook> alone. Go on anyway, or stop while you link it?"
        },
        {
         "question": "Should you use this basic modal to post, or go to Creator Studio for more features like scheduling?",
@@ -189,7 +231,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The modal explicitly states that post scheduling is available in Creator Studio, presenting a choice between a quick post and advanced tools.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might default to the basic modal, losing the opportunity to utilize advanced features like scheduling."
+        "whatTheAgentLoses": "Delegating this choice means the agent might default to the basic modal, losing the opportunity to utilize advanced features like scheduling.",
+        "speak": "never",
+        "check": "Does the modal say scheduling is available in <Creator Studio>?",
+        "say_example": "Posted from the quick composer. Scheduling wasn't needed."
        },
        {
         "question": "Should you switch to Meta Business Suite to access monetization and rights management tools?",
@@ -197,7 +242,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The Video Options modal explicitly states that advanced features like in-stream ads and rights manager are only available if you publish through Meta Business Suite.",
-        "whatTheAgentLoses": "You lose the opportunity to protect your intellectual property or monetize your video because the agent proceeded in the basic publisher."
+        "whatTheAgentLoses": "You lose the opportunity to protect your intellectual property or monetize your video because the agent proceeded in the basic publisher.",
+        "speak": "never",
+        "check": "Does the modal say certain features are only available through <Meta Business Suite>?",
+        "say_example": "Skipped the Business Suite pitch. Plain publishing didn't need it."
        }
       ]
      },
@@ -215,7 +263,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Create post' screen offers a text prompt and a menu of additions, requiring a choice between starting with text or another media format.",
-        "whatTheAgentLoses": "You lose creative control over the primary format and initial impact of your social media message."
+        "whatTheAgentLoses": "You lose creative control over the primary format and initial impact of your social media message.",
+        "speak": "never",
+        "check": "Which starting options does the create-post screen show?",
+        "say_example": "Started the post with <your photo>, as asked."
        },
        {
         "question": "What type of content do you want to create?",
@@ -223,15 +274,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Create' menu offers multiple distinct formats like Reel, Post, and Story, which dictate how the content will be displayed and consumed.",
-        "whatTheAgentLoses": "Delegating this choice means losing control over the specific format and lifespan of the content, such as choosing an ephemeral Story over a permanent Post."
+        "whatTheAgentLoses": "Delegating this choice means losing control over the specific format and lifespan of the content, such as choosing an ephemeral Story over a permanent Post.",
+        "speak": "never",
+        "check": "Which formats does the create menu list?",
+        "say_example": "Picked <Post> from the create menu to match what you asked for."
        },
        {
-        "question": "Are you in the correct camera mode to capture a story?",
+        "question": "Is the camera set to the mode that matches what you asked to post?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Selecting the correct mode from the bottom menu ensures the captured content is formatted for a story rather than a standard post or reel.",
-        "whatTheAgentLoses": "You lose the creative control to decide which format best suits the specific content you are capturing."
+        "whatTheAgentLoses": "You lose the creative control to decide which format best suits the specific content you are capturing.",
+        "speak": "if-wrong",
+        "check": "Which capture mode is highlighted in the mode selector?",
+        "say_example": "The camera was set to <Reel> mode. You asked for a <story>. I switched it."
        },
        {
         "question": "Do you want to create a standard post or a reel?",
@@ -239,7 +296,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The home screen offers distinct buttons for standard posts and reels, which dictate the format and tools available for your content.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to spontaneously decide the best format for your content based on your current creative mood."
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to spontaneously decide the best format for your content based on your current creative mood.",
+        "speak": "never",
+        "check": "Does the screen show separate buttons for a post and a reel?",
+        "say_example": "Used the <post> button, matching your ask."
        },
        {
         "question": "Do you want to include media or a specific activity in your post?",
@@ -247,15 +307,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Create Post' modal offers a grid of options like sharing a photo, starting a live video, or checking in, which determine the format and interactive elements of your content.",
-        "whatTheAgentLoses": "You lose the ability to spontaneously enrich your post with interactive elements like a feeling, check-in, or multimedia that you might notice while browsing the available options."
-       },
-       {
-        "question": "Which post format should you select from the compose menu?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The compose button in the upper right corner opens a menu where you must choose between video, photo, live, or text formats for your new post.",
-        "whatTheAgentLoses": "Letting an agent select the post format deprives you of the creative control to decide which media type best conveys your current message."
+        "whatTheAgentLoses": "You lose the ability to spontaneously enrich your post with interactive elements like a feeling, check-in, or multimedia that you might notice while browsing the available options.",
+        "speak": "never",
+        "check": "Which options does the create-post menu list?",
+        "say_example": "Added <the photo> only. Left the extras alone."
        },
        {
         "question": "Should you record a fresh video, use a template, go live, or upload existing media?",
@@ -263,31 +318,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The camera interface displays options for recording durations, templates, live broadcasting, and an upload button, requiring a choice on how to source the content.",
-        "whatTheAgentLoses": "You lose the creative control over deciding whether to capture a spontaneous moment directly in the app or select a pre-edited clip from your device."
+        "whatTheAgentLoses": "You lose the creative control over deciding whether to capture a spontaneous moment directly in the app or select a pre-edited clip from your device.",
+        "speak": "never",
+        "check": "Which capture options does the camera screen show?",
+        "say_example": "Uploaded <your existing video> instead of recording fresh."
        },
        {
-        "question": "Which content format and specific media file should you select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The interface provides options for a POST, STORY, REEL, or LIVE alongside a gallery grid, requiring you to define the format and select the specific media to share.",
-        "whatTheAgentLoses": "You lose the creative judgment of matching the right content format with the most impactful image or video from your gallery."
-       },
-       {
-        "question": "Do you want to create a Post, Story, Reel, or Live video?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The creation menu offers multiple formats like Post, Story, Reel, and Live, which dictate how your content will be structured and displayed.",
-        "whatTheAgentLoses": "You lose the ability to choose the specific content format that best aligns with your current social media strategy."
-       },
-       {
-        "question": "Do you want to post this as a temporary story or a regular video?",
+        "question": "Should this go out as a story that disappears after 24 hours, or as a regular post that stays on your profile?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a 'Your Story' button and a 'Next' button, forcing a choice between a temporary 24-hour update and a permanent feed post.",
-        "whatTheAgentLoses": "You lose the ability to decide the lifespan and visibility format of your content."
+        "whatTheAgentLoses": "You lose the ability to decide the lifespan and visibility format of your content.",
+        "speak": "gate",
+        "check": "Does the screen offer both a 'Your Story' option and a feed-post option?",
+        "say_example": "This can go out two ways. A story disappears after 24 hours. A regular post stays on your profile. Which one?"
        }
       ]
      },
@@ -296,20 +341,15 @@
       "label": "Survey the other post types",
       "questions": [
        {
-        "question": "What type of post do you want to create?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen offers multiple formats like sharing a photo, video, or getting messages, which determines the core structure of your update.",
-        "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide which media format or interactive feature best suits your message."
-       },
-       {
         "question": "Which multimedia format should you select for your post?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen offers several distinct formats like a photo album, a scrolling carousel, a video slideshow, or an immersive experience, each changing how your audience interacts with the content.",
-        "whatTheAgentLoses": "Delegating this choice means losing control over the specific storytelling format and visual presentation of your media."
+        "whatTheAgentLoses": "Delegating this choice means losing control over the specific storytelling format and visual presentation of your media.",
+        "speak": "never",
+        "check": "Which multimedia formats does the screen list?",
+        "say_example": "Laid the <five> photos out as a plain album, the simplest of the offered formats."
        },
        {
         "question": "Do you want to enter a destination URL to create a photo carousel?",
@@ -317,7 +357,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen prompts for a 'Destination URL' which is required to automatically pull images for a swipeable carousel.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether to feature an interactive carousel and which specific web page to source its images from."
+        "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether to feature an interactive carousel and which specific web page to source its images from.",
+        "speak": "never",
+        "check": "Does the form show a 'Destination URL' field?",
+        "say_example": "Skipped the carousel-from-link tool. You gave me the photos directly."
        },
        {
         "question": "Do you want to select an advertising option, like boosting a post, instead of creating a standard post?",
@@ -325,7 +368,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The menu offers specific business growth options like boosting a post or getting more leads, which changes the entire posting flow.",
-        "whatTheAgentLoses": "You lose the opportunity to strategically align the post with specific paid advertising goals for your business."
+        "whatTheAgentLoses": "You lose the opportunity to strategically align the post with specific paid advertising goals for your business.",
+        "speak": "never",
+        "check": "Does the menu list paid options such as 'Boost a post' or 'Get more leads'?",
+        "say_example": "Stayed on the free posting path. Skipped the ad options."
        },
        {
         "question": "Are you satisfied with how the 'Send Message' button appears in the preview?",
@@ -333,7 +379,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a preview of the post with the 'Send Message' button at the bottom, allowing you to confirm the call-to-action is correct.",
-        "whatTheAgentLoses": "The user loses the opportunity to visually verify the placement and appearance of the call-to-action button before the post goes live."
+        "whatTheAgentLoses": "The user loses the opportunity to visually verify the placement and appearance of the call-to-action button before the post goes live.",
+        "speak": "never",
+        "check": "Does the preview show the <'Send Message'> button?",
+        "say_example": "The preview shows the <Send Message> button where it should be."
        }
       ]
      }
@@ -350,23 +399,32 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "This matters because the screen presents both recent gallery thumbnails and a camera icon, requiring you to decide the source of your post's content.",
-      "whatTheAgentLoses": "Delegating this step means losing the creative freedom to spontaneously capture a live moment instead of relying on pre-existing media."
+      "whatTheAgentLoses": "Delegating this step means losing the creative freedom to spontaneously capture a live moment instead of relying on pre-existing media.",
+      "speak": "never",
+      "check": "Does the screen show both gallery thumbnails and a camera option?",
+      "say_example": "Took <the photo you named> from the gallery."
      },
      {
-      "question": "Do you want to keep the uploaded image of the man holding a mug, or remove it from the draft?",
+      "question": "Is the media now attached to the draft the one you meant to post?",
       "cluster": "approve",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays an image preview with an 'x' button, requiring a decision on whether the photo fits the intended message or if it should be removed.",
-      "whatTheAgentLoses": "The user loses the editorial control to decide whether the specific image enhances the post or if a text-only format is preferred."
+      "whatTheAgentLoses": "The user loses the editorial control to decide whether the specific image enhances the post or if a text-only format is preferred.",
+      "speak": "always",
+      "check": "What does the attached media preview show?",
+      "say_example": "The photo attached shows <a man at a desk holding a mug>. That's the image going out."
      },
      {
-      "question": "What type of media do you want to add to the post, and where should it come from?",
+      "question": "Where should the post's media come from?",
       "cluster": "select",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays dropdown menus for adding photos or videos with options like uploading from the desktop or creating a video from an image, which determines the visual format of the post.",
-      "whatTheAgentLoses": "Delegating this step means losing the creative control to utilize specific platform features, such as generating a dynamic video from a static image, to best engage your audience."
+      "whatTheAgentLoses": "Delegating this step means losing the creative control to utilize specific platform features, such as generating a dynamic video from a static image, to best engage your audience.",
+      "speak": "never",
+      "check": "Which media source options does the add-media menu list?",
+      "say_example": "Uploaded <the video> from <your desktop>."
      },
      {
       "question": "Do you have any saved files available in the file manager to use for your post?",
@@ -374,15 +432,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays 'No files found,' meaning you must cancel the import and source your media from somewhere else.",
-      "whatTheAgentLoses": "You lose the ability to decide where else to source your media or whether to post without it when the file manager is empty."
-     },
-     {
-      "question": "How do you want to add a video to the post?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The dropdown presents distinct options to upload from your desktop, select from a file manager, or create a new video from an image.",
-      "whatTheAgentLoses": "You lose the creative control to decide whether to use an existing video file or generate a new one from an image."
+      "whatTheAgentLoses": "You lose the ability to decide where else to source your media or whether to post without it when the file manager is empty.",
+      "speak": "on-event",
+      "check": "Does the file picker show a message such as 'No files found'?",
+      "say_example": "The file picker says no files found. The <video> isn't where I'm looking. Where should I look instead?"
      }
     ],
     "children": [
@@ -396,7 +449,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays options for '3m', '60s', and '15s', which determines the maximum length of the video you are about to record.",
-        "whatTheAgentLoses": "You lose the opportunity to choose the maximum recording time that best fits the content you want to share."
+        "whatTheAgentLoses": "You lose the opportunity to choose the maximum recording time that best fits the content you want to share.",
+        "speak": "never",
+        "check": "Which duration options does the screen show?",
+        "say_example": "Set the recording limit to <60 seconds> to fit the clip."
        }
       ]
      },
@@ -410,7 +466,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The camera interface offers various creative modes like Boomerang or Layout that fundamentally change the format of the content you capture.",
-        "whatTheAgentLoses": "You lose the creative choice to experiment with different visual formats like a Boomerang or a grid layout for your post."
+        "whatTheAgentLoses": "You lose the creative choice to experiment with different visual formats like a Boomerang or a grid layout for your post.",
+        "speak": "never",
+        "check": "Which camera modes does the interface list?",
+        "say_example": "Left the camera on normal mode. No special effects were asked for."
        },
        {
         "question": "Should you capture a photo or video right now, or close the camera?",
@@ -418,7 +477,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The camera interface is active with options for normal, video, or boomerang, requiring a choice to either capture new media or exit using the 'X' icon.",
-        "whatTheAgentLoses": "You lose the spontaneous creative choice of deciding whether to capture live content for your post or skip it to use existing media."
+        "whatTheAgentLoses": "You lose the spontaneous creative choice of deciding whether to capture live content for your post or skip it to use existing media.",
+        "speak": "never",
+        "check": "Does the screen show capture controls and a close button?",
+        "say_example": "Captured the <photo> with the plain camera."
        },
        {
         "question": "How many separate clips should you record to structure this video?",
@@ -426,7 +488,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The blue progress bar tracks the total length, so deciding how many times to hold and release the red record button determines the pacing and flow of your video.",
-        "whatTheAgentLoses": "Delegating this step means losing creative control over the pacing, timing, and visual composition of the individual recorded clips."
+        "whatTheAgentLoses": "Delegating this step means losing creative control over the pacing, timing, and visual composition of the individual recorded clips.",
+        "speak": "never",
+        "check": "Does the screen show a record button and a progress bar?",
+        "say_example": "Recorded it as <one> continuous clip."
        },
        {
         "question": "At what speed do you want to record the video?",
@@ -434,7 +499,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The speed menu offers options from 0.3x to 3x, allowing you to record the video in slow motion or faster than normal.",
-        "whatTheAgentLoses": "You lose the creative choice to apply stylistic slow-motion or fast-forward effects to your recording."
+        "whatTheAgentLoses": "You lose the creative choice to apply stylistic slow-motion or fast-forward effects to your recording.",
+        "speak": "never",
+        "check": "Which speed options does the speed menu list?",
+        "say_example": "Kept the recording speed at normal."
        },
        {
         "question": "Do you want to use the front or back camera for this recording?",
@@ -442,7 +510,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The camera screen displays a circle of arrows icon in the top right corner that allows you to switch between the front and back lenses.",
-        "whatTheAgentLoses": "Delegating this choice means you lose control over whether the video captures your face or your surroundings."
+        "whatTheAgentLoses": "Delegating this choice means you lose control over whether the video captures your face or your surroundings.",
+        "speak": "never",
+        "check": "Does the screen show a camera-flip control?",
+        "say_example": "Used the <back> camera."
        },
        {
         "question": "Are you ready to tap the checkmark to proceed to editing, or do you need to record more clips?",
@@ -450,7 +521,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a checkmark, a delete button, and a recording progress ring, requiring a choice to either keep the current footage or discard it.",
-        "whatTheAgentLoses": "You lose the creative control to personally evaluate the recorded clip and decide if its quality meets your standards before moving on."
+        "whatTheAgentLoses": "You lose the creative control to personally evaluate the recorded clip and decide if its quality meets your standards before moving on.",
+        "speak": "never",
+        "check": "Does the screen show a checkmark and a delete control for the recorded clips?",
+        "say_example": "Kept the take and moved on to editing."
        },
        {
         "question": "Do you need to set a timer before the recording starts?",
@@ -458,7 +532,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The camera interface provides a 'Timer' tool, which is essential if you need to step away from the device to get into the frame before capturing the video.",
-        "whatTheAgentLoses": "You lose the ability to record hands-free content that requires you to be in position before the camera rolls."
+        "whatTheAgentLoses": "You lose the ability to record hands-free content that requires you to be in position before the camera rolls.",
+        "speak": "never",
+        "check": "Does the camera show a 'Timer' tool?",
+        "say_example": "No timer needed. Recording started right away."
        }
       ]
      },
@@ -472,7 +549,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays an 'Unsaved changes' warning, meaning any recent modifications to the post will be permanently lost if discarded.",
-        "whatTheAgentLoses": "The user loses the opportunity to decide whether their current work in progress should be preserved or abandoned."
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether their current work in progress should be preserved or abandoned.",
+        "speak": "on-event",
+        "check": "Does the screen show an 'Unsaved changes' warning?",
+        "say_example": "Backing out here throws away the edits. Keep them, or let them go?"
        }
       ]
      },
@@ -486,15 +566,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a grid of your photos and videos, requiring you to choose the exact media that best represents your intended message.",
-        "whatTheAgentLoses": "You lose the creative control of hand-picking and sequencing the specific images that best capture the moment you want to share."
-       },
-       {
-        "question": "Is this screenshot of the tweet by Mauroy the correct image to use for your post?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Confirming the image ensures you are sharing the intended screenshot of the tweet containing labels about Jamaica and airports.",
-        "whatTheAgentLoses": "You lose the chance to visually verify that the correct media file was selected from your gallery before proceeding."
+        "whatTheAgentLoses": "You lose the creative control of hand-picking and sequencing the specific images that best capture the moment you want to share.",
+        "speak": "on-event",
+        "check": "Which items in the gallery match <the media you described>?",
+        "say_example": "You said <the beach photo>. Two match, one from <Saturday>, one from <Sunday>. Which one?"
        }
       ]
      },
@@ -508,7 +583,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The gallery shows multiple recent photos and videos with different durations, requiring you to select the exact sequence of items to feature in the post.",
-        "whatTheAgentLoses": "You lose the ability to personally curate the specific combination and sequence of media that best tells your story."
+        "whatTheAgentLoses": "You lose the ability to personally curate the specific combination and sequence of media that best tells your story.",
+        "speak": "on-event",
+        "check": "Which gallery items are selected, and do they match <the items you asked for>?",
+        "say_example": "You asked for <the three photos from the trip>. Four in the gallery fit. Which three go in, or should all four?"
        },
        {
         "question": "Do you want to include multiple photos in this post?",
@@ -516,15 +594,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The overlapping squares icon on the middle bar allows you to select additional photos from your gallery to create a multi-image post.",
-        "whatTheAgentLoses": "You lose the creative judgment of deciding whether a single impactful image or a multi-photo carousel best tells your story."
+        "whatTheAgentLoses": "You lose the creative judgment of deciding whether a single impactful image or a multi-photo carousel best tells your story.",
+        "speak": "never",
+        "check": "Does the screen show a multi-select control for adding more photos?",
+        "say_example": "Selected <all three> photos in one post."
        },
        {
-        "question": "Have you selected all the photos you want to include in your post?",
+        "question": "Does the number of selected items match what you asked to include?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Tapping 'Next' confirms your media choices and advances the flow to the editing screen.",
-        "whatTheAgentLoses": "The user loses the ability to personally curate the exact combination of photos that best represents their intended message."
+        "whatTheAgentLoses": "The user loses the ability to personally curate the exact combination of photos that best represents their intended message.",
+        "speak": "if-wrong",
+        "check": "What selection count does the screen show?",
+        "say_example": "You gave me <five> photos. Only <four> are selected. I'm fixing that before moving on."
        }
       ]
      },
@@ -538,7 +622,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dialog presents two distinct options for sourcing media, one for desktop files in the center and another for mobile devices at the bottom.",
-        "whatTheAgentLoses": "You lose the ability to specify the exact device where your intended media file is currently stored."
+        "whatTheAgentLoses": "You lose the ability to specify the exact device where your intended media file is currently stored.",
+        "speak": "never",
+        "check": "Does the dialog offer both a desktop upload and a mobile option?",
+        "say_example": "Uploaded from the desktop."
        },
        {
         "question": "Which video file do you want to upload?",
@@ -546,7 +633,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The file explorer displays multiple MP4 files, so you must select the exact video intended for this specific social media post.",
-        "whatTheAgentLoses": "You lose the ability to personally verify and select the correct video file from your local storage."
+        "whatTheAgentLoses": "You lose the ability to personally verify and select the correct video file from your local storage.",
+        "speak": "on-event",
+        "check": "Which files does the picker list, and which matches <the file you named>?",
+        "say_example": "Two files could be <the launch video>. One from <Tuesday>, one from <today>. Which one?"
        },
        {
         "question": "Is your video upload proceeding?",
@@ -554,15 +644,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "Checking the 27.4% progress indicator confirms that the video file is actively uploading to the platform without network errors.",
-        "whatTheAgentLoses": "You lose the visual reassurance of the progress bar confirming that your media file is successfully transferring and hasn't stalled."
-       },
-       {
-        "question": "Which image file do you want to upload for the post?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The file selection dialog displays multiple images in the Downloads folder, such as 'Facebook Event Cover Photo.png' and 'Social Media Quick Fix Guide.jpg', requiring you to choose the correct asset for this specific post.",
-        "whatTheAgentLoses": "Delegating this means the agent might select the wrong image from your local files, resulting in an incorrect or unintended visual being published to your social media audience."
+        "whatTheAgentLoses": "You lose the visual reassurance of the progress bar confirming that your media file is successfully transferring and hasn't stalled.",
+        "speak": "never",
+        "check": "What upload progress does the indicator show?",
+        "say_example": "Upload completed, watched it to 100 percent."
        },
        {
         "question": "Did the platform reject the uploaded media file with an 'Unsupported format' or 'File too large' error?",
@@ -570,23 +655,21 @@
         "moment": null,
         "moneyMoving": false,
         "why": "High-resolution videos or specific file types might exceed platform limits, requiring compression or conversion before they can be used.",
-        "whatTheAgentLoses": "You lose the ability to decide how to compress or re-export the media to maintain acceptable quality while meeting platform requirements."
+        "whatTheAgentLoses": "You lose the ability to decide how to compress or re-export the media to maintain acceptable quality while meeting platform requirements.",
+        "speak": "on-event",
+        "check": "Does the page show an upload error such as 'Unsupported format' or 'File too large'?",
+        "say_example": "The file didn't go through. The site says <it's too large>. I can shrink it and try again, or you can give me a different file."
        },
        {
-        "question": "Is the video fully uploaded and the caption complete before you click Next?",
+        "question": "Is the upload finished before moving on?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking that the upload indicator shows 100% ensures the video is fully attached to your caption before you proceed.",
-        "whatTheAgentLoses": "You lose the reassurance of visually confirming the media file has successfully uploaded before advancing to the final publishing settings."
-       },
-       {
-        "question": "Which video file should you upload and what caption will you write to describe it?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Create Reel' screen requires a video upload and provides a text field to describe the reel so people know what it is about.",
-        "whatTheAgentLoses": "You lose the ability to personally select the exact video clip and craft a caption that perfectly matches your unique tone and intent."
+        "whatTheAgentLoses": "You lose the reassurance of visually confirming the media file has successfully uploaded before advancing to the final publishing settings.",
+        "speak": "never",
+        "check": "Does the upload indicator show 100% or a completed state?",
+        "say_example": "Waited for the upload to finish before pressing Next."
        }
       ]
      },
@@ -600,12 +683,15 @@
         "label": "Pick the template",
         "questions": [
          {
-          "question": "Which image and template should you use for the generated video?",
+          "question": "Which template should the generated video use?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The modal presents different template options like 'Spotlight an image' and 'Showcase a square image' that determine how your selected image will be cropped and displayed.",
-          "whatTheAgentLoses": "You lose the creative control to choose the specific image and framing template that best suits your visual content."
+          "whatTheAgentLoses": "You lose the creative control to choose the specific image and framing template that best suits your visual content.",
+          "speak": "never",
+          "check": "Which template options does the modal list?",
+          "say_example": "Used the <Spotlight an image> template for the generated video."
          }
         ]
        },
@@ -619,7 +705,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The video editor interface allows you to modify background colors, add custom text, and upload a brand logo for each scene.",
-          "whatTheAgentLoses": "You lose creative control over the specific visual branding, text messaging, and color scheme applied to the video."
+          "whatTheAgentLoses": "You lose creative control over the specific visual branding, text messaging, and color scheme applied to the video.",
+          "speak": "never",
+          "check": "Which customization tools does the editor show?",
+          "say_example": "Left the template scenes as they came. No custom branding was asked for."
          },
          {
           "question": "What background color should you apply to the text slide?",
@@ -627,7 +716,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displays a color picker and a hex code field, requiring a specific color selection for the background.",
-          "whatTheAgentLoses": "Delegating this step means losing the ability to perfectly match the post's background color to your specific brand aesthetic."
+          "whatTheAgentLoses": "Delegating this step means losing the ability to perfectly match the post's background color to your specific brand aesthetic.",
+          "speak": "never",
+          "check": "Does the screen show a color picker and a hex field?",
+          "say_example": "Kept the default background color."
          },
          {
           "question": "What text should you overlay on the video, and which font should you select?",
@@ -635,7 +727,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen provides a text input field and a font dropdown with options like 'Pt Serif Web Regular' and 'Roboto Bold', allowing you to customize the visual style of your message.",
-          "whatTheAgentLoses": "Delegating this means you lose the ability to choose the exact wording and typographic style that best fits your personal brand."
+          "whatTheAgentLoses": "Delegating this means you lose the ability to choose the exact wording and typographic style that best fits your personal brand.",
+          "speak": "never",
+          "check": "Does the screen show a text field and a font menu?",
+          "say_example": "Put <your words> on the slide, in the default font."
          }
         ]
        },
@@ -655,7 +750,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays multiple message threads, and choosing the right one is necessary to retrieve the correct audio attachment for your content.",
-        "whatTheAgentLoses": "The user loses control over which personal audio message is selected from their private chats to be published publicly."
+        "whatTheAgentLoses": "The user loses control over which personal audio message is selected from their private chats to be published publicly.",
+        "speak": "never",
+        "check": "Which conversations does the messages list show?",
+        "say_example": "Opened <the conversation you named> to get the audio you pointed me to."
        },
        {
         "question": "Which specific audio file should you open to prepare for screen recording?",
@@ -663,7 +761,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays multiple audio messages and files in the conversation with 'Muffin', requiring you to select the correct one to capture for the post.",
-        "whatTheAgentLoses": "The user loses the creative control of choosing the exact audio clip they want to feature in their social media post."
+        "whatTheAgentLoses": "The user loses the creative control of choosing the exact audio clip they want to feature in their social media post.",
+        "speak": "never",
+        "check": "Which audio files does the conversation show?",
+        "say_example": "Captured <the voice note you named> from the conversation."
        }
       ]
      },
@@ -677,7 +778,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "This matters because the screen provides options to search for music, pick from suggested songs, or import custom audio directly from a device video.",
-        "whatTheAgentLoses": "The user loses the creative freedom to feature custom audio from their own device instead of a generic trending song."
+        "whatTheAgentLoses": "The user loses the creative freedom to feature custom audio from their own device instead of a generic trending song.",
+        "speak": "never",
+        "check": "Which audio source options does the screen list?",
+        "say_example": "Took the sound from <your video>, as asked."
        },
        {
         "question": "Is the video you want to import audio from at least 5 seconds long?",
@@ -685,7 +789,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The import screen explicitly states 'Videos must be at least 5 seconds long,' meaning shorter clips will be rejected by the platform.",
-        "whatTheAgentLoses": "The user loses the understanding of why a specific short video cannot be used as an audio source, potentially causing confusion if the agent silently fails or picks a different file."
+        "whatTheAgentLoses": "The user loses the understanding of why a specific short video cannot be used as an audio source, potentially causing confusion if the agent silently fails or picks a different file.",
+        "speak": "on-event",
+        "check": "Does the import screen show a minimum-length rule or a rejection message?",
+        "say_example": "The app won't take audio from that clip. It's under the 5 second minimum. A longer video, or a different sound?"
        }
       ]
      }
@@ -702,15 +809,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays the selected carousel and provides tools like text, filters, and audio to finalize the visual presentation before moving to the caption step.",
-      "whatTheAgentLoses": "You lose the creative control to sequence the images for optimal storytelling and apply personal visual touches."
-     },
-     {
-      "question": "Do you want to apply any edits, such as text overlays or audio enhancement, to the clip?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen provides an edit tools panel with options for text, cropping, trimming, and audio enhancement that can alter the media.",
-      "whatTheAgentLoses": "Delegating this step means losing the creative control to fine-tune the visual and audio elements of the post."
+      "whatTheAgentLoses": "You lose the creative control to sequence the images for optimal storytelling and apply personal visual touches.",
+      "speak": "never",
+      "check": "Which editing tools does the screen show?",
+      "say_example": "Left the photos in the order you gave them. No edits added."
      },
      {
       "question": "What video resolution should you select for the export?",
@@ -718,7 +820,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The 'Export' dialog offers multiple resolution options from 480P to 8K, and selecting the optimal one ensures the highest possible video quality for the platform.",
-      "whatTheAgentLoses": "You lose the ability to decide the exact balance between file size and visual fidelity for your specific content."
+      "whatTheAgentLoses": "You lose the ability to decide the exact balance between file size and visual fidelity for your specific content.",
+      "speak": "never",
+      "check": "Which resolution options does the export dialog list?",
+      "say_example": "Exported at <1080P>, the platform's recommended size."
      },
      {
       "question": "Should you generate auto-captions for the entire video right now?",
@@ -726,7 +831,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "Generating captions for a six-minute video takes significant time, making it more efficient to trim the media first in the open CapCut panel.",
-      "whatTheAgentLoses": "The user loses the opportunity to save time and processing power by deciding to trim the video before generating its captions."
+      "whatTheAgentLoses": "The user loses the opportunity to save time and processing power by deciding to trim the video before generating its captions.",
+      "speak": "never",
+      "check": "Does the editing panel show an auto-captions option?",
+      "say_example": "Trimmed first, then captioned the final cut."
      },
      {
       "question": "Are these the correct auto-caption settings for your video?",
@@ -734,7 +842,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays specific toggles for language, keyword highlighting, and filler words that dictate how the captions will be generated.",
-      "whatTheAgentLoses": "You lose the ability to fine-tune the caption generation settings to perfectly match your video's intended tone and style."
+      "whatTheAgentLoses": "You lose the ability to fine-tune the caption generation settings to perfectly match your video's intended tone and style.",
+      "speak": "never",
+      "check": "Which caption settings does the screen show, and which language is selected?",
+      "say_example": "Captions set to <English>, filler words left out."
      }
     ],
     "children": [
@@ -748,7 +859,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays various filter options like 'Clarendon' and 'Ludwig' that alter the visual aesthetic and mood of the images.",
-        "whatTheAgentLoses": "You lose the ability to personally judge and select the visual aesthetic that best fits your brand or personal style."
+        "whatTheAgentLoses": "You lose the ability to personally judge and select the visual aesthetic that best fits your brand or personal style.",
+        "speak": "never",
+        "check": "Which filters does the filter row list?",
+        "say_example": "No filter. The photos went as shot."
        },
        {
         "question": "Does this filter look good on every photo in the carousel?",
@@ -756,7 +870,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "A filter that enhances the Venus flytrap might wash out or alter the colors of the pink water lily, so checking each image ensures consistent visual quality.",
-        "whatTheAgentLoses": "You lose your personal aesthetic judgment in deciding whether a specific filter flatters all the distinct images in your post."
+        "whatTheAgentLoses": "You lose your personal aesthetic judgment in deciding whether a specific filter flatters all the distinct images in your post.",
+        "speak": "if-wrong",
+        "check": "What do the carousel previews show after the filter is applied?",
+        "say_example": "The filter looks fine on <the first two photos>. On <the lily> it washes the color out. I'd drop the filter there. OK?"
        }
       ]
      },
@@ -770,7 +887,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The music menu presents trending and recommended tracks like 'Raindance' or 'Massive' that can set the mood, though you may prefer to keep the original audio.",
-        "whatTheAgentLoses": "You lose the creative control to pair your visual content with a specific song that matches your intended vibe or personal taste."
+        "whatTheAgentLoses": "You lose the creative control to pair your visual content with a specific song that matches your intended vibe or personal taste.",
+        "speak": "never",
+        "check": "Which tracks does the music menu list?",
+        "say_example": "Kept the original sound. No music was asked for."
        },
        {
         "question": "Which type of audio do you want to add to your Reel?",
@@ -778,7 +898,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The editing screen provides distinct audio options like music, voiceovers, and sound effects that shape the mood of your video.",
-        "whatTheAgentLoses": "You lose the creative control to select the specific background track or voiceover that perfectly matches the vibe of your video."
+        "whatTheAgentLoses": "You lose the creative control to select the specific background track or voiceover that perfectly matches the vibe of your video.",
+        "speak": "never",
+        "check": "Which audio options does the editing screen list?",
+        "say_example": "Left the Reel's own audio in place."
        },
        {
         "question": "Should you select a background sound before you start recording?",
@@ -786,7 +909,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The narrator notes that adding a sound before pressing record allows you to record the video directly to that specific audio track.",
-        "whatTheAgentLoses": "You lose the ability to choreograph or time your live video recording to a specific song or audio track."
+        "whatTheAgentLoses": "You lose the ability to choreograph or time your live video recording to a specific song or audio track.",
+        "speak": "never",
+        "check": "Does the screen show an add-sound option before recording?",
+        "say_example": "Added <the track> before recording started."
        },
        {
         "question": "Is the selected audio track licensed for commercial use?",
@@ -794,7 +920,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Social platforms restrict business profiles from using mainstream copyrighted music, meaning if you select a trending track for a brand post, it may be muted or blocked for copyright infringement.",
-        "whatTheAgentLoses": "You lose the strategic foresight to select royalty-free commercial audio, risking your brand's post being muted and losing its intended impact."
+        "whatTheAgentLoses": "You lose the strategic foresight to select royalty-free commercial audio, risking your brand's post being muted and losing its intended impact.",
+        "speak": "on-event",
+        "check": "Does the page show a license notice on the selected track, such as a restriction for commercial or business use?",
+        "say_example": "That song is marked off limits for business accounts. Using it risks the video going silent. Want a track from the cleared list instead?"
        }
       ]
      },
@@ -808,15 +937,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The audio waveform and timeline scrubber allow you to select the exact portion of the audio to include in your post before tapping \"Done\".",
-        "whatTheAgentLoses": "The user loses the creative control to select the specific portion of the audio clip that best matches their video."
+        "whatTheAgentLoses": "The user loses the creative control to select the specific portion of the audio clip that best matches their video.",
+        "speak": "never",
+        "check": "Does the screen show trim handles on the audio waveform?",
+        "say_example": "Used the audio from the start, untrimmed."
        },
        {
-        "question": "How do you want to adjust the start and end points of the video?",
+        "question": "The video is longer than the platform allows — which part should be kept?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays trim handles on a timeline to keep the video under 60 seconds, which determines the exact pacing and content of your clip.",
-        "whatTheAgentLoses": "You lose creative control over exactly which moments are highlighted and which are cut from the final video."
+        "whatTheAgentLoses": "You lose creative control over exactly which moments are highlighted and which are cut from the final video.",
+        "speak": "on-event",
+        "check": "Does the screen show a maximum length for the clip, and is the video longer than it?",
+        "say_example": "The video runs <2 minutes>. Posts here cut off at <60 seconds>. Which part should I keep?"
        }
       ]
      },
@@ -830,7 +965,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Formatting the image to a taller aspect ratio like 1080 by 1350 pixels ensures it takes up more vertical space when followers scroll on mobile devices.",
-        "whatTheAgentLoses": "You lose the strategic control to frame and crop the image exactly how you want it to capture your audience's attention."
+        "whatTheAgentLoses": "You lose the strategic control to frame and crop the image exactly how you want it to capture your audience's attention.",
+        "speak": "never",
+        "check": "Which crop and ratio options does the screen show?",
+        "say_example": "Kept the image's own shape. No re-crop asked for."
        },
        {
         "question": "Which aspect ratio should you choose to optimize the video for your target platform?",
@@ -838,7 +976,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a dropdown menu with multiple aspect ratio options, and selecting the right one ensures the video displays optimally on the target platform's feed.",
-        "whatTheAgentLoses": "Delegating this step means losing the ability to apply your own stylistic preference for how the video occupies screen space on your followers' timelines."
+        "whatTheAgentLoses": "Delegating this step means losing the ability to apply your own stylistic preference for how the video occupies screen space on your followers' timelines.",
+        "speak": "never",
+        "check": "Which aspect ratios does the dropdown list?",
+        "say_example": "Set the ratio to <9:16>, the platform's native shape."
        },
        {
         "question": "Did the platform's default auto-crop cut off important visual elements like faces or text in the image?",
@@ -846,23 +987,21 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Platforms automatically crop media to fit default feed dimensions (like 1:1 or 4:5), which is instantly obvious to a sighted user but invisible to an agent just passing the file.",
-        "whatTheAgentLoses": "You lose the visual confirmation that the primary subject of your photo is actually visible and not awkwardly sliced off by the platform's default framing."
+        "whatTheAgentLoses": "You lose the visual confirmation that the primary subject of your photo is actually visible and not awkwardly sliced off by the platform's default framing.",
+        "speak": "if-wrong",
+        "check": "What does the cropped preview show at its edges?",
+        "say_example": "The auto crop cuts off <the top of your head> in the preview. I'm re-framing so <the whole face> stays in."
        },
        {
-        "question": "Are you ensuring the video fits the platform's aspect ratio without large black bars?",
+        "question": "Does the preview show the video with black bars instead of filling the frame?",
         "cluster": "photos",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed a vertical video with large black bars on the sides, indicating poor formatting for the platform.",
-        "whatTheAgentLoses": "The user loses the ability to visually verify that their media looks professional and native to the platform."
-       },
-       {
-        "question": "Should you reformat this vertical video to remove the black pillarboxes?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a vertical video with black pillarboxes on the sides, which can make the post look like a low-effort copy-paste job.",
-        "whatTheAgentLoses": "You lose the ability to evaluate the visual presentation and adjust the video format to ensure it looks native and professional on the specific platform."
+        "whatTheAgentLoses": "The user loses the ability to visually verify that their media looks professional and native to the platform.",
+        "speak": "if-wrong",
+        "check": "Does the preview show the video filling the frame, or bars at the sides?",
+        "say_example": "The video sits in the middle with black bars either side. It'll look small in the feed. Want me to fill the frame?"
        }
       ]
      },
@@ -876,7 +1015,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a horizontally scrolling list of font styles like 'Modern', 'Classic', and 'Editor' to customize the visual appearance of your text.",
-        "whatTheAgentLoses": "You lose the creative control to select the specific typographic aesthetic that best fits the mood and branding of your post."
+        "whatTheAgentLoses": "You lose the creative control to select the specific typographic aesthetic that best fits the mood and branding of your post.",
+        "speak": "never",
+        "check": "Which font styles does the list show?",
+        "say_example": "Used the default font for the overlay text."
        },
        {
         "question": "How do you want to style the text using the color, alignment, and animation tools?",
@@ -884,7 +1026,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The toolbar displays options for color, alignment, animation, and background highlights that determine the visual impact of your text.",
-        "whatTheAgentLoses": "You lose the creative control to fine-tune the visual aesthetics and emphasis of your message through specific text styling choices."
+        "whatTheAgentLoses": "You lose the creative control to fine-tune the visual aesthetics and emphasis of your message through specific text styling choices.",
+        "speak": "never",
+        "check": "Which text styling tools does the toolbar show?",
+        "say_example": "Left the text plain. White, centered, no animation."
        },
        {
         "question": "Which sticker should you add to your post?",
@@ -892,7 +1037,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The sticker menu presents numerous options like 'Location', 'Music', and 'Photo' to customize the visual content.",
-        "whatTheAgentLoses": "You lose the creative freedom to select specific interactive or visual elements, like a photo overlay, that best fit your personal style."
+        "whatTheAgentLoses": "You lose the creative freedom to select specific interactive or visual elements, like a photo overlay, that best fit your personal style.",
+        "speak": "never",
+        "check": "Which stickers does the sticker menu list?",
+        "say_example": "No stickers added. None were asked for."
        },
        {
         "question": "What shape do you want the photo sticker to be?",
@@ -900,7 +1048,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen allows you to tap the sticker to cycle through shapes like a heart, star, circle, or square to customize its appearance.",
-        "whatTheAgentLoses": "You lose the creative control to select the specific shape that best frames your image."
+        "whatTheAgentLoses": "You lose the creative control to select the specific shape that best frames your image.",
+        "speak": "never",
+        "check": "Which shape is the photo sticker currently showing?",
+        "say_example": "Left the sticker in its <circle> shape."
        },
        {
         "question": "Do you want to keep this photo sticker or drag it to the trash to remove it?",
@@ -908,23 +1059,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Holding and dragging the sticker reveals a trash can icon at the bottom of the screen, offering a way to delete it.",
-        "whatTheAgentLoses": "The user loses the creative control to refine the post's visual composition by removing unwanted elements."
-       },
-       {
-        "question": "How do you want to style and position any text overlays on the video?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides specific editing tools to adjust font size, text color, and background color, allowing you to customize the visual impact of your message.",
-        "whatTheAgentLoses": "Delegating this step means you lose the creative control to experiment with the text's appearance, placement, and ultimate inclusion on the video."
-       },
-       {
-        "question": "Which visual style do you want to apply to the on-screen text?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a grid of text templates under the 'Text' tab, requiring a selection to determine the visual aesthetic of the video's captions.",
-        "whatTheAgentLoses": "Delegating this choice means losing personal control over the exact aesthetic and color scheme of the video's on-screen text."
+        "whatTheAgentLoses": "The user loses the creative control to refine the post's visual composition by removing unwanted elements.",
+        "speak": "never",
+        "check": "Does the screen show a trash target while the sticker is held?",
+        "say_example": "Kept the sticker where you placed it."
        },
        {
         "question": "Do you want to set a specific duration for the text overlay so it only appears during a certain part of the video?",
@@ -932,7 +1070,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The narrator points out that you can set a duration for text so it appears and disappears, rather than remaining on screen for the entire video.",
-        "whatTheAgentLoses": "You lose the ability to time your text overlays to specific moments or visual beats in the video."
+        "whatTheAgentLoses": "You lose the ability to time your text overlays to specific moments or visual beats in the video.",
+        "speak": "never",
+        "check": "Does the screen show a duration control for the text overlay?",
+        "say_example": "The text stays on screen for the whole video."
        },
        {
         "question": "Do you want the app to read your on-screen text aloud using text-to-speech?",
@@ -940,7 +1081,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Tapping the text overlay provides a text-to-speech option, allowing the platform to automatically generate an AI voiceover of your written words.",
-        "whatTheAgentLoses": "You lose the creative choice to decide whether an AI voice reading your text enhances the video or distracts from your original audio."
+        "whatTheAgentLoses": "You lose the creative choice to decide whether an AI voice reading your text enhances the video or distracts from your original audio.",
+        "speak": "never",
+        "check": "Does the text menu show a text-to-speech option?",
+        "say_example": "Skipped the text-to-speech voice. Nothing speaks over your video without you asking."
        },
        {
         "question": "Is the text overlay actually legible against the background media?",
@@ -948,7 +1092,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "White text placed over a bright part of an image, or text without a drop shadow, can be completely unreadable to the audience, requiring a color change or background highlight.",
-        "whatTheAgentLoses": "You lose the human visual check to ensure your message has enough contrast to actually be read by your audience."
+        "whatTheAgentLoses": "You lose the human visual check to ensure your message has enough contrast to actually be read by your audience.",
+        "speak": "if-wrong",
+        "check": "What does the preview show where the text sits over the image?",
+        "say_example": "The white text sits on a bright patch of sky. It vanishes there. I'm adding the dark backing so it reads."
        },
        {
         "question": "Are the stickers, text overlays, or tags visually blocking important parts of the image, like a person's face?",
@@ -956,7 +1103,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Elements placed automatically or arbitrarily might obscure the main subject of the photo or video, requiring you to manually drag them to a better spot.",
-        "whatTheAgentLoses": "You lose the spatial awareness to position overlays so they complement rather than ruin the visual composition."
+        "whatTheAgentLoses": "You lose the spatial awareness to position overlays so they complement rather than ruin the visual composition.",
+        "speak": "if-wrong",
+        "check": "What does the preview show under each sticker, overlay, and tag?",
+        "say_example": "The <music sticker> is sitting on <your friend's face>. I'm moving it to the corner."
        }
       ]
      },
@@ -970,7 +1120,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides an 'Audio enhancement' toggle to automatically remove background noise, which requires deciding if the original audio needs correction.",
-        "whatTheAgentLoses": "The user loses the ability to listen to the clip and subjectively decide if the digital audio processor improves the sound or makes it sound unnaturally robotic."
+        "whatTheAgentLoses": "The user loses the ability to listen to the clip and subjectively decide if the digital audio processor improves the sound or makes it sound unnaturally robotic.",
+        "speak": "never",
+        "check": "Does the screen show an 'Audio enhancement' toggle?",
+        "say_example": "Left the audio as recorded. The cleanup filter stayed off."
        }
       ]
      }
@@ -991,7 +1144,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The interface explicitly notes that adding a title improves video distribution, and tags help categorize the content for the right audience.",
-        "whatTheAgentLoses": "You lose the ability to strategically choose the exact keywords and phrasing that best target your intended audience."
+        "whatTheAgentLoses": "You lose the ability to strategically choose the exact keywords and phrasing that best target your intended audience.",
+        "speak": "never",
+        "check": "Does the screen show title and tag fields?",
+        "say_example": "Title reads <your working title>, tags <the ones you gave>."
        },
        {
         "question": "Do you want to add multiple titles to test which one performs best?",
@@ -999,7 +1155,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The Video Options modal explicitly states you can test out multiple titles by clicking the '+' button, allowing the platform to A/B test them.",
-        "whatTheAgentLoses": "You lose the opportunity to optimize your video's reach by letting the platform test different title variations with your audience."
+        "whatTheAgentLoses": "You lose the opportunity to optimize your video's reach by letting the platform test different title variations with your audience.",
+        "speak": "never",
+        "check": "Does the modal say multiple titles can be added for testing?",
+        "say_example": "One title only. Skipped the A/B testing pitch."
        }
       ]
      },
@@ -1017,15 +1176,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays an 'Add Collaborator' field with a dropdown of suggested accounts, offering a chance to co-author the post and share its reach.",
-        "whatTheAgentLoses": "You lose the strategic choice of whether to partner with another creator to boost this specific post's visibility."
+        "whatTheAgentLoses": "You lose the strategic choice of whether to partner with another creator to boost this specific post's visibility.",
+        "speak": "never",
+        "check": "Does the screen show an 'Add Collaborator' field?",
+        "say_example": "No collaborator added. That invite only goes out if you ask."
        },
        {
-        "question": "Do you know that the invited collaborator must manually accept the request before the post appears on their profile?",
+        "question": "Will the post show on the collaborator's profile right away?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The interface allows you to add a collaborator, but doesn't explicitly warn you that the post won't automatically appear on their feed until they approve it, which could disrupt a coordinated launch.",
-        "whatTheAgentLoses": "You lose the awareness that your co-marketing effort is pending their approval, potentially leaving you waiting and wondering why their audience isn't seeing the post."
+        "whatTheAgentLoses": "You lose the awareness that your co-marketing effort is pending their approval, potentially leaving you waiting and wondering why their audience isn't seeing the post.",
+        "speak": "on-event",
+        "check": "Does the page say the collaborator must accept the invite before the post appears on their profile?",
+        "say_example": "The invite went to <the collaborator>. Nothing shows on their profile until they accept. If the launch is timed, that wait matters."
        }
       ]
      },
@@ -1039,7 +1204,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Trimming the thumbnail image to a split second on the CapCut timeline ensures it can be selected as a cover without disrupting the actual video for viewers.",
-        "whatTheAgentLoses": "You lose the ability to precisely control the duration of the inserted thumbnail frame to guarantee a seamless viewing experience."
+        "whatTheAgentLoses": "You lose the ability to precisely control the duration of the inserted thumbnail frame to guarantee a seamless viewing experience.",
+        "speak": "never",
+        "check": "Does the timeline show the inserted thumbnail frame and its length?",
+        "say_example": "Skipped the split-second thumbnail trick. The suggested cover was fine."
        },
        {
         "question": "Which method do you want to use to select the video thumbnail?",
@@ -1047,7 +1215,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The interface provides radio buttons with different options for setting the thumbnail, such as choosing a suggested frame, uploading a custom image, or picking a specific frame from the video.",
-        "whatTheAgentLoses": "The user loses the creative control to determine the exact visual hook that will represent their video to the audience."
+        "whatTheAgentLoses": "The user loses the creative control to determine the exact visual hook that will represent their video to the audience.",
+        "speak": "never",
+        "check": "Which thumbnail options does the screen list?",
+        "say_example": "Used the suggested frame as the cover."
        }
       ]
      },
@@ -1065,7 +1236,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a 'Generating captions... 65%' dialog with a Cancel button, presenting the immediate choice to either let the transcription complete or abort it.",
-        "whatTheAgentLoses": "The user loses the ability to manually intervene and cancel the auto-captioning process if they decide on-screen text is unnecessary or taking too long."
+        "whatTheAgentLoses": "The user loses the ability to manually intervene and cancel the auto-captioning process if they decide on-screen text is unnecessary or taking too long.",
+        "speak": "never",
+        "check": "Does the dialog show caption generation progress and a Cancel button?",
+        "say_example": "Let the captions finish generating."
        },
        {
         "question": "Do you want to auto-generate video captions, hold them for review, or upload a custom file?",
@@ -1073,15 +1247,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays toggles for auto-generating captions, holding them for review, or uploading an .srt file, which dictates how and when subtitles appear to viewers.",
-        "whatTheAgentLoses": "Delegating this step means losing the ability to decide whether to trust the platform's auto-generated captions immediately or hold them for manual review."
+        "whatTheAgentLoses": "Delegating this step means losing the ability to decide whether to trust the platform's auto-generated captions immediately or hold them for manual review.",
+        "speak": "never",
+        "check": "Which caption settings does the screen show?",
+        "say_example": "Auto-captions on, held for review before they go live."
        },
        {
-        "question": "Did the auto-captioning tool accurately transcribe your audio, or did it introduce embarrassing typos that need manual correction?",
+        "question": "Do the generated captions say what the audio says?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "AI transcription frequently mishears proper nouns, slang, or mumbled words, meaning you must read through the generated text to catch and fix errors before they are burned into the video.",
-        "whatTheAgentLoses": "You lose the ability to catch transcription errors that could completely change the meaning of your spoken message or make you look unprofessional."
+        "whatTheAgentLoses": "You lose the ability to catch transcription errors that could completely change the meaning of your spoken message or make you look unprofessional.",
+        "speak": "if-wrong",
+        "check": "What text do the generated captions show?",
+        "say_example": "The captions wrote <'Kate'> where you say <'K8 Digital'>. I'm fixing the name before it's burned in."
        }
       ]
      }
@@ -1098,15 +1278,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays an expanded menu with options like 'Photo/video', 'Tag people', and 'Feeling/activity', requiring a decision on how to build the post.",
-      "whatTheAgentLoses": "Delegating this step means losing creative control over which specific media, tags, or activities are used to express your message."
-     },
-     {
-      "question": "What caption and additional details should you include before sharing?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen provides options to write a caption, add music, tag people, or include a location, all of which determine how the audience discovers and interacts with your post.",
-      "whatTheAgentLoses": "Delegating this step means losing your personal voice in the caption and the strategic choice of which tags, locations, or music best complement your content."
+      "whatTheAgentLoses": "Delegating this step means losing creative control over which specific media, tags, or activities are used to express your message.",
+      "speak": "never",
+      "check": "Which add-ons does the expanded menu list?",
+      "say_example": "Added only what you asked for. The extras stayed closed."
      },
      {
       "question": "Which details, tags, or advanced settings should you configure for this post?",
@@ -1114,7 +1289,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen provides options to enrich the post with a caption, tags, and location, as well as toggles for cross-posting to platforms like Facebook and Twitter.",
-      "whatTheAgentLoses": "Delegating this step means losing personal control over the post's narrative, audience targeting through tags and locations, and cross-platform sharing preferences."
+      "whatTheAgentLoses": "Delegating this step means losing personal control over the post's narrative, audience targeting through tags and locations, and cross-platform sharing preferences.",
+      "speak": "never",
+      "check": "Which optional fields does the composer show?",
+      "say_example": "Caption in, no tags, no location. As asked."
      },
      {
       "question": "Do you want to tag a specific event in your post?",
@@ -1122,7 +1300,10 @@
       "moment": null,
       "moneyMoving": false,
       "why": "The menu offers a 'Tag event' option alongside GIF and Camera, allowing you to link your post directly to a scheduled Facebook event.",
-      "whatTheAgentLoses": "You lose the ability to officially associate your update with a specific event page, which could help attendees find your content."
+      "whatTheAgentLoses": "You lose the ability to officially associate your update with a specific event page, which could help attendees find your content.",
+      "speak": "never",
+      "check": "Does the menu show a 'Tag event' option?",
+      "say_example": "Skipped the event tag."
      }
     ],
     "children": [
@@ -1136,15 +1317,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays an active text input area and keyboard, prompting you to decide on the exact message to share.",
-        "whatTheAgentLoses": "Delegating this step means losing your personal voice and the ability to craft the specific message you want to communicate to your followers."
+        "whatTheAgentLoses": "Delegating this step means losing your personal voice and the ability to craft the specific message you want to communicate to your followers.",
+        "speak": "gate",
+        "check": "What text does the caption field currently contain?",
+        "say_example": "The post needs its words. What should it say? I'll type it exactly as you give it."
        },
        {
-        "question": "Should you type text into the field despite the warning to remove media?",
+        "question": "Can the post carry both the media and the text, or does the page say one must go?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a warning stating that media must be removed to use the text feature, which could falsely deter you from entering a caption.",
-        "whatTheAgentLoses": "You lose the human intuition to test the input field and discover that the warning is a false alarm for standard text entry."
+        "whatTheAgentLoses": "You lose the human intuition to test the input field and discover that the warning is a false alarm for standard text entry.",
+        "speak": "on-event",
+        "check": "Does the page show a warning that media must be removed to use the text feature?",
+        "say_example": "This app won't take the photo and the words together. It says the media has to go first. Keep the photo, or keep the text?"
        },
        {
         "question": "Did you include a URL in the Instagram caption that should instead be directed to your bio?",
@@ -1152,7 +1339,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Instagram feed post captions do not support clickable hyperlinks, meaning any web address typed here will force followers to manually copy and paste it.",
-        "whatTheAgentLoses": "You lose the strategic platform knowledge to use a 'link in bio' call-to-action rather than stranding a dead URL in the caption."
+        "whatTheAgentLoses": "You lose the strategic platform knowledge to use a 'link in bio' call-to-action rather than stranding a dead URL in the caption.",
+        "speak": "on-event",
+        "check": "Does the caption text contain a web address?",
+        "say_example": "Your caption has a link in it. Links don't work in captions here. Nobody can tap it. Move it to your bio line, or leave it as is?"
        },
        {
         "question": "Has the caption exceeded the platform's character limit, triggering a warning or disabling the publish button?",
@@ -1160,7 +1350,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Platforms like X (Twitter) have strict character limits, and exceeding them prevents the post from going live until the text is shortened.",
-        "whatTheAgentLoses": "You lose the ability to manually edit down your message to retain its core meaning rather than having an agent arbitrarily cut words to fit."
+        "whatTheAgentLoses": "You lose the ability to manually edit down your message to retain its core meaning rather than having an agent arbitrarily cut words to fit.",
+        "speak": "on-event",
+        "check": "Does the page show the character count over the limit or a disabled post button?",
+        "say_example": "The post is <40> characters over the limit. The button is greyed out. Want to hear what I'd trim?"
        }
       ]
      },
@@ -1174,7 +1367,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a row of colored and patterned background shortcuts above the keyboard, offering a way to make a simple text post more visually prominent.",
-        "whatTheAgentLoses": "Delegating this means losing the creative control to preview and select a specific visual style that best matches the mood of your message."
+        "whatTheAgentLoses": "Delegating this means losing the creative control to preview and select a specific visual style that best matches the mood of your message.",
+        "speak": "never",
+        "check": "Does the composer show background style options?",
+        "say_example": "Plain background. No styling was asked for."
        },
        {
         "question": "Which background color do you want to apply to the text post?",
@@ -1182,7 +1378,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a row of color swatches that instantly update the post preview on the right, determining the visual style of the post.",
-        "whatTheAgentLoses": "Delegating this step means losing the creative control to choose a background color that matches your personal brand or the mood of the message."
+        "whatTheAgentLoses": "Delegating this step means losing the creative control to choose a background color that matches your personal brand or the mood of the message.",
+        "speak": "never",
+        "check": "Which color swatches does the row show?",
+        "say_example": "Kept the default background."
        }
       ]
      },
@@ -1200,7 +1399,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Tag people' screen provides a search bar and a list of suggestions to let you specify exactly who is featured in or relevant to the post.",
-        "whatTheAgentLoses": "You lose the personal judgment of deciding which specific friends or acquaintances should be publicly associated with this content."
+        "whatTheAgentLoses": "You lose the personal judgment of deciding which specific friends or acquaintances should be publicly associated with this content.",
+        "speak": "never",
+        "check": "Does the tag screen show a search bar and suggestions?",
+        "say_example": "Tagged <the two people you named>, nobody else."
        },
        {
         "question": "Did the platform fail to resolve a tagged username, leaving it as plain text instead of a clickable link?",
@@ -1208,7 +1410,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "If a user changed their handle, made a typo, or has strict privacy settings, the tag won't link, defeating the purpose of tagging them for reach.",
-        "whatTheAgentLoses": "You lose the chance to correct a typo in a collaborator's handle, resulting in a missed connection and lower engagement."
+        "whatTheAgentLoses": "You lose the chance to correct a typo in a collaborator's handle, resulting in a missed connection and lower engagement.",
+        "speak": "if-wrong",
+        "check": "Does the tagged name appear as a link or chip in the preview, or as plain text?",
+        "say_example": "The tag on <name> didn't take. It shows as plain text. They won't be notified. Retry the handle, or leave it?"
        },
        {
         "question": "Is the account you selected from the search results actually the correct person or brand you intended to tag?",
@@ -1216,7 +1421,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Search results often display multiple accounts with identical names or similar profile pictures, making it easy to accidentally tag a stranger or a fan account instead of the intended target.",
-        "whatTheAgentLoses": "You lose the personal knowledge required to visually verify that the selected profile belongs to your actual friend or the official brand."
+        "whatTheAgentLoses": "You lose the personal knowledge required to visually verify that the selected profile belongs to your actual friend or the official brand.",
+        "speak": "on-event",
+        "check": "Which accounts do the search results list for <the name>, with which handles and markers?",
+        "say_example": "Three accounts match <Jamie Smith>. I'd pick the <verified one with 12k followers>. That one, or another?"
        },
        {
         "question": "Did the specific account you searched for appear in the tagging suggestions?",
@@ -1224,7 +1432,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "If a user has changed their handle, deleted their account, or restricted their privacy settings, their profile will not appear in the search results, meaning your attempt to tag them has failed.",
-        "whatTheAgentLoses": "You lose the awareness that a key collaborator or friend could not be tagged, and the chance to alter the caption to compensate for the missing link."
+        "whatTheAgentLoses": "You lose the awareness that a key collaborator or friend could not be tagged, and the chance to alter the caption to compensate for the missing link.",
+        "speak": "on-event",
+        "check": "Do the search results show any account for <the handle>?",
+        "say_example": "I can't find <the handle> to tag. The search comes back empty. Skip the tag, or try another name?"
        }
       ]
      },
@@ -1238,7 +1449,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides a grid of feelings and a separate tab for activities to add personal context to your update.",
-        "whatTheAgentLoses": "You lose the ability to authentically share your current mood or specific activity with your audience."
+        "whatTheAgentLoses": "You lose the ability to authentically share your current mood or specific activity with your audience.",
+        "speak": "never",
+        "check": "Which feelings and activities does the grid list?",
+        "say_example": "No feeling or activity attached."
        }
       ]
      },
@@ -1252,23 +1466,32 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays nearby location suggestions like 'Cheboksary', which determines whether you can quickly tap a suggestion or if you need to manually search.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether a broad suggested location is acceptable or if a highly specific location needs to be manually searched for the post's context."
+        "whatTheAgentLoses": "The user loses the ability to decide whether a broad suggested location is acceptable or if a highly specific location needs to be manually searched for the post's context.",
+        "speak": "never",
+        "check": "Does the location list show the place you want?",
+        "say_example": "Picked <the place> straight from the suggestions."
        },
        {
-        "question": "Which of the search results for 'tokyo' should I select as the location?",
+        "question": "Which of the matching locations is the one you mean?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays multiple location options matching 'tokyo', and selecting the correct one ensures the post is tagged accurately.",
-        "whatTheAgentLoses": "The user loses the ability to choose the specific regional or venue tag that best represents their post."
+        "whatTheAgentLoses": "The user loses the ability to choose the specific regional or venue tag that best represents their post.",
+        "speak": "on-event",
+        "check": "Which locations do the search results list for <the search term>?",
+        "say_example": "There's more than one <Tokyo> here. The city, and a restaurant with the same name. I'll take the city. OK, or a different one?"
        },
        {
-        "question": "Do you want to tag a specific location in this post, and should I enable location services to find it?",
+        "question": "Should location services be turned on so the post can be tagged with where you are?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen prompts you to turn on location services or choose from recent places like Rawalpindi to add a location tag to your post.",
-        "whatTheAgentLoses": "Delegating this choice means losing control over whether your location is broadcasted to your audience and which specific region is associated with your post."
+        "whatTheAgentLoses": "Delegating this choice means losing control over whether your location is broadcasted to your audience and which specific region is associated with your post.",
+        "speak": "gate",
+        "check": "Does the screen ask to turn on location services?",
+        "say_example": "Tagging your current spot needs location turned on for the app. That stays on after this post. Turn it on, or tag the place by name instead?"
        },
        {
         "question": "Do you want to add a location to your post before tapping Post?",
@@ -1276,7 +1499,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The composer screen displays a location icon that can be selected before finalizing the publication.",
-        "whatTheAgentLoses": "The user loses control over whether their geographical location is shared publicly alongside their post."
+        "whatTheAgentLoses": "The user loses control over whether their geographical location is shared publicly alongside their post.",
+        "speak": "never",
+        "check": "Does the composer show a location option?",
+        "say_example": "No location on this post. Where you are stays off the record unless you ask."
        }
       ]
      },
@@ -1290,7 +1516,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The search interface displays multiple categories like 'Agree' and 'Applause', requiring you to choose the visual reaction that best matches your message.",
-        "whatTheAgentLoses": "Delegating this choice means losing the personal touch of selecting the specific animation that perfectly captures your intended tone and humor."
+        "whatTheAgentLoses": "Delegating this choice means losing the personal touch of selecting the specific animation that perfectly captures your intended tone and humor.",
+        "speak": "never",
+        "check": "Which GIF categories does the search show?",
+        "say_example": "No GIF attached."
        }
       ]
      },
@@ -1304,7 +1533,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The interface provides a scrolling picker to set the exact duration in days, hours, and minutes for the poll to remain open.",
-        "whatTheAgentLoses": "Delegating this choice means losing control over the specific timeframe your audience has to vote on the poll."
+        "whatTheAgentLoses": "Delegating this choice means losing control over the specific timeframe your audience has to vote on the poll.",
+        "speak": "never",
+        "check": "What poll duration does the picker show?",
+        "say_example": "Poll runs the default <1 day>."
        },
        {
         "question": "What poll question and choices should you add to the post?",
@@ -1312,7 +1544,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a poll being created with a question and four choices about future tutorials, which requires deciding how to engage the audience.",
-        "whatTheAgentLoses": "The user loses the ability to tailor the interactive poll question and choices to their specific audience engagement strategy."
+        "whatTheAgentLoses": "The user loses the ability to tailor the interactive poll question and choices to their specific audience engagement strategy.",
+        "speak": "gate",
+        "check": "What question and choices do the poll fields contain?",
+        "say_example": "The poll needs its question and choices, in your words. What should it ask, and what are the options?"
        }
       ]
      },
@@ -1326,7 +1561,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The composer screen provides an audio wave icon that opens a recording interface to capture and attach a voice note.",
-        "whatTheAgentLoses": "You lose the ability to use your own authentic voice and tone in the attached audio clip."
+        "whatTheAgentLoses": "You lose the ability to use your own authentic voice and tone in the attached audio clip.",
+        "speak": "gate",
+        "check": "Does the screen show a voice recording interface?",
+        "say_example": "A voice note has to be your voice. The recorder is open. Speak when you're ready, and I'll attach it."
        }
       ]
      },
@@ -1340,7 +1578,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The blue plus button above the keyboard allows you to link multiple text inputs together into a single thread.",
-        "whatTheAgentLoses": "You lose the creative control to decide whether your message is best delivered as a single post or a multi-part thread."
+        "whatTheAgentLoses": "You lose the creative control to decide whether your message is best delivered as a single post or a multi-part thread.",
+        "speak": "never",
+        "check": "Does the composer show an add-post control for threading?",
+        "say_example": "One post, no thread."
        }
       ]
      },
@@ -1354,7 +1595,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen presents options to generate an image or enhance your text with Grok, which determines whether AI will alter your original content.",
-        "whatTheAgentLoses": "You lose the personal choice of deciding whether to rely on AI for creative assistance or to keep the post entirely in your own authentic voice."
+        "whatTheAgentLoses": "You lose the personal choice of deciding whether to rely on AI for creative assistance or to keep the post entirely in your own authentic voice.",
+        "speak": "never",
+        "check": "Does the screen offer AI options to generate an image or enhance the text?",
+        "say_example": "Skipped the AI rewrite. Your words went out as you gave them."
        }
       ]
      },
@@ -1368,7 +1612,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a list of existing albums and a '+ Create album' option to help organize your content.",
-        "whatTheAgentLoses": "You lose the ability to curate your profile by organizing related posts into dedicated collections."
+        "whatTheAgentLoses": "You lose the ability to curate your profile by organizing related posts into dedicated collections.",
+        "speak": "never",
+        "check": "Which albums does the list show?",
+        "say_example": "Not filed to an album."
        }
       ]
      }
@@ -1380,20 +1627,15 @@
     "note": "7.1 wherever the default is wrong for the intent - TLHQ escalates Only-me to Public, L9bf deliberately starts Unlisted. 7.2 and 7.3 where the composer exposes them. 7.4 sits at composer entry in Business Suite (T1et) and inside settings sheets everywhere else. 7.5 only where the platform requires it (L9bf).",
     "questions": [
      {
-      "question": "Which privacy settings, sharing options, and metadata should you configure before posting?",
+      "question": "Do any of the sharing or interaction toggles need changing from their defaults before posting?",
       "cluster": "hand over",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays toggles for comments, Duets, and Stitches, alongside audience privacy settings that must be finalized.",
-      "whatTheAgentLoses": "You lose the control to personally dictate the audience visibility and interaction limits for your specific video."
-     },
-     {
-      "question": "Which interaction and privacy settings should you apply before confirming the post?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The screen displays toggles for allowing comments, duets, and stitches, as well as a privacy setting for who can watch the video.",
-      "whatTheAgentLoses": "Delegating this step means you lose the ability to set specific boundaries on how the public can interact with or remix your video."
+      "whatTheAgentLoses": "You lose the control to personally dictate the audience visibility and interaction limits for your specific video.",
+      "speak": "never",
+      "check": "Which toggles does the settings panel show, and what state is each in?",
+      "say_example": "Left the toggles on their defaults. States are in the report."
      }
     ],
     "children": [
@@ -1407,7 +1649,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Post audience' dialog controls who can see your content, and canceling discards any accidental changes to your privacy preferences.",
-        "whatTheAgentLoses": "You lose the ability to personally decide whether to restrict the visibility of this specific post or keep your default audience."
+        "whatTheAgentLoses": "You lose the ability to personally decide whether to restrict the visibility of this specific post or keep your default audience.",
+        "speak": "never",
+        "check": "Does the dialog show apply and cancel options for the audience change?",
+        "say_example": "Applied the audience you chose."
        },
        {
         "question": "Who should be able to see this post?",
@@ -1415,7 +1660,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The privacy button currently shows 'Only me', meaning the tagged friends and intended audience will not be able to see the post unless the setting is updated.",
-        "whatTheAgentLoses": "Delegating this decision means the agent might select an inappropriate privacy level, potentially exposing a personal moment to the public or hiding it from friends."
+        "whatTheAgentLoses": "Delegating this decision means the agent might select an inappropriate privacy level, potentially exposing a personal moment to the public or hiding it from friends.",
+        "speak": "if-wrong",
+        "check": "What audience does the privacy setting show?",
+        "say_example": "The audience is set to <Only me>. Posted like this, none of your friends would see it. I'm setting it to <Friends> as you asked."
        }
       ]
      },
@@ -1429,7 +1677,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides a menu to limit replies to everyone, verified accounts, accounts you follow, or only accounts you mention.",
-        "whatTheAgentLoses": "The user loses the ability to control their post's engagement and potentially prevent unwanted comments."
+        "whatTheAgentLoses": "The user loses the ability to control their post's engagement and potentially prevent unwanted comments.",
+        "speak": "never",
+        "check": "Which reply options does the menu list?",
+        "say_example": "Replies left open to everyone, the default."
        }
       ]
      },
@@ -1443,7 +1694,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The menu offers options to download the post, label it as AI-generated, or disable comments before publishing.",
-        "whatTheAgentLoses": "The user loses the ability to control audience engagement or comply with AI transparency guidelines for their post."
+        "whatTheAgentLoses": "The user loses the ability to control audience engagement or comply with AI transparency guidelines for their post.",
+        "speak": "never",
+        "check": "Which options does the menu list, such as comment controls or an AI label?",
+        "say_example": "No AI label needed. The photo is a real one you gave me."
        },
        {
         "question": "Should you allow other users to remix this Reel?",
@@ -1451,15 +1705,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Leaving this enabled allows other people to download your content and include it in their own Facebook reels.",
-        "whatTheAgentLoses": "The user loses the opportunity to weigh the privacy risks of others reusing their content against the potential for broader audience reach."
+        "whatTheAgentLoses": "The user loses the opportunity to weigh the privacy risks of others reusing their content against the potential for broader audience reach.",
+        "speak": "never",
+        "check": "What state is the remix toggle in?",
+        "say_example": "Remixing stayed on, the platform default. Others can reuse the clip. Say the word and I'll turn it off."
        },
        {
-        "question": "Should you review and edit the auto-generated alt text for your uploaded image?",
+        "question": "Does the alt text describe what the image actually shows?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The photo editor interface includes an 'Alt text' option to describe the image for visually impaired users, which may need manual correction if the auto-generated description is inaccurate.",
-        "whatTheAgentLoses": "You lose the opportunity to ensure your visual content is accurately and meaningfully described for all members of your audience."
+        "whatTheAgentLoses": "You lose the opportunity to ensure your visual content is accurately and meaningfully described for all members of your audience.",
+        "speak": "if-wrong",
+        "check": "What does the alt text field say?",
+        "say_example": "The auto description calls this <'a person on a horse'>. The photo is <your dog on the sofa>. I'm rewriting it."
        }
       ]
      },
@@ -1473,23 +1733,21 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen provides a toggle switch to share the post to Instagram, which determines if the content will be distributed across multiple platforms.",
-        "whatTheAgentLoses": "You lose the ability to decide whether this specific post is suitable for your Instagram audience."
+        "whatTheAgentLoses": "You lose the ability to decide whether this specific post is suitable for your Instagram audience.",
+        "speak": "if-wrong",
+        "check": "What state is the share-to-<Instagram> toggle in?",
+        "say_example": "The share-to-<Facebook> switch came turned on. You didn't ask for that. I turned it off. This goes to <Instagram> only."
        },
        {
-        "question": "Why is the cross-posting toggle disabled, and do you need to fix the account connection before publishing?",
+        "question": "Is the cross-post toggle usable, or has the platform disabled it?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The interface sometimes disables the Instagram or Facebook sharing toggle with a warning that the post can't be shared, meaning you must resolve account linking issues in the settings if you want cross-platform distribution.",
-        "whatTheAgentLoses": "You lose the opportunity to realize your accounts are disconnected and fix the issue, resulting in the post only going to one platform instead of your intended broader audience."
-       },
-       {
-        "question": "Does toggling the option to cross-post to another platform unexpectedly open a login prompt instead of just turning on?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Linked account tokens frequently expire in the background, meaning an attempt to cross-post will silently fail unless you stop to re-authenticate the connection.",
-        "whatTheAgentLoses": "You lose the awareness that your content will not actually reach the secondary platform unless you intervene to fix the broken integration."
+        "whatTheAgentLoses": "You lose the opportunity to realize your accounts are disconnected and fix the issue, resulting in the post only going to one platform instead of your intended broader audience.",
+        "speak": "on-event",
+        "check": "Does the page show the cross-post toggle disabled, a warning that sharing is unavailable, or a login prompt when it is switched on?",
+        "say_example": "The share to <Instagram> won't turn on. The accounts aren't linked right now. Post here only, or stop while you reconnect?"
        }
       ]
      },
@@ -1503,16 +1761,6 @@
     "id": "8",
     "label": "Commit the post",
     "note": "8.1 decides the moment - on consumer composers Now is nearly the only choice, and the business tools open the full set. 8.2 where the platform interposes checks, 8.3 and 8.4 on the final screen, then 8.5. 8.6 and 8.7 as the platform throws dialogs after the tap. on the schedule and draft routes the task ends inside 8.1 and no live post exists for 9.",
-    "questions": [
-     {
-      "question": "Which cover frame and interaction settings do you want to use for this video?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The screen provides options to choose a specific thumbnail and toggle permissions for comments, duets, and stitches before posting.",
-      "whatTheAgentLoses": "You lose the ability to handpick the most engaging thumbnail frame and fine-tune how the audience can interact with your content."
-     }
-    ],
     "children": [
      {
       "id": "8.1",
@@ -1525,7 +1773,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The schedule dialog lets you set exact dates and times for when the post goes live and when it stops being distributed in the news feed.",
-        "whatTheAgentLoses": "You lose control over the exact timing of your post's visibility and when it stops circulating in your audience's feed."
+        "whatTheAgentLoses": "You lose control over the exact timing of your post's visibility and when it stops circulating in your audience's feed.",
+        "speak": "never",
+        "check": "What publish date, time, and expiry does the schedule dialog show?",
+        "say_example": "Scheduled for <Friday 9 am>, your time. No expiry set."
        }
       ],
       "children": [
@@ -1534,36 +1785,26 @@
         "label": "Pick the publish mode",
         "questions": [
          {
-          "question": "What caption and settings do you want to apply, and do you want to publish now or save as a draft?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The posting screen provides options to add a description, adjust privacy settings, and either publish immediately or save as a draft.",
-          "whatTheAgentLoses": "Delegating this means you lose control over the exact wording of the caption, the post's visibility settings, and the timing of the publication."
-         },
-         {
-          "question": "Do you want to schedule this post for a later time or publish it immediately?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The modal provides an option at the bottom to schedule the post from Meta Business Suite instead of publishing it right now.",
-          "whatTheAgentLoses": "You lose control over the exact timing of the publication, which can impact audience reach and engagement."
-         },
-         {
           "question": "Do you want to publish the post now, schedule it for later, or save it as a draft?",
           "cluster": "select",
           "moment": "Now",
           "moneyMoving": true,
           "why": "The screen displays scheduling options including 'Publish now', 'Schedule', and 'Save as draft', which dictate when the content goes live.",
-          "whatTheAgentLoses": "You lose the ability to strategically time your content's release or hold it back for final revisions before it reaches your audience."
+          "whatTheAgentLoses": "You lose the ability to strategically time your content's release or hold it back for final revisions before it reaches your audience.",
+          "speak": "never",
+          "check": "Which publish options does the screen list?",
+          "say_example": "Published now, as asked. Draft and schedule weren't needed."
          },
          {
-          "question": "When do you want to publish this post, and should you address the warnings first?",
+          "question": "Does the publish screen show warnings that should be settled before the post goes out?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": true,
           "why": "The screen provides options to publish now, premiere, or schedule the post, along with specific warnings about video length and playlists that could affect its performance.",
-          "whatTheAgentLoses": "You lose the opportunity to strategically time your post's release or decide whether to address platform warnings to optimize engagement."
+          "whatTheAgentLoses": "You lose the opportunity to strategically time your post's release or decide whether to address platform warnings to optimize engagement.",
+          "speak": "on-event",
+          "check": "Does the publish dialog show any warning messages, and what do they say?",
+          "say_example": "Before this goes out, the site flags <the video runs long for the feed>. Fix that first, or post as is?"
          }
         ]
        },
@@ -1577,7 +1818,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Many platforms require scheduled posts to be set a minimum number of minutes in the future (e.g., 20 minutes on Facebook), and will throw an error if the selected time is too soon.",
-          "whatTheAgentLoses": "You lose the opportunity to decide whether to push the scheduled time further out to satisfy the rule, or to simply publish the post immediately."
+          "whatTheAgentLoses": "You lose the opportunity to decide whether to push the scheduled time further out to satisfy the rule, or to simply publish the post immediately.",
+          "speak": "on-event",
+          "check": "Does the page show an error that the scheduled time is too soon?",
+          "say_example": "The site won't take <9:05>. Scheduled posts need <20 minutes> of lead time. The earliest is <9:25>. Use that?"
          }
         ]
        },
@@ -1590,12 +1834,15 @@
         "label": "Save and find the draft",
         "questions": [
          {
-          "question": "Where do you go to find your saved drafts?",
+          "question": "Is the in-progress post actually saved in the Content Library's Drafts tab, given the current page shows no results?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
           "why": "Navigating to the 'Drafts' tab within the 'Content Library' is essential for retrieving previously saved work, even if the current page shows no results.",
-          "whatTheAgentLoses": "You lose the reassurance of personally verifying that your in-progress content is safely stored in the drafts folder."
+          "whatTheAgentLoses": "You lose the reassurance of personally verifying that your in-progress content is safely stored in the drafts folder.",
+          "speak": "never",
+          "check": "Does the page show where drafts are stored, such as a Drafts tab?",
+          "say_example": "Saved as a draft. It lives under <Content Library, Drafts>."
          }
         ]
        }
@@ -1611,7 +1858,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Using copyrighted music can trigger automated flags that mute the video or restrict its visibility, fundamentally ruining the post's impact.",
-        "whatTheAgentLoses": "You lose the chance to swap the audio track for a royalty-free alternative before the post goes live and gets penalized."
+        "whatTheAgentLoses": "You lose the chance to swap the audio track for a royalty-free alternative before the post goes live and gets penalized.",
+        "speak": "on-event",
+        "check": "Does the page show a copyright warning about the selected audio?",
+        "say_example": "The site flagged the music. It says the video may go out muted. Swap the track, or post it muted?"
        }
       ]
      },
@@ -1625,7 +1875,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "This matters because tapping 'Post' will immediately share the 'Hello' text, selected photos, tagged friends, Tokyo location, and public visibility setting with your audience.",
-        "whatTheAgentLoses": "The user loses the final personal review to ensure the tone, selected photos, tagged friends, and privacy level perfectly align with how they want to present this moment to their social circle."
+        "whatTheAgentLoses": "The user loses the final personal review to ensure the tone, selected photos, tagged friends, and privacy level perfectly align with how they want to present this moment to their social circle.",
+        "speak": "gate",
+        "check": "What do the review screen's fields show for the text, media, tags, location, audience, and account?",
+        "say_example": "Ready to post. From <the brand account>, to <everyone>. It says <'Hello'>, with <three photos>, tagged <Sam>, at <Tokyo>. Press to post, or say change."
        }
       ]
      },
@@ -1639,15 +1892,21 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The post settings dialog includes a 'Boost post' toggle right before the final 'Post' button, allowing you to turn this into a paid ad.",
-        "whatTheAgentLoses": "Delegating this choice means losing control over whether to spend advertising budget to increase the post's visibility."
+        "whatTheAgentLoses": "Delegating this choice means losing control over whether to spend advertising budget to increase the post's visibility.",
+        "speak": "if-wrong",
+        "check": "What state is the 'Boost post' toggle in?",
+        "say_example": "The boost switch was on. That turns this into a paid ad. I switched it off. This posts free."
        },
        {
-        "question": "If you enabled the 'Boost post' option, what specific budget and duration are you committing to pay?",
+        "question": "Before the boost runs, what budget and duration is it set to?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Boosting a post transitions the task from a free organic update to a paid advertisement, meaning money will move based on the parameters set.",
-        "whatTheAgentLoses": "You lose financial control over the advertising spend, risking unexpected charges to your linked payment method."
+        "whatTheAgentLoses": "You lose financial control over the advertising spend, risking unexpected charges to your linked payment method.",
+        "speak": "gate",
+        "check": "What budget and duration does the boost panel show?",
+        "say_example": "The boost would spend <$20> over <5 days>, on your <card on file>. Only you can commit that. Go ahead, or post without it?"
        }
       ]
      },
@@ -1665,7 +1924,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The app warns that because your account is public, this video will be visible to everyone once posted.",
-        "whatTheAgentLoses": "You lose the final opportunity to reconsider the privacy of the video before it becomes visible to the public."
+        "whatTheAgentLoses": "You lose the final opportunity to reconsider the privacy of the video before it becomes visible to the public.",
+        "speak": "never",
+        "check": "Does the app show a warning that the video will be visible to everyone?",
+        "say_example": "Confirmed the public-visibility notice. The audience was already in the read-back you approved."
        }
       ]
      },
@@ -1679,7 +1941,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The app presents a pop-up offering to automatically share your stories and posts to Facebook so friends can see them across both apps.",
-        "whatTheAgentLoses": "You lose the ability to decide whether your content is kept exclusive to one platform or automatically cross-posted to another."
+        "whatTheAgentLoses": "You lose the ability to decide whether your content is kept exclusive to one platform or automatically cross-posted to another.",
+        "speak": "never",
+        "check": "Does a popup offer to automatically share your posts and stories to <Facebook>?",
+        "say_example": "Said no to the auto-share popup. Nothing else gets your posts by default."
        }
       ]
      }
@@ -1696,7 +1961,10 @@
       "moment": "Completion",
       "moneyMoving": true,
       "why": "The screen displays a bottom toolbar with an 'Activity' option, allowing you to confirm the story is live and check its initial viewer count.",
-      "whatTheAgentLoses": "You lose the immediate reassurance of seeing the live story interface and verifying its initial viewer activity yourself."
+      "whatTheAgentLoses": "You lose the immediate reassurance of seeing the live story interface and verifying its initial viewer activity yourself.",
+      "speak": "never",
+      "check": "Does the screen show an activity or views option for the story?",
+      "say_example": "The story shows <3> viewers so far."
      }
     ],
     "children": [
@@ -1710,7 +1978,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Success states are often communicated via ephemeral banners that vanish after a few seconds, which tells you it is safe to close the app or navigate away.",
-        "whatTheAgentLoses": "You lose the definitive, immediate visual confirmation that the system accepted the post, leaving you guessing if a silent failure occurred."
+        "whatTheAgentLoses": "You lose the definitive, immediate visual confirmation that the system accepted the post, leaving you guessing if a silent failure occurred.",
+        "speak": "never",
+        "check": "Did a banner such as 'Post published' or 'Uploading' appear?",
+        "say_example": "The 'Posted' banner came and went, caught at <3:07 pm>."
        },
        {
         "question": "Did the upload fail or stall with a 'Not posted. Tap to try again' error message in the feed?",
@@ -1718,7 +1989,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Network interruptions often cause media-heavy posts to fail silently or stall, requiring manual intervention to retry the upload.",
-        "whatTheAgentLoses": "You lose the awareness that your post never actually went live and the opportunity to manually force a retry on a stable connection."
+        "whatTheAgentLoses": "You lose the awareness that your post never actually went live and the opportunity to manually force a retry on a stable connection.",
+        "speak": "on-event",
+        "check": "Does the feed show an error such as 'Not posted. Tap to try again'?",
+        "say_example": "The post didn't go through. The feed says try again. I'm retrying the post you approved. If it fails again, I'll stop and tell you."
        }
       ]
      },
@@ -1732,7 +2006,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Verifying the post on the live feed and profile confirms that the publication was successful and the content is visible to your audience.",
-        "whatTheAgentLoses": "You lose the immediate, personal reassurance of seeing your content live and verifying its final appearance on your profile."
+        "whatTheAgentLoses": "You lose the immediate, personal reassurance of seeing your content live and verifying its final appearance on your profile.",
+        "speak": "always",
+        "check": "Does the post appear on the profile and feed with its content shown?",
+        "say_example": "It's live. On your profile at <3:07 pm>, showing to <everyone>. It looks the way you approved it."
        },
        {
         "question": "Do you want to verify how the story appears in the home feed for your followers?",
@@ -1740,7 +2017,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Checking the story bar at the top of the home feed confirms exactly how your audience will discover the new post.",
-        "whatTheAgentLoses": "You lose the opportunity to visually confirm that the story is prominently displayed in the follower's story bar."
+        "whatTheAgentLoses": "You lose the opportunity to visually confirm that the story is prominently displayed in the follower's story bar.",
+        "speak": "never",
+        "check": "Does the story bar in the home feed show your story?",
+        "say_example": "Checked the home feed. Your story sits in the bar the way followers see it."
        }
       ]
      },
@@ -1754,7 +2034,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "Clicking the 'Save' button in the Video Options menu immediately triggers a confusing modal asking you to save your changes.",
-        "whatTheAgentLoses": "The user loses the certainty that their video options were properly applied and not lost due to a system glitch."
+        "whatTheAgentLoses": "The user loses the certainty that their video options were properly applied and not lost due to a system glitch.",
+        "speak": "never",
+        "check": "Does clicking Save trigger an 'Unsaved changes' dialog?",
+        "say_example": "Saving popped a contradictory unsaved-changes box. Saved again, and the settings held."
        },
        {
         "question": "Did your post count increase after publishing?",
@@ -1762,7 +2045,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The profile showed '33 posts' both before and after the process, indicating the content was likely published as a temporary story rather than a permanent feed post.",
-        "whatTheAgentLoses": "The user loses the certainty that their content was permanently published to their main profile feed."
+        "whatTheAgentLoses": "The user loses the certainty that their content was permanently published to their main profile feed.",
+        "speak": "if-wrong",
+        "check": "What post count does the profile show now, compared with before publishing?",
+        "say_example": "Your post count didn't move. That means this went out as a story, not a feed post. Want it reposted to the feed?"
        },
        {
         "question": "Is the audio track playing normally on the live post, or did the platform instantly mute it for a copyright violation?",
@@ -1770,7 +2056,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Social platforms aggressively scan media upon publication and will silently mute your video if it detects unauthorized copyrighted music, rendering your content awkward or incomprehensible.",
-        "whatTheAgentLoses": "You lose the immediate realization that your video is playing in silence, delaying your ability to delete it and re-upload with cleared audio."
+        "whatTheAgentLoses": "You lose the immediate realization that your video is playing in silence, delaying your ability to delete it and re-upload with cleared audio.",
+        "speak": "if-wrong",
+        "check": "Does the live post show a copyright or muted-audio notice?",
+        "say_example": "The platform muted the video's audio after posting. It flagged the music. The clip is up, silent. Swap the sound, or take it down?"
        },
        {
         "question": "Did the post actually appear on your connected secondary accounts, or did the cross-posting integration silently fail?",
@@ -1778,7 +2067,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Even if the cross-posting toggle was enabled during creation, expired authentication tokens or API glitches can cause the post to only publish to the primary platform without warning you.",
-        "whatTheAgentLoses": "You lose the opportunity to catch a silent integration failure and manually share the content to your other audiences before the optimal posting window closes."
+        "whatTheAgentLoses": "You lose the opportunity to catch a silent integration failure and manually share the content to your other audiences before the optimal posting window closes.",
+        "speak": "if-wrong",
+        "check": "Does the post appear on the <secondary> account's profile?",
+        "say_example": "The cross-post didn't land. It's on <Facebook>, and <Instagram> has nothing. Reconnect and repost it there?"
        },
        {
         "question": "Does the newly published post appear with an overlay or notification stating it is under review or violates community guidelines?",
@@ -1786,7 +2078,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Automated moderation can instantly flag content for perceived copyright or safety violations, meaning the post is not actually visible to the public despite the initial success message.",
-        "whatTheAgentLoses": "You lose the immediate awareness that your post was blocked, delaying your ability to appeal the decision or publish alternative content."
+        "whatTheAgentLoses": "You lose the immediate awareness that your post was blocked, delaying your ability to appeal the decision or publish alternative content.",
+        "speak": "on-event",
+        "check": "Does the published post show a notice that it is under review or violates guidelines?",
+        "say_example": "The post is up for you, and marked under review. Others can't see it until the review clears. I'll keep an eye on it."
        },
        {
         "question": "Does the published post display the correct privacy icon, such as a globe for public or a lock for private?",
@@ -1794,7 +2089,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The small icon next to the timestamp is the immediate visual proof that the post's audience settings were applied correctly, prompting you to immediately delete or edit the post if it's wrong.",
-        "whatTheAgentLoses": "You lose the quick, reassuring visual check that your content isn't accidentally exposed to the wrong audience."
+        "whatTheAgentLoses": "You lose the quick, reassuring visual check that your content isn't accidentally exposed to the wrong audience.",
+        "speak": "if-wrong",
+        "check": "Which privacy icon does the published post show next to its timestamp?",
+        "say_example": "The live post shows the <lock> icon. It went out as <Only me>, not <public> as you asked. I'm fixing the audience on the live post."
        }
       ]
      },
@@ -1808,7 +2106,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The menu provides options to highlight, save, or adjust partnership and AI labels for the live story, which might be necessary for compliance or profile organization.",
-        "whatTheAgentLoses": "Delegating this step means you lose the immediate opportunity to highlight the story or adjust its partnership and AI labels right after publishing."
+        "whatTheAgentLoses": "Delegating this step means you lose the immediate opportunity to highlight the story or adjust its partnership and AI labels right after publishing.",
+        "speak": "never",
+        "check": "Which options does the story's menu list, such as highlight, save, or labels?",
+        "say_example": "Left the story as posted. Highlight and labels untouched."
        },
        {
         "question": "If you spot a typo or incorrect image in the live post, how do you edit or delete it, and will the platform display an 'edited' history?",
@@ -1816,7 +2117,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Seeing the post live is when mistakes are often first noticed, requiring an immediate decision on whether to pull it down, issue a correction, or leave it as is.",
-        "whatTheAgentLoses": "You lose the ability to quickly retract or fix an embarrassing error before it gains traction with your audience."
+        "whatTheAgentLoses": "You lose the ability to quickly retract or fix an embarrassing error before it gains traction with your audience.",
+        "speak": "never",
+        "check": "Does the post's menu offer edit and delete, and does the page say edits are shown to viewers?",
+        "say_example": "If anything's wrong, the post can still be edited. The menu has edit and delete, and <this platform shows an edit history>."
        }
       ]
      },

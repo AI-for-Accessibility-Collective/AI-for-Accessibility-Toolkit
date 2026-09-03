@@ -20,7 +20,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The first organic result displays the URL 'https://doodle.com', confirming it is the legitimate platform for scheduling meetings.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent navigated to the authentic and secure scheduling service rather than a deceptive link."
+        "whatTheAgentLoses": "The user loses the assurance that the agent navigated to the authentic and secure scheduling service rather than a deceptive link.",
+        "speak": "if-wrong",
+        "check": "Does the search result about to be clicked show the official site's own address, and is it marked as an ad or sponsored?",
+        "say_example": "The top result is an ad, not <the tool>. I'm using the real <doodle.com> link below it."
        },
        {
         "question": "Is the scheduling tool actually free to use, as promised in the search results?",
@@ -28,7 +31,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The search result at 00:14 promises a free tool, which is confirmed at 02:18 when the poll is created without a payment prompt.",
-        "whatTheAgentLoses": "The user loses the assurance of a free service if the agent selects a tool that eventually requires payment."
+        "whatTheAgentLoses": "The user loses the assurance of a free service if the agent selects a tool that eventually requires payment.",
+        "speak": "never",
+        "check": "Does the page ask for payment or an upgrade before the poll can be created?",
+        "say_example": "No payment was asked for. The poll went out on the free plan."
        }
       ]
      },
@@ -42,7 +48,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The banner states that 142 partners will store and access your personal data if you accept all.",
-        "whatTheAgentLoses": "You lose the ability to control which third-party partners can store and access your personal data."
+        "whatTheAgentLoses": "You lose the ability to control which third-party partners can store and access your personal data.",
+        "speak": "never",
+        "check": "Does the page show a consent banner, and what does it say happens on accept all, including how many partners are named?",
+        "say_example": "Said no to the cookie banner's optional sharing. It wanted to pass your data to <142> partners."
        }
       ]
      },
@@ -51,12 +60,15 @@
       "label": "Verify the add-in",
       "questions": [
        {
-        "question": "Have you verified that the FindTime add-in is installed and published by Microsoft?",
+        "question": "Is the FindTime add-in installed, and is Microsoft the publisher?",
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
         "why": "Checking the 'Added' status and publisher details ensures you are using the official Microsoft scheduling tool rather than an unverified third-party app.",
-        "whatTheAgentLoses": "You lose the security of personally confirming the authenticity and correct installation of the scheduling add-in."
+        "whatTheAgentLoses": "You lose the security of personally confirming the authenticity and correct installation of the scheduling add-in.",
+        "speak": "if-wrong",
+        "check": "Does the add-in listing show the expected publisher's name and an installed status?",
+        "say_example": "This add-in isn't from <Microsoft>. The publisher line says <someone else>, so I'm not installing it."
        }
       ]
      },
@@ -75,15 +87,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displays 'Sign up' and 'Log in' options, prompting a choice between the speed of guest access and the tracking benefits of a registered account.",
-          "whatTheAgentLoses": "The user loses the opportunity to decide if the long-term tracking benefits of an account outweigh the immediate convenience of proceeding as a guest."
-         },
-         {
-          "question": "Should you log in or get started?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The top right navigation offers 'Log In' and 'Get started', requiring a choice based on whether an account already exists.",
-          "whatTheAgentLoses": "The user loses the ability to decide whether to use an existing scheduling profile or create a new one."
+          "whatTheAgentLoses": "The user loses the opportunity to decide if the long-term tracking benefits of an account outweigh the immediate convenience of proceeding as a guest.",
+          "speak": "gate",
+          "check": "Does the page offer both a sign-in path and a guest path to create the poll?",
+          "say_example": "I can do this signed in to your account, or as a guest with no login. Guest means you'd manage the poll from email links instead. Which way?"
          }
         ]
        },
@@ -97,15 +104,21 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen presents a choice between filling out standard text fields or using third-party accounts like Google, Microsoft, or Facebook to create your profile.",
-          "whatTheAgentLoses": "You lose control over your account security and privacy preferences, as the agent might link a third-party account instead of keeping this tool's login separate."
+          "whatTheAgentLoses": "You lose control over your account security and privacy preferences, as the agent might link a third-party account instead of keeping this tool's login separate.",
+          "speak": "gate",
+          "check": "Which sign-up methods does the page offer?",
+          "say_example": "This site wants an account before it will go on. I can sign you up with your email, or through <Google>. Which do you want, or should I look for a way in without an account?"
          },
          {
-          "question": "How do I complete the email verification?",
+          "question": "Is the 'Verify email' button in this message actually from the scheduling site you just registered with, before it is clicked?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen showed an email from Doodle containing a 'Verify email' button needed to confirm the account.",
-          "whatTheAgentLoses": "The user loses the ability to personally review their inbox and ensure the verification link is legitimate before clicking."
+          "whatTheAgentLoses": "The user loses the ability to personally review their inbox and ensure the verification link is legitimate before clicking.",
+          "speak": "gate",
+          "check": "Does the page say a verification email was sent, and to which address?",
+          "say_example": "The site sent a verify link to <your email>. I can't press it from here. Open it, press verify, and tell me when you're done."
          }
         ]
        },
@@ -119,7 +132,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displays multiple Google accounts to choose from and notes that continuing will share your name, email, and profile picture with Doodle.",
-          "whatTheAgentLoses": "You lose control over which specific personal or business identity is linked to the scheduling tool and its associated data sharing permissions."
+          "whatTheAgentLoses": "You lose control over which specific personal or business identity is linked to the scheduling tool and its associated data sharing permissions.",
+          "speak": "gate",
+          "check": "Which accounts does the chooser list, and what does the consent screen say will be shared?",
+          "say_example": "Signing in with Google here shares your name, email, and photo with <the site>. Use <account>, a different one, or skip it and go in as a guest?"
          }
         ]
        }
@@ -135,7 +151,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen offers a 14-day premium trial to sync your calendar, which affects whether your existing appointments are automatically checked.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to grant the platform access to their personal calendar data or stick to the free manual version."
+        "whatTheAgentLoses": "The user loses the ability to decide whether to grant the platform access to their personal calendar data or stick to the free manual version.",
+        "speak": "on-event",
+        "check": "Does the page say connecting the calendar starts a trial, and is there a skip option?",
+        "say_example": "It wants to connect your calendar, and that starts a <14 day> trial. I'm skipping it. I'll check your calendar myself so nothing double-books."
        },
        {
         "question": "Should you connect your Zoom account to set up the meeting location, or dismiss the pop-up?",
@@ -143,7 +162,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a prompt to finish setting up the meeting location by connecting a Zoom account, which dictates how participants will meet.",
-        "whatTheAgentLoses": "If the agent dismisses this prompt without asking, you lose the ability to have Zoom links automatically attached to your scheduling link."
+        "whatTheAgentLoses": "If the agent dismisses this prompt without asking, you lose the ability to have Zoom links automatically attached to your scheduling link.",
+        "speak": "never",
+        "check": "Does a prompt to connect a video account appear, and can it be dismissed?",
+        "say_example": "Dismissed the connect-Zoom pop-up. The video choice comes later, with the meeting details."
        }
       ]
      },
@@ -152,12 +174,15 @@
       "label": "Find the create entry point",
       "questions": [
        {
-        "question": "Where do you click to start creating a scheduling poll?",
+        "question": "Should the scheduling poll go out in a new email or as a reply on the existing thread?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Clicking 'New mail' is necessary because the Outlook scheduling poll feature is accessed from within the email composition window.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to initiate the scheduling poll in a brand new email or as a reply to an existing conversation."
+        "whatTheAgentLoses": "You lose the ability to decide whether to initiate the scheduling poll in a brand new email or as a reply to an existing conversation.",
+        "speak": "never",
+        "check": "Does the page show a control that starts a new poll or meeting?",
+        "say_example": "Started the poll from <New mail>."
        }
       ]
      },
@@ -171,7 +196,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen offers distinct options for a group meeting, a 1:1 meeting, or a survey, which dictates the format and functionality of the scheduling poll.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong event format, such as setting up a 1:1 meeting when you actually need to coordinate multiple attendees."
+        "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong event format, such as setting up a 1:1 meeting when you actually need to coordinate multiple attendees.",
+        "speak": "never",
+        "check": "Which event formats does the page offer, and which is selected?",
+        "say_example": "Picked <group meeting> - you're scheduling with several people, so that's the fit."
        },
        {
         "question": "Should this new meeting type be public or private?",
@@ -179,7 +207,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen offers 'Public' meetings that appear on your booking page and 'Private' meetings that are only visible to those with the link.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might expose a meeting type publicly that you intended to keep restricted to specific invitees."
+        "whatTheAgentLoses": "Delegating this choice means the agent might expose a meeting type publicly that you intended to keep restricted to specific invitees.",
+        "speak": "never",
+        "check": "What visibility options does the page show, and which is selected?",
+        "say_example": "Kept the meeting private. Only people with the link can see it, and it stays off your public page."
        },
        {
         "question": "Should you create the older style of appointment slots?",
@@ -187,7 +218,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows an 'Appointment slots' tab with a 30-minute duration setting that dictates how the meeting times will be offered.",
-        "whatTheAgentLoses": "The user gives up control over the specific format and duration of the appointment slots being created."
+        "whatTheAgentLoses": "The user gives up control over the specific format and duration of the appointment slots being created.",
+        "speak": "never",
+        "check": "Does the page offer both the old appointment-slots tab and the newer scheduling option?",
+        "say_example": "Used the current scheduling page, not the old appointment-slots tab."
        }
       ]
      },
@@ -203,52 +237,15 @@
     "note": "2.1, then 2.2 to 2.5 in the order the form presents them; 2.3 rides on 2.2 (udxi). in the mail tools 2.1 is the email subject, which the scheduled meeting later inherits as its title (W0fS). Google Calendar defers 2.2, 2.4, 2.5 to the second wizard page, after goal 3 (VKIQ).",
     "questions": [
      {
-      "question": "What location should you specify for the meeting, and do you need to add any notes?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen includes optional fields for a location and a note, which help participants know where to go and what to expect.",
-      "whatTheAgentLoses": "The user loses the ability to choose the exact wording for the location or decide if extra context is needed in the notes."
-     },
-     {
-      "question": "What title, location, and notes should you set for the meeting?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen prompts for the occasion's title and offers optional location and note fields to define the event before continuing.",
-      "whatTheAgentLoses": "You lose the ability to personally frame the meeting's context and adapt to platform limitations, such as deciding how to share the Zoom link later."
-     },
-     {
-      "question": "What title and description do you give to the poll?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen presents fields for a title and an optional description to set the context for the event.",
-      "whatTheAgentLoses": "The user loses the ability to customize the meeting's context and provide specific instructions to the participants."
-     },
-     {
-      "question": "What details should you enter to define this meeting type?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The form provides fields for the title, description, location, and duration, along with a toggle for a Teams meeting, to fully specify the event for attendees.",
-      "whatTheAgentLoses": "The user loses the ability to craft a personalized description and specify an exact physical location instead of a default virtual link."
-     },
-     {
-      "question": "What location, conferencing details, and description should you provide for the booking page?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen prompts for location, conferencing preferences, and a description to be displayed on the booking page.",
-      "whatTheAgentLoses": "The user loses control over the meeting's location and the contextual information provided to attendees."
-     },
-     {
       "question": "Do you want to customize the photo and name displayed on your booking page?",
       "cluster": "",
       "moment": null,
       "moneyMoving": false,
       "why": "The settings include a 'Booking page photo and name' section that dictates the personal branding and identity shown to anyone who visits the link.",
-      "whatTheAgentLoses": "The user loses the opportunity to ensure their professional identity is presented correctly, rather than defaulting to their standard Google account profile."
+      "whatTheAgentLoses": "The user loses the opportunity to ensure their professional identity is presented correctly, rather than defaulting to their standard Google account profile.",
+      "speak": "if-wrong",
+      "check": "What name does the booking page show as the host, and does it match the person's name?",
+      "say_example": "The booking page introduces you as <an old name>. That's what every invitee would see, so I'm flagging it before the link goes out."
      }
     ],
     "children": [
@@ -262,39 +259,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'What's the occasion?' field requires a clear title so participants know what they are scheduling before you click the creation button.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose a specific, recognizable name for the meeting that makes sense to your invitees."
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose a specific, recognizable name for the meeting that makes sense to your invitees.",
+        "speak": "never",
+        "check": "What does the title field show?",
+        "say_example": "Titled it <what you asked for> so people know what they're scheduling."
        },
        {
-        "question": "What title should you give the group poll?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The form requires a title to identify the poll, which helps invitees understand the purpose of the meeting.",
-        "whatTheAgentLoses": "The user loses the opportunity to choose a clear, context-specific name for the event that their invitees will recognize."
-       },
-       {
-        "question": "What title should you give this schedule, and what time block should you set for your availability?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The title field was empty and the default time block was only one hour, requiring manual input to properly define the scheduling page.",
-        "whatTheAgentLoses": "The user loses control over how the scheduling page is presented to others and the exact window of time offered for meetings."
-       },
-       {
-        "question": "Did you actually type a title into the field before proceeding?",
+        "question": "Does the title field hold the title you meant to give the meeting?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The claim states 'Example' was typed into the Title field, but the screen at 1:03 shows the field is still empty.",
-        "whatTheAgentLoses": "The user loses the ability to successfully create the event without errors if the agent fails to input required fields like the title."
-       },
-       {
-        "question": "What should you name the meeting?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Meeting name' field defaults to 'One-off meeting', which can be customized to better communicate the event's specific purpose.",
-        "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally set a clear, context-specific title that establishes the right tone for the attendees."
+        "whatTheAgentLoses": "The user loses the ability to successfully create the event without errors if the agent fails to input required fields like the title.",
+        "speak": "if-wrong",
+        "check": "After typing, does the title field show the intended text rather than sitting empty?",
+        "say_example": "The title didn't take - the field is still empty. Typing it again before moving on."
        }
       ]
      },
@@ -308,23 +287,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides a description text box where any notes entered will be displayed to invitees on the booking page and in confirmation emails.",
-        "whatTheAgentLoses": "You lose the chance to establish custom meeting expectations and boundaries, such as a late arrival policy, that reflect your specific preferences."
-       },
-       {
-        "question": "Should you provide additional context or an agenda for the meeting?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The optional description field explicitly prompts for an agenda or instructions, which helps the other person prepare for the scheduled time.",
-        "whatTheAgentLoses": "You lose the ability to personally frame the meeting's purpose or provide specific instructions that set the right tone for the conversation."
-       },
-       {
-        "question": "Should you add a description to the poll?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides an optional description field to give participants more context about the meeting.",
-        "whatTheAgentLoses": "The user loses the ability to personally frame the meeting's purpose or agenda for the invitees."
+        "whatTheAgentLoses": "You lose the chance to establish custom meeting expectations and boundaries, such as a late arrival policy, that reflect your specific preferences.",
+        "speak": "never",
+        "check": "What text does the description field show, and where does the page say it will appear?",
+        "say_example": "Put your prep notes in the description. Invitees see it on the booking page and in their confirmation email."
        }
       ]
      },
@@ -338,7 +304,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen offered options to customize the AI-generated description's tone and length, which affects how the invitation is perceived by attendees.",
-        "whatTheAgentLoses": "The user loses the opportunity to ensure the event description accurately reflects their personal voice and the specific context of the meeting."
+        "whatTheAgentLoses": "The user loses the opportunity to ensure the event description accurately reflects their personal voice and the specific context of the meeting.",
+        "speak": "never",
+        "check": "Does the page show generated description text, and what does it say?",
+        "say_example": "Skipped the AI writer. I wrote the description from your own words instead."
        }
       ]
      },
@@ -352,7 +321,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The screen displays a red warning stating that only Premium users can add links, indicating the feature is restricted on the current account.",
-        "whatTheAgentLoses": "The user loses the ability to ensure attendees receive the meeting link if the agent ignores the account tier limitation."
+        "whatTheAgentLoses": "The user loses the ability to ensure attendees receive the meeting link if the agent ignores the account tier limitation.",
+        "speak": "on-event",
+        "check": "Does the page show a warning that links in this field need a paid plan?",
+        "say_example": "The location field won't take a link on this free account. I'm putting the meeting link in the description instead, so people can still find it."
        },
        {
         "question": "Where do you want the meeting to take place?",
@@ -360,7 +332,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays an optional 'Location' field with a dropdown of suggestions like 'online' or Google Maps searches, which sets the venue for the event.",
-        "whatTheAgentLoses": "Delegating this step means losing the ability to decide whether the meeting should be virtual, in-person, or left unspecified."
+        "whatTheAgentLoses": "Delegating this step means losing the ability to decide whether the meeting should be virtual, in-person, or left unspecified.",
+        "speak": "never",
+        "check": "What does the location field show?",
+        "say_example": "Location is set to <what you asked for>."
        },
        {
         "question": "Should you just use the typed text for the location or search for it on Google Maps?",
@@ -368,7 +343,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dropdown offers a choice between using the exact text entered or searching for a verified address on Google Maps.",
-        "whatTheAgentLoses": "You lose the ability to decide whether a simple text description is sufficient or if a precise, mapped address is necessary for the meeting."
+        "whatTheAgentLoses": "You lose the ability to decide whether a simple text description is sufficient or if a precise, mapped address is necessary for the meeting.",
+        "speak": "if-wrong",
+        "check": "Does the location dropdown offer a map match for the typed text, and does that match's address agree with the intended place?",
+        "say_example": "The map's match for <the cafe> is in <another city>. I kept your exact words instead. Worth a glance before it goes out."
        }
       ]
      },
@@ -377,28 +355,15 @@
       "label": "Link the video tool",
       "questions": [
        {
-        "question": "Did you confirm that the video conferencing integration was successfully enabled?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The 'Video conferencing' field still displayed 'Off' after returning from the settings redirect, indicating the connection did not take effect.",
-        "whatTheAgentLoses": "The delegator will have to manually create and share a meeting link later because the poll will not automatically include one."
-       },
-       {
-        "question": "Which video conferencing tool should you select for the meeting?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides a video conferencing toggle and a dropdown of tools like Google Meet and Zoom to define how participants will connect.",
-        "whatTheAgentLoses": "The user loses the ability to choose their preferred virtual meeting platform."
-       },
-       {
-        "question": "Did you verify that the video conferencing selection saved?",
+        "question": "Does the video conferencing field still show the tool you chose?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The video conferencing dropdown had reverted to 'Off' instead of retaining the 'Google Meet' selection.",
-        "whatTheAgentLoses": "The user loses the automated video link for the meeting, requiring manual coordination later."
+        "whatTheAgentLoses": "The user loses the automated video link for the meeting, requiring manual coordination later.",
+        "speak": "if-wrong",
+        "check": "After saving, does the video conferencing field show the chosen tool rather than Off?",
+        "say_example": "The video setting didn't stick - it's back to Off. Redoing it now, before anyone gets a link with no way to join."
        },
        {
         "question": "Should you enable video conferencing, and if so, which tool should you select?",
@@ -406,23 +371,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides a toggle to add video conferencing and a dropdown to choose between tools like Zoom, Google Meet, Microsoft Teams, or Webex.",
-        "whatTheAgentLoses": "The user loses control over the meeting's location and platform, potentially forcing them to use an unfamiliar or unsupported video conferencing tool."
-       },
-       {
-        "question": "Do you want to make this a Teams meeting?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The interface includes a toggle switch that automatically adds a Microsoft Teams link to the event if left on.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether the meeting should be held virtually via Teams or through another channel."
-       },
-       {
-        "question": "Which meeting format should you select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dropdown requires choosing between Google Meet, an in-person meeting, a phone call, or deciding later, which dictates how the participants will connect.",
-        "whatTheAgentLoses": "Letting an agent decide means you lose the chance to pick the communication method that best fits your preferences or technical setup."
+        "whatTheAgentLoses": "The user loses control over the meeting's location and platform, potentially forcing them to use an unfamiliar or unsupported video conferencing tool.",
+        "speak": "never",
+        "check": "Which video tools does the page offer, and which one shows as connected?",
+        "say_example": "Turned on <Google Meet> - it's the one already connected to your account."
        }
       ]
      }
@@ -434,28 +386,15 @@
     "note": "3.1 before the tool opens, where it happens at all; 3.2 and 3.3 wherever the pane puts them. then 3.4 on booking-page routes (VKIQ, LDkn, 6Pzf) or 3.5 on poll and one-off routes (everyone else) - no keeper runs both. re-entered after publish through 9.2 (udxi).",
     "questions": [
      {
-      "question": "Which of these default schedule settings need to be adjusted?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The left sidebar displays default settings like a one-hour duration and Monday-only availability that might not reflect your actual schedule.",
-      "whatTheAgentLoses": "You lose the chance to personally review and tweak the default timezone and availability blocks before sharing the booking link."
-     },
-     {
       "question": "What time increments should be used to display available meeting slots?",
       "cluster": "",
       "moment": null,
       "moneyMoving": false,
       "why": "The 'Limit start time to' setting determines the frequency of offered start times on your booking page, such as every 15, 30, or 60 minutes.",
-      "whatTheAgentLoses": "The user loses the ability to control the granularity of their schedule, potentially leading to awkward gaps if slots are offered too frequently or inflexibility if they are too sparse."
-     },
-     {
-      "question": "How long should the meeting be, and should you restrict the proposed times to standard work hours?",
-      "cluster": "select",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen shows a duration dropdown and a 'Work hours' checkbox that prevents times like 12:00 AM from being offered when checked.",
-      "whatTheAgentLoses": "Delegating this means you lose the ability to dictate the exact meeting length and protect your off-hours from being scheduled."
+      "whatTheAgentLoses": "The user loses the ability to control the granularity of their schedule, potentially leading to awkward gaps if slots are offered too frequently or inflexibility if they are too sparse.",
+      "speak": "never",
+      "check": "What does the start-time increment setting show?",
+      "say_example": "Left start times on the <30 minute> grid."
      },
      {
       "question": "Should you block out time on your calendar to automatically update your booking availability?",
@@ -463,15 +402,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "Creating a calendar event for a task like the 'Revision to YT Script' automatically removes that time slot from your scheduling page so others cannot book it.",
-      "whatTheAgentLoses": "The user loses the ability to prioritize their own private work sessions by blocking out specific times before opening their calendar to others."
-     },
-     {
-      "question": "What should the duration, date, and time constraints be for the meeting you want to propose?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displayed default settings for the meeting's duration, date, and working hours that needed to be tailored to the specific context of the meeting.",
-      "whatTheAgentLoses": "The user loses the ability to apply their personal judgment on appropriate meeting lengths and time zone considerations for specific attendees."
+      "whatTheAgentLoses": "The user loses the ability to prioritize their own private work sessions by blocking out specific times before opening their calendar to others.",
+      "speak": "never",
+      "check": "Does the page say calendar events remove matching times from the booking page?",
+      "say_example": "Your calendar already drives this - anything booked on it drops off the page by itself."
      }
     ],
     "children": [
@@ -485,7 +419,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Reviewing the calendar for the week of June 14th reveals that Monday and Friday are wide open while Tuesday is heavily booked, which prevents accidental double-booking.",
-        "whatTheAgentLoses": "You lose the personal judgment of deciding whether to squeeze a meeting into a partially booked Wednesday or save it for a wide-open Monday."
+        "whatTheAgentLoses": "You lose the personal judgment of deciding whether to squeeze a meeting into a partially booked Wednesday or save it for a wide-open Monday.",
+        "speak": "never",
+        "check": "Which days on the calendar show open time with no events?",
+        "say_example": "Checked your week first. <Monday> and <Friday> are open, <Tuesday> is packed, so I'm drawing from the open days."
        }
       ]
      },
@@ -494,28 +431,15 @@
       "label": "Set the slot duration",
       "questions": [
        {
-        "question": "How long should the meeting be, and which week should you check for availability?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows duration options with '60 min' highlighted and a calendar for August 20-26, so you must decide the meeting length and which week to propose.",
-        "whatTheAgentLoses": "Delegating this means you lose the control to determine the exact length of the meeting and which week to prioritize for scheduling."
-       },
-       {
         "question": "What duration should I set for the meeting?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen requires selecting a meeting duration from options like 60, 90, or 120 minutes to properly size the proposed time slots.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might select a duration that is either too short to cover the agenda or unnecessarily long for the participants."
-       },
-       {
-        "question": "How long should the meeting be, and which time slots will you offer?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Setting the duration to 60 minutes and selecting the 10:00 AM slot on Monday the 22nd determines the exact options the other person can choose from.",
-        "whatTheAgentLoses": "Delegating this step means losing the ability to strategically offer time slots that best fit your personal energy levels or unwritten preferences."
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a duration that is either too short to cover the agenda or unnecessarily long for the participants.",
+        "speak": "never",
+        "check": "What does the duration field show?",
+        "say_example": "Set it to <60 minutes>, like you asked."
        }
       ]
      },
@@ -529,7 +453,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a default time zone of Eastern Time, which must be verified to ensure you are evaluating the available slots in your actual local time.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify that the scheduling tool has correctly detected and applied your local time zone."
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the scheduling tool has correctly detected and applied your local time zone.",
+        "speak": "if-wrong",
+        "check": "What time zone does the page say it is using, and does it match the person's time zone?",
+        "say_example": "The page was showing everything in <Eastern>. You're on <Pacific>, so I switched it. Every time you hear from me is in your time zone."
        }
       ]
      },
@@ -539,12 +466,15 @@
       "note": "3.4.1 and 3.4.2, then 3.4.3 to 3.4.8 in the order the accordion presents them - the corpus sweeps every section and demo-toggles as it goes (VKIQ). LDkn touches only 3.4.1 and 3.4.3; 6Pzf only 3.4.3 and 3.4.5.",
       "questions": [
        {
-        "question": "Where do you modify the scheduling settings for this specific event type?",
+        "question": "The agent claims to be on the event's scheduling-settings view, but the screen shows the public booking page - which one is actually open?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed the public booking page for the event, not the dashboard edit view as claimed.",
-        "whatTheAgentLoses": "The user loses the ability to properly configure their availability if the agent hallucinates the interface."
+        "whatTheAgentLoses": "The user loses the ability to properly configure their availability if the agent hallucinates the interface.",
+        "speak": "never",
+        "check": "Does the page show the edit view for this event rather than its public booking page?",
+        "say_example": "Opened the event's edit page - the public page doesn't have the settings."
        },
        {
         "question": "Do you need to set buffer times or limit your daily bookings?",
@@ -552,7 +482,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The collapsed settings showed no buffer time and no maximum bookings, which could result in back-to-back meetings if left unadjusted.",
-        "whatTheAgentLoses": "You lose the opportunity to enforce personal scheduling boundaries like breathing room between calls or a cap on daily meetings."
+        "whatTheAgentLoses": "You lose the opportunity to enforce personal scheduling boundaries like breathing room between calls or a cap on daily meetings.",
+        "speak": "never",
+        "check": "What do the buffer and daily-limit settings show?",
+        "say_example": "No buffer was set, so meetings could land back to back. I left it as is and noted it."
        }
       ],
       "children": [
@@ -566,7 +499,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen presented a dropdown to choose between regular meeting hours and custom availability hours.",
-          "whatTheAgentLoses": "The user loses the ability to dictate specific hours for this meeting type, which could result in unwanted bookings outside their preferred window."
+          "whatTheAgentLoses": "The user loses the ability to dictate specific hours for this meeting type, which could result in unwanted bookings outside their preferred window.",
+          "speak": "never",
+          "check": "Which availability source is selected - the regular hours or a custom schedule?",
+          "say_example": "Used your regular hours rather than a custom set."
          },
          {
           "question": "Should you adjust the default availability hours of 8:00 AM to 5:00 PM?",
@@ -574,7 +510,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displayed a default schedule of Monday through Friday from 8:00 AM to 5:00 PM, which might not accurately reflect your actual working hours or preferences.",
-          "whatTheAgentLoses": "Delegating this means the agent might blindly accept the default hours, potentially allowing others to book meetings at inconvenient times."
+          "whatTheAgentLoses": "Delegating this means the agent might blindly accept the default hours, potentially allowing others to book meetings at inconvenient times.",
+          "speak": "never",
+          "check": "What hours does the availability schedule show for each day?",
+          "say_example": "Trimmed the default <8 to 5> down to the hours you actually take meetings."
          },
          {
           "question": "Which specific hours should you mark as available for each day?",
@@ -582,7 +521,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen showed a list of days with default statuses like 'Unavailable' and time dropdowns, requiring you to manually adjust and copy the exact hours you are free.",
-          "whatTheAgentLoses": "You lose the ability to apply personal preferences and exceptions to your weekly schedule, which might result in an agent offering times when you are actually busy."
+          "whatTheAgentLoses": "You lose the ability to apply personal preferences and exceptions to your weekly schedule, which might result in an agent offering times when you are actually busy.",
+          "speak": "never",
+          "check": "Which days show as available, and with what hours?",
+          "say_example": "Marked <Tuesday> and <Thursday>, <10 to 4>, and left the rest unavailable."
          }
         ]
        },
@@ -596,7 +538,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen provides a dropdown to choose whether your appointment availability repeats weekly or does not repeat.",
-          "whatTheAgentLoses": "Delegating this choice means the agent might commit you to a recurring weekly schedule when you only wanted to offer one-time availability."
+          "whatTheAgentLoses": "Delegating this choice means the agent might commit you to a recurring weekly schedule when you only wanted to offer one-time availability.",
+          "speak": "if-wrong",
+          "check": "What does the repeat setting show - weekly, or does not repeat?",
+          "say_example": "This was set to repeat every week, which would keep you bookable long after this meeting. You wanted one meeting, so I set it to run once."
          }
         ]
        },
@@ -610,7 +555,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen displays the 'Date range' section under scheduling settings with options like 'calendar days into the future' and 'Indefinitely', which control your availability window.",
-          "whatTheAgentLoses": "You lose the ability to strategically limit how far in advance meetings can be scheduled based on your upcoming workload or preferences."
+          "whatTheAgentLoses": "You lose the ability to strategically limit how far in advance meetings can be scheduled based on your upcoming workload or preferences.",
+          "speak": "never",
+          "check": "What does the date range setting show - a number of days, or indefinitely?",
+          "say_example": "Capped booking at <30 days> out instead of leaving it open forever."
          },
          {
           "question": "How much advance notice do you need before a meeting can be booked?",
@@ -618,7 +566,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The advanced options menu allows you to adjust the minimum lead time to prevent unexpected last-minute bookings.",
-          "whatTheAgentLoses": "An agent might leave the default one-hour lead time in place, exposing you to sudden meetings without adequate time to prepare."
+          "whatTheAgentLoses": "An agent might leave the default one-hour lead time in place, exposing you to sudden meetings without adequate time to prepare.",
+          "speak": "never",
+          "check": "What minimum notice does the setting show?",
+          "say_example": "Set <4 hours> minimum notice so nothing lands on you last minute."
          },
          {
           "question": "Do you want this booking schedule to run indefinitely, or should it have a specific end date?",
@@ -626,15 +577,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The scheduling window dialog allows you to set specific start and end dates for the booking page rather than leaving it open forever.",
-          "whatTheAgentLoses": "You lose the ability to strictly bound the timeframe during which others can schedule meetings with you."
-         },
-         {
-          "question": "How much notice do you need for a booking, and how far into the future should your calendar be open?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen shows settings for maximum booking advance and minimum notice, which determine how far out people can book and how much prep time you get.",
-          "whatTheAgentLoses": "An agent might keep the default four-hour minimum notice, exposing you to unexpected last-minute meetings without enough time to prepare."
+          "whatTheAgentLoses": "You lose the ability to strictly bound the timeframe during which others can schedule meetings with you.",
+          "speak": "never",
+          "check": "Does the scheduling window show an end date or no end?",
+          "say_example": "Gave the schedule an end date of <date> so it doesn't run forever."
          }
         ]
        },
@@ -648,7 +594,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen provides a link to change a date's availability, allowing you to override your default schedule for specific days.",
-          "whatTheAgentLoses": "Delegating this step means the agent might not account for personal, unrecorded commitments that affect your actual availability on that specific day."
+          "whatTheAgentLoses": "Delegating this step means the agent might not account for personal, unrecorded commitments that affect your actual availability on that specific day.",
+          "speak": "never",
+          "check": "Does the page show a date-specific availability override, and what does it say for that date?",
+          "say_example": "Blocked <the 14th> off - your calendar shows you're away that day."
          }
         ]
        },
@@ -662,7 +611,10 @@
           "moment": "On demand",
           "moneyMoving": false,
           "why": "The 'Scheduling settings' page showed 'Buffer time: 15 min after' under 'Event limits', which dictates how soon another meeting can be booked.",
-          "whatTheAgentLoses": "The user loses the ability to ensure they have adequate breathing room between scheduled meetings."
+          "whatTheAgentLoses": "The user loses the ability to ensure they have adequate breathing room between scheduled meetings.",
+          "speak": "never",
+          "check": "What does the buffer time setting show?",
+          "say_example": "Buffer is <15 minutes> after each meeting."
          },
          {
           "question": "How much buffer time do you want to add between appointment slots?",
@@ -670,7 +622,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen includes a checkbox to add time between appointment slots and a dropdown to specify the exact duration.",
-          "whatTheAgentLoses": "You lose the ability to customize your schedule's pacing, as an agent might just accept the default thirty-minute buffer or leave it disabled entirely."
+          "whatTheAgentLoses": "You lose the ability to customize your schedule's pacing, as an agent might just accept the default thirty-minute buffer or leave it disabled entirely.",
+          "speak": "never",
+          "check": "What buffer does the slot settings show between appointments?",
+          "say_example": "Added <10 minutes> between slots so they don't run into each other."
          }
         ]
        },
@@ -683,12 +638,15 @@
         "label": "Pick the conflict calendars",
         "questions": [
          {
-          "question": "Which calendars do you want to check for conflicts, and what color should the schedule be?",
+          "question": "Which calendars should be checked for conflicts before a time is offered?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen provides options to select which calendars to check for availability and to customize the color of the appointment schedule.",
-          "whatTheAgentLoses": "The user loses the ability to specify which calendars to check for conflicts and to personalize the schedule's color."
+          "whatTheAgentLoses": "The user loses the ability to specify which calendars to check for conflicts and to personalize the schedule's color.",
+          "speak": "if-wrong",
+          "check": "Which calendars does the page list as checked for availability, and is any of the person's calendars unchecked?",
+          "say_example": "Only your <work> calendar is being checked. Your <personal> one isn't, so a personal plan could get double-booked. I ticked it."
          }
         ]
        },
@@ -702,7 +660,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The booking form allows you to add custom required fields, which determines the specific context collected from attendees before the meeting.",
-          "whatTheAgentLoses": "You lose the ability to decide whether asking for extra details like the meeting's purpose is worth the added friction for the invitee."
+          "whatTheAgentLoses": "You lose the ability to decide whether asking for extra details like the meeting's purpose is worth the added friction for the invitee.",
+          "speak": "never",
+          "check": "Which fields does the booking form require from the invitee?",
+          "say_example": "The form asks bookers for name and email only. I didn't add more, since every extra field is something bookers would have to hand over."
          }
         ]
        }
@@ -719,15 +680,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking the calendar tooltips for busy statuses and skipping heavily booked days like June 15 ensures you only offer viable options for all required attendees.",
-        "whatTheAgentLoses": "You lose the discretion to strategically pick the most convenient spread of alternative times when the attendees' schedules are tight."
-       },
-       {
-        "question": "Have you selected all the times that work for you?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a '5 times selected' counter and a 'Next' button, meaning this is the moment to confirm you have chosen enough options before advancing.",
-        "whatTheAgentLoses": "You lose the ability to personally decide exactly how many and which specific time slots to offer the other person."
+        "whatTheAgentLoses": "You lose the discretion to strategically pick the most convenient spread of alternative times when the attendees' schedules are tight.",
+        "speak": "never",
+        "check": "Which slots are selected, and does each fall on time the calendar shows as free?",
+        "say_example": "Drafted <5> options from your open time. You'll see the full list before anything is sent."
        }
       ],
       "children": [
@@ -741,7 +697,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The dropdown menu provides options for 'Specific Dates' and 'Days of the Week', which fundamentally changes how the scheduling poll is structured.",
-          "whatTheAgentLoses": "You lose the ability to decide whether coordinating around exact calendar dates or a generic weekly routine makes more sense for this specific meeting."
+          "whatTheAgentLoses": "You lose the ability to decide whether coordinating around exact calendar dates or a generic weekly routine makes more sense for this specific meeting.",
+          "speak": "never",
+          "check": "Which poll basis is selected - specific dates or days of the week?",
+          "say_example": "Went with specific dates - you named the week, so real dates fit."
          }
         ]
        },
@@ -755,7 +714,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen showed a calendar popup, requiring a decision on which alternative date to offer for the meeting.",
-          "whatTheAgentLoses": "The user loses control over which specific alternative dates are proposed to the other person."
+          "whatTheAgentLoses": "The user loses control over which specific alternative dates are proposed to the other person.",
+          "speak": "never",
+          "check": "Which dates are selected in the calendar picker?",
+          "say_example": "Added <Thursday> as the second day of options."
          },
          {
           "question": "Which specific dates should you select for the survey?",
@@ -763,7 +725,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The calendar displayed both past and future dates, requiring careful selection to only suggest valid upcoming days.",
-          "whatTheAgentLoses": "The user loses the discretion to handpick the exact combination of dates they prefer to offer."
+          "whatTheAgentLoses": "The user loses the discretion to handpick the exact combination of dates they prefer to offer.",
+          "speak": "if-wrong",
+          "check": "Are any selected dates earlier than today's date shown on the page?",
+          "say_example": "One picked date already happened - <the 3rd> was last week. The calendar lets you choose past days, so I swapped it for <the 10th>."
          }
         ]
        },
@@ -777,7 +742,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen showed a panel to apply the same times across multiple dates, allowing the user to define specific meeting windows.",
-          "whatTheAgentLoses": "The delegator loses control over the specific time windows proposed for the meeting."
+          "whatTheAgentLoses": "The delegator loses control over the specific time windows proposed for the meeting.",
+          "speak": "never",
+          "check": "Which time slots does the panel show applied to the selected dates?",
+          "say_example": "Applied <10, 1, and 3> across both days."
          }
         ]
        },
@@ -791,15 +759,21 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen provides a 'Need different times for each day?' link, which dictates whether the proposed availability is uniform across all dates or tailored to specific daily schedules.",
-          "whatTheAgentLoses": "You lose the ability to fine-tune the offered meeting times based on your specific daily schedule and preferences."
+          "whatTheAgentLoses": "You lose the ability to fine-tune the offered meeting times based on your specific daily schedule and preferences.",
+          "speak": "never",
+          "check": "Does the page show the same times on every date, or per-day times?",
+          "say_example": "Used the same times each day - your free hours matched."
          },
          {
-          "question": "Is the selected time slot explicitly designated as AM or PM, and does it accurately match your intended time of day?",
+          "question": "Is the time slot marked AM or PM, and does it match the time you meant?",
           "cluster": "",
           "moment": null,
           "moneyMoving": false,
           "why": "Time slots, especially around 12:00, can easily be misread if the AM/PM indicator is small, visually separated from the number, or hidden in a scroll wheel.",
-          "whatTheAgentLoses": "The agent might accidentally book a midnight meeting instead of noon if it fails to correctly parse the small visual AM/PM indicator."
+          "whatTheAgentLoses": "The agent might accidentally book a midnight meeting instead of noon if it fails to correctly parse the small visual AM/PM indicator.",
+          "speak": "if-wrong",
+          "check": "Does each selected slot show an AM or PM marker, and does it match the intended half of the day?",
+          "say_example": "That 12 o'clock came up as midnight, not noon. Fixed it to <12 PM> before it went in."
          }
         ]
        },
@@ -813,7 +787,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The calendar grid requires you to manually select specific one-hour blocks across the week to propose as potential meeting times.",
-          "whatTheAgentLoses": "Delegating this step means losing the ability to handpick your preferred meeting times based on your unwritten personal schedule and daily energy levels."
+          "whatTheAgentLoses": "Delegating this step means losing the ability to handpick your preferred meeting times based on your unwritten personal schedule and daily energy levels.",
+          "speak": "never",
+          "check": "Which blocks are selected on the grid?",
+          "say_example": "Marked <6> one-hour blocks across the week from your open time."
          },
          {
           "question": "Have you selected any time slots to offer before creating the poll?",
@@ -821,7 +798,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen explicitly shows '0 of 20 times selected', meaning the poll is currently empty and lacks the necessary options for an invitee to choose from.",
-          "whatTheAgentLoses": "The delegator looks unprofessional by sending a broken or empty scheduling link, forcing them to apologize and send a corrected version."
+          "whatTheAgentLoses": "The delegator looks unprofessional by sending a broken or empty scheduling link, forcing them to apologize and send a corrected version.",
+          "speak": "if-wrong",
+          "check": "Does the selection counter show zero times selected?",
+          "say_example": "The poll was about to go out empty - <0> times were actually selected. Adding the slots before anything sends."
          }
         ]
        },
@@ -835,7 +815,10 @@
           "moment": "After",
           "moneyMoving": false,
           "why": "The FindTime panel displayed a list of times with green person icons, indicating availability for the selected attendees.",
-          "whatTheAgentLoses": "The user loses the ability to verify that the tool correctly fetched the availability of the specific attendees before proceeding."
+          "whatTheAgentLoses": "The user loses the ability to verify that the tool correctly fetched the availability of the specific attendees before proceeding.",
+          "speak": "never",
+          "check": "Does the panel list times with availability marks for the added attendees?",
+          "say_example": "The panel came back with everyone's availability marks."
          },
          {
           "question": "Which of your attendees are available at 8:00 AM?",
@@ -843,15 +826,21 @@
           "moment": "On demand",
           "moneyMoving": false,
           "why": "The screen showed a hover tooltip over the availability icon listing the specific required and optional attendees available at that time.",
-          "whatTheAgentLoses": "The user loses the ability to verify exactly which required and optional attendees are available before selecting a time slot."
+          "whatTheAgentLoses": "The user loses the ability to verify exactly which required and optional attendees are available before selecting a time slot.",
+          "speak": "never",
+          "check": "What does the availability tooltip list for that slot - which attendees free, tentative, or booked?",
+          "say_example": "At <8 AM> the panel shows <2 of 3> free - <name> is booked."
          },
          {
-          "question": "What do the different attendee icons signify regarding their availability?",
+          "question": "For each alternative time, are the required attendees free, tentative, or booked?",
           "cluster": "facts",
           "moment": "On demand",
           "moneyMoving": false,
           "why": "The screen displays various icons next to the alternative times, with tooltips revealing whether required attendees are available, tentative, or booked.",
-          "whatTheAgentLoses": "The user loses the nuanced understanding of each specific attendee's availability status for the alternative time slots."
+          "whatTheAgentLoses": "The user loses the nuanced understanding of each specific attendee's availability status for the alternative time slots.",
+          "speak": "never",
+          "check": "What do the icon tooltips say - available, tentative, or booked?",
+          "say_example": "Read the icons through their tooltips: green is free, striped is tentative."
          }
         ]
        },
@@ -865,7 +854,10 @@
           "moment": "On demand",
           "moneyMoving": false,
           "why": "The screen displayed the calendar settings where the default availability window is configured as 8:00 AM to 5:00 PM, Monday through Friday.",
-          "whatTheAgentLoses": "The user loses the ability to verify or adjust the underlying working hours settings that dictate their default availability."
+          "whatTheAgentLoses": "The user loses the ability to verify or adjust the underlying working hours settings that dictate their default availability.",
+          "speak": "never",
+          "check": "What hours does the calendar settings page show as the meeting window?",
+          "say_example": "Your normal window is <8 to 5>, weekdays."
          },
          {
           "question": "What earliest and latest times should you offer for the meeting?",
@@ -873,7 +865,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen features 'No earlier than' and 'No later than' dropdowns to define the acceptable time boundaries for the event.",
-          "whatTheAgentLoses": "The user loses the ability to personally enforce their preferred daily working hours, potentially leading to meetings scheduled too early or too late."
+          "whatTheAgentLoses": "The user loses the ability to personally enforce their preferred daily working hours, potentially leading to meetings scheduled too early or too late.",
+          "speak": "never",
+          "check": "What do the no-earlier-than and no-later-than fields show?",
+          "say_example": "Bounded it <9 to 4> so nothing lands at odd hours."
          }
         ]
        }
@@ -887,12 +882,15 @@
     "note": "any subset, in the order the settings pane lists them; the corpus's dominant move is 4.6 - six keepers scroll the block and change nothing. 4.1 to 4.5 get real decisions only in the Outlook family and once each in Doodle and Google (M5A9, VKIQ). 4.7 fires wherever a locked control is touched, including on hover (eZyb).",
     "questions": [
      {
-      "question": "Should you click 'Confirm' or use the browser's back button to return to the poll creation flow?",
+      "question": "Did leaving the scheduling settings page save any change that was not intended?",
       "cluster": "select",
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays a 'Confirm' button at the bottom, but using the browser's back button safely exits the menu without submitting unchanged settings.",
-      "whatTheAgentLoses": "The user loses the assurance that the agent backed out of the settings page without accidentally saving unintended modifications."
+      "whatTheAgentLoses": "The user loses the assurance that the agent backed out of the settings page without accidentally saving unintended modifications.",
+      "speak": "never",
+      "check": "Does the page offer a way back that does not submit the settings?",
+      "say_example": "Backed out without saving - nothing on that screen changed."
      },
      {
       "question": "Should you adjust any optional settings like reserving times or changing the invitee language?",
@@ -900,7 +898,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen offers options to place holds on your calendar for offered times and to set the language for the booking page.",
-      "whatTheAgentLoses": "The user loses the opportunity to tailor the booking experience to the invitee's language or protect their own calendar from double-booking."
+      "whatTheAgentLoses": "The user loses the opportunity to tailor the booking experience to the invitee's language or protect their own calendar from double-booking.",
+      "speak": "never",
+      "check": "What do the hold-times and language settings show?",
+      "say_example": "Left holds on, so the offered times sit on your calendar until this settles. Language stayed <English>."
      },
      {
       "question": "Should you adjust the advanced poll settings?",
@@ -908,23 +909,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "Expanding the manage poll settings section reveals additional configuration options like hidden votes or participant limits.",
-      "whatTheAgentLoses": "The user loses the opportunity to enforce specific privacy or scheduling constraints for the meeting poll."
-     },
-     {
-      "question": "How should you configure the meeting location and automated poll behaviors?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displayed options for a Teams meeting and various poll settings like holding times on your calendar, which determine how the scheduling process operates.",
-      "whatTheAgentLoses": "The user loses the opportunity to customize meeting logistics and automated behaviors, such as requiring identity verification or auto-scheduling when consensus is reached."
-     },
-     {
-      "question": "Are the chosen times correct, and do the default poll settings meet your requirements?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen displays the selected times, a Teams meeting toggle, and poll settings like holding times on your calendar, which all need verification before submission.",
-      "whatTheAgentLoses": "You lose the ability to personally verify the selected times and decide on specific poll configurations like holding times on your calendar."
+      "whatTheAgentLoses": "The user loses the opportunity to enforce specific privacy or scheduling constraints for the meeting poll.",
+      "speak": "never",
+      "check": "Which advanced settings does the expanded section show, and how are they set?",
+      "say_example": "Looked through the advanced settings and left the defaults."
      }
     ],
     "children": [
@@ -954,7 +942,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed a checked calendar invitation option and a disabled premium reminder feature, so confirming these settings ensures both parties receive the expected emails.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to upgrade for additional reminders or rely solely on the default confirmation email."
+        "whatTheAgentLoses": "You lose the ability to decide whether to upgrade for additional reminders or rely solely on the default confirmation email.",
+        "speak": "never",
+        "check": "Is the calendar-invitation option checked, and what does the reminders line show?",
+        "say_example": "Calendar invites are on for both sides. Auto reminders are a paid thing, so there won't be any."
        }
       ]
      },
@@ -968,7 +959,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen presents several 'Settings Pro' options that enhance the poll but trigger a prompt to upgrade to a paid account.",
-        "whatTheAgentLoses": "You lose the opportunity to weigh whether the professional features are worth the cost of upgrading your account."
+        "whatTheAgentLoses": "You lose the opportunity to weigh whether the professional features are worth the cost of upgrading your account.",
+        "speak": "never",
+        "check": "Which settings show a premium marker?",
+        "say_example": "Skipped the paid extras. No deadline and no auto reminders on this plan - I'll chase stragglers myself."
        }
       ]
      },
@@ -982,7 +976,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed a promotional modal offering a Doodle Pro subscription with various premium features.",
-        "whatTheAgentLoses": "The user loses control over whether to incur subscription costs for premium scheduling features."
+        "whatTheAgentLoses": "The user loses control over whether to incur subscription costs for premium scheduling features.",
+        "speak": "never",
+        "check": "Does an upgrade offer appear, and can it be dismissed?",
+        "say_example": "Closed the upgrade pitch. Nothing you asked for needs it."
        }
       ]
      }
@@ -999,7 +996,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The dropdown menu offers multiple ways to handle the meeting type, such as copying the link directly or opening a dedicated share menu.",
-      "whatTheAgentLoses": "You lose the ability to choose the specific method for distributing the meeting link or managing its privacy settings."
+      "whatTheAgentLoses": "You lose the ability to choose the specific method for distributing the meeting link or managing its privacy settings.",
+      "speak": "never",
+      "check": "Which sharing options does the menu show?",
+      "say_example": "Copied the link to send in your own email, like you asked."
      },
      {
       "question": "Who should you invite, and which of the proposed times work for you?",
@@ -1007,7 +1007,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The screen displays a list of proposed dates and times with checkboxes to indicate your availability, alongside a field to enter participant emails before sending the poll.",
-      "whatTheAgentLoses": "The user loses the ability to personally review their own schedule and decide exactly which time slots they are willing to offer."
+      "whatTheAgentLoses": "The user loses the ability to personally review their own schedule and decide exactly which time slots they are willing to offer.",
+      "speak": "never",
+      "check": "Which emails are entered, and which times show as marked for the organizer?",
+      "say_example": "Lined up <3> invitees and your yes marks. It all shows at the send step before anything goes."
      }
     ],
     "children": [
@@ -1021,7 +1024,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen showed an email draft addressed to '[provider] and 'Matt iSpaniel' with the subject 'Important Meeting' and a brief message.",
-        "whatTheAgentLoses": "The user loses the ability to verify that the invitation is being sent to the correct people with the appropriate context."
+        "whatTheAgentLoses": "The user loses the ability to verify that the invitation is being sent to the correct people with the appropriate context.",
+        "speak": "gate",
+        "check": "What do the To line, subject, and body of the draft show?",
+        "say_example": "Ready to send. Going to <names>, subject <subject>, with the times inside. This lands in their inboxes under your name. Send, or say change."
        },
        {
         "question": "Who should you add as an attendee to check their availability?",
@@ -1029,7 +1035,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen prompted to add attendees to the 'To' or 'Cc' lines before it could display any calendar availability.",
-        "whatTheAgentLoses": "The user loses the ability to decide exactly who is required versus optional for this specific discussion."
+        "whatTheAgentLoses": "The user loses the ability to decide exactly who is required versus optional for this specific discussion.",
+        "speak": "never",
+        "check": "Which attendees are listed on the To and Cc lines?",
+        "say_example": "Added the <3> people you named. Their availability marks loaded once they were on the list."
        },
        {
         "question": "Which attendees should you actually include in the meeting poll?",
@@ -1037,7 +1046,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Removing the extra addresses updated the FindTime panel to show accurate availability indicators for only the required participants.",
-        "whatTheAgentLoses": "The user loses the discretion to remove unnecessary contacts from the invite to ensure the scheduling tool only evaluates the availability of essential attendees."
+        "whatTheAgentLoses": "The user loses the discretion to remove unnecessary contacts from the invite to ensure the scheduling tool only evaluates the availability of essential attendees.",
+        "speak": "never",
+        "check": "Does the attendee list match the people the person named, with no extras?",
+        "say_example": "Took <the two extra addresses> off - you named <3> people, and extras would get mail they never asked for."
        },
        {
         "question": "Which of these auto-suggested email addresses should you select for the recipient?",
@@ -1045,7 +1057,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dropdown shows multiple different email addresses for Chris Menard, meaning you must identify the correct one to ensure they actually receive the poll.",
-        "whatTheAgentLoses": "You lose the ability to use your personal knowledge of which specific email address the recipient prefers for meeting invitations."
+        "whatTheAgentLoses": "You lose the ability to use your personal knowledge of which specific email address the recipient prefers for meeting invitations.",
+        "speak": "on-event",
+        "check": "Does the suggestion list show more than one address for the same name?",
+        "say_example": "There are <three> addresses for <the name you gave>. Which one is right - <a>, <b>, or <c>? The poll goes to whichever I pick."
        }
       ]
      },
@@ -1059,7 +1074,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen presented pre-filled name and email fields that determine how you are identified and where poll updates will be sent.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify and correct their name and email address to ensure they receive all poll-related communications."
+        "whatTheAgentLoses": "The user loses the opportunity to verify and correct their name and email address to ensure they receive all poll-related communications.",
+        "speak": "always",
+        "check": "What name and email do the organizer fields show?",
+        "say_example": "The poll lists you as <name>, <email>. Votes and updates go there."
        }
       ]
      },
@@ -1073,7 +1091,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The poll details dashboard shows the organizer's column automatically marked as 'Yes' for all proposed times.",
-        "whatTheAgentLoses": "The user loses the reassurance of verifying that their own availability was correctly registered before sending the poll to others."
+        "whatTheAgentLoses": "The user loses the reassurance of verifying that their own availability was correctly registered before sending the poll to others.",
+        "speak": "on-event",
+        "check": "Does the organizer's column show yes marks the person did not place - one for every proposed time?",
+        "say_example": "The site marked you yes for every time it offered. If some of those don't actually work for you, say so and I'll fix your column."
        }
       ]
      },
@@ -1082,20 +1103,15 @@
       "label": "Create the poll or page",
       "questions": [
        {
-        "question": "Are your meeting details correct before you generate the link?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays the meeting name as 'General Meeting' and the location as 'Google Meet', which must be verified before finalizing the setup.",
-        "whatTheAgentLoses": "The delegator loses the opportunity to review and approve the meeting's title and location before the shareable link is created."
-       },
-       {
         "question": "Are you ready to create and share the poll?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
         "why": "Clicking the 'Create and share' button finalizes the poll setup and generates the link to send to participants.",
-        "whatTheAgentLoses": "The user loses the final opportunity to review the selected times and poll settings before the link becomes active and visible to others."
+        "whatTheAgentLoses": "The user loses the final opportunity to review the selected times and poll settings before the link becomes active and visible to others.",
+        "speak": "gate",
+        "check": "What do the review fields show - title, duration, dates, times, and who it goes to?",
+        "say_example": "Ready to send. <Title>, <60 minutes>, <5> times across <two days>, to <names>. They get emailed under your name, and the offered times go on hold on your calendar. Press to send, or say change."
        },
        {
         "question": "Are all the meeting details correct and ready to be saved?",
@@ -1103,15 +1119,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "Saving the configuration finalizes the event settings and adds the newly created meeting type to your main booking page.",
-        "whatTheAgentLoses": "You lose the chance to verify the meeting parameters yourself before the event type is created and ready to be shared."
-       },
-       {
-        "question": "Are you ready to generate the poll and send it to the attendees?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed the poll details inserted into the email body, confirming the setup is complete and ready for dispatch.",
-        "whatTheAgentLoses": "The user loses the chance to review the generated poll options in the email body before it is sent to the attendees."
+        "whatTheAgentLoses": "You lose the chance to verify the meeting parameters yourself before the event type is created and ready to be shared.",
+        "speak": "gate",
+        "check": "What does the review show, and does the page say saving adds this to the public booking page?",
+        "say_example": "Saving puts <meeting name> on your booking page - anyone with your link can book it from then on. <30 minutes>, <your hours>. Save it, or say change."
        }
       ]
      },
@@ -1125,7 +1136,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Clicking 'Create and share' without a title triggers a red validation error and forces you to scroll back up to fix it.",
-        "whatTheAgentLoses": "The user experiences a delay because the agent must backtrack to fix a preventable validation error before the poll can be shared."
+        "whatTheAgentLoses": "The user experiences a delay because the agent must backtrack to fix a preventable validation error before the poll can be shared.",
+        "speak": "never",
+        "check": "Does the page show a validation error naming a missing field?",
+        "say_example": "The site bounced it for a missing title. Filled it in and sent again - same details."
        }
       ]
      },
@@ -1134,20 +1148,15 @@
       "label": "Review the created poll",
       "questions": [
        {
-        "question": "Have you verified the selected dates, times, and time zone before continuing?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Confirming the chosen dates, specific times for June 13 and 14, and the America/Chicago time zone ensures you are offering accurate availability.",
-        "whatTheAgentLoses": "You lose the opportunity to personally double-check that the proposed time slots and time zone perfectly match your actual availability."
-       },
-       {
         "question": "Are the meeting poll details in the email body correct?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": true,
         "why": "The screen showed a confirmation that the poll was added, along with a generated table displaying the organizer, duration, location, and number of options.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify the meeting details before the poll is sent to participants."
+        "whatTheAgentLoses": "The user loses the opportunity to verify the meeting details before the poll is sent to participants.",
+        "speak": "if-wrong",
+        "check": "Does the card in the email body show the same duration, location, and number of options as configured?",
+        "say_example": "The card in the email says <4> options, but you approved <5>. One dropped out somewhere - fixing it before send."
        },
        {
         "question": "Do you see the confirmation screen displaying the shareable link for your newly created poll?",
@@ -1155,7 +1164,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Verifying this screen ensures the poll was successfully generated and provides the exact URL needed to invite participants.",
-        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the generated link and verifying the poll details before sharing it with others."
+        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the generated link and verifying the poll details before sharing it with others.",
+        "speak": "never",
+        "check": "Does the page show a created confirmation with the poll link?",
+        "say_example": "Poll created at <time>. Link saved for the report."
        },
        {
         "question": "Should you expand the poll details to verify the event parameters?",
@@ -1163,7 +1175,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen displays a collapsed 'Show poll details' button below the invite link, keeping the meeting's duration, location, and timezone hidden.",
-        "whatTheAgentLoses": "The user loses the ability to personally confirm that the poll was generated with the correct timezone, location, and time slots before sharing the link."
+        "whatTheAgentLoses": "The user loses the ability to personally confirm that the poll was generated with the correct timezone, location, and time slots before sharing the link.",
+        "speak": "never",
+        "check": "Does the collapsed details section, once opened, show the configured duration, location, and timezone?",
+        "say_example": "Opened the tucked-away details and checked them against what you approved. All matched."
        }
       ]
      },
@@ -1177,15 +1192,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Previewing the public view ensures the welcome message and event options are displayed correctly before sharing the link.",
-        "whatTheAgentLoses": "The user loses the opportunity to catch any errors or unprofessional formatting on the public-facing booking page before it reaches the invitee."
+        "whatTheAgentLoses": "The user loses the opportunity to catch any errors or unprofessional formatting on the public-facing booking page before it reaches the invitee.",
+        "speak": "never",
+        "check": "Does the preview show the welcome text and event options as configured?",
+        "say_example": "Looked at the page the way an invitee sees it. It reads right."
        },
        {
-        "question": "How do you open the booking page for the specific event?",
+        "question": "Does the booking page that loaded belong to the specific event link you meant to open?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows the browser loading the direct URL for the event's booking page.",
-        "whatTheAgentLoses": "The user loses the ability to verify that the correct event link is being accessed."
+        "whatTheAgentLoses": "The user loses the ability to verify that the correct event link is being accessed.",
+        "speak": "never",
+        "check": "Does the event's booking URL load its page?",
+        "say_example": "Opened the event's own page to check it."
        }
       ]
      },
@@ -1199,7 +1220,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dashboard displays both specific event types and a main profile link, meaning you must decide whether to restrict the invitee to one meeting type or let them choose.",
-        "whatTheAgentLoses": "You lose the ability to strategically decide whether the invitee should see all your available meeting types or just a single specific option."
+        "whatTheAgentLoses": "You lose the ability to strategically decide whether the invitee should see all your available meeting types or just a single specific option.",
+        "speak": "never",
+        "check": "Which link is copied - the event's own link or the general page?",
+        "say_example": "Sent the link for just this meeting. The general page would let people book any of your meeting types, any length."
        },
        {
         "question": "Do you want to share the booking page via a direct link or a website embed?",
@@ -1207,15 +1231,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen provides options to share the booking page either by copying a direct link or by generating code for a website embed button.",
-        "whatTheAgentLoses": "The user loses the ability to choose the most appropriate sharing method for their specific workflow or website integration."
-       },
-       {
-        "question": "How should you share the newly created meeting link?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen offers multiple sharing methods, such as copying a standard link or adding times directly to an email, which dictates how the recipient will experience the invite.",
-        "whatTheAgentLoses": "The user loses the ability to choose the most appropriate sharing format for their specific communication style or client relationship."
+        "whatTheAgentLoses": "The user loses the ability to choose the most appropriate sharing method for their specific workflow or website integration.",
+        "speak": "never",
+        "check": "Which share option is selected?",
+        "say_example": "Plain link. Nobody asked for an embed."
        }
       ]
      },
@@ -1229,15 +1248,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Share via email' dialog requires selecting a recipient in the 'To' field and provides an 'Add a message' box to give context for the meeting.",
-        "whatTheAgentLoses": "Delegating this to an agent means losing the opportunity to include a highly personalized, inside joke or conversational message that builds rapport."
-       },
-       {
-        "question": "Who should you send this poll to, and what should the subject line be?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed an email draft containing the generated meeting poll, which needed recipients and a subject before sending.",
-        "whatTheAgentLoses": "The user loses control over who receives the meeting poll and how the meeting is framed in the subject line."
+        "whatTheAgentLoses": "Delegating this to an agent means losing the opportunity to include a highly personalized, inside joke or conversational message that builds rapport.",
+        "speak": "gate",
+        "check": "What does the To field show, and what message text is entered?",
+        "say_example": "About to email your link to <name> with a note in your voice: <the message>. Send it, or say change."
        },
        {
         "question": "Do you want to add an explanatory message to the email before sending the poll?",
@@ -1245,7 +1259,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The email draft only contained the raw scheduling poll card, which might lack sufficient context for the recipients if sent as-is.",
-        "whatTheAgentLoses": "The user loses the opportunity to frame the meeting request with personal context and a polite tone."
+        "whatTheAgentLoses": "The user loses the opportunity to frame the meeting request with personal context and a polite tone.",
+        "speak": "never",
+        "check": "Does the email body contain context text beyond the poll card?",
+        "say_example": "Added two lines above the card saying what the meeting is and why the times. It's all in the draft you approve."
        }
       ]
      }
@@ -1262,7 +1279,10 @@
       "moment": "Now",
       "moneyMoving": false,
       "why": "The booking page presented options like a one-hour '1:1 Cookie Consultation', which determines the topic and duration of the scheduled event.",
-      "whatTheAgentLoses": "The delegator loses the ability to choose the specific topic and duration that best fits their meeting needs."
+      "whatTheAgentLoses": "The delegator loses the ability to choose the specific topic and duration that best fits their meeting needs.",
+      "speak": "never",
+      "check": "Which meeting types does the booking page list?",
+      "say_example": "Picked <the meeting type you were invited for> from the page's list."
      }
     ],
     "children": [
@@ -1271,28 +1291,37 @@
       "label": "Open the invite link",
       "questions": [
        {
-        "question": "How should you open the poll link to simulate the recipient's perspective?",
+        "question": "Does the page that loaded show the poll signed out, the way a recipient would see it?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Opening the link in an incognito window ensures the poll is viewed without the organizer's active session, matching what the recipient will see.",
-        "whatTheAgentLoses": "The user loses the assurance that the recipient's view was accurately tested without interference from the organizer's logged-in session."
+        "whatTheAgentLoses": "The user loses the assurance that the recipient's view was accurately tested without interference from the organizer's logged-in session.",
+        "speak": "never",
+        "check": "Does the opened page show the poll without the organizer's account signed in?",
+        "say_example": "Opened your poll in a clean window to see it exactly as invitees will."
        },
        {
-        "question": "How do you initiate the voting process from the event's welcome popup?",
+        "question": "Do the event name and organizer on the welcome popup match the meeting you were invited to, before voting starts?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen presents an initial overlay with the event details that requires clicking 'Empezar votación' to access the actual poll options.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify the event name and organizer details on the welcome popup before voting begins."
+        "whatTheAgentLoses": "The user loses the opportunity to verify the event name and organizer details on the welcome popup before voting begins.",
+        "speak": "never",
+        "check": "Does the welcome overlay show a button that starts the voting view?",
+        "say_example": "Got past the welcome screen into the actual times."
        },
        {
-        "question": "Which email should you open to access the scheduling poll?",
+        "question": "Is the email being opened the invitation you meant to act on - from the organizer, about the meeting?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Identifying the specific email from Heather M about 'End of Year Planning' is necessary to retrieve the link to the scheduling tool.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally verify the sender and context of the meeting invitation before proceeding to the poll."
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify the sender and context of the meeting invitation before proceeding to the poll.",
+        "speak": "never",
+        "check": "Does the inbox show the invitation email, and from whom?",
+        "say_example": "Found the invite from <the organizer> and opened the poll from it."
        },
        {
         "question": "Does the booking page display the correct person's avatar or company branding to confirm you opened the right link?",
@@ -1300,7 +1329,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Scheduling URLs can be very similar, and visually verifying the host's profile picture or company logo is often the only way to ensure you aren't booking with a stranger who shares the same name.",
-        "whatTheAgentLoses": "The user risks booking a meeting with the wrong person and sharing their contact details if the agent only reads the text name and ignores visual identity cues."
+        "whatTheAgentLoses": "The user risks booking a meeting with the wrong person and sharing their contact details if the agent only reads the text name and ignores visual identity cues.",
+        "speak": "if-wrong",
+        "check": "Does the host name or company shown on the page match the person the meeting is meant to be with?",
+        "say_example": "This page belongs to a different <name> - it shows <another company>. Stopping before I book you with a stranger."
        },
        {
         "question": "Does the page display an 'Event not found' or 'Link expired' error instead of the booking calendar?",
@@ -1308,7 +1340,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Scheduling links can be single-use, tied to a past date, or manually disabled by the organizer, resulting in a dead end.",
-        "whatTheAgentLoses": "The agent might hallucinate a successful page load or get stuck instead of alerting the user that they need to request a new link."
+        "whatTheAgentLoses": "The agent might hallucinate a successful page load or get stuck instead of alerting the user that they need to request a new link.",
+        "speak": "on-event",
+        "check": "Does the page show an event-not-found or link-expired message?",
+        "say_example": "The invite link is dead - the page says <event not found>. Want me to ask <the organizer> for a fresh one?"
        },
        {
         "question": "Did you expand the clipped email to view the full scheduling poll?",
@@ -1316,7 +1351,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Gmail often clips long automated emails, hiding the actual voting buttons or proposed times behind a '[Message clipped] View entire message' link at the bottom.",
-        "whatTheAgentLoses": "The agent might fail to vote or hallucinate that the poll is broken because the interactive elements are hidden by the email client's interface."
+        "whatTheAgentLoses": "The agent might fail to vote or hallucinate that the poll is broken because the interactive elements are hidden by the email client's interface.",
+        "speak": "never",
+        "check": "Does the email show a message-clipped notice with a view-entire-message link?",
+        "say_example": "The email was cut short by Gmail. Expanded it - the voting buttons were hiding below the fold."
        }
       ]
      },
@@ -1330,7 +1368,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Organizers often set expiration dates on polls. If the poll is closed, you cannot submit your availability and must reach out to the organizer directly.",
-        "whatTheAgentLoses": "The agent might try to interact with a closed poll or fail to alert you that you missed the window to vote."
+        "whatTheAgentLoses": "The agent might try to interact with a closed poll or fail to alert you that you missed the window to vote.",
+        "speak": "on-event",
+        "check": "Does the poll page show a closed or deadline-passed notice?",
+        "say_example": "This poll closed <yesterday>. Your vote can't go in - want me to email <the organizer> instead?"
        },
        {
         "question": "Which of the proposed times should I vote for based on my schedule and the existing votes?",
@@ -1338,31 +1379,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a FindTime poll with multiple time slots and current vote counts from other attendees, requiring you to compare your availability against the group's preferences.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to strategically weigh your own subtle schedule preferences against the emerging consensus of the group."
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to strategically weigh your own subtle schedule preferences against the emerging consensus of the group.",
+        "speak": "gate",
+        "check": "Which times does the poll offer, and what do the current vote counts show for each?",
+        "say_example": "Five times on offer. Your calendar is clear for <two of them>, and <one> already has the most yeses. Vote for those, or tell me different - there's also a cannot-attend button if none work."
        },
        {
-        "question": "How should you rate your availability for each of the proposed meeting times?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The FindTime voting page provides five specific time options and requires choosing 'Prefer', 'Yes', or 'No' for each to determine the best mutual meeting time.",
-        "whatTheAgentLoses": "The user loses the ability to prioritize their favorite meeting times, as an agent might simply mark all technically open slots as equally acceptable."
-       },
-       {
-        "question": "Should you decline the invitation entirely if none of the proposed times work?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The voting interface includes a 'Cannot attend' button, allowing you to explicitly decline the meeting rather than just leaving all individual time slots unchecked.",
-        "whatTheAgentLoses": "The user loses the ability to clearly communicate their complete unavailability, leaving the organizer guessing if they just haven't voted yet."
-       },
-       {
-        "question": "Did you receive confirmation that your votes were successfully submitted?",
+        "question": "Does the page confirm the votes were submitted?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Seeing the 'Votes submitted' dialog with a green checkmark ensures that your availability was properly recorded by the scheduling tool.",
-        "whatTheAgentLoses": "You lose the peace of mind of seeing the visual confirmation that your meeting preferences were actually registered."
+        "whatTheAgentLoses": "You lose the peace of mind of seeing the visual confirmation that your meeting preferences were actually registered.",
+        "speak": "if-wrong",
+        "check": "Does the page show a votes-submitted confirmation?",
+        "say_example": "No confirmation came back after submitting. I'm not counting your vote as in - resubmitting and watching for the receipt."
        }
       ]
      },
@@ -1376,15 +1407,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows an interactive calendar where availability must be painted in to update the group's options.",
-        "whatTheAgentLoses": "The user loses the ability to manually weigh their own schedule and select their preferred meeting times."
+        "whatTheAgentLoses": "The user loses the ability to manually weigh their own schedule and select their preferred meeting times.",
+        "speak": "gate",
+        "check": "Which grid blocks does the page show as markable, for which days and hours?",
+        "say_example": "The grid wants your free hours for <the week>. From your calendar you're open <Tuesday afternoon> and <Thursday morning>. Paint those, or tell me what to change?"
        },
        {
-        "question": "Did you verify that the painted availability blocks exactly match your intended free time before sharing the link?",
+        "question": "Do the painted blocks match the hours you meant to offer?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "It is easy to accidentally drag across the wrong row or column when painting availability on a grid, which would falsely signal to the group that you are free when you are actually busy.",
-        "whatTheAgentLoses": "The agent might clumsily paint the wrong time slots and fail to correct them, leading the group to settle on a time that doesn't actually work for the organizer."
+        "whatTheAgentLoses": "The agent might clumsily paint the wrong time slots and fail to correct them, leading the group to settle on a time that doesn't actually work for the organizer.",
+        "speak": "if-wrong",
+        "check": "Do the marked blocks on the grid match the hours the person approved, with none extra or missing?",
+        "say_example": "The grid shows an extra hour marked on <Wednesday> that you never gave. A stray drag put it there - cleared it, so nobody books you into it."
        }
       ]
      },
@@ -1398,15 +1435,10 @@
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen requires a name and email address so the organizer knows who is voting for the selected time slots.",
-        "whatTheAgentLoses": "Delegating this step means the agent might use an incorrect or less preferred email address for the meeting coordination."
-       },
-       {
-        "question": "What name should you use to identify yourself, and should you secure it with a password?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides fields for a name and an optional password to ensure others cannot alter your submitted schedule.",
-        "whatTheAgentLoses": "Delegating this means the agent might use an unrecognizable name or skip the password, leaving your scheduling response unsecured."
+        "whatTheAgentLoses": "Delegating this step means the agent might use an incorrect or less preferred email address for the meeting coordination.",
+        "speak": "always",
+        "check": "What name and email do the vote-confirmation fields show?",
+        "say_example": "Putting your name and email on the vote so <the organizer> knows it's you."
        }
       ]
      },
@@ -1425,7 +1457,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The booking page displays a calendar for December 2024, requiring a date selection to reveal the specific meeting times available that day.",
-          "whatTheAgentLoses": "The user loses the ability to prioritize specific days that align best with their personal schedule."
+          "whatTheAgentLoses": "The user loses the ability to prioritize specific days that align best with their personal schedule.",
+          "speak": "never",
+          "check": "Which dates on the calendar show as selectable?",
+          "say_example": "Opened <Friday> to see its times."
          },
          {
           "question": "Are there any available time slots shown on the calendar, or is the entire date range greyed out?",
@@ -1433,7 +1468,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "If the organizer is fully booked or the scheduling link has expired, the calendar will show no selectable times, meaning you cannot proceed and must ask for a new link.",
-          "whatTheAgentLoses": "The agent might get stuck trying to interact with unclickable dates or fail to notify you that the link is effectively dead."
+          "whatTheAgentLoses": "The agent might get stuck trying to interact with unclickable dates or fail to notify you that the link is effectively dead.",
+          "speak": "on-event",
+          "check": "Does the calendar show any selectable dates, or is every date greyed out?",
+          "say_example": "Nothing is bookable - every day on this page is greyed out. The link may be stale or <the host> is full up. Want me to ask them for a new one?"
          },
          {
           "question": "Are the dates on the calendar widget visually distinguished, such as with bold text or dots, to indicate which days actually have open slots?",
@@ -1441,7 +1479,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Scheduling widgets use subtle visual cues to show availability at a glance, preventing you from wasting time clicking on fully booked or unavailable days.",
-          "whatTheAgentLoses": "The agent might blindly click through grayed-out days or hallucinate availability, while the user loses the ability to quickly scan for the best week."
+          "whatTheAgentLoses": "The agent might blindly click through grayed-out days or hallucinate availability, while the user loses the ability to quickly scan for the best week.",
+          "speak": "never",
+          "check": "Which dates does the widget mark as having open times?",
+          "say_example": "Only the marked days have slots, so I skipped the blank ones."
          }
         ]
        },
@@ -1455,15 +1496,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen showed available slots for Friday, December 6, such as 12:30pm and 1:00pm, dictating the actual options available for selection.",
-          "whatTheAgentLoses": "The user loses the ability to secure a suitable meeting time if the agent hallucinates availability instead of reading the screen."
-         },
-         {
-          "question": "Which time slot works best for you on June 21, and is the time zone set correctly?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Verifying the Pacific Time zone and selecting the correct slot ensures the meeting is scheduled accurately without any time zone confusion.",
-          "whatTheAgentLoses": "You lose the opportunity to personally verify that the scheduling tool correctly detected your local time zone before locking in a time."
+          "whatTheAgentLoses": "The user loses the ability to secure a suitable meeting time if the agent hallucinates availability instead of reading the screen.",
+          "speak": "gate",
+          "check": "Which time slots does the page list for the selected date?",
+          "say_example": "<Friday the 6th> has <12:30>, <1:00>, and <2:30> - all in your time zone. Which one?"
          },
          {
           "question": "Did the time slot you clicked return an error stating it is no longer available, forcing you to go back and select a different time?",
@@ -1471,7 +1507,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Because availability is dynamic, a time slot that appeared open on the calendar might get booked by someone else right before you click it, triggering an unavailability error.",
-          "whatTheAgentLoses": "The agent might assume the selection worked and fail to notice the error, getting stuck on the calendar page instead of picking an alternative time."
+          "whatTheAgentLoses": "The agent might assume the selection worked and fail to notice the error, getting stuck on the calendar page instead of picking an alternative time.",
+          "speak": "on-event",
+          "check": "Does the page show a no-longer-available message for the clicked slot?",
+          "say_example": "<1:00> just got taken - someone booked it while we were looking. <2:30> is still open. Take it?"
          }
         ]
        },
@@ -1485,7 +1524,10 @@
           "moment": "Now",
           "moneyMoving": false,
           "why": "The 'Enter Details' form requires a name and email to confirm the selected 10:30am time slot.",
-          "whatTheAgentLoses": "The user loses control over what contact information and additional context is sent to the meeting organizer."
+          "whatTheAgentLoses": "The user loses control over what contact information and additional context is sent to the meeting organizer.",
+          "speak": "always",
+          "check": "Which fields does the booking form require, and what is entered in them?",
+          "say_example": "Filling in your name and email for the booking now."
          },
          {
           "question": "Is there an unexpected payment or credit card field required to confirm the booking?",
@@ -1493,7 +1535,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Some booking pages are set up for paid consultations. If you are booking a standard meeting but hit a paywall, you are on the wrong link or the organizer made a mistake.",
-          "whatTheAgentLoses": "The agent might get stuck at a paywall or inappropriately use a payment method for a meeting that was supposed to be free."
+          "whatTheAgentLoses": "The agent might get stuck at a paywall or inappropriately use a payment method for a meeting that was supposed to be free.",
+          "speak": "on-event",
+          "check": "Does the booking form show a payment or card field?",
+          "say_example": "This booking wants a card number. Nothing you told me says this meeting costs money, so I stopped. Check with <the host> before anything gets paid."
          },
          {
           "question": "Are there any pre-ticked checkboxes for marketing emails or account creation that need to be unchecked before submitting?",
@@ -1501,15 +1546,21 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Scheduling tools often include small, pre-selected checkboxes at the bottom of the details form to opt into newsletters or create an account, which are easily overlooked if just rushing to click confirm.",
-          "whatTheAgentLoses": "The user loses control over their inbox and personal data if the agent blindly accepts the default marketing opt-ins while submitting the booking."
+          "whatTheAgentLoses": "The user loses control over their inbox and personal data if the agent blindly accepts the default marketing opt-ins while submitting the booking.",
+          "speak": "never",
+          "check": "Which checkboxes on the form are pre-ticked, and what does each say?",
+          "say_example": "Unticked a pre-checked box signing you up for their newsletter."
          },
          {
-          "question": "Did you verify that your email address is typed perfectly, since a typo here will silently send the calendar invite and meeting link to the wrong destination?",
+          "question": "Is the email address on the booking form the right one?",
           "cluster": "",
           "moment": null,
           "moneyMoving": false,
           "why": "The system has no way to verify if the email address you entered is actually yours, so a typo will result in a successful booking screen but the confirmation email will never arrive.",
-          "whatTheAgentLoses": "The user will miss the meeting because the agent successfully booked the slot but sent the join link to a misspelled email address."
+          "whatTheAgentLoses": "The user will miss the meeting because the agent successfully booked the slot but sent the join link to a misspelled email address.",
+          "speak": "if-wrong",
+          "check": "Does the email in the form match the person's address character for character?",
+          "say_example": "The form has your email with one letter off - <gmial>. The invite would go nowhere, so I fixed it before booking."
          },
          {
           "question": "Are there any custom fields on the booking form marked only by a red asterisk, indicating they are mandatory?",
@@ -1517,7 +1568,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Hosts often add custom mandatory fields (like a phone number or company name) that are flagged as required solely by a small visual asterisk rather than explicit text.",
-          "whatTheAgentLoses": "The agent might attempt to submit an incomplete form and fail validation, or provide incorrect data because it missed the visual requirement flag."
+          "whatTheAgentLoses": "The agent might attempt to submit an incomplete form and fail validation, or provide incorrect data because it missed the visual requirement flag.",
+          "speak": "never",
+          "check": "Which form fields carry a required marker?",
+          "say_example": "The form also required <a phone number>, marked only with an asterisk. Filled it."
          }
         ]
        },
@@ -1531,7 +1585,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "If another person books the same slot while you are entering your details, the submission will fail with a temporary error message that disappears quickly.",
-          "whatTheAgentLoses": "The user falsely believes the meeting is booked and stops trying, because the agent missed the ephemeral error indicating the slot was no longer available."
+          "whatTheAgentLoses": "The user falsely believes the meeting is booked and stops trying, because the agent missed the ephemeral error indicating the slot was no longer available.",
+          "speak": "on-event",
+          "check": "Did an error message appear saying the slot was taken during form entry?",
+          "say_example": "The slot got taken while I was filling the form - the page flashed an error and it's gone. Back to the times: <next options>. Which one?"
          },
          {
           "question": "Did the submission fail because a mandatory custom field, such as a phone number or meeting agenda, was left blank?",
@@ -1539,7 +1596,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Organizers often require specific qualifying information. If the agent skips these custom fields, the form will reject the submission with a validation error.",
-          "whatTheAgentLoses": "The agent might assume the booking succeeded or get stuck on the form without knowing how to provide the missing contextual information."
+          "whatTheAgentLoses": "The agent might assume the booking succeeded or get stuck on the form without knowing how to provide the missing contextual information.",
+          "speak": "on-event",
+          "check": "Does the form show a validation error naming the blank required field?",
+          "say_example": "The form won't book without <a phone number>, and I don't have one from you. What should I put?"
          }
         ]
        },
@@ -1553,15 +1613,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Some booking pages are configured to require manual approval. If it's only a request, you cannot assume the time is locked in and must watch for a follow-up confirmation.",
-          "whatTheAgentLoses": "The agent might report the meeting as confirmed and block your calendar, even though the organizer might reject the request and propose a different time."
-         },
-         {
-          "question": "Did you verify that the confirmation screen displays the correct email address for the calendar invitation?",
-          "cluster": "",
-          "moment": null,
-          "moneyMoving": false,
-          "why": "The confirmation screen explicitly states where the email was sent, which is your only immediate chance to catch a typo in the email address before wondering why the invite never arrived.",
-          "whatTheAgentLoses": "The agent might silently succeed at booking but fail to notice that the invitation was sent to a misspelled email address, leaving the actual invitee without the meeting link."
+          "whatTheAgentLoses": "The agent might report the meeting as confirmed and block your calendar, even though the organizer might reject the request and propose a different time.",
+          "speak": "on-event",
+          "check": "Does the confirmation say confirmed, or does it say pending approval?",
+          "say_example": "Heads up - this isn't booked yet. The page says it's a request, and <the host> still has to approve it. I'll watch for the real confirmation."
          },
          {
           "question": "Did a temporary success banner or 'toast' notification appear on screen to confirm the booking before vanishing?",
@@ -1569,7 +1624,10 @@
           "moment": null,
           "moneyMoving": false,
           "why": "Success confirmations are sometimes transient visual banners that disappear automatically after a few seconds, rather than resolving to a persistent confirmation page.",
-          "whatTheAgentLoses": "The user loses definitive proof that the booking was successfully processed if the agent fails to capture the fleeting visual confirmation."
+          "whatTheAgentLoses": "The user loses definitive proof that the booking was successfully processed if the agent fails to capture the fleeting visual confirmation.",
+          "speak": "never",
+          "check": "Did a success confirmation appear - as a banner or a page - and what did it say?",
+          "say_example": "Caught the success banner before it vanished and saved what it said for the report."
          }
         ]
        }
@@ -1581,16 +1639,6 @@
     "id": "7",
     "label": "Close the poll",
     "note": "poll routes only - booking routes commit inside 6.5, and when2meet never closes (ythO ends at the heatmap, the choosing left outside the tool). 7.1 and 7.2 repeat as votes land. then one of 7.3 (consensus fires on its own) or 7.4 with 7.5 (the organizer forces it - because consensus failed (W0fS) or was switched off (KbIz), or because Doodle's close is always manual (M5A9, MVu8)). 7.6 where the result gets announced - two keepers decline the built-in version for Gmail.",
-    "questions": [
-     {
-      "question": "Are there enough participant votes to justify finalizing the meeting, or should you wait for more responses?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The organizer must decide if the current number of votes is sufficient to lock in a time, knowing that some invitees may never respond.",
-      "whatTheAgentLoses": "The user loses the strategic judgment of knowing when to stop waiting for stragglers and proceed with scheduling the meeting."
-     }
-    ],
     "children": [
      {
       "id": "7.1",
@@ -1602,7 +1650,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The email summary showed missing votes for some attendees, making it necessary to check the full poll rather than immediately clicking an inline schedule button.",
-        "whatTheAgentLoses": "The user loses the assurance that all required attendees have provided their availability before the meeting time is locked in."
+        "whatTheAgentLoses": "The user loses the assurance that all required attendees have provided their availability before the meeting time is locked in.",
+        "speak": "never",
+        "check": "Does the email summary show votes still missing, and does the full poll page list every response?",
+        "say_example": "The email showed votes missing, so I opened the full poll before trusting it."
        },
        {
         "question": "Who submitted a new vote on your poll and what were their choices?",
@@ -1610,7 +1661,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "Reviewing the email notification showing Nestor Wilke's vote details allows you to track individual availability for the proposed times.",
-        "whatTheAgentLoses": "The user loses the context of individual attendee preferences and the ability to monitor the poll's progress directly from their inbox."
+        "whatTheAgentLoses": "The user loses the context of individual attendee preferences and the ability to monitor the poll's progress directly from their inbox.",
+        "speak": "never",
+        "check": "What does the notification show - who voted, and for which times?",
+        "say_example": "<Name> voted: yes to <Monday>, no to the rest."
        },
        {
         "question": "Do you rely on the email's partial voting summary to pick a time, or do you click 'View poll' to evaluate all responses on the website?",
@@ -1618,7 +1672,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The email states the poll did not reach consensus but shows two positive votes for Monday at 8:30 AM, prompting a choice between trusting the summary or investigating the full details.",
-        "whatTheAgentLoses": "You lose the opportunity to personally review the nuanced voting preferences and manually decide which proposed time is the best compromise."
+        "whatTheAgentLoses": "You lose the opportunity to personally review the nuanced voting preferences and manually decide which proposed time is the best compromise.",
+        "speak": "never",
+        "check": "Does the poll page show responses the email summary does not?",
+        "say_example": "Read the full poll page, not the email summary - the email only carries some of the votes."
        },
        {
         "question": "Does the vote count in the notification email reconcile with the total attendees and the votes cast so far?",
@@ -1626,7 +1683,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The notification email stating '2 votes of 6' must correctly reflect the 6 total attendees listed earlier and the two votes cast by the organizer and Nestor.",
-        "whatTheAgentLoses": "The user loses the assurance that the scheduling tool accurately tracked all required and optional attendees' responses."
+        "whatTheAgentLoses": "The user loses the assurance that the scheduling tool accurately tracked all required and optional attendees' responses.",
+        "speak": "if-wrong",
+        "check": "Does the vote count in the email match the count shown on the poll page?",
+        "say_example": "The email says <2 of 6> voted but the poll page shows <3>. I'm going by the poll page - the email is behind."
        }
       ]
      },
@@ -1635,28 +1695,26 @@
       "label": "Read the vote grid",
       "questions": [
        {
-        "question": "How do you review the attendees' votes to decide on a final meeting time?",
+        "question": "Which attendees voted 'Prefer' and which voted 'Yes' for each proposed slot?",
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a detailed breakdown of attendee votes, such as 'Prefer' or 'Yes', and provides options to finalize the meeting for specific time slots.",
-        "whatTheAgentLoses": "The user loses the ability to manually weigh individual attendee preferences and make a nuanced decision on which time slot to finalize."
+        "whatTheAgentLoses": "The user loses the ability to manually weigh individual attendee preferences and make a nuanced decision on which time slot to finalize.",
+        "speak": "never",
+        "check": "What does the vote grid show for each time - who said prefer, yes, or no?",
+        "say_example": "Read the grid person by person before picking anything."
        },
        {
-        "question": "How do you interpret the color-coded availability on the group calendar?",
+        "question": "Which time slots does the group calendar's color scale show as most available, from white for nobody free to dark green for everybody free?",
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The legend showing '0/2 Available' as white and '2/2 Available' as dark green helps you quickly identify the time slots that work for the most people.",
-        "whatTheAgentLoses": "The user loses the immediate visual intuition of the calendar's heat map to quickly gauge the group's overall availability patterns."
-       },
-       {
-        "question": "Do the participant vote counts on the dashboard match the actual voting activity shown in the flow?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The claim that three participants voted is contradicted by the frames, which actually show a Gmail invitation rather than a third person's vote submission.",
-        "whatTheAgentLoses": "The user loses an accurate record of who has actually confirmed their availability for the meeting."
+        "whatTheAgentLoses": "The user loses the immediate visual intuition of the calendar's heat map to quickly gauge the group's overall availability patterns.",
+        "speak": "never",
+        "check": "What does the legend say each color means?",
+        "say_example": "Dark green is everyone free - the legend spells it out, so I ranked times by it."
        }
       ]
      },
@@ -1670,7 +1728,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The email shows that the poll reached a consensus and lists the finalized meeting time.",
-        "whatTheAgentLoses": "The user misses the opportunity to personally review the consensus email and verify the final meeting details."
+        "whatTheAgentLoses": "The user misses the opportunity to personally review the consensus email and verify the final meeting details.",
+        "speak": "on-event",
+        "check": "Does the notification say consensus was reached, and for which time?",
+        "say_example": "Everyone answered, and <Tuesday at 10> works for all of them. Next step is booking it - I'll check with you there."
        }
       ]
      },
@@ -1684,7 +1745,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "Reviewing the vote status icons ensures you choose a time slot that has the most favorable responses from all participants.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh the participants' specific preferences when deciding the final meeting time."
+        "whatTheAgentLoses": "You lose the ability to personally weigh the participants' specific preferences when deciding the final meeting time.",
+        "speak": "gate",
+        "check": "What do the vote tallies show for each proposed time?",
+        "say_example": "<4 of 5> can make <Tuesday at 10> - everyone but <name>. Booking it sends invites to the whole list. Book it, wait for more votes, or pick another time?"
        }
       ]
      },
@@ -1693,20 +1757,15 @@
       "label": "Send the meeting invite",
       "questions": [
        {
-        "question": "Are the meeting details correct before you send the final invitation?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Verifying the attendees and the 9:30 AM time slot for the Trade Show meeting ensures you are booking the correct event before finalizing.",
-        "whatTheAgentLoses": "Delegating this step means you lose the final opportunity to catch errors in the attendee list or meeting time before the invitation goes out."
-       },
-       {
-        "question": "Do you close the 'Poll saved!' dialog box?",
+        "question": "What does the 'Poll saved!' dialog confirm was saved, read out before it is dismissed?",
         "cluster": "hand over",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Dismissing the success message clears the screen so you can review the final agreed-upon meeting details.",
-        "whatTheAgentLoses": "You lose the immediate reassurance of seeing the success message confirming your changes were saved."
+        "whatTheAgentLoses": "You lose the immediate reassurance of seeing the success message confirming your changes were saved.",
+        "speak": "never",
+        "check": "Does a saved confirmation dialog block the page?",
+        "say_example": "Closed the saved box to get back to the details."
        }
       ]
      },
@@ -1720,7 +1779,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen provides built-in link and email sharing options for the closed poll, but using the platform's automated system risks the notification being caught in spam filters.",
-        "whatTheAgentLoses": "The user loses the deliverability assurance of sending a separate, direct email from their own account rather than relying on the scheduling tool's automated sharing."
+        "whatTheAgentLoses": "The user loses the deliverability assurance of sending a separate, direct email from their own account rather than relying on the scheduling tool's automated sharing.",
+        "speak": "never",
+        "check": "Which share options does the closed poll show?",
+        "say_example": "Sent the result through the site's own share. If anyone says nothing arrived, spam is the first place to look."
        },
        {
         "question": "Did you notify the participants of the final date after closing the poll?",
@@ -1728,7 +1790,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The video ends after the poll is closed at 10:39 without showing any message being sent to participants with the final result.",
-        "whatTheAgentLoses": "The user loses the assurance that participants are informed of the final meeting time, potentially leading to missed meetings."
+        "whatTheAgentLoses": "The user loses the assurance that participants are informed of the final meeting time, potentially leading to missed meetings.",
+        "speak": "if-wrong",
+        "check": "Does the page or the sent mail show the final time was shared with the participants?",
+        "say_example": "The poll is closed but nobody was told the result yet. Everyone who voted is still guessing. Sending the final time now."
        },
        {
         "question": "Did you include the necessary video conferencing link in the final confirmation message?",
@@ -1736,7 +1801,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "Because the free tier of the scheduling tool may not automatically generate or allow clickable links in the location field, you must manually paste the meeting link into the message body before sending the final results.",
-        "whatTheAgentLoses": "The user risks sending a finalized meeting confirmation that lacks the actual meeting link, causing confusion and requiring a follow-up email."
+        "whatTheAgentLoses": "The user risks sending a finalized meeting confirmation that lacks the actual meeting link, causing confusion and requiring a follow-up email.",
+        "speak": "if-wrong",
+        "check": "Does the final message text contain a joinable meeting link, not just a location word?",
+        "say_example": "The final invite says <Zoom> but carries no actual link - on the free plan the location line can't hold one. Pasted the real link into the message."
        },
        {
         "question": "Should you send the final meeting confirmation to everyone originally invited, or only to those who actually participated in the poll?",
@@ -1744,7 +1812,10 @@
         "moment": null,
         "moneyMoving": false,
         "why": "The 'Share results' email dialog provides quick-select options for 'Participated' and 'Everyone', forcing a decision on whether non-respondents should still receive the final meeting details.",
-        "whatTheAgentLoses": "The user loses the ability to exclude unresponsive invitees from the final meeting or, conversely, ensure that key people who forgot to vote are still informed of the scheduled time."
+        "whatTheAgentLoses": "The user loses the ability to exclude unresponsive invitees from the final meeting or, conversely, ensure that key people who forgot to vote are still informed of the scheduled time.",
+        "speak": "never",
+        "check": "Which recipient option is selected - participated, or everyone?",
+        "say_example": "Sent it to everyone invited. The ones who never voted still need to know it's happening."
        }
       ]
      }
@@ -1760,12 +1831,15 @@
       "label": "Check the confirmation email",
       "questions": [
        {
-        "question": "Did you notice that a meeting confirmation email is already in the inbox before you even book the meeting?",
+        "question": "Does a meeting with this person already exist before this one is booked?",
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The inbox at 04:27 shows a meeting confirmation received at 2:52 PM, making the subsequent booking flow completed at 05:25 chronologically impossible.",
-        "whatTheAgentLoses": "The user receives a fabricated or out-of-order execution record instead of a genuine, chronological scheduling process."
+        "whatTheAgentLoses": "The user receives a fabricated or out-of-order execution record instead of a genuine, chronological scheduling process.",
+        "speak": "on-event",
+        "check": "Does the inbox already show a confirmation for a meeting with this person around this time?",
+        "say_example": "Your inbox already has a confirmation for a meeting with <name> on <date>. Booking again would double it. Still want me to?"
        }
       ]
      },
@@ -1779,7 +1853,10 @@
         "moment": "After",
         "moneyMoving": true,
         "why": "Checking the calendar holds ensures that the proposed times were successfully blocked off to prevent double-booking.",
-        "whatTheAgentLoses": "The user loses the visual reassurance that their calendar correctly reflects the tentative holds for the proposed meeting."
+        "whatTheAgentLoses": "The user loses the visual reassurance that their calendar correctly reflects the tentative holds for the proposed meeting.",
+        "speak": "if-wrong",
+        "check": "Does the calendar show a hold for each offered time?",
+        "say_example": "The holds never landed on your calendar. The offered times look free to anyone booking you, so I'm watching those slots by hand until the poll closes."
        }
       ]
      },
@@ -1788,12 +1865,15 @@
       "label": "Find the scheduled meeting",
       "questions": [
        {
-        "question": "Did you verify that the meeting was successfully scheduled?",
+        "question": "Is the meeting scheduled, and at what time?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The screen showed a voting page with a confirmation message, making it essential to confirm the final status of the invite.",
-        "whatTheAgentLoses": "The user loses the certainty that the meeting was actually finalized and added to the calendar."
+        "whatTheAgentLoses": "The user loses the certainty that the meeting was actually finalized and added to the calendar.",
+        "speak": "always",
+        "check": "Does the page show the meeting as scheduled, with its final time?",
+        "say_example": "Done. <Tuesday at 10> is booked, everyone got the invite, and it's on your calendar."
        },
        {
         "question": "Are the temporary holds removed and the final meeting correctly placed on your calendar?",
@@ -1801,15 +1881,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The calendar shows a single meeting block for 'Trade Show - 2023' at 9:30 AM, confirming the previous holds are gone.",
-        "whatTheAgentLoses": "The peace of mind of visually confirming your calendar is clean and the meeting is accurately scheduled."
-       },
-       {
-        "question": "Did you verify the booking confirmation and check that the event appears on your calendar?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Seeing the 'Booked!' message and checking the Outlook calendar ensures that the meeting was actually scheduled and synced correctly.",
-        "whatTheAgentLoses": "You lose the certainty of visually confirming that the scheduling tool successfully synced the new meeting to your personal calendar."
+        "whatTheAgentLoses": "The peace of mind of visually confirming your calendar is clean and the meeting is accurately scheduled.",
+        "speak": "if-wrong",
+        "check": "Does the calendar show only the final event, with no leftover holds?",
+        "say_example": "Two old holds are still sitting on your calendar from the poll. They'd block real bookings, so I'm clearing them."
        }
       ]
      },
@@ -1823,7 +1898,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Verifying the title, attendees, times, and the Teams link ensures the meeting was scheduled exactly as intended.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the correct people and meeting link are included in the final invite."
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the correct people and meeting link are included in the final invite.",
+        "speak": "if-wrong",
+        "check": "Do the event's title, time, duration, attendee list, and join link match what was approved?",
+        "say_example": "The booked event runs <45 minutes>, not the <30> you approved. Fixing it before anyone plans around the wrong block."
        }
       ]
      },
@@ -1832,20 +1910,26 @@
       "label": "Recheck the public page",
       "questions": [
        {
-        "question": "Did the setting change apply correctly to the live booking page, and which date should you select next?",
+        "question": "Did the setting change apply correctly to the live booking page?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": false,
         "why": "Refreshing the page to verify that only the next four days are available on the December 2024 calendar confirms your scheduling constraints are active before picking a date.",
-        "whatTheAgentLoses": "You lose the opportunity to visually verify that your custom availability rules are correctly restricting the options shown to guests."
+        "whatTheAgentLoses": "You lose the opportunity to visually verify that your custom availability rules are correctly restricting the options shown to guests.",
+        "speak": "if-wrong",
+        "check": "After a refresh, does the public page reflect the changed setting?",
+        "say_example": "The change didn't reach the live page - it still offers <all 30 days>. Re-saving before anyone books off the stale version."
        },
        {
-        "question": "How do you verify the updated poll when the participant view is still loading?",
+        "question": "The participant view showed only a loading spinner - did the added time slots actually render for participants?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a blank page with a Doodle loading spinner instead of the expected poll details.",
-        "whatTheAgentLoses": "The delegator loses the ability to confirm that the new time slots were successfully added and are visible to participants."
+        "whatTheAgentLoses": "The delegator loses the ability to confirm that the new time slots were successfully added and are visible to participants.",
+        "speak": "never",
+        "check": "Does the page show content, or still a loading spinner?",
+        "say_example": "The participant view hung on its spinner. Reloaded and read it again - I don't report from a blank page."
        },
        {
         "question": "Do the available booking slots accurately exclude all times that would overlap with the newly created busy event?",
@@ -1853,7 +1937,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen needs to confirm whether a 30-minute slot at 1:50pm actually remains available despite a busy event starting at 2:00pm.",
-        "whatTheAgentLoses": "The delegator loses a conflict-free schedule if the agent books an appointment that overlaps with an existing busy block."
+        "whatTheAgentLoses": "The delegator loses a conflict-free schedule if the agent books an appointment that overlaps with an existing busy block.",
+        "speak": "if-wrong",
+        "check": "Does any offered slot overlap a time the calendar shows as busy?",
+        "say_example": "The page still offers <1:50>, but you're busy at <2>. The slot runs past it - pulling it before someone books it."
        },
        {
         "question": "Are the newly added time slots visible on the poll, and which one should you select?",
@@ -1861,7 +1948,10 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "Confirming that the three new options for August 5th are visible ensures the poll updated correctly before you commit to a specific time.",
-        "whatTheAgentLoses": "You lose the ability to verify the poll updated correctly and to personally choose your preferred time from the new options."
+        "whatTheAgentLoses": "You lose the ability to verify the poll updated correctly and to personally choose your preferred time from the new options.",
+        "speak": "if-wrong",
+        "check": "Does the live poll show the newly added times?",
+        "say_example": "The times I added aren't showing on the live poll yet. Not sending anyone there until they appear."
        },
        {
         "question": "Does the copied link work and display the correct event information to your participants?",
@@ -1869,7 +1959,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Verifying that the loaded page shows the correct event title, duration, and availabilities ensures the poll was set up properly.",
-        "whatTheAgentLoses": "You lose the peace of mind that comes from visually confirming exactly what your invitees will see when they open the link."
+        "whatTheAgentLoses": "You lose the peace of mind that comes from visually confirming exactly what your invitees will see when they open the link.",
+        "speak": "if-wrong",
+        "check": "Does the copied link load a page whose title, duration, and times match the created event?",
+        "say_example": "The copied link opens the wrong thing - it shows <another event>. Re-copying the right one before it goes out."
        },
        {
         "question": "Is your newly booked time slot now missing from the public booking page?",
@@ -1877,7 +1970,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The available times for Thursday the 13th skip from 1:50pm to 3:10pm, confirming that the 2:30pm slot was successfully blocked.",
-        "whatTheAgentLoses": "The user loses the assurance that their booking actually updated the public calendar to prevent double-booking."
+        "whatTheAgentLoses": "The user loses the assurance that their booking actually updated the public calendar to prevent double-booking.",
+        "speak": "if-wrong",
+        "check": "Is the just-booked time still offered on the public page?",
+        "say_example": "The slot you just booked still shows as open to others. Until it drops off, someone could double-book it - watching it."
        }
       ]
      },
@@ -1886,20 +1982,26 @@
       "label": "Refresh the stale view",
       "questions": [
        {
-        "question": "Why is the dashboard still showing no participants?",
+        "question": "The dashboard reads 'No participants yet' - is that the current vote state or a stale page that has not refetched?",
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The 'Availabilities' section displays 'No participants yet' because the page state is stale and hasn't automatically fetched the latest votes.",
-        "whatTheAgentLoses": "You lose the intuition to manually refresh the browser when expected updates fail to appear automatically."
+        "whatTheAgentLoses": "You lose the intuition to manually refresh the browser when expected updates fail to appear automatically.",
+        "speak": "never",
+        "check": "Does the page show no participants, and does a refresh change it?",
+        "say_example": "The dashboard said no participants until a refresh - it doesn't update itself."
        },
        {
-        "question": "Is your submitted vote accurately reflected in the availabilities table?",
+        "question": "Does the availabilities table show the vote you submitted?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Checking the availabilities table ensures your name and selected times, such as the highlighted 3:45 PM slot, were successfully recorded by the system.",
-        "whatTheAgentLoses": "Delegating this step means you lose the peace of mind of personally verifying that your specific availability was correctly captured in the group's poll."
+        "whatTheAgentLoses": "Delegating this step means you lose the peace of mind of personally verifying that your specific availability was correctly captured in the group's poll.",
+        "speak": "if-wrong",
+        "check": "Does the availabilities table list the person's name with the times they picked?",
+        "say_example": "Your vote isn't in the table - the <3:45> you picked shows empty. Submitting it again and checking the table after."
        }
       ]
      },
@@ -1908,28 +2010,26 @@
       "label": "Check the outcome against the setup",
       "questions": [
        {
-        "question": "Do the screens consistently confirm your access to premium features throughout the task?",
+        "question": "The premium trial was reported active, but a later screen warns that only premium users can add links - is the account actually on premium before the poll depends on it?",
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The analyst claimed a premium trial was active, but later screens showed premium settings locked with a warning that only premium users can add links.",
-        "whatTheAgentLoses": "The user loses the ability to successfully configure the poll if the agent tries to use premium features that are actually locked."
+        "whatTheAgentLoses": "The user loses the ability to successfully configure the poll if the agent tries to use premium features that are actually locked.",
+        "speak": "never",
+        "check": "Do any pages show premium features as locked?",
+        "say_example": "The plan claims a trial, but link-adding stayed locked the whole way. Treated the account as free."
        },
        {
-        "question": "Did you verify that the custom duration you entered actually matches the time block shown on the calendar?",
+        "question": "Does the block on the calendar match the duration that was entered?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "A close inspection of the screen at 1:22 shows the custom duration field does not actually contain the 300 minutes claimed to match the 5-hour calendar block.",
-        "whatTheAgentLoses": "The user loses the guarantee of an accurate meeting length if the agent misreports or hallucinates the entered duration."
-       },
-       {
-        "question": "Do you see the group availability legend update to '2/2 Available'?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen shows the legend remaining at '0/1 Available ... 1/1 Available' at both moments, failing to reflect the second user.",
-        "whatTheAgentLoses": "The user loses an accurate count of participant availability, which is essential for confidently selecting a meeting time."
+        "whatTheAgentLoses": "The user loses the guarantee of an accurate meeting length if the agent misreports or hallucinates the entered duration.",
+        "speak": "if-wrong",
+        "check": "Does the duration field's value match the length of the block shown on the calendar?",
+        "say_example": "The duration box and the calendar disagree - the block runs <5 hours> but the field doesn't say <300>. Re-entering it so both tell the same story."
        },
        {
         "question": "Do the generated time slots correctly reflect your adjusted availability window, duration, and buffer?",
@@ -1937,15 +2037,21 @@
         "moment": "After",
         "moneyMoving": false,
         "why": "The screen showed exactly six slots from 9:00am to 12:20pm, confirming that the 30-minute duration and 10-minute buffer were correctly applied to the 9:00am to 1:00pm window.",
-        "whatTheAgentLoses": "The user loses the assurance that their specific scheduling constraints and buffers are accurately calculated and presented to invitees."
+        "whatTheAgentLoses": "The user loses the assurance that their specific scheduling constraints and buffers are accurately calculated and presented to invitees.",
+        "speak": "if-wrong",
+        "check": "Do the listed slots match what the window, duration, and buffer should produce - the right count, first start, and last start?",
+        "say_example": "The page made <8> slots where your window and buffer should give <6>. Its math dropped the buffer - fixing the settings before anyone books back to back."
        },
        {
-        "question": "How does your chosen appointment time relate to the buffer setting?",
+        "question": "Does the selected slot still leave the configured buffer around it?",
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The 'Enter Details' page displays the selected event time of 10:30am - 11:15am, which dictates when any configured buffer periods will apply.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify that the selected time slot correctly accommodates their required buffer before finalizing the booking."
+        "whatTheAgentLoses": "The user loses the opportunity to verify that the selected time slot correctly accommodates their required buffer before finalizing the booking.",
+        "speak": "never",
+        "check": "What time range does the page show for the selected appointment?",
+        "say_example": "Booked <10:30 to 11:15>; the buffer pads your calendar after it."
        },
        {
         "question": "Do the emojis in the published poll description exactly match the ones from the AI suggestion?",
@@ -1953,15 +2059,10 @@
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Comparing the published poll to the initial setup ensures the platform didn't alter your intended text or emojis upon submission.",
-        "whatTheAgentLoses": "The user loses the guarantee that their exact intended message and tone were preserved without silent modifications by the platform."
-       },
-       {
-        "question": "Does the final confirmed event duration match the 30 minutes you initially selected?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The confirmation screen shows the event scheduled from 9:00 AM to 9:30 AM, verifying that the 30-minute duration chosen earlier was correctly applied to the agreed start time.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent accurately maintained their requested meeting length throughout the entire scheduling process."
+        "whatTheAgentLoses": "The user loses the guarantee that their exact intended message and tone were preserved without silent modifications by the platform.",
+        "speak": "never",
+        "check": "Does the published description text match what was entered?",
+        "say_example": "The published description reads exactly as written, emojis included."
        }
       ]
      }
@@ -1977,12 +2078,15 @@
       "label": "Reopen the poll",
       "questions": [
        {
-        "question": "How do you access the management view of the newly created poll?",
+        "question": "Is the link being opened the organizer's 'Manage your poll' link rather than the public 'Share' link?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The email contains both a 'Manage your poll' button and a 'Share' link, requiring you to choose the correct one to view respondent availability.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent will use the admin-specific link rather than the public sharing link to track responses."
+        "whatTheAgentLoses": "The user loses the assurance that the agent will use the admin-specific link rather than the public sharing link to track responses.",
+        "speak": "never",
+        "check": "Does the email show a manage button separate from the share link?",
+        "say_example": "Went in through <Manage your poll> - the share link only shows the voting side."
        },
        {
         "question": "Which poll do you want to open?",
@@ -1990,15 +2094,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dashboard displayed multiple options like 'Group Poll' and 'My Birthday', requiring a choice of which one to manage.",
-        "whatTheAgentLoses": "The user loses the ability to decide which specific event or poll they want to focus on and finalize."
+        "whatTheAgentLoses": "The user loses the ability to decide which specific event or poll they want to focus on and finalize.",
+        "speak": "never",
+        "check": "Which polls does the dashboard list?",
+        "say_example": "Opened <the poll you asked about> from the list."
        },
        {
-        "question": "How do you edit the details of this specific poll?",
+        "question": "Do the poll's current title, duration, and location match what was intended before the link goes out?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The poll details page displays current settings like title and duration alongside an 'Edit' button, which allows you to update the event information before sharing.",
-        "whatTheAgentLoses": "The user loses the ability to personally review and refine the event's title, duration, and location to ensure they perfectly match their intentions."
+        "whatTheAgentLoses": "The user loses the ability to personally review and refine the event's title, duration, and location to ensure they perfectly match their intentions.",
+        "speak": "never",
+        "check": "Does the poll page show an edit control?",
+        "say_example": "Opened the poll's edit view to make the change."
        }
       ]
      },
@@ -2012,7 +2122,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The edit page initially showed only a single 2:45 PM slot, making it necessary to add more options to create a functional poll.",
-        "whatTheAgentLoses": "You lose the ability to strategically select which specific backup times to offer based on your own unstated schedule preferences."
+        "whatTheAgentLoses": "You lose the ability to strategically select which specific backup times to offer based on your own unstated schedule preferences.",
+        "speak": "gate",
+        "check": "Which times does the poll currently offer, and which open calendar times could be added?",
+        "say_example": "The poll only offers <one time>, which is why nobody can agree. I found <3> more open slots on your calendar: <times>. Add them? Voters see them the moment I save."
        }
       ]
      },
@@ -2026,7 +2139,10 @@
         "moment": "On demand",
         "moneyMoving": false,
         "why": "The popup explicitly states that upgrading to a Google One Premium plan is required to offer different types of appointments.",
-        "whatTheAgentLoses": "An agent might get stuck trying to bypass the paywall or inappropriately agree to a paid upgrade instead of working within the basic account's limits."
+        "whatTheAgentLoses": "An agent might get stuck trying to bypass the paywall or inappropriately agree to a paid upgrade instead of working within the basic account's limits.",
+        "speak": "on-event",
+        "check": "Does the page say a paid plan is required for a second schedule?",
+        "say_example": "Google won't allow a second schedule without a paid plan. I can reuse the existing one, or stop here - which?"
        }
       ]
      },
@@ -2040,7 +2156,10 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen requires choosing whether to delete availability for just this week, all weeks, or the entire schedule permanently.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to keep future recurring slots or wipe your schedule completely."
+        "whatTheAgentLoses": "You lose the ability to decide whether to keep future recurring slots or wipe your schedule completely.",
+        "speak": "gate",
+        "check": "Which delete scopes does the dialog offer - this week, all weeks, or the whole schedule?",
+        "say_example": "Deleting can mean just this week, every week, or the whole schedule for good. Which one? The last one can't be undone."
        }
       ]
      },
@@ -2054,15 +2173,21 @@
         "moment": "Now",
         "moneyMoving": false,
         "why": "The dashboard offers both personal and shared booking pages, with the shared option being necessary for coordinating multiple staff members and services.",
-        "whatTheAgentLoses": "The user loses the opportunity to determine the scale of the booking operation and whether it requires a shared page for multiple staff."
+        "whatTheAgentLoses": "The user loses the opportunity to determine the scale of the booking operation and whether it requires a shared page for multiple staff.",
+        "speak": "never",
+        "check": "Which page types does the dashboard offer, and which is selected?",
+        "say_example": "Stayed with your personal page - nothing you asked needs a team one."
        },
        {
-        "question": "Which settings should you configure for this shared booking page?",
+        "question": "Do the Staff and Services set on this shared booking page match who and what should actually be bookable?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The left-hand navigation menu contains critical setup options like 'Staff' and 'Services' that determine how the booking page operates.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct staff availability and service details are presented to your invitees."
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct staff availability and service details are presented to your invitees.",
+        "speak": "never",
+        "check": "Which setup sections does the page's menu list?",
+        "say_example": "Walked the shared page's setup list and left it for when you actually want one."
        }
       ]
      }

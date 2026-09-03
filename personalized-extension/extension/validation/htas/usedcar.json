@@ -1,0 +1,2029 @@
+{
+ "task": "research and price a used car as a buyer: set the search filters that matter (make/model, year range, budget, mileage, drivetrain), browse the matching listings, open a specific listing and check its history and price rating, and get a price estimate or value for a specific vehicle; complete when a specific car's listing with its price evaluation (e.g. good/fair deal rating or KBB value) is on screen. Surface pinned: a used-car marketplace or pricing site (KBB, CarGurus, Carvana, AutoTrader, Edmunds). Variants: car-dealer/dealership-side content, car-flipping or reselling business content, car review vlogs with driving footage, and mechanic-inspection videos do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Research and price a used car",
+  "note": "1 on every site and tool the session opens - most open several. 2 then 3 on a marketplace, with 3.5 sending the search back into 2.10 when the list is too long, too short or wrongly ordered. 4 on an opened listing, 4.9 where a history link exists. 5 where a value is wanted - fed from 4.8 when the car is a listing, from memory when it is the user's own car. 6 is the loop most keepers run: it re-runs 2 to 4 on the next site or 5 on the next tool and carries the numbers between them. 7 after any 4 or 5, and again after 6. 8 in three keepers only. The task as asked ends at 7.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the car site",
+    "note": "1.1 then 1.2 on every site; 1.3 whenever a prompt appears, which is at any point in the task; 1.4 when the site has a country edition. 1.5 is never done on camera.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the site",
+      "questions": [
+       {
+        "question": "Which of the car sites listed on the results page will the search use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen lists four specific URLs, highlighting that different platforms offer distinct advantages like better pricing deals or free vehicle history reports.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose their preferred platform based on their personal priority between finding the best price deals or securing free vehicle history reports.",
+        "speak": "always",
+        "check": "Which car sites does the results page list, and which of them are marketplaces or pricing guides?",
+        "say_example": "Got it. Pricing a <2014 Mazda3> under <13,000> near <94025>. I'll check <CarGurus> and <Autotrader> for listings, and <KBB> for what it's worth."
+       },
+       {
+        "question": "Is the site that opened the official appraisal site, and not a sponsored ad or lookalike from the search results?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first organic search result points to the official www.canadianblackbook.com website needed to evaluate the car's price.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent selected the authentic appraisal website instead of a misleading ad.",
+        "speak": "on-event",
+        "check": "Is the result that was opened marked Ad or Sponsored, and does its address match the site's own domain?",
+        "say_example": "The first result is an ad for a lookalike. The real <Canadian Black Book> is the second one, so I'm using that."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Choose the entry path",
+      "questions": [
+       {
+        "question": "Which entry paths does the homepage offer, and which one leads to listings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage presents distinct paths to either find a used car or get a CARFAX report, determining how your new search begins.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to browse new listings or pull a report for a specific car you already have in mind.",
+        "speak": "never",
+        "check": "Which paths does the homepage offer - find a used car, or get a history report?",
+        "say_example": "Went in through <Find a used car>"
+       },
+       {
+        "question": "Is the new/used control set to used?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown defaults to new cars, so you must explicitly select the used option to ensure you are pricing the correct type of vehicle.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to consider certified pre-owned alternatives instead of standard used cars.",
+        "speak": "if-wrong",
+        "check": "Which condition is selected in the new/used control - New, Used, or Value my car?",
+        "say_example": "The form came up set to new cars. You want used, so I'm switching it before I search."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Dismiss the prompts",
+      "questions": [
+       {
+        "question": "Is there a warning about opening many tabs at once?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal warns that proceeding will open 31 separate tabs for Craigslist results and requires pop-ups to be allowed.",
+        "whatTheAgentLoses": "You lose the chance to decide if opening 31 separate tabs will overwhelm your browser or if you prefer to keep the warning active.",
+        "speak": "never",
+        "check": "Does a warning say how many tabs will open, and is there a 'don't show again' box?",
+        "say_example": "Opened 31 Craigslist tabs, left the warning on"
+       },
+       {
+        "question": "Is an ad banner covering part of the results?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Reviewing the 13 results for the BMW M8 Gran Coupe ensures they match your search, while closing the ad banner at the bottom reveals more of the page.",
+        "whatTheAgentLoses": "You lose the chance to notice that the first result is actually a new car rather than a used one and to manually dismiss the ad banner blocking the listings.",
+        "speak": "never",
+        "check": "Is there a banner or ad overlay covering the results, with a close control?",
+        "say_example": "Closed the ad banner over the results"
+       },
+       {
+        "question": "Does the site say its cash offers are suspended or not guaranteed right now?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a COVID-19 warning that Instant Cash Offer certificates are currently invalid for redemption and their stated values cannot be guaranteed.",
+        "whatTheAgentLoses": "The user loses the ability to decide if they want to spend time entering car details for a cash offer that cannot actually be redeemed.",
+        "speak": "on-event",
+        "check": "Does the page show a notice that cash offers are suspended, invalid, or not guaranteed?",
+        "say_example": "The site says its cash offers can't be redeemed right now. The number it gives is only a guide."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Confirm the country edition",
+      "questions": [
+       {
+        "question": "Is this the right country's edition of the site for where you are?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed the US version of Kelley Blue Book, which would not provide accurate pricing for a Canadian buyer.",
+        "whatTheAgentLoses": "The user loses the assurance that the pricing data applies to their local market.",
+        "speak": "if-wrong",
+        "check": "Which country edition is the page, going by the domain, the currency, or a flag, and does it match the location in the search?",
+        "say_example": "This is the <US> Kelley Blue Book. You're in <Canada>, so these prices would be wrong. I'm going to the <Canadian> site."
+       },
+       {
+        "question": "Does this page offer a price tool for regular buyers, or only for dealers?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The kbb.ca homepage displayed a message indicating it currently only offers B2B solutions and lacks a consumer-facing tool.",
+        "whatTheAgentLoses": "The user loses the ability to realize the site is non-functional for consumers and pivot to a working alternative.",
+        "speak": "on-event",
+        "check": "Does the page say the tool is for dealers or businesses only, or that no consumer valuation is offered?",
+        "say_example": "<KBB Canada> only serves dealers now. There's no price tool for you here. I'll try <Canadian Black Book> instead."
+       },
+       {
+        "question": "Do you want to restrict the search to US results only?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The LOCALIZATION section features a 'US Results Only' checkbox that determines whether cars from neighboring countries like Canada or Mexico are included.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether you are willing to cross international borders to purchase the right vehicle.",
+        "speak": "never",
+        "check": "Is the 'US results only' box checked?",
+        "say_example": "Kept results to <US> only"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Sign in or register",
+      "questions": [
+       {
+        "question": "Should you sign in to Autotrader with your Google account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a Google sign-in popup, requiring a choice between linking your personal account or dismissing it to browse anonymously.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to protect your privacy or share your personal Google account details with the platform.",
+        "speak": "on-event",
+        "check": "Is a Google or social sign-in popup covering the page, and is there a way to close it?",
+        "say_example": "It wants you to sign in with Google. I'm closing that and browsing without an account."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Set the search",
+    "note": "2.1 and 2.2 first on every site. 2.3 to 2.9 in any order, each one taken or deliberately left open - the AutoTempest keepers leave mileage and price open on purpose, and P-sp never sets condition. 2.10 whenever the list is too long or too short; it is the return from 3.5. Several keepers arrive with all of this already applied (e3a9 on four sites) and only 2.7 shows on camera.",
+    "questions": [
+     {
+      "question": "What year, make, model, price and location is the search set to?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays the completed search form alongside a 'Search' button, making this the final moment to verify your criteria before executing the query.",
+      "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally double-check your specific make, model, budget, and mileage preferences before generating the results.",
+      "speak": "never",
+      "check": "What year, make, model, price, radius and location does the search form show before submit?",
+      "say_example": "Searched <Autotrader> for a <2014 or newer Mazda3>, under <13,000>, within <50> miles of <94025>"
+     },
+     {
+      "question": "Which filters still hold a leftover or default value that doesn't match the search?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The form displays numerous default filters like a 300-mile radius, a max year of 2020, and specific keywords, which must be reviewed to ensure they match your specific car search criteria.",
+      "whatTheAgentLoses": "Delegating this step means you lose the ability to fine-tune specific parameters like trim levels, aftermarket keyword exclusions, and search radius to perfectly match your personal preferences.",
+      "speak": "if-wrong",
+      "check": "Which filters in the form still show a default or leftover value that differs from the search asked for? Check radius, max year, keywords and trim.",
+      "say_example": "The form still had a <300 mile> radius and a <max year of 2020> from before. I've set them to yours."
+     },
+     {
+      "question": "Is the price shown as a cash total or as a monthly payment?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen provides a 'Price type' toggle between 'Cash' and 'Finance', which changes whether you see the full upfront cost or a monthly payment breakdown.",
+      "whatTheAgentLoses": "You lose the ability to align the displayed costs with your actual financial situation and intended purchasing strategy.",
+      "speak": "never",
+      "check": "Is the price display set to Cash or Finance?",
+      "say_example": "Set the price display to cash totals"
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Choose the make and model",
+      "questions": [
+       {
+        "question": "Which specific make and model do you want to search for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search fields are currently populated with Porsche 911, so you need to specify the exact vehicle you are interested in researching.",
+        "whatTheAgentLoses": "You lose the ability to dictate the exact make and model of the car being researched.",
+        "speak": "if-wrong",
+        "check": "What year, make and model are in the search fields right now, and do they match the car asked for?",
+        "say_example": "The search box came prefilled with <Porsche 911>. You asked for <Golf GTI>, so I'm replacing it."
+       },
+       {
+        "question": "Do you want to search across all models for this make, or select a specific one?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu offers an 'All Models' option alongside specific models like the Cherokee or Wrangler, which determines how broad your search results will be.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to cast a wide net across a brand's entire lineup or restrict the search to a specific model.",
+        "speak": "never",
+        "check": "Is the model dropdown set to All Models or to a specific one?",
+        "say_example": "Set model to <Wrangler>, not all Jeeps"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Set the location and radius",
+      "questions": [
+       {
+        "question": "Should the search stay near your ZIP code, or go nationwide?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a specific ZIP code and an option to update it, which determines whether you see only local cars or a wider range of national prices.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether local convenience or a broader understanding of national market value is more important for your purchase.",
+        "speak": "never",
+        "check": "What ZIP and radius does the search show?",
+        "say_example": "Searched within <50> miles of <94025>"
+       },
+       {
+        "question": "What zip code should you use for your search area?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search form prompts for a zip code, which determines the geographic area of the vehicle listings you will see.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact geographic area you are willing to travel to for purchasing the vehicle.",
+        "speak": "gate",
+        "check": "Is the ZIP or postcode field empty, or does the page show an error asking for one?",
+        "say_example": "This site needs a ZIP code before it'll search. You didn't give me one. What's yours?"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Set the year range",
+      "questions": [
+       {
+        "question": "What model year range should you filter by?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides MIN YEAR and MAX YEAR input fields to narrow down the vehicle search to specific production years.",
+        "whatTheAgentLoses": "Delegating this means the agent might restrict the search to years that exclude desirable older models or include newer versions you do not want.",
+        "speak": "never",
+        "check": "What min and max year are set?",
+        "say_example": "Set years <2014> to <2016>"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Set the price cap",
+      "questions": [
+       {
+        "question": "What is your maximum budget for this car?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the price slider filters out unaffordable options and narrows the thousands of initial listings down to a manageable, relevant set.",
+        "whatTheAgentLoses": "You lose the ability to define exactly what an affordable price means for your specific financial situation.",
+        "speak": "gate",
+        "check": "What is the maximum price set in the filter, and what is the lowest price among the results?",
+        "say_example": "How much do you want to spend? I'll cap the search there."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Set the mileage cap",
+      "questions": [
+       {
+        "question": "Do you want to set a maximum mileage for the car?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays 'MIN MILEAGE' and 'MAX MILEAGE' fields to filter the search results.",
+        "whatTheAgentLoses": "You lose the ability to define your personal tolerance for high-mileage vehicles.",
+        "speak": "never",
+        "check": "What max mileage is set?",
+        "say_example": "Capped mileage at <100,000>"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Set the drivetrain and transmission",
+      "questions": [
+       {
+        "question": "Are all the listings that came back hybrids, or did gas versions get through?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the 2.5L engine and front-wheel drive filters guarantees that the 138 matching listings are exclusively hybrids rather than gas-powered versions.",
+        "whatTheAgentLoses": "You lose the ability to apply your specific knowledge of engine and drivetrain combinations to isolate the exact vehicle variant you want to buy.",
+        "speak": "if-wrong",
+        "check": "Do the titles of the listings returned all say hybrid, or do some say the gas engine?",
+        "say_example": "The engine filter is letting <gas> versions through. <Three> of these aren't hybrids. I'm tightening it."
+       },
+       {
+        "question": "Do you need a specific drivetrain, such as AWD or FWD?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left sidebar offers drivetrain filters like AWD, FWD, and RWD, which determine the car's handling and suitability for different weather conditions.",
+        "whatTheAgentLoses": "Letting an agent choose the drivetrain means you might end up with a vehicle that lacks the traction needed for your local climate or driving habits.",
+        "speak": "never",
+        "check": "Which drivetrain boxes are checked?",
+        "say_example": "Set drivetrain to <AWD>"
+       },
+       {
+        "question": "Should the search filter by transmission or title status?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search filters include options for transmission type like manual or auto, and title status like clean or salvage, which significantly impact the driving experience and vehicle reliability.",
+        "whatTheAgentLoses": "Delegating this means the agent might include cars with automatic transmissions or risky branded titles that do not fit your driving preferences or risk tolerance.",
+        "speak": "never",
+        "check": "Which transmission and title status options are selected?",
+        "say_example": "Set title to clean, left transmission at any"
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Narrow by trim or keyword",
+      "questions": [
+       {
+        "question": "Should the search also filter by colour or fuel type?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a sidebar with options like color, fuel type, and engine, which allow you to further narrow down the search results.",
+        "whatTheAgentLoses": "Delegating this means the agent might arbitrarily restrict the search based on features you don't care about, potentially hiding good deals.",
+        "speak": "never",
+        "check": "Which secondary filters are applied - colour, fuel, engine?",
+        "say_example": "Left the colour and fuel filters off"
+       },
+       {
+        "question": "Should you specify a trim level for this search?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a specific field and tooltip for filtering by trim, but leaving it blank can prevent compatibility issues with aggregated search engines that handle trim poorly.",
+        "whatTheAgentLoses": "You lose the opportunity to apply your knowledge that overly specific trim filters can break results on certain aggregated search engines.",
+        "speak": "never",
+        "check": "Is the trim field filled or blank?",
+        "say_example": "Left trim blank, filtering by keyword instead"
+       },
+       {
+        "question": "Which features or words should the search exclude, so unwanted variants stay out of the results?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The advanced keyword features tooltip explains that placing a dash before a word excludes it, which is essential for filtering out unwanted options.",
+        "whatTheAgentLoses": "You lose the ability to explicitly filter out specific unwanted features using advanced keyword operators.",
+        "speak": "never",
+        "check": "What excluded words does the keyword field show?",
+        "say_example": "Excluded <salvage> and <rebuilt> from the keyword search"
+       },
+       {
+        "question": "Are any of the filters you need greyed out now?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Selecting certain makes or trims can dynamically disable other filters if that combination doesn't exist, which is shown visually by greying out the option.",
+        "whatTheAgentLoses": "The user loses the understanding that their specific combination of desired features is impossible, leading to confusion when the agent cannot apply the requested filter.",
+        "speak": "on-event",
+        "check": "Which filter options are greyed out or disabled after the current selections?",
+        "say_example": "The <hybrid> option is greyed out. This site has no hybrid <Mavericks> in that year, so the filter can't be set here."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Choose the seller type",
+      "questions": [
+       {
+        "question": "Do you want to filter the search to show only private sellers, only dealers, or both?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen features a 'FOR SALE BY' toggle that lets you restrict the search results to specific types of sellers.",
+        "whatTheAgentLoses": "An agent might default to showing all sellers, causing you to sift through dealership listings when you specifically prefer the inventory and negotiation style of private sellers.",
+        "speak": "never",
+        "check": "Which seller type is selected - private, dealer, or both?",
+        "say_example": "Kept both dealers and private sellers"
+       }
+      ]
+     },
+     {
+      "id": "2.9",
+      "label": "Set the condition and title",
+      "questions": [
+       {
+        "question": "Should listings with no price shown be left out?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed an option to include 74 listings without available pricing, which could waste time if those vehicles end up exceeding your budget.",
+        "whatTheAgentLoses": "You lose the ability to decide whether the potential hassle of contacting sellers for unpriced cars is worth your time.",
+        "speak": "never",
+        "check": "Is the option to include listings without a price on or off, and how many are there?",
+        "say_example": "Left out <74> listings with no price shown"
+       },
+       {
+        "question": "Should the search be limited to two-door cars to keep out the SUVs?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting '2-3' from the DOORS dropdown is a quick workaround to exclude larger vehicles and focus the search results strictly on coupes.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal heuristics, like using door counts instead of body style filters, to weed out unwanted vehicle types.",
+        "speak": "never",
+        "check": "What door count is selected?",
+        "say_example": "Set doors to 2 or 3 to keep out the SUVs"
+       }
+      ]
+     },
+     {
+      "id": "2.10",
+      "label": "Widen or tighten the search",
+      "questions": [
+       {
+        "question": "Should the results be narrowed by make and price first, or browsed as they are?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays 455 available coupes alongside unselected filters for make and price, presenting a choice between refining the search or viewing the current matches.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to serendipitously browse a wide variety of cars or strictly limit the search to specific makes and prices.",
+        "speak": "never",
+        "check": "How many results are showing, and which filters are still unset?",
+        "say_example": "Narrowed <455> coupes down by make and price"
+       },
+       {
+        "question": "Which specific models do you want to leave checked in the graph legend?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The graph legend displays multiple Jeep models with checkboxes, allowing you to isolate the exact vehicle you are researching.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which models are included in the visual price comparison.",
+        "speak": "if-wrong",
+        "check": "Which models are checked in the graph legend?",
+        "say_example": "The graph still has <Cherokee> and <Wrangler> both checked, so the prices are mixed. I'm unchecking <Cherokee>."
+       },
+       {
+        "question": "Should you search the entire post instead of just the title?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Expanding the search from 'title only' to 'entire post' might reveal more than the initial 15 results if sellers omitted key details from their titles.",
+        "whatTheAgentLoses": "You lose the chance to uncover hidden deals from poorly titled listings that an automated search might miss.",
+        "speak": "never",
+        "check": "Is the search set to title only or entire post?",
+        "say_example": "Searched titles only, then whole posts"
+       },
+       {
+        "question": "Did the site quietly widen the radius or loosen the filters to show more results?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Car marketplaces often silently broaden your search parameters when exact matches are low, indicating this only through a small, easily overlooked UI banner.",
+        "whatTheAgentLoses": "The user wastes time reviewing cars that are too far away or outside their strict budget because the agent failed to notice the site's silent filter override.",
+        "speak": "on-event",
+        "check": "Is there a banner saying the search was expanded, the radius widened, or filters relaxed to show more results?",
+        "say_example": "This site quietly widened the search to <500 miles> because there were few matches. Some of these cars aren't near you."
+       },
+       {
+        "question": "Do you want to filter out older listings from the scatter plot?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The scatter plot displays recent posts as blue dots and older posts as gray dots, and the checkbox controls whether those older listings are actively included in your view.",
+        "whatTheAgentLoses": "You lose the ability to decide whether older, potentially stale listings should be included in your visual evaluation of the market.",
+        "speak": "never",
+        "check": "Is the box for older listings checked?",
+        "say_example": "Hid older listings from the price graph"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Survey the results",
+    "note": "3.1 and 3.2 first where the site offers them - the aggregators have no sort. 3.3 on every list with ads. 3.4 until a card is worth opening, then 3.6, or 3.5 back to 2.10 when nothing fits. 3.7 after a listing disappoints, back to 3.4.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Sort the results",
+      "questions": [
+       {
+        "question": "How do you want to sort the matching listings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays 138 results for a Ford Maverick, and selecting a sort order like 'Highest price first' determines which end of the market you evaluate first.",
+        "whatTheAgentLoses": "You lose the ability to dictate the specific market comparison strategy, such as finding the most expensive vehicles to establish a price ceiling.",
+        "speak": "never",
+        "check": "What sort order is selected?",
+        "say_example": "Sorted by price, low to high"
+       },
+       {
+        "question": "Are the search results actually sorted in the order you selected?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Even though the sort dropdown says 'New to Old', the listings show older 2011 and 2013 models mixed randomly among newer 2014 models.",
+        "whatTheAgentLoses": "You lose the ability to efficiently review the newest inventory first if the agent blindly trusts a broken sorting filter.",
+        "speak": "if-wrong",
+        "check": "Does the order of the listings match the sort order selected - are years or prices out of sequence?",
+        "say_example": "It says sorted newest first, but a <2011> is sitting above a <2014>. The sort isn't working, so I'm checking each year by hand."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Read the result count",
+      "questions": [
+       {
+        "question": "Did the result count drop by the number the price filter said it would remove?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming that the total listings drop from 560 to 486 after removing the 74 unpriced cars proves the filter was applied accurately.",
+        "whatTheAgentLoses": "The user loses the transparency of seeing the math check out, which builds trust that the search results actually match their exact criteria.",
+        "speak": "if-wrong",
+        "check": "What was the result count before and after the filter, and does the difference match the number the filter said it would remove?",
+        "say_example": "The count went from <560> to <500>, but it said it was removing <74>. The filter didn't fully apply."
+       },
+       {
+        "question": "Does the main page say no results while the regional tabs still show matches?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The main Craigslist section showed 'No Results Found', but exploring the regional tabs revealed five matching listings that would have otherwise been missed.",
+        "whatTheAgentLoses": "You lose access to viable local listings if the agent fails to investigate past a misleading 'No Results Found' message.",
+        "speak": "on-event",
+        "check": "Does the main results area say no results, while regional or other tabs show a count?",
+        "say_example": "The main page says nothing found. But the <regional> tabs have <5> matching cars. I'm opening those."
+       },
+       {
+        "question": "Does the graph offer a bigger set of listings for this model?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial graph only displayed 217 data points, and expanding it reveals over a thousand listings for a more accurate market overview.",
+        "whatTheAgentLoses": "The user loses the opportunity to determine if the initial sample size is adequate or if a larger dataset is necessary for their research.",
+        "speak": "never",
+        "check": "Does the graph offer a larger dataset, and how many points does it show?",
+        "say_example": "Expanded the graph from <217> to <1,100> listings"
+       },
+       {
+        "question": "Does the count on the page match the count the agent is working from?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking that the legend displays exactly 217 points for the Wrangler confirms the search results align with the stated inventory.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent is analyzing the correct pool of available vehicles.",
+        "speak": "if-wrong",
+        "check": "What count does the results header or legend show?",
+        "say_example": "The page shows <217> listings. I had <230>. I'm going by the page."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Skip the sponsored rows",
+      "questions": [
+       {
+        "question": "Are these search results car listings and pricing guides, or mostly videos and ads?",
+        "cluster": "refine",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a list dominated by generic ads and YouTube videos rather than direct links to trusted car marketplaces or pricing tools.",
+        "whatTheAgentLoses": "You lose the ability to bypass unhelpful, ad-heavy search results and navigate directly to a reliable source for used car data.",
+        "speak": "on-event",
+        "check": "Are the search results marketplace or pricing-guide links, or mostly videos and ads?",
+        "say_example": "The search results are mostly videos and ads. I'm going straight to <CarGurus>."
+       },
+       {
+        "question": "Which results are marked sponsored, featured, or new rather than matching used cars?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The results page places sponsored ads for new cars at the top, requiring you to scroll down to find the actual used and certified listings with their respective mileages and prices.",
+        "whatTheAgentLoses": "You lose the opportunity to personally scan the results, filter out irrelevant ads, and weigh the trade-offs between the prices and mileages of the available cars.",
+        "speak": "on-event",
+        "check": "Which result cards are labelled Sponsored, Featured, or New, and do they match the used-car filters?",
+        "say_example": "The top <two> are sponsored, and one is a new car. I'm skipping to the real used ones below."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Scan the cards",
+      "questions": [
+       {
+        "question": "Do two of the cheapest listings have the same price but different trims or mileage?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Spotting that a higher-trim XLT and a lower-trim XL are listed for the exact same price of $32,990 helps you identify the better overall value.",
+        "whatTheAgentLoses": "You lose the opportunity to spot pricing anomalies across different trims that might indicate a hidden deal or a red flag.",
+        "speak": "on-event",
+        "check": "Do two listings show the same price with different trims or mileages?",
+        "say_example": "Two at the same <32,990>. One is the base <XL>, one the <XLT>. The <XLT> is more car for the money."
+       },
+       {
+        "question": "What price range do the matching listings show?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Scanning the prices of the other [address]-Benz listings, which ranged from $14,000 to $16,000, helps establish a baseline market value before selecting a specific car.",
+        "whatTheAgentLoses": "You lose the intuitive grasp of the broader market range that comes from quickly scanning multiple comparable listings.",
+        "speak": "always",
+        "check": "What are the lowest and highest prices among the matching listings, and what model years sit at each end?",
+        "say_example": "<Mazda3>s here run <14,000> to <16,000>. Around <16,000> you're looking at <2014>s."
+       },
+       {
+        "question": "Which of the matching listings should be investigated further?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several [address] GTI Autobahn options with varying prices, mileages, and conditions like 'Certified' or 'Reduced Price', requiring you to weigh these trade-offs.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally decide whether a lower price is worth slightly higher mileage or if a certified status justifies a premium.",
+        "speak": "gate",
+        "check": "For the listings that match, what price, mileage, year and badges (certified, reduced) does each card show?",
+        "say_example": "Two that fit. The <blue one>: <12,795>, <60,000> miles, certified. The <grey one>: <11,900>, <90,000> miles, price just cut. Which one should I dig into?"
+       },
+       {
+        "question": "How many listings sit below the first screen?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a list of matching Mercedes-Benz vehicles, requiring a choice between browsing more results or navigating away to a store location page.",
+        "whatTheAgentLoses": "The user loses the chance to personally review the extended list of search results to find a vehicle that catches their eye.",
+        "speak": "never",
+        "check": "How many listings are there beyond the first screen?",
+        "say_example": "Scrolled all <38> results, not just the first screen"
+       },
+       {
+        "question": "Is any listing photo stamped Pending, Sold, or Reserved?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Dealerships frequently leave sold cars in search results to drive traffic, using only a visual text overlay on the photo to indicate the car is no longer available.",
+        "whatTheAgentLoses": "The user gets their hopes up and wastes time evaluating a car that is already sold because the agent only scraped the text metadata and missed the visual watermark.",
+        "speak": "on-event",
+        "check": "Does a listing's thumbnail or page carry a Pending, Sale Pending, Sold, Reserved, or In Transit mark?",
+        "say_example": "The <12,500> one is marked Sale Pending on its photo. It's likely gone. I'm setting it aside."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Decide the list is wrong",
+      "questions": [
+       {
+        "question": "Did the last filter cut the results down to a handful?",
+        "cluster": "refine",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Applying the specific price, year, mileage, and drivetrain filters drastically narrowed the Autotrader results from 87 to 2, severely limiting the available choices.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide which specific filter to relax in order to see a wider variety of acceptable vehicles.",
+        "speak": "on-event",
+        "check": "How many results were there before the last filter, and how many after?",
+        "say_example": "Your filters leave <2> cars out of <87>. I'll show you both. I can loosen <mileage> if you want more choice."
+       },
+       {
+        "question": "Is the cheapest result still above the budget?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The results showed vehicles ranging from $11,888 up to a $78,645 new model, requiring you to evaluate if the site successfully found the specific sub-$13,000 car you wanted.",
+        "whatTheAgentLoses": "If an agent settles for these expensive listings instead of realizing the search failed, you lose the chance to pivot to a different site that actually has the affordable car you need.",
+        "speak": "on-event",
+        "check": "What is the lowest price on the results, and is it above the price cap that was set?",
+        "say_example": "Nothing here under <13,000>. The cheapest is <13,495>. I'll try the next site."
+       },
+       {
+        "question": "Did this site return any matching listings?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displayed '0 Results' and a message about inventory shortages, indicating you must change your search criteria or switch platforms to find a car.",
+        "whatTheAgentLoses": "You lose the opportunity to decide how to pivot your search strategy when a specific marketplace yields zero results.",
+        "speak": "on-event",
+        "check": "Does the page show 0 results, No Results Found, or an inventory-shortage message?",
+        "say_example": "No used <2019 Siennas> within <50> miles on this site. Only new ones. I'm widening to <100> miles."
+       },
+       {
+        "question": "Do the result cards match the year, model, trim and condition the filters were set to?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Even though the year filter was set strictly to 2014, the results included a 2013 model, indicating the platform's search function is unreliable and requires manual verification of each listing.",
+        "whatTheAgentLoses": "The user wastes time reviewing cars that fall outside their strict age requirements because the agent blindly trusted a broken filter.",
+        "speak": "if-wrong",
+        "check": "Do the year, model, trim and condition on each result card match the filters that were set?",
+        "say_example": "The filter says <2014> only. A <2013> slipped in anyway. This site ignores its own filter. I'll read each year myself."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Open a listing",
+      "questions": [
+       {
+        "question": "Do the points on the graph open real listings?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Clicking a dot on the graph opens a real Craigslist listing for a [address] Wrangler, confirming that the visual data represents actual cars for sale.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the credibility of the pricing graph by inspecting the actual listings behind the data points.",
+        "speak": "never",
+        "check": "Does clicking a point on the graph open a listing?",
+        "say_example": "Checked that the graph points open real Craigslist listings"
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Reject the listing",
+      "questions": [
+       {
+        "question": "Is this cheap price explained by very high mileage?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an attractive $14,391 price and a 'GOOD DEAL' badge, but the 100,128-mile odometer reading might exceed your personal limit for a used car.",
+        "whatTheAgentLoses": "You lose the ability to weigh your personal tolerance for high mileage against an algorithm's 'good deal' rating.",
+        "speak": "on-event",
+        "check": "What does the odometer say on the listing, and what deal badge does it carry?",
+        "say_example": "This one's <14,391> with a Good Deal badge. But it has <100,128> miles. That's why it's cheap. I'm setting it aside unless you say otherwise."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Vet the listing",
+    "note": "4.1 and 4.2 on every listing opened. 4.3 to 4.7 where the user bothers - photos most often, specs when a drivetrain or trim is in doubt, price history where the site allows it. 4.8 when a valuation tool comes next. 4.9 where a history link exists. 4.10 where the listing is worth keeping. 7 picks up from here.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Read the listing panel",
+      "questions": [
+       {
+        "question": "Does the price on the opened listing match the price shown in the preview?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming that the $23,999 tooltip price matches the opened Craigslist page ensures you are evaluating the exact vehicle you intended to view.",
+        "whatTheAgentLoses": "If the agent fails to verify price consistency across pages, you might base your purchasing decision on inaccurate or misleading pricing information.",
+        "speak": "if-wrong",
+        "check": "Does the price on the opened listing match the price shown on the card or tooltip that led to it?",
+        "say_example": "The card said <23,999>. The listing itself says <24,999>. I'm going by the listing."
+       },
+       {
+        "question": "Is the advertised mileage realistic for the vehicle's age, or could it be a typo?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The listing claims a 1999 vehicle has only 2,500 miles, which is highly suspicious and likely a typo by the seller (e.g., missing a zero) that drastically skews the car's perceived value.",
+        "whatTheAgentLoses": "The agent might overvalue the car based on an impossibly low mileage figure, failing to apply the common sense needed to spot a seller's typo.",
+        "speak": "on-event",
+        "check": "What year and mileage does the listing show, and is the mileage far below what that age would carry?",
+        "say_example": "It says a <1999> with <2,500> miles. That's almost certainly a typo, probably <25,000>. Don't trust the price until it's confirmed."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Read the deal rating",
+      "questions": [
+       {
+        "question": "Does the savings figure equal the value minus the asking price?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the math between the estimated value and the dealer price ensures the advertised savings are accurate and not misleading.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the math behind the advertised deal to ensure the platform isn't misrepresenting the actual savings.",
+        "speak": "if-wrong",
+        "check": "What estimated value, asking price, and savings figure does the listing show, and does value minus price equal the savings?",
+        "say_example": "It claims <2,000> in savings. The value and the price are only <1,200> apart. The savings number is padded."
+       },
+       {
+        "question": "Does the price gauge put this price below, within, or above the fair range?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Pricing tools often use a visual gauge or slider to show exactly where a specific price falls within a broader market range, providing context that a single raw number lacks.",
+        "whatTheAgentLoses": "The user loses the intuitive visual context of whether the asking price is at the very top, middle, or bottom of the acceptable market range.",
+        "speak": "never",
+        "check": "What label does the price gauge show for this price - below, within, or above the fair range?",
+        "say_example": "Read the price gauge as <within fair range>"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Inspect the photos",
+      "questions": [
+       {
+        "question": "Should you swipe through the full image galleries for these listings?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The listings indicated multiple available photos, such as '1 of 40' and '1 of 23', which could reveal important details about the vehicles' condition.",
+        "whatTheAgentLoses": "The user loses the opportunity to visually inspect the vehicle's interior and exterior condition before deciding which listing to pursue.",
+        "speak": "never",
+        "check": "How many photos does the gallery say it has?",
+        "say_example": "Went through all <40> photos"
+       },
+       {
+        "question": "Do the photos show the features the ad claims?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Text descriptions on dealer listings can be inaccurate, so zooming in on the interior photos to look for specific details like a Bose logo confirms the car actually has the options you want.",
+        "whatTheAgentLoses": "An agent relying solely on the text metadata might select a car that lacks the specific premium features you requested.",
+        "speak": "if-wrong",
+        "check": "Do the listing's features list or photos show the specific equipment asked for - <manual shifter>, <Bose>, <sunroof>?",
+        "say_example": "The ad says it has the <Bose> stereo. The photos show a plain speaker grille, no Bose logo. I'm not counting on it."
+       },
+       {
+        "question": "Should you watch the pre-recorded video tour of the vehicle?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The media gallery includes a play button for a video walkaround, which can provide a much better sense of the car's actual condition and scale than static photos.",
+        "whatTheAgentLoses": "You lose the richer visual context of a video tour, which might reveal cosmetic flaws or features that are easily hidden in carefully framed photos.",
+        "speak": "never",
+        "check": "Does the gallery include a video tour?",
+        "say_example": "Skipped the listing's video tour, can't watch it"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Read the description and features",
+      "questions": [
+       {
+        "question": "Does the fine print say the price only holds with a down payment, financing, or dealer add-ons?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Dealerships frequently list artificially low prices to rank first in search results, but hide stipulations in the description stating the price requires a $2,000 down payment or excludes mandatory reconditioning fees.",
+        "whatTheAgentLoses": "The user ends up pursuing a car that is actually thousands of dollars over their budget once the hidden stipulations are applied.",
+        "speak": "on-event",
+        "check": "Does the description or fine print say the price requires a down payment, financing, or a trade-in, or excludes dealer fees, reconditioning, or add-ons?",
+        "say_example": "The <12,795> price only counts if you put <2,000> down and finance with them. The cash price is higher."
+       },
+       {
+        "question": "For a private seller, does the ad say they hold a clean title in their own name?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Private sellers sometimes engage in 'title jumping' by selling a car they never legally registered, which can trap the buyer in a DMV nightmare when trying to transfer ownership.",
+        "whatTheAgentLoses": "The user risks handing over cash for a vehicle they cannot legally register or insure because the agent failed to verify the legal legitimacy of the seller's title status.",
+        "speak": "on-event",
+        "check": "For a private seller, does the description say the title is in hand, clean, and in the seller's name?",
+        "say_example": "This is a private seller. The ad doesn't say they hold the title. Ask before you go see it, or the transfer can get stuck."
+       },
+       {
+        "question": "Does the listing show a VIN?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The provided description is very brief and missing a VIN, which is necessary to check the vehicle's history and get an accurate price estimate.",
+        "whatTheAgentLoses": "You lose the chance to decide whether it is worth your time to contact the seller for the missing VIN or if you should just move on to a more detailed listing.",
+        "speak": "on-event",
+        "check": "Does the listing show a VIN anywhere - description, details panel, or photos?",
+        "say_example": "No VIN on this listing. I can't pull its history or price it exactly."
+       },
+       {
+        "question": "Does the description say the car is modified, a race car, rebuilt, or salvage?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed the vehicle is a modified '1999 spec Boxster race car', which drastically changes its everyday usability and value.",
+        "whatTheAgentLoses": "You lose the ability to filter out highly specialized or modified vehicles that may not be practical for your intended use.",
+        "speak": "on-event",
+        "check": "Does the description say modified, race, track, rebuilt, salvage, or not street legal?",
+        "say_example": "The description calls it a <race car> with <track modifications>. That's not a daily <Boxster>, and the guides won't price it."
+       },
+       {
+        "question": "Is there a written description below the photos?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The listing contains a text description below the image gallery that may reveal crucial details about the [address] 240sx's history or modifications that are not visible in the photos.",
+        "whatTheAgentLoses": "You lose the opportunity to catch hidden red flags or important mechanical details that the seller disclosed in the written description.",
+        "speak": "never",
+        "check": "Is there a text description below the photos?",
+        "say_example": "Read the full description, not just the photos"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Check the specs",
+      "questions": [
+       {
+        "question": "How do the two cars compare on boot space and weight?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Practicality' tab showed a significant difference in boot size (964 vs 1436 litres) and kerb weight, which directly impacts how much gear you can haul.",
+        "whatTheAgentLoses": "You lose the ability to personally judge whether the smaller cargo space is an acceptable trade-off for your specific daily lifestyle and hauling requirements.",
+        "speak": "never",
+        "check": "What boot size and kerb weight does the comparison show for each car?",
+        "say_example": "Compared boot space, <964> against <1,436> litres"
+       },
+       {
+        "question": "Should the specs and running-costs sections be opened?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays a passed basic history check and a highly-rated dealer alongside expandable sections for specifications and running costs, requiring a choice on how deep to investigate.",
+        "whatTheAgentLoses": "Delegating this means you might miss out on crucial details about the car's long-term running costs or specific features if the agent decides the basic summary is sufficient.",
+        "speak": "never",
+        "check": "Are the specification and running-cost sections expanded?",
+        "say_example": "Opened specs and running costs"
+       },
+       {
+        "question": "Which car you looked at earlier should this one be compared with?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a comparison selection menu featuring previously viewed cars like the Hyundai ix35, requiring you to choose which model to evaluate side-by-side.",
+        "whatTheAgentLoses": "You lose the ability to personally select which specific alternative vehicle serves as the most useful benchmark for your evaluation.",
+        "speak": "never",
+        "check": "Which cars are offered in the compare menu?",
+        "say_example": "Compared against the <Hyundai ix35> you viewed earlier"
+       },
+       {
+        "question": "How do the two cars compare on running costs and warranty?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a detailed comparison of fuel consumption, insurance groups, and warranties, which are crucial for estimating long-term ownership costs.",
+        "whatTheAgentLoses": "The user loses the ability to personally weigh the trade-offs in fuel efficiency and insurance costs between the compared vehicles.",
+        "speak": "never",
+        "check": "What fuel consumption, insurance group, and warranty does the comparison show?",
+        "say_example": "Compared running costs, <45> against <30> mpg, insurance group <12> against <40>"
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Read the price history",
+      "questions": [
+       {
+        "question": "Does the site show a price history for this car?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen indicates that state regulations block the site from showing the price history, which is crucial information for negotiating a fair deal.",
+        "whatTheAgentLoses": "The user loses the strategic decision to consult alternative valuation tools when local regulations block the primary site's price history features.",
+        "speak": "on-event",
+        "check": "Does the page say price history is unavailable or blocked in this state?",
+        "say_example": "This state doesn't let the site show price history, so I can't tell if it's been cut before."
+       },
+       {
+        "question": "How long has this car been sitting, and how much has the price dropped?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing that the car has been sitting for over 140 days with a $3,000 price drop helps you gauge the dealer's motivation to negotiate.",
+        "whatTheAgentLoses": "You lose the opportunity to personally assess the dealer's desperation based on the specific days on market and price drop trends.",
+        "speak": "on-event",
+        "check": "How many days does the listing say it has been on the market, and what price drops does it show?",
+        "say_example": "It's been listed <140> days and the price has come down <3,000>. They'll be keen to move it."
+       },
+       {
+        "question": "Does the stated price drop match the difference between the original and current prices?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the math confirms that the advertised $3,000 price drop correctly reflects the difference between the $15,795 original price and the $12,795 current price.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the dealer's advertised discount is mathematically accurate.",
+        "speak": "if-wrong",
+        "check": "What original price, current price, and price-drop figure does the listing show, and does original minus current equal the drop?",
+        "say_example": "It says the price dropped <3,000>. The old and new prices are only <2,000> apart."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Check the seller",
+      "questions": [
+       {
+        "question": "Where is the dealership located, and what are their operating hours?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed the dealer's physical address in Chantilly, VA, along with their phone number and hours, which is crucial for planning an in-person visit to see the car.",
+        "whatTheAgentLoses": "The user loses the ability to personally gauge if the dealership's location is within a reasonable driving distance for a test drive and purchase.",
+        "speak": "never",
+        "check": "What address, phone, and hours does the dealer panel show?",
+        "say_example": "Noted the dealer is in <Chantilly, VA>, open till <7>"
+       },
+       {
+        "question": "What rating and how many reviews does this dealer have here?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "A great price on a used car is often a trap if the selling dealer has terrible reviews for hiding damage, bait-and-switch tactics, or refusing to honor advertised prices.",
+        "whatTheAgentLoses": "The user wastes time negotiating with a notoriously shady dealership that a human would have instantly avoided based on a 2-star rating.",
+        "speak": "on-event",
+        "check": "What rating and review count does the seller show on this site?",
+        "say_example": "This dealer has <2.1> stars from <300> reviews here. That's a bad sign even if the price is good."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Capture the VIN",
+      "questions": [
+       {
+        "question": "Is the VIN typed into the pricing site the same one on the listing?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The Vehicle Details section displays the VIN, which is the exact identifier needed to accurately check this specific car's history and price on other platforms.",
+        "whatTheAgentLoses": "You lose the certainty that the agent is cross-referencing the exact same physical vehicle on other pricing platforms rather than just a similar make and model.",
+        "speak": "if-wrong",
+        "check": "Does the VIN entered on the pricing site match the VIN on the listing?",
+        "say_example": "The VIN I typed into <KBB> doesn't match the listing. I'd have priced a different car. Fixing it."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Check the vehicle history",
+      "note": "4.9.1 on every listing that has one. 4.9.2 where the report costs money - priced and refused every time. 4.9.3 where the site gives it free. 4.9.4 once, from inside a free report.",
+      "children": [
+       {
+        "id": "4.9.1",
+        "label": "Read the history summary"
+       },
+       {
+        "id": "4.9.2",
+        "label": "Price the full report",
+        "questions": [
+         {
+          "question": "Do you want to pay for the full history report on this car?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen shows that a single Carfax report costs $39.99, which is an out-of-pocket expense just to check the vehicle's history.",
+          "whatTheAgentLoses": "You lose the ability to decide whether paying for this history report is worth the cost or if you should look for listings that include it for free.",
+          "speak": "gate",
+          "check": "What does the page say a single report costs, and is there a free report linked from the listing?",
+          "say_example": "The full history report costs <39.99>. The listing doesn't include one. Want me to buy it, or skip?"
+         },
+         {
+          "question": "Did the discount actually come off the report's total?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Checking the math ensures the checkout screen actually applies the promised 20% discount to the standard $24.99 report price.",
+          "whatTheAgentLoses": "The user loses the financial oversight of verifying that promotional discounts are accurately calculated and applied before purchase.",
+          "speak": "if-wrong",
+          "check": "What list price, discount, and final total does the report checkout show, and does the total reflect the discount?",
+          "say_example": "It promised <20%> off <24.99>, but the total is still <24.99>. The discount didn't apply."
+         }
+        ]
+       },
+       {
+        "id": "4.9.3",
+        "label": "Read the full report",
+        "questions": [
+         {
+          "question": "Does the history report show accidents, damage, a bad title, or rental use?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Reviewing the CARFAX report for salvage titles, structural damage, or accidents ensures you avoid buying a severely compromised vehicle.",
+          "whatTheAgentLoses": "You lose the ability to personally weigh the severity of specific history notes, such as deciding if an open recall is acceptable on an otherwise clean title.",
+          "speak": "on-event",
+          "check": "Does the history report list accidents, structural damage, salvage or rebuilt title, flood, import, or prior fleet, rental, or corporate use?",
+          "say_example": "The report shows <one accident> with <structural damage>, and it was a <rental> for <three> years. That changes what it's worth."
+         },
+         {
+          "question": "Does the service history show regular and proper maintenance?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Reviewing the detailed service records and maintenance intervals helps you determine if the previous owner properly cared for the vehicle.",
+          "whatTheAgentLoses": "You lose the ability to personally judge the quality and consistency of the vehicle's maintenance history based on the detailed service records.",
+          "speak": "never",
+          "check": "What service records does the report list?",
+          "say_example": "Found <12> service entries, oil changes on schedule"
+         },
+         {
+          "question": "Do the report's mileage and title match what the listing says?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Dealers sometimes advertise a 'clean' car with 60k miles, but the Carfax reveals a branded title or a past odometer reading of 100k miles, indicating fraud or a major listing error.",
+          "whatTheAgentLoses": "The user relies on the dealer's false advertising and buys a car with a rolled-back odometer or a hidden salvage history.",
+          "speak": "if-wrong",
+          "check": "Do the last odometer reading and title status in the report match the mileage and title in the listing?",
+          "say_example": "The listing says <60,000> miles. The report's last reading is <100,000>. Either the odometer was rolled or the ad is wrong."
+         }
+        ]
+       },
+       {
+        "id": "4.9.4",
+        "label": "Open the window sticker",
+        "questions": [
+         {
+          "question": "What was the original trim and MSRP of this vehicle?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Checking the original window sticker reveals the true trim level and original MSRP, exposing whether the current asking price is an unreasonable markup.",
+          "whatTheAgentLoses": "You lose the opportunity to catch a massive dealer markup by personally comparing the current asking price against the original window sticker.",
+          "speak": "never",
+          "check": "What trim and MSRP does the window sticker show?",
+          "say_example": "Read the window sticker, <XLT FWD>, MSRP <24,295>"
+         },
+         {
+          "question": "Does the trim in the listing match the trim on the window sticker and in the photos?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The listing title claimed the vehicle was an XL trim, but the provided window sticker showed it was actually an XLT FWD, which significantly changes its market value and features.",
+          "whatTheAgentLoses": "You lose the ability to accurately price the vehicle if the agent relies on an incorrect listing title rather than the verified window sticker.",
+          "speak": "if-wrong",
+          "check": "Does the trim named in the listing title match the trim on the window sticker, and do the photos show that trim's wheels and badges?",
+          "say_example": "The ad calls it an <XL>. The window sticker says <XLT>. That's a different car, and a different price."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.10",
+      "label": "Save or note the listing",
+      "questions": [
+       {
+        "question": "Does saving the listing ask you to sign in first?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displayed a 'Saved Cars' page with a prompt to 'Sign in / Register', indicating that an account is required to save and compare vehicles.",
+        "whatTheAgentLoses": "The user loses the ability to track and compare their favorite listings if the agent doesn't verify whether the car was actually saved.",
+        "speak": "on-event",
+        "check": "After pressing save, does the page ask to sign in or register?",
+        "say_example": "Saving needs an account here. I'm keeping the link in my notes instead."
+       },
+       {
+        "question": "Do you want to save this vehicle listing for later?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The advert details screen included a heart icon, allowing the user to bookmark the car.",
+        "whatTheAgentLoses": "The user loses the ability to personally curate a shortlist of preferred vehicles to revisit later.",
+        "speak": "never",
+        "check": "Is there a save or heart control on the listing?",
+        "say_example": "Saved the listing"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Value the car",
+    "note": "5.1 then 5.2 on every tool. 5.3 to 5.6 in the tool's own order - each tool asks a different subset, and the CARFAX Canada and Edmunds new-car paths ask nothing of 5.5 and 5.6. 5.7 on the tools that gate the number. 5.8 always. 5.9 loops back to 5.4 or 5.5 and re-reads 5.8. Answers come from 4 when the car is a listing - 7KeD reads every one off the CarGurus tab - and from memory when it is the user's own car.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Choose the value type",
+      "questions": [
+       {
+        "question": "Is the value shown for a private sale or for a dealer cash offer?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers two distinct paths—selling privately for a potentially higher price or getting a fast instant cash offer from a dealership—which determine how the trade-in value is calculated.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to prioritize between a quick dealership quote and a potentially higher private-party valuation based on your personal goals.",
+        "speak": "never",
+        "check": "Which path is selected - sell privately, or instant cash offer?",
+        "say_example": "Took the private-sale value, not the cash offer"
+       },
+       {
+        "question": "Is the price estimate set for a dealer sale or a private sale, and which is this car?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides different fair market ranges and purchase prices depending on whether you buy from a dealer, a certified dealer, or a private party.",
+        "whatTheAgentLoses": "You lose the ability to compare the estimated costs of buying from a private seller versus a dealership.",
+        "speak": "if-wrong",
+        "check": "Which value type is selected on the pricing page, dealer, certified, or private party, and which seller type does the listing show? Check again after any reload.",
+        "say_example": "The pricing page is set to private party. This car is at a dealer, so I'm switching it. The number changes a lot."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Identify the car",
+      "questions": [
+       {
+        "question": "Which body-style category fits this car on the pricing page?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents overlapping categories like 'Coupe' and 'Sports Car', requiring a decision on how the site classifies this specific vehicle.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to prioritize the vehicle's structural shape or its performance class when navigating the site's categorization system.",
+        "speak": "never",
+        "check": "Which body-style categories does the page list for this model?",
+        "say_example": "Picked <Sports Car> over <Coupe> for the <Corvette>"
+       },
+       {
+        "question": "Do the year, make and model in the form match the listing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the completed form with 'Used', '2012', 'Audi', and 'A6' selected, indicating the criteria were ready to submit.",
+        "whatTheAgentLoses": "The user loses the chance to verify their exact vehicle specifications before the search or evaluation begins.",
+        "speak": "if-wrong",
+        "check": "Do the year, make and model shown in the form match the listing?",
+        "say_example": "The form has <2012 Audi A6>. The listing is a <2013>. Fixing it before I price it."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Pick the style",
+      "questions": [
+       {
+        "question": "Which trim should be used for every year of the depreciation table?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays six different trim levels, and choosing the simplest base model ensures more consistent historical data since higher-end trims might not exist in older model years.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to analyze the depreciation of a standard base model versus a specialized higher-end trim.",
+        "speak": "never",
+        "check": "Which trim levels does the page list, and which is selected?",
+        "say_example": "Used the base trim for every year of the depreciation table"
+       },
+       {
+        "question": "Do the trim and engine selected match the car in the listing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple style options like the 2.0T Premium and 3.0T Quattro Premium, which have different features and significantly impact the vehicle's market value.",
+        "whatTheAgentLoses": "You lose the ability to ensure the price estimate accurately reflects the exact engine and trim level of the vehicle you are researching.",
+        "speak": "if-wrong",
+        "check": "Does the style selected - trim, engine, transmission, body - match what the listing says?",
+        "say_example": "I had the <2.0T Premium> selected. The listing is the <3.0T Quattro>. Different engine, different value. Switching."
+       },
+       {
+        "question": "Does the page say the VIN can't tell which trim this is?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "VIN decoders frequently fail to distinguish between sub-trims (e.g., LX vs EX), requiring the user to cross-reference listing photos for specific features (like a sunroof or leather seats) to select the right one.",
+        "whatTheAgentLoses": "The agent might blindly select the default base trim when prompted, resulting in a valuation that is thousands of dollars lower than the car's actual market worth.",
+        "speak": "on-event",
+        "check": "Does the page say the VIN could not determine the trim, or list several possible trims?",
+        "say_example": "The VIN can't tell <LX> from <EX>. The photos show <leather> and a <sunroof>, so I'm going with <EX>."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Set the colour and options",
+      "questions": [
+       {
+        "question": "Does the colour picked in the pricing tool match the listing?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Applying the specific silver color from the listing to the TrueCar calculator dropped the base estimate by $325, showing that exact features directly change the true market value.",
+        "whatTheAgentLoses": "You lose the transparency of seeing exactly how individual features like paint color positively or negatively adjust the vehicle's final valuation.",
+        "speak": "if-wrong",
+        "check": "Does the colour selected in the pricing tool match the colour in the listing?",
+        "say_example": "The tool defaulted to <white>. The car is <silver>, and that moves the price by <325>. Fixing it."
+       },
+       {
+        "question": "Do the options ticked on the pricing form match what the listing shows?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks if you are done adding options and provides a button to calculate the final price estimate.",
+        "whatTheAgentLoses": "You lose the chance to verify that all specific vehicle features and conditions were accurately selected before generating the final valuation.",
+        "speak": "if-wrong",
+        "check": "Which options and condition answers are selected on the pricing form, and does the listing show each of them?",
+        "say_example": "I had <navigation> ticked. The listing doesn't mention it and the photos don't show it. Unticking."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Enter the mileage and ZIP",
+      "questions": [
+       {
+        "question": "Does the mileage entered match the listing's mileage?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The TrueCar appraisal form requires a mileage and ZIP code, which you must extract or estimate from the vehicle details on the CarGurus listing.",
+        "whatTheAgentLoses": "You lose the ability to decide how to approximate the location, such as choosing a general city ZIP code when the exact dealer ZIP isn't explicitly listed.",
+        "speak": "if-wrong",
+        "check": "Does the mileage entered in the pricing tool match the odometer figure in the listing?",
+        "say_example": "I entered <76,000> miles. The listing says <78,872>. Correcting it."
+       },
+       {
+        "question": "Does the ZIP on the pricing page match where the car is, or where you are?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The pricing table calculates a specific regional adjustment and total market value based on the currently entered zip code.",
+        "whatTheAgentLoses": "You lose the guarantee that the final price estimate accurately reflects the specific local market where you plan to buy the car.",
+        "speak": "if-wrong",
+        "check": "What ZIP or postcode is entered on the pricing page, and does it match the listing's location or the person's?",
+        "say_example": "The price is set for <90210>. You're in <94025>. Prices differ by area, so I'm changing it."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Answer the condition questions",
+      "questions": [
+       {
+        "question": "Do the accident and damage answers match what the history report says?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The TrueCar page requires specific declarations about accidents, damage, mechanical issues, and warning lights to generate an accurate evaluation.",
+        "whatTheAgentLoses": "You lose the reliability of the final price estimate if the agent blindly selects 'No' for condition issues without verifying them in the listing.",
+        "speak": "if-wrong",
+        "check": "Which accident, damage and warning-light answers are selected, and does the listing or history report say otherwise?",
+        "say_example": "The form has no accidents. The history report shows <one>. I'm answering yes so the value is honest."
+       },
+       {
+        "question": "Does the form ask whether you're the first owner and still paying it off?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks if you are the original owner, still making payments, and looking to buy a replacement to complete the vehicle details form.",
+        "whatTheAgentLoses": "If the agent guesses these details, it might calculate an inaccurate value based on incorrect equity assumptions or trigger unwanted sales leads.",
+        "speak": "gate",
+        "check": "Does the form ask whether the person is the original owner, still making payments, or shopping for a replacement?",
+        "say_example": "It's asking if you're the first owner and whether you still owe on it. Only you know that. Tell me and I'll fill it in."
+       },
+       {
+        "question": "Are you okay with the price estimate assuming excellent condition?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that Kelley Blue Book assumes excellent condition for this price type, meaning the valuation might not reflect a typical used car.",
+        "whatTheAgentLoses": "You lose the awareness that the resulting price estimate represents a best-case scenario rather than the actual condition of the car you are researching.",
+        "speak": "on-event",
+        "check": "Does the page say the price assumes excellent condition?",
+        "say_example": "This number assumes the car is in excellent shape. Most used cars aren't, so treat it as the top of the range."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Clear the contact gate",
+      "questions": [
+       {
+        "question": "What does the form ask for before it moves on?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for the make, model, year, and buying timeframe to progress the vehicle inquiry form.",
+        "whatTheAgentLoses": "You lose control over the specific vehicle details and purchasing timeline communicated to the dealership.",
+        "speak": "never",
+        "check": "What make, model, year, and purchase timeframe does the form ask for?",
+        "say_example": "Set timeframe to <not sure>"
+       },
+       {
+        "question": "Should the dealer-match step be skipped?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks if you are shopping for another car to match you with dealers for a trade-in, but includes an option to skip this step.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to share your future car shopping preferences in exchange for dealer trade-in matches.",
+        "speak": "never",
+        "check": "Does the form offer a skip for the shopping-for-another-car step?",
+        "say_example": "Skipped the dealer-match step"
+       },
+       {
+        "question": "Should I enter your name, phone and email to see the value, knowing dealers may call you?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The site requires your contact information to send the offer and explicitly warns that up to three participating dealers may contact you about your car.",
+        "whatTheAgentLoses": "Delegating this step means losing control over which personal email and phone number are shared with dealers who may repeatedly contact you.",
+        "speak": "gate",
+        "check": "Which contact fields does the form require, and does the page say dealers may contact the person?",
+        "say_example": "To show the value, the site wants your name, phone and email. It says up to <three> dealers will call you. Want me to enter them, or skip this site?"
+       },
+       {
+        "question": "Are the account and marketing boxes unticked, with only the required terms accepted?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents an optional checkbox to create an account and receive marketing emails alongside the mandatory terms and conditions.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might opt you into unwanted marketing emails and create an unnecessary account on your behalf.",
+        "speak": "never",
+        "check": "Is the create-account or marketing checkbox ticked, and which terms box is required?",
+        "say_example": "Said no to the MyKBB account and marketing emails, accepted the required terms"
+       },
+       {
+        "question": "Does the site want to text or call you with a code before it shows the value?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a prompt to verify a mobile number with options to receive the code via text or call.",
+        "whatTheAgentLoses": "The user loses control over which contact method is used to receive the verification code.",
+        "speak": "gate",
+        "check": "Does the page ask to verify the phone number by text or call, and is there a skip option?",
+        "say_example": "It wants to text you a code to prove the number. I can't get that for you. Read it to me, or type it in yourself."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Read the value and breakdown",
+      "questions": [
+       {
+        "question": "What does the guide say the car is worth, and what moved the number?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Reviewing the exact deductions for mileage, color, and tire condition helps you understand how the final cash estimate of $19,900 to $22,900 was calculated.",
+        "whatTheAgentLoses": "You lose the ability to see exactly how specific details like worn tires or color choice negatively impact the car's overall valuation.",
+        "speak": "always",
+        "check": "What value or range does the page show, and what adjustments does it list for mileage, colour, options, or condition?",
+        "say_example": "<TrueCar> puts it at <19,900> to <22,900>. Mileage took off <800>, the colour <325>."
+       },
+       {
+        "question": "Do you wait for the Instant Cash Offer amount to finish loading?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a loading spinner in the 'Compare Your Values' section, meaning the actual cash offer for the [address] Corvette has not yet been displayed.",
+        "whatTheAgentLoses": "If the agent navigates away before the spinner resolves, you lose the specific Kelley Blue Book valuation needed to accurately evaluate the car's price.",
+        "speak": "never",
+        "check": "Is a loading spinner still showing where the offer should be?",
+        "say_example": "Waited for the offer to load"
+       },
+       {
+        "question": "Which condition tier and value type is selected?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple condition tiers like 'Clean Trade-In' and 'Clean Retail', so you must select the one that best matches the car's actual state to get an accurate total price.",
+        "whatTheAgentLoses": "You lose the ability to personally assess the car's condition and decide which valuation tier provides the most realistic price estimate to compare against other sources.",
+        "speak": "never",
+        "check": "Which condition tier and value type are selected?",
+        "say_example": "Recorded <Clean Retail>, since it's a dealer car"
+       },
+       {
+        "question": "Is the value range too wide to mean anything?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "For rare trims, older cars, or highly modified vehicles, pricing algorithms often fail and output a massive spread, making the automated estimate useless for actual negotiation.",
+        "whatTheAgentLoses": "The user falsely anchors their negotiation to a meaningless algorithmic guess instead of realizing they need to find real-world comparable sales for a specialty vehicle.",
+        "speak": "on-event",
+        "check": "What are the low and high ends of the range shown, and how far apart are they?",
+        "say_example": "The estimate runs <9,000> to <18,000>. That's too wide to mean anything. I'll lean on the other guides."
+       }
+      ]
+     },
+     {
+      "id": "5.9",
+      "label": "Revise an input and re-price",
+      "questions": [
+       {
+        "question": "Should you price the car with only standard equipment to see its baseline value?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The NADA Guides table currently shows higher 'Price + Options' values for trade-in and retail, so selecting standard equipment reveals the vehicle's base value before add-ons.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to evaluate the car's price based on its specific options or just its standard baseline features.",
+        "speak": "never",
+        "check": "Is the table showing standard equipment or price plus options?",
+        "say_example": "Priced the base at <12,000>, with options <13,500>"
+       },
+       {
+        "question": "Should a different style of this car be priced too?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the True Market Value and total price breakdown for the DX Coupe, but checking other configurations might reveal a better option.",
+        "whatTheAgentLoses": "You lose the opportunity to explore alternative trims that might offer better value for your budget.",
+        "speak": "never",
+        "check": "Which style is priced, and does the page offer a back link to other styles?",
+        "say_example": "Priced the <DX Coupe> only"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Compare across sites",
+    "note": "the cross-site loop. 6.1 re-enters 2 on the next marketplace with the same criteria; 6.2 does it through an aggregator, and 6.3 and 6.4 are the extra work that comes with it. 6.5 re-enters 5 on the next tool with the same car. 6.6 after every 5.8 in the keepers that keep a tally; 6.7 when the tour is done; 6.8 whenever a card looks familiar.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Re-run the search elsewhere",
+      "questions": [
+       {
+        "question": "Which sites have been searched so far?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator stated an intent to search four specific sites, and the video shows searches on all of them.",
+        "whatTheAgentLoses": "The user loses the comprehensive cross-platform comparison they expected if the agent skips some of the intended sites.",
+        "speak": "never",
+        "check": "Which car sites do the open tabs show, and which of the sites named in the plan are missing?",
+        "say_example": "Searched <CarGurus>, <Autotrader>, <Craigslist>, <AutoTempest>"
+       },
+       {
+        "question": "Which site gives a free history report for this car?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists several automotive websites, and knowing which platform reliably offers free Carfax reports prevents you from paying unnecessary fees.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred alternative marketplace for verifying the car's background.",
+        "speak": "never",
+        "check": "Which sites on the page say they include a free history report?",
+        "say_example": "Used <CarGurus> for the free history report"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Open the aggregator's external results",
+      "questions": [
+       {
+        "question": "Does the aggregator cover every site you wanted, or do some need their own search?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing the logos for sites like eBay, Craigslist, and Carvana confirms exactly which marketplaces are included in this aggregated search.",
+        "whatTheAgentLoses": "You lose the peace of mind of knowing exactly which specific car marketplaces are sourcing the listings you are about to browse.",
+        "speak": "never",
+        "check": "Which marketplace logos does the aggregator list as covered?",
+        "say_example": "Covered <eBay>, <Craigslist> and <Carvana> through the aggregator, searched <Facebook> on its own"
+       },
+       {
+        "question": "Should you review the setup steps for Facebook Marketplace before opening its results?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interface explicitly warns that setup steps are required for Facebook Marketplace links to work properly.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the external marketplace links function correctly by skipping the required configuration steps.",
+        "speak": "never",
+        "check": "Does the page warn that setup steps are needed before Facebook Marketplace links work?",
+        "say_example": "Skipped Facebook Marketplace, needs setup"
+       },
+       {
+        "question": "Which Craigslist region should you check for listings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists regional groups with the number of cities and distance ranges from your zip code, helping you decide how far you are willing to travel.",
+        "whatTheAgentLoses": "You lose the opportunity to balance your personal willingness to travel against the volume of potential car listings in different regions.",
+        "speak": "never",
+        "check": "Which Craigslist regions does the page list, with distances?",
+        "say_example": "Checked Craigslist <SF Bay> and <Sacramento>"
+       },
+       {
+        "question": "Do some sources only show results in a separate tab, not in the main feed?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "While the narrator promises a single unified search, the interface shows that results from major platforms like Autotrader and Craigslist must be opened in separate external tabs.",
+        "whatTheAgentLoses": "The user loses the efficiency of a truly unified search and might miss relevant listings if the agent fails to check the external tabs.",
+        "speak": "never",
+        "check": "Which sources show results in the main feed, and which only in external tabs?",
+        "say_example": "Opened the <Autotrader> and <Craigslist> tabs the aggregator doesn't show inline"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Close the empty tabs",
+      "questions": [
+       {
+        "question": "Which regional search tabs actually contain matching listings, and which ones are empty?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Quickly identifying and closing tabs that display 'Nothing found' allows you to focus your browsing only on the regions that actually have matching car listings.",
+        "whatTheAgentLoses": "You lose the geographic awareness of exactly which regions have available inventory for your specific car search.",
+        "speak": "never",
+        "check": "Which tabs say Nothing found?",
+        "say_example": "Closed <4> empty regional tabs"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Re-apply the lost filters",
+      "questions": [
+       {
+        "question": "Did the external site keep the filters set on the aggregator?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking that the 87 results for Toyota Siennas in Denver match your original criteria ensures the aggregator successfully transferred your search parameters.",
+        "whatTheAgentLoses": "You lose the ability to verify that the aggregator successfully passed your specific search criteria to the external marketplace.",
+        "speak": "if-wrong",
+        "check": "Do the location, radius, seller type, year and price shown on the external site match the ones set on the aggregator?",
+        "say_example": "<Facebook> opened set to <40> miles from <Rancho Cucamonga>. Your search was <100> miles from your ZIP. I'm resetting it before I read the results."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Try another valuation tool",
+      "questions": [
+       {
+        "question": "Should you cross-check the TrueCar estimate with another source like Edmunds?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Relying on a single estimate might not give you the full picture, and seeing options like 'Appraise My Car' on Edmunds provides a chance to verify the vehicle's true market value.",
+        "whatTheAgentLoses": "You lose the opportunity to decide which specific pricing authorities to trust and compare before making a final judgment on the car's value.",
+        "speak": "never",
+        "check": "Which pricing site is this page on, and which other pricing sites are open in tabs?",
+        "say_example": "Cross-checked TrueCar with Edmunds"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Record the number",
+      "questions": [
+       {
+        "question": "Are you recording the depreciated used car value or the original new car MSRP?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displayed a 'New Car Prices' heading with an MSRP, meaning this number represents the original price rather than the current value of the used car.",
+        "whatTheAgentLoses": "You lose an accurate estimate of the used car's actual market price if the agent mistakenly records the original new car MSRP.",
+        "speak": "if-wrong",
+        "check": "Does the heading above the number say New Car Prices or MSRP, rather than used value?",
+        "say_example": "This page shows the original sticker price. That's not what it's worth now. I'm not recording it."
+       },
+       {
+        "question": "Does the value written into the spreadsheet match the figure the pricing site showed for that year?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The spreadsheet has a specific cell in the Value column for the 2011 car where the researched price must be recorded.",
+        "whatTheAgentLoses": "You lose the assurance that the agent correctly transcribed the exact vehicle price into your tracking document.",
+        "speak": "if-wrong",
+        "check": "Does the value in the spreadsheet cell match the figure the pricing site showed for that year?",
+        "say_example": "The sheet has <18,200> for <2011>. The site said <18,700>. Fixing the cell."
+       },
+       {
+        "question": "Which years should you add to the spreadsheet to complete your depreciation model?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The spreadsheet displays columns for Year, Age, and Value, requiring you to input the correct sequence of past years to calculate a five-year depreciation trend.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly how far back the historical data should go to satisfy your personal financial analysis.",
+        "speak": "never",
+        "check": "Which years are in the spreadsheet's Year column?",
+        "say_example": "Added <2011> to <2015> to the table"
+       },
+       {
+        "question": "Is the same price label recorded for every year?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Recording MSRP for some years and Suggested Retail for others prevents an accurate apples-to-apples price comparison across the different models.",
+        "whatTheAgentLoses": "The user receives a flawed price comparison because the agent mixed new car prices with used car prices.",
+        "speak": "if-wrong",
+        "check": "Which price label was recorded for each year - MSRP, Suggested Retail, Private Party?",
+        "say_example": "<2013> was recorded as MSRP and the others as retail. That skews the curve. I'm redoing <2013>."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Line the numbers up",
+      "questions": [
+       {
+        "question": "How far apart are the pricing tools on this car?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The text editor displays estimates ranging from $9,600 to over $14,000, requiring you to determine which valuation is the most trustworthy.",
+        "whatTheAgentLoses": "You lose the opportunity to apply your own financial judgment to weigh conflicting price estimates and decide what the car is actually worth.",
+        "speak": "on-event",
+        "check": "What value does each pricing tool show for this car, and how far apart are the highest and lowest?",
+        "say_example": "The guides disagree. <KBB> says <9,600>, <NADA> says <14,000>. I'll go with the middle, <12,000>, and tell you why."
+       },
+       {
+        "question": "Which pricing guides are being compared?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Comparing NADA Guides, Kelley Blue Book, and live Craigslist listings provides a comprehensive view of trade-in, retail, and private market values.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the nuances between institutional book values and real-world local asking prices.",
+        "speak": "never",
+        "check": "Which valuation sources are listed?",
+        "say_example": "Compared NADA, KBB and Craigslist asking prices"
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Recognise the same car elsewhere"
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Judge the price",
+    "note": "one of 7.1 to 7.4 supplies the reference price - the badge for the keepers who trust it, a valuation for 7KeD and SaUI, the MSRP for e3a9, the market itself for 0wXt and jG-y. 7.5 where an extra cost shows up late. then 7.6, which is where the task as asked ends.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Weigh the deal rating",
+      "questions": [
+       {
+        "question": "Does the deal badge agree with what the independent guides say the car is worth?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The platform labels the $39,290 price as a 'Great Deal' based on a high average market price, making it crucial to verify the car's actual history and original sticker price.",
+        "whatTheAgentLoses": "You lose the human skepticism needed to question a misleading algorithm and realize the car is actually priced well over its original MSRP.",
+        "speak": "if-wrong",
+        "check": "What deal badge does the listing show, and does the independent guide value sit above or below the asking price?",
+        "say_example": "The site calls this a Great Deal. The guides say it's worth <3,000> less than the asking price. The badge comes from the site's own numbers."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Compare price to value"
+     },
+     {
+      "id": "7.3",
+      "label": "Compare price to MSRP",
+      "questions": [
+       {
+        "question": "Are even the cheapest listings priced above what the car cost new?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed the lowest priced models starting at $28,100, which is important to note because it reveals whether the used market is still inflated above the original MSRP.",
+        "whatTheAgentLoses": "You lose the contextual awareness to realize these used prices are actually inflated above MSRP and the intuition to cross-check another marketplace.",
+        "speak": "on-event",
+        "check": "What is the lowest asking price on the results, and what MSRP does the sticker or spec page show?",
+        "say_example": "Even the cheapest used ones, <28,100>, cost more than the car did new. This model is still marked up."
+       },
+       {
+        "question": "Does the current asking price make sense compared to the original MSRP on the window sticker?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Comparing the $39,290 asking price to the $24,295 original MSRP on the window sticker reveals a massive markup that drastically impacts the fairness of the deal.",
+        "whatTheAgentLoses": "The user loses the ability to spot unreasonable price gouging by cross-referencing the current listing price with the original manufacturer documents.",
+        "speak": "on-event",
+        "check": "What asking price and MSRP does the listing show, and what MSRP does the window sticker show?",
+        "say_example": "Asking <39,290>. The window sticker says it was <24,295> new. That's a <15,000> markup on a used car."
+       },
+       {
+        "question": "Which of the page's prices is the one to compare against?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple price points like MSRP, Fair Purchase Price, and Dealer Invoice, requiring a choice on which metric best serves as a baseline.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to use the conservative MSRP or the lower Fair Purchase Price as your personal baseline for evaluating deals.",
+        "speak": "never",
+        "check": "Which price points does the page list - MSRP, Fair Purchase Price, Dealer Invoice?",
+        "say_example": "Used Fair Purchase Price as the baseline"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Read the market curve",
+      "questions": [
+       {
+        "question": "Are there listings on the price-by-year graph priced well below the others for their year?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays a scatter plot of Jeeps in Seattle by asking price and model year, which helps identify pricing trends and outliers for specific models.",
+        "whatTheAgentLoses": "You lose the ability to visually spot market trends or identify uniquely priced outlier vehicles that might represent a great deal.",
+        "speak": "on-event",
+        "check": "Which points on the price-by-year graph sit well below the others for their year?",
+        "say_example": "Two <2016>s are priced well under the rest. I opened them. One has <150,000> miles, the other's a <salvage> title."
+       },
+       {
+        "question": "At which year do prices on the graph stop dropping steeply?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Visually analyzing the plotted data points helps identify the specific model years where the car stops rapidly losing value.",
+        "whatTheAgentLoses": "You lose the opportunity to apply your own judgment to visual market trends to find your ideal balance of age and price.",
+        "speak": "never",
+        "check": "At which model year do the graph's prices stop dropping steeply?",
+        "say_example": "Found prices flatten out after <2015>"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Add the extra costs",
+      "questions": [
+       {
+        "question": "Do these prices include shipping, and how much does it add?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results showed 17 matches with base prices ranging from $31,998 to $37,998, plus significant shipping fees up to $1,899 that must be factored into the total cost.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between a cheaper car with a higher shipping fee versus a more expensive local option.",
+        "speak": "on-event",
+        "check": "Do the result cards show a shipping or delivery fee beside the price, and how much?",
+        "say_example": "These prices don't include shipping. The <31,998> one adds <1,899> to get it to you."
+       },
+       {
+        "question": "Does the MSRP on the valuation screen include a destination fee that the base price shown earlier did not?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Recognizing that the $16,545 final MSRP includes a $790 destination fee explains the discrepancy from the $15,755 base price shown on the style selection screen.",
+        "whatTheAgentLoses": "You lose the transparency of knowing exactly which additional fees are baked into the car's final market valuation.",
+        "speak": "never",
+        "check": "Does the MSRP line say it includes a destination fee, and how much?",
+        "say_example": "Noted the MSRP <16,545> includes <790> destination"
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Set the target or verdict",
+      "questions": [
+       {
+        "question": "What's a fair price to offer, given what the guides say?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Comparing the varying estimates across TrueCar, KBB, Edmunds, and NADA allows you to determine a realistic negotiation target below the asking price.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the different appraisal values to decide on a negotiation target you feel comfortable with.",
+        "speak": "gate",
+        "check": "What asking price does the listing show, and what value does each guide give?",
+        "say_example": "Asking is <25,896>. The guides put it at <19,900> to <23,100>. That's about <3,000> over. I'd offer <22,500>. Want to go after this one, or keep looking?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Act on the car",
+    "note": "8.1 in narration and skipped forms only - no keeper sends a message. 8.2 on the single-seller app. 8.3 where a financing tool is offered. 8.4 and 8.5 in one keeper, off the web. Everything here is after the task as asked.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Contact the seller",
+      "questions": [
+       {
+        "question": "Should you contact the dealer using this form?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The listing page includes a lead generation form to check availability with the dealership, which requires deciding whether you are ready to share your personal contact information.",
+        "whatTheAgentLoses": "You lose control over when and how your personal contact information is shared with dealerships, which could lead to unwanted sales calls and emails.",
+        "speak": "gate",
+        "check": "Does the listing show a contact or check-availability form, and which fields does it require?",
+        "say_example": "There's a form to ask the dealer if it's still there. It wants your name, phone and email. Send it, or leave it?"
+       },
+       {
+        "question": "Do you want to call the seller right now?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Call seller' button that opened the phone dialer with the number [number], prompting a decision on whether to initiate immediate contact.",
+        "whatTheAgentLoses": "If an agent makes this decision, you lose the ability to personally control the timing and readiness of your first conversation with the seller.",
+        "speak": "gate",
+        "check": "Does the page show a call button, and what number does it dial?",
+        "say_example": "The seller's number is <555 123 4567>. I can't make the call. Want it read again, or should I message them through the site?"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Hold or transfer the car"
+     },
+     {
+      "id": "8.3",
+      "label": "Check the financing",
+      "questions": [
+       {
+        "question": "Do you want to adjust the default financing assumptions, like credit score or down payment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a pre-qualification calculator with default values like a 'Good' credit score, a $2,000 down payment, and a 72-month term.",
+        "whatTheAgentLoses": "The user loses the ability to see accurate estimated monthly payments tailored to their actual financial situation.",
+        "speak": "never",
+        "check": "What credit score, down payment, and term does the calculator default to?",
+        "say_example": "Left the calculator at <good> credit, <2,000> down, <72> months"
+       },
+       {
+        "question": "Does the pre-qualification calculator's math make sense?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The calculator displays a total of $0 and subtracts a $2,000 down payment, but incorrectly outputs a $0 finance amount instead of reflecting the true cost.",
+        "whatTheAgentLoses": "An agent might blindly trust the flawed calculator output, leading to completely inaccurate financing expectations for the vehicle.",
+        "speak": "on-event",
+        "check": "Does the calculator show a 0 total or a finance amount that doesn't equal price minus down payment?",
+        "say_example": "The finance calculator shows <0> to finance. It's broken. Ignore the monthly number here."
+       },
+       {
+        "question": "Should the finance enquiry be sent with your details, or closed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The finance enquiry form asks for personal details like your name and phone number, while showing your email address is already pre-filled.",
+        "whatTheAgentLoses": "You lose the ability to review the required contact information and choose to close the form without submitting an enquiry.",
+        "speak": "gate",
+        "check": "Which fields does the finance enquiry form require, and which are prefilled?",
+        "say_example": "The finance form already has your email and wants your name and phone. It goes to the lender. Send it, or close it?"
+       },
+       {
+        "question": "Do you want to compare the monthly payments and terms between the PCP and HP finance options?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a significant difference in monthly payments between PCP and HP, making it important to understand how the terms of each finance type work.",
+        "whatTheAgentLoses": "You lose the opportunity to decide which financing structure best fits your personal budget and long-term ownership goals.",
+        "speak": "never",
+        "check": "What monthly payment and term does each finance type show?",
+        "say_example": "Compared finance, PCP <250> a month against HP <380>"
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Inspect and test drive",
+      "questions": [
+       {
+        "question": "Is a warning light showing on the dashboard in the photos?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The instrument cluster showed a specific message, which is important to note when evaluating the car's condition.",
+        "whatTheAgentLoses": "The user misses the chance to visually inspect the interior photos for subtle warning signs or condition issues.",
+        "speak": "on-event",
+        "check": "Do the dashboard photos show a warning light or a message on the instrument cluster?",
+        "say_example": "The dashboard photo shows a <check engine> light on. The ad doesn't mention it."
+       },
+       {
+        "question": "Does a window sticker or sign in the photos say AS IS, no warranty?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Spotting the 'C300' and '4MATIC' badges alongside the 'AS IS' window sticker confirms the exact vehicle trim and its lack of dealer warranty.",
+        "whatTheAgentLoses": "You lose the chance to visually verify crucial details in the photos, such as physical trim badges and warranty stickers, which might differ from or supplement the text description.",
+        "speak": "on-event",
+        "check": "Does a window sticker or sign in the photos say AS IS or no warranty?",
+        "say_example": "There's an AS IS sticker in the window photo. No dealer warranty. Anything wrong after you buy is yours."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Buy and add the warranty",
+      "questions": [
+       {
+        "question": "Does the mileage shown in the dashboard photos match the advertised mileage?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard photo shows an actual odometer reading of 76,353 miles, which contradicts the 78,872 miles advertised in the listing text.",
+        "whatTheAgentLoses": "The user loses the opportunity to spot a factual discrepancy in the listing that could impact the car's true value or indicate an unreliable seller.",
+        "speak": "if-wrong",
+        "check": "What mileage does the odometer photo show, and what mileage does the listing text state?",
+        "say_example": "The ad says <78,872> miles. The dashboard photo reads <76,353>. The photo is the actual car, so the ad is wrong."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

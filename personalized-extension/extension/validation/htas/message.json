@@ -1,0 +1,1858 @@
+{
+ "task": "send a message that commits you to something, addressed to a specific person (Gmail, Outlook, LinkedIn): draft the email or DM — an outreach, RSVP, request, or reply that creates an obligation — address it to the right recipient, review it as the recipient will read it, send, and verify it shows as sent; complete when the sent state (Sent folder or sent thread) is on screen. Surface pinned: an email client or LinkedIn/professional messaging on web or app. Variants: casual chat with friends, public posts, and mass newsletters do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Send a message that commits you",
+  "note": "1 where the session is not already inside the client - most keepers start signed in. 2 picks where the message starts: a blank compose, a mail being answered, a calendar event, or a selected group. 3, 4 and 5 in whatever order the form allows; 4.9 replaces the body on the invite keepers. 6 where the message carries terms beyond its text - buttons, an expiry, a flag, a poll. 7 closes it, or refuses to (NKK1, gBs-, VonO go to 2.6). 8 after every send. 9 where the recipients answer inside the video - votes, a poll grid, an RSVP page, a reply coming back.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the messaging client",
+    "note": "1.1 on the phone and browser keepers, 1.2 where the account is not already open, 1.3 whenever a prompt lands, 1.4 in the two keepers who change surface part way.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the app or site",
+      "questions": [
+       {
+        "question": "Is the mail app open on your inbox?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing the inbox with your recent emails like \"Sapang Dalaga MFS\" confirms the app is ready for you to start drafting your message.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent has successfully accessed the correct email account to initiate the outreach.",
+        "speak": "never",
+        "check": "Is the mailbox view open, showing the inbox message list or an Inbox label?",
+        "say_example": "Opened <Gmail> to the inbox"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Sign in to the account",
+      "questions": [
+       {
+        "question": "Which account do you want to send this from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple account options, so you must choose the correct one to ensure the message comes from the intended sender.",
+        "whatTheAgentLoses": "You lose control over your sender identity, risking the agent making a commitment on behalf of the wrong account.",
+        "speak": "on-event",
+        "check": "Does the page show an account chooser listing more than one account? Which email addresses are listed?",
+        "say_example": "Two accounts here, <david@gmail.com> and <dlin@stanford.edu>. I'll use <the Stanford one>. OK, or say the other one?"
+       },
+       {
+        "question": "Which email address should you use to log in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Google sign-in screen presents an empty field requiring the specific email address you want to use to access Gmail.",
+        "whatTheAgentLoses": "Delegating this choice means you lose control over which specific sender identity is used to make the commitment.",
+        "speak": "never",
+        "check": "Is the sign-in page showing an empty email or phone field?",
+        "say_example": "Signed in as <david@gmail.com>"
+       },
+       {
+        "question": "Do you want to type the password in yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the account '[email]', requiring the correct password to authenticate and proceed to the email client.",
+        "whatTheAgentLoses": "The user loses the ability to keep their password private and manually control the authentication process.",
+        "speak": "gate",
+        "check": "Is a password field shown, with a label like 'Enter your password' or 'Password'?",
+        "say_example": "It's asking for your password. I won't type that. The field is yours. Say done when you're in."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Clear the interrupting prompts"
+     },
+     {
+      "id": "1.4",
+      "label": "Switch to another surface",
+      "questions": [
+       {
+        "question": "Does your calendar already have something at the time you're about to commit to?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a navigation bar in the bottom left with a Calendar icon, which you need to click to view your schedule before making a commitment.",
+        "whatTheAgentLoses": "Delegating this means you trust the agent to accurately interpret your calendar and avoid double-booking you.",
+        "speak": "if-wrong",
+        "check": "On the calendar for <date>, is any event shown overlapping <time>? What is its title?",
+        "say_example": "You're about to say <Tuesday at 2>. Your calendar already has <Lab meeting> then. Pick a different time, or say send anyway?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Start the message",
+    "note": "one of 2.1, 2.3, 2.4, 2.5 or 2.7 opens the compose surface - 2.2 first where the message answers a mail. 2.6 whenever a started draft is thrown away: before the real compose in VonO, and instead of a send in NKK1 and gBs-. 2.7 on a professional network, where the message starts from the person's profile rather than from a compose button.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Start a blank message",
+      "questions": [
+       {
+        "question": "Is this a new message, a reply, or a forward? Is that what you asked for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Locating the red pencil icon is required to open the compose screen and begin drafting the message.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to start a brand new email or reply to an existing thread to make your commitment.",
+        "speak": "if-wrong",
+        "check": "Does the compose header show a subject starting with Re: or Fwd: with a quoted thread below it, or an empty subject with no quoted thread?",
+        "say_example": "You asked me to reply on <name>'s thread. This is a brand new message. It wouldn't show up in the thread. I'm switching to a reply."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Open the message to answer",
+      "questions": [
+       {
+        "question": "Which email should you open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The inbox shows a welcome email from the Google Community Team, presenting a choice of which message to interact with.",
+        "whatTheAgentLoses": "The delegator loses the ability to decide which specific email to open and potentially reply to.",
+        "speak": "on-event",
+        "check": "Does the inbox list more than one message from <sender>, or more than one matching <subject>? What are their dates and subjects?",
+        "say_example": "Two messages from <name>. One from <Monday> about <the budget>, one from <today> about <the deadline>. Which one? Say Monday or today."
+       },
+       {
+        "question": "Is this message from a no-reply address that nobody reads?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an automated welcome email from the Google Community Team, which informs the decision of whether this is an appropriate recipient for a commitment.",
+        "whatTheAgentLoses": "The user loses the assurance that their commitment is being sent to a valid, human recipient rather than an automated mailing list.",
+        "speak": "on-event",
+        "check": "Is the sender address of the open message a noreply or no-reply address, or does the message say not to reply?",
+        "say_example": "This one came from <noreply@…>. Nobody reads replies there. Want me to find <name>'s real address instead?"
+       },
+       {
+        "question": "Does the message ask for more than one thing? Which are you answering?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a detailed email paragraph, and highlighting a specific sentence clarifies exactly which point the reply will address.",
+        "whatTheAgentLoses": "The user loses the ability to steer the conversation by selectively focusing on a specific detail or offer from the original message.",
+        "speak": "on-event",
+        "check": "Does the open message contain more than one request or question? Quote each.",
+        "say_example": "<name> asks two things. When you can deliver, and whether you'll join Friday. Answer both, or just one?"
+       },
+       {
+        "question": "Are there older messages folded away in this thread?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows older messages are collapsed, which hides the full history of the conversation.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent considers the entire conversation history before drafting a reply.",
+        "speak": "never",
+        "check": "Does the thread show collapsed earlier messages, such as a count of older messages or an ellipsis?",
+        "say_example": "Opened <3> older messages folded away in the thread"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Choose the response type",
+      "questions": [
+       {
+        "question": "Should you reply to just the sender or reply all to include everyone on the thread?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays 'Reply', 'Reply all', and 'Forward' buttons, and selecting the right one determines who is kept in the loop regarding your commitment.",
+        "whatTheAgentLoses": "Delegating this choice means losing the personal judgment of whether all participants in the thread need to be aware of your response.",
+        "speak": "on-event",
+        "check": "Does the original message list more than one address in To or Cc besides yours? Which ones?",
+        "say_example": "<name> also copied <Ravi> and <Mei>. Reply just to <name>, or reply all?"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Start from a calendar event",
+      "questions": [
+       {
+        "question": "Is the new event on the date you want, or just the day the calendar opened on?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the daily schedule for April 1, 2019, and clicking the '+ New' button in the toolbar is required to open the event creation form.",
+        "whatTheAgentLoses": "You lose the opportunity to visually confirm that the calendar is set to the correct date before starting the draft.",
+        "speak": "if-wrong",
+        "check": "What date does the new event's date field show?",
+        "say_example": "The event landed on <April 1>. That's just the day the calendar opened on. You wanted <April 8>. Fixing it."
+       },
+       {
+        "question": "Do you want to create a calendar event instead of a standard email?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'New mail' button includes a dropdown menu with an 'Event' option, letting you initiate an invite directly from the inbox.",
+        "whatTheAgentLoses": "You lose the ability to choose whether a formal calendar invite or a standard email is the best way to frame your commitment.",
+        "speak": "never",
+        "check": "Does the compose menu show an Event option, and is the event form open?",
+        "say_example": "Started a calendar invite instead of an email, as asked"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Start from a selected group"
+     },
+     {
+      "id": "2.6",
+      "label": "Discard a started draft",
+      "questions": [
+       {
+        "question": "Do you want to throw this draft away?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a dialog box asking to confirm whether to abandon the modified draft.",
+        "whatTheAgentLoses": "The person loses the time and effort spent writing the message if the agent mistakenly discards the draft.",
+        "speak": "on-event",
+        "check": "Is a dialog shown asking to discard or abandon the draft? What does the draft contain?",
+        "say_example": "It's asking whether to throw the draft away. There's <a paragraph> written. Throw it away, or keep it?"
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Start from the person's profile",
+      "questions": [
+       {
+        "question": "Does messaging this person use a paid InMail credit, or does their profile offer a free way to reach them?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The gold 'in' logo indicates a Premium member, which means they might have the open profile feature enabled for free messaging.",
+        "whatTheAgentLoses": "You lose the opportunity to save your paid InMail credits by strategically targeting users with open profiles.",
+        "speak": "on-event",
+        "check": "Does the page say messaging this person uses an InMail credit, or show Open profile or free message? How many credits remain? Does Contact info list an email?",
+        "say_example": "Messaging <name> uses one InMail credit. You have <4> left. Their profile also lists an email, <name@…>, which is free. InMail, or email?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Set the recipients",
+    "note": "3.1 on a blank message; 3.2 where the tutorial bothers with copies; 3.3 where an address book exists. 3.4 before 3.1 in kvML and on every mobile compose whose From line is on screen. 3.5 replaces 3.1 on the group keepers. 3.6 replaces it on the invite keepers. 3.7 wherever the platform asks what the recipients may see.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Type or pick the address",
+      "questions": [
+       {
+        "question": "Who are you sending this email to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a dropdown of suggested contacts after typing 'ia' in the 'To' field, requiring a choice of the correct recipient.",
+        "whatTheAgentLoses": "The delegator loses the ability to personally select the exact recipient from their contacts or suggestions.",
+        "speak": "if-wrong",
+        "check": "What name and address does the To chip show, and does it match the recipient named in the ask?",
+        "say_example": "The To field picked <sam.lee@hotmail.com>. You said <Sam at work>. Changing it to <sam@company.com>."
+       },
+       {
+        "question": "Which of their addresses do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown showed both a Gmail and a Hotmail address for the same person, requiring you to know which one is their active or preferred account.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal knowledge of the recipient's correct contact information when multiple options appear.",
+        "speak": "on-event",
+        "check": "Does the autocomplete list two or more addresses for the same name? Which addresses?",
+        "say_example": "<name> has two addresses here, a Gmail and a Hotmail. Which one? Say Gmail or Hotmail."
+       },
+       {
+        "question": "Is there more than one person with this name in the suggestions?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Autocomplete often suggests multiple contacts with identical or similar names, relying on visual cues like avatars or secondary domain text to differentiate them.",
+        "whatTheAgentLoses": "The user risks sending a binding commitment to the wrong person because the agent selected a matching name without verifying the visual context.",
+        "speak": "on-event",
+        "check": "Does the autocomplete list more than one person with the same name? What distinguishes them: the address domain, the avatar, the title?",
+        "say_example": "There are two people called <Alex Chen> here. One at <stanford.edu>, one at <gmail.com>. Which one? Say Stanford or Gmail."
+       },
+       {
+        "question": "Does it say this person is out of office?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform often surfaces the recipient's away status as soon as their address is added, which might require you to change the deadline of your commitment or CC a secondary contact.",
+        "whatTheAgentLoses": "The user loses the immediate situational awareness that the recipient is unavailable, risking a time-sensitive commitment sitting unread.",
+        "speak": "on-event",
+        "check": "Does the compose window show an away or out-of-office banner for <recipient>? What dates does it give?",
+        "say_example": "<name> is out until <Sep 12>. Your message asks for an answer by <Friday>. Send it anyway, or copy <someone else>?"
+       },
+       {
+        "question": "Is anyone on this outside your company?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Corporate email clients flag external recipients with a banner or tooltip to prevent accidental sharing of sensitive commitments or data.",
+        "whatTheAgentLoses": "The user loses the security check that prevents them from accidentally making a commitment to an external or unauthorized party.",
+        "speak": "on-event",
+        "check": "Does the page show an external or outside-your-organization banner or tag on a recipient? Which address?",
+        "say_example": "<address> is outside <your company>. The message has <the contract terms> in it. Still send?"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Add the copy recipients",
+      "questions": [
+       {
+        "question": "Do the Cc and Bcc fields hold exactly the people you asked to copy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Cc' button next to the 'To' field allows you to include additional stakeholders who need visibility into the commitment.",
+        "whatTheAgentLoses": "The user loses the ability to decide which specific colleagues or stakeholders need to be kept in the loop based on nuanced professional context.",
+        "speak": "if-wrong",
+        "check": "What addresses are in Cc and Bcc, and do they match the copy recipients in the ask?",
+        "say_example": "You asked to copy <Mei>. Cc is empty. Adding her."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Pick from the address book",
+      "questions": [
+       {
+        "question": "Is every attendee you named found in the address book, or does one need typing by hand?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog box provides a list of saved contacts to select from, but also includes a text box where unlisted addresses must be entered manually.",
+        "whatTheAgentLoses": "An agent might only select from the visible list of contacts and fail to manually include necessary external participants.",
+        "speak": "on-event",
+        "check": "Does the address book search return no match for <name>?",
+        "say_example": "<name> isn't in your address book. I'll type <address> in by hand. Is that the right address?"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Check the sending account",
+      "questions": [
+       {
+        "question": "Which email address should you send from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'From' field on the compose screen offered multiple sender addresses, which determines the identity attached to this commitment.",
+        "whatTheAgentLoses": "The user loses the ability to select the most appropriate sender identity for this specific recipient and obligation.",
+        "speak": "if-wrong",
+        "check": "What address does the From field show, and does it match the account you signed in with or the one the ask named?",
+        "say_example": "This would go out from <alias@…>, not your <main address>. Switching it."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Build the recipient set",
+      "note": "3.5.1 then 3.5.2 then 3.5.3 in I57x - the set is a tag. 3.5.1 then 3.5.2 in zZ3x - the set is a saved pipeline. 3.5.4 in both, once per page. 3.5.5 after 3.5.4 - the count changes and nothing on screen says why.",
+      "children": [
+       {
+        "id": "3.5.1",
+        "label": "Find the people",
+        "questions": [
+         {
+          "question": "Is there more than one profile with this name?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dropdown displayed multiple profiles for 'John Smith' alongside generic search terms, meaning a full search might be needed to accurately identify the correct recipient.",
+          "whatTheAgentLoses": "The user loses the ability to review the full search results and ensure the agent selects the exact right person to message.",
+          "speak": "on-event",
+          "check": "Do the search results list more than one profile with the name <name>? What headline and location does each show?",
+          "say_example": "Three people called <John Smith>. One's a <designer in Amsterdam>, one's in <telecom in Rotterdam>. Which one? Say designer or telecom."
+         },
+         {
+          "question": "Is the person you want on the first page of results, or on a later page?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The specific person you needed to contact did not appear on the first page of the search results.",
+          "whatTheAgentLoses": "You lose the ability to manually scan the results and visually identify the correct recipient's profile among similar names.",
+          "speak": "on-event",
+          "check": "Does page 1 of the results list <name>? Is there a next page or pagination control?",
+          "say_example": "<name> isn't on the first page. There are <4> more. Checking them before I give up."
+         },
+         {
+          "question": "Do the search filters match what you asked for?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen showed specific filters like 'Solution Designer', 'Netherlands', and 'Telecommunications' being applied to find the right person to message.",
+          "whatTheAgentLoses": "The user loses the ability to fine-tune search criteria based on their nuanced understanding of the exact profile they want to reach.",
+          "speak": "if-wrong",
+          "check": "Which filter chips are shown as applied, and do they match the ask?",
+          "say_example": "The search is filtered to <Netherlands> and <telecom>. You said <Belgium>. Changing it."
+         }
+        ]
+       },
+       {
+        "id": "3.5.2",
+        "label": "Tag or save them",
+        "questions": [
+         {
+          "question": "Do you want a new project made for this outreach?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a '+ Create new project' option under the Projects dropdown, which dictates how this new task will be organized.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to organize this new commitment under a brand new project or an existing one.",
+          "speak": "never",
+          "check": "Is the Create new project option shown, and was creating a project part of the ask?",
+          "say_example": "Made a project called <Q4 designers>, as asked"
+         },
+         {
+          "question": "How should you name and describe the new project?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Create project' modal includes fields for 'Name' and 'Description' that determine how the project is identified and shared with colleagues.",
+          "whatTheAgentLoses": "The user loses their personal naming convention that includes key details like location, duration, and owner for team visibility.",
+          "speak": "never",
+          "check": "What do the Name and Description fields hold?",
+          "say_example": "Named the project <Q4 designers>"
+         },
+         {
+          "question": "Which tags should you apply to this connection?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a 'Tag' dropdown menu with custom options like 'Queen's' and 'classmates', requiring a choice on how to categorize this contact.",
+          "whatTheAgentLoses": "An agent lacks the personal context of your real-world relationships to accurately assign custom organizational tags to your connections.",
+          "speak": "never",
+          "check": "Which tag is shown on the connection?",
+          "say_example": "Tagged <name> as <classmates>"
+         }
+        ]
+       },
+       {
+        "id": "3.5.3",
+        "label": "Filter to the group",
+        "questions": [
+         {
+          "question": "Which tag do you want to filter by?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The filter menu contains multiple custom tags like 'Queen's' and 'colleagues', so selecting the correct one ensures you isolate the intended audience.",
+          "whatTheAgentLoses": "You lose the ability to personally decide which specific professional or social circle to target for this commitment.",
+          "speak": "if-wrong",
+          "check": "Which tag chip is shown as the active filter?",
+          "say_example": "The list is filtered to <colleagues>. You said <classmates>. Switching."
+         }
+        ]
+       },
+       {
+        "id": "3.5.4",
+        "label": "Select the batch",
+        "questions": [
+         {
+          "question": "Do you want to message everyone on the page, or only the ones the page says are likely to respond?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays valuable filtering signals like '13 are more likely to respond' and '9 open to new opportunities' that are ignored when bulk-selecting the entire page.",
+          "whatTheAgentLoses": "The delegator loses the strategic advantage of personalized targeting, resulting in outreach being sent to potentially unqualified or unresponsive individuals.",
+          "speak": "on-event",
+          "check": "Is a select-all control about to be used, and does the page show counts like 'N more likely to respond' or 'N open to opportunities'? What are the counts?",
+          "say_example": "Select all would message all <25>. The page says <13> are likely to respond. All <25>, or just those <13>?"
+         },
+         {
+          "question": "Are the candidates on the later pages selected too, or only the first page?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The narrator explains that you must scroll down and use the pagination controls to select the next batch of candidates, even though the action itself is not shown on screen.",
+          "whatTheAgentLoses": "The delegator loses the assurance that the agent knows how to navigate multiple pages to include all intended recipients in the outreach.",
+          "speak": "if-wrong",
+          "check": "How many candidates does the page say are selected, and how many are in the filtered list in total?",
+          "say_example": "You said everyone in the list. That's <53>. Only <25> are selected, the first page. Selecting the rest."
+         }
+        ]
+       },
+       {
+        "id": "3.5.5",
+        "label": "Check who dropped out",
+        "questions": [
+         {
+          "question": "Did everyone you picked land in the pipeline?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen displayed a pipeline count of 50 despite showing 53 total candidates, which matters because it indicates that some candidates opted out of receiving emails.",
+          "whatTheAgentLoses": "The user loses the awareness that specific candidates were automatically excluded from the outreach message due to their communication preferences.",
+          "speak": "on-event",
+          "check": "Does the page show a pipeline or added count lower than the number selected? Does it say why, such as opted out?",
+          "say_example": "You picked <53>. <50> made it in. The page says <3> opted out of email. They won't get this."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Add the event guests",
+      "questions": [
+       {
+        "question": "Who should you invite to this event?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Add guests' field and dropdown allow you to select the specific email address to receive the calendar invite.",
+        "whatTheAgentLoses": "The user loses control over who receives the event invitation and what permissions they are granted.",
+        "speak": "if-wrong",
+        "check": "What names are in the guest list, and do they match the people named in the ask?",
+        "say_example": "The guest list has <Ana> but not <Ravi>. Adding him."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Set what recipients see",
+      "questions": [
+       {
+        "question": "Is the event visibility set to Public, so anyone with your calendar can read the details?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The visibility dropdown offers options like Public and Private, which determines whether others can read the meeting details or just see a busy block on your calendar.",
+        "whatTheAgentLoses": "An agent might leave the visibility on the default setting, potentially exposing sensitive meeting details to anyone who has access to view your calendar.",
+        "speak": "if-wrong",
+        "check": "What does the visibility field show: Default, Public, or Private?",
+        "say_example": "This event is set to Public. Anyone who can see your calendar could read <the details>. Switch to private?"
+       },
+       {
+        "question": "Can guests change this event, including the time?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed checkboxes for guest permissions, which determines how much control the attendees will have over the calendar event.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether guests can alter the event details, invite additional people, or view the full attendee list.",
+        "speak": "if-wrong",
+        "check": "Which guest permission boxes are checked: modify event, invite others, see guest list?",
+        "say_example": "Guests can change this event. <name> could move the time. Want that off?"
+       },
+       {
+        "question": "Do you want to hide the recipients from each other so the message is sent privately?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a checkbox below the send button that dictates whether the message is sent as a visible group or as private individual messages.",
+        "whatTheAgentLoses": "The user loses control over their contacts' privacy and the social dynamics of sending a group versus individual message.",
+        "speak": "on-event",
+        "check": "Is the message addressed to more than one recipient, and is there a checkbox to send to each recipient individually or hide recipients? Is it checked?",
+        "say_example": "This goes to <6> people at once. They'd all see each other's names. Send it to each one privately instead?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Write the message",
+    "note": "4.1 and 4.2 on every keeper that sends text; 4.3 where the mail is a job application; 4.4 and 4.5 on the reply keepers; 4.6 to 4.8 where the body is designed rather than typed. 4.9 replaces 4.2 on the invite keepers, and inside it 4.9.8 replaces 4.9.2 and 4.9.3 when the times are polled instead of set. 4.10 replaces 4.1 and 4.2 on a connection request, where the whole message is one optional note.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Write the subject",
+      "questions": [
+       {
+        "question": "What should the subject line be?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The compose screen provides a subject field to give the recipient immediate context about the message.",
+        "whatTheAgentLoses": "The user loses control over how the email is introduced and framed for the recipient.",
+        "speak": "never",
+        "check": "What does the subject field hold?",
+        "say_example": "Set the subject to <Friday delivery>"
+       },
+       {
+        "question": "Is the subject empty, or does it say something different from what's attached or written?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed an empty subject field at 2:26, making it important to verify that the final subject line matches any attached files before sending.",
+        "whatTheAgentLoses": "The user loses the ability to catch discrepancies between the email's subject and its attachments, which could confuse the recipient.",
+        "speak": "if-wrong",
+        "check": "Is the subject field empty, or does it name something different from the attachment name or the body?",
+        "say_example": "The subject is empty. I'm putting <Pictures> in so <name> knows what this is."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Write the body",
+      "questions": [
+       {
+        "question": "What should you write in the body of the email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The compose screen is ready for the main text, which must clearly convey your intended message and tone.",
+        "whatTheAgentLoses": "The user loses control over the exact phrasing, language, and personal tone of the message.",
+        "speak": "always",
+        "check": "What does the body say? Quote the sentence that makes the commitment.",
+        "say_example": "Here's what I wrote. You'll have the report to <name> by <Friday>. Say change if that's not it."
+       },
+       {
+        "question": "Does the message tell people there are voting buttons?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Voting buttons can be subtle, so explicitly mentioning them in the subject and body ensures they are not missed.",
+        "whatTheAgentLoses": "The user loses the nuanced communication strategy of explicitly directing recipients to use specific UI features.",
+        "speak": "if-wrong",
+        "check": "Are voting buttons enabled, and does the subject or body mention them?",
+        "say_example": "Voting buttons are on, but the message doesn't say so. Some mail apps hide them. Adding a line at the top that says to vote."
+       },
+       {
+        "question": "Is 'send a copy to me' checked in the Email guests dialog?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Email guests' dialog contains an empty message field for your note and a default-checked option to send a copy to yourself.",
+        "whatTheAgentLoses": "You lose the ability to dictate the exact wording of the message and decide whether you need a personal copy for your records.",
+        "speak": "never",
+        "check": "Is the send-me-a-copy box checked?",
+        "say_example": "Left the send-me-a-copy box checked"
+       },
+       {
+        "question": "Is the new template set to be shared with your team, or kept private?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'New Template' dialog with options to share the template with team members or keep it private, along with fields for the template name and subject.",
+        "whatTheAgentLoses": "The user loses control over whether their custom template is shared with their team or kept private.",
+        "speak": "never",
+        "check": "Which sharing option is selected in the New Template dialog?",
+        "say_example": "Saved the template as private, just for you"
+       },
+       {
+        "question": "Is there already a thread with this person to reply in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The messaging sidebar displays past threads like the one with Teddy Burriss, allowing you to reference previous interactions for tone and context while drafting.",
+        "whatTheAgentLoses": "You lose the ability to personally select the most relevant past conversation to use as a benchmark for your new message.",
+        "speak": "on-event",
+        "check": "Does the messaging sidebar list an existing thread with <recipient>? What is its date?",
+        "say_example": "You already have a thread with <name> from <March>. I'll reply there instead of starting a new one. OK?"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Write the application text"
+     },
+     {
+      "id": "4.4",
+      "label": "Place the reply text",
+      "questions": [
+       {
+        "question": "Is your reply above the line the sender marked, not on it or below it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The compose box displays a clear instruction to reply above a specific line, indicating that text typed on or below it may not be processed correctly.",
+        "whatTheAgentLoses": "The user loses control over the exact placement of their text, risking that their commitment gets buried or stripped out by the recipient's email system.",
+        "speak": "if-wrong",
+        "check": "Expand any collapsed quote in the compose box. Is there a marker like 'reply above this line'? Is the typed text above it? Is a full editor open, rather than a quick reply chip?",
+        "say_example": "The reply landed below the line that says reply above it. <name>'s system would drop it. Moving it up."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Trim the quoted history",
+      "questions": [
+       {
+        "question": "Is there leftover text in the draft, like an old signature?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The user attempted to select all content using a keyboard shortcut, but only the text portion of the signature was highlighted.",
+        "whatTheAgentLoses": "The delegator loses the ability to ensure unwanted auto-populated content is completely removed before drafting their message.",
+        "speak": "if-wrong",
+        "check": "Does the draft body contain leftover text besides the new message, such as an old signature or 'Sent from …'?",
+        "say_example": "There's leftover text under your message, <'Sent from Yahoo Mail for iPhone'>. Taking it out."
+       },
+       {
+        "question": "Is someone who wasn't on the earlier thread about to get the whole quoted history?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When forwarding a message or adding new recipients to a thread, the entire previous conversation is included by default, which might expose private discussions.",
+        "whatTheAgentLoses": "The user loses the human judgment to review the hidden thread history and delete sensitive parts before exposing them to new participants.",
+        "speak": "on-event",
+        "check": "Is any address in To or Cc absent from every earlier message in the quoted thread, and is the quoted thread included in the draft?",
+        "say_example": "<name> wasn't on this thread before. The whole history goes with it, including <Monday's numbers>. Trim it, or send it all?"
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Format the text"
+     },
+     {
+      "id": "4.7",
+      "label": "Lay out the body",
+      "questions": [
+       {
+        "question": "Which signature should you insert into the email?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Signature' dropdown with options like 'Burntolearn', requiring a choice of which sign-off best fits the context of your message.",
+        "whatTheAgentLoses": "You lose the ability to select the most appropriate professional branding or contact information for this specific recipient.",
+        "speak": "never",
+        "check": "Which signature is shown at the bottom of the draft?",
+        "say_example": "Signed off with your <work> signature"
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Paste in outside content",
+      "questions": [
+       {
+        "question": "Which saved template should this bulk message use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an empty message modal and a template dropdown, requiring a choice to correctly populate the outreach text.",
+        "whatTheAgentLoses": "You lose the assurance that the exact right template is chosen for this specific professional outreach.",
+        "speak": "on-event",
+        "check": "Does the template dropdown list more than one template, and did the ask name one? What are they called?",
+        "say_example": "Three templates here, <Intro>, <Follow up>, <Event>. Which one? Or I can write it fresh."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Fill in the event details",
+      "note": "4.9.1 then 4.9.2 then 4.9.3, or 4.9.8 in place of 4.9.2 and 4.9.3 when the times are put to a vote. 4.9.4 to 4.9.7 where the form shows them - ixyD accepts a recurrence the form derived from the date, and 3qL6 opens every dropdown and changes none.",
+      "children": [
+       {
+        "id": "4.9.1",
+        "label": "Name the event",
+        "questions": [
+         {
+          "question": "What should you title the event?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts for an event title, which serves as the primary subject or identifier the recipient will see.",
+          "whatTheAgentLoses": "The user loses the ability to choose exactly how their name or the commitment is presented to the recipient.",
+          "speak": "never",
+          "check": "What does the event title field hold?",
+          "say_example": "Titled the event <Design review>"
+         }
+        ]
+       },
+       {
+        "id": "4.9.2",
+        "label": "Pick the date"
+       },
+       {
+        "id": "4.9.3",
+        "label": "Set the times",
+        "questions": [
+         {
+          "question": "Is this all day, or does it have a start and end time?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Unchecking the 'All day' box revealed specific time fields, allowing the user to define exact boundaries for the commitment.",
+          "whatTheAgentLoses": "The user loses the ability to dictate their exact availability, risking an agent committing them to an all-day obligation or an incorrect time slot.",
+          "speak": "if-wrong",
+          "check": "Is the All day box checked, and did the ask give a clock time?",
+          "say_example": "It's set to all day. You said <2 pm>. Unchecking it and putting the time in."
+         },
+         {
+          "question": "Does the scheduling grid show an attendee busy at the time you're proposing?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The scheduling grid displays free timeslots without a person icon, which is essential for proposing a time that works for the recipient.",
+          "whatTheAgentLoses": "The user loses the ability to personally select a mutually convenient time based on the visual cues in the scheduling grid.",
+          "speak": "if-wrong",
+          "check": "On the scheduling grid, is <attendee> marked busy or unavailable at <time>? Which slots are free for everyone?",
+          "say_example": "The grid shows <name> is busy at <2>. Everyone's free at <3>. Move it?"
+         },
+         {
+          "question": "What should you set as the event's end time?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The default 30-minute duration needed to be manually adjusted to 20 minutes to accurately reflect the actual length of the lesson.",
+          "whatTheAgentLoses": "You lose the nuance of exact time management, potentially blocking off more time on both calendars than the commitment actually requires.",
+          "speak": "if-wrong",
+          "check": "What end time does the event show, and does the length match the ask?",
+          "say_example": "It defaulted to <30> minutes. You said <20>. Setting the end to <2:20>."
+         },
+         {
+          "question": "What time should the meeting start?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen showed a New Meeting window with a start-time picker, requiring a specific time to be selected for the commitment.",
+          "whatTheAgentLoses": "The user loses control over the exact time they are committing to for the meeting.",
+          "speak": "if-wrong",
+          "check": "What start time does the event show?",
+          "say_example": "Start is showing <9 am>. You said <10>. Fixing it."
+         }
+        ]
+       },
+       {
+        "id": "4.9.4",
+        "label": "Set the recurrence",
+        "questions": [
+         {
+          "question": "Should this event repeat?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displayed a 'Make recurring' button next to the time fields, allowing the sender to turn a single meeting into a repeating series.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether they are committing to a one-time obligation or an ongoing, repeating schedule.",
+          "speak": "if-wrong",
+          "check": "Does the repeat field show Does not repeat or a repeat rule, and what did the ask say?",
+          "say_example": "This is set as a one off. You said every <Tuesday>. Making it repeat."
+         },
+         {
+          "question": "Does the repeat rule have an end, or does it go on forever?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Repeat' dialog requires confirming the frequency, specific days, and an end date for the recurring commitment.",
+          "whatTheAgentLoses": "An agent might set an incorrect recurrence pattern or end date, committing you to a schedule you did not intend.",
+          "speak": "on-event",
+          "check": "What does the repeat rule say, and does it show an end date or a count?",
+          "say_example": "This repeats every <week> with no end. Want it to stop after <June>?"
+         }
+        ]
+       },
+       {
+        "id": "4.9.5",
+        "label": "Set the location",
+        "questions": [
+         {
+          "question": "Does the location field hold a real place, or is it blank or half typed?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "You typed 'DES' into the location field but moved on without selecting any of the suggested locations.",
+          "whatTheAgentLoses": "The agent might send the message without a finalized location, leaving the recipient unsure of where the commitment takes place.",
+          "speak": "if-wrong",
+          "check": "Does the location field hold a selected place, typed text with no suggestion chosen, or nothing? What did the ask name?",
+          "say_example": "The location just says <DES>. It never picked a place, so <name> would get no address. Choosing <Design Building> from the list."
+         },
+         {
+          "question": "Where is the meeting?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The location field requires a specific physical or virtual address so the recipient knows exactly where to meet.",
+          "whatTheAgentLoses": "Delegating this means an agent might choose an incorrect or unavailable location, leading to confusion or a missed meeting.",
+          "speak": "never",
+          "check": "What does the location field show?",
+          "say_example": "Set the location to <Room 204>"
+         }
+        ]
+       },
+       {
+        "id": "4.9.6",
+        "label": "Write the description",
+        "questions": [
+         {
+          "question": "What goes in the description?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The description field acts like an email body where you can provide necessary context or meeting details to the recipient.",
+          "whatTheAgentLoses": "The user loses the opportunity to specify the exact context or details they want the recipient to see.",
+          "speak": "never",
+          "check": "What does the description field hold?",
+          "say_example": "Put the agenda in the description"
+         }
+        ]
+       },
+       {
+        "id": "4.9.7",
+        "label": "Set the reminder and status",
+        "questions": [
+         {
+          "question": "How early do you want the reminder?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displayed a dropdown with reminder intervals ranging from 'None' to '1 day', which controls when you receive an alert.",
+          "whatTheAgentLoses": "An agent cannot know how much preparation or travel time you personally need before this specific commitment.",
+          "speak": "never",
+          "check": "What reminder interval is selected?",
+          "say_example": "Set a reminder for <30 minutes> before"
+         },
+         {
+          "question": "Should this hour show as busy or free to others?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Show As' dropdown lets you control whether colleagues see you as busy, free, or tentative during this commitment.",
+          "whatTheAgentLoses": "An agent might default to 'Busy', potentially blocking your availability when you would have preferred to remain 'Free' or 'Tentative' for other opportunities.",
+          "speak": "never",
+          "check": "What does the Show As field show: busy, free, or tentative?",
+          "say_example": "Marked the hour as busy on your calendar"
+         }
+        ]
+       },
+       {
+        "id": "4.9.8",
+        "label": "Poll the times",
+        "note": "4.9.8.1, then 4.9.8.2 for each slot worth keeping, then 4.9.8.3, then 4.9.8.4 - one keeper, in the order the pane imposes.",
+        "children": [
+         {
+          "id": "4.9.8.1",
+          "label": "Read the slot availability"
+         },
+         {
+          "id": "4.9.8.2",
+          "label": "Pick the slots",
+          "questions": [
+           {
+            "question": "Which times go in the poll?",
+            "cluster": "select",
+            "moment": "Now",
+            "moneyMoving": false,
+            "why": "Choosing times marked with a green icon and a '5' ensures that all five attendees are available for the proposed 30-minute meeting.",
+            "whatTheAgentLoses": "The user loses the ability to apply their own judgment regarding which of the fully available time slots might be most preferred by the group.",
+            "speak": "never",
+            "check": "Which slots are selected for the poll, and what availability count does each show?",
+            "say_example": "Picked <3> times where all <5> of you are free"
+           }
+          ]
+         },
+         {
+          "id": "4.9.8.3",
+          "label": "Set the poll rules",
+          "questions": [
+           {
+            "question": "Are the times, location and settings right before the poll is made?",
+            "cluster": "approve",
+            "moment": "Now",
+            "moneyMoving": false,
+            "why": "The screen showed a 'Scheduling poll' summary pane with selected times, an active 'Teams meeting' toggle, and default settings like 'Hold selected times on my calendar'.",
+            "whatTheAgentLoses": "The user loses the opportunity to specify a physical location or customize the default poll settings before generating the poll.",
+            "speak": "never",
+            "check": "What does the poll summary show: times, duration, location, Teams toggle?",
+            "say_example": "Set up the poll with <3> times, <30> minutes each, and a Teams link"
+           },
+           {
+            "question": "Do you want all the proposed times held on your calendar until someone picks?",
+            "cluster": "",
+            "moment": null,
+            "moneyMoving": false,
+            "why": "The 'Manage poll settings' menu shows 'Hold selected times on my calendar' is checked by default, meaning generating the poll will mark multiple slots as busy until it is finalized.",
+            "whatTheAgentLoses": "The user loses the ability to decide if they can afford to block out large chunks of their schedule, potentially missing out on other urgent meetings.",
+            "speak": "on-event",
+            "check": "Is 'Hold selected times on my calendar' checked, and how many times are proposed?",
+            "say_example": "The poll would block all <5> of those times on your calendar until someone picks. Fine, or leave them open?"
+           }
+          ]
+         },
+         {
+          "id": "4.9.8.4",
+          "label": "Create the poll card"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.10",
+      "label": "Write the connection note",
+      "questions": [
+       {
+        "question": "Do you want to add a personalized note to this connection request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal offers the choice to add a note or send without one, noting that personalized invitations are more likely to be accepted.",
+        "whatTheAgentLoses": "The user loses control over whether the connection request includes a personalized message or is sent generically.",
+        "speak": "on-event",
+        "check": "Does the modal offer Add a note or Send without a note, and did the ask include a note?",
+        "say_example": "It's asking whether to add a note. You didn't give me one. Send it plain, or tell me a line?"
+       },
+       {
+        "question": "Does the note fit inside the character limit the page shows, or is it cut off?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 200-character limit and a warning that only 4 personalized invitations remained for the month.",
+        "whatTheAgentLoses": "The delegator loses control over the exact wording of the message and how to allocate their limited monthly personalized invitations.",
+        "speak": "if-wrong",
+        "check": "What is the character limit shown, and does the counter show the note over it?",
+        "say_example": "The note is over the <200> character limit. The end would be cut. Shortening it."
+       },
+       {
+        "question": "Is the note you gave me in the note box, or is it still empty?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator advised adding a meaningful introduction, but the screen showed the note field was still empty at 1:54.",
+        "whatTheAgentLoses": "The user loses the opportunity to make a strong professional connection if the agent fails to include the intended message.",
+        "speak": "if-wrong",
+        "check": "Is the note field empty while the ask included a note?",
+        "say_example": "The note box is still empty. Your line about <the CHI talk> didn't go in. Adding it."
+       },
+       {
+        "question": "Do you want to use one of your few remaining personalized invites on this person?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The connection modal explicitly warns that only 4 personalized invitations remain for the month, meaning clicking send permanently consumes a scarce premium resource.",
+        "whatTheAgentLoses": "The user loses the ability to strategically ration their limited premium networking features for their most valuable targets.",
+        "speak": "on-event",
+        "check": "Does the modal say how many personalized invitations remain this month? How many?",
+        "say_example": "Adding a note uses one of your <4> invites left this month. Use one on <name>, or send without a note?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Attach the files",
+    "note": "5.1 then 5.2 then 5.3 on every attachment; 5.4 when the first pick is wrong or a second file is wanted; 5.5 where the size rule is raised - narrated in UGzJ, and in 7V6o the warning the narrator describes is on no frame.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Open the attachment menu",
+      "questions": [
+       {
+        "question": "Should the file go as an attachment or as a cloud link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The attachment menu presents distinct options for attaching a local file versus inserting a document directly from Google Drive.",
+        "whatTheAgentLoses": "The user loses the ability to choose whether to send a static local file or share a live document from their Google Drive.",
+        "speak": "never",
+        "check": "Which option was used, attach a file or insert a cloud link?",
+        "say_example": "Attached <report.pdf> as a file rather than a cloud link"
+       },
+       {
+        "question": "Does the message say something is attached while nothing is?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping the paperclip icon reveals options to attach a local file or insert one from Drive, which is essential if your commitment involves sharing a document.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct file or Drive link is selected and attached to the message.",
+        "speak": "if-wrong",
+        "check": "Does the body contain 'attached' or 'see attached', and is an attachment chip shown?",
+        "say_example": "The message says see attached, but nothing's attached. Adding <report.pdf> before it goes."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Find the file",
+      "questions": [
+       {
+        "question": "Which file do you want to attach to the message?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a file picker with multiple recent images and documents, requiring a choice of which specific file to attach.",
+        "whatTheAgentLoses": "The user loses the ability to handpick the exact file, such as a transaction receipt, that supports their commitment.",
+        "speak": "never",
+        "check": "Which file is highlighted in the picker, and does its name match the ask?",
+        "say_example": "Attached <report.pdf>"
+       },
+       {
+        "question": "Did the screenshot save to your desktop?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Waiting for the file 'Screenshot [number] at 23.15.04.png' to appear on the Mac desktop confirmed that the image was successfully captured and saved.",
+        "whatTheAgentLoses": "The user loses the certainty of visually verifying that a local record of the commitment was actually created and saved to their machine.",
+        "speak": "never",
+        "check": "Does the desktop or file list show the new screenshot file?",
+        "say_example": "Saved the screenshot to the desktop"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Check the attached chip",
+      "questions": [
+       {
+        "question": "Has your attachment finished uploading?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Waiting for the blue progress bar on the attachment chip to disappear ensures the file is fully attached before you click send.",
+        "whatTheAgentLoses": "The user loses the peace of mind that their required file was successfully included with the message rather than being dropped by a premature send.",
+        "speak": "if-wrong",
+        "check": "Is a progress bar still shown on the attachment chip? What percentage?",
+        "say_example": "The file is still uploading, <40%>. Sending now would drop it. Waiting."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Replace or add an attachment",
+      "questions": [
+       {
+        "question": "Is the attached file the one you meant to send?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The draft screen shows an attached PDF file named 'Naveen Demo.pdf' with an 'X' button next to it for removal.",
+        "whatTheAgentLoses": "The user loses the ability to catch and remove an incorrect file before committing to the message.",
+        "speak": "if-wrong",
+        "check": "What is the name of the attached file chip, and does it match the file the ask named?",
+        "say_example": "The attached file is <Naveen Demo.pdf>. You asked for <the invoice>. Swapping it."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Handle the size limit",
+      "questions": [
+       {
+        "question": "Is the file over the size limit, so it would go as a link instead of a copy?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a dialog stating the files exceed the 25 MB limit and will automatically be converted to Google Drive links.",
+        "whatTheAgentLoses": "The user loses the chance to cancel the upload and choose an alternative way to share or compress the large files.",
+        "speak": "on-event",
+        "check": "Does a dialog say the files exceed the size limit and will be sent as a Drive or OneDrive link? What size and limit does it show?",
+        "say_example": "The file is <30 MB>, over the limit. It'd go as a link, and <name> would open it online. Link, or a smaller file?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Set the message terms",
+    "note": "6.1 first, then one of 6.2 to 6.6 as the feature demands: 6.2 in vmDl, 6.3 and 6.4 in xjBI, 6.5 and 6.6 in NKK1. 6.8 sits beside 6.2 on the same ribbon and no keeper takes it. 6.7 after any of them - and after 4.9.8.4, where the poll card is the proof.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Find the feature",
+      "questions": [
+       {
+        "question": "Should you add voting buttons to this message?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Options tab reveals a 'Use Voting Buttons' feature that allows you to collect structured responses from the recipient.",
+        "whatTheAgentLoses": "You lose the ability to decide if a formal polling mechanism is the best way to handle the recipient's response to your commitment.",
+        "speak": "never",
+        "check": "Are voting buttons shown as enabled?",
+        "say_example": "Turned on voting buttons"
+       },
+       {
+        "question": "Should you enable confidential mode for this email?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The compose window displays a lock icon and a banner suggesting confidential mode to help keep your information safe.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to decide whether the sensitive nature of your commitment requires extra security restrictions.",
+        "speak": "never",
+        "check": "Is confidential mode shown as on?",
+        "say_example": "Turned on confidential mode"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Choose the voting options",
+      "questions": [
+       {
+        "question": "Which options do you want people to vote on?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed preset options like 'Yes;No' and 'Approve;Reject', but selecting 'Custom...' was necessary to create choices suitable for a lunch vote.",
+        "whatTheAgentLoses": "The user loses the ability to tailor the response options to the specific context and needs of their message.",
+        "speak": "never",
+        "check": "Which voting options are selected?",
+        "say_example": "Set the voting options to <Thai, American, Italian>"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Set the expiry",
+      "questions": [
+       {
+        "question": "Do you want to change the expiry or passcode on this confidential email?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The default settings expire the email in one week without an SMS passcode, which might not fit the security or timeframe needed for your commitment.",
+        "whatTheAgentLoses": "Delegating this means the agent might accept the default one-week expiry, potentially causing the recipient to lose access to your message too soon.",
+        "speak": "on-event",
+        "check": "Is confidential mode on, and what expiry and passcode setting does it show?",
+        "say_example": "Confidential mode is on. It expires in <1 week>, no passcode. Keep that, or change it?"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Decide on the passcode"
+     },
+     {
+      "id": "6.5",
+      "label": "Flag the recipient to act",
+      "questions": [
+       {
+        "question": "Should this follow-up flag apply to you or the recipient?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The custom dialog box requires choosing whether the flag and reminder are set for your own inbox or the recipient's.",
+        "whatTheAgentLoses": "An agent might set the flag for the wrong person, failing to prompt the recipient or unnecessarily adding a reminder to your own task list.",
+        "speak": "if-wrong",
+        "check": "Which flag box is checked: Flag for Me, Flag for Recipients, or both?",
+        "say_example": "The flag is set for you, not for <name>. The reminder would land in your inbox, not theirs. Switching it."
+       },
+       {
+        "question": "What do you want to ask the recipient to do?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the 'Custom' flag dialog with the 'Flag for Recipients' option checked and the 'Flag to:' combo box displaying 'Follow up'.",
+        "whatTheAgentLoses": "The user loses the ability to explicitly signal the expected action to the recipient using the email client's built-in flagging features.",
+        "speak": "never",
+        "check": "What does the Flag to field show?",
+        "say_example": "Flagged for <name> to follow up"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Set the recipient's reminder",
+      "questions": [
+       {
+        "question": "Is the reminder box checked, and for when?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an unchecked 'Reminder:' box with a default date and time, offering a built-in way to track the obligation.",
+        "whatTheAgentLoses": "The user loses the ability to decide exactly when they need to be reminded to fulfill the obligation they are creating.",
+        "speak": "never",
+        "check": "Is the Reminder box checked, and what date and time does it show?",
+        "say_example": "Set the reminder for <Friday at 9>"
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Confirm the terms applied",
+      "questions": [
+       {
+        "question": "Do the voting options on the message match the ones you asked for?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The information bar and the checked item in the 'Use Voting Buttons' dropdown confirmed that the specific choices 'Thai;American;Italian' would be sent to recipients.",
+        "whatTheAgentLoses": "The user loses the certainty of visually confirming the exact voting options recipients will receive before the email goes out.",
+        "speak": "if-wrong",
+        "check": "Does the info bar list the voting options, and do they match the ask?",
+        "say_example": "The info bar shows <Yes;No>. You wanted <Thai, American, Italian>. Redoing it."
+       },
+       {
+        "question": "Is the scheduling poll in the message body?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The side panel confirms the poll is ready to be shared, and the email body displays the poll block with the correct duration and time options.",
+        "whatTheAgentLoses": "The delegator loses the ability to visually verify that the poll details are accurate and properly embedded before sending the message.",
+        "speak": "if-wrong",
+        "check": "Does the email body show the poll block with the selected times and duration?",
+        "say_example": "The poll didn't land in the message. The body is empty where it should be. Inserting it again."
+       },
+       {
+        "question": "Does the message show the flag and reminder you set?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The info bar confirms the exact date and time the recipient will be reminded to reply.",
+        "whatTheAgentLoses": "The user loses the assurance that the recipient will receive the intended reminder at the correct time.",
+        "speak": "if-wrong",
+        "check": "Does the info bar state the flag and the reminder date for the recipient, matching what was set?",
+        "say_example": "The info bar says <name> gets reminded <Monday at 8>. You wanted <Friday>. Fixing it."
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Request a receipt",
+      "questions": [
+       {
+        "question": "Should you request a delivery or read receipt for this message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Options tab provides checkboxes for delivery and read receipts, which are crucial for proving that a binding commitment or important poll was actually received and opened.",
+        "whatTheAgentLoses": "The user loses the ability to automatically track whether the recipient has seen the message, leaving them uncertain if the obligation is mutually understood.",
+        "speak": "never",
+        "check": "Are the delivery receipt and read receipt boxes checked?",
+        "say_example": "Asked for a read receipt, as you said"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Review and send the message",
+    "note": "7.1 to 7.3 as the keeper bothers - EBqe runs all three, most run none and go straight to 7.4. 7.5 instead of 7.4 where the send is a question (3qL6, gBs-, 7V6o, vmDl). 7.6 replaces 7.4 in uQjR and is passed over in s3Um and ixyD. 7.7 once per page in zZ3x. 7.8 after any send that shows a toast. A refused send goes to 2.6.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Expand the hidden recipients",
+      "questions": [
+       {
+        "question": "With the recipient list expanded, are the recipients exactly the people you picked?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed a new message window with multiple recipients already populated, making the subject field the next logical step.",
+        "whatTheAgentLoses": "The user loses the ability to visually verify that the correct recipients are included before committing to the draft.",
+        "speak": "if-wrong",
+        "check": "With the collapsed 'N more' link expanded, which names are in To, Cc and Bcc, and does the count match the picked set?",
+        "say_example": "The message shows <7> recipients. You picked <6>. The extra is <name>. Removing them."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Re-read the draft",
+      "questions": [
+       {
+        "question": "Do you want to send a message that's only a link, with no words?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a message containing just a bare link, which might lack necessary context or professionalism.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to add context or a polite greeting to a bare link before committing to sending it.",
+        "speak": "on-event",
+        "check": "Is the body only a URL with no other text?",
+        "say_example": "The message is just a link, nothing else. <name> won't know what it's for. Give me a line to put in front, or send as is?"
+       },
+       {
+        "question": "Is anything in the message underlined as misspelled?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Browsers and email clients use colored underlines to flag potential errors, which are purely visual cues that a critical detail (like a name, date, or amount) might be misspelled.",
+        "whatTheAgentLoses": "The user loses the immediate visual warning of a typo, risking sending an unprofessional or factually incorrect commitment.",
+        "speak": "on-event",
+        "check": "Does the draft show spelling underlines, and under which words?",
+        "say_example": "Spell check underlined <Thursady> in the date line. Fixing it to <Thursday>."
+       },
+       {
+        "question": "Is there something in the message that shouldn't go out, like a password reset link?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen showed the email body populated with 'You have successfully reset the password for your Adobe ID', indicating potentially sensitive clipboard content was pasted.",
+        "whatTheAgentLoses": "The user loses the ability to catch and remove accidentally pasted sensitive account information before it is sent to the recipient.",
+        "speak": "on-event",
+        "check": "Does the body contain a password reset link, a verification code, or text like 'reset the password'?",
+        "say_example": "The message has a password reset link pasted in. That's not something to send. Taking it out, unless you meant it."
+       },
+       {
+        "question": "Does the drafted text end mid-sentence, as if cut off?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The drafted message says 'let's find the best time for out TPS Report pl', showing a typo and an incomplete sentence.",
+        "whatTheAgentLoses": "The user loses the chance to proofread their custom message, risking sending an unprofessional or confusing commitment.",
+        "speak": "on-event",
+        "check": "Does the body end without punctuation, on a partial word, or mid-sentence?",
+        "say_example": "The message stops mid sentence, at <'for our TPS report pl'>. I can finish it, or tell me what it should say."
+       },
+       {
+        "question": "Is there still a placeholder like '[Insert Date]' in the message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When using templates or copying prior messages, failing to replace placeholders invalidates the specific terms of the new commitment and looks unprofessional.",
+        "whatTheAgentLoses": "The user loses the assurance that the final text is complete and legally or professionally sound before it becomes a binding message.",
+        "speak": "on-event",
+        "check": "Does the body contain bracketed placeholders such as [Insert Date], [Name] or [Amount]?",
+        "say_example": "The template still says <[Insert Date]> where the date should be. Putting <Friday, Sep 12>."
+       },
+       {
+        "question": "Does the time in the message say which time zone it's in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When committing to a time with someone in a different region, failing to specify the time zone can lead to missed obligations and confusion.",
+        "whatTheAgentLoses": "The user loses the contextual awareness to clarify time zones, risking a misaligned commitment that the agent assumes is universally understood.",
+        "speak": "on-event",
+        "check": "Does the body state a clock time with no time zone next to it? Does the recipient's profile, signature or away banner show a location?",
+        "say_example": "You wrote <2 pm> with no time zone. <name> is in <London>. Add <Pacific>?"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Check the pre-filled fields",
+      "questions": [
+       {
+        "question": "Is the new project made and open on its talent pool?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows the newly created project in the dashboard and its details page with the 'Talent pool' tab.",
+        "whatTheAgentLoses": "The user loses the assurance that the project was correctly set up to organize the candidates they intend to message.",
+        "speak": "never",
+        "check": "Does the dashboard list the new project, with a Talent pool tab open?",
+        "say_example": "Created the project and opened its talent pool"
+       },
+       {
+        "question": "Do the pre-filled title and attendees match the message this meeting is answering?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displayed a new meeting window where the title, required attendees, and body were automatically filled from the original message.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the system correctly translated the original email's context into the meeting invitation.",
+        "speak": "if-wrong",
+        "check": "Do the title and required attendees match the original message's subject and sender?",
+        "say_example": "The meeting filled in as <Re: budget> to <Ana>. The original was from <Ravi>. Fixing the attendee."
+       },
+       {
+        "question": "Are the meeting details correct before you send the invitation?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the calendar event window with the title, attendees, date, and time, which must be verified before sending.",
+        "whatTheAgentLoses": "A person delegating to an agent loses the opportunity to ensure the meeting details are accurate before committing to them.",
+        "speak": "gate",
+        "check": "What title, date, time, and guests does the invite show, and is the Send button visible?",
+        "say_example": "Ready to send the invite. <Design review>, <Tuesday Sep 9, 2 to 3>, to <Ana and Ravi>. They'll get an email. Press to send, or say change."
+       },
+       {
+        "question": "Did the event save with the guests and details you asked for?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The pop-up details card displayed the meeting time, guest list, and description, confirming the commitment was accurately recorded.",
+        "whatTheAgentLoses": "The user loses the immediate reassurance of visually confirming that their meeting invitation was successfully created with the correct participants.",
+        "speak": "if-wrong",
+        "check": "Does the saved event card show the guests, date and time as asked?",
+        "say_example": "The event saved without <Ravi>. Adding him back."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Press send",
+      "questions": [
+       {
+        "question": "Are you ready to click 'Send'?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking this button dispatches the message and triggers the 'Message sent' confirmation, making your commitment official.",
+        "whatTheAgentLoses": "You lose the final moment of control to halt the dispatch before the obligation becomes irreversible.",
+        "speak": "gate",
+        "check": "What does the compose show: recipient, subject, the commitment line, attachments, and a send time if one is scheduled?",
+        "say_example": "Ready to send. To <name>, <Friday delivery>. It says you'll have the report by <Friday>. Press to send, or say change."
+       },
+       {
+        "question": "After pressing Send, did a sent confirmation appear?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The video promises to show how to send a connection request but ends while the cursor is hovering over the 'Send' button, never showing the result.",
+        "whatTheAgentLoses": "The agent loses the critical final steps of executing the send action and verifying its success.",
+        "speak": "if-wrong",
+        "check": "After the press, is a Sent or Message sent confirmation shown, or is the compose still open?",
+        "say_example": "I pressed send and nothing confirmed it. The draft's still open. I won't press again until we know. Checking Sent."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Answer the send prompt",
+      "questions": [
+       {
+        "question": "What access should the recipients get to the attached files?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presented a modal asking whether to allow anyone with the link to view the attached files or to send without giving access.",
+        "whatTheAgentLoses": "Delegating this means losing the ability to control the specific privacy and sharing permissions for the attached files.",
+        "speak": "on-event",
+        "check": "Is a dialog asking what access recipients get to the attached files? What options does it list?",
+        "say_example": "<name> can't open the attached file yet. I can give anyone with the link viewing access, or send without. Which?"
+       },
+       {
+        "question": "Do you want to email the new guest an invite?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed a modal dialog asking whether to send invitation emails to Google Calendar guests.",
+        "whatTheAgentLoses": "The user loses the choice of whether to explicitly notify the guest via an automated email or add the event silently.",
+        "speak": "on-event",
+        "check": "Is a dialog asking whether to send invitation emails to guests? Which guests?",
+        "say_example": "It's asking whether to email <name> the invite. Send the email, or just add them quietly?"
+       },
+       {
+        "question": "Does the page say you've hit an invitation limit, or ask for the recipient's email before it'll send?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Professional networks like LinkedIn actively block sends if they suspect spam or if weekly limits are reached, requiring alternative verification.",
+        "whatTheAgentLoses": "The user loses the awareness that their account is being restricted or that the specific recipient requires higher verification to contact.",
+        "speak": "on-event",
+        "check": "Does the page show a limit warning or a prompt for the recipient's email address? Quote it.",
+        "say_example": "LinkedIn says you've hit this week's invitation limit. This one won't go out. Try again <Monday>, or message them instead?"
+       },
+       {
+        "question": "Did company security block the message when it was sent?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Corporate email systems may intercept messages containing sensitive terms or numbers, requiring the sender to provide a business justification or apply encryption before the message can leave the outbox.",
+        "whatTheAgentLoses": "The user loses the ability to handle security intercepts, meaning the agent might fail to send the commitment entirely if it cannot navigate the DLP prompt.",
+        "speak": "on-event",
+        "check": "Is a DLP or security prompt shown after send? What does it say is the reason?",
+        "say_example": "Company mail blocked it. It says the message has <a card number>. It needs a reason from you, or encryption. What do you want to do?"
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Schedule the send",
+      "questions": [
+       {
+        "question": "Send it now, or schedule it for later?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed a dropdown arrow next to the 'Send' button, offering a choice between immediate dispatch and delayed delivery.",
+        "whatTheAgentLoses": "The user loses the ability to strategically time when the recipient receives the commitment.",
+        "speak": "never",
+        "check": "Does the send button have a schedule dropdown, and did the ask give a send time?",
+        "say_example": "Sent right away, no schedule"
+       },
+       {
+        "question": "Is the send time it suggests OK?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The dialog presents a default send time of tomorrow at 8:00 AM Philippine Standard Time, which may not be when you actually want the recipient to get the message.",
+        "whatTheAgentLoses": "You lose control over the exact delivery time of your commitment, risking the message arriving at an inappropriate or ineffective hour if the agent simply accepts the default.",
+        "speak": "on-event",
+        "check": "What default send time and time zone does the schedule dialog show?",
+        "say_example": "It's offering <tomorrow at 8 am>, <Philippine time>. That's <5 pm today> for you. Take it, or pick a time?"
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Send the batch"
+     },
+     {
+      "id": "7.8",
+      "label": "Watch the sending toast",
+      "questions": [
+       {
+        "question": "Did it send, and is the undo still on screen?",
+        "cluster": "undo",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displayed a 'Message sent' toast with options to 'Undo' or 'View message', confirming the send action.",
+        "whatTheAgentLoses": "The user loses the brief opportunity to immediately undo the sent message if they realize a mistake.",
+        "speak": "always",
+        "check": "Is a Message sent toast shown, with Undo or View message?",
+        "say_example": "Sent, <3:07 pm>. Undo is on screen for a few seconds. Say undo if you want it back."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Confirm the message went",
+    "note": "8.1 or 8.2 on the sending side; 8.3 where the toast said Sent and the inbox says otherwise - kvML alone, and it looks past it. 8.4 to 8.6 where the keeper crosses to the recipient's side, eight of 24. 8.7 for the corpus's one round trip.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Open the sent folder",
+      "questions": [
+       {
+        "question": "Is the message in Sent yet, or still in the Outbox?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The Gmail sidebar menu contains an 'Outbox' label where messages with heavy files are temporarily held until they finish sending.",
+        "whatTheAgentLoses": "You lose the reassurance of manually checking the Outbox to confirm whether a delayed message is still in transit.",
+        "speak": "if-wrong",
+        "check": "Is the message listed in Outbox rather than Sent? What does the Outbox show?",
+        "say_example": "It's sitting in the outbox. The <30 MB> file is still going. Not sent yet. I'll tell you when it lands in Sent."
+       },
+       {
+        "question": "Is the message in the Scheduled folder, or did it go out or stay a draft?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Opening the folder list to check the Scheduled folder confirms that the app properly registered your future commitment.",
+        "whatTheAgentLoses": "You lose the visual confirmation that your message is safely queued to be sent at the correct time.",
+        "speak": "if-wrong",
+        "check": "Does the message appear in the Scheduled folder with the scheduled time, rather than in Sent or Drafts?",
+        "say_example": "It's not in Scheduled. It's in Drafts, so it wouldn't go out <Tuesday>. Schedule it again?"
+       },
+       {
+        "question": "Does the sent copy show the recipient, subject and attachment you meant to send?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the Sent folder confirms the message was successfully dispatched with all intended details.",
+        "whatTheAgentLoses": "The user loses the certainty that their commitment was actually sent and recorded in their outbox.",
+        "speak": "if-wrong",
+        "check": "In the Sent copy, what recipient, subject and attachment are shown, and do they match what was sent?",
+        "say_example": "The sent copy has no attachment. The photo didn't go. Send it again with the photo?"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Read the sent copy",
+      "questions": [
+       {
+        "question": "Does the sent forward include the original message under your note?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen showed a collapsed forwarded message with a '> Show original message' link, requiring you to expand it to verify the full text.",
+        "whatTheAgentLoses": "The delegator loses the assurance that the forwarded content was correctly included and formatted in the final sent message.",
+        "speak": "if-wrong",
+        "check": "With the original expanded in the sent copy, is the forwarded message text present?",
+        "say_example": "The forward went out with nothing under your note. <name>'s original didn't come along. Send it again with the text?"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Check for a failure notice",
+      "questions": [
+       {
+        "question": "Has a bounce come back saying the message didn't get through?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The top email in the inbox showed an 'Address not found' snippet, meaning the message did not reach the recipient.",
+        "whatTheAgentLoses": "The user falsely believes their commitment was communicated, leaving the recipient unaware.",
+        "speak": "on-event",
+        "check": "Is there a new message in the inbox with Address not found, Delivery failed, or a bounce for <recipient>?",
+        "say_example": "A bounce came back. <name>'s address wasn't found, so it never got there. Check the address?"
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Get to the recipient's side"
+     },
+     {
+      "id": "8.5",
+      "label": "Open the received copy"
+     },
+     {
+      "id": "8.6",
+      "label": "Test the restrictions"
+     },
+     {
+      "id": "8.7",
+      "label": "Watch the reply come back",
+      "questions": [
+       {
+        "question": "Did an auto-reply come back saying they're away?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "An immediate automated response indicates the recipient is unavailable, meaning the time-sensitive commitment may not be seen.",
+        "whatTheAgentLoses": "The user loses the awareness that their message wasn't actually received by a human, failing to redirect the commitment to an available contact.",
+        "speak": "on-event",
+        "check": "Did an auto-reply or out-of-office message arrive from <recipient>? What return date does it give?",
+        "say_example": "<name>'s auto reply says they're away until <Sep 12>. Your message wanted an answer by <Friday>. Send it to <someone else> too?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Handle the responses",
+    "note": "9.1 for the sender's own vote, 9.2 for the others; then 9.3 and 9.4 as the tally comes in. 9.5 when the poll decides a meeting. 9.6 on the invite link. 9.7 on the recruiting side. 9.8 where the corpus fails and shows no repair. 9.9 last, in one keeper.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Vote on your own poll",
+      "questions": [
+       {
+        "question": "Which option is selected in your own vote, and is it sending now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a voting dropdown with cuisine options and a dialog asking whether to send the response immediately or edit it first.",
+        "whatTheAgentLoses": "The user loses the ability to select their preferred choice and decide whether to add additional context before the vote is sent.",
+        "speak": "never",
+        "check": "Which option is selected in the vote dropdown, and is it asking to send now or edit first?",
+        "say_example": "Voted <Thai> on your own poll"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Answer as the recipient"
+     },
+     {
+      "id": "9.3",
+      "label": "Read the responses"
+     },
+     {
+      "id": "9.4",
+      "label": "Read the tally",
+      "questions": [
+       {
+        "question": "What's the tally, and who hasn't voted?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The Message Tracking window displayed the reply totals and individual responses, which dictates the outcome you are committing to in the message.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally review the voting breakdown and ensure the correct choice is made based on the group's preferences.",
+        "speak": "always",
+        "check": "What totals does the tracking window show per option, and which recipients have no response?",
+        "say_example": "Votes are in. <3> for Thai, <1> for Italian. <Bill> hasn't voted."
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Schedule from the poll",
+      "questions": [
+       {
+        "question": "Book the meeting on the votes so far, or wait for everyone?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that required attendees like Bill Lumbergh haven't responded yet, and the preferred 2:30 PM slot already has one 'No' vote.",
+        "whatTheAgentLoses": "The delegator loses the nuanced human judgment of weighing strong preferences against outright rejections and knowing when to wait for crucial stakeholders before committing.",
+        "speak": "on-event",
+        "check": "Does the poll page show required attendees with no response, or a No on the slot about to be chosen?",
+        "say_example": "<Bill> hasn't voted, and <2:30> already has one no. Book it anyway, or wait for him?"
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Open the invite landing page",
+      "questions": [
+       {
+        "question": "Does the event page match the invite's date and time?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the event landing page ensures the recipient will see the correct date, time, and functional Yes, No, or Maybe buttons.",
+        "whatTheAgentLoses": "The user loses the peace of mind that comes from manually verifying the recipient's exact view of the event details and RSVP options.",
+        "speak": "if-wrong",
+        "check": "Does the event page show the date, time and Yes, No, Maybe buttons matching the invite?",
+        "say_example": "The event page says <3 pm>. The invite says <2>. Everyone invited would see the change. Fix the event to <2>?"
+       }
+      ]
+     },
+     {
+      "id": "9.7",
+      "label": "Record the outreach",
+      "questions": [
+       {
+        "question": "What should go in the candidate's notes?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Note' icon and existing notes, indicating this is the designated place to maintain context about the candidate.",
+        "whatTheAgentLoses": "The delegator loses the assurance that nuanced insights, such as salary expectations or contact preferences, are captured for future interactions.",
+        "speak": "never",
+        "check": "What text is in the candidate's notes?",
+        "say_example": "Noted <messaged about the design role> on <name>'s profile"
+       },
+       {
+        "question": "Has someone on your team already messaged this person?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The Recruiting Activity feed displays notes, views, and message counts from colleagues, which helps you avoid sending redundant or conflicting outreach.",
+        "whatTheAgentLoses": "You lose the awareness of your team's prior relationship with the recipient, which could lead to an uncoordinated or embarrassing message.",
+        "speak": "on-event",
+        "check": "Does the activity feed show a message or note from a colleague to this candidate? Who and when?",
+        "say_example": "<Priya> already messaged <name> <two weeks ago>. Yours might double up. Still send?"
+       },
+       {
+        "question": "What status should the candidate get now that you've messaged them?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen shows a \"Change status\" dropdown with options like \"Contacted\" and \"Screened\" to track the candidate's progress.",
+        "whatTheAgentLoses": "The user loses the ability to define their own workflow rules for categorizing candidates in the pipeline.",
+        "speak": "never",
+        "check": "What does the Change status dropdown show?",
+        "say_example": "Marked <name> as contacted"
+       }
+      ]
+     },
+     {
+      "id": "9.8",
+      "label": "Fix a failed delivery",
+      "questions": [
+       {
+        "question": "What does the send error say?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays an error state in the chat window that must be cleared using the 'X' button so you can return to the main interface and resolve the issue.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally read the error details and understand what caused the failure before the alert is dismissed.",
+        "speak": "on-event",
+        "check": "Is an error shown after send? Quote its text.",
+        "say_example": "It didn't send. The error says <'Message not delivered'>. I'm leaving it on screen. Try again, or a different way?"
+       }
+      ]
+     },
+     {
+      "id": "9.9",
+      "label": "Sign out"
+     }
+    ]
+   }
+  ]
+ }
+}

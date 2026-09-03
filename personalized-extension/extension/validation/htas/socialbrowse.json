@@ -1,0 +1,1283 @@
+{
+ "task": "browse a social feed or forum to find specific content (find top or rising posts in a subreddit, open a community's latest discussion, find posts about a topic, sort or filter a feed): apply the right sort or filter, locate the target content, and open it; complete when the target post or discussion is on screen. Surface pinned: reddit, X/twitter, forums, and community sections. Variants: growing-your-account creator content, drama commentary, and social-media-detox content do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Find content on a social feed",
+  "note": "1, then 2 - 2 is short for most keepers and long where the handle has to be fetched from a profile or an article. then 3 or 4: 3 alone for the keepers who never type a query - SfAA, d5FK's first half, NQWU, ARbd, mz5g's lists; 3 first and then 4 when scrolling is tried and abandoned - 2GlE, d5FK, pRWM. 4 builds the query, 5 narrows where the platform has controls, 6 reads what came back. 7 whenever 6 says the list is wrong or empty, then back into 4 - opYq twice, T6c1 twice, Wk3C once. 8 when the list holds the target; fourteen keepers stop at 6 with the list on screen and never reach 8. 9 after 8, or after 6 where the list itself is the thing checked - 9.6 loops the task back to 2 for the next target.",
+  "questions": [
+   {
+    "question": "At the end of the run, is the page the community that was asked for, or still the home feed?",
+    "cluster": "facts",
+    "moment": "Completion",
+    "moneyMoving": false,
+    "why": "The title card introduces finding niche subreddits, but the video only shows scrolling a home feed and expanding a post description.",
+    "whatTheAgentLoses": "A person delegating this task loses the ability to discover specific communities because the workflow shown does not include any search or discovery steps.",
+    "speak": "if-wrong",
+    "check": "Is the page the community named in the task, showing its name in the header, or is it still the home feed?",
+    "say_example": "I never got to <r/community>. I only scrolled the home feed. That's not what you asked for, so I'm searching for the community now."
+   }
+  ],
+  "children": [
+   {
+    "id": "1",
+    "label": "Get onto the platform",
+    "note": "1.1 where the video starts on the home screen - eleven keepers. 1.2 only in NQWU. 1.3 as the prompts appear. then 1.4, which every search keeper does and the browse keepers skip.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the app or site",
+      "questions": [
+       {
+        "question": "Which app should you open to start your search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple applications, so you must select the correct platform like Reddit to access the desired community.",
+        "whatTheAgentLoses": "You lose the ability to choose which specific social platform the agent uses to find the content.",
+        "speak": "never",
+        "check": "Which icon on the home screen carries the name of the platform in the task?",
+        "say_example": "Opened <Reddit>"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Sign in with an account",
+      "questions": [
+       {
+        "question": "Do you want to go ahead with the email address already filled in to find your account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an account recovery prompt with a pre-filled email, and confirming it initiates the password reset process for that specific address.",
+        "whatTheAgentLoses": "The user loses control over verifying and deciding which email address is submitted for the account recovery process.",
+        "speak": "gate",
+        "check": "Does the page show an account recovery or password reset prompt, and which email address is pre-filled in it?",
+        "say_example": "The site is offering to reset the password for <email>. That sends a reset link to that inbox. Is that your address, and do you want the reset? Or say sign in another way."
+       },
+       {
+        "question": "How do you want to sign in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose between continuing with Google, creating a new account, or logging in to access the platform.",
+        "whatTheAgentLoses": "The user loses the ability to decide which personal account or authentication method is used to access the platform.",
+        "speak": "gate",
+        "check": "Which sign-in options does the page show, and if a Google prompt is open, what data does it say it will share?",
+        "say_example": "It wants you signed in. I can use <Google>, which shares your name, email, and photo with <the site>. Or your email and password, which you'd type yourself. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Dismiss the platform prompts",
+      "questions": [
+       {
+        "question": "Should you sync your contacts to find people you know, or dismiss the prompt?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The feed interrupts the content with a prompt to 'Take a peek at your contacts', requiring a decision on whether to grant the platform access to your personal address book.",
+        "whatTheAgentLoses": "The user loses control over their privacy if the agent blindly accepts the prompt and uploads their personal contacts to the social platform.",
+        "speak": "on-event",
+        "check": "Does the page show a prompt asking to access or sync contacts?",
+        "say_example": "The app wants to look through your contacts to find people you know. I'm saying no. The feed is behind it."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Open the search surface",
+      "questions": [
+       {
+        "question": "Are you logged in and on the home feed ready to search?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing the 'Find anything' search bar and standard feed posts confirms the app has successfully loaded your active session.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of knowing the agent is using your personal account and feed to start the task.",
+        "speak": "never",
+        "check": "Does the page show the search bar and a feed of posts, with no sign-in prompt?",
+        "say_example": "Signed in and on the home feed"
+       },
+       {
+        "question": "After the app bounced back to the home feed, is the search picked up with the same query, not a different one?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Home Feed and a 'Find anything' search bar, which you must tap to resume looking for your target content.",
+        "whatTheAgentLoses": "The user loses the ability to quickly recover from an unexpected navigation change to continue their specific search.",
+        "speak": "on-event",
+        "check": "Is the page the home feed while a search was in progress, and what text does the search field hold now?",
+        "say_example": "The app bounced back to the home feed. I'm picking up the same search, <query>, where it left off."
+       },
+       {
+        "question": "Is the search looking only in this account's posts, not the whole site?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The magnifying glass icon at the top right allows you to search and filter content exclusively within the currently viewed profile.",
+        "whatTheAgentLoses": "You lose the ability to choose the specific keywords used to filter and search through this creator's timeline.",
+        "speak": "if-wrong",
+        "check": "Is the search field labelled as searching within this profile, or is it the platform-wide search?",
+        "say_example": "That search box looks at the whole site, not just <handle>'s posts. I'm switching to the search on the profile page."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Decide what to look for",
+    "note": "2.1 on every account-scoped search - a profile visit in T6c1, QuA_, 0rov and pRWM, a suggestion row in 2GlE. 2.2 where the target is a post rather than an account. 2.3 and 2.4 are the platform's offers, taken by four keepers and ignored by ten. 2.5 where a profile or feed is on screen and the user weighs scrolling it.",
+    "questions": [
+     {
+      "question": "Which post and author from the article are you looking for?",
+      "cluster": "facts",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The news article explicitly names Akshay Shah and quotes his tweet about Shark Tank India, establishing the exact target content to search for.",
+      "whatTheAgentLoses": "You lose the ability to verify that the correct author and keywords were extracted from the source article to guide the search.",
+      "speak": "always",
+      "check": "Which author name and quoted post text does the article show?",
+      "say_example": "Got it. The article quotes <author>'s post, the one that says <quote>. That's what I'm looking for."
+     },
+     {
+      "question": "How do you want to look for people in your niche: by account, keyword, or hashtag?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "Clicking the top search bar presents a choice of discovery methods, requiring you to decide between targeting famous individuals, industry keywords, or specific hashtags.",
+      "whatTheAgentLoses": "You lose the nuanced understanding of your specific industry needed to choose the most effective search strategy for uncovering your target audience.",
+      "speak": "never",
+      "check": "Which discovery options does the search screen offer: accounts, keywords, or hashtags?",
+      "say_example": "Searching by <hashtag> first, since your niche is <topic>"
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Fix the target handle",
+      "questions": [
+       {
+        "question": "Which specific username should I search for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an empty 'Search X' field above a panel of recent accounts, requiring the exact handle to locate the correct user's feed.",
+        "whatTheAgentLoses": "The user loses the ability to specify exactly whose profile or posts the agent should navigate to.",
+        "speak": "never",
+        "check": "What handle is in the search field, and does it match the handle named in the task?",
+        "say_example": "Searching for <@handle>"
+       },
+       {
+        "question": "Does the handle typed into the search match the handle on the target's own profile page, letter for letter?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A close inspection of the screen at 0:10 reveals the handle is actually @Akshay, contradicting the assumption that it was @AkshayWeb.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is tracking the correct, authentic account rather than getting confused by similar handles.",
+        "speak": "if-wrong",
+        "check": "Does the handle in the search field match the handle shown on the target's profile page, character for character?",
+        "say_example": "The search says <@AkshayWeb>, but the profile is <@Akshay>. Those are different accounts. Fixing it."
+       },
+       {
+        "question": "Which exact handle should you copy from this profile?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the verified name 'Cristiano Ronaldo' with the handle '@Cristiano' below it, confirming the official username.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify that the correct, official handle was identified and copied.",
+        "speak": "on-event",
+        "check": "When the task names a person rather than a handle, what handle does the profile page show under the verified name?",
+        "say_example": "You said <Cristiano Ronaldo>. The profile with the verified badge is <@Cristiano>. That's the one I'm using."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Choose the keyword or phrase",
+      "questions": [
+       {
+        "question": "Which part of the quoted post should you search with?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The article displays the exact text of the target tweet, and picking a unique element like a hashtag makes finding the original post much easier.",
+        "whatTheAgentLoses": "You lose the opportunity to manually select the most distinct keywords from the source text to optimize your search.",
+        "speak": "never",
+        "check": "Which distinctive phrase or hashtag does the quoted text in the article contain?",
+        "say_example": "Searching with <#hashtag> from the quote, since it's the rarest part"
+       },
+       {
+        "question": "Which words should you type to find the old post?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar allows you to combine remembered phrases like 'hey' with user filters to effectively narrow down the results.",
+        "whatTheAgentLoses": "You lose the ability to rely on your personal memory of the exact phrases used in the original post to guide the search.",
+        "speak": "never",
+        "check": "What words are in the search field, and do they match the phrase given in the task?",
+        "say_example": "Searching <handle>'s posts for <hey>"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Pick a trend or hashtag",
+      "questions": [
+       {
+        "question": "Which spelling of the hashtag should you use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The autocomplete dropdown shows multiple similar recent searches like 'marketing online' and 'online-marketing', requiring you to decide which exact term will yield the best results.",
+        "whatTheAgentLoses": "You lose the ability to intuitively select the most effective hashtag variation for your specific business goals based on the available suggestions.",
+        "speak": "never",
+        "check": "Which spellings of the term does the autocomplete list show?",
+        "say_example": "Using <#marketingonline>, the one with the most posts"
+       },
+       {
+        "question": "Are the trends shown for the region the task wants?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays localized trends for the United States like '#Chemistry' alongside a 'Change' option, requiring a choice between exploring these local topics or adjusting the region.",
+        "whatTheAgentLoses": "You lose the opportunity to strategically select a region or intuitively pick a trending hashtag that best aligns with your current browsing goals.",
+        "speak": "if-wrong",
+        "check": "Which region does the trends panel say it is showing, and does it match the region in the task?",
+        "say_example": "These trends are for <the United States>. You wanted <India>. Changing the region first."
+       },
+       {
+        "question": "Do these results actually fit the topic you wanted, or should a different hashtag be tried?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results for #Chemistry did not provide ideal examples for demonstrating business networking, prompting a pivot to a different trending hashtag.",
+        "whatTheAgentLoses": "You lose the human judgment needed to realize when a technically correct search yields contextually poor results for your specific overarching goal.",
+        "speak": "never",
+        "check": "Do the results under the hashtag show posts about the topic in the task?",
+        "say_example": "Skipped <#Chemistry>, mostly school posts. Trying <#smallbusiness> instead"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Reuse a recent search",
+      "questions": [
+       {
+        "question": "Which recent search should you run again?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a variety of past searches like 'gaming' and 'Remote Work Trends', and selecting the correct one determines which topic's feed will be surfaced.",
+        "whatTheAgentLoses": "The user loses the ability to spontaneously pick a topic from their search history based on their current mood or interest.",
+        "speak": "never",
+        "check": "Which entries does the recent searches list show, and does one match the task's query?",
+        "say_example": "Reusing your recent search <Remote Work Trends>"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Decide to scroll or search",
+      "questions": [
+       {
+        "question": "Should you keep scrolling manually to find this old tweet, or try a search filter?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows endless scrolling because the target Shark Tank tweet is too old to find efficiently this way.",
+        "whatTheAgentLoses": "The user loses time and efficiency if the agent gets stuck endlessly scrolling for an old post instead of using search.",
+        "speak": "never",
+        "check": "Does the feed show a post matching the target, or only newer posts with more still loading?",
+        "say_example": "Searched by date instead of scrolling, since the post is years old"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Browse to the target",
+    "note": "the no-query route. 3.1 picks the feed or tab, 3.2 scrolls it - SfAA to the end-of-Top-Tweets marker twice, d5FK to the Who to follow block and then gives up. 3.3 once, in NQWU, between two scrolls of the same tab. 3.4 is the sort control at the top of every subreddit feed, which no keeper touches. 3.5 and 3.6 are mz5g's list routes. 2GlE, d5FK and pRWM enter this goal, judge it too slow, and leave it for 4.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Pick the feed tab",
+      "questions": [
+       {
+        "question": "Which feed do you want to view?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app defaults to the 'For you' tab showing algorithmic recommendations, but you might need to switch to the 'Following' tab to find specific posts from accounts you track.",
+        "whatTheAgentLoses": "You lose the choice of prioritizing content from accounts you explicitly follow over general algorithmic recommendations.",
+        "speak": "never",
+        "check": "Which feed tab is highlighted as active?",
+        "say_example": "Switched to the Following tab"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Scroll to the target",
+      "questions": [
+       {
+        "question": "Did the feed hit the end before the post you want showed up?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Infinite scroll can legitimately run out of history, displaying a message like 'You've reached the end of the Top Tweets,' which means the target post isn't here and you must adjust your filters.",
+        "whatTheAgentLoses": "The agent might get stuck trying to scroll further or assume the post doesn't exist, rather than realizing it needs to broaden its search parameters.",
+        "speak": "on-event",
+        "check": "Does the page show an end-of-results message, such as 'You've reached the end'?",
+        "say_example": "I've scrolled to the end of <handle>'s posts and it isn't here. So it isn't in this feed. I'll try a search with dates instead."
+       },
+       {
+        "question": "Did the feed stop loading, with an error, a retry button, or a spinner that never ends?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Social platforms often fail to load older posts during infinite scrolling due to network timeouts or API limits.",
+        "whatTheAgentLoses": "The user loses the knowledge that the search was interrupted by a technical glitch, rather than reaching the true end of the results.",
+        "speak": "on-event",
+        "check": "Does the feed show an error message, a retry button, or a loading spinner that has not resolved?",
+        "say_example": "The feed stopped loading and shows a retry button. Pressing retry once. If it stays stuck I'll use search instead."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Restart the app"
+     },
+     {
+      "id": "3.4",
+      "label": "Sort the community feed",
+      "questions": [
+       {
+        "question": "Did the sort actually change to the one you picked, or did it snap back to the default?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Social platforms sometimes fail to apply a sort parameter or silently revert to the default algorithmic feed, indicated only by the active sort icon.",
+        "whatTheAgentLoses": "The user loses the guarantee that they are actually browsing the 'Top' or 'Latest' posts if the agent assumes the sort applied without verifying the active icon.",
+        "speak": "if-wrong",
+        "check": "Which sort option is shown as active after the selection was made?",
+        "say_example": "I picked New, but the feed is still on Hot. The site ignored it. Trying the sort again."
+       },
+       {
+        "question": "Are the 'Latest' or 'New' posts actually months or years old?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sorting by recency in a niche or abandoned community might surface very old posts, indicating that the forum is dead and the information is likely outdated.",
+        "whatTheAgentLoses": "The user loses the critical context that the community is inactive, which completely changes how much they should trust the 'latest' information provided.",
+        "speak": "on-event",
+        "check": "What is the date on the first post when the feed is sorted by Latest or New?",
+        "say_example": "Sorted by new, and the newest post is from <two years ago>. This community looks dead. Anything here is probably out of date."
+       },
+       {
+        "question": "Is the first post pinned by the moderators rather than the actual newest post?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Communities often pin rules or megathreads at the top of the feed, indicated by a small pin icon, which overrides the selected sort order.",
+        "whatTheAgentLoses": "The user loses the ability to distinguish between a permanently pinned administrative post and the actual highest-performing or newest organic content they requested.",
+        "speak": "on-event",
+        "check": "Does the first post in the feed carry a pin icon or a 'Pinned' label?",
+        "say_example": "The first post is pinned by the moderators. The real newest one is below it."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Open the follow lists",
+      "questions": [
+       {
+        "question": "Which list should you open next, followers or following?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile summary displays large follower and following counts, providing alternative networks to search for relevant content.",
+        "whatTheAgentLoses": "You lose the spontaneous insight to pivot your search into a specific user's audience to find better content.",
+        "speak": "never",
+        "check": "What follower and following counts does the profile show?",
+        "say_example": "Opening <handle>'s following list, <1,200> accounts"
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Read the list by bio",
+      "questions": [
+       {
+        "question": "Which people in this list have bios that fit your business?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Evaluating the bios in the following list ensures you only connect with individuals who align with your specific niche.",
+        "whatTheAgentLoses": "You lose the personal judgment required to evaluate whether a user's bio genuinely aligns with your specific business goals.",
+        "speak": "never",
+        "check": "What text does each bio in the list contain?",
+        "say_example": "Found <4> people in the list whose bios mention <your niche>"
+       },
+       {
+        "question": "Which followers in this list appear to be English speakers?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Skipping profiles with Cyrillic or Japanese text ensures you only connect with relevant users who share your language.",
+        "whatTheAgentLoses": "The user loses the ability to intuitively filter out irrelevant connections based on language cues in names and bios.",
+        "speak": "never",
+        "check": "Which bios in the list are written in a script other than Latin?",
+        "say_example": "Skipping <3> accounts whose bios are in <another language>"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Build the search query",
+    "note": "4.1 on every search keeper - as the whole query on Reddit and on keyword searches, as a placeholder keyword typed only to make the Advanced search link appear in c1r2, 06pZ, 898W and pRWM. then 4.2 or 4.3 for the constraint: ten keepers type the operators, seven fill the form, and the form writes the same operators into the bar. 4.4 runs it, except in opYq and sAUI, which end with the query typed and the search key never pressed.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Enter the search terms",
+      "questions": [
+       {
+        "question": "What first search should you run to get to the results and the advanced search?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a basic 'Search Twitter' bar, which requires executing a preliminary search before the advanced filtering tools become available on the next page.",
+        "whatTheAgentLoses": "You lose control over the preliminary search term used to generate the initial results page before filters are applied.",
+        "speak": "never",
+        "check": "Does the page show the basic search bar, with advanced search not yet available?",
+        "say_example": "Running a plain search for <term> first. Advanced search only shows up after that"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Type the search operators",
+      "note": "4.2.1 then 4.2.2 in the app keepers, in one string. 4.2.3 pastes both at once. 4.2.4 is Reddit's one operator. the platform adds 4.2.1 by itself when the search starts from a profile page - d5FK gets it free, 4J02 gets it and types the handle again.",
+      "questions": [
+       {
+        "question": "Which search operators and date ranges should you use to filter for older posts?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar supports advanced operators like 'since:' and 'until:' to precisely filter the account's posts by a specific timeframe.",
+        "whatTheAgentLoses": "The user loses the ability to define the exact date boundaries that matter most for their specific historical search.",
+        "speak": "never",
+        "check": "What operators does the search field contain?",
+        "say_example": "Using from:<@handle> since:<2018-01-01> until:<2018-12-31>"
+       }
+      ],
+      "children": [
+       {
+        "id": "4.2.1",
+        "label": "Restrict to the author"
+       },
+       {
+        "id": "4.2.2",
+        "label": "Set the date operators",
+        "questions": [
+         {
+          "question": "What start date should you set for the search query?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Appending a date modifier to the search input field restricts the results to the specific timeframe you care about.",
+          "whatTheAgentLoses": "You lose the ability to define the exact historical cutoff date for the content you want to see.",
+          "speak": "never",
+          "check": "What since: date is in the search field, and does it match the start date in the task?",
+          "say_example": "Set the start date to <2018-01-01>"
+         },
+         {
+          "question": "Does the search have an end date, so it isn't open-ended up to today?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search input currently only shows a start date, so you must use the correct syntax to properly bound the end of the timeframe.",
+          "whatTheAgentLoses": "The user loses the ability to manually construct and verify the exact advanced search operators used to filter the results.",
+          "speak": "if-wrong",
+          "check": "Does the search field contain both a since: and an until: date?",
+          "say_example": "The search has a start date but no end date, so it will show everything up to today. Adding until:<date>."
+         },
+         {
+          "question": "Does the search box hold the query as intended, operator by operator?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows the search bar where using the exact 'since:' and 'until:' syntax is necessary to successfully filter the feed to that specific timeframe.",
+          "whatTheAgentLoses": "The user loses the guarantee that the exact date syntax is used to accurately filter the historical posts they want to see.",
+          "speak": "if-wrong",
+          "check": "Does the text in the search field match the intended query, operator by operator, including any exclusion?",
+          "say_example": "The search box says <-flair>, but it should say <-flair:humor>. The autocomplete changed it. Fixing it before I run the search."
+         }
+        ]
+       },
+       {
+        "id": "4.2.3",
+        "label": "Paste a prepared query"
+       },
+       {
+        "id": "4.2.4",
+        "label": "Exclude a flair"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Fill the advanced search form",
+      "note": "4.3.1 opens it. then any of 4.3.2 to 4.3.6, in the form's order: the tutorials go to 4.3.6 and skip the rest - c1r2 and 06pZ - or to 4.3.2 and 4.3.3 and skip the dates - LQ78, pRWM, jNqD. 898W walks every section. 4.3.7 after the run, where the bar shows what the form wrote.",
+      "questions": [
+       {
+        "question": "Which sections of the advanced search dialog should you fill out?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog offers multiple filtering categories like 'Words', 'Accounts', and 'Dates', requiring you to choose which specific parameters will best narrow down your search.",
+        "whatTheAgentLoses": "You lose the ability to prioritize specific filtering strategies, such as relying solely on date ranges rather than keywords or engagement metrics, to find your desired content.",
+        "speak": "never",
+        "check": "Which sections does the advanced search dialog offer?",
+        "say_example": "Filling in words and dates. Leaving accounts empty"
+       }
+      ],
+      "children": [
+       {
+        "id": "4.3.1",
+        "label": "Open the advanced search",
+        "questions": [
+         {
+          "question": "Do the standard search results show the specific posts you need?",
+          "cluster": "refine",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "If the target posts aren't visible in the initial search results, you must use advanced search tools to filter the feed further.",
+          "whatTheAgentLoses": "The user loses the ability to judge when initial search results are inadequate and pivot to using advanced search filters.",
+          "speak": "never",
+          "check": "Is a post matching the target text visible in the results list?",
+          "say_example": "Opened advanced search. The post wasn't in the first results"
+         },
+         {
+          "question": "Can the basic filters narrow this down, or do you need advanced search?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search filters menu reveals basic dropdowns for source and location, but the 'Advanced search' link provides more complex querying options to pinpoint exact posts.",
+          "whatTheAgentLoses": "You lose the ability to intuitively gauge whether the initial results are close enough or if a highly specific advanced query is necessary.",
+          "speak": "never",
+          "check": "Does the filters menu show an 'Advanced search' link?",
+          "say_example": "Opened advanced search, since the basic filters can't do dates"
+         }
+        ]
+       },
+       {
+        "id": "4.3.2",
+        "label": "Enter the words and phrases",
+        "questions": [
+         {
+          "question": "Is each term in the right box, the phrase under words and the tag under hashtags?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The advanced search modal offers specific fields like 'All of these words' and 'These hashtags', so mapping your search terms correctly prevents overly broad or zero-match results.",
+          "whatTheAgentLoses": "The user loses the ability to fine-tune the search logic, potentially missing the exact post if the agent misinterprets how to split the phrase and hashtags across the specific fields.",
+          "speak": "if-wrong",
+          "check": "Which form field holds each term: is the phrase under 'All of these words' and the tag under 'These hashtags'?",
+          "say_example": "The hashtag landed in the words box, so it would match posts without the tag. Moving it to the hashtags box."
+         }
+        ]
+       },
+       {
+        "id": "4.3.3",
+        "label": "Enter the accounts",
+        "questions": [
+         {
+          "question": "Should the search also be limited to one account?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Filling out the 'From these accounts' field alongside other criteria in the advanced search modal helps narrow down the results if you remember multiple details about the target post.",
+          "whatTheAgentLoses": "You lose the ability to use your personal memory of who posted the content to intuitively combine specific account filters with other search terms.",
+          "speak": "never",
+          "check": "Which fields of the advanced search form are filled?",
+          "say_example": "Searching <handle>'s posts with <phrase> and the dates together"
+         }
+        ]
+       },
+       {
+        "id": "4.3.4",
+        "label": "Filter replies and links",
+        "questions": [
+         {
+          "question": "Should you include replies or only search original posts?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The advanced search modal lets you toggle replies on or off, which determines whether your results will include conversational threads or just standalone posts.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to intuitively guess whether the target content was a reply or an original post based on your memory of the context.",
+          "speak": "never",
+          "check": "Is the include-replies toggle on or off?",
+          "say_example": "Leaving replies out, since you asked for the original post"
+         },
+         {
+          "question": "Should you filter the search results to only show tweets with links?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The advanced search modal provides a links filter that can narrow down the results if you are certain the target post contained a URL.",
+          "whatTheAgentLoses": "You lose the ability to use your own intuition and memory of the target content to decide how strictly to apply search filters.",
+          "speak": "never",
+          "check": "Is the links-only filter on or off?",
+          "say_example": "Not filtering to links. You didn't say the post had one"
+         }
+        ]
+       },
+       {
+        "id": "4.3.5",
+        "label": "Set the engagement minimums",
+        "questions": [
+         {
+          "question": "Should the search require a minimum number of likes or replies?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The engagement section of the advanced search modal allows you to filter out low-interaction posts by requiring a minimum number of likes or comments.",
+          "whatTheAgentLoses": "The user loses the nuanced choice of whether to cast a wide net for all relevant posts or restrict the results strictly to highly validated content.",
+          "speak": "never",
+          "check": "What values do the minimum likes, replies, and reposts fields hold?",
+          "say_example": "Left the likes and replies minimums empty. The post you want might have few likes"
+         }
+        ]
+       },
+       {
+        "id": "4.3.6",
+        "label": "Set the date range"
+       },
+       {
+        "id": "4.3.7",
+        "label": "Check the generated query",
+        "questions": [
+         {
+          "question": "Does the search the form built match the dates and fields you set in it?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Confirming that the dates entered in the modal match the 'since' and 'until' operators in the search bar ensures the platform correctly applied your intended timeframe.",
+          "whatTheAgentLoses": "The user loses confidence in the accuracy of the search results if the agent fails to verify that the requested date range was correctly translated into search operators.",
+          "speak": "if-wrong",
+          "check": "Does each field set in the form, dates included, show up the same way in the query the form wrote?",
+          "say_example": "The modal had <March 2020> to <June 2020>, but the search it built says <until:2019>. Fixing the query by hand."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Submit the query",
+      "questions": [
+       {
+        "question": "Was the query actually submitted, or did the run stop with the text still sitting in the search bar?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator tells you to tap search, but the video ends prematurely with just the typed query visible in the search bar.",
+        "whatTheAgentLoses": "The user gets an incomplete automation that types a query but never actually submits it to find the target content.",
+        "speak": "if-wrong",
+        "check": "Does the page show results for the query, or still the search field with text in it and no results below?",
+        "say_example": "The search hasn't run yet. The words are typed but nothing was searched. Running it now."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Narrow the results",
+    "note": "any of 5.1 to 5.5 on a results page, and none is required - every keeper who reaches a list reads Top or Posts as it came. 4aP3 opens all of 5.1, 5.2 and 5.5 and changes nothing; 7664 opens 5.3 and 5.4 and changes nothing. 5.5 is also where the No results hint in 6.5 points.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Switch the results tab",
+      "questions": [
+       {
+        "question": "Which results tab, Top, Latest, People or Media, would your target be under?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays tabs for 'Top', 'Latest', 'People', 'Media', and 'Lists', which organize the results into different formats and categories.",
+        "whatTheAgentLoses": "You lose the chance to casually explore different categories of results that might contain a better or more interesting match.",
+        "speak": "never",
+        "check": "Which results tab is active?",
+        "say_example": "Looking under Latest, since you want a recent post"
+       },
+       {
+        "question": "Is the tab you need hidden past the edge of the screen?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly notes that the 'Communities' tab might not be immediately visible on the screen, requiring a horizontal swipe to find it.",
+        "whatTheAgentLoses": "The agent might fail to filter the results by communities if it assumes the tab is missing just because it isn't visible on the initial screen load.",
+        "speak": "on-event",
+        "check": "Does the results tab bar scroll sideways with tabs cut off at the edge, and is the section the task needs one of the hidden ones?",
+        "say_example": "There's a Communities tab hidden past the edge of the screen. That's where the forums are. Swiping to it."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Set the search filters",
+      "questions": [
+       {
+        "question": "Can you filter by date using the options on this screen?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the search filters menu only displays options for \"People\" and \"Location,\" confirming that a specific date filter is unavailable here.",
+        "whatTheAgentLoses": "The user loses the situational awareness to realize the desired filter is missing and that they must find an alternative method to narrow down the search results.",
+        "speak": "never",
+        "check": "Which filter options does the menu list, and is a date filter among them?",
+        "say_example": "Used advanced search for the dates. This screen only filters by people and location"
+       },
+       {
+        "question": "Which filters should you turn on to find your old posts?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Filters menu displays options like 'Date posted' and 'From' that can significantly narrow down the search results.",
+        "whatTheAgentLoses": "You lose the ability to specify exact search parameters, which could make finding the specific target content take much longer.",
+        "speak": "never",
+        "check": "Which filter options does the menu list, including people and location, and which are applied?",
+        "say_example": "Filtered to your posts, all dates. People and location left on everyone, everywhere"
+       },
+       {
+        "question": "Should you filter the search results by the language the tweet was written in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The advanced search modal allows you to specify the language, which is useful if the user tweets in multiple languages and you are looking for a specific one.",
+        "whatTheAgentLoses": "The agent might return a cluttered feed of multi-lingual posts instead of narrowing down to the specific language context the user remembers.",
+        "speak": "never",
+        "check": "Which language is selected in the language filter?",
+        "say_example": "Leaving language as any"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Sort the results",
+      "questions": [
+       {
+        "question": "Which sort option should you apply to the search results?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Sort by' menu with choices like Hot, Top, and New, which dictates the order of the content you are about to scan.",
+        "whatTheAgentLoses": "You lose the ability to decide whether relevance, popularity, or recency is the best way to prioritize the results for your specific goal.",
+        "speak": "never",
+        "check": "Which sort option is selected?",
+        "say_example": "Sorted by New"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Set the time window",
+      "questions": [
+       {
+        "question": "Which time frame should you filter the search results by?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a \"Filter by time\" menu with options ranging from the past hour to all time, which dictates how recent the surfaced content must be.",
+        "whatTheAgentLoses": "The user loses the ability to specify whether they want to see the most relevant recent discussions or the top posts of all time.",
+        "speak": "never",
+        "check": "Which time window is selected in the filter?",
+        "say_example": "Set the time window to past year"
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Check the search settings",
+      "questions": [
+       {
+        "question": "Should you adjust the sensitive content or blocked account settings for this search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search settings screen provides toggles to hide sensitive content and remove blocked accounts, which determines if potentially unwanted posts appear in your results.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal boundaries regarding exposure to sensitive material or blocked users for this specific search.",
+        "speak": "on-event",
+        "check": "Does the results page show a notice that some results are hidden by the sensitive content or blocked accounts setting?",
+        "say_example": "Some results are hidden by your sensitive content setting. I'm leaving that setting as it is. Say so if you want it off."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Read the results",
+    "note": "6.1 on every list that comes back - it is the whole check for fourteen keepers. 6.2 where the author matters and the query did not say from:. 6.3 on Reddit, where the dropdown is the results page. 6.4 on keyword and people lists. 6.5 when nothing comes back, 6.6 when the same list comes back - both hand off to 7. 6.7 is a count checked across two screens.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Check the authors and dates",
+      "questions": [
+       {
+        "question": "Do the posts shown match the account and date range you asked for?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the author handles and timestamps on the displayed tweets ensures your search filters worked correctly.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the search results accurately reflect the specific timeframe and author you requested.",
+        "speak": "if-wrong",
+        "check": "For each visible result, does the author handle equal the target handle, does the timestamp fall inside the date range, and does the text contain the exact phrase searched?",
+        "say_example": "The results include posts from <2015>, outside the <2014 to 2020> range you asked for. The date filter didn't take. Trying it again."
+       },
+       {
+        "question": "Did the search find the post you're after?",
+        "cluster": "refine",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the exact tweet appears in the search results verifies that your search parameters worked correctly.",
+        "whatTheAgentLoses": "The user loses the ability to visually verify the correct tweet was found and immediately clear the search history for privacy.",
+        "speak": "always",
+        "check": "Is a result visible whose author, date, and text match the target post?",
+        "say_example": "Found it. <Author>'s post from <date>, the one that says <quote>."
+       },
+       {
+        "question": "Does the author's name have an official verified badge, or is it just a checkmark emoji in their display name?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Impersonator accounts often use emojis that look like verified badges to deceive users scanning the feed for official announcements.",
+        "whatTheAgentLoses": "The user risks consuming or interacting with fake news or scam content because the agent failed to distinguish a platform-verified system badge from a text emoji.",
+        "speak": "on-event",
+        "check": "Is the checkmark next to the author's name the platform's own verified badge, or a character typed inside the display name?",
+        "say_example": "That blue check is typed into the name. It isn't the real badge. This account is pretending to be <official name>. Skipping it."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Tell authored posts from mentions",
+      "questions": [
+       {
+        "question": "Are these posts written by the account, or just posts that mention it?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed a tweet from a different account mentioning the target user, indicating the search query needed to be adjusted to only show authored posts.",
+        "whatTheAgentLoses": "You lose the guarantee that the retrieved posts were actually written by the target account rather than just being about them.",
+        "speak": "if-wrong",
+        "check": "Is the author handle on each result the target handle, or a different account whose post mentions it?",
+        "say_example": "These results are other people talking about <handle>. None are <handle>'s own posts. Changing the search to posts from the account."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Compare the candidate communities",
+      "questions": [
+       {
+        "question": "Which community from the search dropdown should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown presents multiple active subreddits like r/anime and r/anime_irl, each catering to different types of content and audiences.",
+        "whatTheAgentLoses": "You lose the ability to specify exactly which niche community you want to browse, as an agent might default to the most popular option or a general results page.",
+        "speak": "gate",
+        "check": "Which communities does the search dropdown list, with their names and member counts?",
+        "say_example": "More than one match. <r/anime>, <5 million> members, about the shows. <r/anime_irl>, <800 thousand>, mostly memes. Which one? Say anime or anime irl."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Scan the post list",
+      "questions": [
+       {
+        "question": "Which result best fits what you asked for?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several posts with varying ages and upvote counts under the 'Posts' tab, requiring you to evaluate if any of these meet your needs or if you should check other tabs like 'Communities'.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal judgment to weigh factors like post age, upvote count, and subtle title nuances to find the most interesting content.",
+        "speak": "never",
+        "check": "What title, age, and vote count does each result show?",
+        "say_example": "Opening the top result, <title>, from <3 days ago>"
+       },
+       {
+        "question": "Is this post a promoted ad rather than a regular post?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Social platforms frequently disguise paid advertisements at the top of sorted feeds to look like regular posts.",
+        "whatTheAgentLoses": "The user loses the human discernment required to filter out paid placements and find genuine community discussions.",
+        "speak": "on-event",
+        "check": "Does the post carry a 'Promoted', 'Sponsored', or 'Ad' label?",
+        "say_example": "The top result is a promoted post, so I'm skipping it."
+       },
+       {
+        "question": "Did the site change your search and show results for a different term?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Social platforms often aggressively autocorrect niche keywords or misspelled handles, showing results for a different term while only providing a subtle 'Search instead for...' link at the top.",
+        "whatTheAgentLoses": "The agent might scrape the wrong topic entirely because it didn't notice the platform quietly changed its search parameters.",
+        "speak": "if-wrong",
+        "check": "Does the results page show a 'Showing results for' or 'Search instead for' notice, or does the search field now hold text different from what was typed?",
+        "say_example": "The site changed your search to <different term>. I'm switching back to <what you typed>."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Diagnose the empty result",
+      "questions": [
+       {
+        "question": "Was the account already around during the dates you asked for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search query looks for posts from 2023, but the profile page shows the account joined in May 2024, making the search timeframe impossible.",
+        "whatTheAgentLoses": "The user receives zero results because the agent blindly applies a date filter for a period before the account even existed.",
+        "speak": "gate",
+        "check": "What since: date does the search use, and what join date does the profile page show for the account?",
+        "say_example": "You asked for posts from <2023>, but this account only joined in <May 2024>. There can't be any. Want me to search from the join date instead, or stop here?"
+       },
+       {
+        "question": "Did the search hit a 'Rate limit exceeded' error or a Captcha?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Rapid searching, using advanced operators, or browsing without an account can trigger platform anti-bot defenses, completely blocking the results page from loading.",
+        "whatTheAgentLoses": "The user loses visibility into platform blocks, leaving them confused if the agent silently fails or returns a blank page instead of the expected search results.",
+        "speak": "gate",
+        "check": "Does the page show 'Rate limit exceeded', a CAPTCHA, or a prove-you're-human challenge?",
+        "say_example": "The site says rate limit exceeded and wants a picture puzzle to prove you're a person. I won't solve it. Do it and tell me when it's through."
+       },
+       {
+        "question": "Did the search return any results for the dates you asked for?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays a 'No results' message, which confirms whether the target account actually posted anything matching your specific criteria.",
+        "whatTheAgentLoses": "You lose the ability to verify if the empty result is a valid outcome of the search or a mistake in how the search parameters were formatted.",
+        "speak": "on-event",
+        "check": "Does the page show 'No results', and if so does the search field text match the intended handle and phrase letter for letter?",
+        "say_example": "No results for <handle> between <dates> with <phrase>. The spelling is right. I'll widen the dates next."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Check the results changed",
+      "questions": [
+       {
+        "question": "After you changed the search, did the results actually change?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When the search query was edited to an impossible date range, the platform did not show an error but instead silently failed and continued displaying the exact same tweets from the previous valid search.",
+        "whatTheAgentLoses": "The user receives completely inaccurate results because the agent assumes the search executed successfully rather than recognizing the feed is stuck in a stale state from a previous query.",
+        "speak": "if-wrong",
+        "check": "After the query was changed, are the visible results the same posts as before, with the same first authors and timestamps?",
+        "say_example": "I changed the dates but the results didn't change at all. The site ignored the new query. Trying it a different way."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Check the counts across screens",
+      "questions": [
+       {
+        "question": "Is the community that opened the same one that was tapped in the dropdown, by name and count?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Matching the '2.5M weekly visitors' statistic from the search dropdown to the subreddit header confirms you successfully navigated to the exact intended community.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent verified it landed on the correct, high-traffic community rather than a similarly named decoy.",
+        "speak": "if-wrong",
+        "check": "Does the community header show the same name and member count as the dropdown entry that was tapped?",
+        "say_example": "The page that opened is <r/other>, not the <r/target> I tapped. Going back."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Repair the query",
+    "note": "entered from 6.5 or 6.6, or from 6.2 when the list is the wrong kind of match. one of 7.1 to 7.3, then back to 4.4 - opYq runs 7.1 and then 7.2, T6c1 runs 7.2 and then 7.3. 7.4 when the user starts over rather than edit. 4J02 and DTSs never enter this goal and end on their empty results.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Fix the spelling",
+      "questions": [
+       {
+        "question": "Does the community come up on the first try, or does it need the r/ prefix or another spelling?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator advises that if the right community doesn't appear, you should modify your search strategy by changing the keyword or explicitly adding the subreddit prefix.",
+        "whatTheAgentLoses": "The agent might give up on finding the community if the first search fails, rather than trying alternative spellings or prefixes as a human would.",
+        "speak": "never",
+        "check": "Does the community results list show no community matching the name searched?",
+        "say_example": "Retried as <r/name> with the prefix, after no community called <name> came up"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Add the missing operator"
+     },
+     {
+      "id": "7.3",
+      "label": "Change the date range"
+     },
+     {
+      "id": "7.4",
+      "label": "Clear and start over",
+      "questions": [
+       {
+        "question": "Is the old search text fully cleared before the new query is typed, so the two don't run together into one search?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar still contained the text 'jofra archer', which had to be removed before a new topic could be entered.",
+        "whatTheAgentLoses": "You lose the context of the previous search session before the agent permanently erases it.",
+        "speak": "if-wrong",
+        "check": "Does the search field contain only the new query, or the old text followed by the new?",
+        "say_example": "The old search words were still in the box, so the two ran together. Clearing it and typing just <new query>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Open the target",
+    "note": "one of 8.1 to 8.3, by what the target is - a post in 7664, pRWM and ARbd, a community in zdQ5 and b5-e, a profile in eight keepers. 8.5 before any of them where the platform interposes a warning - no keeper meets one. 8.4 after 8.1 where the discussion matters. fourteen keepers never reach this goal: the list on screen is where they stop.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Open the post",
+      "questions": [
+       {
+        "question": "Do you want to open this post even though it's marked spoiler?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The feed explicitly displays a 'SPOILER' tag on a post, warning that the content contains plot details you might want to avoid.",
+        "whatTheAgentLoses": "The user loses the ability to protect themselves from unwanted story spoilers if the agent indiscriminately opens relevant but tagged posts.",
+        "speak": "gate",
+        "check": "Does the post carry a 'Spoiler' tag?",
+        "say_example": "This post is marked spoiler. Open it anyway, or skip it?"
+       },
+       {
+        "question": "At the end of the run, is the post itself open on screen, not just listed in the results?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the target tweet in the search results, which must be tapped to see the full post.",
+        "whatTheAgentLoses": "The user loses the ability to read the full context or interact with the tweet if the agent stops at the search results.",
+        "speak": "if-wrong",
+        "check": "Is the page the post's own page, with the full text and replies below it, or still the results list?",
+        "say_example": "I found it in the list but hadn't opened it. Opening the post now."
+       },
+       {
+        "question": "Did tapping the result open the discussion, or send you off to an outside website?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "On platforms like Reddit, clicking a link post's title takes you to the external URL, whereas you must specifically click 'comments' to view the discussion.",
+        "whatTheAgentLoses": "The user loses the ability to view the community's reaction if the agent navigates off-platform instead of opening the internal thread.",
+        "speak": "on-event",
+        "check": "After the tap, is the page on a different domain than the platform, or a full-screen media viewer with no post text or comments?",
+        "say_example": "That tap opened an outside website, <domain>, instead of the discussion. Going back to open the comments."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Open the community"
+     },
+     {
+      "id": "8.3",
+      "label": "Open the profile",
+      "questions": [
+       {
+        "question": "Which account from the dropdown should you pick?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown displays multiple accounts with similar names, so you must choose the exact profile whose network you want to browse.",
+        "whatTheAgentLoses": "You lose the opportunity to leverage your personal familiarity with specific influencers to find the most relevant network connections.",
+        "speak": "gate",
+        "check": "Which accounts does the autocomplete dropdown list, with display name, handle, and verified badge?",
+        "say_example": "Several accounts named <Gary Vaynerchuk>. <@garyvee> has the verified badge and <3 million> followers. The others are small. Use garyvee, or pick another?"
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Read the post and comments",
+      "questions": [
+       {
+        "question": "Is the content of the post still available, or has it been deleted or removed by moderators?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search results often display cached text of posts that have since been deleted or removed, meaning the actual content is replaced by an error or '[deleted]' when you open the page.",
+        "whatTheAgentLoses": "The user receives a link to a dead or empty page because the agent assumed the search preview meant the post was still live.",
+        "speak": "on-event",
+        "check": "Does the post body show '[deleted]', '[removed]', or a message that the post is unavailable?",
+        "say_example": "The post is gone. It says removed by moderators. The preview in the results was an old copy. Nothing to read here."
+       },
+       {
+        "question": "Is the whole post showing, or is it cut off behind a 'Read more' link?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Long posts are often visually truncated to save space, requiring an extra click to reveal the full text of the discussion.",
+        "whatTheAgentLoses": "The user receives an incomplete version of the post because the agent failed to notice the visual truncation and expand it before reading.",
+        "speak": "never",
+        "check": "Does the post body end in a 'Read more' or 'Show more' link?",
+        "say_example": "Expanded the post. It was cut off"
+       },
+       {
+        "question": "Which comment sort should you use for this post?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms default to sorting comments by 'Top' or 'Best', which can completely hide the newest or most controversial replies that the user might actually be looking for.",
+        "whatTheAgentLoses": "The user misses the target conversation because the agent blindly trusts the default comment sorting and fails to uncover buried replies.",
+        "speak": "never",
+        "check": "Which comment sort is selected?",
+        "say_example": "Switched comments from Top to New"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Clear the access warning",
+      "questions": [
+       {
+        "question": "Is the target user's profile locked with a padlock icon, or is the community marked as private?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Accounts and subreddits can change their privacy settings at any time, meaning a previously searchable feed now requires an approved follow request or invite to view.",
+        "whatTheAgentLoses": "The user loses the specific context of why the search failed (an access restriction) rather than assuming the agent just couldn't find the right keywords.",
+        "speak": "gate",
+        "check": "Does the profile show a lock icon or a 'posts are protected' message, or does the community page say it is private?",
+        "say_example": "<Handle>'s account is locked. Only approved followers see the posts. I can send a follow request under your name, or stop here. Which?"
+       },
+       {
+        "question": "Is the target post blurred out with a 'Sensitive Content' or 'NSFW' warning that needs to be dismissed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms hide potentially sensitive media or text behind a click-through warning by default, obscuring the actual content from view until explicitly acknowledged.",
+        "whatTheAgentLoses": "The agent might return a screenshot of a warning label instead of the actual content, requiring the user to manually intervene to see what they asked for.",
+        "speak": "gate",
+        "check": "Is the post or community behind a 'Sensitive content', 'NSFW', or age-verification warning that must be dismissed?",
+        "say_example": "This post is behind a sensitive content warning. Open it anyway, or skip?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Confirm and use the target",
+    "note": "9.1 only where the target came from somewhere else - pRWM. 9.2 where the list itself is the target - NQWU. 9.3 to 9.5 are the corpus's only commits: SfAA twice, LQ78 once, mz5g 27 times. 9.6 sends the task back to 2 - SfAA for a second account, T6c1 for an older range, zdQ5 for the next term, mz5g for the next route.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Check against the source",
+      "questions": [
+       {
+        "question": "Does the post's text match the quote in the article, word for word?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Comparing the text on the Twitter page to the article ensures you have located the exact post being referenced.",
+        "whatTheAgentLoses": "You lose the peace of mind of visually confirming that the exact source material was found rather than just a similar post.",
+        "speak": "if-wrong",
+        "check": "Does the text of the open post equal the quoted text in the article, word for word?",
+        "say_example": "The post I found says <post text>, but the article quotes <article text>. Not the same post. I'll keep looking."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Check the feed order",
+      "questions": [
+       {
+        "question": "Is the feed in time order, newest first, like you expected?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing the 'Following' tab active and checking the recent timestamps on the visible tweets confirms the feed is sorted chronologically as intended.",
+        "whatTheAgentLoses": "You lose the chance to visually confirm that the platform is actually displaying the newest posts first.",
+        "speak": "if-wrong",
+        "check": "Which feed tab is highlighted, and do the timestamps on the visible posts run from newest to oldest?",
+        "say_example": "The feed is on For you, so the order is the site's picks. Switching to Following, which goes by time."
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Retweet the post"
+     },
+     {
+      "id": "9.4",
+      "label": "Reply to the post"
+     },
+     {
+      "id": "9.5",
+      "label": "Follow the account"
+     },
+     {
+      "id": "9.6",
+      "label": "Return for the next target",
+      "questions": [
+       {
+        "question": "Should you return to the home feed before starting the new search?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen currently shows search results for '#TheWalkingDead', which could restrict the new search if you do not reset to the main dashboard first.",
+        "whatTheAgentLoses": "The user loses the assurance that the search begins from a clean, unbiased starting point rather than within previous search results.",
+        "speak": "never",
+        "check": "What text is in the search field and which page is shown?",
+        "say_example": "Went back to the home feed for the next search"
+       },
+       {
+        "question": "After closing the post, are the results still where they were, or did the page reload and lose the place in the list?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Using the browser's back button instead of the platform's native UI can refresh the page, causing you to lose your place in an endless scroll of search results.",
+        "whatTheAgentLoses": "The user loses their progress and has to rescan the entire feed if the agent uses the wrong navigation method to close the post.",
+        "speak": "on-event",
+        "check": "After going back, is the results list at the same position with the same query in the search field, or reloaded to the top?",
+        "say_example": "Going back reloaded the results, so I lost the spot. Scrolling back down to where I was."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

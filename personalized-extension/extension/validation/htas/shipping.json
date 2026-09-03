@@ -1,0 +1,2145 @@
+{
+ "task": "ship a package by buying postage online (USPS Click-N-Ship, FedEx, UPS, PirateShip): enter sender and recipient addresses, package size and weight, choose a service and speed, pay, and get the label printed or a QR drop-off code; complete when the purchased label or drop-off QR code is on screen. Surface pinned: a carrier or postage website/app — not a post-office counter vlog. Variants: tracking a package after it ships, freight or international customs paperwork beyond the standard form, and returns-label flows inside a retailer do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Buy postage and print the label",
+  "note": "1 where the tool needs it - most keepers arrive signed in, and 1.4 and 1.5 are one-time setup that three keepers demo. then 2, which decides how 3 and 4 fill: an imported order arrives with its address and often its package, a single label starts empty. 3 and 4 in either order - Pirate Ship asks address first, Royal Mail asks weight first. 4.9 only for an export. then 5; 4 and 5 loop when the rate is wrong for the package - _F5u packs and weighs after seeing $16.52. 6 sits before 5 on UPS, inside the form on DHL and FedEx, after 7 on Pirate Ship, and never on the marketplaces. then 7 - 7.3.5 replaces 7.4 for an account with no payment method, and VLem stops there. then 8, then 9; 9.6 loops the whole task back to 2 - five times in _F5u, three in gClb, a batch in iwkb.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the postage tool",
+    "note": "1.1, then 1.2 or 1.3 - the sign-in is cut in most keepers and typed in two. 1.4 once, before any order can import. 1.5 once, and LgUR and Wdgn spend their whole video on it. 1.6 where the seller looks around before shipping.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Choose the postage tool",
+      "questions": [
+       {
+        "question": "Which tool on the page is the one for printing a shipping label rather than buying stamps?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage offers multiple quick tools, so you must specifically choose Click-N-Ship to access the label purchasing flow instead of just buying stamps.",
+        "whatTheAgentLoses": "You lose the chance to review the holiday shipping deadlines displayed on the homepage banner before starting your shipment.",
+        "speak": "never",
+        "check": "Which tool on the page is named for buying and printing a shipping label rather than stamps?",
+        "say_example": "Opened <Click-N-Ship>, the label tool."
+       },
+       {
+        "question": "Do you want me to create an account here with your email?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage highlights significant discounts on USPS rates with no monthly fees, which helps justify signing up for a new service.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate the platform's pricing claims and decide whether you want to create a new account with them.",
+        "speak": "gate",
+        "check": "Does the page say the account is free, and does it say a card is or is not needed to open it?",
+        "say_example": "This site needs an account before it sells a label. It says free, no card. OK to make one with <email>?"
+       },
+       {
+        "question": "Is the page warning that this browser isn't supported?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen showed a warning that the shipping tool could not determine your browser type and recommended using Internet Explorer, Firefox, or Safari.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to risk potential technical glitches by continuing in an unsupported browser or to switch to a recommended one.",
+        "speak": "on-event",
+        "check": "Does the page warn that the browser isn't supported, and which browsers does it name?",
+        "say_example": "The site says it can't tell what browser this is and wants <Firefox> or <Safari>. I'll try it here first."
+       },
+       {
+        "question": "Is the top result the real site, or an ad or a lookalike?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows the main ShipStation organic result alongside specific sitelinks like pricing and international versions, so you must choose the correct link to start shipping.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent navigated to the legitimate, official homepage rather than a sponsored ad or incorrect regional link.",
+        "speak": "if-wrong",
+        "check": "Is the result about to be opened marked Ad or Sponsored, or does its address differ from the official site's domain?",
+        "say_example": "The first result is an ad for a different site. I'm opening the real <ShipStation>."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Create the account",
+      "questions": [
+       {
+        "question": "Does the sign-up ask for a card after promising it would not?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The initial screen promised a free trial with no credit card required, so the subsequent account creation steps must honor this by not prompting for payment details.",
+        "whatTheAgentLoses": "The user loses the peace of mind that their financial information is safe from unexpected subscription charges when trying out a new shipping platform.",
+        "speak": "if-wrong",
+        "check": "Does any sign-up step show a card number field after the page promised no card was needed?",
+        "say_example": "It said no card needed. Now it's asking for one. I'm stopping here."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Sign in",
+      "questions": [
+       {
+        "question": "Is the Stay signed in box checked?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen presents an unchecked 'Stay signed in' option that affects how long your session remains active.",
+        "whatTheAgentLoses": "You lose the ability to decide whether your account remains persistently logged in on this device.",
+        "speak": "never",
+        "check": "Is the Stay signed in box checked or unchecked?",
+        "say_example": "Left Stay signed in unchecked."
+       },
+       {
+        "question": "Which account do you want to sign in with?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires an email address and password to authenticate your account before you can start creating the shipment.",
+        "whatTheAgentLoses": "You lose control over which specific shipping account is accessed and billed for the postage.",
+        "speak": "gate",
+        "check": "Does the page show a sign-in form asking for an email and password?",
+        "say_example": "This site wants you signed in. The password is yours to type. I'll hold the page."
+       },
+       {
+        "question": "Is the page saying the popup blocker stopped the tool from opening?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A yellow warning box explicitly states that the browser's popup blocker must be turned off to allow the PayPal MultiOrder Shipping tool to open.",
+        "whatTheAgentLoses": "The user loses control over their browser's security settings and the knowledge of how to troubleshoot popup-related launch failures.",
+        "speak": "on-event",
+        "check": "Does the page say a popup was blocked, and which window does it say failed to open?",
+        "say_example": "The shipping tool won't open. The page says pop-ups are blocked. I can't change that setting myself. Allow pop-ups for <site> and say go."
+       },
+       {
+        "question": "Did the sign-in go through, or is the page showing a login error?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Confirming the login works ensures you can access the shipping dashboard to start creating the label.",
+        "whatTheAgentLoses": "Delegating this step means losing direct control over handling your account credentials and verifying access to your shipping account.",
+        "speak": "if-wrong",
+        "check": "After sign-in, does the page still show the login form or an error message, and what does the error say?",
+        "say_example": "The login didn't take. The page says <username must be an email>. Can you sign in for me? I'll hold."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Connect the store",
+      "questions": [
+       {
+        "question": "Which stores are connected to this account?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Manage Integrations' page listing eBay and Etsy as connected sources for importing orders.",
+        "whatTheAgentLoses": "The user loses the ability to audit or modify which of their online storefronts are actively syncing order data for shipping.",
+        "speak": "never",
+        "check": "Which stores does the integrations page list as connected, and when was each last synced?",
+        "say_example": "<eBay> and <Etsy> are connected."
+       },
+       {
+        "question": "Is the store shown as connected, with a recent sync?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Checking the 'SHIPSTATION CONNECTED' status and recent sync times ensures that new orders will automatically transfer without manual data entry.",
+        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that their e-commerce store and shipping platform are actively communicating.",
+        "speak": "if-wrong",
+        "check": "Does the store page show a Connected status, and is the last sync time recent?",
+        "say_example": "The store says connected, but the last sync was <3 days> ago. New orders may not be here yet."
+       },
+       {
+        "question": "Do you want to let this app read your store's orders and customer details?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows the ShipStation listing on the Shopify App Store, which is where you authorize the connection to automatically import customer addresses into your shipping dashboard.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally review the permissions and customer data access being granted to a third-party shipping application.",
+        "speak": "gate",
+        "check": "What does the install page say the app will be able to read or change, and does it warn about extra charges?",
+        "say_example": "This app wants to read your <Shopify> orders and customer addresses. It says extra charges may apply. OK to connect it?"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Set the label preferences",
+      "questions": [
+       {
+        "question": "Is the page warning that hiding the extra options erases what was entered?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The warning modal states that switching back to the simplified view will erase any advanced details you have already entered.",
+        "whatTheAgentLoses": "The user loses the ability to weigh the convenience of a simpler form against the loss of their advanced shipping configurations.",
+        "speak": "on-event",
+        "check": "Does the page show a warning that switching views will erase entered details?",
+        "say_example": "Going back to the simple view would wipe what's entered. I'm staying on the full view."
+       },
+       {
+        "question": "Is there a link to show more shipping options?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a modal offering the choice to see more carriers and add upgrades like insurance and signature delivery.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether their package requires extra protection or specialized delivery services.",
+        "speak": "never",
+        "check": "Does the page offer a link or modal to show additional shipping options?",
+        "say_example": "Opened the full options view."
+       },
+       {
+        "question": "Which label file type and address correction settings are selected?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays dropdowns for label filetypes like PDF or ZPLII, spreadsheet exports, and automatic address correction, which dictate how your shipping documents are generated.",
+        "whatTheAgentLoses": "Delegating this means the agent might select a specialized label format you cannot easily print or disable automatic address correction.",
+        "speak": "never",
+        "check": "Which label file type and address correction settings are selected?",
+        "say_example": "Label file type is <PDF>. Address correction is <on>."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Read the dashboard",
+      "questions": [
+       {
+        "question": "Is this the dashboard, with a button to start a new label?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Pirate Ship dashboard with previous labels, confirming you are logged in and ready to begin the shipping process.",
+        "whatTheAgentLoses": "The user loses the ability to verify they are using their preferred shipping platform and account before initiating a new shipment.",
+        "speak": "never",
+        "check": "Does the page show the dashboard with a button to create a new shipment or label?",
+        "say_example": "Started a new label from the dashboard."
+       },
+       {
+        "question": "Do the payments and carrier adjustments on the dashboard add up to the total shipping cost?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Verifying that the total payments of $321.76 minus the $10.41 in carrier adjustments equals the $311.35 total shipping costs ensures your account is being billed correctly.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to catch billing discrepancies or unexpected carrier adjustments on your account.",
+        "speak": "never",
+        "check": "Do the total payments and carrier adjustments on the dashboard add up to the total shipping costs it shows?",
+        "say_example": "Past labels cost <311.35>. The carrier added <10.41> in adjustments on top."
+       },
+       {
+        "question": "What is the current shipping status of your recent orders?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "Checking the dashboard confirms that your newly printed labels are correctly marked as ready to ship while letting you track older packages.",
+        "whatTheAgentLoses": "Delegating this means you lose the immediate reassurance of personally verifying your shipment statuses on the dashboard.",
+        "speak": "never",
+        "check": "What status does the dashboard show for each recent label?",
+        "say_example": "<3> labels ready to ship, <2> delivered."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Bring in the shipment",
+    "note": "2.1 first; then 2.2 on a marketplace or aggregator, 2.3 or 2.4 where orders come from another system, and nothing for a single label. 2.5 on every order - the buyer's service and shipping paid are what 5.3 and 5.4 compare against. 2.6 when one buyer has several orders.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Choose how to enter it",
+      "questions": [
+       {
+        "question": "How do you want to start creating your shipment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The shipping menu offers multiple starting points, such as creating a brand new shipment, using a past shipment, or selecting a favorite.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to save time by having the agent use your saved favorites or past shipment templates.",
+        "speak": "never",
+        "check": "Which starting options does the page offer: new shipment, past shipment, import, or upload?",
+        "say_example": "Started from the imported <Etsy> order."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Pick the order to ship",
+      "questions": [
+       {
+        "question": "Which of the waiting orders is the one to ship?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a list of 12 pending orders, requiring a choice of which one to process.",
+        "whatTheAgentLoses": "The user's personal strategy for prioritizing shipments, such as starting with the easiest items.",
+        "speak": "on-event",
+        "check": "How many orders are listed as awaiting shipment, and which one matches the buyer or item in the ask?",
+        "say_example": "There are <12> orders waiting. Two are for <buyer>. One is the <jersey>, one is the <cards>. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Import the orders",
+      "questions": [
+       {
+        "question": "Did the search for the order number come back empty?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The initial search for order '9085' returned an empty results list, so the correct order number must be entered to find the shipment.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the correct customer order is being selected for fulfillment.",
+        "speak": "on-event",
+        "check": "Did the order search return an empty list, and what number was searched?",
+        "say_example": "No order number <9085> here. The list came back empty. Can you check the number?"
+       },
+       {
+        "question": "Does the imported row count match the store's order count?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Checking that the table pagination of 102 rows matches the 102 orders shown in the Shopify sidebar ensures all pending shipments were successfully imported.",
+        "whatTheAgentLoses": "Delegating this means losing the manual cross-check that guarantees every customer order from the store actually made it into the shipping queue.",
+        "speak": "if-wrong",
+        "check": "Does the row count shown in the shipping table equal the pending order count shown for the store?",
+        "say_example": "The store shows <102> orders. Only <98> came across. Some are missing."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Upload the spreadsheet",
+      "questions": [
+       {
+        "question": "Do you want to upload a spreadsheet to make several labels at once?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen features an Upload tab that opens a file dialog, allowing users to bulk import orders instead of typing addresses individually.",
+        "whatTheAgentLoses": "The user loses the opportunity to manually verify that their specific spreadsheet data maps correctly to the shipping platform's bulk upload tool.",
+        "speak": "never",
+        "check": "Does the page show an Upload tab or button for a spreadsheet?",
+        "say_example": "Uploaded the spreadsheet."
+       },
+       {
+        "question": "Is each address field mapped to the right spreadsheet column?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Reviewing the highlighted field mappings and the label preview ensures the recipient's address is imported accurately from your spreadsheet.",
+        "whatTheAgentLoses": "You lose the ability to visually verify that the automated data import correctly placed the recipient's information into the right fields.",
+        "speak": "if-wrong",
+        "check": "In the column mapping, is each address field mapped to a spreadsheet column whose header names that field?",
+        "say_example": "The city column landed in the state field. Fixing the mapping before it imports."
+       },
+       {
+        "question": "Is the file being uploaded the one just downloaded?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Verifying that the uploaded file matches the recently downloaded export ensures the correct batch of addresses is imported.",
+        "whatTheAgentLoses": "The user loses the assurance that the correct set of recipient addresses was imported for the shipment.",
+        "speak": "if-wrong",
+        "check": "Does the file name shown next to the upload control match the name of the file just downloaded?",
+        "say_example": "The file picked is <orders-old.csv>. The one just downloaded is <orders-today.csv>. Switching it."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Read what the buyer paid",
+      "questions": [
+       {
+        "question": "Does the order number on this page match the row that was opened?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking that the order numbers match across screens ensures you are processing the correct shipment.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent is shipping the correct order.",
+        "speak": "if-wrong",
+        "check": "Does the order number on the details page equal the order number on the row that was opened?",
+        "say_example": "This page is order <9084>. The row I opened was <9083>. Going back."
+       },
+       {
+        "question": "How much did the buyer pay for shipping?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The expanded order details showed the buyer paid $5.99 for shipping and the print format was set to a 4x6 PDF, which confirms you are staying within budget and generating the right file type.",
+        "whatTheAgentLoses": "Delegating this means you lose the peace of mind of personally verifying your profit margin on shipping and ensuring the label fits your specific printer.",
+        "speak": "never",
+        "check": "What amount does the order show the buyer paid for shipping?",
+        "say_example": "The buyer paid <5.99> for shipping."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Combine the buyer's orders",
+      "questions": [
+       {
+        "question": "Are there other open orders for the same buyer and address that could ship together?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed three consecutive orders with the same ZIP code and 'Repeat buyer' tags, indicating they can be shipped together to save on postage.",
+        "whatTheAgentLoses": "The user loses the ability to save money on shipping costs by manually identifying and grouping multiple purchases from the same buyer.",
+        "speak": "on-event",
+        "check": "Are there two or more open orders showing the same buyer name and the same ship-to address?",
+        "say_example": "Three orders here are from <buyer>, all going to the same address. Ship them as one package? That's one label instead of three."
+       },
+       {
+        "question": "Which of the combined orders gets the refund?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows three orders for the same buyer with the identical tracking number, requiring a choice of which specific order record to update.",
+        "whatTheAgentLoses": "You lose the ability to decide how the partial refund is accounted for across the specific items in the combined order.",
+        "speak": "never",
+        "check": "Which orders share the same tracking number, and which one is opened for the refund?",
+        "say_example": "Refund goes on order <9083>, the first of the three."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Enter the addresses",
+    "note": "3.1 in every keeper who sees a form, 3.2 where offered. one of 3.3 to 3.6 brings the recipient in - or none, when the order carried it. 3.7 after any auto-fill. 3.8 on an export. 3.9 where the tool offers notifications.",
+    "questions": [
+     {
+      "question": "How do you want to enter the recipient's address?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays both blank text fields and an address book or auto-fill prompt, allowing you to choose between manual entry and selecting a saved contact.",
+      "whatTheAgentLoses": "The user loses the opportunity to double-check if the saved contact's address is still accurate before it is applied to the shipment.",
+      "speak": "never",
+      "check": "Does the address form show blank fields, an address book button, or both?",
+      "say_example": "Typed the address in from the order."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Check the sender address",
+      "questions": [
+       {
+        "question": "Is the pre-filled return address the right one?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a default return address with an edit button and a checkbox to opt into tracking notifications.",
+        "whatTheAgentLoses": "You lose the chance to verify your return address and decide whether you want to receive tracking updates.",
+        "speak": "never",
+        "check": "Which return address is pre-filled in the Ship From section?",
+        "say_example": "Return address is <your address>."
+       },
+       {
+        "question": "Which of your saved addresses do you want to use as the return address?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple saved addresses to choose from for the 'Ship From' section, which dictates where the package will be sent if it is undeliverable.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select an outdated or incorrect return address, risking the loss of the package if it gets returned.",
+        "speak": "on-event",
+        "check": "How many saved sender addresses does the Ship From list show, and which is selected?",
+        "say_example": "There are two sender addresses saved, <home> and <the shop>. It picked <home>. OK, or the other one?"
+       },
+       {
+        "question": "Is postage being figured from the right ZIP code?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen offers a 'Ship from another ZIP Code™' option, which is necessary to ensure accurate postage if you are dropping the package off at a post office far from your return address.",
+        "whatTheAgentLoses": "The user loses the ability to ensure accurate postage calculation if they plan to mail the package from a different location than their home address, potentially resulting in returned packages for insufficient postage.",
+        "speak": "never",
+        "check": "Is the ship-from ZIP option set, and to what?",
+        "say_example": "Postage figured from <your ZIP>."
+       },
+       {
+        "question": "Is the shipping-from-a-residence box checked?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly reminds users to check the residential box if they are shipping from home, which can affect pickup routing and fees.",
+        "whatTheAgentLoses": "The user loses the ability to accurately declare their origin as a residential address, which could lead to missed pickups or carrier adjustments.",
+        "speak": "never",
+        "check": "Is the residential address box checked?",
+        "say_example": "Marked as shipping from a home address."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Hide the sender address",
+      "questions": [
+       {
+        "question": "Do you want your name and address printed on the label as the sender?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form includes a specific checkbox that allows you to hide your return address details from the printed label.",
+        "whatTheAgentLoses": "You lose the ability to protect your privacy by deciding whether the recipient can see your physical return address.",
+        "speak": "on-event",
+        "check": "Does the form show a checkbox to hide the return address on the label, and is it checked?",
+        "say_example": "Your name and address will print on the label as the sender. There's a box to hide them. Want them hidden?"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Type the recipient",
+      "questions": [
+       {
+        "question": "Do you want to add the recipient's email, phone or company?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The shipping form explicitly marks the email, phone, and company fields as optional, leaving it up to you whether to provide them.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to share the recipient's private contact information with the shipping carrier.",
+        "speak": "never",
+        "check": "Which recipient fields are marked optional, and does the order supply a phone or email?",
+        "say_example": "Added the buyer's phone from the order. No email on the order, so that's blank."
+       },
+       {
+        "question": "Are the recipient's name and address being taken from the order?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Where is your shipment going?' form requires exact destination details, including a mandatory postal code and phone number, to ensure the carrier can route and deliver the package.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify that the recipient's address, contact details, and residential status are entered perfectly to avoid delivery failures.",
+        "speak": "always",
+        "check": "Which name and address does the order page show for the buyer, and do the same lines now appear in the ship-to fields?",
+        "say_example": "I'm filling in <buyer>'s address from the order now. <Street>, <city>."
+       },
+       {
+        "question": "Does the destination country match the order's address?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form defaults the destination to the United Kingdom, which dictates the postage rates and shipping services that will be offered.",
+        "whatTheAgentLoses": "You lose the ability to confirm that the default destination country matches where you actually intend to send the package.",
+        "speak": "if-wrong",
+        "check": "Which country is selected in the destination field, and which country does the order's address show?",
+        "say_example": "The form came up on <United Kingdom>. The order is going to <the US>. Switching it, or the rates will be wrong."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Pick the lookup address",
+      "questions": [
+       {
+        "question": "Does one of the suggested addresses match the order's address?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing '5347' brought up multiple Google autocomplete suggestions, and selecting the correct one ensures the package is routed to the right destination.",
+        "whatTheAgentLoses": "Delegating this means losing the ability to personally verify that the correct full address was selected from the list of similar autocomplete options.",
+        "speak": "if-wrong",
+        "check": "Does any suggestion in the address dropdown contain the street, city and ZIP from the order?",
+        "say_example": "None of the suggestions match <address> exactly. I'm typing it in by hand."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Paste the address"
+     },
+     {
+      "id": "3.6",
+      "label": "Use the address book",
+      "questions": [
+       {
+        "question": "Is the new contact saved in the address book?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing the green success banner and the new entry in the list confirms that the recipient's details were correctly stored for the shipment.",
+        "whatTheAgentLoses": "You lose the direct visual confirmation that the exact address details were correctly stored in your account's address book.",
+        "speak": "never",
+        "check": "Does the page show a success banner and the new contact in the list?",
+        "say_example": "Saved <buyer> to the address book."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Verify the filled address",
+      "questions": [
+       {
+        "question": "Do the filled ship-to fields match the address on the order or invoice?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the parsed fields ensures the system correctly separated the street, city, state, and zip code from your pasted text.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to catch and correct any formatting errors made by the auto-fill tool.",
+        "speak": "if-wrong",
+        "check": "Do the street, unit, city, state and ZIP in the ship-to fields match the source address, whether pasted, on the order or on the invoice? Check once when filled and again after the site cleans it up.",
+        "say_example": "The ZIP came in as <94025>. The order says <94301>. Fixing it."
+       },
+       {
+        "question": "Is the carrier flagging the address as a problem?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Shipping platforms often check the recipient address against the carrier's database and flag it if it lacks a recognized ZIP+4 or apartment number, requiring you to either edit it or force it through.",
+        "whatTheAgentLoses": "The user loses the opportunity to contact the buyer to confirm a potentially undeliverable address before paying for postage, risking a returned package.",
+        "speak": "on-event",
+        "check": "Does the page show an address warning, such as not found, missing unit, or unverified, instead of an Address Validated badge, and what does it say?",
+        "say_example": "The carrier can't find <address>. It says the apartment number may be missing. Ship it as the buyer wrote it, or ask them first?"
+       },
+       {
+        "question": "Is the residential or commercial flag on the address the right one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Carriers like FedEx and UPS charge different rates based on this classification, which is often denoted by a small icon or a silent auto-detect toggle that changes dynamically.",
+        "whatTheAgentLoses": "You lose the ability to correct a misclassified address, which could result in unexpected residential delivery surcharges applied after the fact.",
+        "speak": "on-event",
+        "check": "Does the page show the destination flagged residential or commercial, and does the rate list show a surcharge tied to that flag?",
+        "say_example": "The site marked this as a business address. The order says <apartment>. That changes the rate by <3.50>. I'm switching it to residential."
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Enter the tax ID",
+      "questions": [
+       {
+        "question": "Does the shipment need a recipient tax ID, and is it on the order?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The DHL shipping form requires an India Tax ID, which must be located on the accompanying invoice to proceed with the international shipment.",
+        "whatTheAgentLoses": "You lose the ability to verify that the correct recipient tax identification number is submitted for customs clearance.",
+        "speak": "on-event",
+        "check": "Does the form require a recipient tax ID, and does the invoice or order show one?",
+        "say_example": "Shipping to <India> needs the buyer's tax ID. I don't see one on the order. Do you have it?"
+       },
+       {
+        "question": "Does this shipment need an IOSS number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents an IOSS VAT Registration section where you must either provide a tax number or check a box confirming your exemption based on the shipment's value.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their specific tax registration status is accurately declared for European customs clearance.",
+        "speak": "on-event",
+        "check": "Does the form show an IOSS number field and an exemption checkbox, and what value threshold does it state?",
+        "say_example": "The form asks for an IOSS number for <EU> orders, or a box saying you're exempt under <150 euros>. Do you have a number?"
+       }
+      ]
+     },
+     {
+      "id": "3.9",
+      "label": "Set the recipient notifications",
+      "questions": [
+       {
+        "question": "Which tracking emails will the buyer get?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed settings to enable tracking emails by default, set a delay, and manage email templates.",
+        "whatTheAgentLoses": "The user loses the ability to customize the tracking notification experience and timing for their recipient.",
+        "speak": "never",
+        "check": "Which tracking email settings are on, and what delay is set?",
+        "say_example": "Tracking emails to buyers are <on>, sent <1 day> after the label."
+       },
+       {
+        "question": "Do you want tracking updates sent to your own email too?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a checkbox to send status updates to the provided email address, which determines if you will get automated tracking notifications.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether they want to receive automated tracking emails for this specific shipment.",
+        "speak": "never",
+        "check": "Is the box to send status updates to the sender email checked?",
+        "say_example": "Left tracking updates to your email <off>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Describe the package",
+    "note": "4.1 and 4.2 are physical and come first - or not at all when the seller guesses. 4.3 always, or 4.4 in its place. then 4.5 and 4.6, with the rounding decided before typing. 4.7 where the tool asks a value. 4.8 always shown, rarely taken. 4.9 for an export. 4.10 before any of it when the seller has no supplies - one keeper orders from the carrier's store. 4.11 between 4.2 and 4.5 in the keepers who pack on camera. an imported order may arrive with 4.5 and 4.6 already filled, and the seller checks them against the scale.",
+    "questions": [
+     {
+      "question": "Do you want to use a saved package, or pick the packaging by hand?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "Selecting a saved profile like the \"Laptop priority box\" auto-fills the dimensions and weight, whereas manually choosing a category like \"Box or Rigid Packaging\" is necessary for custom or new shipments.",
+      "whatTheAgentLoses": "The user loses the ability to manage their saved package profiles and verify that the selected packaging type perfectly matches the physical item they are boxing up.",
+      "speak": "never",
+      "check": "Does the package section offer saved packages, and which is selected?",
+      "say_example": "Used the saved <Laptop priority box> package."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Weigh the package",
+      "questions": [
+       {
+        "question": "How much does the package weigh?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The digital scale displays exactly 10.0 ounces, which is the precise measurement required to purchase the correct amount of postage.",
+        "whatTheAgentLoses": "An AI agent cannot physically place the item on a scale to determine its exact weight for accurate shipping costs.",
+        "speak": "gate",
+        "check": "Which weight field does the form show, and in what unit?",
+        "say_example": "I need the weight. What does the scale say, in ounces?"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Measure the package",
+      "questions": [
+       {
+        "question": "What are the package's length, width and height?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the user measuring the physical box with a tape measure to determine its length, width, and height for the shipping form.",
+        "whatTheAgentLoses": "An AI agent cannot physically measure the package in the real world, so the user must provide these exact dimensions.",
+        "speak": "gate",
+        "check": "Which dimension fields does the form show, and does it require whole numbers?",
+        "say_example": "And the size. Length, width and height, in inches. Round up if it's between."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Pick the packaging type",
+      "questions": [
+       {
+        "question": "What is the item packed in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing an envelope or soft pack changes the required dimension fields to just length and width, which can unlock discounted cubic shipping rates.",
+        "whatTheAgentLoses": "An agent might default to a standard box and enter all three dimensions, missing the opportunity to classify the item as a soft pack for a cheaper rate.",
+        "speak": "gate",
+        "check": "Which packaging types does the form list, and which saved packages are offered?",
+        "say_example": "What's it packed in? A box, a padded mailer, or a flat rate box? Your saved packages are <Laptop priority box> and <small mailer>, if it's one of those."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Use a saved package",
+      "questions": [
+       {
+        "question": "Do you want to save this package for next time?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a \"Save Package\" checkbox to store the current dimensions and weight for repeated use.",
+        "whatTheAgentLoses": "The user loses the choice of whether to save time on future identical shipments by storing this package profile in their account.",
+        "speak": "never",
+        "check": "Is the Save Package box checked?",
+        "say_example": "Left the save-package box unchecked."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Enter the weight",
+      "questions": [
+       {
+        "question": "Are the pre-filled dimensions the real package size, not the site's placeholder?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows pre-filled dimensions of 12x9x3 inches and a weight of 12 oz for a Kyle Schwarber jersey, which must be accurate to avoid unexpected postage adjustments.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to physically weigh and measure the packaged jersey to confirm the pre-filled details are correct.",
+        "speak": "if-wrong",
+        "check": "Do the pre-filled length, width and height equal what the person gave, or are they a placeholder like 1 by 1 by 1?",
+        "say_example": "The size came up as <1 by 1 by 1>. That's the site's placeholder. Putting in the <12 by 9 by 3> you gave me."
+       },
+       {
+        "question": "Is the entered weight at least what the scale showed?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The scale showed 4.4 ounces, but only 4 ounces were entered in the weight field.",
+        "whatTheAgentLoses": "The user risks having the package returned or delayed due to insufficient postage.",
+        "speak": "if-wrong",
+        "check": "Is the weight in the form equal to or greater than the weight the person gave from the scale, in the same unit?",
+        "say_example": "The form says <4> ounces. The scale said <4.4>. Rounding down means the post office can send it back. Putting in <5>."
+       },
+       {
+        "question": "Is the weight unit set to the one the number was measured in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Accidentally leaving the unit on kilograms instead of grams for a 480-unit package will drastically inflate the shipping price.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent selected the correct measurement unit to avoid being massively overcharged for postage.",
+        "speak": "if-wrong",
+        "check": "Which unit is selected next to the weight, and does the number entered make sense in that unit for a package?",
+        "say_example": "The unit is on kilograms. <480> kilograms can't be right for a mailer. Switching it to grams."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Enter the dimensions",
+      "questions": [
+       {
+        "question": "Is the over-12-inches box checked when a side is over 12?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires checking a box if any dimension exceeds 12 inches and entering the exact measurements to calculate the correct shipping rate.",
+        "whatTheAgentLoses": "You lose the ability to guarantee the exact physical dimensions of your specific box are entered accurately to avoid unexpected oversize fees.",
+        "speak": "if-wrong",
+        "check": "Is any entered dimension greater than 12 inches, and is the over-12-inches box checked?",
+        "say_example": "One side is <18> inches. The over-12 box is unchecked. Checking it, or the rate is wrong."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Declare the value",
+      "questions": [
+       {
+        "question": "Is the package value set to what the order says the item sold for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a 'Package Value' field to declare the worth of the contents up to $5,000.00 for insurance purposes.",
+        "whatTheAgentLoses": "Delegating this means the agent might guess the value incorrectly, potentially leaving you underinsured if the package is lost or damaged.",
+        "speak": "always",
+        "check": "Which amount is in the package value field, and what total does the order show?",
+        "say_example": "Package value set to <29.45>, the order total."
+       },
+       {
+        "question": "Does the included insurance cover the item's full value?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The service description explicitly notes a '$100 carrier liability', meaning you must decide if that default coverage is sufficient or if you need to purchase additional insurance for a high-value shipment.",
+        "whatTheAgentLoses": "The user loses the opportunity to realize the default insurance falls short of their item's actual value, leaving them financially exposed if the package is lost or damaged.",
+        "speak": "on-event",
+        "check": "What carrier liability amount does the service line state, and what is the order total?",
+        "say_example": "This service covers up to <100> if it's lost. The item is <350>. Extra insurance is <4.20>. Add it, or leave it?"
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Set the extras",
+      "questions": [
+       {
+        "question": "Does the package need the non-machinable option?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Carriers charge hefty non-machinable surcharges for packages that cannot roll on standard sorting belts, which must be declared upfront.",
+        "whatTheAgentLoses": "The user risks having the package returned for insufficient postage or their account being hit with a post-shipment surcharge.",
+        "speak": "on-event",
+        "check": "Does the form show a non-machinable or irregular-shape option, and is the packaging chosen a tube, paper wrap, or irregular?",
+        "say_example": "You said it's in a tube. Tubes count as non-machinable here. That's <4> more. I'm adding it. Without it the package gets sent back."
+       },
+       {
+        "question": "Does the item on the order fall under the page's hazardous or restricted list?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Everyday items that are legal to ship domestically via ground, such as perfumes, nail polish, or devices with lithium batteries, are often strictly prohibited on airplanes and will be confiscated.",
+        "whatTheAgentLoses": "The agent might accurately declare the items but select an expedited air service, resulting in the package being flagged and destroyed by aviation security.",
+        "speak": "on-event",
+        "check": "What categories does the hazardous or restricted materials note list, and does the item named on the order match any of them?",
+        "say_example": "The order is <perfume>. The page says that can't go by air. I'll only show ground services."
+       },
+       {
+        "question": "Do you want any extras, like a signature or insurance?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents optional add-ons like signature delivery and liability coverage that affect the final cost and delivery security.",
+        "whatTheAgentLoses": "Delegating this means the agent might skip adding necessary insurance or signature requirements for a valuable package.",
+        "speak": "never",
+        "check": "Which add-ons are offered, and which are checked?",
+        "say_example": "No signature or insurance added."
+       },
+       {
+        "question": "Is the insurance from the carrier or from another company?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly states 'Insurance Provided by Shipsurance' and includes a link to 'View Pricing, Excluded Items, and Terms', indicating the coverage is governed by a third party rather than the shipping carrier itself.",
+        "whatTheAgentLoses": "The user loses the opportunity to review the third-party insurer's specific exclusions, potentially paying for coverage that will deny their claim if the item is on the excluded list.",
+        "speak": "never",
+        "check": "Does the insurance line name a third party as the provider?",
+        "say_example": "The insurance here comes from <Shipsurance>. A claim would go to them."
+       },
+       {
+        "question": "Is a signature required along with the insurance?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Carriers often deny insurance claims for porch theft if the package was left unattended; a signature requirement is usually necessary to enforce the insurance policy on valuable items.",
+        "whatTheAgentLoses": "The agent might buy insurance but skip the signature requirement to save a few dollars, inadvertently voiding the coverage if the package is stolen after delivery.",
+        "speak": "on-event",
+        "check": "Is insurance selected, and is the signature option also selected?",
+        "say_example": "You've added insurance for <350>. The terms say it may not pay out if the package is left at the door. Signature is <3.50> more. Add it?"
+       },
+       {
+        "question": "Did the total change when the signature option was added?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen showed the 'Signature Options (+$)' checkbox selected, but the total charges remained at £23.75, indicating the expected fee was never applied.",
+        "whatTheAgentLoses": "The user loses certainty that the package will actually require a signature upon delivery, potentially leaving a valuable shipment unsecured.",
+        "speak": "if-wrong",
+        "check": "After the signature box is checked, does the total shown differ from the total before it was checked?",
+        "say_example": "The signature box is ticked, but the total didn't move from <23.75>. It may not be on. Re-checking it."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Declare the contents for customs",
+      "note": "4.9.1, then 4.9.2 per item, 4.9.3 where the form asks a code, 4.9.4 on the carriers, 4.9.5 last. only the four export keepers and one demo walk this goal; BIYD reveals the form and hides it.",
+      "questions": [
+       {
+        "question": "Does this shipment need a customs form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the customs form box reveals mandatory fields for item descriptions, quantities, and values required for international or military deliveries.",
+        "whatTheAgentLoses": "The user loses the ability to accurately declare the specific contents and monetary value of their package for legal customs processing.",
+        "speak": "on-event",
+        "check": "Does the destination country differ from the origin country, and does the form show a customs section?",
+        "say_example": "This is going to <Canada>, so it needs a customs form. I'm filling it from the order."
+       }
+      ],
+      "children": [
+       {
+        "id": "4.9.1",
+        "label": "Set the export reason",
+        "questions": [
+         {
+          "question": "Is the contents category set to match the order, sale or gift?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The selected category determines customs processing, such as whether the recipient must show a receipt to prove the declared value or pay import duties.",
+          "whatTheAgentLoses": "An agent might select the wrong customs category, potentially causing the recipient unexpected import duties or customs delays.",
+          "speak": "never",
+          "check": "Which contents category is selected, and does the order show it as a sale?",
+          "say_example": "Marked as merchandise, since it's a sale."
+         }
+        ]
+       },
+       {
+        "id": "4.9.2",
+        "label": "Describe the items",
+        "questions": [
+         {
+          "question": "Are the customs items taken from the order?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires specific item details like description, value, weight, and origin for customs declarations, which must match the provided invoice.",
+          "whatTheAgentLoses": "The user loses the ability to ensure the customs declaration accurately reflects the invoice, potentially causing customs delays or incorrect duties.",
+          "speak": "on-event",
+          "check": "Which item lines does the invoice or order show, and do the same descriptions appear in the customs item rows?",
+          "say_example": "Entering <3> items from the order for customs. <T-shirt>, <2>, <20> each."
+         },
+         {
+          "question": "Do the customs items and values match the order?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a 'Review Products' modal showing the specific item description and a total value of 200.00 GBP, which must be accurate for customs clearance.",
+          "whatTheAgentLoses": "You lose the chance to verify the exact customs declaration and valuation of the items being shipped.",
+          "speak": "if-wrong",
+          "check": "In the review list, do the item descriptions, quantities and total value equal what the order shows, and is the customs weight no more than the package weight?",
+          "say_example": "Customs says <200> for <40> items. The order total is <120>. Fixing it before it goes to customs."
+         }
+        ]
+       },
+       {
+        "id": "4.9.3",
+        "label": "Find the tariff code",
+        "questions": [
+         {
+          "question": "Which tariff code does the lookup give for this item?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires a specific Schedule B number for customs, which can be found using the provided search tool to classify the product based on exact materials like rubber, leather, or textile.",
+          "whatTheAgentLoses": "You lose the ability to accurately specify the exact materials and composition of your item, which could lead to an incorrect customs classification and shipping delays.",
+          "speak": "on-event",
+          "check": "Does the form require a tariff code, and what code does the built-in lookup return for the item description?",
+          "say_example": "It needs a tariff code. The lookup gives <6109.10> for <cotton t-shirt>. Use that?"
+         },
+         {
+          "question": "Is the page rejecting the tariff code as too short?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The system throws a 'Tariff Code min length not met' error if the entered customs code is too short, requiring you to find and input a more specific, longer code to proceed.",
+          "whatTheAgentLoses": "The agent might get stuck on the validation error if it tries to use a generic, short tariff code instead of searching for the fully qualified number.",
+          "speak": "on-event",
+          "check": "Does the page show a tariff code length error?",
+          "say_example": "The code is too short for this form. It wants <10> digits. Looking up the longer one."
+         }
+        ]
+       },
+       {
+        "id": "4.9.4",
+        "label": "Choose the customs documents",
+        "questions": [
+         {
+          "question": "Is the customs invoice flagged incomplete, and what is missing?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a warning that the customs invoice is incomplete, meaning you must edit and provide the missing details to successfully process an international shipment.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to personally ensure your package contents and their values are declared accurately for customs.",
+          "speak": "on-event",
+          "check": "Does the page show a warning that the customs invoice is incomplete, and which fields does it name?",
+          "say_example": "The customs invoice is missing <the item values>. I won't guess those. What did they sell for?"
+         },
+         {
+          "question": "Which customs documents does the page require?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays an alert requiring either a Commercial or Pro Forma Invoice and provides a dropdown to specify the terms of sale for international customs clearance.",
+          "whatTheAgentLoses": "The user loses control over their legal shipment declarations, risking customs delays, package rejection, or unexpected fees if the agent selects the wrong documents or terms of sale.",
+          "speak": "on-event",
+          "check": "Which customs documents does the page require, and which are selected?",
+          "say_example": "This needs a commercial invoice. I'm having the site make it."
+         },
+         {
+          "question": "Do you want to include an optional packing list?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen offers an optional packing list to inventory the contents without showing costs or values.",
+          "whatTheAgentLoses": "You lose the opportunity to include a detailed inventory of the package contents with the shipment.",
+          "speak": "never",
+          "check": "Is the optional packing list checked?",
+          "say_example": "Skipped the optional packing list."
+         }
+        ]
+       },
+       {
+        "id": "4.9.5",
+        "label": "Settle who pays the duties",
+        "questions": [
+         {
+          "question": "Is the page asking for documents to upload for this destination?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displayed an 'IMPORTANT' warning box with an upload link that is likely required for customs clearance when shipping to India.",
+          "whatTheAgentLoses": "You lose the ability to ensure that critical customs warnings and document requirements are properly handled to prevent shipping delays.",
+          "speak": "on-event",
+          "check": "Does the page show an IMPORTANT box with an upload link, and what documents does it name?",
+          "say_example": "There's a warning that shipments to <India> need <KYC documents> uploaded first. I can't make those. Do you have them?"
+         },
+         {
+          "question": "Who does the page say pays the duties?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen shows an acceptance prompt regarding international duties and taxes that the system was unable to estimate.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to proceed with a shipment that might unexpectedly burden the recipient with unknown customs fees.",
+          "speak": "on-event",
+          "check": "What does the duties prompt say about who pays, and does it say the amount could not be estimated?",
+          "say_example": "Customs duties on this will be charged later, and the site can't say how much. It's set so <the buyer> pays them on delivery. OK, or should you pay them?"
+         },
+         {
+          "question": "Are estimated duties included in the total shown?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": true,
+          "why": "The payment page displays an estimated 44.45 GBP for duties and taxes, but the sticky footer total only charges £23.75, indicating extra fees will be owed later.",
+          "whatTheAgentLoses": "You lose the awareness of significant additional fees that are not covered in the upfront payment and may surprise the recipient upon delivery.",
+          "speak": "on-event",
+          "check": "What estimated duties amount does the page show, and does the total in the footer include it?",
+          "say_example": "The total here is <23.75>. Duties of about <44.45> are on top of that, paid later."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.10",
+      "label": "Get the packing supplies"
+     },
+     {
+      "id": "4.11",
+      "label": "Pack the item",
+      "questions": [
+       {
+        "question": "Which items does the order say go in this package?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The user is shown physically packing jeans, a pink packing slip, and a white note into a poly mailer before attaching the printed shipping label.",
+        "whatTheAgentLoses": "You lose the ability to physically verify the items being shipped and add personal touches like a custom note.",
+        "speak": "never",
+        "check": "Which items and quantities does the order list?",
+        "say_example": "This order is <2> items: <jeans> and <a belt>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Choose the service",
+    "note": "5.1, then 5.2 with 5.3 or 5.4 against it where an order exists and 5.5 where the seller doubts the price; then 5.6, 5.7 where the tool offers a carrier switch, 5.8 where the date is asked, 5.9 read on the way. 5.6 loops back to 4 when the package numbers block a service.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Get the rates"
+     },
+     {
+      "id": "5.2",
+      "label": "Compare the service list",
+      "questions": [
+       {
+        "question": "Is the discount here as big as the one advertised?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app listing advertises up to 89% off USPS rates, but the service selection screen shows actual savings of only 26% to 28% for these specific packages.",
+        "whatTheAgentLoses": "An agent might blindly accept the quoted price without realizing the discount falls significantly short of the advertised promotional rate.",
+        "speak": "on-event",
+        "check": "What savings percentage did the listing advertise, and what percentage does the rate list show for this package?",
+        "say_example": "The listing said up to <89> percent off. On this package it's <26>."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Match the buyer's choice",
+      "questions": [
+       {
+        "question": "Does the package sit inside the selected service's size and weight limits?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows the eBay Standard Envelope requires a maximum thickness of .25 inches, but the system allowed it to be selected despite a 1-inch thickness being entered.",
+        "whatTheAgentLoses": "The user risks having their package rejected or being charged extra fees by the carrier for using a label that does not cover the actual package dimensions.",
+        "speak": "if-wrong",
+        "check": "Does the selected service state a maximum weight or thickness, and is the entered weight or dimension over it, whether or not the page shows an error?",
+        "say_example": "The <Standard Envelope> allows a quarter inch. This is <1> inch thick. The site let it through anyway, but the post office won't. Picking the next cheapest."
+       },
+       {
+        "question": "Does the selected service match what the buyer chose on the order?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'SHIPPING' panel displays the customer's requested method, which dictates the exact service you must select to fulfill the order correctly.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent selected the exact shipping speed and carrier the customer originally requested.",
+        "speak": "if-wrong",
+        "check": "Which shipping method does the order's shipping panel name, and which service is selected in the rate list, for each order in view?",
+        "say_example": "The buyer paid for <Priority>. The list is on <Ground>. Switching to what they paid for."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Compare cost to shipping paid",
+      "questions": [
+       {
+        "question": "Does the label cost more than the buyer paid for shipping?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the USPS First-Class Package costs $4.39, which leaves a positive margin against the $5.99 the buyer paid for shipping.",
+        "whatTheAgentLoses": "You lose the ability to ensure the chosen shipping method is cost-effective and fully covered by the buyer's payment.",
+        "speak": "if-wrong",
+        "check": "What is the selected label price, and what did the order show the buyer paid for shipping, summed across the orders in view?",
+        "say_example": "The label is <6.34>. The buyer paid <5.99> for shipping. That's <35> cents out of your pocket."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Check the price elsewhere",
+      "questions": [
+       {
+        "question": "Is the rate here lower than the other platform's rate for the same service?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Comparing the $9.00 Pirate Ship rate to the $9.69 eBay rate ensures you select the most cost-effective option for Priority Mail.",
+        "whatTheAgentLoses": "You lose the ability to cross-check rates between different shipping platforms to maximize your savings.",
+        "speak": "never",
+        "check": "Is the same service priced on another platform's page in view, and what does each show?",
+        "say_example": "<eBay>'s own label for this was <9.69>. Here it's <9.00>."
+       },
+       {
+        "question": "What does the site say this would cost at the post office counter?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The interface claims a 55% discount compared to a $27.38 retail price, which prompts checking if the savings are genuine before selecting the service.",
+        "whatTheAgentLoses": "The user loses the opportunity to independently verify if the third-party platform's claimed discounts are actually a good deal compared to the carrier's direct prices.",
+        "speak": "never",
+        "check": "What retail price and discount does the page claim for this service, on the rate line or in the checkout summary?",
+        "say_example": "The site says <27.38> at the counter, <12.20> here."
+       },
+       {
+        "question": "Do the prices I read out match what's on the screen now?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The narrator mentions specific shipping charges that conflict with the $17.98 paid and the $15.08 label price shown on screen, indicating a discrepancy in the actual cost.",
+        "whatTheAgentLoses": "The user loses financial accuracy if the agent fails to notice that the expected shipping charges do not match the actual billed amounts.",
+        "speak": "if-wrong",
+        "check": "Do the label price and the buyer's shipping payment shown on the current page equal the figures the agent last spoke?",
+        "say_example": "I said <15.08> earlier. The page now says <17.98>. Going with the page."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Pick the service",
+      "questions": [
+       {
+        "question": "Is the destination a PO Box that only USPS can reach?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "FedEx and UPS generally cannot deliver to USPS PO Boxes, but some shipping platforms won't block you from buying the label anyway.",
+        "whatTheAgentLoses": "The user pays for a FedEx or UPS label that will inevitably result in a returned package and a failed delivery.",
+        "speak": "on-event",
+        "check": "Does the ship-to address contain PO Box, and does the rate list include UPS or FedEx services?",
+        "say_example": "This goes to a PO Box. Only the post office delivers there, so I'm skipping UPS and FedEx."
+       },
+       {
+        "question": "Which shipping service do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple carrier options ranging from a $4.46 USPS Ground Advantage to a $7.17 Priority Mail, requiring a trade-off between price and delivery date.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the shipping cost against the estimated delivery time to choose the service that best fits your urgency and budget.",
+        "speak": "gate",
+        "check": "Which services does the rate list show, with each price and delivery date, and does the order name a service?",
+        "say_example": "Two ways to send it. <Ground Advantage> for <4.46>, there by <Friday>. <Priority> for <7.17>, by <Wednesday>. The buyer paid for <Priority>. Which one?"
+       },
+       {
+        "question": "Does the priced rate row match the service picked?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The rates and transit times section can default to a different, more expensive service than the one initially selected in the dropdown.",
+        "whatTheAgentLoses": "The user loses the ability to catch unexpected system defaults, potentially resulting in paying for a much more expensive shipping tier.",
+        "speak": "if-wrong",
+        "check": "Does the service name on the highlighted rate row equal the service selected in the dropdown?",
+        "say_example": "The dropdown says <Ground>, but the rate row jumped to <Express> at <28>. Putting it back."
+       },
+       {
+        "question": "Is the page showing a delay notice for the carrier?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a warning banner stating that USPS is experiencing significant delays and suggests using other carrier options to provide a better buyer experience.",
+        "whatTheAgentLoses": "The user loses the critical context of current carrier delays, potentially resulting in late deliveries and angry buyers if they proceed with the delayed carrier.",
+        "speak": "on-event",
+        "check": "Does the page show a delay notice naming a carrier, and what other services does the rate list offer?",
+        "say_example": "There's a notice that <USPS> is running late right now. <UPS> is <2> more and lands <Thursday>. Switch, or stay?"
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Answer the switch-carrier offer",
+      "questions": [
+       {
+        "question": "Does the switch offer add up to the service's listed price?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The $2.27 offer to switch to USPS added to the $8.25 UPS rate exactly matches the $10.52 Priority Mail Cubic rate shown earlier, confirming there are no hidden fees in the upgrade.",
+        "whatTheAgentLoses": "The user loses the peace of mind that comes from manually verifying that last-minute upgrade offers mathematically align with the original price quotes.",
+        "speak": "if-wrong",
+        "check": "Does the current rate plus the switch amount shown equal the price listed earlier for the offered service?",
+        "say_example": "The switch offer adds <2.27>. That makes <10.52>. <Priority> was <9.80> before, so there's <72> cents extra in the switch."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Set the ship date",
+      "questions": [
+       {
+        "question": "What date do you plan to drop off or ship the package?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Ship Date' dropdown with a default date, which the carrier uses to calculate delivery estimates and determine the label's validity window.",
+        "whatTheAgentLoses": "The user loses the ability to align the postage date with their actual schedule, potentially resulting in an expired label if the agent accepts the default but the user drops it off days later.",
+        "speak": "never",
+        "check": "What date is selected in the Ship Date field?",
+        "say_example": "Ship date is <today>."
+       },
+       {
+        "question": "Did the site move the ship date to tomorrow?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Shipping systems often automatically change the label's valid ship date to the next business day if purchased late in the afternoon, which might conflict with your plan to use a 24-hour drop box today.",
+        "whatTheAgentLoses": "The user loses the ability to notice and correct the date if they actually intend to physically mail the package today despite the late hour.",
+        "speak": "on-event",
+        "check": "Does the Ship Date show a day after today, and does the page mention a cutoff time?",
+        "say_example": "The ship date moved to <tomorrow>. The page says today's cutoff was <3 pm>. If you're dropping it tonight, the label still scans."
+       }
+      ]
+     },
+     {
+      "id": "5.9",
+      "label": "Read the delivery estimate",
+      "questions": [
+       {
+        "question": "Does the delivery date match the speed in the service name?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a shipping date of 12/09/2020 for a '2-Day Delivery' service, but the scheduled delivery is listed as December 12, which is three days later.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch discrepancies between the advertised shipping speed they are paying for and the actual scheduled delivery date.",
+        "speak": "if-wrong",
+        "check": "What ship date and delivery date does the page show, and how many days does the service name promise?",
+        "say_example": "This is a <2-day> service, but the page says delivery <December 12>, three days out."
+       },
+       {
+        "question": "Does the delivery date meet the marketplace deadline?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The estimated delivery date of Friday 11/7 on Pirate Ship contradicts the November 20, 2025 deadline shown on TCGplayer.",
+        "whatTheAgentLoses": "The user loses the ability to catch discrepancies between the shipping service's delivery estimate and the marketplace's required delivery date.",
+        "speak": "if-wrong",
+        "check": "What delivery date does the page show, and what ship-by or deliver-by date does the marketplace order show?",
+        "say_example": "It'll land <Monday>. The order says it has to be delivered by <Friday>. This service won't make it."
+       },
+       {
+        "question": "Is the delivery date a promise or just an estimate?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Services like USPS Priority Mail Express offer a money-back guarantee if the package is late, whereas standard Priority Mail only provides an estimate, which matters if you are facing a strict marketplace delivery deadline.",
+        "whatTheAgentLoses": "The user loses the ability to weigh the risk of a late delivery against the cost of a guaranteed service.",
+        "speak": "never",
+        "check": "Does the service description say guaranteed or estimated?",
+        "say_example": "The <Priority> date is an estimate. Only <Express> promises a day."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Arrange the handover",
+    "note": "6.1 wherever the platform asks - before 5 on UPS, inside the form on DHL and FedEx, after 7 on Pirate Ship; the marketplaces never ask and the seller drops off. 6.2 when a pickup is chosen. 6.3 where a hold or a QR drop-off is offered.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Choose pickup or drop-off",
+      "questions": [
+       {
+        "question": "Do you want a pickup, or will you drop it off?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Pickup/Drop-off' section with radio buttons and an alert that FedEx pickups must be scheduled separately.",
+        "whatTheAgentLoses": "An agent might select a pickup or drop-off option that is inconvenient or requires you to schedule a separate pickup you were not expecting.",
+        "speak": "gate",
+        "check": "Which handover options does the page show, and does it say pickup must be scheduled separately or costs anything?",
+        "say_example": "Free pickup tomorrow from your door, or you drop it at <the post office>? Which one?"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Book the pickup",
+      "questions": [
+       {
+        "question": "Where exactly at your address should the driver collect the package?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a 'Preferred Collection Location' dropdown with options like 'Front Door' and 'Back Door' to specify where the carrier should look.",
+        "whatTheAgentLoses": "The user loses the ability to direct the carrier to the most secure or convenient pickup spot on their property.",
+        "speak": "on-event",
+        "check": "Which collection locations does the pickup form list?",
+        "say_example": "Where will it be for the driver? Front door, back door, or the mail room?"
+       },
+       {
+        "question": "Is the pickup address the place the package will be?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator emphasizes that the pick-up location details must be accurate to avoid missed collections and delays.",
+        "whatTheAgentLoses": "The user risks a missed carrier pickup because the agent failed to verify the specific contact information and address for the collection point.",
+        "speak": "if-wrong",
+        "check": "Do the name, address and phone on the pickup form equal the return address and phone on the account?",
+        "say_example": "The pickup address came up as <the shop>. The package is at <home>. Fixing it, or the driver goes to the wrong place."
+       },
+       {
+        "question": "Which required field is the page saying is missing?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Provide required details above' message that blocks you from continuing the shipment process.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally identify and correct the specific missing shipment details.",
+        "speak": "on-event",
+        "check": "Does the page show a Provide required details message, and which field is marked or empty?",
+        "say_example": "It won't go on. It says a required field is missing, and it's <the phone number>. What should I put?"
+       },
+       {
+        "question": "Which pickup day and time window do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to set a future shipment date and schedule a specific time window for a courier pickup.",
+        "whatTheAgentLoses": "If an agent schedules the pickup, they might choose a time when you are not available to hand over the package.",
+        "speak": "on-event",
+        "check": "Which pickup date and time windows does the form offer?",
+        "say_example": "Pickup windows are <8 to 12> or <12 to 5> on <Tuesday>. Which?"
+       },
+       {
+        "question": "Which carrier do you want to request a pickup from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a 'Manage Pickups' page with a 'Request Pickup' button that allows you to select a specific carrier for collection.",
+        "whatTheAgentLoses": "The user loses the ability to specify their preferred carrier for the pickup, which could lead to missed collections or scheduling conflicts.",
+        "speak": "never",
+        "check": "Which carrier is selected on the Request Pickup form, and which carrier is on the label?",
+        "say_example": "Pickup requested from <USPS>, same as the label."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Choose hold or QR drop-off",
+      "questions": [
+       {
+        "question": "Deliver to their door, or hold it at a pickup point?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a specific option to either deliver to the receiver or hold the package at a UPS location for collection.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose a secure pickup location if the recipient prefers not to have it delivered to their door.",
+        "speak": "never",
+        "check": "Is delivery set to the receiver's address or to a pickup point?",
+        "say_example": "Set to deliver to their door."
+       },
+       {
+        "question": "Do you prefer a printable label or a QR code for drop-off?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the QR code option reveals that carrier pick-up will not be available and the package must be taken to a nearby location.",
+        "whatTheAgentLoses": "You lose the ability to choose the most convenient dispatch method based on whether you have a printer or want a carrier pick-up.",
+        "speak": "never",
+        "check": "Is a printable label or a QR code selected?",
+        "say_example": "Chose the printable label."
+       },
+       {
+        "question": "Does the QR code route need a staffed counter?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "QR codes must be scanned by a clerk or a retail kiosk to print the physical adhesive label; you cannot simply scan a code at an unattended street drop box.",
+        "whatTheAgentLoses": "The agent might select the QR code for convenience, leaving you stuck at a drop box after hours with no way to attach a label to your package.",
+        "speak": "on-event",
+        "check": "Does the QR option say where it can be scanned, and does it say pickup is unavailable?",
+        "say_example": "With the QR code, the package has to go to a counter during opening hours. No pickup, no drop box."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Pay for the postage",
+    "note": "7.1, then 7.2 where the tool has declarations; 7.3 picks how to pay - one of 7.3.1 to 7.3.4, with 7.3.5 forced when the account has none and 7.3.6 a one-time setting; then 7.4, then 7.5. the buy click is cut or never made in eleven keepers.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Review the purchase summary",
+      "questions": [
+       {
+        "question": "Is the package value still in the cart?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The final shipping cart summary displays a package value of $0.00 despite 150 being entered into the Package Value field earlier.",
+        "whatTheAgentLoses": "The user loses the financial protection of having their package properly insured for its actual value if it is lost or damaged in transit.",
+        "speak": "if-wrong",
+        "check": "Does the package value in the cart summary equal the value entered earlier?",
+        "say_example": "The cart shows the package value as <0>. You entered <150>. It dropped. Putting it back before paying."
+       },
+       {
+        "question": "Are there extra charges hidden inside the fees section?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The top-line shipping rate often excludes specific carrier surcharges until the final checkout step, where they are visually hidden inside a collapsed accordion menu or tooltip.",
+        "whatTheAgentLoses": "The user pays more than the base quoted rate without realizing exactly what extra fees the carrier tacked on at the last second.",
+        "speak": "on-event",
+        "check": "Does the checkout show a collapsed Taxes and Fees or surcharge section, and what lines does it contain when opened?",
+        "say_example": "There's a folded-up fees line. Inside it are a <residential> charge of <4.10> and a <fuel> charge of <1.20>. The rate up top didn't include those."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Accept the declarations and terms",
+      "questions": [
+       {
+        "question": "Do you want this bank account saved and charged for the label and any later carrier adjustments?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen warns that confirming will save your bank account as a payment method and authorize charges for both the current label and any future carrier adjustments.",
+        "whatTheAgentLoses": "You lose the chance to decide if you are comfortable saving this specific bank account and accepting liability for unexpected carrier adjustment charges.",
+        "speak": "gate",
+        "check": "What does the confirmation say will be saved, and does it say future carrier adjustments will be charged to it?",
+        "say_example": "This saves your bank account on the site. They can also charge it later if the carrier says the package weighed more. OK to allow that?"
+       },
+       {
+        "question": "Do you confirm the weight and that the package holds nothing prohibited?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout screen requires an email address and mandatory checkboxes confirming the package weight, absence of prohibited items, and agreement to the terms and conditions.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose where the receipt is sent and to personally ensure your package does not violate the carrier's prohibited items policy.",
+        "speak": "gate",
+        "check": "Which checkboxes does the checkout require, and what does each one attest to?",
+        "say_example": "It wants you to confirm the weight is right and there's nothing prohibited in the box. Only you know what's in it. OK to tick those?"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Choose the funding source",
+      "note": "one of 7.3.1 to 7.3.4 as the tool and the account allow. 7.3.5 replaces the choice when nothing is on file - BdF9 passes it inside the buy click, VLem stops. 7.3.6 is a setting demoed twice and taken once.",
+      "children": [
+       {
+        "id": "7.3.1",
+        "label": "Pay with a card",
+        "questions": [
+         {
+          "question": "Will you type the card details in yourself?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The checkout screen requires a card number, cardholder name, expiry date, and security code to process the transaction.",
+          "whatTheAgentLoses": "The user loses the ability to keep their sensitive financial details private and control exactly which account is charged.",
+          "speak": "gate",
+          "check": "Does the page show empty card number, expiry and security code fields?",
+          "say_example": "No card saved here. It wants one typed in. That's yours to enter. I'll hold the page."
+         }
+        ]
+       },
+       {
+        "id": "7.3.2",
+        "label": "Pay from the balance",
+        "questions": [
+         {
+          "question": "Is the balance enough to cover the labels?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The shipment validation window displays the total fees against your current account balances for each carrier, indicating if additional postage must be purchased.",
+          "whatTheAgentLoses": "Delegating this step means you lose the chance to review your carrier balances and manage your funds before committing to the batch purchase.",
+          "speak": "if-wrong",
+          "check": "What balance does the page show for each carrier account, and what total fee is shown against it?",
+          "say_example": "Balance is <6.04>. This batch is <9.20>. It'll need <3.16> more added first."
+         },
+         {
+          "question": "Was each label charged once, and did the balance move by that much?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen shows the $2.60 cost for order 1023 being deducted from the account balance three separate times.",
+          "whatTheAgentLoses": "The user loses money due to duplicate charges for a single shipping label.",
+          "speak": "if-wrong",
+          "check": "In the balance history, how many deductions carry this order's number, and does each balance drop by exactly its fee?",
+          "say_example": "Order <1023> was charged three times, <2.60> each. That's two too many. Don't buy another until that's sorted."
+         }
+        ]
+       },
+       {
+        "id": "7.3.3",
+        "label": "Pay through PayPal or payouts"
+       },
+       {
+        "id": "7.3.4",
+        "label": "Bill a shipper account",
+        "questions": [
+         {
+          "question": "Is the page rejecting the shipper account number?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The system rejected multiple account numbers with errors like '! Account already used', preventing the account from being successfully added.",
+          "whatTheAgentLoses": "You lose the ability to provide a valid, registered account number, which could cause an agent to get stuck in an error loop or fail to link your preferred billing account.",
+          "speak": "on-event",
+          "check": "Does the page show an error next to the account number field, and what does it say?",
+          "say_example": "The site won't take that account number. It says <already used>. Which one should go here?"
+         }
+        ]
+       },
+       {
+        "id": "7.3.5",
+        "label": "Add a payment method"
+       },
+       {
+        "id": "7.3.6",
+        "label": "Set the auto-fund amount",
+        "questions": [
+         {
+          "question": "Do you want to set a default top-up amount for the account?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen offers a setting to add extra funds to your account balance by default, which helps avoid numerous small transactions on your statement.",
+          "whatTheAgentLoses": "Letting an agent decide means you lose control over your cash flow and whether your card is charged per shipment or in larger, consolidated amounts.",
+          "speak": "never",
+          "check": "What default fund amount is set?",
+          "say_example": "Left the auto-fund setting alone."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Confirm the purchase",
+      "questions": [
+       {
+        "question": "Do you want to buy this label at the total shown?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking 'Buy Label' finalizes the transaction and immediately charges the displayed $9.00 to the saved Visa card.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the final shipping cost and chosen service before their payment method is permanently charged.",
+        "speak": "gate",
+        "check": "What does the summary show for service, weight, recipient city, number of labels, total, and payment method?",
+        "say_example": "Ready to buy. <Priority Mail>, <4> pounds, to <buyer> in <Fresno>. <9.00> on your <Visa> ending <8685>. Press to buy, or say change."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Read the purchase confirmation",
+      "questions": [
+       {
+        "question": "Did the purchase fail and land back on checkout?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Payment gateways sometimes fail without a clear pop-up, silently returning you to the payment form with only a small text warning about a declined card or insufficient funds.",
+        "whatTheAgentLoses": "The agent might assume the transaction completed successfully after clicking buy, leaving the shipment unpaid and the label ungenerated.",
+        "speak": "if-wrong",
+        "check": "After the buy click, does the page show the checkout form again with an error text, and what does it say?",
+        "say_example": "It bounced back to the payment page. It says <card declined>. Nothing was bought."
+       },
+       {
+        "question": "Is the label bought and ready to print?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays a 'Ready to Print' status along with a tracking number and a 'Print Label' button, confirming the transaction was successful.",
+        "whatTheAgentLoses": "You lose the immediate confirmation of the tracking number and the ability to personally verify the label is ready before printing.",
+        "speak": "always",
+        "check": "Does the page show a Ready to Print status or a Print Label button with a tracking number?",
+        "say_example": "It went through. Label bought for <9.00>. Tracking <number>."
+       },
+       {
+        "question": "Does the confirmed charge match the price of the service picked?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The selected eBay Standard Envelope service was listed as $0.87, but the confirmation screen displayed a total cost of $3.75.",
+        "whatTheAgentLoses": "The user is unexpectedly overcharged for postage because the agent failed to verify that the final billed amount matched the chosen service.",
+        "speak": "if-wrong",
+        "check": "Does the total on the confirmation equal the price shown for the service that was selected?",
+        "say_example": "The confirmation says <3.75>. The service picked was <0.87>. I'd refund this label before printing."
+       },
+       {
+        "question": "Is the QR code fully visible?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The final step for a printerless drop-off is scanning the QR code from a mobile screen, which fails if the image is broken, partially off-screen, or obscured by a UI element.",
+        "whatTheAgentLoses": "The user arrives at the drop-off location and cannot hand over the package because the clerk cannot scan the broken or obstructed code.",
+        "speak": "on-event",
+        "check": "Is the QR code image fully inside the viewport, with no dialog or banner over it?",
+        "say_example": "The QR code is half off the screen. Scrolling it into view before you scan."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Print the label",
+    "note": "8.1 where the tool asks, 8.2 to reach the file, 8.3 in the print dialog every time, then 8.4. 8.5 on an export, 8.6 at the end of a shipping day, 8.7 when the print fails or the label is wrong, 8.8 on the paper.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Choose the label format",
+      "questions": [
+       {
+        "question": "Which printer is the label going to, so the size and format match?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offers specific label sizes like 4x6 or 2x7 inches and file types like PDF, which must match your physical printer's capabilities to print correctly.",
+        "whatTheAgentLoses": "You lose the ability to ensure the generated label perfectly matches your specific physical printer's size and format requirements.",
+        "speak": "gate",
+        "check": "Which label sizes and file types does the page offer, and which is selected?",
+        "say_example": "What are you printing on? A 4 by 6 thermal printer, or regular paper? I'll set the label size to match."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Open or download the label",
+      "questions": [
+       {
+        "question": "Do you need a link to share the label?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offers a 'Create Share Link' button that generates a unique URL for the label, which is necessary if someone else is actually printing and attaching it.",
+        "whatTheAgentLoses": "Delegating this step means the agent might just download the label locally instead of generating and providing the shareable link you need to send to the person shipping the item.",
+        "speak": "never",
+        "check": "Does the page show a Create Share Link button?",
+        "say_example": "Skipped the share link."
+       },
+       {
+        "question": "How do you want to save or share the shipping label?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents options to print, download, or create a share link for the label, which determines how you will access the final postage.",
+        "whatTheAgentLoses": "The user loses the ability to choose the most convenient method for receiving or sharing the final shipping label.",
+        "speak": "never",
+        "check": "Which of print, download and share does the page offer?",
+        "say_example": "Downloaded the label as a PDF."
+       },
+       {
+        "question": "Does the label file show a whole barcode?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Browser PDF viewers or platform generation glitches can sometimes result in downloading a blank page or a file missing the actual scannable barcode images.",
+        "whatTheAgentLoses": "The user loses the final visual verification that the downloaded file is a valid, scannable label rather than a broken file that cannot be used.",
+        "speak": "if-wrong",
+        "check": "Does the opened label PDF show a barcode and a postage block, fully inside the page edges?",
+        "say_example": "The label file opened blank. No barcode on it. Downloading it again."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Pick the printer and paper",
+      "questions": [
+       {
+        "question": "Does the label size the page shows match the printer chosen?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Checking the print dialog ensures the label is sent to the Rollo [id] printer with the North America 4 x 6 paper size selected.",
+        "whatTheAgentLoses": "You lose the ability to manually verify that the label is being sent to your specific local hardware with the correct paper dimensions.",
+        "speak": "if-wrong",
+        "check": "What label size and format does the page show beside the print or download button, and does it match the printer named earlier, 4 by 6 for a thermal printer or 8.5 by 11 for regular paper?",
+        "say_example": "The label is set to <8.5 by 11>. You said the <Rollo>, which takes 4 by 6. Switching it before printing."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Print the label",
+      "questions": [
+       {
+        "question": "Has the batch finished processing?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Waiting for the status indicator to change from 'Processing...' to a green 'Finished' ensures all the labels are actually ready before you try to print.",
+        "whatTheAgentLoses": "You lose the visual confirmation that the system successfully generated every label in your batch without errors.",
+        "speak": "on-event",
+        "check": "Does the batch status show Processing or Finished?",
+        "say_example": "Still making the labels. I'll print once it says finished."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Print the customs documents",
+      "questions": [
+       {
+        "question": "Which documents does the shipment need printed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen lists multiple generated documents like the waybill, customs invoice, and receipt that must be printed for the courier, requiring a choice of what to view or print.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the final customs documents and save a copy of the receipt for your records.",
+        "speak": "on-event",
+        "check": "Which documents does the page list for this shipment, and how many copies does it say to print?",
+        "say_example": "This one needs the label plus <3> copies of the customs invoice. Printing all of them."
+       },
+       {
+        "question": "Do you want paperless invoicing, so the customs invoice isn't printed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator suggests enrolling in UPS paperless invoicing to eliminate the need to print and attach physical copies of commercial invoices.",
+        "whatTheAgentLoses": "The user loses the opportunity to streamline their international shipping process by opting into a digital, paperless customs workflow.",
+        "speak": "never",
+        "check": "Does the page offer paperless invoicing enrollment?",
+        "say_example": "Left paperless invoicing off."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Print the end-of-day form",
+      "questions": [
+       {
+        "question": "Do you want to see all of the day's labels as one file?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Previewing the combined PDF of 4x6 labels ensures all orders for the selected ship date are correct before you physically print them.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to visually verify the batch of labels in the PDF preview to ensure no orders are mixed up.",
+        "speak": "never",
+        "check": "Does the page offer a combined label preview for the ship date?",
+        "say_example": "Opened the day's labels as one file."
+       },
+       {
+        "question": "Is a SCAN form offered for today's packages?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a 'USPS SCAN AT ACCEPTANCE' PDF with a master barcode, which matters because it allows the postal worker to scan multiple packages into the system simultaneously.",
+        "whatTheAgentLoses": "Delegating this means you lose the choice to provide a consolidated scan sheet that saves time during the post office drop-off.",
+        "speak": "on-event",
+        "check": "How many labels does the page show for today, and does it offer a SCAN form?",
+        "say_example": "You've got <4> packages today. Printing the SCAN form too, so the counter scans one barcode for all of them."
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Reprint or void the label",
+      "questions": [
+       {
+        "question": "What do you want to do with this purchased label?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen provides post-purchase options to duplicate the shipment, export tracking data, or refund the label.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to cancel the label for a refund or save the tracking information for your records.",
+        "speak": "never",
+        "check": "Which actions does the page offer for the bought label?",
+        "say_example": "The label can be refunded from here if it's never used."
+       },
+       {
+        "question": "Which label do you need to reprint?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The History tab displays past shipments, so you must select the specific transaction for Perfectly Posh to access the reprint option.",
+        "whatTheAgentLoses": "You lose the ability to verify the specific transaction details, such as the date and recipient, before choosing to reprint the label.",
+        "speak": "never",
+        "check": "Which past labels does the History tab list?",
+        "say_example": "Reprinted the <Perfectly Posh> label from history."
+       },
+       {
+        "question": "Does the History tab offer a reprint for this label, as the banner promised?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The banner states you can reprint labels from the History tab, which is confirmed when you navigate there and successfully generate the label.",
+        "whatTheAgentLoses": "You lose the assurance that the platform's promise to save and reprint labels actually works in case you need to access the label later.",
+        "speak": "never",
+        "check": "Does the History tab show a Reprint action for the label?",
+        "say_example": "It can be reprinted from History."
+       }
+      ]
+     },
+     {
+      "id": "8.8",
+      "label": "Check the printed label",
+      "questions": [
+       {
+        "question": "Does the label match the service and details paid for?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen showed 'USPS Ground Advantage' being selected and priced, but the final printed label displayed 'USPS FIRST-CLASS PKG', indicating a mismatch in the purchased service.",
+        "whatTheAgentLoses": "The user loses the ability to catch a discrepancy between the purchased shipping service and the actual label generated.",
+        "speak": "if-wrong",
+        "check": "On the label image, do the service name, destination address, weight, price and post-by date equal what the confirmation page shows, allowing weight rounded up to the next whole unit?",
+        "say_example": "The label says <Large Letter>, <1.40>. You paid for <Small Parcel>, <2.95>. Those don't match, and a wrong class gets it sent back. Don't stick this one on."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Finish the shipment",
+    "note": "9.1 then 9.2 on every label that reaches paper. 9.3 where the store does not learn of the label by itself, 9.4 where it does. 9.5 when 5.4 found an overcharge. 9.6 loops back to 2. 9.7 whenever the seller is stuck.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Attach the label"
+     },
+     {
+      "id": "9.2",
+      "label": "Hand the package over"
+     },
+     {
+      "id": "9.3",
+      "label": "Write the tracking back",
+      "questions": [
+       {
+        "question": "Do you need to copy the tracking number to update the marketplace order?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The confirmation page displays the generated tracking number with a copy icon so you can easily retrieve it for your records or marketplace updates.",
+        "whatTheAgentLoses": "You lose the chance to immediately copy the tracking number to your clipboard for updating the marketplace order yourself.",
+        "speak": "never",
+        "check": "Does the confirmation show the tracking number with a copy control?",
+        "say_example": "Copied the tracking number to the <TCGplayer> order."
+       },
+       {
+        "question": "Is the tracking being saved on the right order, with the right number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The TCGplayer order detail page features an 'Add Tracking Number' modal where the tracking number and carrier must be entered to update the shipment.",
+        "whatTheAgentLoses": "You lose the ability to verify that the correct tracking number and carrier were attached to the specific buyer's order.",
+        "speak": "if-wrong",
+        "check": "Do the tracking number and carrier typed in the marketplace's tracking form equal the number and carrier on the label just bought, and is the open order the one that was shipped?",
+        "say_example": "The tracking form is on order <9084>. The label was for <9083>. Moving it."
+       },
+       {
+        "question": "Is the tracking number saved on the order?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The green 'Tracking number saved' banner and updated 'Shipped' status confirm that the platform has correctly registered the shipment.",
+        "whatTheAgentLoses": "You lose the visual confirmation that the tracking number was successfully synced to the original order before printing the label.",
+        "speak": "always",
+        "check": "Does the page show a tracking saved banner and the order status as Shipped?",
+        "say_example": "Tracking saved. The order shows shipped."
+       },
+       {
+        "question": "Did all the combined orders get the tracking number?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "This matters because the 'Manage all orders' page needs to show the same tracking number and a 'Shipped' status for all three items to ensure the platform and the buyer recognize the complete fulfillment.",
+        "whatTheAgentLoses": "Delegating this means you lose the peace of mind of visually confirming that the single purchased label correctly updated the status of every individual order in the batch.",
+        "speak": "if-wrong",
+        "check": "For the combined orders, does each row show the same tracking number and a Shipped status?",
+        "say_example": "Two of the three orders show shipped. Order <9085> still says awaiting. Adding the tracking to it."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Check the order status updated",
+      "questions": [
+       {
+        "question": "Do you want to notify the marketplace about this shipment?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a 'Do not notify marketplace' checkbox in the Marketplace Options section, which determines whether the sales platform receives automatic tracking updates.",
+        "whatTheAgentLoses": "If the agent makes this choice without your input, your buyer might not receive their tracking information automatically, potentially causing confusion or marketplace penalties.",
+        "speak": "never",
+        "check": "Is the Do not notify marketplace box checked?",
+        "say_example": "The marketplace will be told it shipped."
+       },
+       {
+        "question": "Did the store mark the order fulfilled?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Refreshing the Shopify Orders page to see the status change from yellow 'Unfulfilled' to grey 'Fulfilled' confirms that the shipping software synced correctly.",
+        "whatTheAgentLoses": "You lose the peace of mind of visually confirming that your e-commerce platform successfully recorded the fulfillment.",
+        "speak": "if-wrong",
+        "check": "After refresh, does the store's order show Fulfilled, and did the awaiting-shipment count drop by one?",
+        "say_example": "<Shopify> still shows this order unfulfilled. The sync didn't take. Want me to mark it shipped by hand?"
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Refund the shipping difference",
+      "questions": [
+       {
+        "question": "Which order do you need to open to issue the refund?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of orders on the 'Track and manage your shipments' page, including one for an Amazon Fire HD 8 Tablet.",
+        "whatTheAgentLoses": "The user loses control over selecting the correct order to process.",
+        "speak": "never",
+        "check": "Which order in the list matches the one just shipped?",
+        "say_example": "Opened order <25-08538> for the refund."
+       },
+       {
+        "question": "Do you want to send this refund as shown?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The review screen shows a $6.00 refund for a shipping discount and a personalized note to the buyer that must be verified before the deduction occurs.",
+        "whatTheAgentLoses": "Delegating this means you lose control over the personalized communication with your customer and the exact financial amount being refunded.",
+        "speak": "gate",
+        "check": "What refund amount, reason, message and funding source does the review screen show?",
+        "say_example": "Refund ready. <6.00> back to <buyer> for shipping, from your <PayPal balance>. Note says <thanks for the order>. Send it, or change?"
+       },
+       {
+        "question": "Did the buyer pay more for shipping than the label cost?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The buyer paid $21.00 for shipping across three items, but the combined label only cost $7.20, requiring a $14.00 refund to correct the overcharge.",
+        "whatTheAgentLoses": "The delegator loses the ability to ensure fair shipping costs and maintain good customer relations if the agent fails to refund excess charges for combined shipments.",
+        "speak": "on-event",
+        "check": "What shipping amount did the buyer pay across the combined orders, and what did the label cost?",
+        "say_example": "The buyer paid <21> for shipping over three orders. The one label cost <7.20>. That's <13.80> over. Want to refund the difference?"
+       },
+       {
+        "question": "Why does the refund screen's amount differ from the order total?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The order total initially displayed as $42.80 does not match the $40.00 paid amount shown on the refund screen, as it excludes the $2.80 tax.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch billing discrepancies and ensure they are paying or being refunded the correct amount.",
+        "speak": "on-event",
+        "check": "What order total does the order page show, and what paid amount does the refund screen show, and does the difference equal the tax line?",
+        "say_example": "The order says <42.80>. The refund screen says <40>. The gap is the <2.80> tax, which isn't refundable here."
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Ship the next order",
+      "questions": [
+       {
+        "question": "Which orders do you want to add to the Loading Dock?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a list of pending orders, and you must choose which ones are ready to be processed for shipping.",
+        "whatTheAgentLoses": "You lose the control to hold back specific orders that might need address corrections or are not yet packed.",
+        "speak": "never",
+        "check": "Which orders are checked for the Loading Dock?",
+        "say_example": "Staged <4> orders for labels."
+       },
+       {
+        "question": "Will the staged orders still be here if we leave this page?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface explicitly states that your orders will remain in the Loading Dock until you are ready to create labels, confirming your progress is saved.",
+        "whatTheAgentLoses": "You lose the reassurance of verifying that your drafted shipments are securely stored and can be resumed later without starting over.",
+        "speak": "never",
+        "check": "Does the page say staged orders are kept until labels are made?",
+        "say_example": "The staged orders stay put if we leave this page."
+       },
+       {
+        "question": "Do you want to just add this label to your cart, or add it and start a new label?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The summary screen requires you to confirm the $12.80 Priority Mail cost and choose whether to proceed toward payment or create additional shipments.",
+        "whatTheAgentLoses": "You lose the ability to efficiently batch multiple shipments into a single transaction if the agent assumes you are only shipping one package.",
+        "speak": "never",
+        "check": "Does the summary offer Add to Cart and Add and Start New?",
+        "say_example": "Added this label to the cart. One more to go."
+       },
+       {
+        "question": "Which document do you want to print for your staged orders?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displayed a 'Print' dropdown with options to generate an Order Summary Report, Packing Slips, or a Pick List for the four staged orders.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might generate the wrong type of fulfillment document, such as printing packing slips when you actually needed a pick list to gather the items.",
+        "speak": "never",
+        "check": "Which documents does the Print dropdown list for the staged orders?",
+        "say_example": "Printed packing slips for the <4> orders."
+       }
+      ]
+     },
+     {
+      "id": "9.7",
+      "label": "Ask support for help",
+      "questions": [
+       {
+        "question": "Do you want to see the price table for this export service?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Checking the Simple Export Rate table allows you to see the exact cost based on your package's weight and whether it is going to Canada or the rest of the world.",
+        "whatTheAgentLoses": "You lose the chance to manually verify that these specific rates are actually the most cost-effective option for your international shipment.",
+        "speak": "never",
+        "check": "What rates does the pricing table show by weight and destination?",
+        "say_example": "The export rate is <12> to Canada, <18> elsewhere, for this weight."
+       },
+       {
+        "question": "Do you want me to open a chat with support to turn on the cheaper rate?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The text below the rate table explicitly states that you must chat with support to get the exclusive rates activated.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally interact with customer support to ensure the discounted rates are properly applied to their account.",
+        "speak": "gate",
+        "check": "Does the page say the rate is turned on only by contacting support, and is there a chat control?",
+        "say_example": "The cheaper international rate only turns on if someone chats with their support. Want me to open that chat for you?"
+       },
+       {
+        "question": "Did support turn the export rate on?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the chat history with the support agent confirms that the requested international shipping rate has been officially enabled for your account.",
+        "whatTheAgentLoses": "You lose the reassurance of seeing the direct confirmation from support that your account is now eligible for the special export rate.",
+        "speak": "never",
+        "check": "Does the chat history contain a message saying the rate is enabled, and does the rate now appear in the list?",
+        "say_example": "Support says the export rate is on. It shows in the rate list now."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

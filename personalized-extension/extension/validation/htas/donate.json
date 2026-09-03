@@ -1,0 +1,1518 @@
+{
+ "task": "make a donation online (GoFundMe, charity websites, donation platforms): pick the campaign or organization, choose an amount and one-time vs monthly, enter payment details, handle the platform-tip step if shown, commit; complete when the thank-you / donation receipt is on screen. Surface pinned: a fundraising platform or charity website. Variants: starting your own fundraiser, Kickstarter-style reward pledges, and donating goods in person do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Make an online donation",
+  "note": "1 unless the video opens on the giving page. then 2 - every church keeper checks the street address before typing an amount, and 2.8 is what happens when the recipient is not on the platform. then 3, with 3.6 wherever the form asks it - lJrN asks it before the amount, K5dl and RkAM as a tab, aNEF and AWIG as a checkbox after the amount. 4 where the platform adds a tip, a fee cover or a match. 5 where the form asks who the gift is from. 6 where the platform puts it: nowhere for khD3, 4Cqd, Han7, lJrN and RLUw; a guest exit at the door for ZcNV; after the amounts for K5dl, n-lH, RkAM and GYik; before anything in the apps - aNEF, qWf2, AWIG, qQi3. 7 then 8, except that aNEF and SaD3 run 7.3 before 3 because the app wants a stored method first. 9 after the commit; RLUw gets 9.2 before any money moves because the platform emails the bank details.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the giving platform",
+    "note": "1.1, 1.2 or 1.4 gets to the form; 1.3 before the form on the one platform that teaches it. 1.5 for each prompt the app raises. 1.6 for the one keeper who starts from a text message. 1.7 first on a shared machine.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the giving link",
+      "questions": [
+       {
+        "question": "Is the organization named on this page the one you asked to give to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a banner asking for a $2.75 donation to keep Wikipedia thriving, prompting the choice of who to support.",
+        "whatTheAgentLoses": "Delegating this choice means losing the personal satisfaction of selecting a cause that aligns with your own values.",
+        "speak": "if-wrong",
+        "check": "Which organization does the page name as the recipient of the gift?",
+        "say_example": "This page is asking for money for <Wikipedia>. You asked to give to <the Red Cross>. I'll go to their page instead."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Type the platform address",
+      "questions": [
+       {
+        "question": "What address should you type to reach the giving site?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an empty browser tab with the address bar focused, requiring you to know the exact web address of the giving platform to proceed.",
+        "whatTheAgentLoses": "The user loses the opportunity to ensure the agent navigates to the correct, trusted giving platform for their specific church.",
+        "speak": "never",
+        "check": "What address is shown in the address bar?",
+        "say_example": "Opened <redcross.org>."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Check the connection is secure",
+      "questions": [
+       {
+        "question": "Does the address in the bar belong to the organization the page claims to be?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the address bar to confirm the exact URL ensures you are on the legitimate charity website before proceeding.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the website's authenticity, which is a critical step to avoid fraudulent charity scams.",
+        "speak": "if-wrong",
+        "check": "What domain is in the address bar, and what organization name does the page header show?",
+        "say_example": "The address is <redcross-gifts.net>. The charity's own site is <redcross.org>. This isn't it, so I'll stop here."
+       },
+       {
+        "question": "Is this page secure enough to type your card number into?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the padlock icon and the 'Connection is secure' popup ensures your credit card numbers are encrypted before you submit them.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the site's security certificate and ensure your financial data is being transmitted safely.",
+        "speak": "on-event",
+        "check": "Does the address bar show 'Not secure' or a warning instead of the padlock?",
+        "say_example": "This page says not secure. Your card number wouldn't be protected here, so I won't enter it. I'll look for the charity's own donate page."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Install the giving app",
+      "questions": [
+       {
+        "question": "Which app from the search results should you install?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple donation apps like 'Givelify' and 'GiveTide', so you must identify the correct one to ensure the donation goes through the intended platform.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent selected the specific, trusted platform they intended to use rather than a similarly named alternative.",
+        "speak": "on-event",
+        "check": "Who is listed as the developer of each app in the results?",
+        "say_example": "There are <three> giving apps here. <Pushpay> is the one <your church> named, so I'll install that one. OK, or pick another?"
+       },
+       {
+        "question": "Is this the official app for the organization?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the 'Adventist Giving' app in the App Store, and you must verify it is the official platform before proceeding.",
+        "whatTheAgentLoses": "You lose the chance to personally verify the app's authenticity and reviews before trusting it with your financial information.",
+        "speak": "if-wrong",
+        "check": "Who is listed as the developer of this app, and does the listing name the organization or its giving platform?",
+        "say_example": "This app is made by <Acme Apps>. <The church> didn't make it, and neither did <Pushpay>. It might be a lookalike, so I won't use it."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Answer the app's permission prompts",
+      "questions": [
+       {
+        "question": "Should the app get your location to find nearby charities?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app prompts you to enable your location so it can instantly locate charities or places of worship near you.",
+        "whatTheAgentLoses": "If the agent makes this choice, you lose control over your privacy and whether the app is allowed to track your physical location.",
+        "speak": "never",
+        "check": "Does a prompt ask to allow location access?",
+        "say_example": "Said no to location."
+       },
+       {
+        "question": "Do you want to allow the app to send you notifications?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app prompts for permission to send alerts, sounds, and icon badges, which determines whether you will receive future interruptions from the platform.",
+        "whatTheAgentLoses": "The user loses control over their personal device preferences and might receive unwanted alerts if the agent automatically accepts.",
+        "speak": "never",
+        "check": "Does a prompt ask to allow notifications?",
+        "say_example": "Said no to notifications."
+       },
+       {
+        "question": "Do you want to turn on Face ID for this app?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app asks if you want to keep your personal information secure by requiring Face ID to access it.",
+        "whatTheAgentLoses": "An agent cannot provide your biometric data or decide your preferred level of device-linked security for this app.",
+        "speak": "never",
+        "check": "Does a prompt ask to enable Face ID?",
+        "say_example": "Skipped Face ID setup."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Text the give code",
+      "questions": [
+       {
+        "question": "Do you want to send the gift by text yourself, with this code and amount?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The messaging screen requires entering the organization's specific text-to-give number and your desired donation amount to initiate the transaction.",
+        "whatTheAgentLoses": "Delegating this means the agent decides the donation amount and recipient number, potentially pledging more money than you intended.",
+        "speak": "gate",
+        "check": "What number and keyword does the page say to text, and how does it say to write the amount?",
+        "say_example": "This site takes gifts by text. Send <GIVE 50> to <73256> from your phone. That text is the gift itself. Want to do that, or give on the website instead?"
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Log out before giving",
+      "questions": [
+       {
+        "question": "Is the site signed in as someone other than you?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The navigation bar shows an active session under 'Me', which means the donation could incorrectly default to the logged-in user's information.",
+        "whatTheAgentLoses": "You lose the peace of mind of verifying that the donation is being made under your own name rather than a previously logged-in user on a shared device.",
+        "speak": "if-wrong",
+        "check": "What account name does the navigation bar show as signed in?",
+        "say_example": "This site is signed in as <Maria>. The gift would go under her name and card. I'll sign out first."
+       },
+       {
+        "question": "Are you fully logged out of the account?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing the 'Login' and 'Register' links in the navigation menu confirms that your session has been securely closed.",
+        "whatTheAgentLoses": "Delegating this means you cannot personally verify that your account session was securely terminated after the transaction.",
+        "speak": "never",
+        "check": "Does the navigation show Login and Register links instead of an account name?",
+        "say_example": "Signed out of <Maria's> account before starting."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Choose the recipient",
+    "note": "2.1, 2.2 or 2.3 brings up candidates - most keepers arrive with the recipient named and still search. 2.4 picks among same-name results by address, then 2.5 on the recipient's own page. 2.6 where a header button would credit the wrong recipient. 2.7 on the grant platform, and 2.8 when the recipient is not on the platform at all. 2.9 after the amounts are open.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Search the recipient by name",
+      "questions": [
+       {
+        "question": "What should you search for to find the campaign?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage search bar returns multiple campaign cards, so using exact keywords ensures you find the correct fundraiser.",
+        "whatTheAgentLoses": "You lose the ability to visually verify that the selected campaign card matches the specific person or cause you intended to support.",
+        "speak": "never",
+        "check": "What text is in the search field?",
+        "say_example": "Searched for <Bike to the Beach>."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Pick from the nearby list"
+     },
+     {
+      "id": "2.3",
+      "label": "Find the person to sponsor",
+      "questions": [
+       {
+        "question": "Do you want to search for a specific participant, team, or company?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage offers distinct options to search for a fundraiser by company, team, or individual participant.",
+        "whatTheAgentLoses": "The user loses the ability to specify whether their donation should be credited to an individual participant, a team, or a company.",
+        "speak": "never",
+        "check": "Which search types does the page offer: participant, team, or company?",
+        "say_example": "Searched for <Jerika Henderson> as a participant."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Match the recipient's address",
+      "questions": [
+       {
+        "question": "Does the search result's name and location match the organization you named?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the physical address for the search results, allowing you to verify you are selecting the correct local organization.",
+        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying the physical address to ensure their donation goes to their specific community.",
+        "speak": "if-wrong",
+        "check": "What name and location does the top matching result show?",
+        "say_example": "The only <Grace Church> here is in <Ohio>. You said <Texas>. It's a different church. I'll keep looking."
+       },
+       {
+        "question": "Does the result show the organization as enrolled on this platform?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the specific church name, address, and 'enrolled' status ensures your donation goes to the correct, registered organization.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your specific local church is officially registered to receive funds on this platform.",
+        "speak": "on-event",
+        "check": "What status does the result show beside the organization, such as enrolled or not enrolled?",
+        "say_example": "<Grace Church> shows as not enrolled here. A gift can't go through on this site. I'll look for their own giving page."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Check the recipient's page",
+      "questions": [
+       {
+        "question": "Is the campaign's goal the same on the listing and on its page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search result and edit page show a £100 target while the campaign page displays £200, which might indicate a platform glitch or a deceptive listing.",
+        "whatTheAgentLoses": "The user loses the ability to spot this discrepancy and potentially avoid donating to a suspicious or buggy campaign.",
+        "speak": "on-event",
+        "check": "What goal does the campaign page show, and what goal does the listing show for it?",
+        "say_example": "The listing says the goal is <100 pounds>. The campaign page says <200>. The two don't agree, so I'm not sure this listing is right."
+       },
+       {
+        "question": "Did the button open a donation form, or an event sign-up?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page presents distinct options to either 'DONATE' or 'RIDE WITH ME', requiring you to choose the correct path for a financial gift.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the direct donation path rather than accidentally registering them as an event participant.",
+        "speak": "if-wrong",
+        "check": "Does the page that opened ask for a gift amount, or for participant registration or new-fundraiser details?",
+        "say_example": "This button signs you up as a participant. It doesn't give money. Going back to the donate button."
+       },
+       {
+        "question": "Is this giving page for the organization you named, at the location you named?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the church name and address in the page header ensures your money goes to the exact local organization you intended.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the donation portal belongs to your specific local community.",
+        "speak": "if-wrong",
+        "check": "What organization name and address does the giving page header show?",
+        "say_example": "This giving page is for <First Baptist, Springfield Missouri>. You asked for the one in <Springfield Illinois>. Wrong church. I'll go back."
+       },
+       {
+        "question": "Does the page show a verified badge, or say the organizer is the person being helped?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "High-profile tragedies or viral events often attract duplicate, unauthorized, or scam campaigns that look identical to the real one.",
+        "whatTheAgentLoses": "You lose the critical human judgment needed to distinguish a legitimate, family-authorized campaign from a well-disguised scam.",
+        "speak": "on-event",
+        "check": "Who is named as the organizer, and does the page show a verified badge or a statement that the organizer is the beneficiary?",
+        "say_example": "This fundraiser is run by <Sam Lee>. The page doesn't say <the family> set it up, and there's no verified mark. Do you still want to give here?"
+       },
+       {
+        "question": "Does the page say the organization is a registered 501(c)(3) charity?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Personal fundraisers or unverified charities do not provide tax-deductible receipts, which might change whether you donate or how much you are willing to give.",
+        "whatTheAgentLoses": "You lose the ability to ensure your contribution legally qualifies for a tax deduction before committing funds.",
+        "speak": "on-event",
+        "check": "Does the page state that the organization is a registered nonprofit, or that donations are not tax deductible?",
+        "say_example": "This is a personal fundraiser. It isn't a registered charity, so your gift won't be tax deductible."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Skip the header donate button",
+      "questions": [
+       {
+        "question": "Should the gift go to the general campaign, or to a participant or team?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a general 'Donate' button at the top, but also provides specific search buttons to 'Find a Team' or 'Find a Participant' to credit a personal page.",
+        "whatTheAgentLoses": "An agent might click the first general donate button it sees, failing to credit the specific person or team you intended to support.",
+        "speak": "never",
+        "check": "Does the page offer a general donate button and a per-participant option?",
+        "say_example": "Chose the general campaign, since you didn't name a participant."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Search the charity database",
+      "questions": [
+       {
+        "question": "Should you select a charity from your saved list or search for a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an empty 'Your charity list' with an 'Add a new charity +' button, requiring a choice between reusing a past organization or finding a new one.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to review your past giving history and intentionally decide whether to support a familiar cause or discover a new one.",
+        "speak": "never",
+        "check": "Is the saved charity list empty?",
+        "say_example": "Searched by name, since your saved charity list was empty."
+       },
+       {
+        "question": "Several charities share this name. Which state's is the one you mean?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search returned 11 results with similar names across the nation, so using a state filter helps quickly isolate the correct Missouri organization.",
+        "whatTheAgentLoses": "You lose the ability to manually verify the location and tax ID to ensure your donation goes to the exact charity you intended.",
+        "speak": "on-event",
+        "check": "How many results share the name, and what state or city is shown beside each?",
+        "say_example": "There are <eleven> charities called <Boys and Girls Club>. Which one? Say the city or state."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Enter an unlisted recipient",
+      "questions": [
+       {
+        "question": "Do you want me to add this charity to the site's list?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an \"Add this charity +\" button, indicating that the platform must first verify the organization's non-profit status before processing the gift.",
+        "whatTheAgentLoses": "The user loses the understanding that their donation will be delayed pending the platform's manual due diligence process.",
+        "speak": "gate",
+        "check": "Does the page say the charity was not found and show a form to add it, and which fields does that form require?",
+        "say_example": "<Rural Aid> isn't in this site's list. I can add it, but the site checks it first, so your gift would wait. Want me to add it, or try their own website?"
+       }
+      ]
+     },
+     {
+      "id": "2.9",
+      "label": "Change the recipient",
+      "questions": [
+       {
+        "question": "Is the charity you picked still shown on the grant details page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The charity 'OUT OF POVERTY THRU EDUCATION INC' added previously is missing from the grant details screen, indicating the selection was lost.",
+        "whatTheAgentLoses": "The user loses the guarantee that their money is going to their chosen cause if the agent proceeds without noticing the dropped charity.",
+        "speak": "on-event",
+        "check": "Is the charity chosen earlier named on the grant details page?",
+        "say_example": "The charity you picked, <Out of Poverty>, isn't on this page any more. The site lost it. I'll pick it again."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Fill in the gift",
+    "note": "3.1 always, and 3.2 beside it - fund before amount on the envelope platforms, amount before fund on Givelify, and no fund at all on the crowdfunding forms. 3.3 where the platform lets a gift split. 3.4 where a description or a percent hint is on the form. 3.5 before leaving the page. 3.6 wherever the form asks it.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Enter the amount",
+      "questions": [
+       {
+        "question": "How much do you want to donate?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides an open text field requiring you to specify the exact monetary amount for the contribution.",
+        "whatTheAgentLoses": "You lose control over your personal budget and the exact financial impact you want to make for the cause.",
+        "speak": "gate",
+        "check": "What amount is entered or preselected in the amount field?",
+        "say_example": "How much? The page suggests <25, 50, or 100>, and any amount works."
+       },
+       {
+        "question": "Is the amount you asked for below the site's stated minimum?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The custom amount field explicitly states there is a $25.00 minimum for online donations.",
+        "whatTheAgentLoses": "You lose the ability to decide the exact financial contribution you make to the organization.",
+        "speak": "on-event",
+        "check": "What minimum amount does the page state?",
+        "say_example": "The smallest gift this site takes is <25>. You said <10>. Go up to <25>, or give somewhere else?"
+       },
+       {
+        "question": "Is the amount in your own currency, or a foreign one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Entering '100' on an international campaign (e.g., in GBP or EUR) will result in a significantly higher charge to your bank account once converted to USD.",
+        "whatTheAgentLoses": "You lose the chance to adjust the numerical amount to account for currency conversion and avoid overdrawing your budget.",
+        "speak": "on-event",
+        "check": "What currency symbol or code is shown beside the amount field?",
+        "say_example": "This page charges in <pounds>. <100> here is about <127 dollars>, and your bank may add a foreign fee. Still <100>?"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Choose the fund or cause",
+      "questions": [
+       {
+        "question": "Which specific cause do you want to support?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'I Want to Support' dropdown offers different funds like Disaster Relief, Blood Services, or local chapters, determining exactly how your money is used.",
+        "whatTheAgentLoses": "You lose the ability to direct your charitable contribution to the specific initiative or local chapter that aligns best with your personal values.",
+        "speak": "on-event",
+        "check": "Which fund options does the dropdown list, and which one is selected?",
+        "say_example": "The page asks which fund. You didn't say, so I'll leave it on <Where it's needed most>. OK, or name one?"
+       },
+       {
+        "question": "Do you want to enter an amount for the 'Tithe' section?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Tithe' section with a recommendation of 10% and an input field for the amount.",
+        "whatTheAgentLoses": "The user loses the choice of whether to allocate funds specifically to the tithe category.",
+        "speak": "never",
+        "check": "Is there a tithe field, and what amount is in it?",
+        "say_example": "Left the tithe field empty. You asked for <50> to the general offering."
+       },
+       {
+        "question": "What description should I enter for the specialty offering?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The donation form includes a text field to specify the details or dedication for this particular offering tier.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personalize the note or specify exactly how your specialty donation should be directed.",
+        "speak": "never",
+        "check": "Is there a description field for the specialty offering?",
+        "say_example": "Left the specialty description blank."
+       },
+       {
+        "question": "Do you want to add a message or name an initiative for this grant?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform provides a text field to add custom language, allowing you to direct the funds to a specific initiative rather than general use.",
+        "whatTheAgentLoses": "The user loses the ability to communicate specific intentions or restrictions to the charity receiving the grant.",
+        "speak": "never",
+        "check": "Is there a message or initiative field?",
+        "say_example": "Left the message field blank."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Add another gift line",
+      "questions": [
+       {
+        "question": "Do you want a fund from the full list behind the link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main envelope view only shows a limited set of funds, but clicking the link reveals a modal with many more specific options like Religious Liberty.",
+        "whatTheAgentLoses": "You lose the ability to direct your donation to a highly specific, personally meaningful cause that isn't featured by default.",
+        "speak": "never",
+        "check": "Does the page hide more fund options behind a link?",
+        "say_example": "Skipped the full fund list behind the link."
+       },
+       {
+        "question": "Do you want to split your donation across multiple funds?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes an 'Add Gift +' button that allows you to allocate different amounts to specific designations, though it disables recurring giving.",
+        "whatTheAgentLoses": "You lose the opportunity to precisely distribute your total contribution among different specific causes or funds that matter to you.",
+        "speak": "on-event",
+        "check": "Does the page say that adding a gift line turns off recurring giving?",
+        "say_example": "Splitting the gift across two funds turns off monthly giving on this site. You asked for both. Which matters more?"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Read the fund guidance",
+      "questions": [
+       {
+        "question": "Do you want to hear what each fund is for before choosing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The virtual tithe envelope lists multiple customizable offering categories, such as 'Church Expense' and 'Campus Maintenance', which have additional details available on hover.",
+        "whatTheAgentLoses": "You lose the ability to learn about and intentionally direct your donation to the specific local church initiatives that align with your personal priorities.",
+        "speak": "never",
+        "check": "Are the fund descriptions in hover text?",
+        "say_example": "Skipped the fund descriptions, which only show on hover."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Check the running total",
+      "questions": [
+       {
+        "question": "Does the page's total equal the amounts you entered?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a total charge of USD 20.00, confirming that no extra platform tips or processing fees were added to the intended donation amount.",
+        "whatTheAgentLoses": "You lose the opportunity to catch and remove any default platform tips or hidden fees before handing over your payment information.",
+        "speak": "if-wrong",
+        "check": "What total does the page show, and what amounts are in the gift lines?",
+        "say_example": "The lines add up to <120>, but the total says <130>. Something was added. I'll check before going on."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Set the schedule",
+      "note": "3.6.1 on every form - eleven keepers keep the one-time default. 3.6.2 to 3.6.4 only when recurring is picked; no keeper activates a schedule on camera.",
+      "questions": [
+       {
+        "question": "What schedule do you want for the recurring gift?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to customize the specific fund, frequency, start date, and number of installments for your scheduled giving.",
+        "whatTheAgentLoses": "Delegating this step means you give up control over the exact schedule, duration, and specific ministry for your recurring contributions.",
+        "speak": "gate",
+        "check": "Which schedule options does the form show: frequency, start date, and end date or number of payments?",
+        "say_example": "Setting up a monthly gift. <50> on the <1st> of each month, starting <October 1>, no end date. Sound right? Say change to set an end date."
+       }
+      ],
+      "children": [
+       {
+        "id": "3.6.1",
+        "label": "Choose one-time or recurring",
+        "questions": [
+         {
+          "question": "Do you want to make this a one-time gift or a recurring gift?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a 'Select a Gift Duration' section with radio buttons for a one-time or recurring donation.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to support the organization with a single payment or an ongoing financial commitment.",
+          "speak": "if-wrong",
+          "check": "Which frequency option is selected, one-time or recurring?",
+          "say_example": "This form has monthly ticked by default. You asked for a one-time gift, so I'm switching it."
+         }
+        ]
+       },
+       {
+        "id": "3.6.2",
+        "label": "Set the interval",
+        "questions": [
+         {
+          "question": "How often should this gift repeat?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The platform offers several specific recurring schedules, such as weekly on Sundays or monthly on the 1st, which dictates exactly when your account will be charged.",
+          "whatTheAgentLoses": "Delegating this choice means you lose control over aligning the exact timing of the recurring charges with your personal cash flow or payday schedule.",
+          "speak": "if-wrong",
+          "check": "Which interval is selected in the frequency dropdown?",
+          "say_example": "The schedule is set to <weekly>. You said <monthly>. Fixing it."
+         }
+        ]
+       },
+       {
+        "id": "3.6.3",
+        "label": "Set the start day",
+        "questions": [
+         {
+          "question": "When should the first payment go out?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The timing dropdown allows you to send the funds ASAP, schedule them for a future date, or set up a recurring contribution.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might process the payment immediately instead of scheduling it for a later date or setting up a recurring schedule.",
+          "speak": "if-wrong",
+          "check": "What start date or timing option is selected?",
+          "say_example": "The first payment is set for <today>. You said <the first of next month>. Changing it."
+         }
+        ]
+       },
+       {
+        "id": "3.6.4",
+        "label": "Set the end date",
+        "questions": [
+         {
+          "question": "Does the schedule end when you said, or does it run with no end date?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides radio buttons to either set a specific end date or leave the recurring donation to continue indefinitely.",
+          "whatTheAgentLoses": "You lose the ability to control exactly how long your financial commitment to the organization will last before automatically stopping.",
+          "speak": "if-wrong",
+          "check": "Is an end date or number of payments set, or is the gift set to run with no end date?",
+          "say_example": "This gift is set to run with no end date. You said <12 months>. Setting the end."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Adjust for fees and matching",
+    "note": "4.1 on the crowdfunding platform, where a tip is preset and the form says 0 percent platform fee. 4.2 where a cover-fees control exists - three keepers take it. 4.3 on the one platform that asks for an employer. each of these changes the total after the amount was chosen.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Change the platform tip",
+      "questions": [
+       {
+        "question": "Do you want to keep the tip the site added for itself, change it, or set it to zero?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to a 10% tip that increases your total charge, but allows you to select 'Other' to enter a custom amount like zero.",
+        "whatTheAgentLoses": "You lose the chance to opt out of the optional platform tip and ensure your entire payment goes only to the campaign.",
+        "speak": "gate",
+        "check": "What tip percentage or amount is preselected, and what does the total become with it?",
+        "say_example": "The site added a <15 percent> tip for itself. That's <7.50> on top of your <50>. Keep it, or set it to zero?"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Cover the processing fee",
+      "questions": [
+       {
+        "question": "Should you cover the processing fees for this donation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a 'Cover fees?' toggle that adds an additional $0.35 to your total, changing the final amount to $5.35.",
+        "whatTheAgentLoses": "You lose the choice of whether to absorb the transaction costs yourself or let the organization pay them.",
+        "speak": "gate",
+        "check": "What fee amount does the cover-fees option add, and is it checked?",
+        "say_example": "There's a box to cover the card fee. It adds <1.75>, so the charity gets the full <50>. Tick it?"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Look up an employer match",
+      "questions": [
+       {
+        "question": "Do you want to check if your employer will match your donation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Find Your Employer' search field to check if your company participates in a matching gifts program.",
+        "whatTheAgentLoses": "You lose the chance to potentially double your donation's impact if the agent skips checking your specific employer's matching program.",
+        "speak": "never",
+        "check": "Does the page offer an employer match search?",
+        "say_example": "Skipped the employer match. Say so if you want it."
+       },
+       {
+        "question": "Which office of your employer is the right one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display multiple regional branches for the same company, requiring the exact location to ensure proper processing.",
+        "whatTheAgentLoses": "The user loses the ability to specify their exact workplace branch, which could result in a failed employer donation match.",
+        "speak": "on-event",
+        "check": "How many entries match the employer name, and what location is shown beside each?",
+        "say_example": "Your employer shows up <four> times, one per office. Which office? Say the city."
+       },
+       {
+        "question": "Is this gift from you, or from a company?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a checkbox to specify if the contribution is corporate rather than personal.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether the donation should be credited to their business for public recognition and tax purposes.",
+        "speak": "never",
+        "check": "Is the on-behalf-of-a-company checkbox ticked?",
+        "say_example": "Left it as a personal gift."
+       },
+       {
+        "question": "Is your gift big enough for your employer to match it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The employer search result displays specific matching criteria, such as a $25 minimum, which you must meet for the company to double your gift.",
+        "whatTheAgentLoses": "You lose the opportunity to slightly increase your donation to hit the minimum threshold and secure the corporate match.",
+        "speak": "on-event",
+        "check": "What minimum gift does the employer match entry state?",
+        "say_example": "<Acme> matches gifts of <25> or more. Yours is <20>, so it wouldn't be matched. Go up to <25>?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Identify the donor",
+    "note": "5.1 on every guest form. 5.2 where the platform asks who sees the gift - the default is public everywhere it is shown. 5.3 and 5.4 where offered. 5.5 on the grant platform, in place of 5.2.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Enter the name and email",
+      "questions": [
+       {
+        "question": "What name and email should go on this gift?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform requires your name and email address to process the donation, send a receipt, and let the organizer know who contributed.",
+        "whatTheAgentLoses": "You lose control over how your identity is presented to the campaign organizer and where your donation receipt is sent.",
+        "speak": "always",
+        "check": "Which contact fields does the form ask for?",
+        "say_example": "I'm filling in your name, email, and phone number now."
+       },
+       {
+        "question": "Should I use the saved details to fill in the form?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a dropdown with a saved address suggestion, prompting a choice between autofilling or manually typing the information.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to use their saved profile or provide a different name and address for this specific donation.",
+        "speak": "never",
+        "check": "Does a saved address suggestion appear?",
+        "say_example": "Used the saved address suggestion."
+       },
+       {
+        "question": "Do you want marketing emails from the charity?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Donation forms frequently include checkboxes (which are sometimes pre-checked) asking for permission to send newsletters or share your contact information.",
+        "whatTheAgentLoses": "You lose control over your inbox and personal data privacy if the agent accepts default marketing subscriptions on your behalf.",
+        "speak": "never",
+        "check": "Is the marketing or newsletter checkbox ticked?",
+        "say_example": "Said no to marketing emails."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Set the gift's visibility",
+      "questions": [
+       {
+        "question": "Should your name and amount appear publicly on the campaign page?",
+        "cluster": "select",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen presents checkboxes to hide your name or donation amount from the public page, alongside options for employer matching.",
+        "whatTheAgentLoses": "Delegating this step means the agent might publicly display your name and donation amount when you would have preferred to remain anonymous.",
+        "speak": "gate",
+        "check": "What do the display options or the payment dialog say will be shown publicly: name, amount, both, or hidden?",
+        "say_example": "Your name and the <50> will show on the campaign page for anyone to see. Fine, or hide them?"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Dedicate the gift",
+      "questions": [
+       {
+        "question": "What name should show on the campaign page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a 'Recognition Name' field that determines what name appears on the campaign's public honor roll.",
+        "whatTheAgentLoses": "Delegating this means the agent might just use your billing name instead of a preferred display name, an anonymous option, or a special dedication.",
+        "speak": "never",
+        "check": "What is in the recognition name field?",
+        "say_example": "Left the recognition name as <your name>."
+       },
+       {
+        "question": "Is this gift in honor of someone?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the 'Dedicate this gift' box expands the form to collect the honoree's name.",
+        "whatTheAgentLoses": "The user loses the ability to dedicate their charitable gift as a meaningful tribute to a specific friend or loved one.",
+        "speak": "never",
+        "check": "Is the dedicate-this-gift box ticked?",
+        "say_example": "Skipped the dedication."
+       },
+       {
+        "question": "Do you want to send a card to the person you're honoring?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When dedicating a gift, the form often notes that you will have the option to send a card to the honoree or their family once the donation is complete.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the platform facilitates notifying the family or honoree about the memorial or tribute donation you just made.",
+        "speak": "never",
+        "check": "Does the form offer a tribute card?",
+        "say_example": "Skipped the tribute card."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Credit the referrer",
+      "questions": [
+       {
+        "question": "Which team member do you want to credit for referring this donation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes an optional 'Referred by' dropdown to credit a specific team member for the donation.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might skip the optional field or guess randomly, preventing you from supporting a specific person's fundraising efforts.",
+        "speak": "never",
+        "check": "What is selected in the referred-by dropdown?",
+        "say_example": "Left referred-by blank."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Choose the acknowledgement"
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Get past the account gate",
+    "note": "6.1 where the platform offers the three-way choice - the guest option is refused everywhere but ZcNV. 6.2 then 6.3 for a new account, with 6.4 on the phone-code app. 6.5 to log in. the gate sits after the amounts on the envelope platforms, at the door on easyTithe, first in the apps, and nowhere on the guest forms.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Choose the account route",
+      "questions": [
+       {
+        "question": "Do you want to sign in, create an account, or continue as a guest?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a pop-up asking you to choose between joining, signing in, or continuing as a guest to proceed with the donation.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose control over whether a new account is created with your details or if you check out as a guest.",
+        "speak": "always",
+        "check": "Does the page offer a guest option alongside sign in and create account?",
+        "say_example": "There's a guest option, so I'm not making an account."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Pick the sign-up method",
+      "questions": [
+       {
+        "question": "Which way do you want to sign in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to join or sign in, offering options to continue with Facebook or with an email address.",
+        "whatTheAgentLoses": "The user loses the choice of which personal account or email to link to the donation platform.",
+        "speak": "never",
+        "check": "Which sign-in methods does the page offer?",
+        "say_example": "Signed in with <email>."
+       },
+       {
+        "question": "Which phone number should get the login code?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform requires a mobile number to send a verification code for logging in.",
+        "whatTheAgentLoses": "The user loses control over which of their phone numbers is linked to the donation account and receives the verification texts.",
+        "speak": "never",
+        "check": "Does the page ask for a phone number to send a code?",
+        "say_example": "Entered your number ending <1234> for the code."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Fill in the account form",
+      "questions": [
+       {
+        "question": "Should I make an account for you here?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a form to create a new account using your full name, email, and password, alongside an option to sign in.",
+        "whatTheAgentLoses": "You lose the ability to decide whether your personal information is permanently saved to an account on this platform.",
+        "speak": "gate",
+        "check": "Does the page require creating an account to continue, and which fields does it ask for?",
+        "say_example": "This site won't take a gift without an account. It wants <an email, a password, and a four-digit PIN>. Make one, or give somewhere else?"
+       },
+       {
+        "question": "What name should go on your tax receipt?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The registration form includes an optional field to replace your individual name with a joint name (like \"John & Georgiana Smith\") on official receipts.",
+        "whatTheAgentLoses": "You lose the ability to ensure your end-of-year tax statements are formatted correctly for joint filing purposes.",
+        "speak": "never",
+        "check": "Is there an optional receipt-name field, and what is in it?",
+        "say_example": "Left the receipt name as <your name>."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Verify the phone code",
+      "questions": [
+       {
+        "question": "What code did the site text to your phone?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for a six-digit code sent to your phone number to verify your identity and proceed with the transaction.",
+        "whatTheAgentLoses": "You lose the security of personally handling the two-factor authentication required to authorize the payment.",
+        "speak": "gate",
+        "check": "Does the page ask for a code sent to the phone, and how many digits?",
+        "say_example": "A <six>-digit code went to your phone ending <1234>. Read it to me."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Log in",
+      "questions": [
+       {
+        "question": "What does the site need to sign you in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Tithe.ly login screen requires an email and password to authenticate your account before proceeding with the donation.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the donation is recorded under their preferred personal account for tax and receipt tracking purposes.",
+        "speak": "gate",
+        "check": "Which credentials does the sign-in form ask for?",
+        "say_example": "The site wants your <password>. I don't have it. The field is yours."
+       },
+       {
+        "question": "Did the account get created?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays a modal confirming your account was created successfully, which must be dismissed to continue the donation process.",
+        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the direct confirmation that their new account was successfully registered.",
+        "speak": "never",
+        "check": "Does a confirmation say the account was created?",
+        "say_example": "Created the account. Dismissed the confirmation."
+       },
+       {
+        "question": "Do you want to stay logged in on this device?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login modal includes a 'Keep me logged in' checkbox that warns against use on shared devices.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether their account session should remain active based on their trust in the current device.",
+        "speak": "never",
+        "check": "Is the keep-me-logged-in box ticked?",
+        "say_example": "Left keep me logged in unticked."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Provide the payment",
+    "note": "7.1 where the recipient limits what it takes. 7.2 on every platform that takes money. 7.3 for a new stored method and 7.4 where one is already saved - aNEF and SaD3 run 7.3 before 3. 7.5 on the guest forms. 7.6 where the money is taken on another site or is already on the platform. 7.7 instead of 7.2 to 7.6 where the donor gives by post or phone. no keeper is watched finishing 7.5 with real card details.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Read the accepted methods",
+      "questions": [
+       {
+        "question": "Which accepted payment method do you want to use for this donation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that American Express, Discover, and US bank accounts are not accepted, meaning you must choose an alternative like Visa or Mastercard.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to use an alternative card or abandon the donation entirely if your preferred payment method is rejected.",
+        "speak": "on-event",
+        "check": "Which payment methods does the page say are accepted, and which does it say are not?",
+        "say_example": "This site doesn't take <American Express>. Your other card is a <Visa ending 4821>. Use that?"
+       },
+       {
+        "question": "Does the page contradict itself about whether your payment method is accepted?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen simultaneously displays a warning that US bank accounts are not accepted while listing them as an available payment option to add.",
+        "whatTheAgentLoses": "The user loses the opportunity to notice the contradictory payment information and manually select a reliable alternative to avoid a failed transaction.",
+        "speak": "on-event",
+        "check": "Does the page both state that a method is not accepted and list it as an option to add?",
+        "say_example": "The page says <bank accounts> aren't accepted, but it also lets you add one. The two don't agree. I'll use <a card> to be safe."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Pick the payment method",
+      "questions": [
+       {
+        "question": "Which payment method do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The checkout screen requires choosing between a credit card and PayPal to process the donation.",
+        "whatTheAgentLoses": "By letting the agent decide, you lose control over which of your financial accounts is charged for the donation.",
+        "speak": "gate",
+        "check": "Which payment options does the checkout show, and is any saved method listed?",
+        "say_example": "Pay with your <Visa ending 4821>, or <PayPal>? Say card or PayPal."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Add a stored method",
+      "note": "7.3.1 or 7.3.2, then 7.3.3 - both demo adds fail validation and only aNEF is seen to land. aNEF and SaD3 make this the first thing after the recipient.",
+      "children": [
+       {
+        "id": "7.3.1",
+        "label": "Enter a new card",
+        "questions": [
+         {
+          "question": "Does the form say the card number is invalid?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a 'Your card number is invalid' warning, indicating that the payment cannot be processed as entered.",
+          "whatTheAgentLoses": "The user loses the assurance that their donation will actually go through if the agent ignores payment validation errors.",
+          "speak": "on-event",
+          "check": "Does the form show an error that the card number is invalid?",
+          "say_example": "The site says the card number is invalid. I won't guess at it. The card fields are yours."
+         },
+         {
+          "question": "Which credit or debit card should you enter for this donation?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows the form to add a new card, requiring you to decide which specific card number, expiration date, and security code to use.",
+          "whatTheAgentLoses": "The user loses control over which specific financial account is charged for the donation.",
+          "speak": "gate",
+          "check": "Which card fields does the form show as empty and required?",
+          "say_example": "This needs a new card. I'll hand you the number, expiry, and code fields."
+         },
+         {
+          "question": "Do you want to save this card for next time?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The modal includes an optional nickname field and a save checkbox, which helps distinguish between multiple payment methods on a shared account.",
+          "whatTheAgentLoses": "Letting an agent handle this means losing the chance to assign a recognizable nickname to the saved payment method for future use.",
+          "speak": "never",
+          "check": "Is the save-this-card box ticked?",
+          "say_example": "Didn't save the card."
+         }
+        ]
+       },
+       {
+        "id": "7.3.2",
+        "label": "Enter a new bank account",
+        "questions": [
+         {
+          "question": "Which bank account should pay for this?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The modal requires your name, account type, routing number, and account number to process the payment.",
+          "whatTheAgentLoses": "You lose control over which specific bank account is used and whether the agent saves this sensitive routing data for future use.",
+          "speak": "gate",
+          "check": "Which bank account fields does the form ask for?",
+          "say_example": "This pays by bank account. It wants the routing and account numbers. Those fields are yours."
+         },
+         {
+          "question": "Does the form say the routing number is invalid?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The screen displayed a 'Please enter a valid routing number' warning when an incomplete 8-digit number was entered, requiring correction to a 9-digit format.",
+          "whatTheAgentLoses": "The user loses the immediate feedback of the form's validation, which catches typos in sensitive banking details before a failed transaction occurs.",
+          "speak": "on-event",
+          "check": "Does the form show an error that the routing number is invalid?",
+          "say_example": "The site says the routing number isn't valid. It needs nine digits. I won't guess. The field is yours."
+         }
+        ]
+       },
+       {
+        "id": "7.3.3",
+        "label": "Check the method saved",
+        "questions": [
+         {
+          "question": "Did the card get saved?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen showed a loading spinner on the add card page, meaning the system was still processing the payment details.",
+          "whatTheAgentLoses": "The user loses the ability to verify if their payment method was successfully saved before proceeding with the donation.",
+          "speak": "never",
+          "check": "Does the page confirm the card was added?",
+          "say_example": "Added the card <ending 4821> to the account."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Pick the saved method"
+     },
+     {
+      "id": "7.5",
+      "label": "Fill in the card details",
+      "questions": [
+       {
+        "question": "What billing address goes on the form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays specific billing fields like Address, Country, City, State, and Postal Code that must be filled out to process the payment.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their specific billing address is entered correctly so the payment is not declined.",
+        "speak": "never",
+        "check": "Which billing address fields does the form ask for?",
+        "say_example": "Filled in your billing address."
+       },
+       {
+        "question": "Do you want to add a private note to the gift?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout screen includes an optional memo field where you can send a specific message or accounting instruction directly to the organization's staff.",
+        "whatTheAgentLoses": "You lose the ability to attach personal context or specific instructions to your financial gift that won't be displayed publicly.",
+        "speak": "never",
+        "check": "Is there a memo field?",
+        "say_example": "Left the memo blank."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Pay on the external site",
+      "questions": [
+       {
+        "question": "Does the giving fund balance cover the amount you asked to give?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard displays your available balance and pending grants, which dictates your capacity to make a new donation.",
+        "whatTheAgentLoses": "You lose the chance to personally verify your available funds and outstanding commitments before deciding to initiate a new grant.",
+        "speak": "on-event",
+        "check": "What available balance does the giving fund dashboard show?",
+        "say_example": "Your giving fund has <200> available. That's less than the <500> you asked for. Give <200>, or add money first?"
+       },
+       {
+        "question": "Do you want to send the money yourself by bank transfer?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides specific account numbers and instructions for a manual bank transfer that must be recorded to complete the donation.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to securely handle the manual transfer process from your own banking portal.",
+        "speak": "gate",
+        "check": "Does the page give bank account details and instructions for a manual transfer?",
+        "say_example": "This site doesn't take payment here. It shows bank details for you to send <50> yourself. Do you want to do the transfer? I'll read the details to you."
+       },
+       {
+        "question": "Which bank do you use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to Royal Bank of Canada but provides options for other banks like Scotia or First Caribbean, requiring you to specify your funding source.",
+        "whatTheAgentLoses": "Delegating this step means the agent might proceed with the default bank or guess your institution, potentially causing the payment to fail or draw from the wrong account.",
+        "speak": "on-event",
+        "check": "Which bank is preselected in the bank dropdown, and which others are listed?",
+        "say_example": "The page assumes <RBC>. Which bank do you use? Say <RBC, Scotia, or First Caribbean>."
+       },
+       {
+        "question": "What does your bank need to sign you in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the RBC Caribbean Online Banking sign-in page with empty fields for User ID and Password, requiring credentials to proceed with the payment.",
+        "whatTheAgentLoses": "The user loses the ability to securely provide their specific bank login credentials, which are necessary to authorize the donation payment.",
+        "speak": "gate",
+        "check": "Does the page show a bank sign-in form with user ID and password fields?",
+        "say_example": "This is your bank's sign-in page. I don't enter bank passwords. The fields are yours."
+       },
+       {
+        "question": "Do you want the site to save your payment details for next time?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The PayPal checkout screen offers an option to enable One Touch to save payment details on the device before completing the transaction.",
+        "whatTheAgentLoses": "The user loses control over whether their payment credentials remain saved on the device for future purchases.",
+        "speak": "never",
+        "check": "Does the checkout offer to save payment details for next time?",
+        "say_example": "Said no to saving your payment details."
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Give by mail or phone"
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Review and confirm",
+    "note": "8.1 on the wizard platforms, 8.2 everywhere the button carries the total. 8.3 where a receipt toggle exists. then 8.4, with 8.5 on the apps that ask twice. the commit is on camera in six of nineteen keepers and frame-confirmed in fewer.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the review page",
+      "questions": [
+       {
+        "question": "Does the review page show what you asked for?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a final breakdown of the $200 donation across multiple categories, the saved payment method, and the billing address, which must be verified before clicking 'Confirm Donation'.",
+        "whatTheAgentLoses": "Delegating this step means the user loses the final opportunity to verify the exact distribution of their funds and ensure the correct payment method is charged.",
+        "speak": "if-wrong",
+        "check": "What amount, recipient, fund, schedule, and payment method does the review page show?",
+        "say_example": "The review page says <60>, but you asked for <50>. Something changed it. I won't go on until it's <50>."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Check the button total",
+      "questions": [
+       {
+        "question": "Does the amount on the give button match what you typed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The custom amount field contained '5,000', but the submit button and donation summary both displayed '$1,000.00'.",
+        "whatTheAgentLoses": "The user loses control over their financial contribution if the agent proceeds with a mismatched donation amount.",
+        "speak": "if-wrong",
+        "check": "What amount is on the submit button, and what amount is in the custom amount field?",
+        "say_example": "You entered <5,000> but the button says <1,000>. The site didn't take your number. I'll fix it before anything is sent."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Set the receipt email",
+      "questions": [
+       {
+        "question": "Do you want a receipt by email?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a toggle switch asking if a transaction confirmation email should be sent.",
+        "whatTheAgentLoses": "The user loses the ability to ensure they receive an emailed receipt to track their personal giving.",
+        "speak": "never",
+        "check": "Is the confirmation email toggle on?",
+        "say_example": "Left the receipt email switched on."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Click the give button",
+      "questions": [
+       {
+        "question": "Do you want to leave the checkout and lose what's filled in?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog explicitly warns that exiting will cause you to lose any progress made so far.",
+        "whatTheAgentLoses": "You lose the ability to stop the agent from abandoning the donation and erasing the payment details already entered.",
+        "speak": "on-event",
+        "check": "Does a dialog warn that leaving will lose progress?",
+        "say_example": "A box warns that leaving loses everything filled in. Staying on the form."
+       },
+       {
+        "question": "Are you ready to submit the donation?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The red 'DONATE $1,000.00' button finalizes the transaction, which will fail if the required form fields above it are left empty.",
+        "whatTheAgentLoses": "You lose the final opportunity to verify the exact charge amount and ensure all personal details are correct before the funds are committed.",
+        "speak": "gate",
+        "check": "What amount, recipient, frequency, and payment method are shown at the give button, and does the page show any tip or fee added?",
+        "say_example": "Ready to give. <50>, one time, to <the Red Cross>, from your <Visa ending 4821>. <Nothing added>. Press to give, or say change."
+       },
+       {
+        "question": "After pressing give, did the page hang or show an error?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Payment gateways can hang while still processing the charge. Clicking submit again without checking can result in an accidental double donation.",
+        "whatTheAgentLoses": "The user loses the cautious judgment to stop and verify the bank state, risking a double charge if the agent blindly retries a hanging submission.",
+        "speak": "on-event",
+        "check": "After the press, does the page show an error, a spinner, or the same form again?",
+        "say_example": "The page hung after the press. I'm not pressing again. That could charge you twice. Check your email for a receipt before we try again."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Confirm the dialog",
+      "questions": [
+       {
+        "question": "Does the confirm box show the amount and recipient you approved?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a final confirmation dialog with the exact donation amount and organization name, providing one last chance to cancel before the payment is processed.",
+        "whatTheAgentLoses": "The user loses the final opportunity to verify the exact transaction details before their money is officially transferred.",
+        "speak": "if-wrong",
+        "check": "What amount and recipient does the confirmation dialog show?",
+        "say_example": "The confirm box says <500>, but you approved <50>. Not confirming."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Verify the gift",
+    "note": "9.1 where a thank-you renders. 9.2 where the keeper opens mail - RLUw gets the email before any money moves. 9.3 on the crowdfunding platform, 9.4 in the apps. 9.5 where the thank-you page offers it. 9.6 is the one node no keeper performs.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Read the thank-you page",
+      "questions": [
+       {
+        "question": "Does the amount on the thank-you page match what you meant to give?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen proves the transaction succeeded, but it is crucial to verify the final amount since platform minimums might override the initially entered amount.",
+        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the success message and knowing exactly how much was ultimately deducted from their account.",
+        "speak": "if-wrong",
+        "check": "What amount does the thank-you page show?",
+        "say_example": "Done, but the receipt says <25>. You asked for <10>. The site's minimum raised it. Want me to find how to cancel it?"
+       },
+       {
+        "question": "After the press, did a thank-you page come up, or is the payment form still there?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The narrator claims clicking 'Process' will complete the donation, but the video cuts off while still on the payment form without showing the actual confirmation receipt.",
+        "whatTheAgentLoses": "The user loses visual proof that the donation was successfully processed and the transaction actually went through.",
+        "speak": "on-event",
+        "check": "After the press, is a thank-you or confirmation page on screen, or still the payment form?",
+        "say_example": "I pressed give, but no thank-you page came. The form is still here. I'm not sure it went through. Not pressing again yet."
+       },
+       {
+        "question": "Does the thank-you page say the gift went through?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays a thank-you message and explains that an email confirmation will be sent once the donation is processed.",
+        "whatTheAgentLoses": "Delegating this step means you miss the immediate reassurance of seeing the success message and knowing to expect a confirmation email.",
+        "speak": "always",
+        "check": "Does the thank-you page state the gift went through and how the receipt arrives?",
+        "say_example": "Done. <50> to <the Red Cross>. The receipt is going to <your email>."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Open the receipt email",
+      "questions": [
+       {
+        "question": "Does the receipt email show the amount and recipient you gave?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen shows an email from GoFundMe confirming the £5 donation, which serves as the final proof of a successful transaction.",
+        "whatTheAgentLoses": "Delegating this step means you lose the immediate peace of mind of personally verifying the exact receipt and campaign details in your inbox.",
+        "speak": "never",
+        "check": "Does the receipt email show the amount and recipient?",
+        "say_example": "Opened the receipt email. It says <50> to <the Red Cross>."
+       },
+       {
+        "question": "Does the email say payment is still owed by bank transfer?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reviewing the email ensures your specific tithe and offering amounts are correct and provides the Royal Bank of Canada details needed to finalize the payment.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the exact breakdown of your donation and securely handle the manual bank transfer yourself.",
+        "speak": "on-event",
+        "check": "Does the email say the gift is pending a bank transfer, and does it list bank details?",
+        "say_example": "The email says the gift isn't paid yet. You still need to send <50> to the bank account it lists. Want the details?"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Check the recipient's page",
+      "questions": [
+       {
+        "question": "Does your gift show on the campaign page?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the recent donations and comments sections confirms that your transaction was successful and your message was published correctly.",
+        "whatTheAgentLoses": "You lose the personal satisfaction of visually confirming your name and supportive message on the public campaign page.",
+        "speak": "never",
+        "check": "Does the campaign page list the donation and comment?",
+        "say_example": "Found your gift listed on the campaign page."
+       },
+       {
+        "question": "Did the campaign total go up by your gift?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the '$300 FUNDRAISED' stat ensures that the platform properly recorded the recent donation towards the $550.00 goal.",
+        "whatTheAgentLoses": "You lose the peace of mind that comes from personally verifying your specific contribution was accurately added to the campaign's progress.",
+        "speak": "never",
+        "check": "What fundraised total does the campaign page show?",
+        "say_example": "Campaign total went from <250> to <300>."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Open the giving history",
+      "questions": [
+       {
+        "question": "Does the giving history in the app list this donation with the amount and recipient you approved?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The 'Where To?' menu offers several account options, and selecting 'Recent Giving' lets you verify the details of your completed donation.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of personally verifying your donation record in the app's history.",
+        "speak": "never",
+        "check": "Does the giving history list the donation with amount and recipient?",
+        "say_example": "Giving history lists <50> to <the Red Cross>."
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Share or comment after giving",
+      "questions": [
+       {
+        "question": "Do you want to leave a public comment to accompany your donation?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen provides a text box and a photo upload option to publicly share your reasons for supporting the campaign.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to share a personalized, encouraging message with the organizer and the community.",
+        "speak": "never",
+        "check": "Does the page offer a public comment box?",
+        "say_example": "Skipped the public comment."
+       },
+       {
+        "question": "Do you want to share this fundraiser on your timeline?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen presents a modal to share the campaign on your timeline with an option to add a custom text message.",
+        "whatTheAgentLoses": "Delegating this step means losing the choice of whether to publicly broadcast the donation and the ability to craft a personal message to your network.",
+        "speak": "never",
+        "check": "Does a share dialog appear?",
+        "say_example": "Didn't share on your timeline."
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Manage the recurring gift",
+      "questions": [
+       {
+        "question": "Does the receipt say how to cancel the recurring gift?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a recurring donation was set up (intentionally or accidentally by a hidden default), you need to know exactly how to stop future charges before closing the session.",
+        "whatTheAgentLoses": "You lose the immediate opportunity to secure the cancellation route, leaving you trapped in a subscription if the agent didn't save the account credentials.",
+        "speak": "on-event",
+        "check": "Does the receipt page or email state how to cancel the recurring gift, or give a link?",
+        "say_example": "This repeats <monthly>, and the receipt doesn't say how to stop it. You'd have to ask <the charity> directly."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

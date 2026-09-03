@@ -11,7 +11,7 @@
     "note": "one of: 1.1 then 1.2 (task arrives as a search), 1.3 (arrives as an app), 1.4 (arrives as a message). then 1.5 when the venue is a directory fronting many hospitals.",
     "questions": [
      {
-      "question": "Do you already have an upcoming appointment, and where do you click to schedule a new one?",
+      "question": "Does the site already show an upcoming appointment for this same need?",
       "cluster": "facts",
       "moment": "Now",
       "moneyMoving": false,
@@ -24,7 +24,10 @@
        "safety": 1,
        "reversibility": 2,
        "recovery": 2
-      }
+      },
+      "speak": "on-event",
+      "check": "Does the Upcoming Visits section list an existing appointment, and for what?",
+      "say_example": "You already have a visit booked here - <Dr. Patel, October 5>. Still want a new one?"
      },
      {
       "question": "Should you contact the office directly using the provided details or proceed to the online booking portal?",
@@ -40,7 +43,10 @@
        "safety": 1,
        "reversibility": 1,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Does the page show office contact details and an online booking link?",
+      "say_example": "Used the online portal, not the phone line"
      },
      {
       "question": "Are you willing to wait in the virtual queue to access the scheduling page?",
@@ -56,7 +62,10 @@
        "safety": 1,
        "reversibility": 1,
        "recovery": 2
-      }
+      },
+      "speak": "on-event",
+      "check": "Does the page show a waiting room and an estimated wait time?",
+      "say_example": "There's a line just to get in. The site says about <15 minutes>. I'll wait it out unless you say stop."
      }
     ],
     "children": [
@@ -82,7 +91,10 @@
          "safety": 2,
          "reversibility": 3,
          "recovery": 3
-        }
+        },
+        "speak": "never",
+        "check": "Which result shows the hospital's own web address?",
+        "say_example": "Opened <cmch-vellore.edu> - the hospital's own site, not a third-party booker"
        },
        {
         "question": "Are you on the correct official portal to start booking your appointment?",
@@ -98,7 +110,10 @@
          "safety": 2,
          "reversibility": 3,
          "recovery": 3
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Do the page header and web address match the intended provider's official site?",
+        "say_example": "This isn't <the hospital>'s own site. I'm going to the real one before typing anything about you."
        }
       ]
      },
@@ -120,7 +135,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "What rating, download count, and publisher does the store page show?",
+        "say_example": "Booking here needs their app. It's by <the clinic>, rated <4.4>, lots of downloads. OK to put it on your phone?"
        },
        {
         "question": "Should you grant the app access to your location?",
@@ -136,7 +154,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the screen show a location permission prompt?",
+        "say_example": "Said no to location - typed your <ZIP> instead"
        },
        {
         "question": "Which app from the search results should you install?",
@@ -152,7 +173,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Do the app title and publisher match the intended booking service?",
+        "say_example": "Installed <Doctena> - checked the publisher name first"
        },
        {
         "question": "Do you want to allow the app to send you notifications?",
@@ -168,7 +192,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the screen show a notifications permission prompt?",
+        "say_example": "Said no to app notifications"
        }
       ]
      },
@@ -177,7 +204,7 @@
       "label": "Follow the message link",
       "questions": [
        {
-        "question": "How do you access the scheduling ticket mentioned in the email?",
+        "question": "Is the email carrying this scheduling ticket genuinely from the clinic's portal, before its sign-in link is opened?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -190,7 +217,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the email show a sign-in button for the scheduling ticket?",
+        "say_example": "Opened the scheduling link from the email"
        }
       ]
      },
@@ -212,7 +242,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which hospital networks does the page list?",
+        "say_example": "Picked the <State> network - that's where your hospital is"
        },
        {
         "question": "Which state is the hospital located in?",
@@ -228,7 +261,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which states does the page list?",
+        "say_example": "Chose <Tamil Nadu>"
        },
        {
         "question": "Which hospital do you want to select for your appointment?",
@@ -244,7 +280,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Is the intended hospital in the list the page shows?",
+        "say_example": "Selected <CMC Vellore> from the list"
        }
       ]
      }
@@ -269,7 +308,10 @@
        "safety": 1,
        "reversibility": 2,
        "recovery": 2
-      }
+      },
+      "speak": "never",
+      "check": "Does the page show both a sign-in form and a sign-up option?",
+      "say_example": "Signed in with your saved account"
      },
      {
       "question": "Should you sign up for an account first or click one of the direct location booking buttons?",
@@ -285,7 +327,10 @@
        "safety": 0,
        "reversibility": 1,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Does the page show sign-up links and direct booking buttons?",
+      "say_example": "Went straight to booking - no account needed for this"
      },
      {
       "question": "How do you want to sign in or create your account?",
@@ -301,7 +346,10 @@
        "safety": 0,
        "reversibility": 1,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Which sign-in methods does the page offer?",
+      "say_example": "Signed in with your email, skipped the Google option"
      },
      {
       "question": "Which scheduling method should you choose to book your appointment?",
@@ -317,7 +365,10 @@
        "safety": 1,
        "reversibility": 1,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Which booking paths does the page list?",
+      "say_example": "Used online scheduling for new patients"
      }
     ],
     "children": [
@@ -326,7 +377,7 @@
       "label": "Log in with credentials",
       "questions": [
        {
-        "question": "Are your username and password entered correctly to sign in?",
+        "question": "Does the user enter their own portal username and password rather than handing those credentials to the agent?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -339,7 +390,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "if-wrong",
+        "check": "After signing in, does the page show an error message?",
+        "say_example": "The sign-in didn't take. The page says <wrong password>. The field is yours."
        },
        {
         "question": "Which mobile number should you use to log in?",
@@ -355,7 +409,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page ask for a mobile number to sign in?",
+        "say_example": "Used your number ending <4821>"
        },
        {
         "question": "Do you want to log in using your mobile number or your ABHA Health ID?",
@@ -371,7 +428,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which login options does the page show?",
+        "say_example": "Signed in by mobile number - no ABHA on file"
        },
        {
         "question": "Do you agree to be redirected to Google for sign-in without hiding this warning in the future?",
@@ -387,7 +447,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show a redirect notice with a do-not-show-again checkbox?",
+        "say_example": "Continued to Google sign-in - left the warning turned on"
        },
        {
         "question": "Are you logged in under the correct patient's name?",
@@ -403,7 +466,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "What account name does the welcome message show?",
+        "say_example": "The account says <Maria Santos>. You asked me to book for <you>. Stopping until that's sorted."
        }
       ]
      },
@@ -411,22 +477,6 @@
       "id": "2.2",
       "label": "Create an account",
       "questions": [
-       {
-        "question": "Should you try another email or create a new account?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows an error that the email is not on file, requiring a choice between trying another sign-in or creating a new account.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether to attempt signing in with a different personal email or to start a brand new profile.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
        {
         "question": "What contact information and preferences should I provide to identify myself?",
         "cluster": "hand over",
@@ -441,7 +491,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which contact fields does the form require?",
+        "say_example": "Filled your name, email, and phone"
        },
        {
         "question": "Do you want to create a patient portal account now, and if so, what password should be used?",
@@ -457,7 +510,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page require a password to continue, or offer a skip option?",
+        "say_example": "They want you to make an account with a password. I'll hand you that field. Or say skip and I'll book without one."
        },
        {
         "question": "Did the system block your registration because an account already exists for your email or phone number?",
@@ -473,7 +529,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show an error that the account already exists or was not found?",
+        "say_example": "The site says there's already an account under your email. Want me to try the recovery link, or use a different email?"
        }
       ]
      },
@@ -482,7 +541,7 @@
       "label": "Pass the OTP check",
       "questions": [
        {
-        "question": "What is the 6-digit verification code sent to your phone?",
+        "question": "Retrieving the texted code means the agent reads your text messages - take over that part, or allow it?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -495,7 +554,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show a code-entry box and say where the code was sent?",
+        "say_example": "They texted a code to your phone ending <4821>. Read it to me when you have it."
        },
        {
         "question": "Should you allow Google Play services to read your text messages to autofill verification codes?",
@@ -511,7 +573,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the screen ask permission to read text messages?",
+        "say_example": "Said no to reading your texts - you can give me the code yourself"
        },
        {
         "question": "Did the site confirm your mobile number verification was successful?",
@@ -527,26 +592,13 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page say the mobile number was verified?",
+        "say_example": "Phone number verified"
        },
        {
-        "question": "Have you received the email OTP and entered it correctly?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'OTP Verification' popup requires a code from your email to confirm your identity before proceeding.",
-        "whatTheAgentLoses": "The user must grant the agent access to their personal email inbox to retrieve the verification code.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Was your email successfully verified?",
+        "question": "Did the site verify your email?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -559,7 +611,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page say the email was verified?",
+        "say_example": "Email verified"
        }
       ]
      },
@@ -586,7 +641,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page offer both finishing registration and booking now?",
+        "say_example": "Went straight to booking"
        },
        {
         "question": "Do you have an existing Central Registration Number for this hospital?",
@@ -602,10 +660,13 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page ask whether you have a prior registration number for this hospital?",
+        "say_example": "They ask if you've been registered at <this hospital> before. Have you? A wrong answer here makes a second file for you."
        },
        {
-        "question": "Do you want to review the pre-registration instructions and supported departments before proceeding?",
+        "question": "Is the department you need in the list of departments this site can actually book?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -618,7 +679,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Is the needed department in the page's list of departments that allow online booking?",
+        "say_example": "<Dermatology> isn't on their online list. This site can't book what you need. Want the phone number instead?"
        },
        {
         "question": "Did you complete the mandatory portal registration you agreed to on the Finalize page?",
@@ -634,7 +698,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page say registration is still pending or incomplete?",
+        "say_example": "The appointment went through, but the site says your registration isn't finished. I'll finish it now so the booking sticks."
        }
       ],
       "children": [
@@ -656,7 +723,10 @@
            "safety": 2,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "if-wrong",
+          "check": "Do the name, date of birth, and card number on the form match the details you gave me?",
+          "say_example": "The form has your birthday as <March 3>. You told me <March 30>. Fixing it before this goes on your medical file."
          },
          {
           "question": "What personal details must you provide to register as a patient?",
@@ -672,7 +742,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which personal fields does the form require?",
+          "say_example": "Filled the required personal fields - it also wanted religion and marital status, which is unusual for a booking"
          },
          {
           "question": "What permanent address details should you provide?",
@@ -688,7 +761,10 @@
            "safety": 0,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which address fields does the form require?",
+          "say_example": "Entered your home address"
          },
          {
           "question": "Which contact details do you want to provide and verify?",
@@ -704,10 +780,13 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Which contact fields require verification?",
+          "say_example": "Entered and verified your phone and email"
          },
          {
-          "question": "How should you register the patient for the infertility clinic?",
+          "question": "Whose name does the page say this clinic's registration has to be under?",
           "cluster": "facts",
           "moment": "Now",
           "moneyMoving": false,
@@ -720,7 +799,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page state whose name the registration must be under?",
+          "say_example": "The page says the record has to be in <the wife's> name for this clinic. I'll register it that way."
          },
          {
           "question": "Which family member do you want to register as the patient?",
@@ -736,7 +818,10 @@
            "safety": 2,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Which patient profiles does the page list to choose from?",
+          "say_example": "Booked under <your> profile, not the family members"
          }
         ]
        },
@@ -758,7 +843,10 @@
            "safety": 2,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the page ask whether you have an ABHA health ID?",
+          "say_example": "Answered no to the ABHA question - none on file"
          },
          {
           "question": "Do you want to create an Ayushman Bharat Health Account (ABHA) for the patient now?",
@@ -774,7 +862,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the page offer to create an ABHA account now?",
+          "say_example": "Said no to creating a new government health ID - you didn't ask for one"
          }
         ]
        },
@@ -805,7 +896,10 @@
        "safety": 0,
        "reversibility": 0,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Does the page offer booking by treatment and by practitioner?",
+      "say_example": "Searched by treatment - you named the treatment, not a person"
      },
      {
       "question": "What search criteria should you enter to find the right doctor?",
@@ -821,7 +915,10 @@
        "safety": 0,
        "reversibility": 0,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Which search fields does the page require?",
+      "say_example": "Set condition, location, date, and your insurance in the search"
      },
      {
       "question": "Are your specialty, location, date, and insurance details correct before searching?",
@@ -837,7 +934,10 @@
        "safety": 1,
        "reversibility": 1,
        "recovery": 1
-      }
+      },
+      "speak": "always",
+      "check": "What specialty, location, date, and insurance does the page show set?",
+      "say_example": "Looking for a <dermatologist> near <94025>, <next week>, on your <Aetna> plan."
      }
     ],
     "children": [
@@ -851,7 +951,7 @@
         "label": "Select the visit reason",
         "questions": [
          {
-          "question": "Which booking option should you select to start finding a new family doctor?",
+          "question": "Does the booking path being started match your actual patient status, rather than another path the page lists?",
           "cluster": "select",
           "moment": "Now",
           "moneyMoving": false,
@@ -864,7 +964,10 @@
            "safety": 0,
            "reversibility": 0,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which booking paths does the homepage list?",
+          "say_example": "Took the new-patient path"
          },
          {
           "question": "Which specific reason should you select for your appointment?",
@@ -880,23 +983,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
-         },
-         {
-          "question": "Did you verify that the appointment type on the dashboard matches the one requested in the initial notification?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The dashboard at 00:38 identifies the appointment as a 'COVID-19 Vaccine (initial dose)', but the initial notification at 00:27 is not visible to confirm this is correct.",
-          "whatTheAgentLoses": "The user loses the assurance that the agent is booking the specific appointment type requested by the provider.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which visit reasons does the page list?",
+          "say_example": "Picked <Physical> - closest match to what you asked for"
          },
          {
           "question": "Which preventative care appointment do you want to schedule next?",
@@ -912,7 +1002,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which due appointments does the dashboard list?",
+          "say_example": "Booked the <annual physical> - a <skin screening> is also due, it's in my notes"
          },
          {
           "question": "Do you want to book a private or general appointment?",
@@ -928,7 +1021,10 @@
            "safety": 0,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the booking form require choosing between private and general?",
+          "say_example": "They ask private or general. Private costs more and moves faster. Which one?"
          },
          {
           "question": "What kind of appointment do you want to schedule?",
@@ -944,7 +1040,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which appointment kinds does the page list?",
+          "say_example": "Chose <video visit> like you asked"
          },
          {
           "question": "Which specific test category applies to your visit?",
@@ -960,7 +1059,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which test categories does the page list?",
+          "say_example": "Picked <All Other Tests> - your test isn't in the named ones"
          },
          {
           "question": "Which appointment type should you select based on the clinic's guidelines?",
@@ -976,7 +1078,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "How does the page define each appointment type?",
+          "say_example": "Booked <follow-up> - their definition matches your case"
          },
          {
           "question": "Are you scheduling your first or second vaccine dose?",
@@ -992,7 +1097,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the page ask whether this is a first or second dose?",
+          "say_example": "Marked it as your <second> dose, like you said"
          },
          {
           "question": "Are you comfortable proceeding without being able to choose the specific COVID-19 vaccine brand?",
@@ -1008,7 +1116,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page say the vaccine brand is determined by local inventory?",
+          "say_example": "You don't get to pick the brand here. It's whatever the site has that day. Still OK?"
          },
          {
           "question": "Does this new patient intake appointment match my current medical needs?",
@@ -1024,7 +1135,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page limit what this appointment type is for?",
+          "say_example": "Careful - this visit is just an intro to find a doctor. The page says it's not for treating anything now."
          },
          {
           "question": "Are you booking a new appointment or a follow-up?",
@@ -1040,7 +1154,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the page ask new appointment or follow-up?",
+          "say_example": "Marked it new - you have no registration number here"
          }
         ]
        },
@@ -1062,7 +1179,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which care pathways does the home screen list?",
+          "say_example": "Went to local doctor search, not online consults"
          },
          {
           "question": "Do you prefer a video visit or an in-person appointment?",
@@ -1078,23 +1198,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
-         },
-         {
-          "question": "Do you want an in-person physical appointment or a teleconsultation?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The site requires choosing between a physical consultation at the hospital or an online teleconsultation before proceeding with the booking.",
-          "whatTheAgentLoses": "The user loses the ability to decide whether they prefer the convenience of an online visit or the necessity of an in-person examination.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page say in-person slots are limited or mostly video?",
+          "say_example": "You wanted in person, but the page says most of these doctors only do video right now. Take video, or hold out for in person?"
          }
         ]
        },
@@ -1116,10 +1223,13 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the booking page show a procedure package dropdown?",
+          "say_example": "Chose the <pre-employment exam> package your employer asked for"
          },
          {
-          "question": "Where do you find the short code for your specific procedure?",
+          "question": "Is the short code entered the one for the test you actually need, as the page's own list gives it?",
           "cluster": "facts",
           "moment": "Now",
           "moneyMoving": false,
@@ -1132,7 +1242,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the page list the short code for the needed procedure?",
+          "say_example": "Used code <QFT> for the TB blood test - from the site's own list"
          }
         ]
        }
@@ -1156,7 +1269,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which treatment types does the menu list?",
+        "say_example": "Picked <physiotherapy>"
        },
        {
         "question": "Which specific clinic within the department do you want to select?",
@@ -1172,7 +1288,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which clinics does the dropdown list?",
+        "say_example": "Selected <Reproductive Medicine>"
        },
        {
         "question": "Do you need to see a primary care physician or a specialist?",
@@ -1188,7 +1307,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page ask primary care or specialist?",
+        "say_example": "Chose <specialist>, matching what you asked for"
        },
        {
         "question": "Which medical department do you need an appointment for?",
@@ -1204,7 +1326,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which departments does the page list?",
+        "say_example": "Picked <Dermatology> for your <skin> concern"
        },
        {
         "question": "Which specific center or department do you need to visit?",
@@ -1220,7 +1345,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which centers does the page list?",
+        "say_example": "Chose the <eye> center"
        },
        {
         "question": "What language do you need the doctor to speak?",
@@ -1236,7 +1364,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which languages does the filter list?",
+        "say_example": "Filtered to <Spanish>-speaking doctors"
        }
       ]
      },
@@ -1258,7 +1389,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page offer the questionnaire and a skip option?",
+        "say_example": "Skipped the questionnaire - your ask already had the details"
        },
        {
         "question": "Do you need a new diagnosis and prescription, or just a medication refill?",
@@ -1274,7 +1408,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page ask new diagnosis or refill?",
+        "say_example": "Marked it a refill, like you said"
        },
        {
         "question": "Are you willing to see a primary care provider instead of a specialist for this issue?",
@@ -1290,23 +1427,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Do you meet the state's eligibility requirements, and are there actually appointments available?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists specific eligibility criteria and shows that all visible cities are fully booked, so proceeding without checking availability might waste time.",
-        "whatTheAgentLoses": "The user loses the opportunity to confirm their personal eligibility and avoid wasting time trying to book in locations with no available slots.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page say primary care providers can also handle this issue?",
+        "say_example": "A regular doctor could handle this too, and there are more of them free sooner. Want me to include those?"
        },
        {
         "question": "Do you meet the age and vaccine timing requirements for this screening mammogram?",
@@ -1322,7 +1446,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "What eligibility rules does the page state for this appointment?",
+        "say_example": "This one's for <women 40 and up>. They also say wait <four weeks> after a Covid shot or the scan can read wrong. Does that all fit you?"
        },
        {
         "question": "Are you following up on a previously treated condition?",
@@ -1338,7 +1465,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the questionnaire ask if this is a follow-up?",
+        "say_example": "Marked it a follow-up of your <knee> treatment"
        },
        {
         "question": "How should you answer the required medical history questions?",
@@ -1354,10 +1484,13 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which medical history questions does the page require?",
+        "say_example": "These next questions are about your body - <new lumps, your last mammogram>. I can't answer those for you. I'll read each one and take your answer."
        },
        {
-        "question": "Did you notice the system allowed you to proceed despite your answer contradicting the scheduling instructions?",
+        "question": "Does the page's own instruction contradict the answer it just accepted?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -1370,7 +1503,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page's own instruction conflict with the answer given, and did it still allow continuing?",
+        "say_example": "You said your last mammogram was <8 months> ago. The page says to wait 12. It let me continue anyway. Keep going, or check with your doctor first?"
        },
        {
         "question": "Who are you seeking care for?",
@@ -1386,7 +1522,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page ask who the care is for?",
+        "say_example": "Marked it for <you>"
        },
        {
         "question": "Which age demographic do you select for the patient?",
@@ -1402,23 +1541,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 2
-        }
-       },
-       {
-        "question": "What is your experience with seeking mental health care?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The booking platform asks whether you are new to mental health care or have prior experience to properly tailor your patient profile and intake.",
-        "whatTheAgentLoses": "You lose the ability to accurately convey your personal comfort level and history with therapy, which could affect how the provider approaches your initial care.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 1,
-         "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which age groups does the page list?",
+        "say_example": "Picked <Adult 25-64>"
        },
        {
         "question": "Who referred you for this test?",
@@ -1434,10 +1560,13 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which referral sources does the page list?",
+        "say_example": "Marked <employer> as who ordered the test"
        },
        {
-        "question": "What are your eligibility details?",
+        "question": "Which eligibility category (age band, occupation, or condition) applies to you?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -1450,7 +1579,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which eligibility fields does the page require?",
+        "say_example": "Filled age, priority group, and state from your details"
        }
       ]
      },
@@ -1464,7 +1596,7 @@
         "label": "Scope the search area",
         "questions": [
          {
-          "question": "Do you see consistent visual behavior when selecting 'Any location'?",
+          "question": "After choosing 'Any location', does the page actually show all locations as selected?",
           "cluster": "facts",
           "moment": "Now",
           "moneyMoving": false,
@@ -1477,7 +1609,10 @@
            "safety": 0,
            "reversibility": 0,
            "recovery": 1
-          }
+          },
+          "speak": "if-wrong",
+          "check": "After selecting Any location, which locations does the page show as selected?",
+          "say_example": "I asked for any location, but the page only ticked <two clinics>. Fixing that so we don't miss openings."
          },
          {
           "question": "Which country are you booking this appointment for?",
@@ -1493,7 +1628,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which countries does the dropdown list?",
+          "say_example": "Set country to <Nigeria>"
          },
          {
           "question": "Which city do you want to book the appointment in?",
@@ -1509,7 +1647,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which cities does the dropdown list?",
+          "say_example": "Set city to <Delhi>"
          },
          {
           "question": "What are your location and travel destination for the appointment?",
@@ -1525,7 +1666,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which location fields does the form require?",
+          "say_example": "Entered <Manila> and destination <Canada> - the site assigns the center from those"
          },
          {
           "question": "Which destination country are you traveling to?",
@@ -1541,7 +1685,10 @@
            "safety": 2,
            "reversibility": 1,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the page show a destination country dropdown?",
+          "say_example": "Set destination to <Canada>"
          },
          {
           "question": "Which state do you want to check for vaccine availability and eligibility?",
@@ -1557,7 +1704,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the page require choosing a state?",
+          "say_example": "Chose <Ohio>"
          },
          {
           "question": "What ZIP code or city and state should I search to find your vaccine appointment?",
@@ -1573,7 +1723,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the page ask for a ZIP or city to search?",
+          "say_example": "Searched around <43138>"
          },
          {
           "question": "Did the system reject your location search because it couldn't find an exact match for the city and state?",
@@ -1589,7 +1742,10 @@
            "safety": 0,
            "reversibility": 0,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the page show a no-exact-match error with suggestions?",
+          "say_example": "The search balked at <Logan, Ohio> - picked it from their own dropdown instead"
          }
         ]
        },
@@ -1611,7 +1767,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which clinic options does the page list, including an any-location choice?",
+          "say_example": "Left it on any location - more slots that way"
          },
          {
           "question": "Which location should you choose for your appointment?",
@@ -1627,7 +1786,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "What distance does the page list for each location?",
+          "say_example": "Picked the closest - <1.2 miles>"
          },
          {
           "question": "Which connected office do you want to use for this appointment?",
@@ -1643,7 +1805,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which connected offices does the account list?",
+          "say_example": "Used your <downtown> office"
          },
          {
           "question": "Which assessment center location should you select?",
@@ -1659,7 +1824,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which centers does the page list, with addresses and hours?",
+          "say_example": "Chose <Lagos> - it's your city"
          }
         ]
        },
@@ -1681,71 +1849,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
-         },
-         {
-          "question": "Are you satisfied with this location's details, such as parking and hours, and ready to schedule an appointment?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays specific location details like operating hours, available tests, and parking information that help determine if this site is convenient.",
-          "whatTheAgentLoses": "You lose the opportunity to evaluate the practical convenience of the location based on details like parking and landmarks before committing to it.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         },
-         {
-          "question": "Are you comfortable with this clinic's location and operating hours?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays the clinic's specific address in Manila, a vicinity map, and its weekday schedule, which are crucial details for planning your visit.",
-          "whatTheAgentLoses": "You lose the opportunity to personally assess the commute and convenience of the clinic's location using your own knowledge of the area and landmarks.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
-         },
-         {
-          "question": "Is the correct military health care facility selected for your appointments?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen shows your currently selected military health care facility and family sponsor, which determines where your appointments and prescription refills are routed.",
-          "whatTheAgentLoses": "You lose the chance to verify that the appointment is being booked at your actual assigned military health care facility.",
-          "costDims": {
-           "money": 1,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "Are the location and operating hours for this health assessment center correct for your needs?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays the center's specific address in GRA Ikeja and its operating hours, which you must verify to ensure you can actually attend an appointment there.",
-          "whatTheAgentLoses": "You lose the opportunity to confirm that the clinic's physical location and specific operating hours fit your schedule and travel capabilities.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page show a location already selected, and which one?",
+          "say_example": "The page picked a lab for you already, on <Alum Rock Avenue>. That's <8 miles> out. Keep it, or want one closer?"
          },
          {
           "question": "Did you notice that the Lagos and Abuja health assessment centers list the exact same phone number?",
@@ -1761,23 +1868,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
-         },
-         {
-          "question": "Should I continue with the selected location?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen shows 'Pittsburg Nursing' as the selected location, and confirming it determines where the appointment will take place.",
-          "whatTheAgentLoses": "The user loses the ability to ensure the appointment is booked at a convenient or preferred location.",
-          "costDims": {
-           "money": 0,
-           "privacy": 0,
-           "thirdParty": 0,
-           "safety": 1,
-           "reversibility": 1,
-           "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Do the two locations list the same phone number?",
+          "say_example": "Both centers list one phone number - <02014656600> - likely a central line"
          },
          {
           "question": "Does the service you need have specific location and time constraints?",
@@ -1793,7 +1887,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page say the needed service is only at certain branches or hours?",
+          "say_example": "Heads up - <chest x-rays> only happen at <the main branch>, <mornings>. That decides where and when we can book."
          }
         ]
        }
@@ -1817,7 +1914,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Which insurance plan does the page show selected?",
+        "say_example": "The page has you on <Aetna HMO>. Your card says <Aetna PPO>. Fixing it - the wrong plan makes every result look covered when it isn't."
        },
        {
         "question": "Does the number of available providers change when you switch your insurance filter to self-pay?",
@@ -1833,7 +1933,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the result count change when the insurance filter changes?",
+        "say_example": "Sanity-checked the filter - <272> in-network vs <297> self-pay, so it's really filtering"
        },
        {
         "question": "Which insurance carrier and plan do you want to use for the search?",
@@ -1849,7 +1952,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which carriers and plans does the page list to choose from?",
+        "say_example": "Which insurance should I put in - your <Aetna> through work, or something else? The wrong one means surprise bills."
        },
        {
         "question": "Did changing the search specialty clear your previously selected insurance filter?",
@@ -1865,23 +1971,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Which general category of health insurance do you hold?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The portal requires you to specify whether you have Medicare, non-Medicare insurance, or no insurance to proceed with the booking.",
-        "whatTheAgentLoses": "You lose the ability to accurately declare your insurance status, which dictates how the appointment will be billed.",
-        "costDims": {
-         "money": 2,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "After changing the search, does the page still show the insurance filter applied?",
+        "say_example": "The site quietly dropped your <UnitedHealthcare> filter when I switched to dentists. Putting it back - these results weren't checked against your plan."
        },
        {
         "question": "Did the system flag your insurance as out-of-network or require a primary care referral after validating your member ID?",
@@ -1897,7 +1990,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show an out-of-network warning or a missing-referral notice?",
+        "say_example": "Bad news from the page - this doctor is out of network for your exact plan. You'd pay the full price. Want me to find an in-network one?"
        }
       ]
      },
@@ -1919,7 +2015,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page say a referral is required for this specialist?",
+        "say_example": "The page says your plan needs a referral from your regular doctor first. Book without it and the insurance can refuse the whole bill."
        },
        {
         "question": "What specific documents and items must you bring to the appointment?",
@@ -1935,7 +2034,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "What items does the page list as required to bring?",
+        "say_example": "Saved their bring-list - passport, vaccine records, and 8 more. It's in the report"
        }
       ]
      }
@@ -1960,7 +2062,10 @@
        "safety": 0,
        "reversibility": 0,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Does the page offer choose-by-doctor and choose-by-date tabs?",
+      "say_example": "Searched by date - you wanted the soonest"
      }
     ],
     "children": [
@@ -1968,22 +2073,6 @@
       "id": "4.1",
       "label": "Compare the candidates",
       "questions": [
-       {
-        "question": "Which provider should you select for your new patient intake appointment?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple available doctors, such as Dr. Bethany So and Dr. Cameron Caners, requiring a choice of who to see.",
-        "whatTheAgentLoses": "You lose the ability to personally review the list of available doctors and choose the specific provider you feel most comfortable seeing.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
        {
         "question": "Which provider should you choose based on their experience, ratings, location, and fees?",
         "cluster": "compare",
@@ -1998,71 +2087,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Which provider should you choose based on rating, availability, and visit type?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows multiple in-network providers with varying ratings and appointment slots, requiring a decision to either select one or adjust the search criteria.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between a provider's rating, their available times, and whether to change insurance filters to see different options.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which of these in-network ENT specialists do you want to select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The updated search results display 8 in-network providers, including a highly-rated ENT doctor offering video visits, giving you options to evaluate.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh factors like provider ratings, specific credentials, and visit types when deciding who to trust with your medical care.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which specific provider would you like to schedule the appointment with?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple available doctors with different specialties, such as Family Practice and Internal Medicine, requiring a selection.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to choose a doctor based on your personal preferences, gender preference, or past experiences with them.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Which doctor should you choose based on their distance and availability?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple available doctors along with their addresses, distances, and next available dates, requiring you to pick the best fit.",
-        "whatTheAgentLoses": "You lose the ability to personally balance how close the clinic is against how soon you can get an appointment.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "What experience, rating, distance, and fee does the page list for each provider?",
+        "say_example": "Two good fits. <Dr. Rao>: <12 years> in, <4.8> stars, <1 mile> away, <500>. <Dr. Shah>: newer, <4.9> stars, <5 miles>, <350>. Which one?"
        },
        {
         "question": "Do you want to select a sponsored provider or scroll down to the organic search results?",
@@ -2078,7 +2106,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Which results does the page mark as sponsored?",
+        "say_example": "The top two are paid ads, not your best matches. I'm ranking past them."
        }
       ]
      },
@@ -2100,23 +2131,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Are you satisfied with this provider's qualifications and ready to start booking?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Reviewing details like the provider's spoken languages, education, and exact location ensures they are the right fit for your medical needs before you proceed.",
-        "whatTheAgentLoses": "You lose the chance to personally evaluate the doctor's background and description to build trust and comfort before scheduling a visit.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "What ratings and review policy does the page show for this provider?",
+        "say_example": "Checked reviews - <4.7> overall, and the site says providers can't edit them"
        },
        {
         "question": "Is the provider you selected actually accepting new patients?",
@@ -2132,7 +2150,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the profile say the provider is accepting new patients?",
+        "say_example": "Open slots, but the page says <Dr. Rao> isn't taking new patients. Booking anyway usually ends with the clinic cancelling on you. Skipping to one who is."
        }
       ]
      },
@@ -2154,7 +2175,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the page show the chosen provider as selected before continuing?",
+        "say_example": "The page never marked <Dr. Sotolongo> as picked. Re-selecting before I continue, or the wrong doctor rides along."
        },
        {
         "question": "Which specific provider and date range do you prefer for this appointment?",
@@ -2170,7 +2194,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page let you set a provider and a date range?",
+        "say_example": "Set <Dr. Sotolongo> and your <next two weeks> window"
        },
        {
         "question": "Are you sure you want to book with a doctor other than your Primary Care Provider?",
@@ -2186,7 +2213,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page name a primary care provider different from the selected one?",
+        "say_example": "Your listed regular doctor is <Dr. Nadler>, but this books with <Dr. Sotolongo>. On purpose?"
        },
        {
         "question": "Do you want to schedule with a provider you've seen before or search by the reason for your visit?",
@@ -2202,7 +2232,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page offer booking by past provider or by reason?",
+        "say_example": "Booked through your usual doctor's page"
        },
        {
         "question": "Which of your connected providers do you want to select for this appointment?",
@@ -2218,10 +2251,13 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which connected providers does the page list?",
+        "say_example": "Picked <Dr. Chen> - the one you named"
        },
        {
-        "question": "Do you want to view the profile of your allocated doctor, call them, or go back?",
+        "question": "Does the doctor the site allocated to you match what you asked for?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -2234,7 +2270,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Which doctor does the page say is allocated to you?",
+        "say_example": "The site assigned you <Dr. Lichtenberger> - you didn't pick him, they did. You asked for <a woman doctor>, so I'm checking if that can change."
        }
       ]
      },
@@ -2263,7 +2302,10 @@
        "safety": 0,
        "reversibility": 0,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Does the browser show a blocked pop-up notice from this site?",
+      "say_example": "Allowed the booking pop-up - the site needs it"
      }
     ],
     "children": [
@@ -2285,7 +2327,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page have a date-range field for the search?",
+        "say_example": "Capped the search at <June 30> like you asked"
        },
        {
         "question": "Are there any appointments available in the location you searched?",
@@ -2301,7 +2346,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page say no appointments are available for this search?",
+        "say_example": "Nothing available near <94025>. Want me to try a wider area, or different dates?"
        },
        {
         "question": "Which date has suitable available appointments?",
@@ -2317,7 +2365,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which dates show open-slot badges?",
+        "say_example": "Aimed at <Dec 9> - it shows the most open times"
        },
        {
         "question": "Do the available appointment times listed match the number of slots indicated on the calendar badge?",
@@ -2333,42 +2384,13 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the number of times listed match the count on the calendar badge?",
+        "say_example": "The calendar promised <12> openings but only <3> loaded. Refreshing so we see the real list before picking."
        },
        {
-        "question": "Which specific date, time, provider, and clinic location works best for you?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple available time slots across different dates, providers, and clinic locations, requiring you to balance your schedule with travel and provider preferences.",
-        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between a convenient appointment time, a preferred provider, and a closer clinic location.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Did you accurately identify all the available time slots when they first appeared?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen actually displayed four available time slots once the loading finished, contradicting the claim that only three were available.",
-        "whatTheAgentLoses": "The user loses the ability to choose from all genuinely available appointment times if the agent fails to recognize every option presented.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Did you wait for the provider's calendar dates and availability to fully load?",
+        "question": "Has the calendar finished loading, or does it still show placeholder dashes?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
@@ -2381,7 +2403,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the calendar still show placeholder dashes instead of dates?",
+        "say_example": "Waited for the calendar to finish loading before reading it"
        },
        {
         "question": "Are there any available appointment slots in the current month?",
@@ -2397,10 +2422,13 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the current month show any open slots?",
+        "say_example": "June was empty - moved to July"
        },
        {
-        "question": "Did you notice the lockdown warning advising you to call the clinic before booking an in-person visit?",
+        "question": "Does the page warn that this centre may not actually be taking bookings?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -2413,10 +2441,13 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show a warning to call before booking?",
+        "say_example": "A warning on the page says some centers aren't really taking bookings right now - call first. Book anyway, or want the phone number?"
        },
        {
-        "question": "Are the dates on the calendar actually active and available, or just visually grayed out?",
+        "question": "After selecting a date, does the page actually show times for it?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -2429,7 +2460,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "After clicking a date, does the page show times for it or nothing?",
+        "say_example": "Skipped the grayed dates - clicking them does nothing"
        }
       ]
      },
@@ -2451,7 +2485,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the calendar offer a wider view than 3 days?",
+        "say_example": "Opened the full month view"
        },
        {
         "question": "Do you want to check for an earlier available date?",
@@ -2467,7 +2504,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page have an earlier-dates arrow?",
+        "say_example": "Checked earlier dates - nothing sooner"
        },
        {
         "question": "If the available dates at this center don't work for you, should you go back and select a different location?",
@@ -2483,7 +2523,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "What dates does the page show for this center, and is there a back option?",
+        "say_example": "This center has nothing until <March>. The <Avoca> one had openings <next week>. Switch, or wait?"
        }
       ]
      },
@@ -2505,23 +2548,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Which branch, date, and time slot do you want for your appointment?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires selecting a specific branch location, a date from the calendar, and an available time slot to schedule the visit.",
-        "whatTheAgentLoses": "Delegating this choice means losing the ability to pick the most convenient clinic location and time for your personal schedule.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Which times does the page list as available?",
+        "say_example": "Open times <Wednesday>: <9:00, 9:40, 11:20>. Which one?"
        },
        {
         "question": "Does this appointment time conflict with any of your other scheduled family appointments?",
@@ -2537,10 +2567,13 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the page list another scheduled appointment at the same time?",
+        "say_example": "That slot bumps into <Emma's dentist visit at 3>. It's on your list here. Pick a different time?"
        },
        {
-        "question": "Did you notice the popup warning that your selected time slot is only for reference and the actual visit could take 4 to 5 hours?",
+        "question": "Does the page say the booked time is not guaranteed, or that the visit runs long?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -2553,7 +2586,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does a notice say the time is not guaranteed or the visit runs long?",
+        "say_example": "One catch - the page says your time is loose. The visit can run <4 to 5 hours>. Keep the day clear."
        }
       ]
      },
@@ -2562,7 +2598,7 @@
       "label": "Join the waitlist",
       "questions": [
        {
-        "question": "What specific reason should you enter for the visit, and do you want to join the waitlist for an earlier opening?",
+        "question": "Do you want to join the waitlist for an earlier opening?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
@@ -2575,7 +2611,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page offer a waitlist checkbox for earlier openings?",
+        "say_example": "Want me to also put you on the list for anything earlier? If a spot opens they'll tell you."
        },
        {
         "question": "Does the review page correctly reflect your waitlist selection?",
@@ -2591,7 +2630,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the review page show the waitlist choice that was made?",
+        "say_example": "The review page lost your waitlist choice. Ticking it again before we book."
        }
       ]
      },
@@ -2599,22 +2641,6 @@
       "id": "5.5",
       "label": "Send an appointment request",
       "questions": [
-       {
-        "question": "What dates and times are you available for the appointment?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides fields for a date range and checkboxes for specific days and times to narrow down the available appointment slots.",
-        "whatTheAgentLoses": "You lose the ability to manually adjust the search window based on the nuances of your personal schedule.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
        {
         "question": "What reason for the appointment and provider instructions do you want to include?",
         "cluster": "hand over",
@@ -2629,7 +2655,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which request fields does the form show?",
+        "say_example": "Wrote your reason and the note for the doctor from your ask"
        },
        {
         "question": "Is this a guaranteed booking, or just an appointment request that requires manual clinic approval?",
@@ -2645,7 +2674,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page call this a request needing clinic approval?",
+        "say_example": "This isn't a booked visit yet. It's a request. The clinic still has to say yes, and they'll reach you at <your email>."
        }
       ]
      }
@@ -2657,7 +2689,7 @@
     "note": "6.1 when the system already holds a record, else 6.2. 6.3 only for visa or immigration medicals. 6.4 where the venue demands it. 6.5 sits right before the submit.",
     "questions": [
      {
-      "question": "Are you aware of the two-month validity limit and additional test requirements before entering your information?",
+      "question": "Do the exam results stay valid long enough for what you need them for?",
       "cluster": "facts",
       "moment": "Now",
       "moneyMoving": false,
@@ -2670,7 +2702,10 @@
        "safety": 2,
        "reversibility": 2,
        "recovery": 2
-      }
+      },
+      "speak": "on-event",
+      "check": "Does the page state a validity period for the exam results?",
+      "say_example": "The page says results only count for <two months>. If your <interview> is later than that, this exam would expire first. Book it anyway?"
      },
      {
       "question": "What are the specific rules for filling out this registration form?",
@@ -2686,7 +2721,10 @@
        "safety": 0,
        "reversibility": 0,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "What form rules does the page list?",
+      "say_example": "Followed their rules - full address unabbreviated, one form per person"
      },
      {
       "question": "Which optional fields should you leave blank on the registration form?",
@@ -2702,7 +2740,10 @@
        "safety": 0,
        "reversibility": 0,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Which fields does the form mark optional?",
+      "say_example": "Left the optional overseas-address section blank - doesn't apply"
      },
      {
       "question": "Did any inline validation errors appear while filling out the patient details form?",
@@ -2718,7 +2759,10 @@
        "safety": 0,
        "reversibility": 0,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Does the form show inline error messages?",
+      "say_example": "Fixed the phone format the form flagged"
      }
     ],
     "children": [
@@ -2740,7 +2784,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Do the prefilled address and details match your current ones?",
+        "say_example": "The form still has your old address on <Garfield Ave>. You're on <Chatburn> now. Updating it - mail from the clinic goes there."
        },
        {
         "question": "Is your demographic information correct?",
@@ -2756,23 +2803,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Are your pre-filled contact details accurate, and which demographic details and text alert preferences should you provide?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays your pre-filled contact information for verification alongside a checkbox for text alerts and dropdowns for personal demographics.",
-        "whatTheAgentLoses": "You lose the ability to decide exactly which personal demographic details to share and whether to opt into text message notifications.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page require ticking a box that the address is accurate?",
+        "say_example": "Confirmed the address box after checking it"
        },
        {
         "question": "Do you need to update your contact info immediately to avoid losing your Medi-Cal coverage?",
@@ -2788,7 +2822,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 3
-        }
+        },
+        "speak": "never",
+        "check": "Does the dashboard show a contact-info warning tied to coverage?",
+        "say_example": "The site warns Medi-Cal folks to keep contact info current - flagged it in the report"
        }
       ]
      },
@@ -2815,7 +2852,10 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Is the National ID field marked optional?",
+          "say_example": "Left the optional National ID blank - less to leak"
          },
          {
           "question": "What personal, contact, and insurance details should I enter to schedule the appointment?",
@@ -2831,7 +2871,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Which personal and insurance fields does the form require?",
+          "say_example": "Filled the required details from what you gave me"
          },
          {
           "question": "What personal information must you provide?",
@@ -2847,7 +2890,10 @@
            "safety": 1,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "always",
+          "check": "Which personal fields does the form require?",
+          "say_example": "I'm filling in your name, birth date, and address now."
          },
          {
           "question": "How do you want to answer the required demographic questions about your race and ethnicity?",
@@ -2863,7 +2909,10 @@
            "safety": 0,
            "reversibility": 1,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the form require race and ethnicity answers?",
+          "say_example": "Answered the race and ethnicity questions from your details"
          },
          {
           "question": "What intake details and forms do you need to complete to finalize the booking?",
@@ -2879,7 +2928,10 @@
            "safety": 2,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Which intake fields does the finalize page require?",
+          "say_example": "Set intake type, your number, and health card - opened the new patient form"
          }
         ]
        },
@@ -2901,7 +2953,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the form ask for an email for notifications?",
+          "say_example": "Used <your gmail> for confirmations"
          },
          {
           "question": "Which phone number should you enter?",
@@ -2917,7 +2972,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the form ask for a phone number?",
+          "say_example": "Used your number ending <4821>"
          },
          {
           "question": "Who should you list as your emergency contact, and what is their phone number?",
@@ -2933,7 +2991,10 @@
            "safety": 2,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the form require an emergency contact name and number?",
+          "say_example": "They want an emergency contact - who the clinic calls if something goes wrong during a visit. Who should that be?"
          }
         ]
        },
@@ -2959,7 +3020,10 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Which insurance and extra fields does the form ask for?",
+          "say_example": "Entered your insurance - the vehicle info request was odd, noted it"
          },
          {
           "question": "What are my medical and prescription insurance details, and what is my relationship to the policyholder?",
@@ -2975,7 +3039,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Which insurance card fields does the form require?",
+          "say_example": "This form wants numbers off your insurance card - member ID and the pharmacy codes. Read them to me when you have the card."
          }
         ]
        },
@@ -2997,10 +3064,13 @@
            "safety": 2,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the page say which fields existing patients should fill?",
+          "say_example": "Followed the site's rule - SSN and birth date only, names left blank"
          },
          {
-          "question": "Which time slot do you want to select, and are the patient's details correct?",
+          "question": "Do the patient details entered match the person this booking is for?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
@@ -3013,7 +3083,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "if-wrong",
+          "check": "Do the SSN and date of birth entered match the intended patient's?",
+          "say_example": "Before this ties to a medical record - the birth date on screen isn't the one you gave me. Fixing it."
          },
          {
           "question": "Are the correct patients listed and do you need to view their profiles?",
@@ -3029,7 +3102,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "if-wrong",
+          "check": "Which patient names does the Scheduled Patients list show?",
+          "say_example": "The visit list shows <Steven> and <Angela>. You only asked for <Steven>. Taking <Angela> off before booking."
          },
          {
           "question": "How many family members are you booking this appointment for?",
@@ -3045,7 +3121,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the page have a family-members count dropdown?",
+          "say_example": "Set it to <2> - you and <your husband>"
          },
          {
           "question": "If the system finds an existing patient record matching your details, should you link to it or create a new profile?",
@@ -3061,23 +3140,10 @@
            "safety": 2,
            "reversibility": 2,
            "recovery": 2
-          }
-         },
-         {
-          "question": "Should you remove this patient from the appointment record?",
-          "cluster": "undo",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The Scheduled Patients section displays a red remove button next to the patient's details, allowing you to delete them if the wrong person is listed.",
-          "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct individual is scheduled for the appointment before finalizing.",
-          "costDims": {
-           "money": 0,
-           "privacy": 1,
-           "thirdParty": 1,
-           "safety": 1,
-           "reversibility": 2,
-           "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page show an existing patient record matching these details?",
+          "say_example": "The system found an old file for you here. Link to it and your history carries over. A new file starts clean but splits your records. Which?"
          }
         ]
        }
@@ -3101,7 +3167,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which fields does the form mark required versus optional?",
+        "say_example": "Filled the required ones, skipped the optional demographics"
        },
        {
         "question": "Do you want to enter your passport number?",
@@ -3117,7 +3186,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the form ask for a passport number?",
+        "say_example": "Entered your passport number"
        },
        {
         "question": "What should you enter as the passport issue place?",
@@ -3133,7 +3205,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the form ask where the passport was issued?",
+        "say_example": "Issue place set to <Taipei>, off your passport"
        },
        {
         "question": "What is your passport expiry date?",
@@ -3149,7 +3224,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the form ask for the passport expiry date?",
+        "say_example": "Entered the expiry from your passport"
        },
        {
         "question": "Which visa type do you have?",
@@ -3165,7 +3243,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which visa types does the form list?",
+        "say_example": "Chose <Work Visa>, matching your case"
        },
        {
         "question": "Which position should you select for the visa application?",
@@ -3181,7 +3262,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which positions does the dropdown list?",
+        "say_example": "Selected <Engineer> - the job on your application"
        },
        {
         "question": "What personal and passport information should you provide?",
@@ -3197,7 +3281,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which identification fields does the form require?",
+        "say_example": "Filled passport and visa details from your documents"
        },
        {
         "question": "What are the case details for your visa application?",
@@ -3213,23 +3300,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "What petitioner details do you want to provide?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires the petitioner's full name, relationship, contact information, and intended port of entry to proceed.",
-        "whatTheAgentLoses": "You lose the ability to ensure your personal contact information and relationship details are entered accurately.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Which case fields does the form require?",
+        "say_example": "This form wants your <NVC case number> and <interview date>. Those live on your visa letters. Read them to me, or point me at the letter."
        },
        {
         "question": "What type of migration are you undertaking?",
@@ -3245,7 +3319,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the form ask temporary or permanent migration?",
+        "say_example": "Marked <permanent>, per your application"
        }
       ]
      },
@@ -3253,38 +3330,6 @@
       "id": "6.4",
       "label": "Answer history and consent items",
       "questions": [
-       {
-        "question": "How should I answer the additional questions about your US Tourist Visa, previous medical exams, and COVID-19 vaccination history?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The form requires mandatory answers about your US Tourist Visa and COVID-19 vaccine status, including specific dose dates, to proceed with the booking.",
-        "whatTheAgentLoses": "You lose the ability to accurately report your personal vaccination dates and visa history required by the clinic.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Do you need to update your COVID-19 vaccination history?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen prompts you to review your immunizations and provides options to either update your COVID-19 vaccination date or indicate no changes.",
-        "whatTheAgentLoses": "You lose the ability to ensure your healthcare provider receives your accurate and up-to-date COVID-19 vaccination dates.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
        {
         "question": "How should you answer the social history and COVID-19 symptom screening questions?",
         "cluster": "hand over",
@@ -3299,7 +3344,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which history and symptom questions does the page require?",
+        "say_example": "Health questions now - current symptoms, habits, what's changed since last time. Those answers are yours, not mine. I'll read each one out."
        },
        {
         "question": "Should you expand and review all of your social history answers before clicking complete?",
@@ -3315,103 +3363,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Should you update your recorded health conditions and surgical history?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays your active conditions and surgical history, with a note that edits here will notify the clinic but not automatically update your chart.",
-        "whatTheAgentLoses": "You lose the chance to personally review your sensitive medical history and decide which health updates to share with the clinic.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 3,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Should you review or update your active and discontinued medications?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays your active and discontinued medications, and any updates made here will notify the office to adjust your chart.",
-        "whatTheAgentLoses": "The user loses the ability to personally verify and correct their medication history before the appointment.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 3,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Should you add any allergies to your profile before continuing?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen indicates there are no allergies on file and provides an '+ Add Allergy' button to update your medical history.",
-        "whatTheAgentLoses": "You lose the ability to personally ensure your specific medical allergies are accurately reported to the healthcare provider.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 3,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Do any of these severe allergy conditions apply to me?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The booking system requires you to disclose any history of anaphylaxis or severe vaccine reactions to ensure your safety during the visit.",
-        "whatTheAgentLoses": "You lose the guarantee that your critical medical history and allergy information is reported accurately to the healthcare provider.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 3,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "How do you want to handle the required privacy and consent forms?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen requires a signature for the Notice of Privacy Practices and Assignment of Benefits forms to proceed with the booking.",
-        "whatTheAgentLoses": "You lose the opportunity to read the privacy practices and understand what you are legally agreeing to before signing.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Do you need to update your allergies on the health history form?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The health history form requires you to review your allergies and explicitly state if there are no changes or if new ones need to be added.",
-        "whatTheAgentLoses": "An agent might incorrectly select 'No Changes' and fail to document a critical new allergy for the medical provider.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 3,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show only part of the saved answers, with an expand control?",
+        "say_example": "Expanded all 13 saved answers before submitting - 8 were hidden"
        },
        {
         "question": "Do you want to read the vaccine fact sheet before continuing?",
@@ -3427,7 +3382,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page present a fact sheet before consent?",
+        "say_example": "There's a <6-page> fact sheet about the <vaccine> before you agree. Want me to read it to you, or just the short version?"
        },
        {
         "question": "What terms are you agreeing to by signing electronically?",
@@ -3443,7 +3401,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "What does the page say the signature covers?",
+        "say_example": "This box is a real signature. It covers <agreeing to treatment, owing the bill, sharing records>. Sign it, or hear it in full first?"
        }
       ]
      },
@@ -3452,23 +3413,7 @@
       "label": "Pass the human check",
       "questions": [
        {
-        "question": "Do you want to agree to the declarations and solve the CAPTCHA to proceed?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a mandatory consent checkbox and a CAPTCHA that must be completed to continue the registration.",
-        "whatTheAgentLoses": "The user loses the chance to personally review and agree to the medical declarations.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "What validation code do you see in the image?",
+        "question": "Does the CAPTCHA get handed back to you rather than left to the agent's image recognition, which can fail on distorted text and block the booking?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -3481,7 +3426,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show a human-verification challenge?",
+        "say_example": "The site wants proof a person is here - a code from a picture. That one's yours. There's an audio option if that's easier."
        },
        {
         "question": "Do you need to correct the mismatched captcha to submit the appointment?",
@@ -3497,7 +3445,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show the verification rejected in red?",
+        "say_example": "The human-check didn't take, so nothing was submitted yet. Let's try it again."
        }
       ]
      }
@@ -3507,40 +3458,6 @@
     "id": "7",
     "label": "Confirm the booking",
     "note": "7.1 to 7.3 in the order the page asks, then 7.5. if the system rejects it: 7.4, then 7.5 again. 7.6 wherever the venue bills at booking - after the slot pick (CMC), right after the form (Wafid), or not at all (most portals). a countdown can be running during any of this.",
-    "questions": [
-     {
-      "question": "Are the appointment details correct, and what should you enter as the main reason for your visit?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "You must verify the provider, time, and $20 copay, and provide the main reason for your visit before clicking the Schedule button.",
-      "whatTheAgentLoses": "You lose the opportunity to verify the final appointment details, acknowledge the copay, and specify exactly what you want the doctor to address.",
-      "costDims": {
-       "money": 1,
-       "privacy": 1,
-       "thirdParty": 2,
-       "safety": 2,
-       "reversibility": 2,
-       "recovery": 2
-      }
-     },
-     {
-      "question": "Is the reason for your visit entered correctly, and are you ready to schedule the appointment?",
-      "cluster": "approve",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "You need to ensure your medical concern is accurately described and submit the request before your reserved time slot expires at 7:56 AM.",
-      "whatTheAgentLoses": "You lose the opportunity to personally verify how your medical concern is communicated to the doctor and to choose your own waitlist preferences.",
-      "costDims": {
-       "money": 1,
-       "privacy": 1,
-       "thirdParty": 2,
-       "safety": 2,
-       "reversibility": 2,
-       "recovery": 2
-      }
-     }
-    ],
     "children": [
      {
       "id": "7.1",
@@ -3560,7 +3477,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which procedures does the page show selected?",
+        "say_example": "Kept just the <TB test> - nothing extra selected"
        },
        {
         "question": "Do you acknowledge the warning that this is a phone appointment?",
@@ -3576,26 +3496,13 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does a notice say this is a phone appointment?",
+        "say_example": "Important one - this visit is a phone call. Don't go to the clinic. They call you at <your number>."
        },
        {
-        "question": "Do you want to edit any of the appointment details or start over before confirming?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays a summary of the visit reason, location, provider, and time with individual edit links and a red start over button, offering a final chance to correct mistakes.",
-        "whatTheAgentLoses": "You lose the final opportunity to review the appointment details and catch any mistakes before the booking is officially submitted.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Does the ZIP code shown during the review match the 27711 entered earlier on the demographics page?",
+        "question": "Do the values on the review page match what was entered earlier in the flow?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
@@ -3608,71 +3515,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Are the appointment details correct and do you meet the visit instructions?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The review page requires you to verify the date, time, location, and specific visit instructions, such as ensuring it has been a full year since your last mammogram, before finalizing the booking.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the appointment details and ensure you comply with the specific medical instructions for the visit.",
-        "costDims": {
-         "money": 1,
-         "privacy": 1,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Is the appointment for you or someone else, and are the summary details correct?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays the provider, date, time, and patient details, requiring you to verify if the booking is for yourself or another person before confirming.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that the appointment is being booked under the correct patient's name and contact information.",
-        "costDims": {
-         "money": 1,
-         "privacy": 2,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Are the hospital, department, and appointment date correct before you confirm?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The pop-up dialogue displays the selected hospital, department, and date, which must be verified to avoid booking the wrong appointment.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify that the correct hospital, department, and date were selected before finalizing the booking.",
-        "costDims": {
-         "money": 1,
-         "privacy": 1,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Are the appointment details correct, what procedures are included, and what payment terms are you agreeing to?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Reviewing the summary ensures the patient details, time, and specific procedures like the QuantiFERON TB Blood Test are accurate before you accept the Private Pay terms.",
-        "whatTheAgentLoses": "Letting an agent handle this means you lose the chance to personally verify the exact procedures being booked and the financial terms you are committing to.",
-        "costDims": {
-         "money": 2,
-         "privacy": 1,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does each value on the review page match what was entered earlier?",
+        "say_example": "The review page changed your ZIP from <27711> to <27511>. Putting back what you gave me before this books."
        }
       ]
      },
@@ -3694,7 +3540,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the visit reason on the form match the one selected earlier?",
+        "say_example": "The form quietly reset your reason to <Illness>. You're booking an <annual physical>. Fixed it."
        }
       ]
      },
@@ -3716,7 +3565,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page require agreeing to terms before submitting?",
+        "say_example": "Agreed to the site terms - required to submit. Link's in the report"
        },
        {
         "question": "Should you check the box to confirm the information is true and accurate?",
@@ -3732,7 +3584,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page require confirming the info is true and accurate?",
+        "say_example": "Checked the accuracy box after re-reading the details"
        },
        {
         "question": "Are there any critical warnings about duplicate bookings you need to be aware of?",
@@ -3748,26 +3603,13 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page warn that duplicate or unpaid bookings get cancelled?",
+        "say_example": "Their rule - book this twice, or don't pay, and the system cancels it on its own. So one booking, and we pay today."
        },
        {
-        "question": "Do you agree to the $55.00 private pay fee required to finalize this booking?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen required checking a box to acknowledge a $55.00 payment due at check-in before the submit button would become active.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether you are willing to accept the $55.00 out-of-pocket fee required at check-in.",
-        "costDims": {
-         "money": 2,
-         "privacy": 1,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "What is the clinic's cancellation policy, and do you agree to the required notice period to avoid fees?",
+        "question": "What is the clinic's cancellation policy?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -3780,7 +3622,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "What cancellation policy does the page state?",
+        "say_example": "You can cancel free with <24 hours>' notice. Less than that and they charge <a fee>."
        },
        {
         "question": "Are there any visually minimized, pre-checked boxes at the bottom of the review page authorizing data sharing or marketing communications?",
@@ -3796,7 +3641,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Are any consent checkboxes already ticked near the bottom of the page?",
+        "say_example": "Unticked two pre-checked boxes - marketing and data sharing"
        }
       ]
      },
@@ -3805,7 +3653,7 @@
       "label": "Fix the rejected fields",
       "questions": [
        {
-        "question": "Did the form submit successfully, or do you need to correct an error?",
+        "question": "Did the form go through, or is there an error to fix?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": true,
@@ -3818,7 +3666,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "After submitting, does the page show an error?",
+        "say_example": "First submit bounced - a slot wasn't set. Fixed it and resubmitted"
        }
       ]
      },
@@ -3840,10 +3691,13 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "What summary does the page show for the booking?",
+        "say_example": "Ready to book. <Dr. Rao>, <Wednesday 9:40>, at <the Harlan clinic>, for <you>. <$20> copay at the visit. Free to cancel until <Tuesday>. Press to book, or say change."
        },
        {
-        "question": "How should you respond to the countdown timer on the review page?",
+        "question": "Does the page show a time limit on the held slot?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
@@ -3856,26 +3710,13 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show a countdown or hold timer?",
+        "say_example": "No rush from me, but the page holds this slot for <10 minutes>. After that we pick again."
        },
        {
-        "question": "Are you sure you want to finalize the appointment for this date and doctor?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays a final confirmation dialog asking if you are sure you want to book the General Doctor on 19/11/2024.",
-        "whatTheAgentLoses": "You lose the final chance to verify the date and provider details before the booking is officially submitted.",
-        "costDims": {
-         "money": 2,
-         "privacy": 2,
-         "thirdParty": 3,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Is the schedule button active so you can submit the form?",
+        "question": "If 'SCHEDULE APPOINTMENT' is still greyed out, which required details does the form mark as missing?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
@@ -3888,7 +3729,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Is the submit button enabled?",
+        "say_example": "Submit was greyed out - found the missing field and filled it"
        }
       ]
      },
@@ -3898,7 +3742,7 @@
       "note": "7.6.1, then 7.6.2, then 7.6.3.",
       "questions": [
        {
-        "question": "Are you comfortable paying the 290 rupees fee, and which payment method do you want to use?",
+        "question": "Do you want to pay the booking fee shown, and by which method?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -3911,7 +3755,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "What amount and payment methods does the page show?",
+        "say_example": "It's <290 rupees> to book. Pay by card, or <UPI>? Only you say yes to money."
        }
       ],
       "children": [
@@ -3933,7 +3780,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the account page show an outstanding balance?",
+          "say_example": "The account shows an old balance of <$40> on top of today's fee. Leave that for later, or handle it too?"
          },
          {
           "question": "Do you accept the specific medical examination fee required for your age group?",
@@ -3949,7 +3799,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "What fee does the page list for the patient's age group?",
+          "say_example": "Fee is <18,540 pesos> - the 15-and-over rate"
          },
          {
           "question": "Which invoices do you want to select for payment?",
@@ -3965,23 +3818,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
-         },
-         {
-          "question": "Are the procedure and payment details correct?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen shows the QuantiFERON TB Blood Test is currently set to be paid by the agency, but you can use the dropdown to change the payer to the patient if needed.",
-          "whatTheAgentLoses": "Delegating this means you lose the opportunity to verify that the correct party is being billed for your specific medical procedures.",
-          "costDims": {
-           "money": 2,
-           "privacy": 1,
-           "thirdParty": 2,
-           "safety": 2,
-           "reversibility": 2,
-           "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Which invoices does the page list with checkboxes?",
+          "say_example": "There's an unpaid invoice here for <$1.68> besides the booking. Pay it now too, or just the visit?"
          },
          {
           "question": "Do you want to bill this procedure to the agency or pay for it yourself?",
@@ -3997,10 +3837,13 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Who does the page show as the payer?",
+          "say_example": "The page has <the agency> paying for this test. If that's wrong, the <$55> lands on you. Leave it, or switch to self-pay?"
          },
          {
-          "question": "Is there a tooltip or disclaimer icon next to the estimated copay or fee?",
+          "question": "Is the copay shown a firm amount, or does a disclaimer mark it as only an estimate?",
           "cluster": "",
           "moment": null,
           "moneyMoving": false,
@@ -4013,7 +3856,10 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Does an info icon or tooltip say the amount is an estimate?",
+          "say_example": "Small print behind an icon - the <$20> is only an estimate. The real bill can come out different."
          },
          {
           "question": "Is the credit card being charged immediately, or is it only being held on file to enforce the cancellation policy?",
@@ -4029,10 +3875,13 @@
            "safety": 1,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the page say when the card is charged?",
+          "say_example": "Card is held, not charged - they bill at the visit"
          },
          {
-          "question": "Did you verify that the consultation fee remained consistent from the booking summary through to the final confirmation?",
+          "question": "Is the consultation fee the same on the summary, the payment page, and the confirmation?",
           "cluster": "facts",
           "moment": "Completion",
           "moneyMoving": true,
@@ -4045,7 +3894,10 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "if-wrong",
+          "check": "Is the fee the same on the summary, the payment page, and the confirmation?",
+          "say_example": "The fee grew on the way - <290> at the summary, <340> at the payment page. Stopping until we know why."
          }
         ]
        },
@@ -4053,86 +3905,6 @@
         "id": "7.6.2",
         "label": "Pick a payment method",
         "questions": [
-         {
-          "question": "Which payment method do you want to use to pay the $75.00 balance and secure this appointment?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen shows a $75.00 balance and a countdown timer, meaning the reservation will expire if payment details are not entered promptly.",
-          "whatTheAgentLoses": "The user loses the ability to choose which credit card is charged or to decide if they are comfortable paying an upfront fee for the appointment.",
-          "costDims": {
-           "money": 2,
-           "privacy": 1,
-           "thirdParty": 2,
-           "safety": 0,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "Do you want to use the saved VISA ending in 1111, add a new card, or pay your balance?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen showed a saved VISA ending in 1111 alongside options to add a new card or pay an outstanding balance.",
-          "whatTheAgentLoses": "The user loses control over which payment method is used and whether to address outstanding charges before confirming.",
-          "costDims": {
-           "money": 2,
-           "privacy": 1,
-           "thirdParty": 2,
-           "safety": 0,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "Which UPI ID do you want to use for the PhonePe payment?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen requires entering and verifying a PhonePe UPI ID to process the payment for the appointment.",
-          "whatTheAgentLoses": "The user loses the ability to choose which specific bank account is charged for the appointment fee.",
-          "costDims": {
-           "money": 2,
-           "privacy": 1,
-           "thirdParty": 2,
-           "safety": 0,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "Which credit card do you want to use to pay the $10.00 fee?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen shows a $10.00 payment is required to proceed, along with fields for credit card details.",
-          "whatTheAgentLoses": "The user loses control over which financial account is charged for the appointment.",
-          "costDims": {
-           "money": 2,
-           "privacy": 1,
-           "thirdParty": 2,
-           "safety": 0,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
-         {
-          "question": "Are you willing to enter your credit card details to pay the $1.68 fee?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen shows a payment gateway asking for your credit card information to process a $1.68 charge.",
-          "whatTheAgentLoses": "You lose the chance to withhold your sensitive payment information or question the unexpected charge before proceeding.",
-          "costDims": {
-           "money": 1,
-           "privacy": 2,
-           "thirdParty": 2,
-           "safety": 0,
-           "reversibility": 2,
-           "recovery": 2
-          }
-         },
          {
           "question": "Are you authorizing a credit card to be kept on file for future balances or no-show fees?",
           "cluster": "",
@@ -4147,7 +3919,10 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page say the card is kept on file for future charges?",
+          "say_example": "Saving this card lets them charge it later too - no-shows, leftover bills. That's part of the deal here. Still OK?"
          },
          {
           "question": "How are you required to pay the medical fee?",
@@ -4163,7 +3938,10 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page say payment must happen by bank transfer or printed form?",
+          "say_example": "This one can't be paid online. The page wants a bank transfer with a printed form. I'll get the form ready - the transfer is yours to make."
          }
         ]
        },
@@ -4172,7 +3950,7 @@
         "label": "Authorize the payment",
         "questions": [
          {
-          "question": "Is your UPI ID successfully verified so you can proceed with the payment?",
+          "question": "Is your UPI ID verified so you can pay?",
           "cluster": "facts",
           "moment": "Now",
           "moneyMoving": true,
@@ -4185,10 +3963,13 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the page show the payment method as verified?",
+          "say_example": "UPI ID verified - green badge on the page"
          },
          {
-          "question": "How will you approve the ₹290.00 payment request in your PhonePe app before the timer expires?",
+          "question": "Do you want to approve the payment request waiting in your payment app before it expires?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": true,
@@ -4201,10 +3982,13 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "gate",
+          "check": "Does the page show a pending payment request and a time limit?",
+          "say_example": "The payment request is waiting in your <PhonePe> app - <290 rupees>, and it expires in <15 minutes>. That press has to be yours. Tell me when it's done."
          },
          {
-          "question": "Has the payment been processed successfully, and how do you view the appointment details?",
+          "question": "Did the payment go through, and where do you see the appointment details?",
           "cluster": "receipts",
           "moment": "Completion",
           "moneyMoving": true,
@@ -4217,7 +4001,10 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the page say the payment succeeded?",
+          "say_example": "Payment went through - opened the appointment details"
          }
         ]
        }
@@ -4248,23 +4035,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Does the confirmation screen show the exact phone number and health card details you entered?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The final confirmation must match the provided patient details, but the screen at 04:41 shows a blank form instead of the claimed input.",
-        "whatTheAgentLoses": "The user loses the certainty that their appointment is tied to their actual contact and insurance information.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "What booked details does the confirmation show?",
+        "say_example": "Booked. <Dr. Kumari>, <tomorrow 6:15>, a <phone> visit. Reference <A123>. Free to cancel until <Monday>."
        },
        {
         "question": "Does the stated arrival time correctly account for the early arrival instructions?",
@@ -4280,26 +4054,13 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the confirmation state an arrival time earlier than the appointment?",
+        "say_example": "Arrive by <10:15> for the <10:30> visit - it's in the readback and the report"
        },
        {
-        "question": "Does the confirmation screen show the specific visit reason you entered earlier?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Verifying that your detailed visit reason appears on the confirmation ensures the clinic actually received the correct context for the appointment.",
-        "whatTheAgentLoses": "You lose the peace of mind of confirming that the provider was successfully informed about the specific medical issue.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Does the confirmed appointment date and time match the slot you originally selected?",
+        "question": "Does everything on the confirmation match what was actually chosen - date, time, place, patient, fee?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": true,
@@ -4312,58 +4073,13 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Do the date, time, place, patient, and fee on the confirmation match what was chosen?",
+        "say_example": "The confirmation says <September 20 at 1>, but we picked <October 18 at 11:30>. That's not what you agreed to. I'm finding out which one is real."
        },
        {
-        "question": "Does the location address and phone number on the confirmation match what was shown during scheduling?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The address and phone number shown during scheduling at 1213 Garfield Ave differ from the contact information provided on the final confirmation graphic at 1220 Chatburn Ave.",
-        "whatTheAgentLoses": "The user risks showing up at the wrong clinic address or calling the wrong phone number for their appointment.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Are the details of my newly booked appointment correct?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Verifying the appointment details for Dr. Venu Kumari at 6:15 PM tomorrow ensures the booking was successful and shows your options to reschedule or cancel.",
-        "whatTheAgentLoses": "You lose the immediate peace of mind of personally verifying the confirmation details and knowing exactly where and when your appointment is.",
-        "costDims": {
-         "money": 1,
-         "privacy": 1,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Did you see the confirmation message stating your appointment has been scheduled?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen showed a success modal confirming the appointment was scheduled, which is the final proof of a completed booking.",
-        "whatTheAgentLoses": "You lose the immediate peace of mind of seeing the final success message confirming your medical visit is officially on the calendar.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Did you notice the warning that the patient's age exceeds the department's typical limit?",
+        "question": "Does the confirmation carry a warning about the patient alongside the success message?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -4376,7 +4092,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the confirmation show a warning banner about the booking?",
+        "say_example": "It booked, but with a red flag - the page says the patient is over the children's-department age limit. They could turn you away at the door. Want me to rebook in the adult clinic?"
        }
       ]
      },
@@ -4398,7 +4117,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page offer a confirm-attendance button?",
+        "say_example": "Confirmed attendance - saves you the reminder call"
        }
       ]
      },
@@ -4406,22 +4128,6 @@
       "id": "8.3",
       "label": "Save the proof",
       "questions": [
-       {
-        "question": "What details should you verify on the appointment confirmation PDF?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays a PDF document containing the final appointment details, which must be reviewed to ensure the time, doctor, and contact information are correct.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify the final appointment details and save the confirmation document for your own records.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
        {
         "question": "How do you want to save a copy of your appointment confirmation?",
         "cluster": "select",
@@ -4436,7 +4142,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page offer print or email options for the confirmation?",
+        "say_example": "Saved the confirmation PDF and emailed you a copy"
        },
        {
         "question": "Does the patient ID in the downloaded confirmation filename match the ID printed on the document?",
@@ -4452,23 +4161,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Are the details on the generated appointment slip correct, including the assigned medical center?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The PDF appointment slip displays critical details like the payment status and the assigned medical center, which must be verified for accuracy.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct medical center and patient details were captured on the final appointment slip.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the ID in the file name match the ID inside the document?",
+        "say_example": "Filename and slip carry the same patient ID - right file"
        },
        {
         "question": "How do you want to save the official receipt and payment reference code?",
@@ -4484,7 +4180,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the receipt show the amount and a reference code?",
+        "say_example": "Saved the receipt - <18,540 pesos>, reference <R-7788>"
        }
       ]
      },
@@ -4506,10 +4205,13 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page say an SMS confirmation was sent?",
+        "say_example": "They texted your appointment ID - show that message at the front desk"
        },
        {
-        "question": "How do you verify the appointment confirmation details?",
+        "question": "Does the confirmation email show the same date, time, and location you selected?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
@@ -4522,7 +4224,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page say a confirmation email was sent?",
+        "say_example": "Confirmation email should be in your inbox - the reference number's in it"
        },
        {
         "question": "What are the confirmed details, costs, and next steps for your appointment?",
@@ -4538,7 +4243,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "What details does the confirmation email list?",
+        "say_example": "The email has the date, fees, and a PIN you'll need for the medical form - all in the report"
        }
       ]
      },
@@ -4560,55 +4268,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Do the appointment alerts on the dashboard agree with the visit history page?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The dashboard shows an 'Appointment Canceled' alert for Feb 27, contradicting the 'Appointments and Visits' page which claims there are no past visits.",
-        "whatTheAgentLoses": "You lose the chance to spot system inconsistencies that could leave you uncertain about your true appointment status.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Did the Well Guide checklist update to reflect your newly booked appointment?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The dashboard initially showed a '1/5 completed' checklist, so checking if it updates confirms the system properly registered the annual physical.",
-        "whatTheAgentLoses": "You lose the reassurance of seeing your personal health dashboard accurately track your preventative care progress.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Are you looking at the correct tile's badge to verify the appointment count?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The red badge showing '64' is actually located on the Messages tile rather than the Appointments tile, meaning the initial assumption about the appointment count was incorrect.",
-        "whatTheAgentLoses": "The user loses an accurate understanding of their account status if the agent misidentifies which feature has pending notifications.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the newly booked appointment appear in the site's upcoming list?",
+        "say_example": "The site's own list doesn't show the booking. The confirmation may not have stuck. I'm not calling this done until it appears."
        }
       ]
      }
@@ -4637,7 +4300,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which appointment does the page show with a cancel option?",
+        "say_example": "Cancelling <Dr. Mathias, October 5>. Once it's gone the slot may not come back. Your call - cancel it?"
        }
       ]
      },
@@ -4646,7 +4312,7 @@
       "label": "Complete pre-visit check-in",
       "questions": [
        {
-        "question": "Do you want to review your intake forms or contact info before booking?",
+        "question": "Are the intake forms and contact details on file still current before a new visit is booked?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -4659,23 +4325,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Which optional contact details and medical history questions do you provide?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The intake form includes optional fields for occupation and international addresses alongside mandatory TB screening questions.",
-        "whatTheAgentLoses": "You lose the ability to decide which optional personal details to withhold and how to accurately report your specific medical history.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the sidebar list intake forms and contact info sections?",
+        "say_example": "Checked the intake and contact pages - up to date"
        },
        {
         "question": "Is your insurance information correct and do you want to use it for this visit?",
@@ -4691,23 +4344,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Are your health issues up to date and are you ready to finish the eCheck-In?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen shows that you have no health issues on file and requires you to check a box confirming this is correct before clicking FINISH.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify or update your medical history before the appointment.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 1,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page ask to confirm the guarantor and bill insurance?",
+        "say_example": "Confirmed you as guarantor and billed your <Aetna>"
        },
        {
         "question": "Should you complete the eCheck-in and pay the copay now, or just return to your visits list?",
@@ -4723,7 +4363,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page offer eCheck-in with a copay payable now?",
+        "say_example": "They offer check-in now - it includes paying the <$20> copay today. Do it now and skip the front-desk line, or pay there?"
        },
        {
         "question": "Do you want to fill out the online intake form or subscribe to the calendar now?",
@@ -4739,10 +4382,13 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which post-booking options does the page list?",
+        "say_example": "Filled the intake form - calendar file saved for you"
        },
        {
-        "question": "Did you confirm that the eCheck-In process was successfully completed?",
+        "question": "Did the site confirm the eCheck-In finished?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
@@ -4755,7 +4401,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page say eCheck-in completed?",
+        "say_example": "eCheck-in done - the site says you're all set"
        }
       ]
      },
@@ -4781,7 +4430,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which reminder settings does the page show?",
+        "say_example": "Left reminders on for appointments"
        },
        {
         "question": "How do you want to receive appointment reminders and health updates?",
@@ -4797,7 +4449,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which notification channels does the page offer?",
+        "say_example": "Set text reminders - skipped the unencrypted email option for health updates"
        },
        {
         "question": "Do you want to receive appointment notifications by email, text, or both?",
@@ -4813,7 +4468,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show email and text checkboxes with a consent note?",
+        "say_example": "Ticked text only - the consent note is in the report"
        }
       ]
      },
@@ -4835,7 +4493,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show a results PDF button?",
+        "say_example": "Downloaded your results PDF - status reads FIT"
        },
        {
         "question": "Do you want to search for your medical results using your passport number or your Wafid slip number?",
@@ -4851,10 +4512,13 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which lookup methods does the results page offer?",
+        "say_example": "Looked up your results with the passport number"
        },
        {
-        "question": "Does the downloaded medical certificate accurately reflect your personal details and 'FIT' status?",
+        "question": "Does the certificate match your personal details and 'FIT' status?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
@@ -4867,7 +4531,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Do the name, passport number, and status on the certificate match yours?",
+        "say_example": "The certificate has someone else's passport number on it. That paper is what the embassy reads. Getting it corrected."
        }
       ]
      }

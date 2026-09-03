@@ -1,0 +1,1990 @@
+{
+ "task": "find and book a tutor on a tutoring platform (Preply, Wyzant, italki, Varsity Tutors, Cambly, Outschool): search by subject or language, compare tutors on rates, reviews, and intro videos, pick one, and book or schedule a trial or lesson through to the booking confirmation; complete when the booked-lesson confirmation is on screen. Surface pinned: the CLIENT-side booking flow — tutor-side content (how to become a tutor, earnings) is off-task.",
+ "tree": {
+  "id": "0",
+  "label": "Find and book a tutor",
+  "note": "1 where the platform demands an account - at the door (jHfA, i3ok, XyTV, KIjj, cDu8, 7RrY), or only when the booking button is pressed (CWIs, cDu8's email gate, 7jo_'s verify wall); half the keepers arrive signed in. 2 before any lesson on the credit platforms (jHfA, i3ok), when the wall fires inside 7 (jMRd), or after a trial to prepay hours (zym-). then 3, then 4 as far as the user bothers - filters are opened far more often than applied. 5 picks one tutor and 5.5 reads it; a profile that fails loops back to 5.1. 6 configures the lesson, with 6.6 for the time. 7 commits in one of three ways set by the platform: pay from the wallet and wait for the tutor (italki), pay at a checkout (Preply, the plan credit in 7RrY), or send a message request and pay later (Wyzant). 8 reads whatever follows, which on italki and Wyzant is a pending request. two keepers skip 3 to 5 and start on a chosen tutor (htcf, jHfA's recommended shortcut).",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the platform",
+    "note": "1.1, then 1.2 or 1.3; 1.4 to 1.6 on a new account as the platform asks. 1.7 when the gate fires later, at the booking button - it can interrupt 7. 1.8 on the one keeper who lands on the wrong account type. 1.9 where offered, before the search, on the one keeper who opens settings.",
+    "questions": [
+     {
+      "question": "Do you already have an account here, or should I set up a new one?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen requires authentication to view the 40,000+ tutor profiles, offering options to sign up via email or social accounts, or to sign in to an existing account.",
+      "whatTheAgentLoses": "The user loses the choice of which personal account or authentication method is linked to their tutoring sessions.",
+      "speak": "gate",
+      "check": "Does the page show a sign-in or sign-up prompt, and which options does it list (email, Google, Apple, Facebook)?",
+      "say_example": "This site needs an account before it shows any tutors. Do you already have one here? Say sign in, or say new account and I'll set one up."
+     }
+    ],
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Reach the platform",
+      "questions": [
+       {
+        "question": "Does the sign-up page carry the free first hour promotion shown on the homepage?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The current signup screen does not explicitly mention the free first hour, so navigating to the homepage might be necessary to trigger the promotional offer.",
+        "whatTheAgentLoses": "You lose the financial benefit of a promotional discount if the agent defaults to the standard signup flow instead of hunting for the special offer.",
+        "speak": "never",
+        "check": "Does the sign-up page mention the free first hour promotion?",
+        "say_example": "Saw the free first hour promised on the homepage but not on the sign-up page. Checked at checkout whether it landed."
+       },
+       {
+        "question": "Does the page promise a credit bonus for arriving through this link?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator explained that navigating through this specific link provides a $10 credit bonus when you purchase your first class.",
+        "whatTheAgentLoses": "You lose the $10 promotional credit if the agent navigates directly to the platform instead of using the referral link.",
+        "speak": "never",
+        "check": "Does the page show a credit bonus for arriving through this link, and how much?",
+        "say_example": "Came in through a link that promised <10> credits. Checked at checkout whether it was applied."
+       },
+       {
+        "question": "Is the site signed into your existing account, or is it creating a new one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The top navigation bar displays a 'Log in' link alongside options like 'Start free', which is necessary to access your saved profile and payment details for booking.",
+        "whatTheAgentLoses": "Delegating this step means the user loses the ability to ensure the agent signs into their specific existing account rather than accidentally creating a new one.",
+        "speak": "if-wrong",
+        "check": "Does the header show a signed-in account name, or still show 'Log in' / 'Start free' links, and does the name match the person's?",
+        "say_example": "I'm on a create-account page, but you said you already have an account here. Switching to sign in so your saved card and history are there."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Sign in",
+      "questions": [
+       {
+        "question": "Is the Facebook account it wants to sign in with yours?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a prompt asking if you want to continue authenticating with a previously used Facebook account to access Preply.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to use their linked social media profile or a different method to authenticate their account.",
+        "speak": "if-wrong",
+        "check": "What name does the 'Continue as' prompt show?",
+        "say_example": "Facebook wants to continue as <name>. That's not you, so I've stopped. Which account should I use?"
+       },
+       {
+        "question": "Which sign-in option should I use? You'll type the password yourself.",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The sign-in form requires an email and password to authenticate your identity before you can proceed with the booking.",
+        "whatTheAgentLoses": "Delegating this means you lose control over which specific account is used to book the tutor and whether the session is kept signed in on the device.",
+        "speak": "gate",
+        "check": "Does the page show email and password fields, and which other sign-in options are listed?",
+        "say_example": "The sign-in form is up. It offers <Google, Apple, or email>. Which one? The password is yours to type. Tell me when you're in."
+       },
+       {
+        "question": "The site says the password didn't match. Do you want to retype it yourself?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays an error message indicating invalid credentials, requiring you to identify the missing password and enter it to successfully authenticate.",
+        "whatTheAgentLoses": "The user loses the ability to securely manage their own login credentials and troubleshoot authentication failures without exposing sensitive passwords to an agent.",
+        "speak": "on-event",
+        "check": "Does the page show an error such as 'credentials do not match' or 'incorrect password'?",
+        "say_example": "The site says the password didn't match. I won't guess at it. The field is yours."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Sign up",
+      "questions": [
+       {
+        "question": "Is the email on the sign-up form spelled right?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Double-checking the email field prevents typos that could lock you out of your new account or cause you to miss booking confirmations.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the account is registered to your exact, correctly spelled email address.",
+        "speak": "if-wrong",
+        "check": "What does the email field contain, and does the page show an error beside it?",
+        "say_example": "The email on the form reads <email>, one letter off from yours. Fixing it before I submit, or the confirmation goes nowhere."
+       },
+       {
+        "question": "What does the sign-up form say you agree to by submitting it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sign-up screen requires your email, name, password, and ZIP code, and clicking the sign-up button automatically binds you to Wyzant's terms of use and privacy policy.",
+        "whatTheAgentLoses": "You lose the opportunity to review the platform's terms of use and privacy policy before your personal information is submitted and the account is created.",
+        "speak": "never",
+        "check": "What text sits beside the sign-up button about terms of use and privacy?",
+        "say_example": "Sign-up asked for name, email, password, ZIP. Submitting agreed to <site>'s terms and privacy policy."
+       },
+       {
+        "question": "Is the sign-up set to a parent account, since the lessons are for a child?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms like Outschool or Varsity Tutors require strict COPPA compliance, meaning lessons for children must be booked through a verified parent account with specific consent, not a standard adult learner profile.",
+        "whatTheAgentLoses": "The user risks having the account banned or the lesson immediately cancelled by the tutor for violating child safety policies if the agent uses a standard profile.",
+        "speak": "if-wrong",
+        "check": "Does the sign-up form show a student age or account type choice, and which option is selected?",
+        "say_example": "This form has you down as an adult learner. The lessons are for <child>, so I'm switching to the parent account option. It will ask a parent to consent, and that part is yours."
+       },
+       {
+        "question": "What name should show on your public profile?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The name entered during registration is often displayed to tutors and potentially on public reviews, requiring a choice between using your real identity or a pseudonym for privacy.",
+        "whatTheAgentLoses": "The user loses control over their privacy if the agent automatically uses their full legal name on a platform where they might prefer anonymity.",
+        "speak": "never",
+        "check": "Does the form say where the display name appears?",
+        "say_example": "Set the display name to <name>. The site shows it to tutors and on public reviews."
+       },
+       {
+        "question": "The new account needs a password. Will you set it yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires a password of 6 or more characters where capitalization matters to proceed with the booking.",
+        "whatTheAgentLoses": "You lose the ability to choose your own secure and memorable password for your new tutoring account.",
+        "speak": "gate",
+        "check": "Which fields does the sign-up form require, what password rule does it state, and what does it say you agree to by submitting?",
+        "say_example": "New account. It needs a name, which shows on your public profile, an email, and a password of <6> or more characters. I'll put <name> and <email>. The password is yours to type. Tell me when it's in and I'll continue."
+       },
+       {
+        "question": "Is the personal-info form marked optional, so it can be skipped?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows an email and personal info form that can be skipped by scrolling down.",
+        "whatTheAgentLoses": "The user loses the choice to withhold optional personal details to protect their privacy during checkout.",
+        "speak": "never",
+        "check": "Does the form label these fields optional or required, and is there a skip or continue button that works without them?",
+        "say_example": "Skipped the optional personal-info form."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Pass the captcha",
+      "questions": [
+       {
+        "question": "A reCAPTCHA is blocking the sign-up. Will you solve it yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a reCAPTCHA grid requiring you to identify specific objects to prove you are human and proceed.",
+        "whatTheAgentLoses": "The user loses the ability to personally solve the visual security puzzle required to bypass the platform's bot protection.",
+        "speak": "gate",
+        "check": "Does the page show a reCAPTCHA or 'prove you're human' challenge?",
+        "say_example": "There's a picture puzzle to prove you're human. That one's yours. Tell me when it's done."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Answer the onboarding questions",
+      "questions": [
+       {
+        "question": "Do you want other learners to be able to contact you for language exchange?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The onboarding modal requires you to specify if you are looking for a paid tutor and whether you want to receive language exchange requests.",
+        "whatTheAgentLoses": "You lose the ability to control your privacy and decide whether your profile is open to unsolicited language exchange requests.",
+        "speak": "never",
+        "check": "Does the onboarding modal ask whether to receive language exchange requests, and which option is selected?",
+        "say_example": "Said no to language exchange requests from other users."
+       },
+       {
+        "question": "The form asks for your program of study and semester. What should I put?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The onboarding form requires specific information like your program of study and semester to unlock the main booking calendar.",
+        "whatTheAgentLoses": "You lose the ability to accurately represent your specific academic background and preferred name on your tutoring profile.",
+        "speak": "gate",
+        "check": "Which required fields on the form are empty, and what are their labels?",
+        "say_example": "The form won't go on without your program and semester. I don't have those. What should I put?"
+       },
+       {
+        "question": "What should I pick for how you heard about them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout form includes a dropdown menu asking how you heard about the platform before allowing you to complete the booking.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report their actual referral source or give credit to the specific person who referred them.",
+        "speak": "never",
+        "check": "Does the form show a 'how did you hear about us' dropdown, and is it required?",
+        "say_example": "Picked Other for how you heard about them."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Verify the email",
+      "questions": [
+       {
+        "question": "Does the dashboard still say your email is unconfirmed after you clicked the link?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Although you clicked the verification link, the dashboard still displays a red warning banner claiming your email is unconfirmed.",
+        "whatTheAgentLoses": "An agent might blindly assume the verification succeeded and fail to resolve the system error that could block the lesson booking.",
+        "speak": "if-wrong",
+        "check": "Does the dashboard still show a banner saying the email is unconfirmed?",
+        "say_example": "You clicked the link, but the site still says your email isn't confirmed. Messages from the tutor may not reach you until it clears. Resend the link, or wait a minute and reload?"
+       },
+       {
+        "question": "The site sent a confirmation link to your inbox. Will you click it yourself?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Wyzant email contains an orange confirmation button that must be clicked to verify your account and ensure you can receive correspondence from your tutor.",
+        "whatTheAgentLoses": "Delegating this step requires granting the agent access to your personal email inbox, which exposes your private messages.",
+        "speak": "gate",
+        "check": "Does the page say a verification link was sent, and to which address?",
+        "say_example": "The site sent a link to <email> and won't go on until it's clicked. That's in your inbox. Tell me when you've pressed it."
+       },
+       {
+        "question": "After the email check, does the site go back to the tutor you were on, or to the dashboard?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Although the screen prompts you with a 'GO TO DASHBOARD' button, using the OS task switcher allows you to bypass the generic dashboard and directly resume your previous search.",
+        "whatTheAgentLoses": "The user loses the seamless continuation of their specific search if the agent blindly clicks the dashboard button and loses the previous page's context.",
+        "speak": "never",
+        "check": "After verification, does the page show the dashboard or the tutor and search you were on?",
+        "say_example": "Went back to <tutor>'s page after the email check sent me to the dashboard."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Clear the booking gate",
+      "questions": [
+       {
+        "question": "This is a tutor account, so it can't book. Do you want a student account made?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform explicitly prevents booking from a tutor account and requires you to acknowledge the error before you can switch account types.",
+        "whatTheAgentLoses": "You lose the awareness that your current account type is invalid for booking and the chance to decide how to set up a student profile.",
+        "speak": "gate",
+        "check": "Does the popup say the account is a tutor account and that a student account is needed to book?",
+        "say_example": "This is a tutor account, so it can't book lessons. I can make a student account with <email>, or stop here. Which?"
+       },
+       {
+        "question": "Which email address should receive the lesson confirmation?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires an email address to send the lesson booking confirmation and continue the process.",
+        "whatTheAgentLoses": "The user loses the ability to choose which email address receives the booking confirmation or to abort the process.",
+        "speak": "never",
+        "check": "What email address is shown in the confirmation-email field?",
+        "say_example": "Set the confirmation email to <email>."
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Recover from the wrong account",
+      "questions": [
+       {
+        "question": "Is the page on the student side of the site rather than the tutor side?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The profile dropdown shows tutor-specific options like 'Insights' and 'Classroom', meaning you must switch to a student account to access the client-side booking flow.",
+        "whatTheAgentLoses": "If the agent fails to recognize it is logged in as a tutor, it will get stuck in the wrong dashboard and be unable to search for or book a lesson.",
+        "speak": "if-wrong",
+        "check": "Does the header, profile menu or page body show tutor-side items such as Insights, Classroom, or a tutor application?",
+        "say_example": "I've landed on the tutor side of the site. Nothing here books a lesson. Going back to the student side."
+       },
+       {
+        "question": "The Google sign-in has stalled. Should I try email sign-in instead?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The user attempts to log in with Google, switches tabs, and then abandons that route to click 'Get started' on the homepage instead, indicating a failure or change of mind with the authentication method.",
+        "whatTheAgentLoses": "An agent might get stuck in a broken OAuth flow, failing to pivot to a standard email sign-up or alternative entry point to continue the task.",
+        "speak": "on-event",
+        "check": "Is the Google sign-in window still blank or loading after the click?",
+        "say_example": "The Google sign-in isn't going anywhere. Trying email sign-in instead."
+       }
+      ]
+     },
+     {
+      "id": "1.9",
+      "label": "Set the app preferences",
+      "questions": [
+       {
+        "question": "Which language do you want the app interface to display in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile settings screen includes an 'App language' option to customize the interface text.",
+        "whatTheAgentLoses": "Delegating this means the agent might proceed in a default language that you cannot easily read if you need to review the booking later.",
+        "speak": "never",
+        "check": "What does the 'App language' setting show?",
+        "say_example": "Left the interface language at <English>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Fund the account",
+    "note": "2.1 then 2.2, with 2.3 read against it; then 2.4 and 2.5. on italki this whole goal runs before a lesson is chosen (jHfA, i3ok) or fires as a wall inside 7 (jMRd). on Preply 2.6 picks the tutor first and the hours are prepaid for them (zym-). on Wyzant 2.7 is deferred until after the tutor replies (XyTV).",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Open the wallet",
+      "questions": [
+       {
+        "question": "What credit balance does the account page show?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Checking the 'My Account' tab reveals your available funds, which dictates the price range you can afford when browsing search results.",
+        "whatTheAgentLoses": "You lose direct visibility into your current account balance and how it aligns with the rates of the tutors being considered.",
+        "speak": "never",
+        "check": "What balance does the account page show?",
+        "say_example": "Read the balance. <100> credits, about <10> dollars."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Choose the amount",
+      "questions": [
+       {
+        "question": "How much do you want to buy up front, in credits or hours?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout screen defaults to a larger credit bundle and notes that buying more reduces transaction fees, requiring a choice between upfront investment and exact lesson cost.",
+        "whatTheAgentLoses": "You lose the ability to balance the potential savings of lower transaction fees against the financial commitment of holding excess credits on the platform.",
+        "speak": "gate",
+        "check": "Which credit or hour amounts does the page offer, at what price each, and which one is preselected?",
+        "say_example": "You need to load money before booking. One lesson is <9>. The page has <20> hours preselected for <95>, which is <5> cheaper per lesson. Buy just the one, or the bundle?"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Compare the processing fees"
+     },
+     {
+      "id": "2.4",
+      "label": "Pick the payment method",
+      "questions": [
+       {
+        "question": "Does the selected payment method on screen match the one you stated you would use?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The audio indicates a choice to use Skrill, but the screen shows the payment being processed with the Credit / Debit Card option still selected.",
+        "whatTheAgentLoses": "The user loses control over their financial accounts if the agent charges a default card instead of the specifically requested payment method.",
+        "speak": "if-wrong",
+        "check": "Which payment method is shown as selected at checkout?",
+        "say_example": "You said <PayPal>, but the page still has <card> selected. Switching before I go on."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Confirm the purchase",
+      "questions": [
+       {
+        "question": "Does the amount on the payment page match the site's checkout total?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Verifying the total of $10.67 USD for 100 italki Credits ensures you are not being overcharged before logging into your payment account.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to catch hidden fees or discrepancies in the final billing amount before authorizing the payment.",
+        "speak": "if-wrong",
+        "check": "What total does the PayPal or card page show, and what total did the site's checkout show?",
+        "say_example": "PayPal is asking for <12.40>. The site's checkout said <10.67>. Those don't match, so I've stopped."
+       },
+       {
+        "question": "Did the bonus credits promised on the front page show up after the purchase?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The landing page explicitly promised a $10 credit voucher after the first purchase, but the final confirmation screen does not show it being awarded.",
+        "whatTheAgentLoses": "The user loses out on a promised financial benefit because the agent failed to ensure the promotional credit was actually delivered.",
+        "speak": "if-wrong",
+        "check": "Does the confirmation or Transactions page list the promised <10> credit bonus?",
+        "say_example": "The front page promised <10> credits with your first purchase. The account shows the <100> you bought and nothing extra."
+       },
+       {
+        "question": "Does the confirmation page show the credit purchase went through?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen displays a green checkmark and an order number to verify that your funds were successfully converted into platform credits.",
+        "whatTheAgentLoses": "Delegating this step means you miss seeing the exact order number and direct confirmation that your payment was successfully processed.",
+        "speak": "always",
+        "check": "Does the page show a success message or checkmark, the amount, and an order number?",
+        "say_example": "Paid. <100> credits for <10.67>, order <number>. Now the lesson."
+       },
+       {
+        "question": "Does the account shown after payment match the one you used to initiate the booking?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen suddenly displays a different profile with a pre-existing balance, a real photo, and scheduled lessons after the payment cut.",
+        "whatTheAgentLoses": "The user loses the assurance that their payment and booking were actually applied to their own account.",
+        "speak": "if-wrong",
+        "check": "What name, photo and balance does the profile show after payment, versus before?",
+        "say_example": "After paying, the page shows a different person: <name>, with lessons already booked. That's not your account. I've stopped."
+       },
+       {
+        "question": "Is the total for the credits right before you pay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout page displays a total of $190.30 including fees and a pre-checked auto-refill box that will automatically charge your saved card for future lessons.",
+        "whatTheAgentLoses": "You lose control over verifying the final transaction total and deciding whether to authorize automatic recurring payments.",
+        "speak": "gate",
+        "check": "What total, fee line and payment method does the checkout show?",
+        "say_example": "Ready to pay. <190.30> for <20> hours, including a <0.72> card fee, on your <card ending 4821>. Press to pay, or say change."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Pick the tutor to prepay",
+      "questions": [
+       {
+        "question": "Is the tutor selected in the buy-hours modal the one you chose?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal presents multiple tutors with different available actions, allowing you to either buy hours for a previous tutor or book a trial with a new one.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to continue investing time with a familiar tutor or try out someone new.",
+        "speak": "if-wrong",
+        "check": "Which tutor name is selected in the buy-hours modal, and which action (buy hours or book trial)?",
+        "say_example": "The buy box has <Kate> selected, from your old lessons. You picked <Marco>. Switching."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Add a payment method later"
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Set the search",
+    "note": "3.1 first, everywhere. 3.2 chooses the route: the questionnaire runs 3.3 to 3.8 one screen at a time with Skip on each, the manual route goes straight to 4. 3.9 is Wyzant's other door and 3.10 is italki's free alternative - both opened, neither taken further.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Choose the language or subject",
+      "questions": [
+       {
+        "question": "Is the search set to your exact course code rather than the broad subject, so the tutors match your syllabus?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the exact course code from the autocomplete dropdown ensures you find tutors who specialize in your specific class rather than a broad subject.",
+        "whatTheAgentLoses": "Delegating this means the agent might search for a broad subject instead of your specific course code, potentially matching you with a tutor unfamiliar with your exact syllabus.",
+        "speak": "if-wrong",
+        "check": "What does the subject field show as selected: the course code or the broad subject name?",
+        "say_example": "The search picked the broad subject <Calculus>. You gave the course code <MATH 21>. Using the code, so the tutors match your class."
+       },
+       {
+        "question": "Which specific subject or language do you want to search for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform presents a massive list of both academic subjects and languages, so picking the exact topic is necessary to filter the available tutors.",
+        "whatTheAgentLoses": "Delegating this choice means missing out on browsing the extensive catalog of topics to find the exact skill or language you want to learn.",
+        "speak": "if-wrong",
+        "check": "Which subject or language does the search show as selected?",
+        "say_example": "The search is set to <Spanish>. You asked for <Portuguese>. Fixing it."
+       },
+       {
+        "question": "Which language do you want to learn in this lesson?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tutor teaches multiple languages, so you must explicitly select which one you want to focus on for this booking.",
+        "whatTheAgentLoses": "You lose the ability to ensure the lesson is taught in your target language, potentially wasting money on the wrong subject.",
+        "speak": "if-wrong",
+        "check": "Which language is selected in the booking's language dropdown?",
+        "say_example": "<Tutor> teaches more than one language. The booking has <Italian> picked. You want <Spanish>. Changing it."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Choose guided or manual matching",
+      "questions": [
+       {
+        "question": "Should you take the matching questionnaire, or browse the full tutor list?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a choice between clicking 'Find your tutor' to answer a few quick questions for a personalized match or showing all 3,999 available French tutors.",
+        "whatTheAgentLoses": "You lose the opportunity to personally answer the questionnaire to ensure the platform's algorithm accurately captures your specific learning goals and preferences.",
+        "speak": "never",
+        "check": "Does the page offer a 'find your tutor' questionnaire and a link to browse all tutors?",
+        "say_example": "Skipped the matching quiz. Browsed all <3,999> tutors with your filters."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "State the goal",
+      "questions": [
+       {
+        "question": "What do you want out of the lessons?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform asks for your learning goal, such as career advancement or exam prep, to tailor the tutor recommendations to your specific needs.",
+        "whatTheAgentLoses": "If the agent selects the learning goal for you, you might receive tutor recommendations that do not align with your actual reasons for studying.",
+        "speak": "never",
+        "check": "Which goal options does the page list, and is there a skip?",
+        "say_example": "Set the goal to <exam prep>, from your ask."
+       },
+       {
+        "question": "How soon do you want to reach your goal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform asks for a target timeframe to tailor recommendations, offering options from a few weeks to indefinitely, or the choice to skip.",
+        "whatTheAgentLoses": "The agent might skip the question or guess a timeframe, potentially leading to mismatched tutor recommendations or lesson pacing.",
+        "speak": "never",
+        "check": "Which timeframe options does the page list, and is there a skip?",
+        "say_example": "Set the timeframe to <three months>."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "State the level",
+      "questions": [
+       {
+        "question": "What's your current level in the language?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform asks for your French level, offering options from 'just starting' to 'fluent' or a skip button, to help filter and recommend appropriate tutors.",
+        "whatTheAgentLoses": "Delegating this step means the agent might guess your proficiency level incorrectly or skip the personalization entirely, leading to tutor recommendations that do not match your actual skill level.",
+        "speak": "never",
+        "check": "Which level options does the page list, and which is selected?",
+        "say_example": "Set the level to <beginner>, as you told me."
+       },
+       {
+        "question": "What education level are you booking this tutoring for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform requires specifying if the student is an Adult, College, High School, Middle School, or Elementary level to filter for appropriate tutors.",
+        "whatTheAgentLoses": "Letting the agent guess the student's level could result in being matched with a tutor who specializes in the wrong age group or curriculum.",
+        "speak": "never",
+        "check": "Which education level options does the page list, and which is selected?",
+        "say_example": "Set the education level to <high school>."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Pick the topics",
+      "questions": [
+       {
+        "question": "Which topic or exam do you want the lessons to focus on?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides specific exam and topic options like DELF, TEF, and DALF that tailor the tutor recommendations to your exact needs.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select the wrong certification or skip personalization entirely, resulting in tutors who cannot help you pass your specific exam.",
+        "speak": "never",
+        "check": "Which topic or exam options does the page list, and which is selected?",
+        "say_example": "Set the topic to <DELF>, since that's the exam you named."
+       },
+       {
+        "question": "What kind of lessons are you looking for, like conversation or business?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform prompts you to select a lesson focus, such as Conversational English or Business English, to filter for tutors who specialize in your goals.",
+        "whatTheAgentLoses": "You lose the ability to specify your exact learning objectives, which could result in the agent finding a tutor whose expertise doesn't match your needs.",
+        "speak": "never",
+        "check": "Which lesson focus options does the page list, and which is selected?",
+        "say_example": "Set the lesson type to <conversational>."
+       },
+       {
+        "question": "Does the option selected on this step match what you asked for, or is it the site's default?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform pre-selects a default topic like 'Conversational English' on the questionnaire, meaning clicking continue without changing it will skew your tutor recommendations.",
+        "whatTheAgentLoses": "The user loses the personalization of their search results if the agent blindly accepts the default topic instead of inputting their actual learning goals.",
+        "speak": "if-wrong",
+        "check": "Which option on this questionnaire step is shown as selected, and does it match the instruction?",
+        "say_example": "This step came preset to <Conversational English>. You asked for <IELTS prep>. Changing it before I continue."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Choose online or in person",
+      "questions": [
+       {
+        "question": "Do you prefer to meet with your tutor online or in person?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform requires you to choose between online, in-person, or undecided formats to properly filter your tutor search results.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a meeting format that does not fit your learning style or physical location.",
+        "speak": "never",
+        "check": "Which format option is selected: online, in person, or undecided?",
+        "say_example": "Set the format to online, from your ask."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Say how soon",
+      "questions": [
+       {
+        "question": "Do you want to filter for tutors available within 72 hours?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results page includes a 'Within 72 hours' checkbox to narrow down the list to teachers with immediate availability.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to prioritize immediate availability over a wider selection of tutors.",
+        "speak": "never",
+        "check": "Is the 'within 72 hours' box checked?",
+        "say_example": "Turned on within 72 hours, since you want to start this week."
+       },
+       {
+        "question": "How soon do you need to start tutoring?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform requires you to select a timeframe, ranging from today to sometime this month, to help match you with tutors who have appropriate availability.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a timeline that is either too urgent or too delayed for your actual learning goals.",
+        "speak": "never",
+        "check": "Which start-timeframe option is selected?",
+        "say_example": "Set the start to <this week>."
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Confirm the time zone",
+      "questions": [
+       {
+        "question": "Is the time zone the site picked the one you're actually in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a user is traveling, using a VPN, or if a browser agent is running on a cloud server, the platform might auto-detect the wrong timezone for the calendar.",
+        "whatTheAgentLoses": "The user misses the lesson and forfeits the fee entirely because the agent scheduled it based on a server's timezone rather than the user's actual local time.",
+        "speak": "if-wrong",
+        "check": "What time zone and country does the page show as current, in the modal or the calendar header?",
+        "say_example": "The site thinks you're in <Frankfurt>. You're on <Pacific time>, so every lesson time here would be <9> hours off. Setting it to <Pacific>."
+       }
+      ]
+     },
+     {
+      "id": "3.9",
+      "label": "Post a tutor request",
+      "questions": [
+       {
+        "question": "Do you want to manually search for a tutor or submit a request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Submitting a request can be a faster way to find a match for specific subjects compared to browsing individual profiles.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether you want to handpick a specific tutor yourself or let the platform match one to your needs.",
+        "speak": "never",
+        "check": "Does the page offer 'submit a request' alongside search?",
+        "say_example": "Searched tutors directly rather than posting a request, since you wanted a lesson booked."
+       }
+      ]
+     },
+     {
+      "id": "3.10",
+      "label": "Browse the exchange partners",
+      "questions": [
+       {
+        "question": "Do you want to look for a free language exchange partner instead of a paid tutor?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Community' dropdown includes a 'Find Language Partners' option, offering an alternative to standard paid lessons.",
+        "whatTheAgentLoses": "You lose the chance to decide if you prefer engaging in a free language exchange over booking a paid tutoring session.",
+        "speak": "never",
+        "check": "Does the menu offer a language-partner option?",
+        "say_example": "Skipped the free language-partner option. You asked for a tutor."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Narrow the list",
+    "note": "4.1 opens the surface. any of 4.2 to 4.8, in any order, each re-counting the list - most keepers open more filters than they apply. 4.9 in place of filtering on mobile; 4.10 to find one tutor by name. 4.11 after every cut, and it decides whether to start reading yet.",
+    "questions": [
+     {
+      "question": "Which filters should be on to narrow the list?",
+      "cluster": "refine",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "With over 35,000 teachers matching the initial search, applying specific filters for price, availability, and specialties is necessary to find a manageable list of suitable candidates.",
+      "whatTheAgentLoses": "Letting an agent choose the filters means you lose the ability to prioritize the specific traits, such as native speaker status or price range, that matter most to your learning style and budget.",
+      "speak": "never",
+      "check": "Which filters are shown as active?",
+      "say_example": "Turned on filters for <under 20>, <evenings> and <native>."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Open the tutor list",
+      "questions": [
+       {
+        "question": "Should you browse the listed tutors or apply filters first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays thousands of English tutors and filtering options, but also provides bottom navigation tabs like 'Messages' to manage existing conversations.",
+        "whatTheAgentLoses": "An agent might immediately select a tutor from the search results, missing your preference to check existing conversations in the Messages tab before booking.",
+        "speak": "never",
+        "check": "Does the page show the tutor list and a filter panel?",
+        "say_example": "Applied filters before browsing."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Filter by teacher type",
+      "questions": [
+       {
+        "question": "Which kind of teacher do you want the list filtered to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown lets you choose between highly-skilled professional teachers for structured learning and community tutors for informal speaking practice.",
+        "whatTheAgentLoses": "Delegating this filter means you lose the ability to specify whether you need a qualified professional or just a native speaker for casual practice.",
+        "speak": "never",
+        "check": "Which teacher category is selected?",
+        "say_example": "Kept both professional teachers and community tutors."
+       },
+       {
+        "question": "Should you toggle the filter to only show Super Tutors?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Turning on the 'Only Super Tutors' toggle restricts the search results to only show highly rated and experienced tutors, narrowing the list to 270 matches.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to strictly limit your options to top-rated tutors or keep a broader, potentially more affordable selection.",
+        "speak": "never",
+        "check": "Is the Super Tutor toggle on, and what count does the page show?",
+        "say_example": "Left the Super Tutor toggle off so cheaper tutors stay in."
+       },
+       {
+        "question": "Should the list include community tutors, who charge less?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Applying the community tutor filter reveals teachers with significantly lower hourly rates, such as GBP 7.24 compared to the GBP 13.02 charged by professional teachers.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to weigh the cost savings of a community tutor against the formal credentials of a professional teacher.",
+        "speak": "never",
+        "check": "What rates does the page show for community tutors versus professional teachers?",
+        "say_example": "Kept both tutor types. Community tutors start at <7>, professional teachers at <9>, both under your <10> cap."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Filter by tutor country",
+      "questions": [
+       {
+        "question": "Do you have a preference for which country your tutor is from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform prompts you to filter tutors by their country of origin, offering specific options like the US or UK, or allowing any country.",
+        "whatTheAgentLoses": "Delegating this choice means you might miss out on selecting a tutor with a specific regional accent or cultural background that you prefer.",
+        "speak": "never",
+        "check": "Which country filter is selected?",
+        "say_example": "Set the country filter to <Spain>, from your ask."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Filter by the languages spoken",
+      "questions": [
+       {
+        "question": "What other languages do you need the tutor to speak?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Filtering by a shared language in the 'Teacher speaks' dropdown significantly reduces the pool of available tutors, as shown when the total results dropped from 2440 to 411.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might not pick a tutor who can explain complex concepts in your native or preferred language.",
+        "speak": "never",
+        "check": "Which languages are selected under 'teacher speaks'?",
+        "say_example": "Filtered to tutors who speak <English>."
+       },
+       {
+        "question": "Do you want to restrict your search to native speakers?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the 'Native' checkbox under the 'More' menu filters the results, visibly dropping the available professional teachers from 716 to 483 to ensure you only see native speakers.",
+        "whatTheAgentLoses": "You lose the chance to decide whether a native speaker is strictly necessary for your learning goals or if you are open to all qualified teachers.",
+        "speak": "never",
+        "check": "Is the Native box checked?",
+        "say_example": "Ticked native only, as you asked."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Set the price range",
+      "questions": [
+       {
+        "question": "Does the price filter on the results page match the budget you set earlier?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The budget slider was initially set to $1 - $8, but the subsequent search results page shows the price filter reset to $1 - $50+.",
+        "whatTheAgentLoses": "The user loses strict enforcement of their budget constraints, potentially leading to wasted time evaluating unaffordable tutors.",
+        "speak": "if-wrong",
+        "check": "What price range and which filter chips does the results page show as active, versus what was set?",
+        "say_example": "The price filter has gone back to <1 to 50 and up>. I set <1 to 8>. Putting it back before I read the list."
+       },
+       {
+        "question": "What is your budget for a lesson?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented a budget slider with a default range of '$3 - $40+' per 50-min lesson to filter the available tutors.",
+        "whatTheAgentLoses": "You lose the ability to restrict the search to tutors you can comfortably afford.",
+        "speak": "never",
+        "check": "What price range does the budget slider show?",
+        "say_example": "Set the budget to <under 20> a lesson, from your ask."
+       },
+       {
+        "question": "Is the cheapest rate in the results within the price you asked for?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator claimed they would find a tutor for $2 per hour, but the lowest rate shown in the search results is $5 per hour.",
+        "whatTheAgentLoses": "The user loses the ability to stick to their intended budget if the agent proceeds with higher-priced options without meeting the initial criteria.",
+        "speak": "if-wrong",
+        "check": "What is the lowest rate shown in the results?",
+        "say_example": "Nothing here is under <2>. The cheapest is <5> an hour. OK to go up to <5>, or stop?"
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Filter by lesson type",
+      "questions": [
+       {
+        "question": "Which services should the calendar show?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a left sidebar with 'Services' filters like 'Tutoring', 'English Tutoring', and 'Study Skills' to narrow down the available help.",
+        "whatTheAgentLoses": "The user loses the ability to specifically filter the calendar to only show the types of tutoring services they actually need.",
+        "speak": "never",
+        "check": "Which services are checked in the sidebar?",
+        "say_example": "Set services to <English tutoring>."
+       },
+       {
+        "question": "Should you filter the tutors by a specific lesson type, like conversation practice or test prep?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu offers specific categories like 'Business' or 'Test Preparation' to help narrow down tutors to those who specialize in your exact learning goals.",
+        "whatTheAgentLoses": "If the agent skips this filter, you lose the opportunity to quickly narrow the search to tutors who specialize in your specific needs, like job interviews or DELE exams.",
+        "speak": "never",
+        "check": "Which lesson category is selected?",
+        "say_example": "Set the lesson type to <test preparation>."
+       },
+       {
+        "question": "Do you need to filter tutors by a specific specialization, like teaching beginners or children?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a dropdown with specialization tags like beginners, children, and business, which helps narrow down tutors experienced with your specific learning needs.",
+        "whatTheAgentLoses": "If an agent selects the specialization, you might end up with a tutor who is not suited for your actual proficiency level or specific learning goals.",
+        "speak": "never",
+        "check": "Which specialization tags are selected?",
+        "say_example": "Set specialization to <children>, since the lessons are for <child>."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Filter by availability",
+      "questions": [
+       {
+        "question": "What days and times are you available for lessons?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform prompts you to specify when you can take lessons, offering specific days and time blocks like afternoon or 12-15, to filter for available tutors.",
+        "whatTheAgentLoses": "Delegating this means the agent might input availability that conflicts with your actual personal schedule, leading to mismatched tutor recommendations.",
+        "speak": "never",
+        "check": "Which days and time blocks are selected in the availability filter?",
+        "say_example": "Set availability to <weekday evenings>, from your ask."
+       },
+       {
+        "question": "Do you need a tutor who is available for instant tutoring right now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The availability dropdown includes an 'Instant Tutoring Available Now' checkbox to filter for teachers who can start a lesson immediately.",
+        "whatTheAgentLoses": "You lose the ability to decide whether your current urgency requires an immediate session or if a scheduled future lesson would suffice.",
+        "speak": "never",
+        "check": "Is the 'instant tutoring available now' box checked?",
+        "say_example": "Left instant tutoring off. You asked for a scheduled lesson."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Filter by trial or credentials",
+      "questions": [
+       {
+        "question": "Do you want to filter for tutors offering trial lessons?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu provides additional search filters like native speaker status and trial availability to help narrow down the list of tutors.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to prioritize discounted trial lessons or native speakers based on your specific learning preferences.",
+        "speak": "never",
+        "check": "Is the trial-lesson filter checked?",
+        "say_example": "Filtered to tutors offering a trial lesson."
+       },
+       {
+        "question": "Do you want to filter the search to only show tutors with a background check on file?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Selecting the 'Background check on file' checkbox prioritizes safety by narrowing the results down to 1,104 verified Calculus tutors.",
+        "whatTheAgentLoses": "Delegating this means the agent might skip safety filters and book a tutor who has not been formally vetted.",
+        "speak": "never",
+        "check": "Is the 'background check on file' box checked, and what count does the page show?",
+        "say_example": "Only showing tutors with a background check on file, since the lessons are for <child>."
+       },
+       {
+        "question": "Do you want to limit the tutor's age?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search filters include a tutor age slider currently set to '18 and up', which can be adjusted to exclude older tutors from the results.",
+        "whatTheAgentLoses": "You lose the chance to restrict the tutor pool to an age demographic you feel most comfortable learning from.",
+        "speak": "never",
+        "check": "What does the tutor age slider show?",
+        "say_example": "Left the tutor age filter at 18 and up."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Sort the list",
+      "questions": [
+       {
+        "question": "How do you want to sort the list of available tutors?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a bottom sheet with options to sort the search results by price, popularity, reviews, rating, or relevance.",
+        "whatTheAgentLoses": "You lose the ability to dictate which criteria—such as the lowest price or the highest rating—should be prioritized when browsing potential matches.",
+        "speak": "always",
+        "check": "What sort order does the page show as selected, and does it say results include sponsored or promoted tutors?",
+        "say_example": "The list is sorted by <relevance>, which mixes in paid spots. I'm sorting by <price> instead."
+       }
+      ]
+     },
+     {
+      "id": "4.10",
+      "label": "Search by tutor name",
+      "questions": [
+       {
+        "question": "Do you want to search for a specific tutor by name?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results page features a 'Search by name or keyword' field that lets you directly locate a known tutor's profile instead of browsing general results.",
+        "whatTheAgentLoses": "You lose the opportunity to direct the search toward a specific, pre-selected tutor you already know and prefer.",
+        "speak": "never",
+        "check": "Does the page show a search-by-name field?",
+        "say_example": "Searched by name for <tutor>, since you named them."
+       }
+      ]
+     },
+     {
+      "id": "4.11",
+      "label": "Read the count and decide",
+      "questions": [
+       {
+        "question": "How many tutors are left after the filters?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows hundreds of results split between professional teachers and community tutors, prompting a choice between browsing the current list or applying more filters.",
+        "whatTheAgentLoses": "You lose the ability to decide your own threshold for when a search is specific enough to start evaluating individual candidates.",
+        "speak": "always",
+        "check": "What result count does the page show?",
+        "say_example": "Found <3,999> <French> tutors. With your filters that's <42>."
+       },
+       {
+        "question": "Did the list actually change after the filter, or is it still the old one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Directory filters often use asynchronous updates, meaning the screen might briefly show a loading state or silently fail, leaving stale results on screen.",
+        "whatTheAgentLoses": "The agent might scrape and select a tutor from the stale list, ignoring the user's newly applied constraints.",
+        "speak": "if-wrong",
+        "check": "What result count and which tutor names appear before and after the filter was applied?",
+        "say_example": "I applied the filter, but the list didn't change. Still the same <3,999>. Reloading before I trust it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Choose a tutor",
+    "note": "5.1 on every list; 5.2 where the platform offers a shortcut past it. 5.3 and 5.4 where the card is enough to act on. then 5.5, which opens the profile and is where most of the reading happens; a profile that fails loops back to 5.1 (cDu8, jYhF). 5.6 closes the goal either way.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the tutor cards",
+      "questions": [
+       {
+        "question": "Is the top result marked Promoted or Sponsored?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms frequently inject paid placements at the top of search results with subtle visual badges that an agent might ignore, leading to a biased selection.",
+        "whatTheAgentLoses": "The user loses the ability to distinguish between a tutor who earned their top spot through high ratings versus one who simply paid for placement.",
+        "speak": "on-event",
+        "check": "Does the result card carry a Promoted, Sponsored, or Ad label?",
+        "say_example": "The first result is a paid spot, so I'm skipping it."
+       },
+       {
+        "question": "Does the camera icon's tooltip say video introduction or video lessons?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator claims the camera icon indicates video lesson availability, but the on-screen tooltip clearly states it represents a video introduction.",
+        "whatTheAgentLoses": "An agent might incorrectly filter or select tutors based on false assumptions about their lesson formats if it relies on the flawed narration instead of the actual interface text.",
+        "speak": "never",
+        "check": "What does the tooltip on the camera icon say?",
+        "say_example": "Read the camera icon's tooltip. It marks a video intro only."
+       },
+       {
+        "question": "Does the tutor show as online right now?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If you need an immediate response or instant tutoring, a visual 'online' indicator is the fastest way to know if the tutor is actually at their computer.",
+        "whatTheAgentLoses": "The user loses the ability to prioritize tutors who are actively online and likely to respond to a message or booking request immediately.",
+        "speak": "never",
+        "check": "Does the profile picture show an online indicator, or the page show 'online now' text?",
+        "say_example": "Saw <tutor> marked online now."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Pick from the suggested tutors",
+      "questions": [
+       {
+        "question": "Should you book a lesson with your existing teacher or search for a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'My Teachers' page displays your previous tutor, Kate, alongside options to find someone new, requiring a choice between continuing an existing learning relationship or starting a fresh search.",
+        "whatTheAgentLoses": "An agent might automatically rebook your previous teacher for convenience, missing your desire to try a different teaching style or learn from someone new.",
+        "speak": "on-event",
+        "check": "Does the page list a previous tutor under 'My Teachers', and what name?",
+        "say_example": "You've had lessons with <Kate> before. Book them again, or find someone new?"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Watch the intro video",
+      "questions": [
+       {
+        "question": "Should I skip the intro video if it won't load?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The YouTube video popup is displaying a black screen with a loading spinner, requiring a choice between waiting or skipping the introduction.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally assess the tutor's communication style and personality if the agent skips the video.",
+        "speak": "never",
+        "check": "Is the video popup showing a spinner or black frame after <10> seconds?",
+        "say_example": "Skipped <tutor>'s intro video. It wouldn't load."
+       },
+       {
+        "question": "Do you want to watch the introduction video to get a feel for the tutor's personality?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The embedded video thumbnail offers a direct way to hear the tutor's voice and see them in action before committing.",
+        "whatTheAgentLoses": "You lose the subjective, personal assessment of the tutor's communication style and demeanor that comes from watching their video.",
+        "speak": "never",
+        "check": "Does the profile show an intro video, and how long is it?",
+        "say_example": "Found a <2> minute intro video on <tutor>'s profile. Link in the notes."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Save the tutor",
+      "questions": [
+       {
+        "question": "Should you save this tutor to your shortlist?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Saving a highly rated 'Super Tutor' with 25 years of experience and a $48 hourly rate allows you to easily compare her against other strong candidates later.",
+        "whatTheAgentLoses": "You lose the chance to personally weigh whether her specific mix of extensive experience, multilingual skills, and price point feels like the right fit for your learning style.",
+        "speak": "never",
+        "check": "Does the page show a save or favourite button on the profile?",
+        "say_example": "Saved <tutor> to your shortlist."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Vet the profile",
+      "note": "5.5.1 always. 5.5.2 to 5.5.8 in the order the page shows them, as far as the user scrolls - v3cT reads all of them, cDu8 none. 5.5.9 before booking, or instead of it.",
+      "children": [
+       {
+        "id": "5.5.1",
+        "label": "Read the header stats",
+        "questions": [
+         {
+          "question": "What do the tutor's rating, lesson count and languages look like?",
+          "cluster": "compare",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The top section of the profile shows the tutor's rating, number of students, languages taught, and specialties, which are key factors in deciding if they are a good fit.",
+          "whatTheAgentLoses": "Delegating this to an agent means losing the personal judgment of whether the tutor's specific background and specialties align with your learning preferences.",
+          "speak": "never",
+          "check": "What rating, student count, languages and specialties does the profile header show?",
+          "say_example": "Checked <tutor>. <4.9> stars, <300> lessons, teaches <Spanish>."
+         }
+        ]
+       },
+       {
+        "id": "5.5.2",
+        "label": "Read the teaching style",
+        "questions": [
+         {
+          "question": "Does the tutor's profile list a language you speak, and at what level?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Checking the tutor's location and intermediate English proficiency ensures you can communicate effectively while learning native Spanish.",
+          "whatTheAgentLoses": "You lose the opportunity to personally assess if the tutor's cultural background and secondary language fluency match your comfort level for learning.",
+          "speak": "if-wrong",
+          "check": "Which languages and levels does the profile list under 'speaks'?",
+          "say_example": "<Tutor> lists English as intermediate. You're a beginner in Spanish, so explaining things could be hard. Want someone with fluent English?"
+         },
+         {
+          "question": "What teaching materials does the tutor's profile list?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Reviewing the tutor's listed resources, such as presentation slides, flashcards, and audio files, helps ensure their methods align with your educational needs.",
+          "whatTheAgentLoses": "An agent might just verify that materials are provided without understanding if that specific mix of resources actually suits your personal learning style.",
+          "speak": "never",
+          "check": "What materials does the profile list?",
+          "say_example": "Noted <tutor> teaches with <slides, flashcards and audio>."
+         },
+         {
+          "question": "What does the tutor's about section say they focus on?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Reading the 'About me' section helps you verify if the tutor's qualifications and stated focus match your personal objectives, such as IELTS preparation or conversational fluency.",
+          "whatTheAgentLoses": "You lose the opportunity to personally evaluate whether the tutor's written introduction and teaching philosophy resonate with your unique learning preferences.",
+          "speak": "never",
+          "check": "What does the 'About me' section say the tutor focuses on?",
+          "say_example": "Read <tutor>'s about section. The focus is <IELTS prep and business English>."
+         }
+        ]
+       },
+       {
+        "id": "5.5.3",
+        "label": "Read the lessons and prices",
+        "questions": [
+         {
+          "question": "Is the selected lesson package actually available to new students?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Tutors sometimes list special discounted packages specifically labeled 'for old existing students', which you are not eligible to book if this is your first lesson.",
+          "whatTheAgentLoses": "The user risks having their booking rejected by the tutor and their funds temporarily tied up if the agent selects a restricted package they don't qualify for.",
+          "speak": "if-wrong",
+          "check": "Does the selected package carry a label such as 'for existing students only'?",
+          "say_example": "The <8> lesson deal is marked for existing students. This is your first lesson, so it won't apply. The single lesson is <12>."
+         }
+        ]
+       },
+       {
+        "id": "5.5.4",
+        "label": "Read the statistics",
+        "questions": [
+         {
+          "question": "What do the tutor's lesson count, response rate and attendance show?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Checking the completed lessons, response rate, and attendance rate helps you gauge if the tutor is dependable and active on the platform.",
+          "whatTheAgentLoses": "You lose the ability to personally weigh whether a tutor's specific attendance and response rates meet your personal standards for reliability.",
+          "speak": "never",
+          "check": "What completed lessons, response rate and attendance rate does the profile show?",
+          "say_example": "Checked <tutor>'s stats. Response rate <98%>, attendance <100%>, <1,200> lessons."
+         }
+        ]
+       },
+       {
+        "id": "5.5.5",
+        "label": "Read the reviews",
+        "questions": [
+         {
+          "question": "What do the student reviews reveal about this tutor's teaching style?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Reading specific feedback, such as the review praising the tutor's knowledge of Guatemala, helps you verify the tutor's effectiveness and personality beyond just their 4.9 average rating.",
+          "whatTheAgentLoses": "You lose the opportunity to personally interpret the qualitative nuances of student feedback to determine if the tutor's approach matches your specific learning preferences.",
+          "speak": "never",
+          "check": "What do the review texts say?",
+          "say_example": "Read the reviews. They praise <patience> and <clear grammar explanations>."
+         },
+         {
+          "question": "How are the tutor's star ratings split?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Checking the specific distribution, such as seeing 71 five-star reviews and only a single four-star review, provides a much clearer picture of the tutor's consistency than the 4.9 average alone.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify the review distribution, risking an AI misinterpreting a minor four-star rating as a severe one-star complaint.",
+          "speak": "never",
+          "check": "What star breakdown does the profile show?",
+          "say_example": "Counted <71> five-star reviews and <1> four-star."
+         },
+         {
+          "question": "How recent are the tutor's newest reviews and last lesson?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Reviewing the lesson history and the dates of student reviews, such as those from 2016 and 2017, helps you determine if the tutor is currently active and reliable.",
+          "whatTheAgentLoses": "You lose the personal reassurance of reading individual student feedback and judging whether older reviews still reflect the tutor's current teaching quality.",
+          "speak": "if-wrong",
+          "check": "What dates do the most recent reviews and the last completed lesson show?",
+          "say_example": "<Tutor>'s newest review is from <2017>. They may not be active now. Want me to keep looking?"
+         }
+        ]
+       },
+       {
+        "id": "5.5.6",
+        "label": "Read the credentials",
+        "questions": [
+         {
+          "question": "Do you want to review the tutor's verified credentials and work experience?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The screen displayed specific tabs for education, work experience, and verified certifications that help determine if the tutor is actually qualified.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to personally judge if the tutor's specific background and certificates align with your learning standards.",
+          "speak": "never",
+          "check": "What do the education, work and certification tabs list, and which are marked verified?",
+          "say_example": "Found a verified <CELTA> certificate on the profile."
+         }
+        ]
+       },
+       {
+        "id": "5.5.7",
+        "label": "Read the policies",
+        "questions": [
+         {
+          "question": "What happens if you need to cancel or reschedule a lesson?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "Evaluating the tutor's profile prompts a necessary check of the platform's cancellation policies to ensure you won't face unexpected fees if your schedule changes.",
+          "whatTheAgentLoses": "You lose the ability to weigh the platform's strict 24-hour cancellation fee policy against your own personal scheduling risks before committing to a tutor.",
+          "speak": "never",
+          "check": "What does the page say about cancelling or rescheduling, and by when?",
+          "say_example": "Noted the cancel policy. Free until <24 hours> before, full price after that."
+         }
+        ]
+       },
+       {
+        "id": "5.5.8",
+        "label": "Check the availability preview",
+        "questions": [
+         {
+          "question": "Does the tutor accept short-notice bookings if their calendar appears full?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "A message on the calendar states \"Some teachers may accept short notice\", indicating you might still be able to book a session even if the immediate slots look unavailable.",
+          "whatTheAgentLoses": "The agent might abandon a preferred tutor whose calendar looks full, missing the opportunity to request a short-notice exception.",
+          "speak": "never",
+          "check": "Does the calendar show a note about short-notice bookings?",
+          "say_example": "Saw a note that some teachers accept short notice."
+         },
+         {
+          "question": "Are the tutor's open slots in usable blocks, or scattered single hours?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "A quick glance at a visual calendar grid instantly reveals if a tutor's schedule is highly fragmented, which dictates how easy they will be to book consistently.",
+          "whatTheAgentLoses": "The agent might technically verify the tutor has '5 hours available', but fail to realize those hours are fragmented into unusable 15-minute gaps.",
+          "speak": "never",
+          "check": "Which slots does the calendar show as available this week?",
+          "say_example": "Checked <tutor>'s calendar. Open slots are scattered, mostly single hours."
+         },
+         {
+          "question": "Do you want to check the tutor's availability before clicking book now?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The profile displays a 'CHECK AVAILABILITY' button next to 'BOOK NOW', allowing you to verify their schedule fits yours before starting the booking flow.",
+          "whatTheAgentLoses": "The user loses the opportunity to personally review the tutor's calendar to ensure the available times align with their own schedule.",
+          "speak": "never",
+          "check": "Does the profile show a check-availability button beside book now?",
+          "say_example": "Checked availability before opening the booking."
+         },
+         {
+          "question": "Does the tutor have available time slots in your timezone?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The scheduling interface displays the tutor's open slots converted to your local timezone, which is essential for confirming the lesson fits your routine before booking.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to personally verify that the available times align with your daily schedule and personal preferences.",
+          "speak": "if-wrong",
+          "check": "Which available slots does the calendar show in the person's time zone, within the requested days and hours?",
+          "say_example": "<Tutor> has nothing open on <weekday evenings>. Closest is <Saturday at 10>. Take that, or a different tutor?"
+         }
+        ]
+       },
+       {
+        "id": "5.5.9",
+        "label": "Message the tutor first",
+        "questions": [
+         {
+          "question": "What should the note to the tutor say?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displayed a contact modal prompting you to introduce yourself, share your goals, and ask the tutor any questions.",
+          "whatTheAgentLoses": "You lose the chance to personally articulate your specific needs and establish an initial rapport with the tutor.",
+          "speak": "gate",
+          "check": "Does the contact form show a message box, and is it required?",
+          "say_example": "Before booking, the site wants a note to <tutor>. I wrote that you're preparing for <DELF B1 in March> and can do <weekday evenings>. Send it, or change it?"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Decide on the tutor",
+      "questions": [
+       {
+        "question": "Which tutor should I select from the search results?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of Turkish tutors with varying rates, ratings, and experience levels to compare.",
+        "whatTheAgentLoses": "The user loses the opportunity to weigh trade-offs between price, experience, and ratings according to their personal preferences.",
+        "speak": "gate",
+        "check": "What name, rate, rating, lesson count and headline does each shortlisted tutor card show?",
+        "say_example": "Two good tutors under <20>. <Ana>: <15> an hour, <4.9> stars, <800> lessons, native. <Luis>: <12>, <4.8>, newer, free trial. Which one? Say Ana or Luis."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Set up the lesson",
+    "note": "6.1, then 6.2 and 6.3 where the platform asks them; 6.4 on the subject-tutoring sites; 6.5 for in-person. then 6.6. 6.7 and 6.8 after the time on italki, where they sit on the scheduling page. the order is the platform's: italki 2023 runs 6.1, 6.2 with 6.3, 6.6 and 6.7 as five modals in a row (eMJV); Preply runs 6.2 then 6.6 in one dialog (B6np, cDu8); the college system runs 6.6 first and everything else inside the slot's modal (jaAO).",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Choose the lesson type",
+      "questions": [
+       {
+        "question": "Which lesson type and length do you want with this tutor?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple lesson options like 'Conversation Practice' and 'French for Beginners' with different hourly rates, requiring you to select the one that fits your goals.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a lesson type or pricing package that does not align with your specific learning needs or budget.",
+        "speak": "gate",
+        "check": "Which lesson types, lengths and prices does the booking box list, and which is preselected?",
+        "say_example": "<Tutor> offers a <30> minute trial for <4>, or a full <60> minute lesson for <7>. Which one?"
+       },
+       {
+        "question": "Is this your last discounted trial lesson?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms typically cap the number of discounted trial lessons a user can take (e.g., a maximum of 3 per account) to prevent abuse of the system.",
+        "whatTheAgentLoses": "The user wastes a valuable, strictly limited trial slot on a suboptimal tutor chosen by the agent, leaving them without discounted options to test out other tutors later.",
+        "speak": "on-event",
+        "check": "Does the page say how many discounted trial lessons remain, or that this is the last one?",
+        "say_example": "This is your last discounted trial. After it, trials are full price."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Choose the length"
+     },
+     {
+      "id": "6.3",
+      "label": "Choose single or package",
+      "questions": [
+       {
+        "question": "Does the package actually cost less than buying the lessons one at a time?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Verifying the math ensures the 'SAVE 8%' badge on the $55.00 package is a genuine discount compared to buying five $12.00 single lessons.",
+        "whatTheAgentLoses": "Delegating this step means trusting the platform's marketing badges without independently verifying that the bulk package actually saves money.",
+        "speak": "if-wrong",
+        "check": "What is the package price and lesson count, and the single-lesson price?",
+        "say_example": "The pack is marked <save 8%>, but <5> singles cost <55> too. There's no saving."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Pick the subject"
+     },
+     {
+      "id": "6.5",
+      "label": "Set the place"
+     },
+     {
+      "id": "6.6",
+      "label": "Pick a time",
+      "note": "6.6.1, then 6.6.2 and 6.6.3; 6.6.4 when a length change or a clash moves the legal starts; 6.6.5 on Wyzant instead of a slot; 6.6.6 where the user wants more than one lesson.",
+      "children": [
+       {
+        "id": "6.6.1",
+        "label": "Read the calendar and timezone",
+        "questions": [
+         {
+          "question": "What is the earliest slot the tutor's notice rule allows?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The platform's stated rule requiring 24 hours of advance notice must match the actual dates available on the scheduling calendar to ensure a valid booking.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to verify that the platform's scheduling constraints are accurately applied to your requested timeframe.",
+          "speak": "if-wrong",
+          "check": "Does the page state a minimum notice, and what is the earliest slot shown?",
+          "say_example": "<Tutor> needs <24 hours> notice. The earliest slot is <tomorrow at 3>. OK, or someone who can do today?"
+         }
+        ]
+       },
+       {
+        "id": "6.6.2",
+        "label": "Pick the date"
+       },
+       {
+        "id": "6.6.3",
+        "label": "Pick the slot",
+        "questions": [
+         {
+          "question": "Is the book button greyed out until something else is picked?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Platforms often leave the 'Book' button visible but visually faded and disabled until the user selects a prerequisite like lesson type or duration.",
+          "whatTheAgentLoses": "The agent might get stuck trying to click an inactive button, failing to realize it missed a required step earlier in the form.",
+          "speak": "never",
+          "check": "Is the book button disabled, and does the page say what is missing?",
+          "say_example": "Saw the book button greyed until a duration was picked."
+         },
+         {
+          "question": "Which of the open slots do you want?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The calendar displays available time slots as dark green blocks under each tutor's name, and you must click one that fits your schedule to proceed with the booking.",
+          "whatTheAgentLoses": "Letting an agent choose the time slot means you lose the ability to pick a specific window that best fits your personal, off-calendar schedule.",
+          "speak": "gate",
+          "check": "Which slots does the calendar show as available on the requested days, in the person's time zone?",
+          "say_example": "<Tutor> has three slots that fit your <Tuesday evening>: <6>, <7>, or <8>. Which one?"
+         },
+         {
+          "question": "Is the chosen slot in the morning or evening you meant?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Scheduling interfaces often mix 12-hour and 24-hour formats across different regions, making it incredibly easy to accidentally book a 12:00 AM (midnight) lesson instead of 12:00 PM (noon).",
+          "whatTheAgentLoses": "The user risks missing the lesson entirely and losing their money because the agent booked it for the middle of the night due to a 12-hour clock misinterpretation.",
+          "speak": "if-wrong",
+          "check": "How is the selected slot's time written, 12-hour with AM/PM or 24-hour, and what does it show?",
+          "say_example": "The slot reads <00:00>. This calendar uses 24-hour time, so that's midnight, not noon. Picking <12:00> instead."
+         }
+        ]
+       },
+       {
+        "id": "6.6.4",
+        "label": "Re-pick when the slots move",
+        "questions": [
+         {
+          "question": "Picking the length changed the slots. Which of the remaining times do you want?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Changing the duration to one hour made several earlier slots unavailable, requiring you to actively choose a valid time.",
+          "whatTheAgentLoses": "The agent might just pick the auto-highlighted time slot rather than the specific hour that best fits your personal schedule.",
+          "speak": "on-event",
+          "check": "Which slots became unavailable after the duration changed, and which remain?",
+          "say_example": "Choosing <60> minutes took away the <7> o'clock slot. What's left is <6> or <8>. Which one?"
+         }
+        ]
+       },
+       {
+        "id": "6.6.5",
+        "label": "Propose times to the tutor"
+       },
+       {
+        "id": "6.6.6",
+        "label": "Add another lesson",
+        "questions": [
+         {
+          "question": "Is the chosen slot shown as saved before continuing?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The green checkmark and 'Remove' option confirm your chosen slot was successfully saved, while the visible 'Add date / time' button offers the choice to schedule multiple sessions at once.",
+          "whatTheAgentLoses": "You lose the ability to visually confirm your preferred time was accurately recorded and the flexibility to batch-schedule multiple lessons before checkout.",
+          "speak": "never",
+          "check": "Does the page show the chosen slot with a checkmark or a Remove link beside it?",
+          "say_example": "Saved the <Tuesday 7 pm> slot. Didn't add a second lesson, since you asked for one."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Choose the communication tool",
+      "questions": [
+       {
+        "question": "What's your username on the tool the lesson runs over, like Skype?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select a teaching tool from the dropdown and verify your contact ID so the tutor can successfully connect with you.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the lesson is conducted on a platform you are comfortable using and that your personal contact ID is accurate.",
+        "speak": "gate",
+        "check": "Which tool is selected in the dropdown, and what does the contact ID field contain?",
+        "say_example": "The lesson runs over <Skype>, and the form needs your Skype name. I don't have it. What is it?"
+       },
+       {
+        "question": "Does the lesson tool need a particular browser or app installed first?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "While selecting Skype or Zoom implies an external app, some platforms' native 'classrooms' only function on specific browsers (like Chrome) or prohibit mobile devices.",
+        "whatTheAgentLoses": "The user scrambles at the last minute and misses a portion of their paid lesson because they didn't realize they needed to download software or switch devices to support the chosen tool.",
+        "speak": "never",
+        "check": "What does the page say about the classroom's browser or app requirements?",
+        "say_example": "Noted lessons run in the site's own classroom, which needs <Chrome> and no phones."
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Write the tutor a message",
+      "questions": [
+       {
+        "question": "What should you tell the tutor about your goals and schedule?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form asks for your availability and a message about your goals so the tutor can prepare for the lesson.",
+        "whatTheAgentLoses": "An agent might send a generic message or skip schedule preferences, failing to accurately convey your specific learning objectives to the tutor.",
+        "speak": "never",
+        "check": "Does the booking form show a message box, and what is in it?",
+        "say_example": "Told <tutor> you're preparing for <DELF B1 in March> and can do <weekday evenings>."
+       },
+       {
+        "question": "Do you have any specific files or assignments you want to share with the tutor ahead of the session?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The booking form provides an optional feature to upload files, which is useful for giving the tutor materials to review before the lesson.",
+        "whatTheAgentLoses": "The user loses the opportunity to proactively send their homework or study materials, which could make the tutoring session more efficient.",
+        "speak": "never",
+        "check": "Does the form show a file upload, and is anything attached?",
+        "say_example": "Left the file upload empty."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Confirm the booking",
+    "note": "7.1 on every commit surface. then one of three: 7.2 to 7.5 on the credit platforms - balance against cost, the wall if it is short, a password as the contract, then Continue; 7.2, 7.6, 7.7 and 7.8 on the card platforms; 7.9 on Wyzant, where the send is the commit. 1.7 can interrupt any of them. seven keepers stop on this goal with the button unpressed (jMRd, eMJV, B6np, zym-, CWIs, cDu8, bD08).",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Review the summary",
+      "questions": [
+       {
+        "question": "What does checkout say happens if the trial isn't a fit?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": true,
+        "why": "The checkout screen highlights a 'Free replacement or refund' guarantee, reassuring you of your options before finalizing the payment.",
+        "whatTheAgentLoses": "Delegating this means you miss learning about the platform's satisfaction guarantee and your specific options for a replacement or refund if the tutor isn't a good fit.",
+        "speak": "never",
+        "check": "What guarantee or refund text does the checkout or confirmation show, and did the tutor's profile promise one?",
+        "say_example": "Noted checkout's promise of a free replacement or refund if the trial isn't a fit."
+       },
+       {
+        "question": "Does the checkout total include the promotion the site promised, like a free trial or first hour?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The checkout screen displays the total amount the student is charged for the session, which clarifies the actual cost of the trial.",
+        "whatTheAgentLoses": "The user loses accurate information about the financial commitment required for the trial lesson if the agent does not verify the checkout total.",
+        "speak": "if-wrong",
+        "check": "What promotion did an earlier page state, and does the checkout total or a discount line show it?",
+        "say_example": "The profile said the first hour is free. Checkout is charging <60> for it. Something's off, so I've stopped."
+       },
+       {
+        "question": "Was the rewards popup skipped?",
+        "cluster": "undo",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "A 'Rewards found!' popup appeared offering 680 to 1,700 points back, but it was dismissed without being redeemed.",
+        "whatTheAgentLoses": "The user misses out on potential cashback or discount rewards that could have reduced the overall cost of the lesson.",
+        "speak": "never",
+        "check": "Does a rewards popup appear, and what does it offer?",
+        "say_example": "Skipped the rewards popup offering <680> points. It signs you up for a loyalty program."
+       },
+       {
+        "question": "Does the price in the checkout summary match the rate you selected earlier?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "This matters because the checkout summary displays a $60 charge for a 1-hour session, contradicting the $20 rate shown previously in the booking panel.",
+        "whatTheAgentLoses": "If an agent ignores this discrepancy, you could end up paying significantly more for the session than the advertised rate.",
+        "speak": "if-wrong",
+        "check": "What total does the checkout show, and what price and fees were shown on the search card, profile and booking panel?",
+        "say_example": "Checkout says <60>. The booking panel said <20>. I've stopped until that's explained."
+       },
+       {
+        "question": "Is the checkout total in the same currency as the prices we searched in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms sometimes display search results in a default currency (like USD) but switch to local currency at checkout based on IP or payment method, changing the actual numeric total.",
+        "whatTheAgentLoses": "The user loses the ability to catch unexpected currency conversion rates or fees that alter the final out-of-pocket cost.",
+        "speak": "if-wrong",
+        "check": "What currency code or symbol is on the search-result rates and on the checkout total, and what is the person's currency?",
+        "say_example": "Prices were in <USD> while we searched. Checkout is in <CAD>. So the total is really <27.50 CAD>."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Check balance against cost",
+      "questions": [
+       {
+        "question": "Is your account balance taken off the checkout total?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The checkout screen must accurately reflect the application of the $11.00 USD italki Balance shown earlier on the dashboard.",
+        "whatTheAgentLoses": "The user loses the financial benefit of their existing balance if the agent fails to ensure it is applied during checkout.",
+        "speak": "if-wrong",
+        "check": "What balance did the dashboard show, and what does the checkout subtract as balance?",
+        "say_example": "You had <11> in balance. Checkout isn't using it, so it wants the full <14>. Applying it first."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Handle the insufficient-credits wall",
+      "questions": [
+       {
+        "question": "There aren't enough credits for this lesson. Buy more with real money, or stop here?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays an insufficient credits warning with options to either buy more credits or close the modal, forcing a choice on whether to spend real money.",
+        "whatTheAgentLoses": "The user loses the ability to prevent unwanted financial charges if the agent automatically chooses to buy credits to complete the task.",
+        "speak": "gate",
+        "check": "Does the page show an insufficient-credits or balance-short message, a disabled pay button, and the amount still owed?",
+        "say_example": "You're <30> credits short for this lesson. Buying more means real money, about <3>. Buy them, or stop here?"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Authorize with the password",
+      "questions": [
+       {
+        "question": "What does typing the password count as agreeing to?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Entering the password acts as a legal signature confirming a purchase order and asserting the user is at least 13 years old.",
+        "whatTheAgentLoses": "The agent might blindly agree to legal age requirements and contract terms on the user's behalf without their explicit consent.",
+        "speak": "never",
+        "check": "What does the text beside the password field say the entry confirms?",
+        "say_example": "Noted that typing the password counts as agreeing to the purchase terms and being over <13>."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Submit the lesson request"
+     },
+     {
+      "id": "7.6",
+      "label": "Choose how to pay"
+     },
+     {
+      "id": "7.7",
+      "label": "Enter the card details"
+     },
+     {
+      "id": "7.8",
+      "label": "Confirm the payment",
+      "questions": [
+       {
+        "question": "Ready to pay and book this lesson?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The payment page shows a final out-of-pocket cost of $3.00 USD, requiring a final decision to either complete the transaction or abandon the booking.",
+        "whatTheAgentLoses": "You lose the final opportunity to review the actual cost and back out of the transaction before your funds are spent.",
+        "speak": "gate",
+        "check": "What tutor, date, time, length, lesson type, total, payment source, cancellation terms, note to the tutor and commit-button label does the final page show?",
+        "say_example": "Ready to book. <Ana>, <Tuesday> at <7 pm>, <60> minutes. <14> total, <11> from your balance and <3> on your card. Free to cancel until <Monday 7 pm>. Your note says you're preparing for <DELF B1>. Press to book, or say change."
+       },
+       {
+        "question": "Is there a pre-ticked box that would start a monthly charge after this?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms like Preply and Cambly often use discounted trial lessons as entry points into mandatory subscription models, meaning a $5 trial could result in an automatic $100/month charge if not immediately cancelled.",
+        "whatTheAgentLoses": "The user loses the ability to prevent unwanted recurring charges on their credit card if the agent blindly accepts the trial terms without opting out of the subscription.",
+        "speak": "on-event",
+        "check": "Does the page show a pre-checked subscription, auto-refill or auto-renew line, and what does it say is charged and when?",
+        "say_example": "There's a box already ticked that would charge <100> a month after this trial. I've unticked it. Say keep if you want it."
+       },
+       {
+        "question": "After pressing pay, is the page still the checkout with no confirmation or error?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Payment gateways sometimes fail silently, dropping the loading animation and leaving the user on the checkout page without generating an explicit error message.",
+        "whatTheAgentLoses": "The agent might assume the transaction succeeded or get stuck in a loop, leaving the user without a booked lesson.",
+        "speak": "on-event",
+        "check": "After the pay press, is the page still the checkout with no confirmation, success message or error?",
+        "say_example": "I pressed pay and nothing changed. No confirmation, no error. I won't press again. Checking your bookings page to see if it went through."
+       }
+      ]
+     },
+     {
+      "id": "7.9",
+      "label": "Send the request",
+      "questions": [
+       {
+        "question": "Should you resubmit the form now that your email is verified?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Tell Us More' form is still displayed with your previously entered message, requiring you to click 'Send' again to actually complete the submission after the email verification step.",
+        "whatTheAgentLoses": "The user loses the assurance that their introductory message to the tutor was successfully transmitted after the email verification interruption.",
+        "speak": "on-event",
+        "check": "Is the request form still showing with the message filled in and a Send button?",
+        "say_example": "Your request didn't go out before the email check. It's still here, filled in. Press to send it again."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Read the outcome",
+    "note": "8.1 on every commit that lands. 8.2 on the platforms where the tutor still has to accept or reply - italki and Wyzant - and 8.3 where a confirmation email or a dashboard exists. 8.4 to 8.7 as far as the keeper goes: only 7RrY and 7jo_ see past the booking itself, and nobody cancels.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the result page",
+      "questions": [
+       {
+        "question": "Is the lesson booked, or waiting on the tutor to accept?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen states that the tutor has 48 hours to accept the request before the lesson is officially scheduled and your credits are deducted.",
+        "whatTheAgentLoses": "You lose the immediate understanding that your booking is not yet guaranteed and that you must monitor your account for the tutor's response over the next 48 hours.",
+        "speak": "always",
+        "check": "Does the confirmation say scheduled, or pending the tutor's acceptance, and by when?",
+        "say_example": "Booked. <Ana>, <Tuesday> at <7 pm>. It's pending until <Ana> accepts, within <48> hours. Credits come off when they do."
+       },
+       {
+        "question": "Does the confirmation page show the date, time and place you booked?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the email details like the tutor's name, start date, and location ensures the appointment was booked exactly as you intended.",
+        "whatTheAgentLoses": "You lose the personal reassurance of seeing the confirmation email in your inbox to verify the exact meeting location and time.",
+        "speak": "if-wrong",
+        "check": "What tutor, date, time and location does the confirmation or lesson details page show, versus what was booked?",
+        "say_example": "The lesson details page says <Wednesday>. We booked <Tuesday>. I'd check with the tutor before trusting either."
+       },
+       {
+        "question": "Does the expected response time on the confirmation screen match what was stated on the tutor's profile?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Verifying that the post-submission screen confirms the two-hour response time promised on the profile ensures your scheduling expectations are accurate.",
+        "whatTheAgentLoses": "An agent might overlook the expected response time, leaving you uncertain about when the tutor will actually confirm the lesson.",
+        "speak": "never",
+        "check": "What response time does the confirmation state, and what did the profile state?",
+        "say_example": "Noted <2> hours to reply on the confirmation, same as the profile."
+       },
+       {
+        "question": "Did the remaining-session count drop by exactly one after booking?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout page stated there were 8 sessions left, but the confirmation page showed only 7 remaining, revealing a discrepancy in the account balance.",
+        "whatTheAgentLoses": "An agent might overlook this mismatch, leaving you unaware that your subscription balance is incorrect or that an extra session was unexpectedly deducted.",
+        "speak": "if-wrong",
+        "check": "What session count did checkout show, and what does the confirmation show?",
+        "say_example": "Checkout said <8> sessions left. Now it says <6>. That's two gone for one lesson."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Read the pending status",
+      "questions": [
+       {
+        "question": "How did the tutor respond to your message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows an unread message preview from Kyle M. saying 'Sup dawg', which you need to open to read the full context of their reply.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate the tutor's communication style and professionalism before committing to a booking.",
+        "speak": "on-event",
+        "check": "Does the messages panel show a reply from the tutor, with what text and timestamp?",
+        "say_example": "<Tutor> wrote back within a minute, which is probably an automatic reply. It says <text>."
+       },
+       {
+        "question": "Should I send the tutor another message about this request?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displayed a 'Messages' panel with a text box for sending a note to the teacher prior to the lesson.",
+        "whatTheAgentLoses": "The user loses the opportunity to provide specific context, goals, or requests to the tutor before the lesson begins.",
+        "speak": "never",
+        "check": "Does the page show a message box to the teacher?",
+        "say_example": "Skipped a second message to the tutor."
+       },
+       {
+        "question": "Does the countdown on the lesson page match the reply window the confirmation gave?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The confirmation screen stated the teacher has 48 hours to respond, which should be immediately reflected as an active countdown on the lesson details page.",
+        "whatTheAgentLoses": "You lose the reassurance of personally verifying that the platform's system correctly registered the tutor's response deadline.",
+        "speak": "never",
+        "check": "What countdown does the lesson details page show, and what reply window did the confirmation state?",
+        "say_example": "Saw a <47> hour countdown for the tutor to reply, matching the <48> hours promised."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Check the dashboard",
+      "questions": [
+       {
+        "question": "Does the booking now appear under upcoming sessions on the dashboard?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The dashboard displayed an 'Upcoming Sessions' section with the newly booked appointment, confirming the system successfully registered the lesson.",
+        "whatTheAgentLoses": "The user loses the reassurance of independently verifying that the scheduled lesson is correctly listed in their personal dashboard.",
+        "speak": "never",
+        "check": "Does the dashboard list the new lesson under upcoming sessions?",
+        "say_example": "Found the lesson under upcoming sessions on the dashboard."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Read the session details"
+     },
+     {
+      "id": "8.5",
+      "label": "Set the recording options",
+      "questions": [
+       {
+        "question": "Do you consent to having this session recorded and published on YouTube?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The confirmation page includes settings for recording consent and YouTube publishing, which directly affect your privacy during the lesson.",
+        "whatTheAgentLoses": "An agent might accept the default privacy settings or opt into publishing the recording, potentially exposing your image and voice online without your explicit permission.",
+        "speak": "gate",
+        "check": "Does the page show a recording consent or YouTube publishing option, and what is its current state?",
+        "say_example": "The site wants permission to record your lessons and post them on YouTube. That's yours to decide. Yes or no?"
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Join the online lesson room"
+     },
+     {
+      "id": "8.7",
+      "label": "Cancel or reschedule the lesson"
+     }
+    ]
+   }
+  ]
+ }
+}

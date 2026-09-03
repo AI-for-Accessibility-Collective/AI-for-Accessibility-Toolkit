@@ -24,7 +24,10 @@
        "safety": 1,
        "reversibility": 3,
        "recovery": 2
-      }
+      },
+      "speak": "on-event",
+      "check": "Does the page show a form from a third-party service (e.g. labelled 'Incogni' or marked sponsored/ad) requesting name or email, separate from the platform's own settings?",
+      "say_example": "This part is a sponsored ad for <Incogni>, a paid data-removal service. It's not your account's settings. It wants your name and email. I'm skipping it."
      }
     ],
     "children": [
@@ -33,7 +36,7 @@
       "label": "Open the right app",
       "questions": [
        {
-        "question": "Which app should you open to change your location settings?",
+        "question": "Should this setting be changed at the device level for every app, or only inside the one app?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -46,7 +49,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which apps or settings surfaces are visible on screen, and which one is currently open?",
+        "say_example": "Made the change in the phone's <Settings>, not inside <the app> - covers the whole phone"
        }
       ]
      },
@@ -84,7 +90,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the quick-settings panel show an Airplane Mode toggle, and what is its current state?",
+        "say_example": "I can flip Airplane Mode. Everything goes quiet at once, but calls and texts stop too. Want that, or should I just turn off location?"
        }
       ]
      },
@@ -106,7 +115,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Which account name or email does the page show as the active one?",
+        "say_example": "You're signed in as <account>. The changes land on that one."
        },
        {
         "question": "Which account's settings do you want to modify?",
@@ -122,7 +134,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which accounts does the page list, and how is each labelled (e.g. organizer, child, family member)?",
+        "say_example": "There are <two> accounts here: <yours> and <the child's>. Which one am I changing?"
        },
        {
         "question": "Is this the specific device you want to use to determine your shared location?",
@@ -138,7 +153,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "What device does the 'My Location' setting name as the source of the shared location?",
+        "say_example": "Your shared location comes from <this phone>, not your other devices. If you leave it behind, that's what people see."
        }
       ]
      },
@@ -160,10 +178,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which sign-in methods does the page list?",
+        "say_example": "The page wants a sign-in. It offers <phone, email, or Facebook>. Which way do you use here?"
        },
        {
-        "question": "How should you authenticate to proceed to the account settings?",
+        "question": "Do you enter your own account password rather than handing it to the agent?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -176,7 +197,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show a password or credential dialog, and for which account name or email?",
+        "say_example": "It's asking for the password for <your Apple account>. That's yours to type. I'll wait."
        }
       ]
      },
@@ -198,7 +222,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show an error stating cookies are disabled or blocked for sign-in?",
+        "say_example": "The sign-in failed because cookies are off in this browser. Turning them back on for this site so you can log in."
        },
        {
         "question": "How do you want to handle the Chrome enhanced ad privacy prompt?",
@@ -214,10 +241,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show a prompt about new ad privacy features, and what do its accept and dismiss buttons say?",
+        "say_example": "Chrome popped up asking about <new ad privacy features>. Agreeing turns on a new kind of ad tracking. I'm closing it without agreeing."
        },
        {
-        "question": "Do you wait for the Instagram splash screen to finish loading before attempting to navigate to your profile?",
+        "question": "Do you wait for the Instagram splash screen to finish loading before going to your profile?",
         "cluster": "watch",
         "moment": "Now",
         "moneyMoving": false,
@@ -230,7 +260,10 @@
          "safety": 0,
          "reversibility": 0,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show only a splash or loading screen, with no navigation bar yet?",
+        "say_example": "Waited out the <Instagram> splash screen"
        }
       ]
      }
@@ -255,7 +288,10 @@
        "safety": 1,
        "reversibility": 2,
        "recovery": 2
-      }
+      },
+      "speak": "on-event",
+      "check": "Does the page show both a 'Find My iPhone' control and a 'Share My Location' control, and what state is each in?",
+      "say_example": "Two switches look alike here. <Find My iPhone> finds your lost phone. <Share My Location> tells your people where you are. You asked to stop the sharing one, so the lost-phone one stays on."
      },
      {
       "question": "Do you want to use the guided 'Privacy guide' or manually locate the specific settings?",
@@ -271,7 +307,10 @@
        "safety": 0,
        "reversibility": 0,
        "recovery": 1
-      }
+      },
+      "speak": "never",
+      "check": "Does the page show a 'Privacy guide' option alongside the manual settings sections?",
+      "say_example": "Went straight to the setting, skipped the <Privacy guide> tour"
      }
     ],
     "children": [
@@ -284,7 +323,7 @@
       "label": "Find the control in the section",
       "questions": [
        {
-        "question": "Which setting do you tap to control usage and diagnostics data?",
+        "question": "Is 'Usage and diagnostics' actually on this screen, or is it being acted on while not visible?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -297,10 +336,13 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Is 'Usage and diagnostics' listed among the options visible on the current tab?",
+        "say_example": "<Usage and diagnostics> wasn't on the first screen - found it under <All services>"
        },
        {
-        "question": "Which activity setting do you want to modify, and are you in the correct account?",
+        "question": "Which activity setting matches the one you asked to change?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -313,7 +355,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which tracking categories does the page list (e.g. Web & App Activity, Location History), and what state does each show?",
+        "say_example": "Found <Web & App Activity on, Location History off>"
        }
       ]
      },
@@ -335,7 +380,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the title of the opened search result match the name of the setting that was searched for?",
+        "say_example": "The search gave me <Private DNS>, but that's not the setting you asked about. Looking again."
        }
       ]
      },
@@ -357,7 +405,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Which apps does the list show with location set to 'Always', and are there apps beyond the one named in the request?",
+        "say_example": "While I'm here - <two> other apps besides <the named one> also have location on all the time: <names>. They're in the report."
        },
        {
         "question": "Which of these signed-in devices do you recognize?",
@@ -373,7 +424,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which devices does the page list as signed in, with what type, name, and location for each?",
+        "say_example": "Your account shows <5> signed-in devices. One is <an unknown type from Haryana, India>. Do you recognize it? If not, I can sign it out."
        },
        {
         "question": "Which app do you want to clear the cache for?",
@@ -389,7 +443,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Is the named app present in the installed-apps list on screen?",
+        "say_example": "Opened <the app's> storage page from the app list"
        },
        {
         "question": "Which website in the allowed list is causing the unwanted notifications?",
@@ -405,7 +462,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Which site URLs does the allowed-to-notify list show, and does one match the site named in the recent fake notifications?",
+        "say_example": "The fake pop-ups come from <site>. It's on the list of sites allowed to send you notifications. Taking it off."
        },
        {
         "question": "Whose location sharing settings should you modify?",
@@ -421,23 +481,10 @@
          "safety": 2,
          "reversibility": 3,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Which device should you remove from your account?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a list of signed-in devices, requiring you to identify and select unrecognized sessions like the unknown device from Haryana, India.",
-        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally review your login history and distinguish your actual devices from potentially unauthorized access.",
-        "costDims": {
-         "money": 1,
-         "privacy": 3,
-         "thirdParty": 2,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which people does the sharing list show, and is the named person among them?",
+        "say_example": "Stopped sharing with <the one named>; the other <2> untouched"
        }
       ]
      },
@@ -446,23 +493,7 @@
       "label": "Recover the missing control",
       "questions": [
        {
-        "question": "Is the direct profile locking feature available for your account?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Audience and visibility' section shows whether the 'Profile locking' option is currently supported and visible for this specific account.",
-        "whatTheAgentLoses": "Delegating this step means you lose the awareness of whether your account natively supports the direct profile locking feature or if you must rely on individual privacy toggles.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        }
-       },
-       {
-        "question": "Is the 'History & privacy' option visible in this settings menu?",
+        "question": "Is the control you need actually present in this menu for this account?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
@@ -475,7 +506,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Is the target control or menu option present among the options the page lists?",
+        "say_example": "The menu here doesn't have <History & privacy>. The setting you want isn't where it should be on this account. I'm looking for another way in."
        }
       ]
      },
@@ -497,7 +531,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "always",
+        "check": "Which visibility settings does the page list, and what current value does each show?",
+        "say_example": "Three of these still let strangers reach you: <list with current values>. Setting each to the most private option, like you asked."
        },
        {
         "question": "Do you need to make any changes to your block list before clicking next?",
@@ -513,7 +550,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "How many blocked accounts does the page report?",
+        "say_example": "The block list holds <27> people, left as is"
        },
        {
         "question": "Do you want to adjust any of the additional safety settings like comments or direct messages?",
@@ -529,7 +569,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which additional safety options does the page list (e.g. Duet, Stitch, Mentions and tags), and what state is each in?",
+        "say_example": "Left <Duet, Stitch, mentions> as they were - not in the ask"
        }
       ]
      },
@@ -562,10 +605,13 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the status bar or notification shade show an active network connection?",
+        "say_example": "Online - changes can sync"
        },
        {
-        "question": "Does the 'Share My Location' row have a toggle switch or a navigation arrow?",
+        "question": "Is 'Share My Location' a switch, or a row that opens a menu - and did the change land on the setting itself?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
@@ -578,7 +624,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the 'Share My Location' row show a switch or a chevron/arrow?",
+        "say_example": "<Share My Location> opens a menu, not a switch - going one level deeper"
        },
        {
         "question": "Do all of these apps really need full access to your photo library?",
@@ -594,7 +643,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Which apps does the page list with 'Full Access' to photos, and how many photos does it say that covers?",
+        "say_example": "<Six> apps can see all <8,000> of your photos, not just the ones you share with them. I'll list them in the report."
        },
        {
         "question": "What is the current state of your Bluetooth and Bluetooth scanning?",
@@ -610,10 +662,13 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "What state does the page show for Bluetooth scanning, and what state does the quick-settings panel show for Bluetooth itself?",
+        "say_example": "Bluetooth shows off, but Bluetooth scanning is still on. Apps can still sense nearby devices to guess where you are."
        },
        {
-        "question": "What is the current status of your location services, and where do you tap to access the toggle?",
+        "question": "What is the current status of your location services before any change?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
@@ -626,7 +681,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "What status does the page show next to the location services row?",
+        "say_example": "Location showed <Off> before the change"
        },
        {
         "question": "What is the current privacy status of your account?",
@@ -642,7 +700,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the profile page show a 'Private account' label or lock icon, or neither?",
+        "say_example": "The account showed <Private account> before the change"
        },
        {
         "question": "Do you want to add a phone number to your recovery methods?",
@@ -658,7 +719,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "What does the page show for recovery email and recovery phone - filled or empty?",
+        "say_example": "Recovery is email only, no phone on file"
        },
        {
         "question": "Is the specific privacy control visible but grayed out and unclickable?",
@@ -674,7 +738,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Is the target control shown grayed out or disabled, and does the page state a reason (e.g. managed by an organization, age or region restriction)?",
+        "say_example": "The setting is there but locked. The page says <it's managed by your organization>. I can't change it, and neither can you from this phone."
        },
        {
         "question": "How do you want to configure your Private Space settings?",
@@ -690,10 +757,13 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which Private Space options does the page show (lock, hide, delete), and what is each set to?",
+        "say_example": "Private Space set to <hidden>; lock left on"
        },
        {
-        "question": "Is the setting you are instructed to select already active?",
+        "question": "Is the setting already in the state the task is asking for, so there is no change left to make?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
@@ -706,39 +776,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Are you able to change the wired accessories permission to a more secure option?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the setting is locked to 'Always Allow' and explicitly states it is managed by your organization and cannot be changed.",
-        "whatTheAgentLoses": "The user loses the awareness that an organizational restriction is actively blocking the agent from securing the device.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 3,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Is the toggle to allow search engines to link to your profile already turned off?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a grey toggle switch for the search engine setting, indicating it is already disabled so no modification is needed.",
-        "whatTheAgentLoses": "The user loses the guarantee that the agent checked the current state of the toggle before acting, which could lead to accidentally turning the setting on.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 3,
-         "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show the target option already selected or the target toggle already in the requested state?",
+        "say_example": "<Enhanced protection> is already on. Nothing to change - I'll leave it be."
        },
        {
         "question": "Who can currently see your liked videos?",
@@ -754,23 +795,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Do you need to enable 2-step verification, or is it already turned on?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows '2-step verification' is already 'On', meaning no changes are necessary to secure the account.",
-        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that their extra layer of account security is actively enabled.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 3,
-         "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "What option does the page show selected for who can watch your liked videos?",
+        "say_example": "Liked videos were on <Only me> before the change"
        }
       ]
      },
@@ -792,7 +820,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "What does the page say the report contains and covering what period?",
+        "say_example": "Read the <Apple Intelligence Report> - view only, nothing exported"
        },
        {
         "question": "Do you want to change your account to public despite the default privacy setting for users under 16?",
@@ -808,7 +839,10 @@
          "safety": 2,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page state that accounts for users under 16 are private by default so only approved users can watch?",
+        "say_example": "The page says under-16 accounts stay private so only approved people can watch. Going public opens your videos to everyone. Do you still want it public?"
        },
        {
         "question": "What do the different colored arrow icons next to the system services mean?",
@@ -824,7 +858,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "What does the on-page legend say each arrow style means?",
+        "say_example": "The arrow legend reads <purple means recent, gray means the last 24 hours, hollow means conditional>."
        },
        {
         "question": "Which specific Google services are included in your activity tracking?",
@@ -840,7 +877,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which service icons or names does the page list under the activity section?",
+        "say_example": "Tracking covers <Search, Maps, YouTube, Play>"
        },
        {
         "question": "Does a prompt indicate that your current account type prevents you from making the account private?",
@@ -856,7 +896,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page state that the current account type (Business or Creator) cannot be set to private?",
+        "say_example": "The page says a <Business> account can't go private. To lock it down, the account has to switch to <Personal> first."
        },
        {
         "question": "Are you aware that making your account private will not prevent non-followers from messaging or tagging you?",
@@ -872,7 +915,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the confirmation dialog state that going private hides posts but does not restrict who can tag, mention, or message you?",
+        "say_example": "One thing the page says: going private hides your posts, but people can still message and tag you. That part doesn't change."
        }
       ]
      },
@@ -894,23 +940,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Which app should you download to trigger the permission prompt?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "You must select an app with a 'GET' button from the 'Top apps this week' list, such as Disney+, to install a new application for adjusting and verifying permissions.",
-        "whatTheAgentLoses": "You lose control over which specific third-party application gets installed on your device to test the privacy settings.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show a notification styled as a security warning (e.g. antivirus expiration) that comes from a website rather than the system?",
+        "say_example": "That <McAfee> warning is a fake ad from a website, not a real alert from your computer. Ignoring what it says, and blocking where it came from."
        }
       ]
      }
@@ -939,7 +972,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page state that this feature uses the front-facing camera?",
+        "say_example": "Turned on <face detection for auto-rotate> - the page says it uses the front camera"
        },
        {
         "question": "Should you enable the option to filter spam calls?",
@@ -955,7 +991,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the spam-call filter toggle and its current state?",
+        "say_example": "Turned on the spam-call filter"
        },
        {
         "question": "Do you want to enable Device protection, and if so, should the device be restarted immediately or later?",
@@ -971,7 +1010,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the Device protection toggle, and does it offer restart-now and restart-later options?",
+        "say_example": "Turned on <Device protection>, picked <restart later> - active after the restart"
        },
        {
         "question": "Do you want to keep sharing your usage and diagnostic data with Google?",
@@ -987,10 +1029,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the usage and diagnostics toggle, its state, and what it says is shared?",
+        "say_example": "Turned off usage and diagnostics sharing"
        },
        {
-        "question": "Should you toggle on 'Share My Location' to set up your location-freezing strategy?",
+        "question": "Should you turn on 'Share My Location', which broadcasts this device's position to your chosen contacts?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -1003,7 +1048,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the 'Share My Location' toggle and its current state?",
+        "say_example": "Turned on <Share My Location> - chosen contacts can see this phone"
        },
        {
         "question": "Should you disable 'Always use secure connections' to bypass the HTTPS warning?",
@@ -1019,7 +1067,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page state that this setting upgrades browsing to HTTPS and warns before unsupported sites?",
+        "say_example": "This switch keeps your browsing on safer connections. Turning it off means some sites load the less safe way, with no warning first. Turn it off anyway?"
        },
        {
         "question": "Should you allow this app to access your precise location?",
@@ -1035,7 +1086,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the precise location toggle for this app and its current state?",
+        "say_example": "Precise location off for <the app> - approximate only now"
        },
        {
         "question": "Do you want your phone to build a profile of the places you visit often?",
@@ -1051,7 +1105,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page describe this feature as learning significant places and frequent routes, and what is the toggle's state?",
+        "say_example": "Turned off <Significant Places>"
        },
        {
         "question": "Do you want to turn off personalized ads, knowing it won't reduce the total number of ads you receive?",
@@ -1067,7 +1124,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page state that disabling this changes ad relevance but not the number of ads?",
+        "say_example": "Personalized ads off - page says the ad count stays the same"
        },
        {
         "question": "Should you disable the App Privacy Report?",
@@ -1083,7 +1143,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the App Privacy Report toggle and what it says the report records?",
+        "say_example": "Turned off the <App Privacy Report>"
        },
        {
         "question": "Should you turn off background Bluetooth scanning to save battery?",
@@ -1099,7 +1162,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page state that scanning lets apps detect nearby devices even when Bluetooth is off, and what is the toggle's state?",
+        "say_example": "Turned off Bluetooth scanning - apps stop sensing nearby devices"
        },
        {
         "question": "Do you want search engines outside Facebook to link to your profile?",
@@ -1115,7 +1181,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the search-engine linking setting and its current value?",
+        "say_example": "Search engines outside <Facebook> no longer link to your profile"
        },
        {
         "question": "Should you allow previews of your public group posts outside of Facebook?",
@@ -1131,7 +1200,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the group-post preview setting and what it says gets shown outside the platform?",
+        "say_example": "Turned off outside previews of your public group posts"
        },
        {
         "question": "Should you toggle your account to private?",
@@ -1147,23 +1219,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Should you toggle off the private account setting?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the private account toggle is currently green, meaning turning it off will allow unapproved users to follow you and watch your videos.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally weigh the privacy implications of making your account public before the change occurs.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 2,
-         "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the Private Account toggle and its current state?",
+        "say_example": "Flipped <Private Account> on - new followers now need approval"
        },
        {
         "question": "Do you want to turn off the 'Require Purchase Approval' restriction?",
@@ -1179,7 +1238,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show the 'Require Purchase Approval' toggle, its state, and which family member it applies to?",
+        "say_example": "This switch makes <the family member> ask a parent before buying or downloading. Turning it off ends that. Do you want it off?"
        },
        {
         "question": "Do you want your account to be suggested to your contacts and Facebook friends?",
@@ -1195,7 +1257,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which suggestion toggles does the page show (contacts, Facebook friends, mutual connections), and what state is each in?",
+        "say_example": "Turned off account suggestions to <contacts and Facebook friends>"
        },
        {
         "question": "Do you want to sync your contacts and Facebook friends with TikTok?",
@@ -1211,7 +1276,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the contact-sync and Facebook-friends-sync toggles and their states?",
+        "say_example": "Left contacts and <Facebook> friends unsynced"
        },
        {
         "question": "Do you want to allow TikTok to use your off-app activity for targeted advertising?",
@@ -1227,7 +1295,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the off-app activity ad toggle and what it says it uses?",
+        "say_example": "Turned off <off-TikTok activity> ad targeting"
        },
        {
         "question": "Do you want to turn off Web & App Activity tracking by clicking the blue toggle?",
@@ -1243,7 +1314,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show Web & App Activity as on, and what does it say is being saved?",
+        "say_example": "Turned off <Web & App Activity> - saving stops from now"
        },
        {
         "question": "Should you enable location-based suggestions?",
@@ -1259,7 +1333,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the Location-Based Suggestions toggle and its current state?",
+        "say_example": "Turned on <Location-Based Suggestions>, per the ask"
        },
        {
         "question": "Do you want to allow third-party advertisers to use your videos in ads?",
@@ -1275,7 +1352,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the ad authorization toggle and what it says advertisers may do?",
+        "say_example": "Turned off <ad authorization> - advertisers can't use your videos"
        },
        {
         "question": "Should you leave the 'Downloads' setting turned on?",
@@ -1291,7 +1371,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the Downloads setting and its current state?",
+        "say_example": "Set <Downloads> to <off> - people can't save your videos"
        }
       ]
      },
@@ -1313,7 +1396,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "How many page thumbnails does the screen show, and which are checked?",
+        "say_example": "Unchecked <page 3> - that page of apps hidden, apps stay installed"
        },
        {
         "question": "Are you willing to send your browsing data to Google to enable Enhanced protection?",
@@ -1329,7 +1415,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page state that Enhanced protection sends browsing data to Google?",
+        "say_example": "The page says <Enhanced protection> works by sending your browsing data to <Google>. Safer from bad sites, less private from <Google>. That's the trade you'd be making."
        },
        {
         "question": "Which alternative search engine should you select for better privacy?",
@@ -1345,23 +1434,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
-       },
-       {
-        "question": "Which privacy level do you want to select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays an 'Edit Privacy' menu with options for Public, Friends, and Only me, requiring a choice to set the desired visibility.",
-        "whatTheAgentLoses": "You lose the ability to personally decide the exact audience that can view your account activity.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which search engines does the page list, and which is currently selected?",
+        "say_example": "Search engine set to <DuckDuckGo>"
        },
        {
         "question": "Should you change the location access from 'Always' to a more restrictive setting?",
@@ -1377,7 +1453,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "What location access level does the page show as currently selected for this app?",
+        "say_example": "<The app's> location: <Always> changed to <While using>"
        },
        {
         "question": "What level of contact access should you grant to this app?",
@@ -1393,7 +1472,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which access levels does the page offer (None, Limited, Full), and which is selected?",
+        "say_example": "Contacts access set to <Limited> - only the picked people"
        },
        {
         "question": "Should you require a security delay only when away from familiar locations, or always?",
@@ -1409,7 +1491,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which delay options does the page offer, and which is currently selected?",
+        "say_example": "The delay can protect you everywhere, or only away from places like home. Everywhere is safer if someone learns your passcode, but slower for you at home. Which do you want?"
        },
        {
         "question": "Who should be able to see your future posts by default?",
@@ -1425,7 +1510,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which audience options does the page offer for future posts, and which is selected?",
+        "say_example": "Default audience for new posts set to <Friends>"
        },
        {
         "question": "Do you need to change who can send you friend requests?",
@@ -1441,7 +1529,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "What does the page show as the current friend-request audience?",
+        "say_example": "Changed friend requests from <Friends of friends> to <the pick>"
        },
        {
         "question": "Who should be able to find your profile using your phone number?",
@@ -1457,7 +1548,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which options does the page offer for phone-number lookup, and which is selected?",
+        "say_example": "Phone-number lookup set to <Only me>"
        },
        {
         "question": "Who should be allowed to find your profile using your email address?",
@@ -1473,7 +1567,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which options does the page offer for email lookup, and which is selected?",
+        "say_example": "Email lookup set to <Only me>"
        },
        {
         "question": "Who do you want to allow to follow your profile?",
@@ -1489,7 +1586,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which follower options does the page offer, and which is selected?",
+        "say_example": "Followers set to <Friends>"
        },
        {
         "question": "Who should be allowed to comment on your public posts?",
@@ -1505,7 +1605,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which comment-audience options does the page offer, and which is selected?",
+        "say_example": "Comments on public posts set to <Friends>"
        },
        {
         "question": "Which third-party cookie setting do you want to enable?",
@@ -1521,7 +1624,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which cookie-blocking levels does the page list, and which is selected?",
+        "say_example": "Cookies set to <Block third-party>"
        },
        {
         "question": "Do you want to allow the App Store to access your location while using the app, or never?",
@@ -1537,7 +1643,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which location options does the permission dialog offer for this app?",
+        "say_example": "<App Store> location set to <Never>"
        },
        {
         "question": "Which option should you select from the dropdown to block pop-ups for this specific website?",
@@ -1553,7 +1662,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "What does the dropdown show as the current pop-up permission for this site, and is 'Block' among the options?",
+        "say_example": "Set <the site> to <Block> - its pop-ups stop"
        },
        {
         "question": "Do you want to allow or block pop-ups and redirects across all websites?",
@@ -1569,7 +1681,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which default behavior options does the page show for pop-ups and redirects, and which is selected?",
+        "say_example": "Pop-ups and redirects set to <Blocked> for all sites"
        },
        {
         "question": "Which level of web content restriction do you want to apply?",
@@ -1585,7 +1700,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which restriction levels does the page list (e.g. Unrestricted, Limit Adult Websites), and which is selected?",
+        "say_example": "Web content set to <Limit Adult Websites>"
        },
        {
         "question": "Which account type do you want to switch to?",
@@ -1601,10 +1719,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which account types does the dialog offer (Business, Personal)?",
+        "say_example": "Switched the account type to <Personal>"
        },
        {
-        "question": "How do you proceed with changing the region?",
+        "question": "How do you change the region?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -1617,7 +1738,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page warn that changing region requires accepting new terms and a valid payment method for the new location?",
+        "say_example": "Changing region isn't just a menu pick. The page wants new terms accepted and a payment method for <the new country>. Lining those up before anything changes."
        },
        {
         "question": "Which country do you want to select for your region?",
@@ -1633,7 +1757,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which countries does the list show, and is the requested one present?",
+        "say_example": "Region set to <the named country>"
        },
        {
         "question": "Which payment method do you want to select for the new region?",
@@ -1649,7 +1776,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Which payment method options does the page offer (card, PayPal, None)?",
+        "say_example": "The new region wants a payment method: <card, PayPal, or None>. Which should it be?"
        },
        {
         "question": "Who should be allowed to see your friends list?",
@@ -1665,7 +1795,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page state that mutual friends remain visible even when the friends list is hidden?",
+        "say_example": "Friends list is set to <Only me> now. The page says mutual friends still show - that part can't be hidden."
        },
        {
         "question": "Which type of screen lock do you want to set?",
@@ -1681,7 +1814,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which lock types does the page list (face, fingerprint, pattern, PIN, password)?",
+        "say_example": "Pick the lock for your phone: <face, fingerprint, pattern, PIN, or password>. Setting it up needs your hands either way."
        },
        {
         "question": "Which comment moderation filters do you want active on your account?",
@@ -1697,7 +1833,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which filter options does the page list, and which are currently on?",
+        "say_example": "Turned on the <spam and offensive> comment filter"
        },
        {
         "question": "Do you want to remove the app from the Home Screen?",
@@ -1713,7 +1852,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the dialog state that removing from the Home Screen keeps the app in the App Library?",
+        "say_example": "Removed <the app> from the Home Screen - still in the App Library"
        },
        {
         "question": "Which age restriction should you apply to hide downloaded apps?",
@@ -1729,7 +1871,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which age ratings does the page list, and which is selected?",
+        "say_example": "App limit set to <12+> - higher-rated apps hidden"
        },
        {
         "question": "Who should be able to see the list of accounts you follow?",
@@ -1745,7 +1890,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which options does the page offer for following-list visibility, and which is selected?",
+        "say_example": "Following list set to <mutual friends only>"
        }
       ]
      },
@@ -1767,7 +1915,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the sign-up form show a required date-of-birth field?",
+        "say_example": "The form wants a birthday. The date decides what protections the account gets, like private-by-default for under-16s. What should I put?"
        },
        {
         "question": "Which private DNS provider hostname should you enter?",
@@ -1783,10 +1934,13 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show a hostname field for the private DNS provider?",
+        "say_example": "It wants a DNS name to send all your browsing through. You'd be trusting that one company with every site you visit. Which provider do you want - say <provider A> or <provider B>?"
        },
        {
-        "question": "How will you fill out the required billing address fields?",
+        "question": "Are you willing to submit placeholder billing details to get past the required fields?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -1799,10 +1953,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Which fields does the page mark as Required (e.g. Street, City, Zip), and are they empty?",
+        "say_example": "The page won't save this without a billing address - street, city, and zip. Should I fill in yours?"
        },
        {
-        "question": "Should I add a screen lock to your Galaxy M35 5G as recommended?",
+        "question": "Should a screen lock be set on the device the checkup flagged?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -1815,10 +1972,13 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the security checkup page show a warning that a specific device has no screen lock?",
+        "say_example": "The checkup flags <this phone> as having no screen lock. Setting one needs your hands on it, so it's in the report for later."
        },
        {
-        "question": "What pattern should you set, and are you ready to proceed?",
+        "question": "Have you chosen a new unlock pattern you can remember, before drawing it?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -1831,7 +1991,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show the pattern-entry screen, and does it warn that forgetting the pattern requires resetting the phone?",
+        "say_example": "A new pattern is yours to draw, not mine. The page warns that forgetting it means wiping the phone. Take the phone for this part."
        }
       ]
      },
@@ -1854,7 +2017,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Which time ranges and data types does the page offer, and what does it say gets deleted with each (e.g. saved passwords, autofill)?",
+        "say_example": "It can clear from <the last hour> up to <all time>. All time also wipes <12 saved passwords> and your autofill. How far back should I go, and do the passwords stay?"
        }
       ],
       "children": [
@@ -1876,7 +2042,10 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the page show a control for opening the Web & App Activity history?",
+          "say_example": "Opened the <Web & App Activity> history to work on it"
          },
          {
           "question": "Should you reset your advertising ID or delete it entirely?",
@@ -1892,7 +2061,10 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Which options does the page offer for the advertising ID (reset, delete), and what does it say each does?",
+          "say_example": "Deleted the advertising ID - reset was the other option"
          },
          {
           "question": "Which option should you select to clear the cache without deleting user data?",
@@ -1908,10 +2080,13 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "Does the page show both a 'Clear storage' and a 'Clear cache' button?",
+          "say_example": "Pressed <Clear cache> only - <Clear storage> would wipe data"
          },
          {
-          "question": "Do you want to clear the 191 MB of cache currently stored by this app?",
+          "question": "Do you want to clear the cache this app has stored?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": false,
@@ -1924,23 +2099,10 @@
            "safety": 0,
            "reversibility": 2,
            "recovery": 1
-          }
-         },
-         {
-          "question": "Should you clear the app cache to free up the 235 MB of space?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The settings menu shows the cache is currently taking up 235 MB of storage space that could be freed.",
-          "whatTheAgentLoses": "You lose the opportunity to manage your device's storage by deciding exactly when to clear cached app data.",
-          "costDims": {
-           "money": 0,
-           "privacy": 1,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 2,
-           "recovery": 1
-          }
+          },
+          "speak": "never",
+          "check": "How much cache does the page show for this app?",
+          "say_example": "Cleared the cache - freed <191 MB>, data and sign-ins untouched"
          }
         ]
        },
@@ -1962,7 +2124,10 @@
            "safety": 0,
            "reversibility": 3,
            "recovery": 2
-          }
+          },
+          "speak": "gate",
+          "check": "Which auto-delete windows does the page offer, and does it state that older activity is deleted immediately?",
+          "say_example": "It can auto-delete activity older than <3, 18, or 36> months. Picking one erases everything older than that right away - there's a <Preview> if you want to see what goes. Which window?"
          },
          {
           "question": "How much of your activity history do you want to delete?",
@@ -1978,7 +2143,10 @@
            "safety": 0,
            "reversibility": 3,
            "recovery": 2
-          }
+          },
+          "speak": "gate",
+          "check": "Which deletion ranges does the dialog offer, from last hour to all time?",
+          "say_example": "It can delete from <the last hour> to <all time>. Gone is gone - how much should go?"
          }
         ]
        },
@@ -1986,22 +2154,6 @@
         "id": "4.4.3",
         "label": "Scope what gets deleted",
         "questions": [
-         {
-          "question": "Do you want to preview more of the older activity that will be deleted immediately before confirming?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen warns that activity older than 3 months will be deleted now and offers a 'Preview more' button to see those items.",
-          "whatTheAgentLoses": "The user loses the opportunity to review specific historical data before it is permanently erased.",
-          "costDims": {
-           "money": 0,
-           "privacy": 2,
-           "thirdParty": 0,
-           "safety": 0,
-           "reversibility": 3,
-           "recovery": 2
-          }
-         },
          {
           "question": "Should you clear all shared dictionaries or just the specific one for this isolation key?",
           "cluster": "select",
@@ -2016,7 +2168,10 @@
            "safety": 0,
            "reversibility": 3,
            "recovery": 2
-          }
+          },
+          "speak": "never",
+          "check": "Does the page show both a global 'Clear all' and a per-item 'Clear' control?",
+          "say_example": "Cleared only <the one site's> entry, not all"
          },
          {
           "question": "Which specific Google products do you want to delete activity for?",
@@ -2032,7 +2187,10 @@
            "safety": 0,
            "reversibility": 3,
            "recovery": 3
-          }
+          },
+          "speak": "gate",
+          "check": "Which products does the page list for deletion, and which are selected by default?",
+          "say_example": "Everything is ticked by default - <all Google products>. Deleting for all of them wipes history in apps you may want to keep. All of them, or just <the one you named>?"
          },
          {
           "question": "Which specific block of tracked activity do you want to delete?",
@@ -2048,7 +2206,10 @@
            "safety": 0,
            "reversibility": 3,
            "recovery": 3
-          }
+          },
+          "speak": "never",
+          "check": "Which activity blocks does the page show, and does each have its own delete control?",
+          "say_example": "Deleted <today's> activity block only"
          },
          {
           "question": "Are you aware that clearing this data will also remove it from your synced devices?",
@@ -2064,7 +2225,10 @@
            "safety": 0,
            "reversibility": 3,
            "recovery": 3
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page state that the deletion also applies to synced devices?",
+          "say_example": "Heads up from the page: the <103> items clear here and on your synced devices. Every machine signed in as you forgets them."
          },
          {
           "question": "Do you want to clear cookies, knowing it will sign you out of most sites but keep you signed into your Google Account?",
@@ -2080,7 +2244,10 @@
            "safety": 0,
            "reversibility": 1,
            "recovery": 2
-          }
+          },
+          "speak": "on-event",
+          "check": "Does the page state that clearing cookies signs you out of most sites but not your Google Account?",
+          "say_example": "One catch the page mentions: clearing cookies signs you out of most sites, but you stay signed in to <Google>. If you wanted every session cut, that one needs its own step."
          }
         ]
        },
@@ -2108,23 +2275,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "How do you want to handle the unrecognized device?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents options to either sign out or flag the unrecognized device, which determines the appropriate security response.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to simply disconnect the device or formally report it as a security breach.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 1,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 3
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show the master tracking-request toggle, and which apps are listed as already allowed?",
+        "say_example": "I can stop apps from asking to track you. For the <two> apps that already can - <names> - the page asks: leave them, or cut them off too?"
        },
        {
         "question": "Should you block the website entirely or just remove its current permission?",
@@ -2140,10 +2294,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the menu offer both 'Block' and 'Remove' for this site, and what does the page say each does?",
+        "say_example": "Chose <Block> over remove - the site can't ask again"
        },
        {
-        "question": "Should I execute the action to stop sharing my location with this person?",
+        "question": "Is the device online, so the stop-sharing change can actually take effect?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -2156,7 +2313,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show an offline alert (e.g. turn off Airplane Mode or connect to Wi-Fi) blocking the change?",
+        "say_example": "The phone is offline right now - the page says to turn off Airplane Mode or join Wi-Fi. The change won't stick until it's back online."
        },
        {
         "question": "Which profile information categories do you want to disable for ad targeting?",
@@ -2172,7 +2332,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which profile categories does the page list as usable for ad targeting, and which are on?",
+        "say_example": "Turned off <employer, job title, education> for ad targeting"
        },
        {
         "question": "Which specific ad categories do you want to remove?",
@@ -2188,7 +2351,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which ad categories does the page list, each with its own remove control?",
+        "say_example": "Removed ad categories: <Birthday in August, Frequent Travelers>"
        },
        {
         "question": "Do you also need to remove previously synced contacts, since turning off sync does not delete them?",
@@ -2204,7 +2370,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page state that turning off sync does not remove already-synced contacts?",
+        "say_example": "Sync is off now. But the page says the contacts already uploaded stay until they're removed separately. Doing that step too."
        }
       ]
      },
@@ -2226,10 +2395,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which subsettings does the page list under this activity control (e.g. Chrome history, voice recordings), and what state is each in?",
+        "say_example": "Kept <Chrome history>, turned off <voice recordings>"
        },
        {
-        "question": "Which option do you select from the bottom sheet to modify the selected posts?",
+        "question": "Is 'Change Audience' the action about to be applied to the selected posts, rather than Archive or Trash?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -2242,10 +2414,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which options does the bottom sheet list (e.g. Archive, Trash, Change Audience)?",
+        "say_example": "Picked <Change Audience> - not archive, not trash"
        },
        {
-        "question": "Have you verified which posts are selected before applying the new audience setting?",
+        "question": "Does the selection cover only the posts this change was meant for?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
@@ -2258,7 +2433,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the page show which posts are selected, and does the selection match the ones the change was meant for?",
+        "say_example": "Hold on - every post is selected, not just the ones you meant. Fixing the selection before changing anything."
        },
        {
         "question": "Which system services do you want to keep enabled for safety and core functionality versus toggling off for privacy?",
@@ -2274,7 +2452,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Which system services does the page list with location access, and which are safety-related (e.g. Emergency Calls & SOS)?",
+        "say_example": "I can turn these off, but a couple are safety ones. <Emergency Calls & SOS> uses your location when you call for help. Keep the safety ones on?"
        },
        {
         "question": "Do you want to share your location data for Apple's product improvements, and should the status bar icon display when tracking occurs?",
@@ -2290,7 +2471,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the analytics-location toggle and the status-bar icon toggle, and what state is each in?",
+        "say_example": "Location analytics to <Apple>: off. Status-bar arrow: kept on"
        },
        {
         "question": "Which specific analytics and improvement features do you want to disable?",
@@ -2306,7 +2490,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which analytics options does the page list (e.g. iPhone Analytics, Siri dictation), and what state is each in?",
+        "say_example": "Turned off <iPhone Analytics, Siri dictation> sharing"
        },
        {
         "question": "Which specific pieces of your profile information do you want to change to 'Only me'?",
@@ -2322,7 +2509,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Which profile fields does the page list with a visibility setting, and what is each set to?",
+        "say_example": "Set <phone, emails, hometown> to <Only me>"
        },
        {
         "question": "Do you want to limit the visibility of all your past posts to friends?",
@@ -2338,7 +2528,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the dialog state that this applies to all past posts and that undoing it must be done one post at a time?",
+        "say_example": "This hides all your old posts from everyone but friends, in one press. The page warns that undoing it means fixing each post one at a time. Go ahead?"
        },
        {
         "question": "Should you use the master toggle to disable all restrictions at once?",
@@ -2354,7 +2547,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show a master toggle that disables every restriction below it at once?",
+        "say_example": "This one switch turns off every restriction on this phone at once, not just the one you named. All of them, or just yours?"
        },
        {
         "question": "Which built-in apps do you want to hide from your home screen and app library?",
@@ -2370,7 +2566,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which built-in apps does the page list with toggles, and what does it say happens when one is off?",
+        "say_example": "Hid <the named apps> - icons and access removed"
        },
        {
         "question": "Which of these general privacy toggles do you want to disable?",
@@ -2386,7 +2585,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which privacy toggles does the page list, and what state is each in?",
+        "say_example": "Turned off <the two asked>, left the rest"
        },
        {
         "question": "Which specific system suggestion notifications do you want to turn off?",
@@ -2402,7 +2604,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which suggestion checkboxes does the page list, and which are checked?",
+        "say_example": "Unchecked the <three> system-suggestion notifications"
        },
        {
         "question": "Which device usage categories do you want to disable for personalized tips and ads?",
@@ -2418,7 +2623,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Which usage categories does the page list (e.g. Gaming, Family, Business), and which are on?",
+        "say_example": "Turned off <Gaming, Family> as ad categories"
        },
        {
         "question": "Does this audience change also hide the posts you have shared in Facebook Groups?",
@@ -2434,7 +2642,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the dialog state that the change applies only to profile posts and not to posts in groups?",
+        "say_example": "The page says this covers your profile only. Posts you shared in groups stay visible there - that's a separate cleanup."
        },
        {
         "question": "Are you aware that limiting past posts will not hide them from people who are tagged in them or their friends?",
@@ -2450,7 +2661,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the dialog state that tagged people and their friends may still see the posts?",
+        "say_example": "The dialog says people tagged in those posts, and their friends, can still see them. Limiting helps, but it isn't a full hide."
        }
       ]
      },
@@ -2472,7 +2686,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show Airplane Mode as on, or an alert saying it must be turned off to proceed?",
+        "say_example": "Airplane Mode is on, so nothing can save. Turning it off to reconnect first."
        },
        {
         "question": "Should you click the grey toggle to turn Web & App Activity tracking back on?",
@@ -2488,7 +2705,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show Web & App Activity as paused, with a grey toggle?",
+        "say_example": "Turned <Web & App Activity> back on - the gap stays unsaved"
        },
        {
         "question": "Should you tap the toggle switch to re-enable Location Services?",
@@ -2504,7 +2724,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the page show the Location Services toggle in the off position?",
+        "say_example": "Turned <Location Services> back on"
        },
        {
         "question": "Do you want to leave all restrictions disabled, or turn the main toggle back on to adjust specific settings individually?",
@@ -2520,23 +2743,10 @@
          "safety": 1,
          "reversibility": 1,
          "recovery": 1
-        }
-       },
-       {
-        "question": "How do you restore the original settings to avoid detection?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The screen shows the 'Require Purchase Approval' toggle, which must be turned back on to revert the temporary changes.",
-        "whatTheAgentLoses": "The user loses the ability to ensure their temporary changes are reverted to avoid detection by the account owner.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 3,
-         "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the master restrictions toggle show off (all restrictions disabled), and did the request name only a specific restriction?",
+        "say_example": "You asked to change <one restriction>, but the main switch is off, so all of them are off now. Turning the main switch back on and setting just yours."
        }
       ]
      }
@@ -2552,7 +2762,7 @@
       "label": "Weigh the consequence warning",
       "questions": [
        {
-        "question": "Should you agree to the Apple Media Services Terms and Conditions without reading them?",
+        "question": "Do you want to accept the terms this page requires before continuing?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -2565,7 +2775,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show a terms-and-conditions agreement requiring explicit acceptance to proceed?",
+        "say_example": "The page wants you to agree to <Apple's media terms> before anything else happens. That's a contract, so it's yours to accept. OK to agree?"
        },
        {
         "question": "Are you sure you want to permanently delete this activity?",
@@ -2581,39 +2794,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 3
-        }
-       },
-       {
-        "question": "Are you sure you want to reset your advertising ID, knowing it will temporarily make ads less relevant to you?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The confirmation popup warns that replacing your ID with a new random number means you will still see ads, but they may be less relevant or interesting for a while.",
-        "whatTheAgentLoses": "You lose the opportunity to weigh the privacy benefit of a new random ID against the temporary inconvenience of seeing less relevant ads.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Are you sure you want to permanently delete your advertising ID?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen warns that deleting this ID means you will see less relevant ads and have less control over the types of ads shown to you.",
-        "whatTheAgentLoses": "You lose the opportunity to weigh the privacy benefits against the drawback of receiving less personalized and potentially less interesting ads.",
-        "costDims": {
-         "money": 0,
-         "privacy": 1,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show a confirmation dialog stating the deletion is permanent, and what does it list as being deleted?",
+        "say_example": "This delete is permanent. The page lists what goes: <feed cards and notifications>. No undo after. Delete it?"
        },
        {
         "question": "Do you want to clear the data from the specific sites Chrome flagged as important?",
@@ -2629,39 +2813,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Do you want to proceed with switching to a private account?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed a 'Switch to Private Account?' confirmation dialog with a blue button to finalize the change.",
-        "whatTheAgentLoses": "The user loses the final say in whether to actually make their account private after reading the implications.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 1
-        }
-       },
-       {
-        "question": "Are you sure you want to clear your search history?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The confirmation dialog requires a final decision because clearing your search history is a permanent action.",
-        "whatTheAgentLoses": "You lose the opportunity to review or save any important past searches before they are permanently deleted.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the popup name specific sites flagged as important, and which sites does it list?",
+        "say_example": "Chrome flags <apkcombo.com and exness.com> as sites important to you. You said clear everything, so their data goes too."
        },
        {
         "question": "Are you sure you want to confirm turning off Location Services for all apps?",
@@ -2677,7 +2832,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "always",
+        "check": "Does the dialog state that this turns off location access system-wide for all apps?",
+        "say_example": "Confirming location off for the whole phone. Every app loses it at once, maps included, until it's turned back on."
        },
        {
         "question": "Are you sure you want to make your account public, allowing anyone to view your videos and auto-approving followers?",
@@ -2693,7 +2851,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the dialog state that anyone can watch your videos and that pending follow requests will be approved automatically?",
+        "say_example": "Going public means anyone can watch your videos. The page also says every pending follow request gets approved the moment it flips. Still want public?"
        },
        {
         "question": "Are you sure you want to switch to a personal account and permanently lose your content insights?",
@@ -2709,7 +2870,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the dialog state that switching deletes insights and promotion data permanently?",
+        "say_example": "Switching to a personal account deletes your insights and promotion data for good. The page says there's no getting them back. Switch anyway?"
        },
        {
         "question": "Do you actually see a confirmation dialog warning about losing insights?",
@@ -2725,7 +2889,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the current screen show the described confirmation dialog, or a different page?",
+        "say_example": "The warning dialog I expected isn't here - the screen shows <the plain settings list>. Re-checking where things stand before pressing anything."
        },
        {
         "question": "Do you want to acknowledge the consequences and permanently stop supervision for this account?",
@@ -2741,7 +2908,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page state that continuing removes supervision from the account and all supervised devices, and require a checkbox acknowledgment?",
+        "say_example": "This ends supervision for <the account> and every supervised device, and the page says it's permanent. Are you sure?"
        },
        {
         "question": "Do you want to review the specific consequences of removing this family member before proceeding?",
@@ -2757,10 +2927,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "What consequences does the confirmation screen list for removing this family member (lost access, pending charges)?",
+        "say_example": "Removing <this person> from the family. The page lists what they lose - <shared services> - and says pending purchases may still charge. Go ahead?"
        },
        {
-        "question": "Do you want to proceed with deleting the family group?",
+        "question": "Do you want to delete the family group?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -2773,10 +2946,13 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page state that deleting the family group removes members' access to shared services?",
+        "say_example": "Deleting the family group means <the members> lose <shared Google services>. Delete it?"
        },
        {
-        "question": "What are the consequences of pausing this setting, and how do you confirm the change?",
+        "question": "What happens if you pause this setting, and how do you know the change went through?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -2789,7 +2965,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "What does the pop-up say pausing limits, and which button commits it?",
+        "say_example": "Paused it - <Google> says personalization drops from here"
        },
        {
         "question": "Does turning off this tracking feature also prompt you to delete the historical data it has already collected?",
@@ -2805,7 +2984,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "After the toggle is turned off, does the page show a prompt offering to delete the previously collected data?",
+        "say_example": "It's off going forward. What it already collected is still there - the page offers a delete for that too."
        },
        {
         "question": "Is the Pause button actually enabled and ready to be clicked?",
@@ -2821,7 +3003,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "never",
+        "check": "Is the Pause button shown active, or does it require scrolling through the explanation first?",
+        "say_example": "Scrolled to the end so <Pause> would unlock, then pressed it"
        }
       ]
      },
@@ -2830,7 +3015,7 @@
       "label": "Authenticate the change",
       "questions": [
        {
-        "question": "What is the Screen Time passcode required to confirm turning off these restrictions?",
+        "question": "Do you enter the passcode yourself rather than handing over a code that also unlocks the device's other controls?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -2843,7 +3028,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show a passcode keypad for confirming the restriction change?",
+        "say_example": "It wants the Screen Time passcode, the 4-digit one. That's yours to enter. I'll wait."
        }
       ]
      },
@@ -2852,7 +3040,7 @@
       "label": "Back out of the risky path",
       "questions": [
        {
-        "question": "Do you want to proceed with turning off Safe Browsing despite the security warning?",
+        "question": "Do you want to turn off Safe Browsing despite the security warning?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -2865,7 +3053,10 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the prompt state that turning this off removes protection against deceptive or dangerous sites?",
+        "say_example": "Turning off Safe Browsing removes the warnings before dangerous sites. You'd be browsing without that net. Turn it off anyway?"
        },
        {
         "question": "Should you change your password to secure the account?",
@@ -2881,7 +3072,10 @@
          "safety": 1,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show a security dialog stating someone else might have your password and offering a password change?",
+        "say_example": "<Google> says someone else might have your password and suggests changing it now. That's a real warning from your account, not an ad. Deal with it now, or finish the setting first?"
        },
        {
         "question": "Should you tap 'Ask' or 'Cancel' when the parental permission pop-up appears?",
@@ -2897,7 +3091,10 @@
          "safety": 2,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show an Ask Permission pop-up blocking the download, with Ask and Cancel options?",
+        "say_example": "This download needs a parent's OK. I can send the request with <Ask>, or stop here. Which?"
        }
       ]
      },
@@ -2923,7 +3120,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "After the change, does the page still show an unpressed Save or Apply button?",
+        "say_example": "Almost missed it - the changes here don't save themselves. There's a <Save> button at the bottom. Pressing it now."
        }
       ]
      }
@@ -2935,7 +3135,7 @@
     "note": "6.1 always. then whichever of 6.2 to 6.7 the setting can prove itself by - 6.4 and 6.5 for outward-facing changes, 6.3 after deletions, 6.7 when the system says so. 6.8 once everything on the checklist reads back correct.",
     "questions": [
      {
-      "question": "Do your on-screen actions match your stated intent to turn off location tracking?",
+      "question": "Is location access actually off, or was only the precise-location part turned off?",
       "cluster": "facts",
       "moment": "Completion",
       "moneyMoving": false,
@@ -2948,10 +3148,13 @@
        "safety": 0,
        "reversibility": 1,
        "recovery": 2
-      }
+      },
+      "speak": "if-wrong",
+      "check": "Does the main location permission for the app show off, or does it still show 'Allow all the time' with only the precise-location subtoggle changed?",
+      "say_example": "One thing didn't match. Precise location went off, but the main permission still says <Allow all the time> - the app can still see where you are. Fixing the main one."
      },
      {
-      "question": "Do the moments of this task agree with each other?",
+      "question": "Does this screen show what the last step said it would?",
       "cluster": "facts",
       "moment": "Completion",
       "moneyMoving": false,
@@ -2964,7 +3167,10 @@
        "safety": 0,
        "reversibility": 1,
        "recovery": 2
-      }
+      },
+      "speak": "if-wrong",
+      "check": "Does the current screen show what the previous step claimed would be there (same tab, same card, same items)?",
+      "say_example": "The page doesn't show what I said it would. I claimed <your devices> were listed, but this is <the security tab>. Re-checking before I go on."
      }
     ],
     "children": [
@@ -2973,7 +3179,7 @@
       "label": "Re-read the control",
       "questions": [
        {
-        "question": "Did you actually change the setting for every app like you said you would?",
+        "question": "Is any app in the list still on the old permission after the sweep?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -2986,10 +3192,13 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does any app in the list still show the old permission value (e.g. 'Always') after the sweep?",
+        "say_example": "One got missed. <American> still says <Always>. Going back to change it."
        },
        {
-        "question": "Did you verify that the 'System Customization' toggle was left in the on position?",
+        "question": "Is the toggle that was meant to stay on still on?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -3002,7 +3211,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the named toggle show the state the instruction said to leave it in?",
+        "say_example": "<System Customization> was supposed to stay on, but it's showing off. Putting it back."
        },
        {
         "question": "Is the account actually private, or do you still need to confirm the prompt?",
@@ -3018,7 +3230,10 @@
          "safety": 0,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the page show the private-account toggle on, or a still-open confirmation sheet with the toggle off behind it?",
+        "say_example": "Not done yet. The confirm sheet is still open and the switch is still off behind it. Pressing <Switch to private> to finish."
        },
        {
         "question": "Is the 'Share My Location' toggle visibly grey and turned off on this screen?",
@@ -3034,7 +3249,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "What state does the Share My Location toggle show on the current screen?",
+        "say_example": "Checked it again after the change. <Share My Location> now shows off, grey switch."
        },
        {
         "question": "Does the screen actually confirm that your location is not being shared?",
@@ -3050,23 +3268,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Do you see the final state of the setting after tapping 'Stop Sharing'?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "The video ends immediately after the button is tapped, failing to show if the location access was successfully revoked.",
-        "whatTheAgentLoses": "You lose the certainty that your privacy setting was successfully updated and your location is no longer being shared.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the sharing screen show no active sharing, or does the map still show a contact receiving your location?",
+        "say_example": "The map still shows <a contact> getting your location, so sharing isn't off yet. Looking at what got missed."
        },
        {
         "question": "Are the last accessed timestamps consistent with the system clock?",
@@ -3082,10 +3287,13 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Do the last-accessed times shown fall before the current time on the system clock?",
+        "say_example": "The times don't add up. The clock says <9:31>, but the list shows access at <9:58 pm> - later than now. I don't trust this screen, so I'm checking another way."
        },
        {
-        "question": "Did you verify the custom DNS hostname appeared under the setting before going back?",
+        "question": "Does the Private DNS row now show the hostname that was entered?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": false,
@@ -3098,10 +3306,13 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Does the Private DNS row now display the hostname that was entered?",
+        "say_example": "The setting now shows <the hostname> under Private DNS. It saved."
        },
        {
-        "question": "How do you verify that Wi-Fi and cellular connections are off after enabling Airplane Mode?",
+        "question": "How do you check that Wi-Fi and cellular are off after turning on Airplane Mode?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": false,
@@ -3114,10 +3325,13 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Do the Wi-Fi and cellular indicators show off after Airplane Mode was enabled?",
+        "say_example": "Airplane Mode took. Wi-Fi and cellular both show off - nothing is broadcasting."
        },
        {
-        "question": "Did you disable Airplane mode to verify that the toggle actually worked?",
+        "question": "Does the page say the change can't be confirmed while the phone is offline?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": false,
@@ -3130,10 +3344,13 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the page show an alert that Airplane Mode must be off for the change to apply or be confirmed?",
+        "say_example": "Can't confirm the change while the phone is offline - the alert says so. Reconnecting to check it took."
        },
        {
-        "question": "How do you confirm the account is now private before returning to the main feed?",
+        "question": "How can you tell the account is now private before you go back to the main feed?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": false,
@@ -3146,23 +3363,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Did the toggle remain in the new position after a few seconds, or did it snap back to its previous state?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "Network errors or server-side sync issues can cause a setting to visually change for a moment before reverting, meaning the privacy change failed silently.",
-        "whatTheAgentLoses": "The user loses the true verification of their privacy state if the agent assumes the first visual change was permanent without waiting for server confirmation.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 3,
-         "recovery": 2
-        }
+        },
+        "speak": "never",
+        "check": "Does the profile now show the 'Private account' label or lock icon?",
+        "say_example": "Own profile shows <Private account> with the lock"
        },
        {
         "question": "Does the setting retain its new state if you pull down to refresh or exit and re-enter the menu?",
@@ -3178,7 +3382,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "After reloading or re-entering the page, does the setting still show the new state?",
+        "say_example": "It looked changed, but after reopening the page the switch is back to <on>. The change didn't hold. Trying again."
        },
        {
         "question": "Does the parent menu row for Location Services reflect the new 'Off' status?",
@@ -3194,7 +3401,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Does the parent menu now show 'Off' next to the Location Services row?",
+        "say_example": "Backed out to the main menu. The <Location Services> row itself now says <Off>."
        },
        {
         "question": "Does the master privacy setting display a definitive checkmark, or an indeterminate minus line indicating partial restriction?",
@@ -3210,7 +3420,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "Does the master setting show a full checkmark, or a dash/indeterminate mark?",
+        "say_example": "The box shows a dash, not a checkmark. That means only some of it got restricted, not all. Finishing the rest."
        }
       ]
      },
@@ -3232,7 +3445,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Does the page now display a 'no data' or empty-state message where the history was?",
+        "say_example": "The page now says <no data>. The history is gone."
        },
        {
         "question": "Does the dialog confirm that your selected data has been cleared?",
@@ -3248,7 +3464,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Does the dialog state that the selected data has been removed, and from where (this device, synced devices)?",
+        "say_example": "The page confirms it: the data you picked is cleared, here and on your synced devices."
        },
        {
         "question": "Are all the security checkmarks complete?",
@@ -3264,7 +3483,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Does each checkup item show a completed checkmark, and does the summary show the protected state?",
+        "say_example": "Every item on the checkup shows a green check. Nothing left flagged."
        },
        {
         "question": "Did a brief confirmation toast, such as 'Settings updated', appear and vanish at the bottom of the screen?",
@@ -3280,7 +3502,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Did a confirmation toast (e.g. 'Settings updated') appear after the change?",
+        "say_example": "A little note flashed at the bottom - <Settings updated>. That's the page's way of confirming it saved."
        }
       ]
      },
@@ -3302,7 +3527,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the dialog warn that third-party apps may still have access unless their permissions are revoked separately?",
+        "say_example": "One warning before OK: apps you connected before can still reach the account until their access is removed. That's a separate list - I'll look at it and report what's there."
        },
        {
         "question": "Is there local browsing history remaining after deleting my Google account activity?",
@@ -3318,7 +3546,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the browser's own history page still list visited sites after the account-level deletion?",
+        "say_example": "Your <Google> account activity is deleted, but this phone still keeps its own browsing history. That needs its own clearing step - it's in the report."
        },
        {
         "question": "Do you see any of your past searches in the address bar dropdown?",
@@ -3334,7 +3565,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Does the address bar dropdown show personal past searches, or only generic/trending suggestions?",
+        "say_example": "Typed in the address bar to test. Only <trending searches> come up, none of your own. It's really gone."
        }
       ]
      },
@@ -3343,7 +3577,7 @@
       "label": "Check the visible effect",
       "questions": [
        {
-        "question": "Is the profile successfully locked from public view?",
+        "question": "Is the profile locked from public view?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": false,
@@ -3356,7 +3590,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Does the profile viewed from outside show a locked/empty state (e.g. 'No posts available')?",
+        "say_example": "Looked at your profile from the outside. It shows <no posts available>. Locked, like you wanted."
        },
        {
         "question": "Do the before and after profile views confirm the 'Private account' badge was removed?",
@@ -3372,23 +3609,10 @@
          "safety": 0,
          "reversibility": 3,
          "recovery": 2
-        }
-       },
-       {
-        "question": "Does the public view of your profile confirm your posts are hidden?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "Verifying the 'No posts available' message on the public view ensures your recent privacy changes successfully restricted access to your content.",
-        "whatTheAgentLoses": "Letting an agent verify this deprives you of the firsthand reassurance that your personal photos and posts are genuinely hidden from strangers.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 3,
-         "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Does the profile still show the 'Private account' label and lock, or are they gone?",
+        "say_example": "From the outside, the <Private account> label and lock are gone. You're public now."
        },
        {
         "question": "Which account from the search results should you select?",
@@ -3404,7 +3628,10 @@
          "safety": 0,
          "reversibility": 1,
          "recovery": 1
-        }
+        },
+        "speak": "on-event",
+        "check": "Do the search results show more than one username close to the target, and which one matches the handle exactly?",
+        "say_example": "The search shows <two> names that look almost the same. I'm checking <the exact handle>, the one that's yours."
        }
       ]
      },
@@ -3413,7 +3640,7 @@
       "label": "Test the changed behavior",
       "questions": [
        {
-        "question": "Should I confirm that you are 17 or older to download Yubo?",
+        "question": "Are you 17 or older, as this download asks you to confirm?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -3426,10 +3653,13 @@
          "safety": 2,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "gate",
+        "check": "Does the page show an age-confirmation prompt stating the app has age-restricted material?",
+        "say_example": "It asks to confirm you're 17 or older before downloading <the app>. Only you can answer that one."
        },
        {
-        "question": "How do you verify that the browser will now allow an HTTP connection without upgrading it?",
+        "question": "Does a plain http address now stay on http instead of being upgraded?",
         "cluster": "hand over",
         "moment": "Completion",
         "moneyMoving": false,
@@ -3442,10 +3672,13 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "After loading a plain http address, does the address bar show http without an upgrade or warning?",
+        "say_example": "Tested it. Opened <the site> over plain http and it stayed http, no upgrade, no warning. The change is working."
        },
        {
-        "question": "Do the moments of this task agree with each other regarding the connection security?",
+        "question": "Did the insecure-connection test actually load over HTTP, or did the page come back secure?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": false,
@@ -3458,10 +3691,13 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "if-wrong",
+        "check": "After entering an http address to test, does the address bar show http, or a lock and https?",
+        "say_example": "The test didn't prove it. I typed http, but the page came back with the lock, on https. The setting may not be doing anything on this site - trying another."
        },
        {
-        "question": "Should you tap 'Install' to verify the app downloads without needing approval?",
+        "question": "Did the install proceed without an approval prompt, showing the restriction is really off?",
         "cluster": "approve",
         "moment": "Completion",
         "moneyMoving": false,
@@ -3474,10 +3710,13 @@
          "safety": 2,
          "reversibility": 2,
          "recovery": 2
-        }
+        },
+        "speak": "on-event",
+        "check": "Does the install proceed without an 'Ask Permission' or approval prompt appearing?",
+        "say_example": "The download started with no ask-permission prompt. The approval requirement is really off."
        },
        {
-        "question": "Are the restricted apps successfully hidden from your App Library search?",
+        "question": "Are the restricted apps hidden from your App Library search?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": false,
@@ -3490,7 +3729,10 @@
          "safety": 1,
          "reversibility": 3,
          "recovery": 2
-        }
+        },
+        "speak": "always",
+        "check": "Does an App Library search for the restricted app return no results?",
+        "say_example": "Searched the App Library for <the app>. Nothing comes up. The restriction is holding."
        }
       ]
      },

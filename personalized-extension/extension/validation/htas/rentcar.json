@@ -1,0 +1,1825 @@
+{
+ "task": "rent a car online (Enterprise, Hertz, Turo, Expedia cars): pick a location and dates, choose a vehicle, review add-ons (insurance, young-driver fees, fuel policy), and book; complete when the reservation confirmation is on screen. Surface pinned: a car-rental website or app. Variants: car-rental business and fleet content, rental-car reviews and vlogs, and airport pickup vlogs without the booking flow do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Rent a car online",
+  "note": "do 1, then 2 - 8 fires inside 2, 4 and 6 wherever the site asks the driver question. 3 narrows and picks; 3.8 goes back to 2.3 when the cheapest price is still too high, and 4.9 goes back to 3 when the pick fails. then 4, then 5 - on Sixt and Budget 5 is its own pages before 6, on Expedia, Priceline and Costco it sits on the checkout or summary page, on Turo each option is a sheet off the checkout. then 6 and 7. p3Kd loops 5.6 through 7.6 twice and stops. 9 after a commit - every keeper shows it on a trip booked in another session, since none reaches 7.7.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the rental site",
+    "note": "1.1, 1.2 or 1.3 to arrive; 1.4 whenever a prompt interrupts; 1.5 on every multi-product site; 1.6 where the user reads before searching. 1.7 at the start on RrcB, nAUs and dQTT, after the car and extras on -FXQ, and never for the rest - most arrive signed in or check out as guests. 1.8 only on dQTT.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Search for the site",
+      "questions": [
+       {
+        "question": "Which search result is the rental company's own site, not the ads above it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results show multiple links, so you need to identify the official costcotravel.com URL to ensure a legitimate booking.",
+        "whatTheAgentLoses": "The user loses the ability to verify the authenticity of the website, which could lead to booking through an unofficial or insecure third-party site.",
+        "speak": "on-event",
+        "check": "Which result links to the company's own domain or app-store developer name, and which results above it are marked Sponsored or Ad?",
+        "say_example": "The first two results are ads for other rental sites. The real <Sixt> link is third. That's the one I'm opening."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Enter via a coupon site",
+      "questions": [
+       {
+        "question": "Which company's coupon did we come in through?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a grid of promotional tags from various companies like Budget, Avis, and Alamo, meaning your choice determines which brand and savings apply to your search.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to prioritize a specific brand or discount type, such as a flat weekly discount versus a free upgrade, that best fits your travel needs.",
+        "speak": "never",
+        "check": "Which company and offer tiles does the coupon page show, and which one was clicked?",
+        "say_example": "Went in through the <Budget> coupon for <20% off>."
+       },
+       {
+        "question": "Does the page the coupon opened show the same discount the coupon promised?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The coupon clicked promised a specific discount, so it is important to verify that the subsequent page reflects this exact promotion rather than a generic offer or failing to load.",
+        "whatTheAgentLoses": "The user loses the ability to ensure they are actually receiving the specific discount they selected, potentially costing them money.",
+        "speak": "if-wrong",
+        "check": "Does the landing page name the same company and discount as the coupon that was clicked?",
+        "say_example": "The coupon said <20% off Budget>. The page it opened is a plain <Budget> homepage with no discount on it. I'll look for the code before we go on."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Install or open the app",
+      "questions": [
+       {
+        "question": "Which app will you open to start your car rental search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen shows multiple app icons, so you must select a specific car rental platform like Turo to begin.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred car rental platform.",
+        "speak": "never",
+        "check": "Which car rental app is open on screen?",
+        "say_example": "Opened <Turo>."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Answer the site prompts",
+      "questions": [
+       {
+        "question": "What should I do with the cookie banner?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a Google Translate popup and a cookie consent banner that affect your browsing language and privacy settings.",
+        "whatTheAgentLoses": "Delegating this means the agent might proceed in English or accept unwanted cookies, ignoring your language and privacy preferences.",
+        "speak": "never",
+        "check": "What choices does the cookie banner offer, and is a translate prompt showing?",
+        "say_example": "Closed the cookie banner with only the required ones. Said no to translating the page."
+       },
+       {
+        "question": "Do you want to allow the app to send you push notifications?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requests permission to send notifications for important trip instructions and host alerts.",
+        "whatTheAgentLoses": "The user loses the ability to control their personal device's notification preferences for this app.",
+        "speak": "never",
+        "check": "Is a notification permission prompt showing?",
+        "say_example": "Said no to notifications for now. You can turn them on later if you want trip alerts."
+       },
+       {
+        "question": "Does the listing say the car has a GPS tracker?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping the car image opens an informational popup disclosing that all vehicles have GPS tracking devices installed.",
+        "whatTheAgentLoses": "The user loses awareness of important privacy details, such as the presence of mandatory GPS tracking devices in their rental car.",
+        "speak": "never",
+        "check": "Does the listing's popup say the car has a GPS tracker?",
+        "say_example": "Noted the listing says every car has a GPS tracker."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Pick the car rental product"
+     },
+     {
+      "id": "1.6",
+      "label": "Read the platform rules",
+      "questions": [
+       {
+        "question": "Does the trip meet any of the discount conditions the site lists?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly detailed that discounts are available for weekly or monthly trips, early bookings, and by opting into promotional emails on the Account page.",
+        "whatTheAgentLoses": "You miss out on potential savings because the agent ignored the platform's specific instructions for obtaining lower rates.",
+        "speak": "never",
+        "check": "What discount conditions does the page list, and does the trip's length or booking date meet any of them?",
+        "say_example": "Checked the <10% off> for week-long trips. Yours is <three days>, so it doesn't apply."
+       },
+       {
+        "question": "Is there a travel warning on the site for where you're going?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The homepage displays a prominent alert that active natural disasters may affect travel plans, which could impact the safety or feasibility of renting a car at your destination.",
+        "whatTheAgentLoses": "You lose the opportunity to verify if your specific destination is affected by a natural disaster, potentially leading to a dangerous or useless booking.",
+        "speak": "on-event",
+        "check": "Is a travel advisory or alert banner showing, and what area does it name?",
+        "say_example": "There's a warning banner. It says <wildfires> may affect travel around <your destination>. Want me to keep going?"
+       },
+       {
+        "question": "Can you add extra drivers, and does it cost anything?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explained that the primary driver can add approved drivers with no additional fees, but the host cannot do it for them.",
+        "whatTheAgentLoses": "The user misses the opportunity to add drivers for free and might misunderstand the process, risking policy violations if someone else drives.",
+        "speak": "never",
+        "check": "What does the page say about adding drivers, and any fee?",
+        "say_example": "Read that extra drivers are free here. You add them yourself after booking."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Decide account or guest",
+      "questions": [
+       {
+        "question": "Are you actually logged into your account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator claims to be logged in, but the interface still displays a 'Login' button in the top right corner.",
+        "whatTheAgentLoses": "You lose the ability to automatically apply your saved driver details, payment methods, and loyalty benefits to the reservation.",
+        "speak": "if-wrong",
+        "check": "Does the header show a Login or Sign in button, or the account name?",
+        "say_example": "The page still shows a Login button. You're not signed in, so the member rate won't apply. Want to sign in first?"
+       },
+       {
+        "question": "Should I log in to your account before starting the search?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage displays search fields to start looking for cars immediately, but logging into an account first is necessary to actually book a vehicle on Turo.",
+        "whatTheAgentLoses": "The user loses the ability to use their existing account history, saved payment methods, and verified driver status for a smoother booking process.",
+        "speak": "gate",
+        "check": "Does the page require sign-in to book, and is the header showing a Login button?",
+        "say_example": "<Turo> needs you signed in before it lets me book. Sign in now? You type the password yourself. Or I can keep looking as a guest."
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Create the account",
+      "questions": [
+       {
+        "question": "Is the marketing box on the sign-up form pre-checked?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers third-party logins alongside a standard email sign-up, plus a pre-checked box for receiving deals and discounts.",
+        "whatTheAgentLoses": "You lose control over which personal credentials are linked to the rental service and whether you receive promotional spam.",
+        "speak": "never",
+        "check": "Is the deals and discounts checkbox on the sign-up form checked by default?",
+        "say_example": "Unticked the box for marketing emails."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Specify the rental",
+    "note": "2.1, then 2.2 where the return differs - X3W2 sets it on the form, nAUs is asked after Reserve. 2.3 and 2.4 in either order; 8.1 and 8.3 here where the form carries them. 2.5 where the site offers codes or filters up front; 2.6 where a depot must be chosen before prices. then 2.7. 2.3 is re-run from 3.8 when the cheapest price is too high.",
+    "questions": [
+     {
+      "question": "Where do you need to pick up the car?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The search interface requires a specific pickup location, such as an airport code, and exact pickup and drop-off dates to find available vehicles.",
+      "whatTheAgentLoses": "Letting an agent choose the search parameters means they might select the wrong destination or travel dates for your actual itinerary.",
+      "speak": "gate",
+      "check": "What pickup location does the search form show?",
+      "say_example": "Where are you picking up? The form's set to <San Jose>. Say an airport or an address and I'll use that."
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Enter the pickup location",
+      "questions": [
+       {
+        "question": "Which place in the dropdown is the pickup spot you meant?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search for 'dtw' returned several distinct locations, including the airport, a research facility, and an Amazon fulfillment center, so you must specify the correct one to get accurate rental options.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the actual airport rather than a similarly named but incorrect location like a nearby cell phone lot.",
+        "speak": "on-event",
+        "check": "Which entries does the location dropdown list for the typed text, and which is the airport or address that was asked for?",
+        "say_example": "Typing <DTW> gives three places. <The airport, a research center, and a warehouse>. I'm taking the airport. OK?"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Set the drop-off location",
+      "questions": [
+       {
+        "question": "Do you need to drop off the car at a different location than your pick-up spot?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search form includes a 'Same as pick-up' toggle that determines whether you are booking a standard round-trip or a one-way rental.",
+        "whatTheAgentLoses": "Delegating this means the agent might assume a round-trip rental, forcing you to return the car to the original city instead of your actual final destination.",
+        "speak": "never",
+        "check": "Is the drop-off set to the same location as pickup?",
+        "say_example": "Set the drop-off to the same place as pickup."
+       },
+       {
+        "question": "Which drop-off spot do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple drop-off locations with varying distances from the city center and their associated fees.",
+        "whatTheAgentLoses": "You lose the ability to choose the exact drop-off branch that best fits your travel itinerary.",
+        "speak": "on-event",
+        "check": "Which drop-off locations does the page list, and what fee and distance does each show?",
+        "say_example": "Three places to return it. <Downtown> is free. <The airport> adds <25>. Which one?"
+       },
+       {
+        "question": "Does the place on this screen match the pickup and drop-off you searched for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search form indicated the drop-off location was the same as the pick-up in Tagaytay, but the subsequent screen listed locations near Calamba city center.",
+        "whatTheAgentLoses": "The user loses the assurance that their intended itinerary is being followed, potentially resulting in a booking with an inconvenient and costly drop-off location.",
+        "speak": "if-wrong",
+        "check": "Does the location named on this screen match the pickup and drop-off entered in the search?",
+        "say_example": "You asked for <Tagaytay>. This page is showing rental spots in <Calamba>, a different town. I'm going back to fix it."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Set the dates",
+      "questions": [
+       {
+        "question": "What are your pick-up and drop-off dates and times?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The calendar allows you to set the exact start and end dates for the rental, which determines vehicle availability and the total cost.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to perfectly align the rental period with your specific travel itinerary.",
+        "speak": "gate",
+        "check": "What pickup and drop-off dates and times does the search form show?",
+        "say_example": "The form has <December 28> to <29>, <10:30> both ways. Are those your dates and times?"
+       },
+       {
+        "question": "Are your dates greyed out or crossed off on the calendar?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Rental sites indicate sold-out or unavailable dates purely through visual styling like low-contrast grey text or strikethroughs, rather than explicit text warnings.",
+        "whatTheAgentLoses": "The agent might attempt to book a visually disabled date and silently fail, or worse, automatically select the nearest available date without your knowledge.",
+        "speak": "on-event",
+        "check": "On the calendar, are the requested dates styled as unavailable, greyed, or struck through?",
+        "say_example": "<The 24th> is greyed out on the calendar. This company can't rent that day. Want a different day, or a different company?"
+       },
+       {
+        "question": "Do the dates on the results match the dates you asked for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search was executed without specific dates, causing the results to display varying, arbitrary date ranges for different cars.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the selected car is actually available for their specific travel dates.",
+        "speak": "if-wrong",
+        "check": "What dates do the results show, and do they match the dates entered?",
+        "say_example": "The results came back for <March 3 to 5>. You asked for <the 10th to the 12th>. I'm re-running the search."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Set the times",
+      "questions": [
+       {
+        "question": "Is the rental billed as an extra day because it runs just past 24 hours?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Although the narrator claims the price is based on exact hours, the screen shows the 24.5-hour rental is billed as two days.",
+        "whatTheAgentLoses": "The user loses the opportunity to adjust the drop-off time by half an hour to save the cost of an extra rental day.",
+        "speak": "on-event",
+        "check": "How many days is the rental billed as, and how many hours are between the pickup and drop-off times shown?",
+        "say_example": "This runs <24 and a half> hours, so it's billed as two days. Returning it <half an hour> earlier saves a whole day's charge. Want me to move it?"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Set the search options",
+      "questions": [
+       {
+        "question": "Do you want to apply a discount code before searching?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an 'I have a discount code' link right above the search button, which must be expanded to apply promotional rates to the results.",
+        "whatTheAgentLoses": "The user loses the opportunity to save money on their rental if the agent fails to ask for and apply available promotional codes before searching.",
+        "speak": "never",
+        "check": "Is a discount code field showing, and is anything in it?",
+        "say_example": "Left the discount code box blank. You didn't give me one."
+       },
+       {
+        "question": "Do you want to search for a car near an airport, a specific place, or a U.S. address?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown requires choosing a location category to ensure the search targets the correct type of pickup spot.",
+        "whatTheAgentLoses": "You lose the ability to decide whether picking up the car at an airport or a specific local address is more convenient for your travel plans.",
+        "speak": "never",
+        "check": "Which location type is selected: airport, place, or address?",
+        "say_example": "Searched by airport."
+       },
+       {
+        "question": "Is a member-only rate already ticked on the search form?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search form includes a checkbox for AARP member rates that explicitly warns membership is required and verified at pick-up.",
+        "whatTheAgentLoses": "The agent might select this checkbox to get a cheaper rate, but if you don't actually have an AARP membership, you could be denied the rental or charged a higher walk-up rate at the counter.",
+        "speak": "on-event",
+        "check": "Is a member-rate box such as AARP checked, and does the page say membership is verified at pickup?",
+        "say_example": "The form has the <AARP> rate ticked already. They check the card at the counter. Are you a member? If not, I'll untick it."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Choose the rental depots",
+      "questions": [
+       {
+        "question": "Which nearby rental locations do you want to compare?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen allows selecting up to four nearby branches, such as San Jose - Curtner and Holiday Inn, to compare rental rates.",
+        "whatTheAgentLoses": "You lose the opportunity to decide which specific branches to compare based on your preferred balance of distance and price.",
+        "speak": "never",
+        "check": "Which nearby branches does the page offer to compare?",
+        "say_example": "Compared the <four> closest branches."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Run the search",
+      "questions": [
+       {
+        "question": "Do the location, dates, times and driver age on the search form match what you asked for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the pre-filled location of San Jose, the November dates, and the age checkbox ensures the search results will match your actual travel needs.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to verify or adjust the specific travel dates, location, and age requirements before the search is executed.",
+        "speak": "always",
+        "check": "What pickup location, dates, times, driver-age, and residency settings does the search form show?",
+        "say_example": "Got it. <San Jose airport>, <November 3> to <6>, <10 am> both ways, driver over 25. Searching."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Narrow and compare the results",
+    "note": "3.1 on arrival, then 3.2 to 3.6 in any order, mostly demonstrated and left at default. 3.7 where the site compares for the user or the user compares sites. 3.8 sends the search back to 2.3 when the cheapest price is too high - _mYw and zNb2. 3.9 on the marketplace app. then 3.10; 4.9 returns here when the pick fails, and bMzQ runs 3.10 and 4.7 five times.",
+    "questions": [
+     {
+      "question": "Which filters do you want on the results?",
+      "cluster": "refine",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The sidebar displays multiple filtering options like free cancellation, payment timing, and specific rental companies that directly impact the price and flexibility of the rental.",
+      "whatTheAgentLoses": "Delegating this choice means losing the ability to personally weigh the trade-offs between cheaper upfront rates and the flexibility of free cancellation or preferred brands.",
+      "speak": "never",
+      "check": "Which filters does the sidebar offer?",
+      "say_example": "Applied the filters you asked for, <SUV and automatic>."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Read the results page",
+      "questions": [
+       {
+        "question": "Is a bigger car in the results priced below the cheapest economy car?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The category quick-links bar states Economy cars start at ₱ 5,804.22, but the first recommended search result is a Midsize SUV priced lower at ₱ 5,169.34.",
+        "whatTheAgentLoses": "The user loses the opportunity to spot this pricing anomaly and get a larger vehicle for less money.",
+        "speak": "on-event",
+        "check": "Does any larger car class in the results cost the same as or less than the starting price shown for a smaller class?",
+        "say_example": "A <midsize SUV> here is <5,169>. That's less than the cheapest economy car. I'm putting it on the list."
+       },
+       {
+        "question": "Do the seat and luggage counts shown on the listing fit your whole group and bags?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Rental sites typically use small icons of a person and a suitcase to indicate capacity, which are crucial for ensuring the car fits your travel group.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the vehicle can safely and legally hold their entire group and baggage, as an agent might overlook these purely visual indicators.",
+        "speak": "if-wrong",
+        "check": "What seat and bag counts do the icons on the listing show?",
+        "say_example": "This one seats <4> with <1> big bag. There are <five> of you. Skipping it."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Sort the results",
+      "questions": [
+       {
+        "question": "How should I sort to find the cheapest car?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting 'Total Price' from the dropdown menu instead of 'Customer Rating' or 'Recommended' ensures the cheapest vehicles appear at the top of your search results.",
+        "whatTheAgentLoses": "Delegating this step means the agent might prioritize highly-rated or recommended vehicles over finding the absolute lowest price for your rental.",
+        "speak": "always",
+        "check": "What is the sort dropdown set to?",
+        "say_example": "The sort was on Recommended, which is partly paid. I'm sorting by total price instead."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Filter by vehicle type",
+      "questions": [
+       {
+        "question": "Do you want to filter the search by a specific vehicle type, such as SUVs or electric vehicles?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search panel offers an optional 'Vehicle Type' filter with categories like 'SUVs & Wagons' and 'Electric Vehicles' before displaying results.",
+        "whatTheAgentLoses": "If the agent decides whether to apply this filter, you might have to sift through irrelevant cars or miss out on browsing all available options.",
+        "speak": "always",
+        "check": "Which vehicle type filters are available, and how many results remain after applying the requested one?",
+        "say_example": "Found <225> cars. You asked for an SUV, so I'm keeping those. That leaves <41>."
+       },
+       {
+        "question": "Do you prefer an automatic or manual transmission?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen features a 'Transmission' dropdown to filter the available rental cars, which is critical since not all drivers are comfortable operating a stick shift.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might book a manual transmission vehicle that you are unable or unwilling to drive.",
+        "speak": "on-event",
+        "check": "Do the results include manual transmission cars, or is a transmission filter shown?",
+        "say_example": "Some of these are manual. Can you drive stick? If not, I'll keep automatics only."
+       },
+       {
+        "question": "Should the filters stay on, or be cleared to see more cars?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clearing the previously checked filters in the sidebar expands the available options to all SUVs that fit six or more passengers.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly how broad or narrow the search criteria should be when evaluating available vehicles.",
+        "speak": "never",
+        "check": "Which filters are currently checked?",
+        "say_example": "Cleared the old filters to show everything that seats <six>."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Filter by company or location",
+      "questions": [
+       {
+        "question": "Do you want only one rental company?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Rental car company' filter on the left sidebar with options like 'Hertz', allowing you to narrow down the available vehicles based on brand preference or loyalty perks.",
+        "whatTheAgentLoses": "The user loses the opportunity to apply their personal brand loyalty or specific credit card benefits to the rental selection.",
+        "speak": "never",
+        "check": "Which company filter is selected?",
+        "say_example": "Kept all rental companies in the results."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Filter by host or rating",
+      "questions": [
+       {
+        "question": "Do you want only cars that book instantly, with no host approval?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a 'Book instantly' filter that allows you to reserve a car without waiting for host approval, which affects both confirmation speed and the number of available vehicles.",
+        "whatTheAgentLoses": "The user loses the ability to balance their need for immediate booking confirmation against having a wider selection of vehicles.",
+        "speak": "never",
+        "check": "Is the Book instantly filter on?",
+        "say_example": "Kept only cars that book instantly, no host approval needed."
+       },
+       {
+        "question": "Do you want any of the extra filters, like top-rated hosts or app unlock?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'More filters' modal provides options like distance included, All-Star hosts, and app unlock to help narrow down the available vehicles.",
+        "whatTheAgentLoses": "You lose the ability to prioritize highly rated hosts or specific conveniences like app-based unlocking for your rental experience.",
+        "speak": "never",
+        "check": "Which options does the More filters panel show?",
+        "say_example": "Skipped the extra filters."
+       },
+       {
+        "question": "Do you want only cars above a certain rating?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left sidebar includes a 'Customer Rating' section with checkboxes like 'Very good' and 'Good' to help narrow down the options.",
+        "whatTheAgentLoses": "You lose the chance to decide how much weight to give to previous customer reviews versus other factors like price.",
+        "speak": "never",
+        "check": "Which rating filter is checked?",
+        "say_example": "Left the rating filter off."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Filter by mileage or price",
+      "questions": [
+       {
+        "question": "Do you need a feature filter, like all-wheel drive?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays specification filters like all-wheel drive and unlimited mileage along with their starting prices, which might be necessary depending on your destination.",
+        "whatTheAgentLoses": "An agent might not know if your specific travel itinerary requires special vehicle capabilities like four-wheel drive.",
+        "speak": "never",
+        "check": "Which feature filters are offered, and which are checked?",
+        "say_example": "Kept all-wheel drive on. You said mountains."
+       },
+       {
+        "question": "Should the price slider be narrowed?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an average price of ₱ 11,631 alongside a bar chart of available rates, providing context to help you decide if you should filter out more expensive vehicles.",
+        "whatTheAgentLoses": "You lose the opportunity to visually analyze the price distribution and strategically cap your budget based on your personal flexibility.",
+        "speak": "never",
+        "check": "What price range is the slider set to?",
+        "say_example": "Left the price slider open."
+       },
+       {
+        "question": "Does the average price shown change when the list is filtered?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sidebar shows the exact same average price of ₱ 11,631 for both the initial 77 cars and the filtered list of 60 cars, indicating the metric does not reflect your specific criteria.",
+        "whatTheAgentLoses": "An agent might use this static average price to evaluate deals, failing to realize it doesn't represent the true average cost of vehicles that actually meet your requirements.",
+        "speak": "never",
+        "check": "Does the average price figure change after a filter is applied?",
+        "say_example": "Noted the average price on the side didn't move after filtering."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Compare across sites or companies",
+      "questions": [
+       {
+        "question": "Is the same car class cheaper on the other site we checked?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Costco Travel grid shows the lowest full-size car price is $316 with Enterprise, which is higher than the $309 rate found on the other platform.",
+        "whatTheAgentLoses": "The user loses the satisfaction of personally cross-checking their membership perks against other aggregators to guarantee they are getting the absolute lowest rate.",
+        "speak": "on-event",
+        "check": "What is the lowest price shown here for the requested car class, and what was the price for the same class on the site checked earlier?",
+        "say_example": "A full-size here starts at <316>. The other site had <309>. Want the cheaper one, or stay here for the <Costco> extras?"
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Change the dates for price",
+      "questions": [
+       {
+        "question": "Is the cheapest total for your dates over your budget?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results displayed a minimum total price of $209 for the December 24th to 31st holiday week, prompting a check on budget limits.",
+        "whatTheAgentLoses": "You lose the ability to dynamically adjust your travel schedule to avoid unexpected holiday price surges.",
+        "speak": "on-event",
+        "check": "What is the lowest total shown for the searched dates?",
+        "say_example": "Cheapest for your week is <209>. That's <40> over your budget. Go up, or try different dates?"
+       }
+      ]
+     },
+     {
+      "id": "3.9",
+      "label": "Browse the map",
+      "questions": [
+       {
+        "question": "Do you want to use the map to search for cars in a specific area?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map interface shows Newark Liberty International Airport and lets you visually expand the search area to find more available vehicles.",
+        "whatTheAgentLoses": "You lose the opportunity to visually explore the map and decide exactly how far outside the airport you are willing to look for a car.",
+        "speak": "never",
+        "check": "Is a map view available, and does it show each pickup spot with its price?",
+        "say_example": "Checked the map for pickup spots around <the airport>."
+       }
+      ]
+     },
+     {
+      "id": "3.10",
+      "label": "Pick from the results",
+      "questions": [
+       {
+        "question": "Which host badges or delivery perks matter most when comparing cars?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Listings display varying perks like 'All-Star Host' status, 'Free delivery', and 'App unlock' that impact the reliability and convenience of your trip.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the value of premium host reliability and delivery convenience against a cheaper daily rate.",
+        "speak": "never",
+        "check": "Which badges does each listing show?",
+        "say_example": "Favored the <two> with an All-Star host badge."
+       },
+       {
+        "question": "Is the rental company's recommendation score on this listing low?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sorted results show an unbelievably low $1 daily rate but display a concerning '17% recommend' score for the vendor, suggesting poor service or hidden issues.",
+        "whatTheAgentLoses": "You lose the ability to weigh the extreme tradeoff between a rock-bottom price and the high likelihood of a terrible rental experience.",
+        "speak": "on-event",
+        "check": "What recommendation or rating score does the listing show for the rental company?",
+        "say_example": "This one's <1> a day, but only <17%> of renters recommend the company. That usually means long lines or surprise fees. Skip it?"
+       },
+       {
+        "question": "Which car do you want?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results show multiple options like a Chevrolet Corvette for $129/day, a Mazda for $79/day, and a Volkswagen for $39/day, each with different prices and host ratings.",
+        "whatTheAgentLoses": "The user loses the opportunity to weigh price, vehicle type, and host reliability to find the best rental for their needs.",
+        "speak": "gate",
+        "check": "Which cars are listed with their prices, ratings, and pickup spots?",
+        "say_example": "Three fit. The <Corolla>, <39> a day, at the airport. The <Mazda>, <79>, with <five stars>. The <Jetta>, <45>, a <ten minute> shuttle away. Which one?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Vet the car and terms",
+    "note": "4.1 on arrival; 4.2 to 4.6 as the page offers them and the user bothers - the corpus reads price and location and skips the rules. 8.2 here where the age rule lives on the page. 4.7 on Turo, where delivery is chosen inside the listing. 4.8 where an upgrade is offered. 4.9 sends a failed pick back to 3.",
+    "questions": [
+     {
+      "question": "Does the listing say the car can't leave a state or cross a border?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "The car details page includes a link for geographic restrictions, which might prohibit taking the rental car across state lines or international borders.",
+      "whatTheAgentLoses": "You lose the chance to verify if your planned driving route violates the rental agreement, which could result in hefty fines or voided insurance.",
+      "speak": "on-event",
+      "check": "Does the listing show a geographic or travel restriction, and what area does it name?",
+      "say_example": "This car can't leave <California>. If your trip crosses the state line, it won't work."
+     },
+     {
+      "question": "Do the full rules behind the link say anything the summary doesn't?",
+      "cluster": "facts",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows a link to view all rules and restrictions, which could contain important details like cancellation terms or hidden fees not visible in the summary.",
+      "whatTheAgentLoses": "You lose the opportunity to personally verify the fine print, potentially leaving you vulnerable to unexpected fees or strict rental conditions that an agent might skip over.",
+      "speak": "never",
+      "check": "Is there a link to full rules and restrictions, and what does the linked page say?",
+      "say_example": "Read the full rules behind the link. Nothing new beyond what's on the page."
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Read the car and price",
+      "questions": [
+       {
+        "question": "Have the listing photos loaded, or is the frame still blank?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a loading spinner and an empty photo area with a '1 of 7' counter, meaning the images are not yet available to view.",
+        "whatTheAgentLoses": "The user loses the ability to visually inspect the vehicle to confirm it matches their personal preferences.",
+        "speak": "on-event",
+        "check": "Has the photo area loaded, or is it showing a spinner or empty frame?",
+        "say_example": "The photos for this car haven't loaded. I can't tell you what it looks like yet. Wait, or move on?"
+       },
+       {
+        "question": "Does the photo match what the listing says about the car?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The listing text states the Nissan Versa has 2 doors, but the provided image clearly shows a 4-door vehicle.",
+        "whatTheAgentLoses": "You lose the chance to catch this discrepancy and make an informed decision about whether to trust the listing.",
+        "speak": "if-wrong",
+        "check": "Does the car in the photo match the door count, body type, and model named in the listing text?",
+        "say_example": "The text says two doors. The photo shows four. One of them is wrong, so I'm not trusting the details on this one."
+       },
+       {
+        "question": "Does the listing say 'or similar', so you're booking a car size rather than the exact car pictured?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Traditional rental agencies guarantee a vehicle category (like 'Compact' or 'SUV'), not the exact make and model shown in the photo, meaning you might get a different car with different features.",
+        "whatTheAgentLoses": "The agent might select a listing based on the photo of a specific car you want, but you lose the awareness that you could be handed the keys to a completely different vehicle in that class.",
+        "speak": "on-event",
+        "check": "Does the listing say 'or similar' next to the car model?",
+        "say_example": "The page says <Nissan Versa> or similar. You're booking the size, not that exact car."
+       },
+       {
+        "question": "Is this the car, dates, and total you want?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the exact dates, manual transmission, and full-to-full fuel policy shown on the screen ensures the rental meets your specific travel needs.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the rental terms, transmission type, and final price before moving forward with the booking.",
+        "speak": "always",
+        "check": "What car, dates, total, fuel policy, and transmission does the details page show?",
+        "say_example": "Here's the one you picked. <Toyota Yaris>, <March 3 to 6>, <163> total. Manual gearbox. Full tank out, full tank back."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Check the pickup location",
+      "questions": [
+       {
+        "question": "Is the pickup counter somewhere other than the terminal, and is it open when you arrive?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the specific address, operating hours, and notes that a shuttle is required to reach the off-airport counter.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide if taking an off-airport shuttle is too inconvenient for their schedule.",
+        "speak": "on-event",
+        "check": "Where does the page say the counter is, does it mention a shuttle, and what are its opening hours?",
+        "say_example": "This counter is off the airport. A shuttle takes you there. It closes at <6 pm>, and you land at <7>. Want a counter inside the terminal?"
+       },
+       {
+        "question": "Which pickup spot do you want for this car?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple pickup options, such as a general area in Kearny or a specific train station in Short Hills, which determines where you need to travel to get the car.",
+        "whatTheAgentLoses": "You lose the opportunity to choose the pickup location that best fits your personal travel itinerary and convenience.",
+        "speak": "on-event",
+        "check": "Which pickup locations does the listing offer for this car, and what does each cost?",
+        "say_example": "Two ways to get this car. Meet the host in <Kearny>, or pick it up at <Short Hills station>. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Check mileage and fuel policy",
+      "questions": [
+       {
+        "question": "Does the details page repeat every promise the results card made, like unlimited miles or a waived fee?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results advertised 'unlimited miles', but this feature is missing from the scrolled portion of the car's details page.",
+        "whatTheAgentLoses": "The user loses the ability to catch a potentially costly discrepancy in the rental's mileage policy before committing to the booking.",
+        "speak": "if-wrong",
+        "check": "Which features or promises did the results card show, and does the details page state each one?",
+        "say_example": "The results said unlimited miles. The car's page doesn't say that anywhere. I'll check the terms before we go on."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Read the cancellation terms",
+      "questions": [
+       {
+        "question": "Do the cancellation terms in the fine print actually match the 'cancel anytime' promise you saw earlier?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The booking page prominently advertised penalty-free cancellation, but the Terms & Conditions revealed a hidden one-day charge for last-minute cancellations.",
+        "whatTheAgentLoses": "An agent might blindly accept the terms and conditions without noticing the contradictory penalty, leaving the user vulnerable to unexpected fees if plans change.",
+        "speak": "if-wrong",
+        "check": "What cancellation deadline and fee do the terms give, and what did the results card or details page claim?",
+        "say_example": "The page said cancel any time. The fine print charges a day's rent if you cancel inside <24 hours>. That's <45>."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Read the reviews and host",
+      "questions": [
+       {
+        "question": "What are the host's and car's ratings and trip counts?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the car's 4.94 rating and the host's 5.0 rating across hundreds of trips helps ensure a reliable rental experience.",
+        "whatTheAgentLoses": "You lose the peace of mind that comes from personally evaluating the host's track record to gauge your own trust in the rental.",
+        "speak": "never",
+        "check": "What ratings and trip counts do the car and host show?",
+        "say_example": "Read the host at <5 stars> over <300> trips, car at <4.9>."
+       },
+       {
+        "question": "Does the host's profile show cancelled trips?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "On platforms like Turo, a host might have a 5-star rating from completed trips but still frequently cancel on guests at the last minute, leaving them stranded.",
+        "whatTheAgentLoses": "You lose the ability to screen out unreliable hosts who might ruin your travel plans with a last-minute cancellation.",
+        "speak": "never",
+        "check": "Does the host profile show a cancellation count or rate?",
+        "say_example": "Found no cancellation history shown for this host."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Check the extras on offer"
+     },
+     {
+      "id": "4.7",
+      "label": "Choose the delivery location",
+      "questions": [
+       {
+        "question": "Do you want the car delivered, so only hosts who deliver show up?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Exploring the extended filters reveals whether the platform supports having the rental car delivered directly to your location.",
+        "whatTheAgentLoses": "You lose the chance to personally verify if delivery is an option before settling for a standard pickup.",
+        "speak": "never",
+        "check": "Is a delivery filter available, and is it on?",
+        "say_example": "Kept only hosts who deliver."
+       },
+       {
+        "question": "Which pickup or delivery option do you want, given what each costs?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that delivery to the airport costs an extra $120, while picking up the car at a nearby hotel is completely free.",
+        "whatTheAgentLoses": "An agent might default to the expensive airport delivery for convenience, depriving you of the chance to save money by choosing a free nearby pickup spot.",
+        "speak": "on-event",
+        "check": "Which pickup and delivery options does the listing show, and what fee does each carry?",
+        "say_example": "Delivery to the airport adds <120>. Picking it up at <a hotel ten minutes away> is free. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Consider an upgrade",
+      "questions": [
+       {
+        "question": "Keep the car you picked, or pay extra for a hybrid or electric?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows your current Intermediate SUV selection for $132.93 alongside options to upgrade to an electric or hybrid car for an additional cost.",
+        "whatTheAgentLoses": "Delegating this step means an agent might unnecessarily increase the total price by selecting an upgrade you do not actually want or need.",
+        "speak": "never",
+        "check": "What upgrade offers does the page show, and at what added cost?",
+        "say_example": "Kept your SUV. Passed on the hybrid for <18> more."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Reject the pick",
+      "questions": [
+       {
+        "question": "Does the car's page say it's unavailable for your dates, even though it was in the results?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search results can sometimes display stale inventory, meaning a car that appeared available might actually be booked for your dates once you click into its details.",
+        "whatTheAgentLoses": "You lose the ability to catch that the platform's search results were misleading, preventing you from realizing you need to back out and select a different vehicle.",
+        "speak": "on-event",
+        "check": "Does the details page show an unavailable or sold-out message for the selected dates?",
+        "say_example": "This car says it's unavailable for your dates, even though it showed in the results. Going back to the next one."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Set the rental options",
+    "note": "5.1 where the site prices payment timing; 5.2 where mileage is sold separately; 5.3 on every checkout - toggled to read the total before choosing, and declined by most; 5.4 where extras are offered; 5.5 where a code exists. 5.6 replaces 5.1 on Priceline's bidding tool and loops with 7.5 and 7.6 until accepted or abandoned. on Sixt and Budget these are pages before 6; on Expedia, Priceline and Costco they sit on the checkout or summary page; on Turo each is a sheet off the checkout.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Choose the payment timing",
+      "questions": [
+       {
+        "question": "Pay now for the lower price, or pay later and keep free cancellation?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a trade-off between a $111 Pay Later option with free cancellation and a discounted $105 Pay Now option with restricted cancellation terms.",
+        "whatTheAgentLoses": "Delegating this choice means losing the ability to weigh upfront savings against the need for booking flexibility.",
+        "speak": "gate",
+        "check": "What are the pay-now and pay-later prices, and what cancellation terms does each carry?",
+        "say_example": "Same car, two prices. <105> if you pay now, but no refund if plans change. <111> if you pay at the counter, cancel free. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Choose the mileage plan",
+      "questions": [
+       {
+        "question": "Keep the included mileage limit, or pay extra per day for unlimited?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a choice between a free 1200 km limit with a per-kilometer overage fee or unlimited mileage for an additional daily cost.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if your planned driving distance justifies paying extra for the peace of mind of unlimited mileage.",
+        "speak": "gate",
+        "check": "What mileage limit is included, what is the overage charge, and what does unlimited cost?",
+        "say_example": "<1,200 km> is included. Over that it's <15 cents> a kilometer. Unlimited is <3> a day more. How far are you driving?"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Choose the protection plan",
+      "questions": [
+       {
+        "question": "What exactly does the minimum protection plan cover?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Expanding this option reveals crucial financial details, such as the $3,000 maximum out-of-pocket cost and state minimum liability inclusions.",
+        "whatTheAgentLoses": "You lose the chance to evaluate your personal financial risk and decide if you are comfortable with a $3,000 out-of-pocket maximum in the event of an accident.",
+        "speak": "never",
+        "check": "What does the minimum plan cover, and what is the maximum out of pocket?",
+        "say_example": "Read the minimum plan. It leaves up to <3,000> on you if there's damage."
+       },
+       {
+        "question": "Which damage cover do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents three protection packages with different upfront costs and deductibles that directly impact your final fare.",
+        "whatTheAgentLoses": "You lose the ability to balance your personal risk tolerance against the upfront cost of the rental insurance.",
+        "speak": "gate",
+        "check": "Which protection options are listed, what does each cost per day, and what is the out-of-pocket maximum for each?",
+        "say_example": "Damage cover. <Premier> is <30> a day, you pay nothing if it's damaged. <Minimum> is <10>, you'd pay up to <3,000>. No cover, you pay it all. Your card may cover rentals. Which one?"
+       },
+       {
+        "question": "Does the protection plan selected on the page match what you chose?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows options for roadside assistance and various levels of insurance protection with daily costs.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred level of insurance coverage and roadside assistance based on their personal risk tolerance and existing coverage.",
+        "speak": "if-wrong",
+        "check": "Which protection options are selected on the page?",
+        "say_example": "The page has the <Standard> plan selected. You said no cover. Fixing it."
+       },
+       {
+        "question": "If you cancel, do you get the damage cover money back?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen notes that the coverage is fully refundable up until the pick-up time, which lowers the financial risk of adding it.",
+        "whatTheAgentLoses": "You lose the peace of mind of knowing that adding the insurance doesn't lock you into paying for it if your travel plans change.",
+        "speak": "never",
+        "check": "Does the page say the coverage is refundable, and until when?",
+        "say_example": "Confirmed the cover refunds in full if you cancel before pickup."
+       },
+       {
+        "question": "Is any optional insurance already switched on before we touch it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Rental interfaces often use dark patterns where expensive add-ons are pre-selected visually, requiring you to actively uncheck them to avoid the charge.",
+        "whatTheAgentLoses": "The user loses the chance to spot and opt out of stealthy pre-selected fees that an agent might blindly accept as part of the default form state.",
+        "speak": "on-event",
+        "check": "Are any insurance or add-on toggles already on, and what does each add to the total?",
+        "say_example": "The <roadside plan> was switched on before I touched anything. That's <9> a day. You didn't ask for it, so I'm switching it off."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Add or skip the extras",
+      "questions": [
+       {
+        "question": "Do you need to add any extra equipment for your trip, like a child safety seat or a cooler?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers optional extras like a child safety seat for $30 per trip and a cooler for $14 per trip, which might be essential depending on your passengers and travel plans.",
+        "whatTheAgentLoses": "Letting an agent decide means they might skip essential equipment like a child seat, or add unnecessary items that needlessly increase your rental cost.",
+        "speak": "never",
+        "check": "Which extras are offered, and which are selected?",
+        "say_example": "Said no to the child seat, cooler, and GPS."
+       },
+       {
+        "question": "Is the extra you picked only paid at the counter and not guaranteed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that requested extras like child seats are subject to availability and are paid for at pick-up, not during the online checkout.",
+        "whatTheAgentLoses": "You lose the awareness that your requested child seat might not actually be there when you arrive, which could completely derail your travel plans.",
+        "speak": "on-event",
+        "check": "Does the page say the selected extra is subject to availability or paid at pickup?",
+        "say_example": "The child seat isn't guaranteed. You pay for it at the counter, and they might not have one. Want a backup plan?"
+       },
+       {
+        "question": "Do you want prepaid fuel, so you don't have to fill up before returning?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The host offers a prepaid refuel option, which allows you to return the car at any fuel level without penalty, offering convenience at a fixed price.",
+        "whatTheAgentLoses": "You lose the ability to weigh the convenience of not having to find a gas station before your flight against the upfront cost.",
+        "speak": "never",
+        "check": "Is a prepaid fuel option offered, and at what price?",
+        "say_example": "Skipped prepaid fuel. Bringing it back full is cheaper."
+       },
+       {
+        "question": "Do you want the toll pass, or pay tolls as you go?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The rental company offers an unlimited e-Toll package for a high daily rate (e.g., $23.99/day), which might cost significantly more than the actual tolls you will encounter on your route.",
+        "whatTheAgentLoses": "An agent might add the expensive toll package for convenience, causing you to drastically overpay for tolls you could have easily managed yourself.",
+        "speak": "never",
+        "check": "Is a toll pass offered, and at what daily rate?",
+        "say_example": "Skipped the <24> a day toll pass. Tolls on their own usually cost less."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Apply a coupon or promo",
+      "questions": [
+       {
+        "question": "Do the savings amounts on your booking review screen agree with each other?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen contradicts itself by claiming a ₹1000 saving in the Wallet & Offers section while stating a ₹500 saving below the final fare.",
+        "whatTheAgentLoses": "You lose the opportunity to spot this pricing discrepancy and ensure you receive the correct discount before paying.",
+        "speak": "if-wrong",
+        "check": "Do the savings amounts shown in different parts of the review screen agree?",
+        "say_example": "The offers box says you save <1,000>. The fare line says <500>. I'm reading the total to see which is real."
+       },
+       {
+        "question": "Do you have a promo code to apply to this trip?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a field to apply a promo code, noting that only one code can be used per trip.",
+        "whatTheAgentLoses": "You lose the opportunity to apply a personal discount code to lower the total cost of your rental.",
+        "speak": "never",
+        "check": "Is a promo code field showing?",
+        "say_example": "Left the promo box empty. You didn't give me a code."
+       },
+       {
+        "question": "Is a rate or discount code applied that the counter will ask you to prove?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a special rate code was used to lower the price, the rental counter will demand a matching corporate ID, badge, or membership card before handing over the keys.",
+        "whatTheAgentLoses": "The agent might apply a generic discount code found online to get a lower price, leaving you to face a massive price hike or denial at the counter when you cannot prove eligibility.",
+        "speak": "on-event",
+        "check": "Is a corporate, membership, or discount code applied anywhere in the booking, and does the page say proof is required at pickup?",
+        "say_example": "There's a corporate code on this booking. They'll ask for the matching badge at the counter. Is it yours? If not, I'll take it off."
+       },
+       {
+        "question": "Will entering this promo code overwrite a discount you already have?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout system explicitly warns that only one promo code can be applied per trip, meaning adding a new code will silently replace any previously applied discounts.",
+        "whatTheAgentLoses": "You lose the ability to verify whether the new promo code actually saves you more money or accidentally wipes out a more valuable existing discount.",
+        "speak": "on-event",
+        "check": "Is a discount already applied, and does the page say only one code can be used?",
+        "say_example": "A <500> discount is already on. Adding your code replaces it. Want me to try yours anyway?"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Bid a price",
+      "questions": [
+       {
+        "question": "How much should you bid for the daily rental rate?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a standard price of $38 per day and an option to save up to 40%, requiring you to calculate a strategic bid.",
+        "whatTheAgentLoses": "You lose the ability to decide how aggressively to discount the standard rate based on your personal risk tolerance for a rejected bid.",
+        "speak": "gate",
+        "check": "What retail price does the page show, and what does it say about the bid range?",
+        "say_example": "Retail is <38> a day. The page says bids can go up to <40%> under. How much do you want to offer?"
+       },
+       {
+        "question": "Do you want to raise the bid, since the page says it has a low chance?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warned that a $19/day bid had a low chance of being accepted and suggested bidding $40 based on retail prices.",
+        "whatTheAgentLoses": "The user loses the ability to decide their own bidding strategy and risk tolerance for getting a rejected offer.",
+        "speak": "on-event",
+        "check": "Does the page warn the bid has a low chance, and what amount does it suggest?",
+        "say_example": "The page says <19> has a low chance. It suggests <40>. Raise it, or send it anyway?"
+       },
+       {
+        "question": "Which companies could fill this bid?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the logos for Alamo, AVIS, Budget, Hertz, and National, confirming that the opaque deal will be fulfilled by a major national brand.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate the list of potential agencies and ensure you are comfortable with whichever one is ultimately assigned to your reservation.",
+        "speak": "never",
+        "check": "Which company logos does the page show as possible providers?",
+        "say_example": "Noted any of <Alamo, Avis, Budget, Hertz, or National> could fill this bid."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Fill the booking form",
+    "note": "6.1 first - typed on Idz5 and the two broker keepers, pre-filled on 3-44 and KpGS, left empty everywhere else. 8.1 and 8.3 here where the form repeats them. 6.2 on airport pickups; 6.3 as the form asks; 6.4 where the site takes payment now - Expedia is pay at pickup, Costco and the brokers take no card at all. 6.5 when a field is rejected or the page resets.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Enter the driver details",
+      "questions": [
+       {
+        "question": "Are the driver details actually filled in on the form, or are the fields still empty?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narration instructs you to enter your personal information, but the form fields remain visibly empty as you scroll past them.",
+        "whatTheAgentLoses": "You lose the assurance that the reservation will be successfully booked under your name since the required driver details were skipped.",
+        "speak": "if-wrong",
+        "check": "Do the driver fields on the form show the entered values, or are they empty?",
+        "say_example": "The name and email boxes are still empty. I'm typing them in again."
+       },
+       {
+        "question": "What contact details should I enter for the primary driver?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a name, email address, and phone number for the person who will be driving the vehicle.",
+        "whatTheAgentLoses": "The user loses control over whose name is on the reservation and where the confirmation email and updates are sent.",
+        "speak": "always",
+        "check": "Which driver fields does the form require?",
+        "say_example": "I'm filling in your name, email, and phone number now."
+       },
+       {
+        "question": "Who do you want as the driver?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a closed 'Driver (Adult)' dropdown prompting you to select from a list, which determines whose details will be attached to the rental.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong saved profile, potentially causing identification or payment issues at the rental counter.",
+        "speak": "on-event",
+        "check": "Which names does the driver dropdown list?",
+        "say_example": "The driver list has <you> and <Jennifer>. Who's driving?"
+       },
+       {
+        "question": "Does the driver name on the form match your licence exactly?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form explicitly states the driver information must match the driver's license, meaning any nicknames or discrepancies could result in being denied the car at the counter.",
+        "whatTheAgentLoses": "An agent might use a preferred name or nickname, causing the rental agency to refuse to hand over the keys when the ID doesn't perfectly match.",
+        "speak": "on-event",
+        "check": "Does the form say the driver name must match the licence, and what name is entered?",
+        "say_example": "The form says the name has to match your licence exactly. I've entered <David Lin>. Is that how your licence reads?"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Add the flight details",
+      "questions": [
+       {
+        "question": "Do you want to add your flight number, in case you land late?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tooltip explains that providing an arrival flight number allows the rental company to hold your car if your flight is delayed.",
+        "whatTheAgentLoses": "You lose the opportunity to link your specific flight to the reservation to ensure the car is held if your travel is delayed.",
+        "speak": "on-event",
+        "check": "Is a flight number field shown, and what does the page say it is used for?",
+        "say_example": "There's a box for your flight number. They'll hold the car if you land late. Want me to add it?"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Set contact and marketing options",
+      "questions": [
+       {
+        "question": "Which email should the confirmation go to?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states the email address where the booking confirmation will be sent, which is crucial for receiving your itinerary and receipt.",
+        "whatTheAgentLoses": "Delegating this means the agent might use a default or incorrect email address, preventing you from receiving the reservation details directly in your preferred inbox.",
+        "speak": "never",
+        "check": "Which email address does the page say the confirmation goes to?",
+        "say_example": "Set the confirmation email to <your gmail address>."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Enter the payment details",
+      "questions": [
+       {
+        "question": "Does the checkout say you pay now, or at the counter?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The checkout screen should clearly state whether payment is required immediately or at the rental counter.",
+        "whatTheAgentLoses": "The user loses the ability to verify the payment terms and ensure they are not being charged unexpectedly before pick-up.",
+        "speak": "on-event",
+        "check": "Does the checkout say whether you pay now or at pickup, and how much is due at each?",
+        "say_example": "Nothing is charged today. You pay <the total> at the counter. They'll want a credit card in your name."
+       },
+       {
+        "question": "Which card do you want to use for this booking?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a final total of $67.10 and requires your credit card and personal information to move to the final confirmation step.",
+        "whatTheAgentLoses": "You lose the ability to back out of the transaction before handing over your sensitive payment details if you change your mind about the booking.",
+        "speak": "gate",
+        "check": "Which payment options does the page show, and is a card already saved?",
+        "say_example": "Time to pay. It's <309>. Use the saved card ending <4821>, or a new one? If it's new, you type the number yourself."
+       },
+       {
+        "question": "Do you want to apply for the credit card the checkout is advertising?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout page offers a promotion where applying for a specific credit card provides a statement credit, effectively reducing the immediate total to zero.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if opening a new line of credit is worth the immediate savings on your rental car.",
+        "speak": "never",
+        "check": "Is a credit card offer shown on the checkout page?",
+        "say_example": "Skipped the credit card offer."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Fix the form errors",
+      "questions": [
+       {
+        "question": "Is any field showing a red error message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Form validation errors often appear silently as red text near the input fields rather than triggering an alert, preventing the booking from completing.",
+        "whatTheAgentLoses": "The user loses the ability to quickly understand why the booking is stalled, as the agent might not explicitly read out visual-only error states.",
+        "speak": "on-event",
+        "check": "Is any red inline error text showing near a field, and what does it say?",
+        "say_example": "The <name> field is showing an error. It says <invalid character>. I'll fix it and try again."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Review and commit the booking",
+    "note": "7.1 with 7.2 against it; 7.3 wherever a deposit or hold is on the page; then 7.4 and 7.5. 7.6 on a refusal - p3Kd loops back to 5.6 and stops after two, zNb2 stops at once. 7.7 is what the task defines as done and no keeper reaches it - the closest are a demo request number and a creator's card.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Review the booking summary",
+      "questions": [
+       {
+        "question": "Does the price breakdown show any fee or add-on you didn't choose?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Detalle de los precios' link next to the total price, which could reveal hidden fees, taxes, or add-on costs.",
+        "whatTheAgentLoses": "You lose the opportunity to verify exactly which specific fees, taxes, or add-ons are contributing to your final rental cost.",
+        "speak": "if-wrong",
+        "check": "Does the price breakdown list any fee or add-on that was not chosen?",
+        "say_example": "The breakdown has a <young driver fee> of <25> a day. You're over 25, so that shouldn't be there. Checking the age box."
+       },
+       {
+        "question": "Are the car, dates, and total right before I press book?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a final total of $33.88 and requires initialing the terms before clicking 'Buy My Rental Car Now'.",
+        "whatTheAgentLoses": "The user loses the chance to verify the exact final charge and make a deliberate choice about collision damage coverage before the purchase is locked in.",
+        "speak": "gate",
+        "check": "What car, dates, pickup spot, total, payment split, deposit, and cancellation deadline does the review page show?",
+        "say_example": "Ready to book. <Chevrolet Malibu>, <December 24 to 31>, from <the airport>. <309> total with taxes. <300> hold on your card at pickup. Free to cancel until <the 22nd>. Press to book, or say change."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Check the total across screens",
+      "questions": [
+       {
+        "question": "Do the line items add up to the total shown?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking that the $132.93 base price plus the $18.04 upgrade matches the $151 rounded price shown earlier confirms the pricing is consistent and transparent.",
+        "whatTheAgentLoses": "Delegating this check means losing the peace of mind that comes from personally verifying the math and ensuring no hidden fees were slipped into the upgrade.",
+        "speak": "never",
+        "check": "Do the listed line items add up to the total shown?",
+        "say_example": "Checked the lines add up to the total, within a cent."
+       },
+       {
+        "question": "Does the breakdown show the discount the earlier page promised?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that the $382 base price minus the $42 discount equals the initially advertised $340 total ensures the promised savings are actually applied.",
+        "whatTheAgentLoses": "You lose the transparency of seeing exactly how your promotional discounts are calculated and applied to the base rate.",
+        "speak": "if-wrong",
+        "check": "What discount did the earlier page promise, and does the breakdown show a discount line of that amount?",
+        "say_example": "The listing promised <42> off. The breakdown shows no discount line. Total is <382>."
+       },
+       {
+        "question": "Do taxes and fees go up when the bid goes up?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed taxes and fees rising from $7.84 on a $19 bid to $8.88 on a $25 bid, indicating that these charges are partially percentage-based rather than a flat rate.",
+        "whatTheAgentLoses": "You lose the ability to strategically calculate your true maximum budget, as an agent might just increase the base bid without accounting for the scaling fees.",
+        "speak": "never",
+        "check": "How do taxes and fees change between the two bid amounts shown?",
+        "say_example": "Noted taxes go up a little with the bid."
+       },
+       {
+        "question": "Does the review page show the same company and price as the row that was clicked?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the provider and price on the review screen against your selection ensures you didn't misread or misclick the intended row.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify that the correct rental option was successfully carried over to the review stage.",
+        "speak": "if-wrong",
+        "check": "Which company and price does the review page show, and which row was clicked in the results?",
+        "say_example": "The review page says <Dollar>. You picked the <Enterprise> row. Going back."
+       },
+       {
+        "question": "Do the exact deductibles differ from the rounded figures shown earlier?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial screen showed rounded deductibles of £754 and £251, but the later details specified the exact amounts as £753.67 and £251.22.",
+        "whatTheAgentLoses": "The user loses the chance to verify and approve the exact, unrounded deductible amounts before finalizing the insurance coverage.",
+        "speak": "never",
+        "check": "What deductibles does the detail page give, and what did the earlier screen round them to?",
+        "say_example": "Noted the deductibles are <753.67> and <251.22>, a little off the rounded figures."
+       },
+       {
+        "question": "Did the total go up by more than what you just added?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the total price inexplicably jump from $194.18 to $215.78 on the equipment page without any visible selections being made.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch and question hidden fees or system glitches that inflate the final cost of the rental.",
+        "speak": "if-wrong",
+        "check": "What was the total on the last screen, what is it now, and did any selected option change?",
+        "say_example": "The total went from <194> to <215> on this page. Nothing was added. I'm looking for what changed."
+       },
+       {
+        "question": "Does the checkout show the same charge in two different currencies?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The site displays conflicting amounts and currencies for the pay-at-counter total, showing '1 dólar mexicano', 'MXN$0.92', and 'USD 0.05' at different stages.",
+        "whatTheAgentLoses": "The user loses the opportunity to clarify the exact amount and currency they will actually be charged at the rental counter.",
+        "speak": "if-wrong",
+        "check": "Which currencies and amounts does the checkout show for the same charge?",
+        "say_example": "The counter charge shows as <MXN 0.92> in one place and <USD 0.05> in another. That's small, but the site is mixing currencies. I'll go by the total in <pesos>."
+       },
+       {
+        "question": "Is the checkout total higher than the rate the results showed?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The initial 'pay now rate' of $51.84 increased to a final total of $67.10 because $15.26 in taxes and fees were added to the reservation.",
+        "whatTheAgentLoses": "The user loses the chance to decide if the final price, inclusive of taxes and fees, still fits their budget before booking.",
+        "speak": "on-event",
+        "check": "What total does the checkout show, and what rate did the results page show?",
+        "say_example": "Heads up, the real price is <67> with taxes and fees. The results said <52>."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Read the deposit and hold",
+      "questions": [
+       {
+        "question": "Is there really no deposit, or will they still hold money on your card?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The car details screen highlights a 'Zero security deposit' feature, which could significantly reduce the upfront cash or credit hold required to secure the rental.",
+        "whatTheAgentLoses": "You lose the opportunity to understand how to avoid a large hold on your credit card by utilizing the zero security deposit offer.",
+        "speak": "never",
+        "check": "Does the page say what deposit or hold is taken at pickup?",
+        "say_example": "Found no deposit or hold on this one."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Accept the terms"
+     },
+     {
+      "id": "7.5",
+      "label": "Submit the booking"
+     },
+     {
+      "id": "7.6",
+      "label": "Answer a rejected booking",
+      "questions": [
+       {
+        "question": "Take the offer they made instead, bid again, or stop here?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates your $25 per day bid was too low and presents a higher-priced alternative, requiring you to decide whether to pay more or stop.",
+        "whatTheAgentLoses": "An agent might automatically accept the higher alternative price instead of knowing you prefer to wait and try again closer to the rental date.",
+        "speak": "gate",
+        "check": "Does the page say the bid was rejected, and what alternative offer or price does it show?",
+        "say_example": "They said no to <25>. They're offering <a midsize for 41>. Take it, bid again, or stop here?"
+       },
+       {
+        "question": "Is the app showing an 'Overlap bookings' error?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform will prevent you from proceeding if the dates you selected conflict with another trip you already have booked on your account.",
+        "whatTheAgentLoses": "An agent might fail to secure the vehicle and not understand that the failure is due to a scheduling conflict with your existing reservations.",
+        "speak": "on-event",
+        "check": "Does the page show an overlap or conflicting booking error?",
+        "say_example": "The app says these dates overlap another trip on your account. Do you already have a car booked then?"
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Read the confirmation",
+      "questions": [
+       {
+        "question": "Did the booking go through, and what's the confirmation number?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen confirms the reservation is being processed and provides a specific request number to retain for future reference.",
+        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the processing status and direct access to the tracking number for their records.",
+        "speak": "always",
+        "check": "Does the page show a confirmation number, and does its status read confirmed rather than pending?",
+        "say_example": "It's booked. Confirmation number <K7X2M9>. <Chevrolet Malibu>, <December 24 to 31>, <309> total."
+       },
+       {
+        "question": "After pressing book, did a confirmation appear, or is the page still on the form?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The video ends at the checkout form with the 'Reserve Now' button visible, meaning the actual booking was never finalized.",
+        "whatTheAgentLoses": "You lose the confirmation number and the guarantee that the rental car was successfully booked.",
+        "speak": "if-wrong",
+        "check": "After the submit button was pressed, does the page show a confirmation, an error, or the same form?",
+        "say_example": "I pressed book, but no confirmation came up. The page is still on the form. Nothing's booked yet."
+       },
+       {
+        "question": "Is the reservation actually confirmed, or is it just a pending request waiting for the host's approval?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "On peer-to-peer platforms, non-instant bookings require the host to manually accept the trip within a certain timeframe, meaning you do not actually have a car secured yet.",
+        "whatTheAgentLoses": "The agent might report the task as complete after submitting the request, leaving you unaware that the host could still reject it and leave you without a vehicle.",
+        "speak": "on-event",
+        "check": "Does the confirmation say confirmed, or pending host approval, and by when?",
+        "say_example": "This isn't booked yet. The host has until <tomorrow 3 pm> to say yes. Want a backup that books instantly?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Meet the driver requirements",
+    "note": "one movable gate. 8.1 on the search form on Costco, Budget, Booking.com, Turo and the brokers, at the driver form on Sixt and Priceline. 8.2 from the details page or the terms, only where the user looks. 8.3 on the broker and Budget forms. 8.4 on every page that mentions the counter - the corpus reads it and never sees it enforced. 8.5 before a first marketplace trip, off camera in every keeper.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Declare the driver's age",
+      "questions": [
+       {
+        "question": "Are you at least 25 years old?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search form includes a default-checked box confirming the driver is 25 or older, which dictates whether young-driver fees are applied to the quoted rates.",
+        "whatTheAgentLoses": "The user loses the chance to disclose if they are under 25, risking unexpected fees or rental denial at the counter if the agent blindly accepts the default.",
+        "speak": "on-event",
+        "check": "Is a driver-age box pre-checked, and what fee does the page give for younger drivers?",
+        "say_example": "The form has 'driver is 25 or older' ticked already. Under 25 adds <23.50> a day, and they check at the counter. Is that right?"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Read the young-driver surcharge",
+      "questions": [
+       {
+        "question": "Do you meet the age and licence rules the site lists?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists strict age and driver's license history requirements that vary by country for booking a car on Turo.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure your personal age and driving history meet the platform's mandatory eligibility rules.",
+        "speak": "never",
+        "check": "What age and licence-history requirements does the page list?",
+        "say_example": "Read that drivers must be <21> with a licence held <two years>."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Set the country of residence"
+     },
+     {
+      "id": "8.4",
+      "label": "Read the counter card rules",
+      "questions": [
+       {
+        "question": "What card does the counter require, and in whose name?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays important rental company rules, such as presenting a valid license and credit card in your name, which are required to successfully pick up the vehicle.",
+        "whatTheAgentLoses": "You miss the opportunity to directly read the rental conditions and ensure you understand how to avoid extra fees for things like gas and cleaning.",
+        "speak": "on-event",
+        "check": "Does the page say a credit card is required at pickup, in whose name, and does it exclude debit cards?",
+        "say_example": "They want a credit card in the driver's name at the counter. Debit won't work here."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Upload the license for approval"
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Manage the booked rental",
+    "note": "9.1 to reach the record; 9.2 and 9.3 as the user reads it; 9.4 and 9.5 as needs arise. 9.6 at the pickup - in the app on Zoomcar, at the counter on Hertz. then 9.7. every keeper here shows a trip booked in another session: the corpus has no on-camera path from 7.5 into 9.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Open the booking record",
+      "questions": [
+       {
+        "question": "Does the final trip confirmation match the car and dates you originally selected?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The video shows a booking for a Maruti S-Presso for May 13-15, but the active trip screen displays a Datsun Redi-GO for May 5-8.",
+        "whatTheAgentLoses": "The user loses their intended travel plans and ends up paying for the wrong vehicle on the wrong dates.",
+        "speak": "if-wrong",
+        "check": "What car, dates, and total does the booking record show, and what was selected at checkout?",
+        "say_example": "The booking shows a <Datsun> for <May 5 to 8>. You picked a <Maruti> for <the 13th to 15th>. That's a different trip. Checking what happened."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Read the pickup instructions",
+      "questions": [
+       {
+        "question": "What steps must you take to pick up the car from the host?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The host's message states you need to take a shuttle to a nearby parking area and complete a remote check-in by uploading your driver's license.",
+        "whatTheAgentLoses": "You lose direct awareness of the specific off-site transit logistics and ID verification requirements needed to access your rental.",
+        "speak": "never",
+        "check": "What pickup steps does the confirmation or host message list?",
+        "say_example": "Read the pickup steps. Shuttle to <the lot>, then upload your licence in the app."
+       },
+       {
+        "question": "Does the exact pickup address only get released shortly before the trip?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "This matters because the screen states the exact pickup address will be updated four hours before the trip and the next step unlocks 40 minutes prior.",
+        "whatTheAgentLoses": "Delegating this means you miss seeing the exact timeline for when your pickup location and vehicle access steps will be revealed.",
+        "speak": "on-event",
+        "check": "Does the page say when the exact pickup address is released?",
+        "say_example": "The exact address only comes <four hours> before pickup. If you're planning around it, that's late."
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Review the booking terms",
+      "questions": [
+       {
+        "question": "Does the site promise less fuel at pickup than it wants back at return?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app explicitly states you must leave the car at 100% fuel while only ensuring you will find it with a minimum of 10% fuel, creating an unfair cost burden.",
+        "whatTheAgentLoses": "You lose the ability to catch this contradictory policy and decide whether to choose a different car or rental company to avoid paying for someone else's gas.",
+        "speak": "on-event",
+        "check": "What fuel level does the page promise at pickup, and what level does it require at return?",
+        "say_example": "They only promise <10%> in the tank at pickup, but want it back at <100%>. You'd be paying for their fuel. Still want this one?"
+       },
+       {
+        "question": "Does the payment summary show the total you agreed to, with nothing left owing?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays a total cost of ₹645, a ₹6 refund, and a zero balance, which confirms the final financial details of the booking.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the exact cost breakdown and ensure no unexpected fees were applied to your payment.",
+        "speak": "if-wrong",
+        "check": "What total, refund, and balance does the payment summary show?",
+        "say_example": "The summary shows <645> paid and a balance of <30> still owing. You agreed to <645>. I'm checking what the extra is."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Modify or cancel the booking"
+     },
+     {
+      "id": "9.5",
+      "label": "Contact support or the host"
+     },
+     {
+      "id": "9.6",
+      "label": "Pick up the car",
+      "note": "9.6.1, then 9.6.2, then 9.6.3 in the app's fixed order on Zoomcar - a damage tile refuses Done without a photo. 9.6.4 at a counter instead, where the price is re-set in person. zNb2 and m6kN do 9.6.1 with a camera rather than the app.",
+      "children": [
+       {
+        "id": "9.6.1",
+        "label": "Record the car's condition",
+        "questions": [
+         {
+          "question": "What damage does the app already list for this car?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen prompts you to categorize the rear door's condition and requires an image upload to proceed if damage is selected.",
+          "whatTheAgentLoses": "Delegating this step means the agent cannot physically inspect the car to verify the damage or take the required photos, potentially leaving you liable for pre-existing scratches.",
+          "speak": "on-event",
+          "check": "Which pre-existing damage does the app already list for this car?",
+          "say_example": "The app already lists <a scratch on the rear door>. Check that spot. If there's more, take a photo before you unlock."
+         },
+         {
+          "question": "What photos does the app require before it lets you continue?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen requires photos of all four sides of the vehicle to document its condition before you can proceed to the fuel details.",
+          "whatTheAgentLoses": "You lose the opportunity to personally verify that the uploaded photos clearly capture the car's actual condition to protect yourself against false damage claims.",
+          "speak": "gate",
+          "check": "Which photos does the app say are required, and which are still missing?",
+          "say_example": "The app wants photos of all four sides before it unlocks the car. That's you. I'll wait."
+         },
+         {
+          "question": "Does the car on the check-in screen match the one that was booked?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The app requires uploading several photos of the car's interior and exterior to establish its baseline condition, such as being dirty but scratch-free.",
+          "whatTheAgentLoses": "The user loses the ability to physically inspect the vehicle for unrecorded damage and take real-time photos to protect against future liability claims.",
+          "speak": "if-wrong",
+          "check": "What plate, make, and model does the check-in screen show, and what does the booking show?",
+          "say_example": "The app is showing a <white Altima>, plate <7ABC123>. Your booking says <Sentra>. Don't unlock it yet."
+         }
+        ]
+       },
+       {
+        "id": "9.6.2",
+        "label": "Confirm the fuel level",
+        "questions": [
+         {
+          "question": "Does the fuel level recorded in the app match the gauge?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen explicitly warns that blurry or dark images will not be considered for fuel disputes, making clear photographic evidence essential.",
+          "whatTheAgentLoses": "You lose the ability to personally verify that the physical fuel gauge matches the reported percentage, which is your primary protection against unfair fuel charges.",
+          "speak": "on-event",
+          "check": "What fuel level is recorded in the app, and does the page warn about photo quality?",
+          "say_example": "The app says the tank is at <half>. Check the gauge matches. Take the photo in good light. A blurry one won't hold up in a dispute."
+         }
+        ]
+       },
+       {
+        "id": "9.6.3",
+        "label": "Confirm and start the trip",
+        "questions": [
+         {
+          "question": "Does the start-trip summary list the damage, fuel, and mileage as you see them?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen shows a summary of reported damages, such as scratches on the doors, which must be accurate before you finalize the inspection.",
+          "whatTheAgentLoses": "The user loses the chance to verify that the agent correctly documented all pre-existing damages, potentially leaving them liable for issues they didn't cause.",
+          "speak": "gate",
+          "check": "What damage, fuel level, and mileage does the start-trip summary list?",
+          "say_example": "The app has recorded <scratches on both doors>, fuel at <half>, <7,307> miles. Once the trip starts, anything new is on you. Start it?"
+         }
+        ]
+       },
+       {
+        "id": "9.6.4",
+        "label": "Settle at the counter",
+        "questions": [
+         {
+          "question": "What does the agreement charge per gallon if the tank comes back short?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays the rental company's specific fuel policy charges, which can be significantly higher than local gas prices and drastically increase the final cost.",
+          "whatTheAgentLoses": "The user loses the opportunity to save money by catching exorbitant fuel fees and choosing to refill the tank themselves.",
+          "speak": "never",
+          "check": "What per-gallon refuelling charge does the agreement show?",
+          "say_example": "Read the refuel charge, <9.99> a gallon if it comes back short."
+         },
+         {
+          "question": "Does every line on the final receipt match the booking?",
+          "cluster": "facts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The final receipt showed a base rental cost of $221.87 and a total of $431.80, which contradicts the initial booking summary quote of $309.34.",
+          "whatTheAgentLoses": "You lose the opportunity to catch and dispute unexpected price changes between the quoted booking summary and the final confirmation receipt.",
+          "speak": "if-wrong",
+          "check": "What base rate, insurance line, and total does the receipt show, and what did the booking confirmation show?",
+          "say_example": "The receipt is <431>. You booked at <309>. The insurance line is <30> a day. You picked the <13> plan. Ask the counter before you sign."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "9.7",
+      "label": "Return the car",
+      "questions": [
+       {
+        "question": "Does the fuel level at return match what was recorded at pickup?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard shows the fuel gauge pointing to '1' (full), confirming the tank was refilled to avoid the rental location's expensive per-gallon refueling fees.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify the physical fuel gauge and ensure they are protected from exorbitant post-rental gas charges.",
+        "speak": "if-wrong",
+        "check": "What fuel level does the return screen record, and what was recorded at pickup?",
+        "say_example": "Return shows <three quarters>. You picked it up full. Fill it before you hand it back, or they charge <9.99> a gallon."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

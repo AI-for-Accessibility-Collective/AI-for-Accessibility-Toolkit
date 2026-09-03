@@ -1,0 +1,2058 @@
+{
+ "task": "research and assemble travel options for a specific trip using travel-planning tools (Google Flights, Google Travel/Maps, Skyscanner, Kayak, Rome2Rio): search flights for dates, compare times, prices, and stops, check hotels or things-to-do for the same dates, and gather a shortlist of concrete options with prices — the person makes the final call, so booking is NOT required; complete when a compared set of options (e.g. a flights list filtered/sorted, tracked prices, or a saved shortlist) is on screen. Surface pinned: travel-search and planning tools in a browser or app. Variants: destination vlogs/guides (\"top 10 things in Rome\"), booking-only videos with no comparison (the hotel and flights domains cover booking), and travel-hacking/points content do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Compare travel options for a trip",
+  "note": "1, then 2. 3 when the destination was left open - ten keepers - and 4 when the dates were, in either order; both loop back into 2 when the price is not right. 5 on the results; 6 in place of 3 to 5 on the multi-modal tool. 7 for every flight keeper, and 7.7 for the three who rebuild the search on the source. 8 where anything is kept - alerts, a trip, a map. No keeper pays, so the task ends on a comparison.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the planning tool",
+    "note": "1.1 where the narrator believes incognito helps - four keepers. 1.2 then 1.3 on search-engine entries, 1.4 on the one app entry. 1.5 where the tool asks or the narrator wants tracking. 1.6 fires throughout the task. 1.7 for the Explore, map, and trip modes, which sit outside the main search form.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open a clean browser session"
+     },
+     {
+      "id": "1.2",
+      "label": "Search for the tool",
+      "questions": [
+       {
+        "question": "Which flight search website should you use?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing a specific URL into the address bar determines which platform's unique features and flight inventory will be used for the search.",
+        "whatTheAgentLoses": "Delegating this choice means you cannot rely on your personal favorite platform or the specific search features you trust most.",
+        "speak": "never",
+        "check": "Which site is loaded, from the page title or address bar?",
+        "say_example": "Searched on <site>"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Skip the sponsored link",
+      "questions": [
+       {
+        "question": "Is the top search result an ad rather than the official site?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct official domain from the Google search results ensures you use the legitimate platform rather than a sponsored ad or third-party site.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent is navigating to the trusted, official regional domain rather than a potentially unsafe or incorrect site.",
+        "speak": "on-event",
+        "check": "Is the first result labelled Sponsored or Ad, and which result's domain is the official one?",
+        "say_example": "The first result is an ad. I'm opening the real <site> instead."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Install the app",
+      "questions": [
+       {
+        "question": "Is this the real app from the flight site, going by the developer name and rating?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the app's legitimacy through its 4.7-star rating and over 5 crore downloads ensures you are installing the official tool rather than a malicious copy.",
+        "whatTheAgentLoses": "You lose the ability to independently verify the authenticity and safety of the application before it gets installed on your device.",
+        "speak": "if-wrong",
+        "check": "What developer name and rating does the store listing show?",
+        "say_example": "This app is listed by <developer>, not <site>. I'm not installing it."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Sign in to the tool",
+      "questions": [
+       {
+        "question": "Should you sign in before searching for flights?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Sign in' button, and logging in allows you to track prices and save your shortlist directly to your personal account.",
+        "whatTheAgentLoses": "Delegating this step means the agent might search without logging in, preventing you from easily accessing tracked prices or saved itineraries on your own devices later.",
+        "speak": "never",
+        "check": "Is anything on the page blocked until you sign in?",
+        "say_example": "Compared without signing in - nothing needed an account"
+       },
+       {
+        "question": "Is the page asking for a passkey, fingerprint or face check?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to confirm your identity for the account [name] using a device fingerprint, face, or screen lock.",
+        "whatTheAgentLoses": "The user loses the security of providing their own physical biometric or device-level approval to access their personal account.",
+        "speak": "on-event",
+        "check": "Does the page ask for a passkey, fingerprint, face or screen-lock confirmation?",
+        "say_example": "The site wants your fingerprint or face to sign in. That's yours to do. I'll wait."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Dismiss the interruptions",
+      "questions": [
+       {
+        "question": "Do you want to accept all cookies, or only the required ones?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requests permission to collect and share your usage data with third parties to personalize your experience.",
+        "whatTheAgentLoses": "If an agent automatically accepts all cookies, you lose the ability to restrict third-party data sharing according to your personal privacy preferences.",
+        "speak": "never",
+        "check": "Does the page show a cookie consent dialog, and what are its options?",
+        "say_example": "Said no to optional cookies"
+       },
+       {
+        "question": "Should you allow notifications from this site?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a browser dialog asking for notification permissions for the airline's website, which requires a choice to dismiss.",
+        "whatTheAgentLoses": "The user loses the ability to set their own preference for receiving browser alerts from this specific airline.",
+        "speak": "never",
+        "check": "Is the browser asking to allow notifications from this site?",
+        "say_example": "Said no to notifications from <site>"
+       },
+       {
+        "question": "Do you want to sign up for the site's newsletter with your email?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A modal popup appeared offering a free newsletter with travel news and money-saving tips in exchange for an email address.",
+        "whatTheAgentLoses": "An agent might subscribe you to unwanted promotional emails or dismiss a newsletter you actually wanted to receive.",
+        "speak": "never",
+        "check": "Is a newsletter or email sign-up popup showing?",
+        "say_example": "Closed the newsletter popup without giving your email"
+       },
+       {
+        "question": "What does the pricing notice say about how prices and fees are shown?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a modal blocking the flight details that must be dismissed to access the booking options.",
+        "whatTheAgentLoses": "The person loses the opportunity to read and understand the platform's fee structure before proceeding to the flight details.",
+        "speak": "never",
+        "check": "What does the pricing notice say about how prices and fees are shown?",
+        "say_example": "Read the pricing notice - prices <are estimates until checkout>"
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Find the explore mode",
+      "questions": [
+       {
+        "question": "Do you want the normal search form, or the map that shows prices for anywhere?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents both a pre-filled search form and a 'Map' link, and choosing the map allows for a more visual, budget-driven exploration of destinations.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to visually browse the map and spontaneously discover appealing destinations that fit your budget.",
+        "speak": "never",
+        "check": "Does the page offer both a search form and an Explore or Map mode?",
+        "say_example": "Used the map view, since you said anywhere"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Set up the search",
+    "note": "2.1 to 2.4 in the form's order - 2.3 and 2.4 are left open by the keepers who go on to 3 and 4, and 2.5 replaces 2.4 for them. 2.6 on the Explore tools only. 2.7 and 2.8 mostly accepted as defaults. the passenger counter is stepped and reverted to teach in three keepers. 2.9 where the form offers knobs; 2.10 on the two budget-first tools. then 2.11. the whole goal is re-entered from 3, 4, and 6 when the price sends the user back to the form.",
+    "questions": [
+     {
+      "question": "Where are you flying from, and where to?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen showed the origin initially set to Lucknow, requiring a change to New Delhi and the selection of Mumbai as the destination to search the correct route.",
+      "whatTheAgentLoses": "If an agent chooses the route, you lose the ability to specify your exact travel plans, which could result in a shortlist of flights for the wrong cities.",
+      "speak": "never",
+      "check": "What origin and destination does the search form show?",
+      "say_example": "Set <origin> to <destination>"
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Pick the trip type",
+      "questions": [
+       {
+        "question": "Are you searching for a one-way, round-trip, or multi-city flight?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search form requires an itinerary type to ensure the flight results match the intended travel logistics.",
+        "whatTheAgentLoses": "The user loses the ability to define their exact travel structure, which could lead to the agent researching unnecessary return flights.",
+        "speak": "never",
+        "check": "Does the form show one-way, round trip or multi-city selected?",
+        "say_example": "Set one way, as you asked"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Set the origin",
+      "questions": [
+       {
+        "question": "Which departure airport do you mean?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing 'Tiru' reveals multiple distinct airports like Tirupati, Tiruchirapalli, and Tirana, requiring a specific choice to ensure accurate flight results.",
+        "whatTheAgentLoses": "The user loses the ability to specify their exact local departure airport when the search query returns multiple similarly named cities.",
+        "speak": "on-event",
+        "check": "Does the origin dropdown list more than one distinct place for what was typed, and which is selected?",
+        "say_example": "Found more than one match for <typed>. I'll use <airport>, the one in <city>. OK, or a different one?"
+       },
+       {
+        "question": "Do the origin and destination in the form match your trip?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the Rome2rio search fields pre-filled with 'Venice, Italy' and 'Grand Canyon, USA' before any search was initiated.",
+        "whatTheAgentLoses": "The person loses the ability to verify that the agent is starting the search with the correct origin and destination.",
+        "speak": "if-wrong",
+        "check": "What origin and destination does the search form show, and do they match the trip asked for?",
+        "say_example": "The form came pre-filled with <city>. That's not your trip. I'm changing it to <origin>."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Set the destination",
+      "questions": [
+       {
+        "question": "Which destination airport do you mean?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing 'Sin' brings up multiple options including specific airports like Singapore Changi (SIN), broader city options like Singapore (Any), and unrelated locations like Srinagar.",
+        "whatTheAgentLoses": "The user loses the ability to specify whether they want to fly into a specific airport like Changi or keep the search broad across any airport in the destination city.",
+        "speak": "on-event",
+        "check": "Does the destination dropdown list more than one distinct place, or a city-wide 'Any' option alongside specific airports?",
+        "say_example": "Found more than one match for <typed>. I'll use <airport> in <city>. OK, or pick another?"
+       },
+       {
+        "question": "Do you want to search a whole country, or one city?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering entire countries like Italy and Greece for a whole month allows you to cast a wide net to find the best routes before narrowing down specific airports.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide exactly how flexible they want to be with their departure and arrival locations.",
+        "speak": "never",
+        "check": "Does the destination field hold a country or a city?",
+        "say_example": "Searched the whole of <country> first"
+       },
+       {
+        "question": "Do you want to leave the destination as 'Anywhere' and the dates open, or set them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows broad default parameters like 'Anywhere' and 'Anytime', which dictate whether you are optimizing for the absolute lowest price or specific schedule constraints.",
+        "whatTheAgentLoses": "An agent might assume you need a specific destination and force you to choose one, losing the flexibility to build a trip entirely around the cheapest available airfare.",
+        "speak": "never",
+        "check": "Does the form show Anywhere and Anytime, or a set destination and dates?",
+        "say_example": "Left the destination as anywhere, since you didn't name one"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Set the dates",
+      "questions": [
+       {
+        "question": "What dates are you flying out and back?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a collapsed search bar with the dates already set to September 23 and September 30, defining the exact timeframe for the flight search.",
+        "whatTheAgentLoses": "The user loses control over their travel schedule, which could result in a researched itinerary for dates they are unavailable.",
+        "speak": "never",
+        "check": "What departure and return dates does the search show?",
+        "say_example": "Set <date> to <date>, as you asked"
+       },
+       {
+        "question": "Do the dates in the search summary match the ones you asked for, or are month and day swapped?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Entering dates numerically (like 04/05) can be parsed as April 5th or May 4th depending on the site's localization, leading to a search for the wrong month.",
+        "whatTheAgentLoses": "The user receives a shortlist of flights for the completely wrong time of year because the agent didn't verify the parsed date display.",
+        "speak": "if-wrong",
+        "check": "What dates does the search summary show after entry, and do they match the dates asked for?",
+        "say_example": "The site read your dates the other way round. It searched <wrong date>. Fixing it to <date>."
+       },
+       {
+        "question": "Is one of your dates a public holiday there?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The date picker explicitly highlights upcoming public holidays, which heavily impact flight availability, pricing, and destination crowds.",
+        "whatTheAgentLoses": "The user loses the opportunity to intentionally align their trip with a major holiday or avoid it to escape peak travel prices and crowds.",
+        "speak": "on-event",
+        "check": "Does the date picker list a public holiday on or next to the chosen dates?",
+        "say_example": "Heads up, <date> is <holiday> there. Prices and crowds will be up."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Choose flexible dates instead",
+      "questions": [
+       {
+        "question": "Do you want to search for a specific departure date or browse an entire month?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interface provides a 'Whole month' tab alongside specific dates, allowing you to compare prices across an entire month if your travel plans are flexible.",
+        "whatTheAgentLoses": "Delegating this means the agent might default to a specific date, missing the opportunity to leverage your flexibility for better deals across a whole month.",
+        "speak": "never",
+        "check": "Does the date picker show a specific date or the whole-month tab selected?",
+        "say_example": "Searched the whole month, since your dates are flexible"
+       },
+       {
+        "question": "Which month do you want to depart?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Depart' dropdown with various months, and selecting one focuses the map's pricing and availability on that specific timeframe.",
+        "whatTheAgentLoses": "The person loses the chance to browse and compare prices across different months to find the optimal time for their schedule.",
+        "speak": "never",
+        "check": "Which month does the Depart dropdown show?",
+        "say_example": "Set the month to <March>"
+       },
+       {
+        "question": "Which month, and how many days?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Using the pop-up to change the range from 'Any time' to a specific month and adjusting the duration slider ensures the flight search matches your actual availability.",
+        "whatTheAgentLoses": "You lose the ability to personally decide the exact timing and length of your vacation based on your own schedule and preferences.",
+        "speak": "never",
+        "check": "What month and trip duration does the search show?",
+        "say_example": "Set <month>, <7> days"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Set the trip length",
+      "questions": [
+       {
+        "question": "How long do you want the trip to be?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Duration' slider that filters the search results based on the minimum and maximum number of days for the trip.",
+        "whatTheAgentLoses": "Delegating this choice means losing the ability to specify exactly how many days you want to spend at the destination.",
+        "speak": "never",
+        "check": "What range does the Duration slider show?",
+        "say_example": "Set trip length to <5> to <7> days"
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Set the travellers",
+      "questions": [
+       {
+        "question": "How many people are flying, and in which cabin?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search pop-up requires specifying the number of adults and children along with the cabin class, which directly dictates the flight availability and total prices shown.",
+        "whatTheAgentLoses": "The agent might search for a solo economy ticket when you actually need to accommodate multiple passengers or prefer a premium cabin class.",
+        "speak": "never",
+        "check": "What passenger count and cabin class does the form show?",
+        "say_example": "Set <2> adults, economy"
+       },
+       {
+        "question": "Does the site need the children's ages?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search interface includes options to select passengers who are '12+ years' or 'under 12', which can affect the availability of child fares and seating arrangements.",
+        "whatTheAgentLoses": "The user loses the opportunity to secure potentially cheaper child fares or ensure appropriate seating if the agent defaults to searching for adults only.",
+        "speak": "on-event",
+        "check": "Does the traveller picker ask for children's ages or an under-12 category?",
+        "say_example": "The site needs the children's ages. How old are they?"
+       },
+       {
+        "question": "Did the traveller dropdown close after Apply?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows the 'Travellers and cabin class' dropdown still open with the 'Apply' button in a pressed state, indicating the interface is lagging and the search hasn't actually been submitted.",
+        "whatTheAgentLoses": "The user loses the ability to catch that the agent is stuck waiting for a frozen interface element to close, meaning no flight results are actually being generated.",
+        "speak": "if-wrong",
+        "check": "Is the traveller dropdown still open after Apply was pressed?",
+        "say_example": "The traveller box didn't close. Pressing apply again."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Pick the cabin class",
+      "questions": [
+       {
+        "question": "Does the cabin dropdown say only economy prices show for this search?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dropdown explicitly states that it can only show Economy prices until specific travel dates and destinations are entered, restricting the search capabilities.",
+        "whatTheAgentLoses": "The agent might blindly accept the Economy default, failing to realize they need to refine the search parameters first to get the requested premium cabin prices.",
+        "speak": "on-event",
+        "check": "Does the cabin dropdown say only Economy prices can be shown for this search?",
+        "say_example": "This view only shows economy prices. Business fares appear once I set dates and a destination."
+       },
+       {
+        "question": "Which cabin class do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map currently displays Economy prices in USD, but the dropdown allows you to switch and compare fares for Business or First class.",
+        "whatTheAgentLoses": "The user loses the ability to decide their preferred balance between flight comfort and budget.",
+        "speak": "never",
+        "check": "Which cabin class is selected?",
+        "say_example": "Set economy, as you asked"
+       }
+      ]
+     },
+     {
+      "id": "2.9",
+      "label": "Set the search options",
+      "questions": [
+       {
+        "question": "Do you want direct flights only, and should nearby airports count?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays checkboxes for 'Add nearby airports' and 'Direct flights only', which directly control the flexibility and convenience of the flight results.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the comfort of a direct flight against the potential savings of layovers or alternate airports.",
+        "speak": "never",
+        "check": "Are Direct flights only and Add nearby airports checked?",
+        "say_example": "Set direct only, no nearby airports"
+       },
+       {
+        "question": "Are the prices in your currency?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map displays prices to various European destinations in Pakistani Rupees (PKR), which might need to be changed if you prefer comparing costs in another currency.",
+        "whatTheAgentLoses": "You lose the chance to set the display currency to the one you actually use for budgeting and paying.",
+        "speak": "if-wrong",
+        "check": "What currency symbol or code do the prices carry?",
+        "say_example": "Prices here are in <currency>. I'll switch to <your currency>."
+       },
+       {
+        "question": "Do you want the hotel search box left checked?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Rome2Rio search interface includes a default-checked box that will automatically bundle Expedia hotel results alongside your transport options.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to keep your transport and accommodation searches separate or combined.",
+        "speak": "never",
+        "check": "Is the accommodation-with-Expedia box checked?",
+        "say_example": "Unchecked the hotel bundle box"
+       },
+       {
+        "question": "Which card will you pay with, so the search includes its fee?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a dropdown to select payment types like MasterCard or Visa so that the displayed prices accurately include applicable minimum payment fees.",
+        "whatTheAgentLoses": "If the agent guesses your payment method, you might see inaccurate total prices that do not reflect the actual fees you will pay at checkout.",
+        "speak": "never",
+        "check": "What payment-type options does the fee dropdown offer?",
+        "say_example": "Set the fee dropdown to <card type>"
+       },
+       {
+        "question": "Does the card fee the dropdown warns about match the fee on the flight cards?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The dropdown menu warned about an applicable minimum payment fee, so it is important to confirm that the flight cards accurately reflect this cost, which in this case was Rs0.",
+        "whatTheAgentLoses": "The user loses the assurance that potential payment method fees were properly accounted for in the final price comparison.",
+        "speak": "if-wrong",
+        "check": "What fee does the payment dropdown warn about, and what fee shows on the flight cards?",
+        "say_example": "The site warned about a card fee of <fee>. The cards show <shown>. Noted the difference."
+       }
+      ]
+     },
+     {
+      "id": "2.10",
+      "label": "Set the budget cap",
+      "questions": [
+       {
+        "question": "What's the most you want to spend on the flight, to filter the map?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Setting a price limit on the map slider, such as 'Under $600', instantly filters out unaffordable locations while still leaving a broad variety of places to consider.",
+        "whatTheAgentLoses": "You lose the chance to intuitively adjust your budget threshold based on seeing exactly which destinations appear or disappear on the map.",
+        "speak": "gate",
+        "check": "What price cap does the map slider show, and what does the map show under it?",
+        "say_example": "The map can filter by budget. What's the most you want to spend on the flight? I'll hide everything above it."
+       }
+      ]
+     },
+     {
+      "id": "2.11",
+      "label": "Run the search",
+      "questions": [
+       {
+        "question": "Does the search summary show the trip you asked for, with direct flights only on?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen shows specific dates, locations, and a checked 'Direct flights only' box that will strictly limit the initial results.",
+        "whatTheAgentLoses": "The person loses the chance to verify that the exact dates, route, and specific filters match their actual travel preferences before the search is executed.",
+        "speak": "always",
+        "check": "What origin, destination, dates, trip type, travellers, cabin and filters does the search summary show?",
+        "say_example": "Got it. <origin> to <destination>, <dates>, <two> travellers, economy, direct only. Searching."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Pick the destination by price",
+    "note": "only when 2.3 was left open. 3.1 on the map tools, 3.2 on the list and grid tools; 3.3 loops back to 2.5 and 3.1 when the month is wrong - 11bY twice. 3.4 closes the goal; 3.5 after it on the country-to-country search, where the departure airport is also a choice. IDVZ runs 3.2, 3.4, and 3.5 as three nested price lists.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Read the price map",
+      "questions": [
+       {
+        "question": "Is one place on the map priced far below everything around it, and worth a look?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map shows a $103 flight to New Orleans, which is significantly cheaper than surrounding options like $509 or $478.",
+        "whatTheAgentLoses": "The user loses the ability to balance a surprisingly cheap fare against their personal interest in exploring other cities on the map.",
+        "speak": "on-event",
+        "check": "Is one destination's map price far below its neighbours' prices?",
+        "say_example": "<city> is <price>. Everything around it is <next price> and up. Worth a look?"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Read the destination list",
+      "questions": [
+       {
+        "question": "Which country do you want to open up, to see its cities?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of countries sorted by lowest estimated price, requiring a decision on which region to investigate further.",
+        "whatTheAgentLoses": "The user loses the chance to spontaneously pick a destination country based on how appealing the baseline prices are to them.",
+        "speak": "never",
+        "check": "Which countries does the list show, sorted by lowest price?",
+        "say_example": "Opened <country>, the cheapest on the list"
+       },
+       {
+        "question": "What kind of place do you want, like beach or city?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple thematic filters like 'Cheapest flights', 'Direct flights', and 'Beach', which dictate the type of trip options generated.",
+        "whatTheAgentLoses": "The user loses the opportunity to discover themed or more convenient destinations if the agent defaults strictly to the cheapest flights.",
+        "speak": "never",
+        "check": "Which category tabs does the explore page offer?",
+        "say_example": "Used the <category> tab, as you asked"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Change the month",
+      "questions": [
+       {
+        "question": "Should the search stay on the month it moved to, or go back to the one you asked for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar currently shows April 2022, but the opened date menu offers the option to switch back to March to explore the original timeframe.",
+        "whatTheAgentLoses": "An agent might proceed with the April dates without realizing you prefer to revert the search back to your original March timeline.",
+        "speak": "never",
+        "check": "Which month does the search bar show?",
+        "say_example": "Kept <month>"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Choose the destination",
+      "questions": [
+       {
+        "question": "Which destination do you want, from the prices shown?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed multiple cities within a region, such as Lima from $307 and Cuzco from $502, requiring a choice between different price points and locations.",
+        "whatTheAgentLoses": "You lose the ability to weigh your subjective desire to visit a specific city against the concrete cost differences presented.",
+        "speak": "gate",
+        "check": "Which destinations and prices does the list or map show?",
+        "say_example": "Cheapest places for <month>: <city> from <price>, <city> from <price>, <city> from <price>. Which one? Or say more for the next few."
+       },
+       {
+        "question": "Did the cheapest direct price change when the search narrowed from the country to one city?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial search for anywhere in Thailand showed a $245 direct flight, but the subsequent search specifically for Phuket showed the cheapest direct option as $310.",
+        "whatTheAgentLoses": "An agent might proceed with the more expensive flight without alerting you to the cheaper alternative within the broader destination.",
+        "speak": "if-wrong",
+        "check": "What was the cheapest direct price on the country-wide search, and what is it now the search names a city?",
+        "say_example": "Narrowing to <city> moved the cheapest direct flight from <old> to <new>."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Pick the departure airport",
+      "questions": [
+       {
+        "question": "Which departure airport is easier for you, given the prices shown?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays various Australian departure airports with different prices, like Darwin for $177 and Sydney for $261, requiring you to weigh the ticket cost against the travel required to reach the departure city.",
+        "whatTheAgentLoses": "An agent might automatically select the cheapest departure airport without knowing your actual location or your willingness to travel domestically to catch the flight.",
+        "speak": "on-event",
+        "check": "Does the page list more than one departure airport, and what price does each show?",
+        "say_example": "You can leave from <airport> for <price> or <airport> for <price>. Which is easier for you?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Pick the dates by price",
+    "note": "only when 2.4 was left open, or after 5.1 when the results are too expensive - v340 and MAxS come here from the results. 4.1 in every keeper who reaches the goal; 4.2 and 4.3 where the tool has them; 4.4 loops on the ribbon and arrows. 4.5 closes it and returns to 2.11 or 5. 4.6 wherever the calendar is empty or admits it is cached.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Read the price calendar",
+      "questions": [
+       {
+        "question": "Do the savings shown in the date tip match the actual price difference on the calendar?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the date tip against the calendar prices ensures the suggested savings of ₹ 495 are mathematically accurate before adjusting your travel plans.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is double-checking automated savings tips against the actual daily prices to guarantee the best deal.",
+        "speak": "if-wrong",
+        "check": "What saving does the date tip claim, and what is the difference between the two calendar prices it points at?",
+        "say_example": "The tip says shifting saves <claimed>. The calendar shows the difference is really <actual>."
+       },
+       {
+        "question": "Do you want to compare prices across different days of the week to find the cheapest flight?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The calendar view displays prices for each day, allowing you to verify if certain days are actually cheaper than others.",
+        "whatTheAgentLoses": "An agent might rely on general assumptions about cheap travel days instead of checking the actual prices for nearby dates.",
+        "speak": "never",
+        "check": "Does the calendar show a price under each day?",
+        "say_example": "Compared prices across the week"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Read the price chart"
+     },
+     {
+      "id": "4.3",
+      "label": "Read the date grid",
+      "questions": [
+       {
+        "question": "Should you check the date grid to see if nearby dates are cheaper?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays specific flights like Gulf Air and Qatar Airways for your exact dates, but the \"Date grid\" button offers a way to find cheaper fares if your schedule is flexible.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether saving money by shifting your travel dates is worth changing your original itinerary.",
+        "speak": "never",
+        "check": "Does the results page offer a date grid or price graph?",
+        "say_example": "Checked the date grid too"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Step through nearby dates",
+      "questions": [
+       {
+        "question": "Do you want to move your dates to a cheaper day the calendar shows?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The price calendar displays a nearby date highlighted in green that is significantly cheaper than the currently selected travel date.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide if the potential cost savings are worth the inconvenience of shifting their travel schedule.",
+        "speak": "on-event",
+        "check": "Does the calendar, grid or graph show a nearby date priced well below the chosen date?",
+        "say_example": "Leaving on <date> instead of <date> is <saving> cheaper. Want that, or keep your date?"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Choose the dates",
+      "questions": [
+       {
+        "question": "Which date do you want, going by price?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The calendar displays the lowest flight price directly under each date, allowing you to easily spot the most affordable day to travel.",
+        "whatTheAgentLoses": "The user loses the opportunity to visually compare daily price fluctuations across the month to decide if shifting their trip is worth the savings.",
+        "speak": "never",
+        "check": "Which date carries the lowest price on the calendar?",
+        "say_example": "Picked <date>, the cheapest day shown"
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Note the stale prices",
+      "questions": [
+       {
+        "question": "Do some return dates show a magnifying glass instead of a price?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The return calendar displays magnifying glass icons instead of prices for certain dates, indicating that a manual click is needed to load the actual cost.",
+        "whatTheAgentLoses": "The user misses out on knowing the actual flight costs for those specific dates, potentially overlooking the cheapest or most convenient travel options.",
+        "speak": "on-event",
+        "check": "Do some dates on the calendar show a magnifying-glass icon instead of a price?",
+        "say_example": "Some return dates show no price yet. I only compared the ones with a number."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Narrow and pick the flight",
+    "note": "5.1 on arrival. 5.2 in most keepers; 5.3 and 5.4 where the user bothers - half the corpus opens the filter panel and applies nothing. 5.5 wherever a sponsored card sits above the cheapest. 5.6 before 5.7; 5.8 on the round-trip tools, where the pick is two lists. 5.9 before 7 in the careful keepers, skipped in HKTN. 5.10 is one keeper's side trip. when the price is wrong, back to 4 - v340, MAxS.",
+    "questions": [
+     {
+      "question": "How do you want to narrow the results?",
+      "cluster": "refine",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays summary tabs like 'Best' and 'Cheapest' alongside sidebar filters for stops and times, which are essential for narrowing down the broad list of flights to match specific travel preferences.",
+      "whatTheAgentLoses": "Delegating this step means losing the ability to personally weigh the trade-offs between price, duration, and convenience when deciding how to filter the initial results.",
+      "speak": "never",
+      "check": "Which sort tabs and filters does the results page show?",
+      "say_example": "Filtered to direct, sorted by price"
+     }
+    ],
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the results tabs",
+      "questions": [
+       {
+        "question": "Is the lowest price in the results higher than the calendar preview said?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The calendar view initially advertised a $26 flight for January 10th, but the actual search results only offer a $35 minimum.",
+        "whatTheAgentLoses": "The user loses the opportunity to investigate the missing fare or adjust their travel dates to secure the originally expected deal.",
+        "speak": "if-wrong",
+        "check": "What was the lowest price shown on the calendar or map preview, and what is the lowest price in the results list?",
+        "say_example": "The calendar said from <preview>. The real results start at <actual>."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Sort the results",
+      "questions": [
+       {
+        "question": "How do you want to sort the flight results?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The results are currently sorted by 'Best', but changing the dropdown to 'Cheapest' completely changes which flights appear at the top of your shortlist.",
+        "whatTheAgentLoses": "You lose the chance to specify your personal trade-off between flight price and convenience.",
+        "speak": "always",
+        "check": "Which sort order is active, and does the page say it includes sponsored or recommended results?",
+        "say_example": "Sorted by Best, which is partly ads. I'm sorting by price instead."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Filter by stops",
+      "questions": [
+       {
+        "question": "Do you want direct flights only?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The filters panel shows direct flights starting at ₹6,487 and flights with stops at higher prices, making this a key choice for balancing travel time and cost.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the convenience of a direct flight against the specific price differences shown for flights with layovers.",
+        "speak": "never",
+        "check": "Is the direct-only filter on, and what does the panel show as the cheapest direct and cheapest with stops?",
+        "say_example": "Set direct only, from <price>"
+       },
+       {
+        "question": "How many stops are you willing to accept for this flight?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that direct flights are unavailable, leaving a choice between one-stop flights starting at P 10,739 and two-stop flights starting at P 34,694.",
+        "whatTheAgentLoses": "You lose the chance to personally weigh the cost savings of adding layovers against the convenience of a shorter travel time.",
+        "speak": "on-event",
+        "check": "Does the stops filter show direct flights as unavailable, and what do one-stop and two-stop start at?",
+        "say_example": "No direct flights on <date>. One stop starts at <price>, two stops at <price>. OK with one stop, or change the date?"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Set the other filters",
+      "questions": [
+       {
+        "question": "Do you want to limit it to certain airlines?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a massive price variance among available airlines, ranging from $158 for Norwegian to $3,001 for American Airlines, making airline selection a critical cost factor.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to weigh your personal airline preferences and brand trust against the drastic price differences.",
+        "speak": "never",
+        "check": "Which airlines does the filter list, with their starting prices?",
+        "say_example": "Left the airline filter open"
+       },
+       {
+        "question": "Which airports do you want, and is changing airports on a layover OK?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows filters for specific departure and arrival airports like LAX and LHR, as well as an option to avoid stressful airport changes during connections.",
+        "whatTheAgentLoses": "The user loses the ability to apply their personal preferences for specific airports and their desire to avoid stressful airport transfers.",
+        "speak": "never",
+        "check": "Which airport filters are set, and is 'avoid airport changes' on?",
+        "say_example": "Kept both airports, no airport changes"
+       },
+       {
+        "question": "What's the most you want to pay?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the budget slider filters the search results to only show flights that fit within your specific financial limits.",
+        "whatTheAgentLoses": "You lose the ability to personally decide the exact price ceiling based on your own financial comfort.",
+        "speak": "never",
+        "check": "What price cap does the slider show?",
+        "say_example": "Set the price cap to <cap>, from your budget"
+       },
+       {
+        "question": "Do you want to loosen the take-off time filter if it leaves only a few flights?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the take-off slider reduced the results to only three matching flights, prompting a suggestion to add nearby airports.",
+        "whatTheAgentLoses": "You lose the ability to weigh the convenience of a specific departure time against having a wider selection of flights and prices.",
+        "speak": "on-event",
+        "check": "How many results remain after filtering, and does the page suggest widening the search?",
+        "say_example": "Your filters leave only <three> flights. Want me to add nearby airports, or loosen the times?"
+       },
+       {
+        "question": "Did this flight's price change after the filters were applied?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen initially listed the flight at $1,701, but it updated to $1,702 after filtering, indicating a minor price fluctuation.",
+        "whatTheAgentLoses": "The user receives inconsistent pricing data in their shortlist, which could cause confusion when they make the final booking decision.",
+        "speak": "never",
+        "check": "What price did this flight show before filtering, and what does it show now?",
+        "say_example": "Saw the <airline> fare move from <old> to <new> after filtering"
+       },
+       {
+        "question": "Do you want only one airline alliance, like Star Alliance?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The sidebar provides checkboxes to filter by airline alliances, which is crucial for travelers looking to earn or redeem frequent flyer miles within a specific network.",
+        "whatTheAgentLoses": "The user loses the ability to prioritize flights that contribute to their specific frequent flyer status or allow them to use alliance benefits.",
+        "speak": "never",
+        "check": "Which alliance filters does the sidebar offer?",
+        "say_example": "Left the alliance filter off"
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Spot the sponsored results",
+      "questions": [
+       {
+        "question": "Is the top result a sponsored ad, with a cheaper real flight below it?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top result is a sponsored ad for $73, while the second result is labeled as the cheapest for $60 with nearly identical travel times.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal preference for avoiding sponsored results in favor of the genuinely cheapest flight.",
+        "speak": "on-event",
+        "check": "Is the top result labelled Sponsored or Ad, and what does the next unsponsored result cost?",
+        "say_example": "The first result is an ad at <price>. The cheapest real one is <price>. Skipping the ad."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Read a flight's details",
+      "questions": [
+       {
+        "question": "Are you OK with a long layover and a self-transfer to get the cheapest flight?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The flight details show a 7.5-hour layover and a self-transfer requiring you to collect and recheck your bags.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh the inconvenience of a long layover and self-transfer against the financial savings.",
+        "speak": "on-event",
+        "check": "Does the itinerary say self-transfer, separate tickets, or that bags must be collected and rechecked, and how long is the layover?",
+        "say_example": "The cheapest is <price>, but it's a self-transfer. You'd collect your bags in <city> and check in again, with <hours> to do it. Take it, or the next one at <price> with bags checked through?"
+       },
+       {
+        "question": "What does this fare include for bags, and what does a checked bag add?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the price breakdown reveals hidden costs, like the £80 fee for a checked bag, which drastically changes the actual cost of the flight.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh whether the cheap base fare is still a good deal once steep baggage fees are factored into your specific travel needs.",
+        "speak": "on-event",
+        "check": "What does the price breakdown say about cabin and checked bags, including any bag fee or 'unknown' allowance?",
+        "say_example": "The <price> fare has no checked bag. Adding one is <fee>, so it's really <total>."
+       },
+       {
+        "question": "Does this flight have Wi-Fi and in-seat power?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The flight details explicitly state \"No Wi-Fi\" and \"No in-seat power\", which might be a dealbreaker for a traveler needing to work or stay connected.",
+        "whatTheAgentLoses": "The user loses the opportunity to filter out flights that lack the in-flight amenities they need to be productive or comfortable.",
+        "speak": "never",
+        "check": "Does the flight detail list Wi-Fi and in-seat power?",
+        "say_example": "Found no Wi-Fi or power on this one"
+       },
+       {
+        "question": "Do the flight's emissions matter for your pick?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The flight results display the CO2 emissions and highlight options with lower emissions (e.g., \"-17% emissions\"), allowing for a more environmentally conscious decision.",
+        "whatTheAgentLoses": "The user loses the ability to apply their personal environmental values to prioritize greener flights over slightly cheaper or faster ones.",
+        "speak": "never",
+        "check": "What emissions figure does the result show?",
+        "say_example": "Noted emissions of <412 kg>"
+       },
+       {
+        "question": "Does the arrival time show a '+1' or '+2', meaning you land on a later day?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Crossing time zones or taking red-eye flights can push the arrival to the next day, which is critical if you have a hard deadline like a wedding or cruise departure.",
+        "whatTheAgentLoses": "The user might select a flight that technically departs on the right day but arrives too late for their actual scheduled events.",
+        "speak": "on-event",
+        "check": "Does the arrival time carry a +1 or +2 day marker?",
+        "say_example": "It lands the next day, <date>, at <time>."
+       },
+       {
+        "question": "Does small text under the airline say the flight is 'Operated by' another carrier?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Codeshare flights prominently display the marketing airline's logo, while the actual operating carrier is relegated to tiny, easily overlooked text.",
+        "whatTheAgentLoses": "The user might expect the service and baggage policies of a premium airline but end up flying on a budget partner because the agent only saw the primary logo.",
+        "speak": "on-event",
+        "check": "Does small text under the airline name say Operated by a different carrier?",
+        "say_example": "Sold as <airline>, but flown by <operator>."
+       },
+       {
+        "question": "Is any layover overnight or many hours long?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The speaker explicitly advises keeping an eye out for overnight connections and long layovers to ensure a smoother travel experience, rather than just looking at the price.",
+        "whatTheAgentLoses": "The agent might select a cheap flight with a grueling overnight layover, ignoring the physical toll and inconvenience it causes the traveler.",
+        "speak": "on-event",
+        "check": "Does any layover run overnight or exceed several hours, per the itinerary detail?",
+        "say_example": "There's a <hours> hour layover in <city>, overnight."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Choose the flight",
+      "questions": [
+       {
+        "question": "Which flight do you want?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple direct IndiGo flights from Chennai to Goa starting at ₹3,860, requiring a choice on which departure time to prioritize.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-offs between different departure times based on your specific travel preferences.",
+        "speak": "always",
+        "check": "Which flight is selected, and what airline, times, stops, duration and price does it show?",
+        "say_example": "Going with <airline>, <dep time> to <arr time>, direct, <price>. Cheapest that fits."
+       },
+       {
+        "question": "Do you still want the cheapest flight if it's priced far below all the others?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a massive jump from a $20 Ryanair flight to alternatives costing hundreds of dollars, making it crucial to decide if the budget fare is acceptable.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally weigh the potential drawbacks of a budget airline against the steep cost of premium carriers.",
+        "speak": "on-event",
+        "check": "Is the cheapest result priced far below the next results, and on which airline?",
+        "say_example": "Cheapest is <price> on <airline>. The next is <price>. That gap usually means no bag and a far-out airport."
+       },
+       {
+        "question": "Do you still want this flight, given the site warns it's often delayed?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The expanded details explicitly note that this 14-hour overnight flight is often delayed by 30+ minutes and only offers average legroom.",
+        "whatTheAgentLoses": "An agent might automatically select this flight for its nonstop status and price without considering your personal tolerance for long overnight travel and frequent delays.",
+        "speak": "on-event",
+        "check": "Does the detail show a delay warning, such as often delayed by 30+ minutes?",
+        "say_example": "This one is often delayed by <minutes> minutes, the site says."
+       },
+       {
+        "question": "Do you still want the cheapest flight if it lands at a different airport than you searched?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The $555 option saves money but returns to Stewart International (SWF) instead of JFK and involves a nearly 15-hour journey with budget airlines.",
+        "whatTheAgentLoses": "The user loses the opportunity to weigh the financial savings against the logistical hassle of returning to a different, potentially less convenient airport.",
+        "speak": "on-event",
+        "check": "Does the return or arrival airport differ from the one searched, per the itinerary detail?",
+        "say_example": "Cheapest comes back into <airport>, not <airport>. That's <distance> from where you'd be. Fine, or pay <diff> more for <airport>?"
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Choose the return flight"
+     },
+     {
+      "id": "5.9",
+      "label": "Read the itinerary warnings",
+      "questions": [
+       {
+        "question": "Does the price note say taxes are only estimates until checkout?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The expanded reservation warning notes that the displayed price only includes estimated taxes and that final prices and terms must be verified on the booking site.",
+        "whatTheAgentLoses": "The user loses the chance to personally evaluate the risk of hidden fees or restrictive terms before deciding if this flight makes the final shortlist.",
+        "speak": "never",
+        "check": "Does the reservation note say the price includes only estimated taxes?",
+        "say_example": "Noted the site says taxes are estimates until checkout"
+       },
+       {
+        "question": "Does the page show an entry-rules warning for your destination?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a prominent warning for 'COVID-19 Travel rules in India', indicating that there may be entry requirements or restrictions that could affect the feasibility of the trip.",
+        "whatTheAgentLoses": "The user loses the chance to ensure they can actually comply with local travel regulations before committing to a specific itinerary.",
+        "speak": "on-event",
+        "check": "Does the page show a travel-rules or entry-requirements warning for the destination?",
+        "say_example": "There's an entry-rules notice for <country>. It says <summary>."
+       },
+       {
+        "question": "Does the itinerary carry a 'Mixed cabin classes' note, meaning one leg is a lower class?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When searching for premium economy or business class, aggregators often use small text to warn that a connecting leg is actually in standard economy.",
+        "whatTheAgentLoses": "The user might pay a premium price expecting business class for the entire journey, only to be seated in economy for a long segment because the agent missed the visual warning.",
+        "speak": "on-event",
+        "check": "Does the itinerary carry a Mixed cabin classes note?",
+        "say_example": "Business class, but the <leg> leg is economy. The site calls it mixed cabin."
+       }
+      ]
+     },
+     {
+      "id": "5.10",
+      "label": "Check the seat map elsewhere",
+      "questions": [
+       {
+        "question": "Which flight should you check the seat map for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Expanding the $40 United flight reveals the specific flight number, UA495, needed to look up seat layouts and comfort.",
+        "whatTheAgentLoses": "You lose the ability to prioritize which specific flights have their seat comfort and layouts verified before shortlisting them.",
+        "speak": "never",
+        "check": "What flight number does the expanded detail show?",
+        "say_example": "Noted flight <number>, in case you want to look up seats"
+       },
+       {
+        "question": "Which seats do you want, or want to avoid?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The color-coded seat map and tooltips reveal hidden drawbacks like missing windows or proximity to galleys, helping ensure a comfortable flight.",
+        "whatTheAgentLoses": "The user loses the ability to personally weigh the trade-offs of specific seat quirks, such as prioritizing extra legroom over being further from the restroom.",
+        "speak": "never",
+        "check": "What does the seat map legend and tooltip say about a seat?",
+        "say_example": "Skipped the seat map - not part of the comparison"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Compare the ways to travel",
+    "note": "runs in place of 3 to 5 on Rome2Rio. 6.1 on every search; 6.2 and 6.3 per mode, looping over the modes the user bothers with - lSU6 twice, 7VDv three times. 6.4 closes a leg. 6.5 where the user wants real airfares. 6.6 when the trip has more than one leg - a2XG and B4QU add destinations inside the tool, 7VDv re-searches leg by leg. 6.7 happens wherever the hotel box was left checked.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Read the mode options",
+      "questions": [
+       {
+        "question": "Have the routes and prices finished loading?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Rome2Rio screen displays only grey skeleton rows under the 'Ahmedabad to Kashmir Valley' header, indicating the results have not yet loaded.",
+        "whatTheAgentLoses": "The user receives fabricated pricing details because the agent hallucinates data from a page that is still loading.",
+        "speak": "if-wrong",
+        "check": "Does the results area show grey placeholder rows or a loading state instead of routes?",
+        "say_example": "Still loading. Waiting before I compare anything."
+       },
+       {
+        "question": "Do you want flights included in the options for this route?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple transport methods, including flights from London City and Heathrow, which vary significantly in time and cost compared to trains or buses.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether flying is their preferred mode of transport for this specific leg of the trip.",
+        "speak": "never",
+        "check": "Does the mode list include flights, and from which airports?",
+        "say_example": "Included flights in the comparison"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Expand the mode's legs",
+      "questions": [
+       {
+        "question": "What are the legs, times and prices for this route?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the detailed itinerary, including the train to the airport and the flight to Gatwick, ensures you know the exact travel times and out-of-pocket costs before saving the option.",
+        "whatTheAgentLoses": "Delegating this means you miss the opportunity to judge whether the specific transfers, like a 6-minute walk between stations with luggage, are manageable for you.",
+        "speak": "always",
+        "check": "What legs, durations, transfers and prices does the expanded route show?",
+        "say_example": "Bus and train: <hours>, one change at <city>, from <price>. Flying: <hours> door to door, from <price>."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Read the schedule and frequency",
+      "questions": [
+       {
+        "question": "Does this service run on your travel day, or only on some days of the week?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results show the ferry from Pula to Venice only operates four times a week, meaning it might not be available depending on the exact day you choose to travel.",
+        "whatTheAgentLoses": "An agent might rigidly search for a specific date and miss the ferry option entirely, losing the opportunity to shift the travel day for a better route.",
+        "speak": "on-event",
+        "check": "How often does the page say this service runs, and on which days?",
+        "say_example": "The ferry only runs <three> days a week, not on <weekday>. You'd need to shift a day for that route."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Choose the mode",
+      "questions": [
+       {
+        "question": "How do you want to travel: train, bus or plane?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows train, bus, rideshare, and drive options with varying times and prices, requiring a choice on which mode to research further.",
+        "whatTheAgentLoses": "An agent might automatically select the cheapest or fastest transport mode shown, missing your personal preference to fly or change the destination entirely.",
+        "speak": "gate",
+        "check": "Which modes does the page list, with duration and price range for each?",
+        "say_example": "Three ways to get there. Train, <hours>, from <price>. Bus, <hours>, from <price>. Fly, <hours> with the airport, from <price>. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Add a date for fares",
+      "questions": [
+       {
+        "question": "Should you add dates first to get real fares instead of estimates?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays broad price ranges for different transport modes, meaning specific dates are needed to lock in exact costs.",
+        "whatTheAgentLoses": "An agent might just record the generic price ranges presented instead of refining the search to find the actual cost for your specific travel days.",
+        "speak": "never",
+        "check": "Does the page show price ranges rather than fares, and offer to add a date?",
+        "say_example": "Added your dates to get real fares"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Plan the trip in legs",
+      "questions": [
+       {
+        "question": "Is the total time and cost still OK with this stop added?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The trip overview panel displays a total time of 5h 1m and a cost of $117 to $264, allowing you to see exactly how much the final leg to Cardiff adds to the journey.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate whether the additional time and expense of the final leg to Cardiff are worth including in your final travel plans.",
+        "speak": "always",
+        "check": "What total time and cost range does the trip overview show after this leg?",
+        "say_example": "With <city> added, the whole trip is <hours> and <low> to <high>."
+       },
+       {
+        "question": "Does the trip overview's total match what the legs add up to?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The trip overview estimates total travel at SAR1,372 to SAR3,213, but the single listed flight step shows a higher minimum cost starting from SAR2,151.",
+        "whatTheAgentLoses": "The user receives a shortlist with contradictory pricing information, making it difficult to trust the estimates and budget accurately.",
+        "speak": "if-wrong",
+        "check": "What total does the trip overview estimate, and what do the individual legs' prices sum to?",
+        "say_example": "The overview says <low> to <high>. The legs themselves start at <sum>. The overview is out of date."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Check the lodging alongside",
+      "questions": [
+       {
+        "question": "Should you note the flight and hotel prices in the side panel before leaving the page?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The side panel displays quick estimates for nonstop flights and hotel tiers in Mumbai without needing a separate search.",
+        "whatTheAgentLoses": "The user misses out on capturing a convenient summary of flight and hotel costs for their destination.",
+        "speak": "never",
+        "check": "What flight and hotel estimates does the side panel show?",
+        "say_example": "Noted the side-panel hotel range for <city>: <low> to <high>"
+       },
+       {
+        "question": "What matters most for the hotel: price, stars or reviews?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed accommodations ranging from a $7 budget stay to a $122 4-star hotel, requiring a decision on the trade-off between cost and quality.",
+        "whatTheAgentLoses": "The user loses the ability to apply their personal comfort preferences and budget constraints to the lodging selection.",
+        "speak": "never",
+        "check": "What price, star rating and review count does each listing show?",
+        "say_example": "Noted hotels run <low> to <high>"
+       },
+       {
+        "question": "Should you check hotels near the destination too?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the full travel itinerary to Kashmir Valley with estimated costs and provides a direct link to check nearby lodging availability.",
+        "whatTheAgentLoses": "The delegator loses the chance to decide whether to explore these specific hotel options or continue comparing alternative travel routes first.",
+        "speak": "never",
+        "check": "Does the page offer a lodging link for the destination?",
+        "say_example": "Checked hotels near <destination> too"
+       },
+       {
+        "question": "Are these real hotels, or sponsored ads?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed sponsored tour packages like 'Rasool Tour & Travels' rather than the direct hotel listings needed for the shortlist.",
+        "whatTheAgentLoses": "The user loses the ability to independently choose specific accommodations if the agent includes bundled, sponsored tour packages instead of direct hotel options.",
+        "speak": "on-event",
+        "check": "Are the listings labelled Sponsored or tour packages rather than hotels?",
+        "say_example": "These are sponsored tour packages, not hotels. Skipping them."
+       },
+       {
+        "question": "Does the map show the hotel far outside the centre or away from your pinned places?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A hotel's list view might show a great price and rating, but only the visual map reveals if it is impractically far from the actual destination.",
+        "whatTheAgentLoses": "The user might save money on the room but spend hours and extra money commuting because the agent didn't verify the hotel's visual geographic context.",
+        "speak": "on-event",
+        "check": "What distance from the centre or from the pinned places does the listing or map show?",
+        "say_example": "Cheap, but it's <distance> out of town."
+       },
+       {
+        "question": "Does the room's small print say shared bathroom or no window?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Budget accommodations often hide major compromises like shared bathrooms or lack of windows in the fine print of the room type description.",
+        "whatTheAgentLoses": "The user might arrive expecting a standard private hotel room and be unpleasantly surprised by hostel-like conditions because the agent only looked at the price and star rating.",
+        "speak": "on-event",
+        "check": "Does the room description say shared bathroom, windowless, or similar?",
+        "say_example": "That rate is for a windowless room with a shared bathroom."
+       },
+       {
+        "question": "Does your flight land before the hotel's check-in time?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Flights arriving early in the morning often conflict with standard 3 PM hotel check-in times, requiring extra planning or paying for an additional night.",
+        "whatTheAgentLoses": "The user might arrive exhausted with nowhere to put their bags because the agent didn't coordinate flight arrival times with hotel check-in policies.",
+        "speak": "on-event",
+        "check": "What check-in time does the hotel page show, and what is the flight's arrival time?",
+        "say_example": "You land at <time>, but check-in isn't until <time>. Worth asking them to hold your bags."
+       },
+       {
+        "question": "Is there a resort fee or city tax paid at the hotel on top?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many booking sites exclude mandatory resort fees or tourist taxes from the initial search results, making the hotel appear cheaper than it actually is.",
+        "whatTheAgentLoses": "The user loses an accurate total budget estimate, as they will be hit with unexpected charges upon check-in or check-out.",
+        "speak": "on-event",
+        "check": "Does the listing mention a resort fee, city tax or charge paid at the property?",
+        "say_example": "The <price> doesn't include a <fee> a night, paid at the hotel. Real price is <total>."
+       },
+       {
+        "question": "Is this rate non-refundable, or can you cancel free?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The lowest advertised hotel prices usually lock you into non-refundable terms, requiring a choice between maximum savings and travel flexibility.",
+        "whatTheAgentLoses": "The user loses the ability to decide if the financial savings are worth the risk of losing their money if they have to cancel the trip.",
+        "speak": "on-event",
+        "check": "Does the rate say non-refundable, or free cancellation until a date?",
+        "say_example": "That's the non-refundable rate. Free cancellation is <diff> more."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Check the seller's price",
+    "note": "7.1 for every flight keeper who picks a flight - the Google Flights keepers read it and leave, since the tool does not book. 7.2 with it; 7.3 is one keeper's side trip. 7.4 decides the route, and four keepers refuse the aggregator's link on principle. then 7.5 and 7.6 for the rest. 7.7 for the three who rebuild the search on the source and for wqOm's rival tab. 7.8 wherever the seller shows a fare tier or a bag rule. 7.9 for the eight who walk in - every one stops before paying.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Compare the providers' prices",
+      "questions": [
+       {
+        "question": "Which seller do you want to book with?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple third-party booking options like Kiwi.com, Opodo, eDreams, and BudgetAir with slightly different prices, requiring a tradeoff between cost and provider reputation.",
+        "whatTheAgentLoses": "The user loses the opportunity to avoid certain third-party agencies based on their own past experiences or personal trust preferences.",
+        "speak": "always",
+        "check": "Which booking providers does the page list for this flight, and at what price each?",
+        "say_example": "Cheapest seller is <agent> at <price>. The airline itself is <price>. I'm noting both."
+       },
+       {
+        "question": "Does the total equal the per-person price times the number of travellers?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a per-person price of $555 but a total of $1,109 for two adults, which is a one-dollar difference from the expected math.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is meticulously verifying the exact cost breakdowns and catching minor pricing quirks.",
+        "speak": "if-wrong",
+        "check": "What per-person price and what total does the page show, and does the total equal per-person times travellers?",
+        "say_example": "It says <pp> each, but the total for <n> is <total>. That's <diff> more than it should be."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Weigh the provider's rating"
+     },
+     {
+      "id": "7.3",
+      "label": "Vet the provider off-site",
+      "questions": [
+       {
+        "question": "What does the off-site review page say about this seller?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Sitejabber page shows a polarized 3.3-star rating with 19 one-star reviews citing deceptive practices and delayed updates, which could impact the reliability of the flight options you recommend.",
+        "whatTheAgentLoses": "The user loses the ability to apply their personal risk tolerance when deciding whether a cheaper flight is worth the potential hassle of a poorly-reviewed third-party booking site.",
+        "speak": "on-event",
+        "check": "What rating and how many one-star reviews does the review site show for this seller?",
+        "say_example": "<agent> is the cheapest, but its reviews are <rating> with <a lot of> one-star complaints about <theme>. I'll list it with a warning, or leave it out. Which?"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Choose airline or agent",
+      "questions": [
+       {
+        "question": "Does the airline say buying at the airport avoids a passenger fee?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'flight hack' noting that buying tickets at the airport excludes certain passenger fees from the base fare.",
+        "whatTheAgentLoses": "An agent might simply provide the standard online booking link, missing the context that a large family would benefit significantly from the in-person purchasing hack.",
+        "speak": "never",
+        "check": "Does the page say fees are excluded when buying at the airport?",
+        "say_example": "Noted the site says buying at the airport skips <fee>"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Follow the seller handoff"
+     },
+     {
+      "id": "7.6",
+      "label": "Check the handoff price",
+      "questions": [
+       {
+        "question": "The price went up. Keep it on the list, or drop it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The booking site displayed a popup warning that the ticket price had increased to 149 € and offered alternative flights.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to accept the higher price or pivot to one of the cheaper alternative flights.",
+        "speak": "on-event",
+        "check": "Does a popup say the price has changed, and to what?",
+        "say_example": "The price just went up to <new>, from <old>. Keep it on the list at the new price, or drop it?"
+       },
+       {
+        "question": "Did the total rise by the same amount as the fare did?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming that the 31 € difference accounts for the entire total increase from 245.45 € to 276.45 € ensures that no unexpected baggage or seating fees were quietly added.",
+        "whatTheAgentLoses": "An agent might blindly accept the new total without verifying the fee breakdown, losing the transparency of knowing exactly what caused the price increase.",
+        "speak": "if-wrong",
+        "check": "How much did the fare line change, and how much did the total change?",
+        "say_example": "The fare rose <fare diff>, but the total rose <total diff>. Something else was added: <line>."
+       },
+       {
+        "question": "Does the airline on the booking page match the one in the results?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The search aggregator initially showed one airline for the return flight, but the redirected booking page displayed a different airline for the same times.",
+        "whatTheAgentLoses": "The user loses the ability to catch discrepancies between search results and booking pages, potentially leading to unexpected travel arrangements.",
+        "speak": "if-wrong",
+        "check": "Which airline does the booking page show for this flight, and which did the results show?",
+        "say_example": "The results said <airline>. The booking page says <airline> for the same times."
+       },
+       {
+        "question": "Does the price on the booking site exactly match the quote from the aggregator?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Skyscanner listed the flight deal at ₹15,223, but the initial total price upon clicking through to Cleartrip was ₹15,224.",
+        "whatTheAgentLoses": "The user loses the assurance of exact pricing and might be surprised by discrepancies when they actually go to book.",
+        "speak": "if-wrong",
+        "check": "What price does the booking site show, and what did the aggregator quote?",
+        "say_example": "<Aggregator> said <price>. <Seller> is showing <price>."
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Compare against the source",
+      "note": "7.7.1, then 7.7.2 where the fees only show at payment, then 7.7.3. vJMK stops at 7.7.1 and reads the base fares. wqOm skips 7.7.1 - the rival tab was already searched - and does 7.7.3 by tab flipping.",
+      "questions": [
+       {
+        "question": "Is the airline's own site cheaper than the aggregator for the same flight?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen showed Wego quoting the flight at Rs 109,109 while the official Airblue site listed the same flight at PKR 106,965, revealing a PKR 2,144 markup.",
+        "whatTheAgentLoses": "The user loses the financial savings of booking directly with the airline because an agent might just accept the aggregator's inflated price.",
+        "speak": "if-wrong",
+        "check": "For the same flight and times, what does the airline's own site show, and what does the aggregator show?",
+        "say_example": "Direct with <airline> it's <price>. Through <site> it's <price>. The airline is <diff> cheaper."
+       }
+      ],
+      "children": [
+       {
+        "id": "7.7.1",
+        "label": "Search the airline's site",
+        "questions": [
+         {
+          "question": "Is the airline's search form filled in and showing results, or still empty?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows empty destination and date fields that must be filled to actually retrieve and compare concrete flight options.",
+          "whatTheAgentLoses": "The user loses the actual shortlist of concrete flight prices and times needed to make a final travel decision.",
+          "speak": "if-wrong",
+          "check": "Are the route and date fields filled and are results showing, or is the form still empty?",
+          "say_example": "The airline's form is still blank. Filling it in before I compare."
+         },
+         {
+          "question": "What route, dates and travellers go into the airline's form to match the first search?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen currently shows default or incorrect parameters like Delhi and September 9th, which must be updated to match the previous search to accurately compare prices.",
+          "whatTheAgentLoses": "The user loses the guarantee that the agent is comparing the exact same route and dates across different travel platforms.",
+          "speak": "never",
+          "check": "What route, date and traveller values does the airline's form show?",
+          "say_example": "Entered the same route and dates on the airline's site"
+         },
+         {
+          "question": "Does the airline fly on your date?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The search results explicitly state that flights are not available for the chosen date, requiring a pivot to the alternative dates shown in the tabs.",
+          "whatTheAgentLoses": "The user misses the opportunity to adjust their travel plans using the alternative dates and prices provided when their primary choice is unavailable.",
+          "speak": "on-event",
+          "check": "Does the page say no flights are available for the date, and which nearby dates does it offer?",
+          "say_example": "<Airline> has nothing on <date>. Nearest is <date>."
+         },
+         {
+          "question": "Does another site list a direct flight the aggregator left out?",
+          "cluster": "compare",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "MakeMyTrip revealed a second direct flight at ₹15,215 that Skyscanner omitted from its results.",
+          "whatTheAgentLoses": "The user loses a complete view of all available direct flights if the agent relies solely on a single aggregator that hides options it cannot sell.",
+          "speak": "if-wrong",
+          "check": "Does the other site list a direct flight the aggregator's results did not?",
+          "say_example": "<Site> shows a second direct flight at <time> for <price> that <aggregator> left out."
+         }
+        ]
+       },
+       {
+        "id": "7.7.2",
+        "label": "Reach both payment pages",
+        "questions": [
+         {
+          "question": "Should you go to the payment page to see the final price with fees?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a lower base price of ₹5,343 on the airline's site, but hidden fees added at checkout could change which option is actually cheaper.",
+          "whatTheAgentLoses": "The user loses the chance to save money if the agent only compares base prices and ignores final checkout fees.",
+          "speak": "never",
+          "check": "What base price does the airline page show before fees?",
+          "say_example": "Went to the payment page to see the real total"
+         },
+         {
+          "question": "Do you want to enter your passenger details to see the final price?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Entering passenger details is often necessary to reveal the true final cost, as the screen showed the total fare updating to ₹5,804.",
+          "whatTheAgentLoses": "The user loses control over which personal details are shared with the booking site and the opportunity to evaluate if the final price increase is acceptable.",
+          "speak": "gate",
+          "check": "Does the page require passenger name, passport or contact details before showing the final price?",
+          "say_example": "To see the final price I'd have to enter a passenger name and details. Want me to, using yours? Say the name as it is on your passport, or say skip and I'll record the price so far."
+         }
+        ]
+       },
+       {
+        "id": "7.7.3",
+        "label": "Subtract the totals",
+        "questions": [
+         {
+          "question": "Is the tax line higher on the referred page than on the airline's own page?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "This matters because MakeMyTrip inflated the taxes by ₹450 when referred by Skyscanner to artificially match the direct booking subtotal.",
+          "whatTheAgentLoses": "The user loses the ability to spot deceptive pricing tactics where advertised referral discounts are secretly negated by hidden fee increases.",
+          "speak": "if-wrong",
+          "check": "What tax line does the referred page show, and what does the direct page show for the same fare?",
+          "say_example": "Referred from <aggregator>, the taxes are <tax>. Direct, they're <tax>. The discount is being eaten by the tax line."
+         },
+         {
+          "question": "Which is cheaper, the airline or the search site, and by how much?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Calculating the exact difference between the Indigo fare of INR 6,429 and the Cleartrip fare of INR 6,340 ensures you identify the most cost-effective booking platform.",
+          "whatTheAgentLoses": "You lose the opportunity to apply personal credit card cashback strategies to maximize your total savings across different booking platforms.",
+          "speak": "always",
+          "check": "What final total does each site's payment page show for the same flight?",
+          "say_example": "The airline's final price is <price>. The aggregator's is <price>. <The airline> is cheaper by <diff>."
+         },
+         {
+          "question": "What details do I need to find this same flight on another site?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Noting the exact airline and 04:40 departure time ensures you can find the identical itinerary when cross-checking prices on MakeMyTrip.",
+          "whatTheAgentLoses": "You lose the opportunity to weigh whether the cost savings are worth the inconvenience of a very early morning departure.",
+          "speak": "never",
+          "check": "What airline, flight number and departure time does the chosen result show?",
+          "say_example": "Noted <airline> <time> to find it again"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "7.8",
+      "label": "Read fare tiers and bags",
+      "questions": [
+       {
+        "question": "Which fare do you want? It depends on whether you're checking a bag.",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a clear price difference between the 'value' fare with no checked bags and the 'flexi' fare with a 20kg bag, requiring you to weigh the cost against your actual luggage needs.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a fare that either lacks necessary baggage allowance or overcharges for luggage you do not plan to bring.",
+        "speak": "gate",
+        "check": "Which fare tiers does the page list, with the bag allowance, change and cancellation terms and price of each?",
+        "say_example": "Two fares. <Tier> at <price>: cabin bag only, no changes. <Tier> at <price>: a <kg> checked bag, changes allowed. Are you checking a bag?"
+       },
+       {
+        "question": "Should you take the base fare or add the paid flexi option?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a ₹416 add-on for extra benefits, which increases the total fare from ₹5,343 to ₹5,759 and affects the accuracy of your price comparison.",
+        "whatTheAgentLoses": "The person loses the ability to decide whether the extra flexibility and benefits are worth the additional cost for their specific travel needs.",
+        "speak": "never",
+        "check": "Is the flexi add-on selected, and what does it add?",
+        "say_example": "Left the <add-on> off so the price compares fairly"
+       },
+       {
+        "question": "What size cabin bag is free, and what does a bigger one cost?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows Ryanair's strict baggage tiers and specific dimensions for a small personal bag, which directly impact the total flight cost and packing constraints.",
+        "whatTheAgentLoses": "The person loses the opportunity to weigh whether strict baggage limits and potential extra fees make a budget airline less appealing than a competitor.",
+        "speak": "never",
+        "check": "What bag sizes and fees does the page list?",
+        "say_example": "Noted a small bag is free at <size>, and a bigger cabin bag is <fee>"
+       }
+      ]
+     },
+     {
+      "id": "7.9",
+      "label": "Reach the booking total",
+      "questions": [
+       {
+        "question": "Do you want extras like seats or meals, or skip them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows optional add-ons like seat selection starting from INR 735.00 and meals from INR 945.00, which will increase the total fare if selected.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to pay extra for specific in-flight comforts or keep the base fare as low as possible.",
+        "speak": "never",
+        "check": "Are any seat, meal or other add-on options selected, including a paid seat?",
+        "say_example": "Skipped seats and meals"
+       },
+       {
+        "question": "Do you want travel insurance?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a choice between Travel Plus, Travel Basic, or no insurance, which directly impacts the final total price and determines COVID-19 coverage.",
+        "whatTheAgentLoses": "The user loses control over their personal risk management and the decision of whether to pay extra daily fees for medical and travel coverage.",
+        "speak": "never",
+        "check": "Is any insurance option selected, and what fee does the page attach to it?",
+        "say_example": "Skipped insurance"
+       },
+       {
+        "question": "Do you want the paid support tier?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a choice between free Basic Services with low priority or paying 10 € for Plus Services to get email support and reduced processing fees.",
+        "whatTheAgentLoses": "You lose the ability to decide whether the peace of mind from premium customer support is worth the extra cost for this specific trip.",
+        "speak": "never",
+        "check": "Is the paid support tier selected?",
+        "say_example": "Left support on free"
+       },
+       {
+        "question": "Does the total reflect the discount code?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a detailed fare breakdown confirming that the 'CANARACC' coupon successfully reduced the total cost by ₹1,571.",
+        "whatTheAgentLoses": "You lose the peace of mind of knowing exactly how much was saved and confirming the true final price for your shortlist.",
+        "speak": "if-wrong",
+        "check": "What discount does the breakdown show, and does the total reflect it?",
+        "say_example": "The coupon says <amount> off, but the total didn't move."
+       },
+       {
+        "question": "Did the total change between the review and payment screens?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The base fare, taxes, and convenience fees all increased unexpectedly before checkout, changing the actual cost of the flight.",
+        "whatTheAgentLoses": "The user receives a shortlist with inaccurate, artificially low prices and will face unexpected costs when they try to book.",
+        "speak": "if-wrong",
+        "check": "What total did the review screen show, what does the payment screen show, and which line items changed?",
+        "say_example": "The price moved between screens. Review said <old>, payment says <new>. The <line> went up."
+       },
+       {
+        "question": "Do you want a cab added?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed various cab options with prices alongside a 'Skip to add-ons' button.",
+        "whatTheAgentLoses": "The user loses the opportunity to review ground transportation options and prices if the agent skips this step without noting them.",
+        "speak": "never",
+        "check": "Does the page offer a cab add-on?",
+        "say_example": "Skipped the cab offer"
+       },
+       {
+        "question": "Should you skip the seat selection and add-ons to see the final price?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows optional add-ons like cabs and flight delay protection that must be bypassed to find the true final price for the shortlist.",
+        "whatTheAgentLoses": "The user loses the chance to specify if they actually want to include specific seats or travel protections in their estimated trip budget.",
+        "speak": "never",
+        "check": "Which add-on screens sit between here and the final price?",
+        "say_example": "Skipped the add-ons to reach the total"
+       },
+       {
+        "question": "Which coupon gives the most off?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple coupon options with different discount amounts and payment requirements, such as a larger discount specifically for using UPI.",
+        "whatTheAgentLoses": "The user loses the ability to decide if they are willing to use a specific payment method like UPI in exchange for securing the maximum possible discount.",
+        "speak": "never",
+        "check": "Which coupons does the page list, with amount and any payment condition?",
+        "say_example": "Picked coupon <code>, <amount> off, no card condition"
+       },
+       {
+        "question": "Do you actually want to pay for this booking now?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the final payment amount of INR 6,600.00 and a 'Buy with G Pay' button, which will initiate an actual financial transaction.",
+        "whatTheAgentLoses": "The user loses the ability to authorize the final payment amount and choose whether to actually book the flight or just save it as an option.",
+        "speak": "gate",
+        "check": "Is this the payment button, and what final amount does it show?",
+        "say_example": "This is the pay button. <amount> through <method>. I'm stopping here. The price is on your list. Say book if you actually want it."
+       },
+       {
+        "question": "Does the coupon only work with one card?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that the applied CANARACC coupon code is only valid for the recommended Canara Bank credit card, and changing the method removes the discount.",
+        "whatTheAgentLoses": "The user loses awareness of the specific payment constraints required to actually secure the discounted price presented in the shortlist.",
+        "speak": "on-event",
+        "check": "Does the page say the applied coupon is valid only with a specific card or payment method?",
+        "say_example": "That <amount> discount only works with a <bank> card. Without one the price is <price>."
+       },
+       {
+        "question": "Do the itemized charges add up to the stated total?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The sum of the base fare, taxes, convenience fee, and coupon discount equals ₹16,736, but the screen displays a final total of ₹17,575.",
+        "whatTheAgentLoses": "The person receives an inaccurate price estimate for their trip because the agent failed to notice a hidden cost discrepancy.",
+        "speak": "if-wrong",
+        "check": "What line items does the breakdown show, and do they sum to the stated total?",
+        "say_example": "The lines add up to <sum>, but the total says <total>. <diff> is unexplained."
+       },
+       {
+        "question": "Does the page offer discounts or bank offers that aren't applied yet?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The app displayed '15 discounts waiting' and earlier statements promised their use, but the final screens show no applied discounts.",
+        "whatTheAgentLoses": "The user receives a shortlist with artificially high prices because the agent failed to apply available cost-saving offers.",
+        "speak": "if-wrong",
+        "check": "Does the page advertise discounts or bank offers, and does the breakdown show any applied?",
+        "say_example": "The app says <3> discounts waiting, but none is applied. Checking them."
+       },
+       {
+        "question": "Does the form warn that a single-name passport isn't accepted for this destination?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The booking form displays a critical warning that travelers with a single name on their passport will not be allowed to travel to or from the UAE.",
+        "whatTheAgentLoses": "An agent might successfully compile an itinerary using a single name, leaving the user to discover at the airport that they are legally barred from boarding the flight.",
+        "speak": "on-event",
+        "check": "Does the form warn that single-name passports are not accepted for this destination?",
+        "say_example": "Heads up, the form says a passport with only one name can't fly to <country>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Keep the plan",
+    "note": "8.1 on the flight tools, where it is the only state change any keeper commits; 8.2 after it on the one tool with a history. 8.3 on the map tool, in place of everything else. 8.4 where the tool holds trips; 8.5 where it does not. 8.6 and 8.7 close dEAL. 8.8 is knowledge-filled - the shortlist the task names and no keeper makes.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Track the price",
+      "questions": [
+       {
+        "question": "Do you want price alerts for this trip by email?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Track prices' toggle that can be activated to save the trip and send price change alerts and travel tips to your email.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether they want their email inbox to receive automated price alerts and travel tips for this specific search.",
+        "speak": "on-event",
+        "check": "Does the page offer price tracking, and to which email?",
+        "say_example": "Want price alerts for this trip? They'd go to <email>. Say yes, or no."
+       },
+       {
+        "question": "Should I log in to set up a price alert for this flight?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The site requires an email or social login to finish creating the price alert for the Bengaluru to Mumbai trip.",
+        "whatTheAgentLoses": "You lose the ability to receive automated notifications about ticket price changes if the agent skips this login requirement.",
+        "speak": "on-event",
+        "check": "Does the page require login to finish the price alert?",
+        "say_example": "The alert needs you signed in. Sign in yourself and I'll finish it, or skip the alert?"
+       },
+       {
+        "question": "Do you want to pay to freeze this fare?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Kayak menu offers a 'Price Freeze' option, allowing you to pay a small fee to lock in the current flight price for a set period without committing to the full purchase immediately.",
+        "whatTheAgentLoses": "The user loses the opportunity to secure a good deal temporarily while they confirm other travel details, risking a price increase in the meantime.",
+        "speak": "never",
+        "check": "Does the page offer a paid price freeze, and at what fee?",
+        "say_example": "Skipped the paid price freeze, <fee>"
+       },
+       {
+        "question": "Does the page show the price alert as active after saving?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows the price alert modal opening but closing without a confirmation, meaning the flight prices are not actually being tracked.",
+        "whatTheAgentLoses": "The user misses out on potential savings because they will not receive notifications if the flight prices drop.",
+        "speak": "if-wrong",
+        "check": "After saving, does the page show the alert or tracker as active?",
+        "say_example": "The alert didn't save. Trying again."
+       },
+       {
+        "question": "Does the page still show flight results, or an expired-search message?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The frame clearly shows a working Kayak results page for the London to Bucharest trip, contradicting the assertion that the search had expired or failed.",
+        "whatTheAgentLoses": "The user misses out on tracking fares for their desired dates if the agent falsely believes the search has crashed and abandons the process.",
+        "speak": "if-wrong",
+        "check": "Does the page still show flight results, or an expired-search message?",
+        "say_example": "The results are still here. Nothing expired. Carrying on with the tracker."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Read the price history",
+      "questions": [
+       {
+        "question": "Is today's price low or high for this route?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The price history graph shows how the current ₹ 2,704 fare compares to prices over the last 14 days, helping you decide whether to book now or wait.",
+        "whatTheAgentLoses": "You lose the opportunity to apply your own risk tolerance when interpreting historical price trends to decide if waiting for a price drop is worth it.",
+        "speak": "on-event",
+        "check": "Does the price history call today's price low, typical or high?",
+        "say_example": "Today's <price> is <typical> for this route, the site says. It's been between <low> and <high>."
+       },
+       {
+        "question": "Is the price graph for the same route and dates as the tracked flight?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Comparing the current tracked price of ₹ 2,704 against a historical graph requires confirming both screens show the same route and dates to be a valid comparison.",
+        "whatTheAgentLoses": "The user loses an accurate understanding of the actual price trend, potentially causing them to make a poorly timed booking decision based on false data.",
+        "speak": "if-wrong",
+        "check": "What route and dates does the price graph show, and do they match the tracked flight?",
+        "say_example": "That graph is for <route>, not your flight. Ignoring it."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Build the place map",
+      "note": "8.3.1 once, then 8.3.2 per place from a list kept off screen - three on camera, the rest across a cut - then 8.3.3 per pin.",
+      "children": [
+       {
+        "id": "8.3.1",
+        "label": "Create the map"
+       },
+       {
+        "id": "8.3.2",
+        "label": "Add the places",
+        "questions": [
+         {
+          "question": "Which of the place suggestions is the one you mean?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search returned multiple options like 'Basilica del Voto Nacional' and 'Parroquia Nuestra Señora', so you must verify the correct attraction before adding it.",
+          "whatTheAgentLoses": "You lose the ability to ensure the exact tourist attraction you want to visit is the one saved to your trip map.",
+          "speak": "on-event",
+          "check": "Does the place search return more than one distinct match for the typed name?",
+          "say_example": "More than one <name>. I'll add <full name> in <area>. OK, or a different one?"
+         },
+         {
+          "question": "Do you want any of the suggested places added?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The map interface lists multiple pre-selected tourist spots like 'Mercado Central' and 'Church of the Society of Jesus', requiring you to filter them based on your personal interests and available time.",
+          "whatTheAgentLoses": "The user loses the ability to curate their own sightseeing experience, as an agent might simply add all default suggestions to the map regardless of the user's actual interests.",
+          "speak": "never",
+          "check": "Which suggested places does the map list?",
+          "say_example": "Added <6> places from your list and skipped the suggested ones"
+         }
+        ]
+       },
+       {
+        "id": "8.3.3",
+        "label": "Annotate and group the pins",
+        "questions": [
+         {
+          "question": "What do you want noted on this pin?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Adding specific context like 'Cheap food market, under $3' to the map pin ensures you remember exactly why you shortlisted this location when reviewing the itinerary later.",
+          "whatTheAgentLoses": "The user loses the personal context and budget reminders that make the saved map actually useful for their trip.",
+          "speak": "never",
+          "check": "What does the pin's description field show?",
+          "say_example": "Noted <detail> on the <place> pin"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Save the trip",
+      "questions": [
+       {
+        "question": "Is this the trip you want to save, with the right origin, destination and dates?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the origin as Saudi Arabia and the destination as Canada, which sets the foundation for all subsequent flight and hotel searches.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify that the correct starting point and destination were entered before the trip research begins.",
+        "speak": "always",
+        "check": "What origin, destination and dates does the new trip show?",
+        "say_example": "Saved the trip. <origin> to <destination>, <dates>."
+       },
+       {
+        "question": "Does the new list show up in your saved lists?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen at 07:15 only shows default Google Maps lists like Favorites and Want to go, contradicting the claim that a specific Quito itinerary was saved.",
+        "whatTheAgentLoses": "The user loses the actual compiled shortlist if the agent hallucinates creating a custom itinerary that was never actually saved.",
+        "speak": "if-wrong",
+        "check": "Does the saved-lists view show the new list by name?",
+        "say_example": "The list didn't save. Only the default lists are there. Trying again."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Keep the plan elsewhere",
+      "questions": [
+       {
+        "question": "Does the page offer a share link to save instead of the address-bar URL?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many travel aggregators use session-based URLs that expire after a short period, meaning a copied link will lead to an error page when opened later.",
+        "whatTheAgentLoses": "The user receives a shortlist of dead links, forcing them to manually re-enter all search parameters to view the options again.",
+        "speak": "never",
+        "check": "Does the page offer a share or copy-link button, rather than only the address bar?",
+        "say_example": "Saved the site's share link, not the address bar one"
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Share the plan",
+      "questions": [
+       {
+        "question": "When you share the map, should your name and photo show?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Share map' dialog with toggles for link sharing, public searchability, and displaying the creator's name and photo.",
+        "whatTheAgentLoses": "The user loses the ability to control their privacy settings and decide if their personal information is exposed to anyone viewing the shared travel map.",
+        "speak": "gate",
+        "check": "Which sharing toggles does the dialog show, including public search and showing name and photo?",
+        "say_example": "Sharing this map shows your name and photo to anyone with the link. Keep those on, or hide them?"
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Navigate from the plan",
+      "questions": [
+       {
+        "question": "Does the saved map hold every place that was shortlisted, not just the pins visible on screen right now?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping the 'VIEW MAP LEGEND' button on the bottom sheet expands the complete list of pinned locations for the 3-day itinerary.",
+        "whatTheAgentLoses": "You lose the opportunity to review the full list of saved locations and see exactly how the planned activities are organized.",
+        "speak": "if-wrong",
+        "check": "How many places does the map legend list, and how many were shortlisted?",
+        "say_example": "The saved map has <9> places. You shortlisted <10>. <The museum> is missing."
+       },
+       {
+        "question": "What name is the map saved under, so you can find it on your phone?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The desktop screen shows a map named 'Quito 3 Days', but the mobile app displays a different map named 'Quito 3-Day Itinerary', indicating a potential mismatch in the saved options.",
+        "whatTheAgentLoses": "The user loses the assurance that their compiled travel shortlist is properly synced and consistent across their devices.",
+        "speak": "never",
+        "check": "What name does the saved-maps list show for the map just created?",
+        "say_example": "Saved the map as <name> - look for that name on your phone"
+       }
+      ]
+     },
+     {
+      "id": "8.8",
+      "label": "Shortlist a flight"
+     }
+    ]
+   }
+  ]
+ }
+}

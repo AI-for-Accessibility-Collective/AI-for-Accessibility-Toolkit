@@ -1,0 +1,1252 @@
+{
+ "task": "return an item for a refund on a retail site (Amazon returns, Walmart, Target): locate the order in order history, find the return path, choose the reason and the refund/drop-off method, confirm; complete when the return confirmation — refund amount plus label, QR code, or drop-off instructions — is on screen. Surface pinned: the retailer's website or app order pages, not a store returns-desk vlog. Variants: disputing a card charge (seeded variant), cancelling an order before it ships (seeded variant), and warranty claims do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Return an item for a refund",
+  "note": "1 unless the session opens on the orders list. 2 next, and 2 decides the rest: a live window with a return button goes on to 3; only Replace on offer sends ftqi through 3 to 6 once for a replacement and back to 2 on the new order; a closed window sends 2aq2 to 9 and the task ends there. then 3, 4, 5, 6 in the wizard's fixed order - no keeper navigates back across them; the loops live inside 3 (a reason per item) and around the whole wizard (ftqi). 7 where the item has to travel; skipped when the platform says keep it (xRnx, BQE5 if accepted) and for digital goods (FTbb). 8 when the session looks back at the return, in the same sitting or days later. 9 from 2 when the window is closed, or after 6 to ask about a return already filed (ftqi).",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the orders list",
+    "note": "one of 1.1 to 1.5, chosen by surface - 1.1 and 1.2 on desktop, 1.3 and 1.4 in the apps, 1.5 on Steam; BQE5, VuAs and FTbb each show a second route on purpose. 1.6 where the session starts outside the site. 1.7 wherever the greeting is read as proof of the account.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Take the header orders link",
+      "questions": [
+       {
+        "question": "Is the order you want to return in the account that's signed in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top navigation bar features a 'Returns & Orders' button, which is the direct path to access your purchase history.",
+        "whatTheAgentLoses": "You lose the opportunity to review your recent purchase history and verify which account is currently logged in.",
+        "speak": "on-event",
+        "check": "Which account name does the header show, and does the orders list contain the order named in the request?",
+        "say_example": "You're signed in as <name>. The <item> order isn't in this account's orders. Do you have another account? Or tell me the order details and I'll look again."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Use the account menu"
+     },
+     {
+      "id": "1.3",
+      "label": "Use the profile tab"
+     },
+     {
+      "id": "1.4",
+      "label": "Use the site menu"
+     },
+     {
+      "id": "1.5",
+      "label": "Reach the purchase history"
+     },
+     {
+      "id": "1.6",
+      "label": "Search for the site"
+     },
+     {
+      "id": "1.7",
+      "label": "Check the signed-in state"
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Open the order's return",
+    "note": "2.1, then 2.2 on every retail keeper - the date decides everything after it. 2.3 where the order already carries a remedy; 2.4 where the product page is checked first. then 2.5, or 2.6 where the button has moved, and 2.7 where the wizard lists several items. when only Replace is offered, 2.8 runs 3 to 6 once and comes back here on the new order (ftqi). when the window is closed there is no button and the task goes to 9 (2aq2). FTbb has no delivery and no window: 2.9 stands in for 2.2 to 2.5.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Pick the order",
+      "questions": [
+       {
+        "question": "More than one recent order matches the item. Which one is it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Scrolling through the list of recent purchases like the phone stand and rug ensures you locate the exact coffee cups order and verify its return eligibility.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally confirming that the correct item from your order history was selected for a refund.",
+        "speak": "on-event",
+        "check": "How many orders on the list match the item named in the request, and what date and price does each show?",
+        "say_example": "There are two <item> orders here. One from <date> for <price>. One from <date> for <price>. Which one?"
+       },
+       {
+        "question": "Is this the specific order and item you want to return?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the order details, like the £10.00 Artificial Grass Table Runner delivered on April 6, ensures you initiate a return for the correct purchase.",
+        "whatTheAgentLoses": "You lose the chance to personally verify that the agent has selected the exact item and correct past order you intended to send back.",
+        "speak": "if-wrong",
+        "check": "What item name, price and delivery date does the opened order show?",
+        "say_example": "This order is <item>, delivered <date>. You asked about <item>. Is this the one? Or say which."
+       },
+       {
+        "question": "Is the order missing from the orders shown, so older or archived orders need a look?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the item was bought longer ago than the default recent orders view displays, or was hidden to keep a gift secret, it will not appear in the immediate list.",
+        "whatTheAgentLoses": "The user loses the ability to initiate the return because the agent assumes the order does not exist when it simply requires changing the search parameters.",
+        "speak": "on-event",
+        "check": "Is the requested item absent from the current list, and does the page show a date filter or an Archived orders link?",
+        "say_example": "I don't see <item> in your last <6> months of orders. I'll check older ones and the archive."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Read the return window",
+      "questions": [
+       {
+        "question": "Does the return deadline on the product page match the one on the order?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The product page stated a 10-day replacement policy, while the order details showed the item was eligible for return until February 2026.",
+        "whatTheAgentLoses": "An agent might rely on the incorrect policy, causing you to either miss a strict return window or rush a return unnecessarily.",
+        "speak": "if-wrong",
+        "check": "What return window does the product page state, and what return-eligible-through date does the order page show?",
+        "say_example": "The order page says you can return this until <date>. The product page says only <10 days> for a replacement. I'll go by the order page, since that's the one for your order."
+       },
+       {
+        "question": "Is the item still within the return window shown, or has it closed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that the return window closed on December 2, meaning the standard return button is missing and an alternative support route is required.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to abandon the return entirely or invest time in escalating the issue to a customer service representative for a possible exception.",
+        "speak": "on-event",
+        "check": "Does the order page show a return button, or does it say the return window closed on a date?",
+        "say_example": "The return window for <item> closed on <date>. There's no return button. I can ask their support instead. Want me to?"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Read the prior remedy",
+      "questions": [
+       {
+        "question": "Does the order history show that a replacement has been ordered for this item?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing the 'Replacement ordered' status confirms that an exchange has already been initiated for this specific item.",
+        "whatTheAgentLoses": "The user loses the reassurance of personally verifying the exact status of their replacement order on the screen.",
+        "speak": "on-event",
+        "check": "Does the order show a status of Replacement ordered, or an existing return for this item?",
+        "say_example": "This order already has a replacement on the way. A refund now would be on top of that. Still want the refund? Or say cancel the replacement."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Check the product's return policy",
+      "questions": [
+       {
+        "question": "Was this sold by a third-party seller who has to approve the return first?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Third-party sellers often have their own return policies and must approve the request before a shipping label is issued, meaning the return isn't instantly approved.",
+        "whatTheAgentLoses": "The user loses the awareness that their return is pending manual review by a seller rather than being automatically processed by the retailer.",
+        "speak": "on-event",
+        "check": "Does the page say the item is sold by a third-party seller, or that the return needs the seller's approval before a label is issued?",
+        "say_example": "This one was sold by <seller>, a third-party seller. They have to approve the return before a label comes. The page says that takes up to <days>."
+       },
+       {
+        "question": "Does a badge or small print mark the item as final sale, non-returnable, or replacement only?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Retailers often use small tags or icons to indicate non-returnable items, which explains why the standard return button is missing or disabled.",
+        "whatTheAgentLoses": "You waste time trying to find a return path or contacting support for an item that was explicitly marked as non-returnable through a visual badge.",
+        "speak": "on-event",
+        "check": "Does the product or order page show a badge or note reading Final Sale, non-returnable, replacement only, or hazardous materials?",
+        "say_example": "This item is marked final sale. The site won't take it back. I can still ask their support. Want me to?"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Click the return button",
+      "questions": [
+       {
+        "question": "Which option do you select to start the return process for this item?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple post-purchase options like 'Need help with your item?' and 'Return items', requiring you to choose the exact path for a refund.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to explore alternative resolutions like troubleshooting or product support before committing to a full return.",
+        "speak": "never",
+        "check": "Which post-purchase buttons does the order page show, and which one starts a return?",
+        "say_example": "Started the return from the Return items button, not Need help with your item."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Find the moved return entry"
+     },
+     {
+      "id": "2.7",
+      "label": "Tick the item to return",
+      "questions": [
+       {
+        "question": "This order has more than one item. Which one is being returned?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple items from the same order, requiring you to check the box next to the specific item to trigger the return reason dropdown.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the correct item from a multi-item order is selected for the return.",
+        "speak": "on-event",
+        "check": "How many items does the order list, and which of them match the requested item's name, size and colour?",
+        "say_example": "This order has <4> items. Two of them are <item>, one in <size>, one in <size>. Which one?"
+       },
+       {
+        "question": "Are any items you're keeping ticked for return?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Retailers sometimes default to selecting all items in a multi-item order for return, requiring you to actively uncheck the ones you want to keep.",
+        "whatTheAgentLoses": "You risk accidentally authorizing the return of items you intended to keep because the agent didn't notice they were pre-selected by the interface.",
+        "speak": "if-wrong",
+        "check": "Which items on the order have their return checkbox ticked?",
+        "say_example": "The page had all <4> items ticked. I unticked everything except the <item>."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Order a replacement first",
+      "questions": [
+       {
+        "question": "Does this order offer a refund, or only a replacement?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen only displays a 'Replace item' button instead of a standard return option, indicating a refund is not available.",
+        "whatTheAgentLoses": "If an agent blindly proceeds with a replacement, you lose the chance to cancel the process and end up with another copy of an unwanted item instead of your money back.",
+        "speak": "on-event",
+        "check": "Does the order page show only a Replace item option and no refund option?",
+        "say_example": "This order only offers a replacement. There's no refund button. Want the replacement? Or I can ask support about a refund."
+       }
+      ]
+     },
+     {
+      "id": "2.9",
+      "label": "Pick the purchase to refund",
+      "questions": [
+       {
+        "question": "Does the purchase detail shown match the order being returned?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a purchase detail block with a long number instead of refund options, meaning the specific transaction must be verified before proceeding.",
+        "whatTheAgentLoses": "The user loses the ability to confirm they are initiating a return for the correct order.",
+        "speak": "if-wrong",
+        "check": "What purchase number, item and date does the purchase detail block show?",
+        "say_example": "This is purchase <number>, for <item>. You asked about <item>. Going back to find the right one."
+       },
+       {
+        "question": "Does the page show more use than the refund policy allows?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the selected game has 9 hours of playtime, which contradicts the refund policy requiring less than 2 hours of playtime.",
+        "whatTheAgentLoses": "The user wastes time and risks a rejected claim because the agent attempts to process a return for an ineligible item.",
+        "speak": "on-event",
+        "check": "What usage figure does the page show for the item, and what limit does the refund policy state?",
+        "say_example": "The policy refunds only under <2 hours> of play. This game shows <9 hours>. They'll likely refuse. Still want me to send it?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Describe the return",
+    "note": "3.1 on every keeper; 3.2 where the platform asks for more; 3.3 where a text box is offered - required after some reasons (VuAs, xzab, ftqi, BWj-) and optional after others. 3.4 and 3.5 where asked. 3.6 where photos are offered, and they are mandatory on mmeg. 3.7 before or after the reason where more items can ride along, and 3.8 as the gate out of it on Shein. the whole goal repeats per item ticked - FSdL and 3MXm run it twice. on 2aq2 the reason is answered inside the chat instead, at 9.4.3.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Pick the reason",
+      "questions": [
+       {
+        "question": "Which reason on the list matches why you're returning it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing a specific explanation like 'Bought by mistake' or 'No longer needed' to justify the return.",
+        "whatTheAgentLoses": "Delegating this means the agent might select an inaccurate reason, which could affect return shipping costs or restocking fees.",
+        "speak": "gate",
+        "check": "Which return reasons does the dropdown, or the chat's pick-an-issue prompt, list?",
+        "say_example": "The reasons here are <wrong size, damaged, changed my mind, and four more>. You said <it doesn't fit>. I'll pick <wrong size>. OK, or pick a different one?"
+       },
+       {
+        "question": "Did a fee or a smaller refund appear after the reason was picked?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Retailers often quietly deduct shipping costs for 'buyer's remorse' reasons (like 'No longer needed') by simply updating a small text figure on the screen without any pop-up warning.",
+        "whatTheAgentLoses": "You might unknowingly accept a return shipping fee deduction because the agent did not notice or announce the subtle, immediate visual change triggered by their reason choice.",
+        "speak": "on-event",
+        "check": "After the reason is selected, does the page show a fee line, a deduction, or a lower estimated refund than before?",
+        "say_example": "Picking <reason> took <amount> off the refund. It's now <amount>. OK? Or say change reason."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Pick the detailed reason",
+      "questions": [
+       {
+        "question": "Which sub-reason on this screen matches what you told me?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a specific sub-reason, such as poor quality or a duplicate product, to accurately categorize the return.",
+        "whatTheAgentLoses": "You lose the ability to provide precise feedback on exactly why the item failed to meet your expectations.",
+        "speak": "on-event",
+        "check": "Does the page ask for a more specific reason, and which options does it list?",
+        "say_example": "It wants more detail. The choices are <torn, stained, broken zip>. I'll pick <broken zip>. OK, or pick a different one?"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Write the comment",
+      "questions": [
+       {
+        "question": "Is the quantity set to the number you're returning?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the selected quantity of two and the 'No longer needed' reason ensures the correct items are processed before moving to the next step.",
+        "whatTheAgentLoses": "You lose the opportunity to verify the exact quantity being returned and to provide optional comments explaining the issue.",
+        "speak": "if-wrong",
+        "check": "What quantity is shown next to the item on the return form?",
+        "say_example": "The form had quantity 2. You're returning one. I set it to 1."
+       },
+       {
+        "question": "Do you need to add any comments to explain the return before continuing?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an optional comments field alongside the uploaded photos, leaving you to decide if extra explanation is necessary before clicking continue.",
+        "whatTheAgentLoses": "You lose the opportunity to provide specific context or details about the item's condition that might be relevant to the return.",
+        "speak": "never",
+        "check": "Is the comments field optional or required?",
+        "say_example": "Left the optional comment blank."
+       },
+       {
+        "question": "The comments box is required. What should it say?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting a reason from the dropdown triggers a mandatory comments box that must be filled out to proceed with the return.",
+        "whatTheAgentLoses": "The user loses the ability to accurately describe the specific defect or issue with the item in their own words.",
+        "speak": "on-event",
+        "check": "Does the page mark the comments field as required, and what does it say about length?",
+        "say_example": "This return needs a written reason. I'll write <your words>. OK, or tell me what to say?"
+       },
+       {
+        "question": "Was the comment accepted, or is the form still refusing to continue because the text is too short?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface disables the 'Continue' button and displays an 'Enter at least 5 characters' warning if your typed reason is too short.",
+        "whatTheAgentLoses": "An agent might fail to proceed because it doesn't realize the input was rejected for being too brief, leaving the task stuck.",
+        "speak": "never",
+        "check": "Does the page show a too-short warning or a disabled Continue after the comment is entered?",
+        "say_example": "Added more of your words after the site said the comment was too short."
+       },
+       {
+        "question": "Does the page say the comment isn't read by support and goes to outside companies?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that the text entered in the return comments field is used for defect tracking and shared with external providers, rather than being read by a support agent.",
+        "whatTheAgentLoses": "The user loses the ability to protect their privacy by ensuring the agent doesn't inadvertently type personal details into a field shared with third parties.",
+        "speak": "on-event",
+        "check": "Does the page say the comment is not read by customer service, or is shared with outside providers?",
+        "say_example": "Heads up, this comment box isn't read by support. It goes to outside companies. I'll keep your phone number and any requests out of it."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Answer the packaging question",
+      "questions": [
+       {
+        "question": "Is the item unopened and sealed in its original packaging?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The retailer asks you to confirm if the item's original plastic wrapping or sticker seal is intact, noting this will not impact the return or refund.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report the physical condition of the item's packaging to the retailer.",
+        "speak": "gate",
+        "check": "Does the page ask whether the item is unopened or sealed, and what options does it give?",
+        "say_example": "It's asking if the <item> is still sealed. Is it? Say sealed or opened."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Accept the condition terms",
+      "questions": [
+       {
+        "question": "Do you agree the item is in the condition the page requires?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "You must confirm the item is in its original condition with all tags and accessories to avoid refund delays or failed pickups.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that you actually possess the original tags and accessories required to successfully return the item.",
+        "speak": "gate",
+        "check": "What condition, packaging and accessories does the agreement checkbox ask you to confirm?",
+        "say_example": "I have to tick that the <item> has its tags and original box. If it doesn't, they may refuse it. Does it? Say yes or no."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Add the photos",
+      "questions": [
+       {
+        "question": "The page wants photos of the item. Can you take and add them?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Add photos of the item' page, requiring you to decide whether to take a live picture or upload an existing image to support your return reason.",
+        "whatTheAgentLoses": "An agent cannot physically operate your device's camera to take a live picture of the item, meaning you must capture and provide the photos yourself.",
+        "speak": "gate",
+        "check": "Does the page ask for photos of the item, and how many does it require?",
+        "say_example": "It wants <3> photos of the item. I can't take those. Add them when you're ready and I'll carry on."
+       },
+       {
+        "question": "Does the page say more photos are required?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the first uploaded photo alongside a camera icon box, prompting a choice about whether more visual evidence is needed.",
+        "whatTheAgentLoses": "You lose the personal judgment of determining exactly how much visual proof is necessary to ensure the return is accepted.",
+        "speak": "on-event",
+        "check": "How many photos are attached, and does the page state a minimum?",
+        "say_example": "One photo is in. It wants at least <3>. Add another and I'll continue."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Add more items"
+     },
+     {
+      "id": "3.8",
+      "label": "Confirm every item is listed",
+      "questions": [
+       {
+        "question": "Does the page warn that returning other items later will cost extra shipping?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface warns that you must add all desired items to this single return list, because initiating a second return for the same order later will incur additional shipping fees.",
+        "whatTheAgentLoses": "You lose money if the agent processes multiple items from the same order as separate return requests, triggering unnecessary shipping fee deductions for the subsequent packages.",
+        "speak": "on-event",
+        "check": "Does the page say a second return from this order will incur shipping fees, and which other items does it list?",
+        "say_example": "Your order also has <the jacket and the belt>. This site charges shipping on a second return later. Add either of them now? Or say just the <item>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Choose the remedy",
+    "note": "4.1 where the platform asks refund-or-replacement-or-exchange, or pre-selects an exchange (0yz0, Hjpo) or a replacement (ftqi). 4.2 where a troubleshooting offer stands in the way. then 4.3 - the one question most keepers get - with 4.4 read beside it. 4.5 where there is nothing to choose.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Choose refund, replacement, or exchange",
+      "questions": [
+       {
+        "question": "Is the remedy set to a refund rather than an exchange or replacement?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a suggested exchange option alongside a refund to the original payment method, requiring a choice on how to be compensated.",
+        "whatTheAgentLoses": "An agent might select the default exchange or store credit option instead of returning the funds to your preferred bank account.",
+        "speak": "if-wrong",
+        "check": "Which remedy option is selected or highlighted by default?",
+        "say_example": "The page had an exchange picked for you. You asked for a refund. Switched it."
+       },
+       {
+        "question": "Does the page say your card will be charged if the item isn't received by a date?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When opting for an advanced exchange or certain refund methods, the retailer requires you to authorize a future charge to your original payment method if they do not receive the item within 30 days.",
+        "whatTheAgentLoses": "You lose the awareness that you are authorizing a conditional future charge on your credit card, which becomes a real financial penalty if you forget to drop off the package.",
+        "speak": "on-event",
+        "check": "Does the page state a charge to a payment method if the item is not returned within a number of days, and which card?",
+        "say_example": "This one charges your <card ending 1234> the full <price> if they don't get the item by <date>. OK with that? Or say refund only."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Decline the troubleshooting offer",
+      "questions": [
+       {
+        "question": "Do you want to troubleshoot the item or proceed with a refund to your original payment method?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing between troubleshooting the issue or receiving a refund, which involves agreeing to specific return conditions.",
+        "whatTheAgentLoses": "You lose the chance to decide whether to attempt troubleshooting the item yourself or to review the specific condition requirements you are agreeing to for the refund.",
+        "speak": "never",
+        "check": "Does the page offer troubleshooting before the refund, and which option leads to the refund?",
+        "say_example": "Skipped the troubleshooting offer."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Pick the refund destination",
+      "questions": [
+       {
+        "question": "Where should the refund go?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing between a faster refund to the account balance within a few hours or a slower refund to the original payment method taking several business days.",
+        "whatTheAgentLoses": "Delegating this step means the agent might choose the default store credit option for speed, locking your money into the retailer's ecosystem instead of returning it to your bank account.",
+        "speak": "gate",
+        "check": "Which refund destinations does the page list, which one is preselected, and what timing does each state?",
+        "say_example": "The refund can go to your <site> balance in a few hours. Or back to your <card ending 1234> in <5 to 7> days. Which one?"
+       },
+       {
+        "question": "Does the 'Continue shopping' button carry the return forward, or leave it and go back to the store?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a prominent yellow 'Continue shopping' button, which actually exits the return flow instead of advancing it.",
+        "whatTheAgentLoses": "The user loses the completion of their return because the agent mistakenly navigates back to the storefront instead of finalizing the refund.",
+        "speak": "never",
+        "check": "Which button on this page continues the return, and does any prominent button leave the flow?",
+        "say_example": "Used the Continue button below, since Continue shopping leaves the return."
+       },
+       {
+        "question": "Is this a gift return, where the refund would go back to whoever bought it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the item was received as a gift, selecting the standard refund option might send the money back to the gift giver's original payment method instead of giving you store credit.",
+        "whatTheAgentLoses": "The user loses the ability to ensure they receive the credit for the gift without alerting the person who bought it.",
+        "speak": "on-event",
+        "check": "Does the page mark the order as a gift, or say the refund goes to the purchaser's payment method?",
+        "say_example": "This was a gift. A refund would go back to the card of whoever bought it. I can take store credit for you instead. Which one?"
+       },
+       {
+        "question": "Is there a warning that one of the refund options has problems right now?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A banner at the top of the screen warns of momentary technical issues with the Amazon Pay balance, which means routing a refund there might result in delayed or inaccessible funds.",
+        "whatTheAgentLoses": "The user loses the opportunity to route their refund to a more reliable payment method, potentially trapping their money in a broken system.",
+        "speak": "on-event",
+        "check": "Is there a banner warning of technical issues with a refund destination?",
+        "say_example": "There's a warning up top. Refunds to the <balance> are having problems right now. I'll send it to your card instead. OK?"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Read the refund timing",
+      "questions": [
+       {
+        "question": "Does the refund timeline on this screen match the method you picked?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The lengthy refund timeline shown on the confirmation screen contradicts the earlier selection of an Amazon Pay balance refund.",
+        "whatTheAgentLoses": "The user loses the ability to accurately track when their funds will arrive if the agent ignores discrepancies between the chosen refund method and the final confirmation.",
+        "speak": "if-wrong",
+        "check": "What refund timing does this screen state, and what did the earlier screen state for the chosen method?",
+        "say_example": "You picked the balance refund, which said a few hours. This screen now says <5 to 7> days. Want me to go back and check the choice?"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Read the fixed destination",
+      "questions": [
+       {
+        "question": "Is there only one place the refund can go?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the refund destination and timing ensures you know exactly how and when you will get your money back, such as receiving it to an account balance once the return is received.",
+        "whatTheAgentLoses": "You lose the chance to verify that the refund is being routed to your preferred destination and to understand the timeline for receiving your money back.",
+        "speak": "on-event",
+        "check": "Does the page show one refund destination with no other option, and what timing does it state?",
+        "say_example": "The refund goes to your <balance>. No other choice here. The page says it lands <once they get the item>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Choose the way back",
+    "note": "5.1 on every retail keeper, then one of 5.2 to 5.5 - the platform decides which exist. 5.6 after a drop-off partner (FSdL, z6cQ, Hjpo), 5.7 after a pickup (ftqi, mmeg). 5.8 as the last read before 6. Flipkart schedules the pickup itself after submit, so BWj- skips 5.2 to 5.7; Steam has no goods to move.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the options and fees",
+      "questions": [
+       {
+        "question": "Which way back do you want, given the fees and where you'd have to go?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows different return logistics options, such as a UPS Dropoff that deducts $8.89 from the refund versus an 'I'll Ship & Pay' option.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to pay for shipping upfront or have the cost deducted from your final refund based on your personal convenience.",
+        "speak": "gate",
+        "check": "Which return options are listed, and for each, what fee, location, and box or label requirement does the page state?",
+        "say_example": "Three ways to send it back. Drop at <place>, free, no box or label. <Carrier> pickup, <fee> off the refund, someone must be home. Post it yourself, you pay the postage. Which one?"
+       },
+       {
+        "question": "Is the way back you wanted greyed out?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface displays certain return options as greyed out and disabled, meaning a previously planned shipping method is no longer viable for this specific item.",
+        "whatTheAgentLoses": "An agent might fail the task or select a completely inconvenient alternative if they do not recognize that the expected method is disabled by the system.",
+        "speak": "on-event",
+        "check": "Are any return options shown greyed out or disabled, and which ones?",
+        "say_example": "Pickup is greyed out for this item. Only drop-off is on. Drop at <place>?"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Pick a drop-off partner"
+     },
+     {
+      "id": "5.3",
+      "label": "Pick a carrier label"
+     },
+     {
+      "id": "5.4",
+      "label": "Pick self-shipping"
+     },
+     {
+      "id": "5.5",
+      "label": "Pick the carrier pickup",
+      "questions": [
+       {
+        "question": "Is the pickup address the one where the item is?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents 'Amazon Pickup' as the logistics method, which dictates exactly how and where the item will be collected by the carrier.",
+        "whatTheAgentLoses": "You lose the opportunity to verify the pickup address or select a potentially more convenient drop-off option instead of waiting for a carrier.",
+        "speak": "if-wrong",
+        "check": "What pickup address does the page show, and what delivery address did the order show?",
+        "say_example": "Pickup is set to <address>. The order shipped to <address>. Which one is the item at?"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Pick the drop-off location",
+      "questions": [
+       {
+        "question": "Which drop-off location do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a map with multiple UPS Store options, distances, and operating hours, requiring you to pick the one that best fits your real-world schedule.",
+        "whatTheAgentLoses": "An agent would likely just select the closest location by mileage, unaware of your current whereabouts or upcoming travel plans.",
+        "speak": "gate",
+        "check": "Which drop-off locations does the map list, with distance and hours?",
+        "say_example": "Nearest <UPS Store> is <name> on <street>, <distance> away, open until <time>. Use that one? Or say another."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Pick the pickup slot",
+      "questions": [
+       {
+        "question": "Which day and time do you want the pickup?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a carousel of available dates from February 13 to 18 and a time window of 07:00 to 22:00, requiring you to pick a slot when you will be available.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might schedule the pickup for a day or time when you are not home to hand over the package.",
+        "speak": "gate",
+        "check": "Which pickup dates and time windows does the page offer?",
+        "say_example": "Pickup can be <date> to <date>, between <7 am> and <10 pm>. Which day? Say a day and I'll book the window."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Check the summary and deadline",
+      "questions": [
+       {
+        "question": "Is there an earlier date the item must be posted by to keep shipping free?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen specifies that only the first return postmarked within 35 days of the purchase date is free, which is a different and potentially stricter deadline than the general return window.",
+        "whatTheAgentLoses": "The user might delay the physical drop-off, assuming they have until the end of the general return window, and unexpectedly incur a shipping fee because they missed the specific 35-day free shipping deadline.",
+        "speak": "on-event",
+        "check": "Does the page say free return shipping applies only if postmarked within a number of days of purchase, and what date is that?",
+        "say_example": "Free shipping only if it's posted by <date>. That's sooner than the return deadline of <date>. After that you'd pay <fee>."
+       },
+       {
+        "question": "Does the deadline on the summary match the one the order page gave?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The initial order details stated the item was eligible for return through March 27, but the final return instructions extended the deadline to March 28.",
+        "whatTheAgentLoses": "The user loses the ability to notice and clarify conflicting return deadlines to ensure the item is shipped back in time.",
+        "speak": "if-wrong",
+        "check": "What return deadline does the final summary give, and what date did the order page give?",
+        "say_example": "The summary says return by <date>. The order page said <date>. Go by the earlier one to be safe."
+       },
+       {
+        "question": "Does the refund amount match the item price minus the fees shown?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking that the refund summary matches the final expected amount of £19.79 ensures no unexpected shipping fees were deducted.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to catch unexpected fee deductions before the return is finalized.",
+        "speak": "if-wrong",
+        "check": "What item price, fees, and refund total does the summary show, and does the total equal price minus fees? If free shipping was promised earlier, does the summary still say free?",
+        "say_example": "The refund shows <amount>. The item was <price> and the only fee listed is <fee>. That's <amount> short. Want me to go back?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Confirm the return",
+    "note": "6.1, then 6.2. 6.3 fires after the button on BQE5 and is the whole outcome on xRnx. then 6.4, with 6.5 to 6.7 where the page or the mailbox offers them. ftqi runs this goal twice and goes back to 2 between the passes. 0yz0 and FTbb cut at the button; Hjpo never reaches it.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Review the return summary",
+      "questions": [
+       {
+        "question": "Are the return details and estimated refund amount correct before you confirm?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the final refund summary and the chosen shipping method, making this the last chance to verify costs before finalizing the return.",
+        "whatTheAgentLoses": "You lose the ability to verify the final refund amount and ensure the most cost-effective shipping method was selected.",
+        "speak": "gate",
+        "check": "What item, reason, refund amount, destination, return method, and deadline does the review screen list?",
+        "say_example": "Ready to submit. <item>, reason <reason>. Refund <amount> to your <card>. Drop off at <place> by <date>, no box or label. Press to submit, or say change."
+       },
+       {
+        "question": "Is the refund the price you paid, rather than zero because this is a replacement order?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The replacement order was initially processed at ₹0.00, so it is crucial to verify that the final return screen shows the actual ₹565.00 refund.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the system correctly credited their original payment amount instead of issuing a zero-dollar refund.",
+        "speak": "if-wrong",
+        "check": "What refund amount does the summary show, and what was the item's original price?",
+        "say_example": "The refund shows <0>. This was the replacement order. The original was <price>. Checking the original order for the refund instead."
+       },
+       {
+        "question": "Do the items listed on the refund summary match exactly what you selected to return?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The refund list displays four items, including a brown tee, even though only three items were selected in the previous steps.",
+        "whatTheAgentLoses": "The user loses accuracy in their return request, potentially returning or altering the status of an item they intended to keep.",
+        "speak": "if-wrong",
+        "check": "Which items does the refund summary list, and which items were ticked for return?",
+        "say_example": "The summary lists four items. You picked three. The extra one is the <item>. Removing it."
+       },
+       {
+        "question": "Does the return reason on the confirmation screen match the one you selected earlier?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Confirming that the final modal displays the exact reason chosen initially ensures the system processed the correct feedback for the return.",
+        "whatTheAgentLoses": "The user loses the assurance that their specific feedback about the product's quality was accurately recorded and submitted to the retailer.",
+        "speak": "if-wrong",
+        "check": "What reason does the confirmation show, and what reason was selected?",
+        "say_example": "The confirmation shows the reason as <reason>. I picked <reason>. I'll go back and fix it."
+       },
+       {
+        "question": "Is there a warning that the return could be refused or your account restricted?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The confirmation screen displays a 'Please Note' banner warning that returning items in non-original condition may lead to rejection and future account restrictions, escalating the risk of this transaction.",
+        "whatTheAgentLoses": "The user loses the chance to cancel the return and protect their account standing if they realize they cannot meet the strict condition requirements.",
+        "speak": "on-event",
+        "check": "Does the page show a warning about rejection, non-original condition, or account restrictions?",
+        "say_example": "There's a warning here. If the item comes back not as described, they may refuse it and restrict your account. Still OK to send?"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Confirm the return",
+      "questions": [
+       {
+        "question": "Does the page confirm the return was accepted, and what does it say to do next?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The green checkmark and success message confirm that the system accepted the return request.",
+        "whatTheAgentLoses": "You miss the immediate reassurance of seeing the explicit success confirmation before the final instructions appear.",
+        "speak": "always",
+        "check": "Does the page show a success message, and what deadline, drop-off or pickup instruction, refund timing, and cancel option does it state?",
+        "say_example": "Return submitted. Drop it at <place> by <date>. Refund of <amount> to your <card>, within <days> of them getting it. You can cancel from <Your Orders> until <it's scanned>."
+       },
+       {
+        "question": "The site wants a one-time code sent to your phone. Can you tell me the code?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a 'Verification Required' popup indicating an OTP will be sent to the registered mobile number to proceed.",
+        "whatTheAgentLoses": "Delegating this step means the agent is blocked from finalizing the return unless the user is present to provide the OTP sent to their personal device.",
+        "speak": "gate",
+        "check": "Does the page ask for a one-time code, and where does it say the code was sent?",
+        "say_example": "The page says a code went to your phone ending <digits>. Tell me the code and I'll enter it."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Answer the keep-it offer",
+      "questions": [
+       {
+        "question": "Accept the partial refund and keep the item, or return it for the full amount?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented a pop-up dialog offering a £7.08 refund if you choose to keep the item instead of returning it.",
+        "whatTheAgentLoses": "An agent might automatically decline the offer to fulfill the original return request, depriving you of the chance to decide if keeping the item for a partial refund is a better deal.",
+        "speak": "gate",
+        "check": "What partial refund does the pop-up offer for keeping the item, and what is the full refund?",
+        "say_example": "They'll give you <amount> to keep it. Or send it back for the full <amount>. Which one? Say keep or return."
+       },
+       {
+        "question": "Does the confirmation say you can keep the item?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The on-screen confirmation explicitly states you can keep the item without returning it, making the narrator's instruction to visit the post office incorrect.",
+        "whatTheAgentLoses": "An agent following the flawed audio instructions would unnecessarily ship the item back instead of keeping it as permitted.",
+        "speak": "on-event",
+        "check": "Does the confirmation say the item does not need to be returned?",
+        "say_example": "Good news. You don't need to send it back. Keep the <item>. The <amount> refund comes anyway."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Read the confirmation",
+      "questions": [
+       {
+        "question": "Is the order on the confirmation the same one picked at the start, with the same delivery date?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The initial order details showed a delivery date of August 31, but the final confirmation screen showed August 29, suggesting the video might be spliced from different orders.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is reliably processing a single, specific order from start to finish.",
+        "speak": "if-wrong",
+        "check": "What order number and delivery date does the confirmation show, and what did the order picked at the start show?",
+        "say_example": "The confirmation is for an order delivered <date>. The one you picked was delivered <date>. That's a different order. Checking before anything else."
+       },
+       {
+        "question": "Does the final refund amount and currency match the earlier summary?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The refund summary showed a total of USD 34.63, but the final confirmation displayed €29.90, revealing a mismatch in both currency and amount.",
+        "whatTheAgentLoses": "The user loses the chance to catch and dispute a potentially incorrect refund amount or unexpected currency conversion before the return is finalized.",
+        "speak": "if-wrong",
+        "check": "What refund amount and currency does the confirmation show, and what did the summary show?",
+        "say_example": "The summary said <34.63 dollars>. The confirmation says <29.90 euros>. That's a different amount in a different currency. Want me to ask support?"
+       },
+       {
+        "question": "Does the refund method on the confirmation screen match the card you selected earlier?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen showed the refund going to a Visa ending in 1506, contradicting the earlier selection of a Visa ending in 1306.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their money is returned to the correct account if the agent ignores the payment method discrepancy.",
+        "speak": "if-wrong",
+        "check": "What card or destination does the confirmation name for the refund, and which was selected?",
+        "say_example": "The refund is going to a card ending <1506>. You picked the one ending <1306>. Want me to change it, or ask support?"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Save the return code"
+     },
+     {
+      "id": "6.6",
+      "label": "Read the confirmation email",
+      "questions": [
+       {
+        "question": "What are your specific drop-off and packaging instructions for this return?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation email specifies 'The UPS Store' and 'No Box No Label,' which dictates exactly where and how you must physically hand over the item.",
+        "whatTheAgentLoses": "You lose direct awareness of the physical logistics required to complete the return, such as needing to bring the unboxed item and the QR code to a specific UPS Store.",
+        "speak": "never",
+        "check": "What drop-off location and packaging instruction does the email open on screen give?",
+        "say_example": "Confirmed by email. Drop at The UPS Store, no box or label needed."
+       },
+       {
+        "question": "Does the confirmation email provide the postage authorization code promised during the return setup?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The website stated a postage authorization code would be sent, so checking the email confirms you have the necessary number to mail the item.",
+        "whatTheAgentLoses": "You lose the immediate peace of mind of verifying that the essential return shipping code actually arrived in your inbox.",
+        "speak": "if-wrong",
+        "check": "What label or authorization code does the email open on screen show, and is it the one the site said it would send?",
+        "say_example": "The site said a postage code would be in the email. The email open here has no code in it. I'll check the return page again. If it's not there either, want me to ask support?"
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Read the cancel options",
+      "questions": [
+       {
+        "question": "Does the page show how to cancel or change the return?",
+        "cluster": "undo",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen displays the pickup timeline and an 'Edit return' menu that reveals options to cancel or reschedule the request.",
+        "whatTheAgentLoses": "Delegating this step means missing the crucial warning that cancelling the return might permanently prevent you from requesting another refund for this order.",
+        "speak": "never",
+        "check": "Does the page show an edit, cancel, or reschedule option for the return, and until when?",
+        "say_example": "Noted the return can be cancelled or rescheduled from Edit return until pickup."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Hand the item over",
+    "note": "7.1 where a label has to be printed, then 7.2 and 7.3; 7.4, then 7.5 when a box is reused, then 7.6. 7.7 closes the goal and is narrated in every keeper - no camera follows the package to the counter. skipped for pickups where the carrier brings the label, for keep-it outcomes, and for FTbb.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Print the label",
+      "note": "7.1.1 from the page or 7.1.2 from the mail, then 7.1.3 where it arrived as a file, then 7.1.4 - the print click itself is cut in both keepers.",
+      "questions": [
+       {
+        "question": "Is the label only on this screen, so it needs saving before we move on?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays the final return deadline, packing instructions, and a button to print the required shipping label.",
+        "whatTheAgentLoses": "You lose direct visibility of the return deadline and the immediate ability to print the physical shipping label yourself.",
+        "speak": "on-event",
+        "check": "Does the page show a label or QR code to print or save, and does it say it was also emailed?",
+        "say_example": "The label is only on this screen. The page doesn't say it was emailed. Save or print it now, before I move on. Say done when you have it."
+       }
+      ],
+      "children": [
+       {
+        "id": "7.1.1",
+        "label": "Print from the page"
+       },
+       {
+        "id": "7.1.2",
+        "label": "Find the emailed label"
+       },
+       {
+        "id": "7.1.3",
+        "label": "Open the label file"
+       },
+       {
+        "id": "7.1.4",
+        "label": "Set the print options"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Cut the label apart"
+     },
+     {
+      "id": "7.3",
+      "label": "Read the packing instructions",
+      "questions": [
+       {
+        "question": "What specific instructions must you follow to pack and mail the return?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays strict requirements for boxing the item, placing the label over old barcodes, and applying postage to ensure the return is accepted.",
+        "whatTheAgentLoses": "Delegating this step means you miss the exact physical packaging and mailing requirements needed to successfully send the item back.",
+        "speak": "never",
+        "check": "What packing, labelling, and postage instructions does the page give?",
+        "say_example": "Noted the packing rules. A box, the label over any old barcodes, postage prepaid."
+       },
+       {
+        "question": "Does the page say to sign out or reset the device before sending it back?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Retailers will reject the return of electronics like laptops or phones and deny the refund if the device is still locked to a personal iCloud or Google account.",
+        "whatTheAgentLoses": "The user risks having the item shipped back to them and the refund permanently denied because the agent did not warn them to remove their activation locks.",
+        "speak": "on-event",
+        "check": "Does the page tell you to sign out of accounts, remove locks, or reset the device before returning it?",
+        "say_example": "Before it goes back, sign out of your <Apple> account and reset the <phone>. The page says they'll refuse it if it's still locked to you."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Pack the item"
+     },
+     {
+      "id": "7.5",
+      "label": "Remove the old labels"
+     },
+     {
+      "id": "7.6",
+      "label": "Attach the label"
+     },
+     {
+      "id": "7.7",
+      "label": "Hand the package over"
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Follow the refund",
+    "note": "8.1, then 8.2 and 8.3 on the same page; 8.4 on Shein, where the record sits behind two more links. 8.5 when the refund lands - seen only in the spliced BWj- screen. entered from 6 in the same sitting or days later.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Open the return's status"
+     },
+     {
+      "id": "8.2",
+      "label": "Read the return timeline",
+      "questions": [
+       {
+        "question": "What deadline does the status page give for handing the item over?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Confirming the May 5 drop-off deadline and the CDN$ 15.99 refund amount ensures you know exactly when to return the item and what compensation to expect.",
+        "whatTheAgentLoses": "You lose the immediate awareness of your specific drop-off deadline and the exact amount being credited to your gift card balance.",
+        "speak": "never",
+        "check": "What drop-off deadline does the return status page show?",
+        "say_example": "Noted the drop-off deadline on the status page, September 30."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Read the refund promise"
+     },
+     {
+      "id": "8.4",
+      "label": "Open the return record",
+      "questions": [
+       {
+        "question": "Do the prices on the return screen match the ones shown when the items were picked?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The processing screen revealed crossed-out original prices and applied discounts for the dress and tee that were not explicitly detailed on the initial selection list.",
+        "whatTheAgentLoses": "The user loses the opportunity to audit the refund calculation to ensure they are being credited the exact amount they actually paid.",
+        "speak": "if-wrong",
+        "check": "What item prices does the return processing screen show, and what prices did the selection screen show?",
+        "say_example": "The refund is based on <price> for the <item>. You paid <price>. Want me to ask about the difference?"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Confirm the refund landed",
+      "questions": [
+       {
+        "question": "Has your return and refund been successfully processed?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing the 'Refund Completed' badge and timeline confirms the return is finalized and tells you exactly when to expect your money.",
+        "whatTheAgentLoses": "You miss the immediate reassurance of seeing the exact refund amount and the timeline for when the funds will reach your account.",
+        "speak": "always",
+        "check": "Does the return page show a refund completed status, and what date and amount does it give?",
+        "say_example": "Refund done. <amount> went to your <card> on <date>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Ask the retailer for help",
+    "note": "9.1, then 9.2 and 9.3 to name the order and the topic. 9.4 for the chat route - it can refuse and restart (2aq2). 9.5 and 9.6 for the call route (ftqi). 9.7 when the session gives up on the platform. entered from 2 when the window is closed, or after 6 to ask about a return already filed.",
+    "questions": [
+     {
+      "question": "Do you want to reach support by chat or by phone?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen requires choosing between starting a live chat or requesting a phone call, including a language preference, to proceed with the return.",
+      "whatTheAgentLoses": "The user loses the ability to select their preferred communication method and spoken language for interacting with customer support.",
+      "speak": "gate",
+      "check": "Which contact options does the page list, and does it ask for a language?",
+      "say_example": "Support is by chat or a phone call. I can do the chat. You'd have to take a call yourself. Which one?"
+     }
+    ],
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Reach customer service"
+     },
+     {
+      "id": "9.2",
+      "label": "Pick the order for help"
+     },
+     {
+      "id": "9.3",
+      "label": "Pick the help topic",
+      "questions": [
+       {
+        "question": "Does the provided information resolve your issue, or do you need to continue to customer service?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays cashback information alongside a 'Continue to Customer Service' button, requiring you to decide if you still need human assistance to process the return.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to evaluate the provided information and decide if escalating to customer service is actually necessary.",
+        "speak": "never",
+        "check": "Does the page offer a Continue to Customer Service button after the help text?",
+        "say_example": "Continued to customer service since the help text didn't cover returns."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Work the chat helper",
+      "note": "9.4.1, then 9.4.2, then 9.4.3, then 9.4.4; Yes, need more help goes back to 9.4.1, and the user reads that as a loop and leaves.",
+      "children": [
+       {
+        "id": "9.4.1",
+        "label": "Confirm the item",
+        "questions": [
+         {
+          "question": "Is the chat helper asking about the correct item?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The automated helper displayed a specific microphone, and confirming this ensures you are initiating a return for the right purchase.",
+          "whatTheAgentLoses": "You lose the ability to verify that the automated system has selected the exact item you intend to return.",
+          "speak": "if-wrong",
+          "check": "Which item does the chat helper name?",
+          "say_example": "The chat is asking about the <microphone>. You want to return the <item>. Picking the right one."
+         }
+        ]
+       },
+       {
+        "id": "9.4.2",
+        "label": "Pick the action"
+       },
+       {
+        "id": "9.4.3",
+        "label": "Pick the issue"
+       },
+       {
+        "id": "9.4.4",
+        "label": "Read the bot's verdict",
+        "questions": [
+         {
+          "question": "Is the chat bot getting anywhere, or just repeating itself?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The chat history shows a repetitive loop of automated responses, indicating that this support channel is a dead end for processing the return.",
+          "whatTheAgentLoses": "An agent might get stuck endlessly interacting with an unhelpful chatbot instead of recognizing the loop and backing out to find the standard return path.",
+          "speak": "on-event",
+          "check": "Do the chat's last replies repeat, or does it say it cannot help?",
+          "say_example": "The chat is going in circles. Same answer three times. Want me to try the phone option?"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Request a call",
+      "questions": [
+       {
+        "question": "Is this the correct phone number to receive the callback?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a pre-filled phone number input field and a 'Call me now' button to initiate a support call.",
+        "whatTheAgentLoses": "The user loses the chance to route the customer service callback to a preferred or currently accessible phone number.",
+        "speak": "gate",
+        "check": "What phone number is prefilled for the callback?",
+        "say_example": "They'll call you at the number ending <digits>. Request the call? You'll need to pick up."
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Answer the call"
+     },
+     {
+      "id": "9.7",
+      "label": "Leave for a phone number",
+      "questions": [
+       {
+        "question": "Is the support screen stuck loading?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app's support screen was stuck loading, making it necessary to decide whether to wait or use an external workaround to contact customer care.",
+        "whatTheAgentLoses": "You lose the ability to rely on your own saved contacts or personal workarounds when the standard app flow fails.",
+        "speak": "on-event",
+        "check": "Is the support screen still showing a loading state after waiting?",
+        "say_example": "The support page isn't loading. I'll look for their phone number on the site. If you have it saved, tell me."
+       },
+       {
+        "question": "Did the return actually go through, or did it end rejected with only a phone number to call?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The in-app chat explicitly rejected the return because the window expired, and the video ended by showing a phone number instead of a return confirmation.",
+        "whatTheAgentLoses": "The user is left with an unresolved return and a phone number to call, rather than a completed return and refund confirmation.",
+        "speak": "on-event",
+        "check": "Does the chat say the return was refused, why, and does it give a phone number?",
+        "say_example": "They refused the return. The window closed on <date>. There's a number to call, <number>. Want me to write it down?"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
