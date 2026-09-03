@@ -29,7 +29,8 @@
     "ports/",
     "sync/",
     "surfaces/",
-    "adapters/",
+    "platforms/",
+    "registry/",
     "protocol/",
     "README.md"
   ],

@@ -8,8 +8,10 @@ ports and consume the core, the catalog, or the hosted service.
 ## Architecture
 
 - `toolkit/` — the platform-agnostic core. Sub-parts:
-  - `core/` — Librarian (memory/profile agent), datastore, ability-model,
-    broker, and the skill engine (`skill.js`, `skill-builder.js`). Imports only
+  - `core/` — Librarian (memory/profile agent), datastore, the ability model
+    (`ability.js`, `surface.js`, `strength.js`, `units.js`, `memory-class.js`,
+    `taxonomy.js`), and the skill engine (`skill.js`, `skill-builder.js`). The
+    old broker was folded into `sync/grants.js` and the Librarian. Imports only
     `ports/` and `sync/` — never a surface, adapter, or catalog.
   - `ports/` — the interfaces a host implements (KVStore, Clock, Scheduler,
     Consent, actuation). The core reaches every platform capability through these.
