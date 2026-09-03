@@ -17,6 +17,8 @@
     "./core/skill": "./core/skill.js",
     "./core/skill-builder": "./core/skill-builder.js",
     "./platforms/chrome/web-surface": "./platforms/chrome/web-surface.js",
+    "./platforms/chrome/*.js": "./platforms/chrome/*.js",
+    "./package.json": "./package.json",
     "./surfaces/web": "./surfaces/web.js",
     "./surfaces/xr": "./surfaces/xr.js",
     "./sync": "./sync/index.js",
@@ -32,6 +34,7 @@
     "platforms/",
     "registry/",
     "protocol/",
+    "skills/",
     "README.md"
   ],
   "scripts": {
