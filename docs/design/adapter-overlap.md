@@ -1,4 +1,4 @@
-> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior.
+> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior. File paths refer to the tree as it was when this was written, before the repository split; see the README's "Where things moved" section for current locations.
 
 # Built-in Adapter Overlap Audit
 

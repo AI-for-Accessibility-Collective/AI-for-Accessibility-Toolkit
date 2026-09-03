@@ -15,8 +15,8 @@ catalog, a **surface** renderer, or a **platform port**.
 
 ```bash
 git clone <your fork>
-cd AI-for-Accessibility-Toolkit && npm install
-npm test        # toolkit/test + tools/test
+cd <your clone> && npm install
+npm test        # tools, toolkit, controller, and onboarding suites
 ```
 
 Pure ES modules — the core has no build step. There is no browser extension in
@@ -154,8 +154,8 @@ in your host's provider. Keep prompts and the provider host-side.
 ## Testing
 
 ```bash
-npm test                                 # toolkit/test + tools/test
-node toolkit/hosts/xr-demo/demo.js       # cross-surface + broker loop
+npm test                                 # tools, toolkit, controller, and onboarding suites
+node toolkit/hosts/xr-demo/demo.js       # cross-surface + grants loop
 node toolkit/hosts/skill-demo/demo.js    # retrieve → resolve → build → validate → save
 node server/test/server-test.mjs         # hosted service
 ```

@@ -1,3 +1,5 @@
+> Historical design document. File paths refer to the tree as it was when this was written, before the repository split; see the README's "Where things moved" section for current locations.
+
 # The verifier: a second agent that watches the first
 
 A design doc for the validation layer's next stage, written as a gap list

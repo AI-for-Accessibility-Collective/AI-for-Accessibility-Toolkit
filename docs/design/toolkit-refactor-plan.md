@@ -1,4 +1,4 @@
-> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior.
+> Internal design document — describes a proposal/point-in-time snapshot, not necessarily current behavior. File paths refer to the tree as it was when this was written, before the repository split; see the README's "Where things moved" section for current locations.
 >
 > **Status update (2026-07-16): Phase 0 is DONE.** `toolkit/` exists (core: librarian/datastore/taxonomy as ES modules behind platform ports; chrome adapter bundles back to `personalized-extension/extension/lib/` at the same paths). Exit gate held: librarian-test 69/69, run-tests 0 fails, demo-beats e2e 26/26, background.js untouched. Corrections found during execution: the chrome.alarms literals were in librarian.js (~L1003), not background.js; `recordExplicitSetting` is internal-only (not a librarian* message); custom adapters are a separate customSkills→user-script path, so Phase 2's "fold skills under procedural memory" is real integration work.
 >

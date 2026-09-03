@@ -1,54 +1,25 @@
 # Security Policy
 
-## Supported Versions
-
-| Version | Supported          |
-| ------- | ------------------ |
-| Latest  | :white_check_mark: |
+This policy covers this repository: the toolkit core, the tools catalog, the hosted service (`server/`), and the onboarding example. The browser extensions have their own policy in the [extension repository](https://github.com/josifiin/AI-for-Accessibility-Extension/blob/main/SECURITY.md). This is a pre-alpha research probe; a security review before any public release is an open roadmap item.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in the AI for Accessibility Toolkit, please report it responsibly:
-
 1. **Do not** open a public issue
 2. Email the maintainers directly at [dcelin@stanford.edu](mailto:dcelin@stanford.edu)
-3. Include:
-   - Description of the vulnerability
-   - Steps to reproduce
-   - Potential impact
-   - Suggested fix (if any)
+3. Include: a description, steps to reproduce, potential impact, and a suggested fix if you have one
 
-We will respond within 48 hours and work with you to understand and address the issue.
+We will respond within 48 hours and work with you to understand and address the issue. There are no tagged releases yet; until the first one, only the current state of the default branch is supported.
 
-## Security Considerations
+## Facts worth knowing
 
-### API Keys
+- **The library never holds an API key.** The AI provider is injected by the host (`tools/utils/ai.js`); key storage and transmission are the host's responsibility. The hosted service is itself such a host: `server/` reads `GEMINI_API_KEY` from its environment and holds it for the life of the deployment, so a deployer owns that key's handling.
+- **Profile ids are credentials.** The onboarding service's routes are unauthenticated by design; the profile id itself is the capability, so treat an id like a private share link. Details in [onboarding/README.md](onboarding/README.md).
+- **The hosted service uses bearer tokens.** See [server/README.md](server/README.md) before deploying.
+- **Cross-app sharing is gated by explicit, revocable grants** (`toolkit/sync/grants.js`); free text and confidence scores are never exported through them.
 
-- Gemini API keys are stored in `chrome.storage.local`, which is encrypted at rest by Chrome
-- Keys are transmitted only to Google's API endpoints over HTTPS
-- The extension never logs or transmits API keys elsewhere
+## Practices for Contributors
 
-### Content Script Execution
-
-- Content scripts run in an isolated world separate from page scripts
-- AI-generated text content uses `textContent` for safe DOM insertion
-- Reader mode sanitizes extracted HTML before `innerHTML` insertion (tag/attribute allowlist)
-- We do not use `eval()` or `document.write()`
-
-### Data Handling
-
-- User preferences are stored locally in `chrome.storage.sync`
-- No user data is transmitted to third parties (except Gemini API for AI features)
-- Custom adapters are linted before execution but are **not** sandboxed — they are registered as Chrome user scripts and run with full page access, which is why the extension warns users to only install adapters they trust
-
-### Dependencies
-
-- We minimize dependencies and audit them regularly
-- Third-party libraries (axe-core, DarkReader, Readability) are bundled and version-locked
-
-## Security Best Practices for Contributors
-
-1. Never use `innerHTML` with user/AI-generated content without escaping
+1. Never use `innerHTML` with user or AI-generated content without sanitizing
 2. Avoid `eval()`, `Function()`, and similar dynamic code execution
 3. Use `textContent` for text-only insertions
 4. Validate all inputs from external sources (AI responses, user input)

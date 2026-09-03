@@ -14,7 +14,15 @@
 // Per-entry fields:
 //   settings   — chrome.storage.sync keys this tool sets when enabled
 //   emoji      — onboarding card icon. `icon` is the Material Symbols name
-//   quickStart — shown on the onboarding quick-start grid. AI
+//   quickStart — shown on the onboarding quick-start grid
+//   requiresAI — true means the tool cannot do its job without a configured
+//                AI provider, so hosts gate enabling it on a key being set.
+//                false means the tool must work with no key at all. A false
+//                tool may still call the provider opportunistically to
+//                improve a result it can already produce without one
+//                (fix-contrast, fix-links, fix-tables, and auto-transcriber
+//                are heuristic-first like this) — the field answers "does
+//                the toggle work without a key", not "may it ever call AI".
 
 export const skillRegistry = [
   {

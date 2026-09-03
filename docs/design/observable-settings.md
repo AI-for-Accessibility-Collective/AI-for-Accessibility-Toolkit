@@ -1,3 +1,5 @@
+> Historical design document. File paths refer to the tree as it was when this was written, before the repository split; see the README's "Where things moved" section for current locations.
+
 # Observable System & Browser Accessibility Settings
 
 > Accessibility guidelines say a site or tool should *respect* the user's system
