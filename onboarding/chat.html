@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A11y Toolkit Chat</title>
+<style>
+  :root {
+    --bg: #f6f8fc; --panel: #ffffff; --ink: #1a1c1e; --muted: #5a6068;
+    --line: rgba(0,0,0,.10); --accent: #1a73e8; --accent-ink: #fff;
+    --user-bg: #d3e3fd; --user-ink: #041e49; --assist-bg: #f0f2f5; --assist-ink: #1a1c1e;
+    --pill: #eef1f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131416; --panel: #1e1f22; --ink: #e3e3e6; --muted: #9aa0a6;
+      --line: rgba(255,255,255,.14); --accent: #8ab4f8; --accent-ink: #062e6f;
+      --user-bg: #004a77; --user-ink: #c2e7ff; --assist-bg: #282a2d; --assist-ink: #e3e3e6;
+      --pill: #2a2c30;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    display: flex; flex-direction: column; align-items: center; }
+  .app { width: 100%; max-width: 46rem; height: 100%; display: flex; flex-direction: column; }
+
+  /* Header: profile pill (always visible) + settings hamburger */
+  header { display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem; }
+  .brand { font-weight: 600; font-size: 1.05rem; letter-spacing: -.01em; white-space: nowrap; }
+  .brand .spark { color: var(--accent); }
+  /* Plain text — NOT a pill/input; no border or background. */
+  #profile { flex: 1; min-width: 0; font-size: .85rem; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #profile .who { font-family: ui-monospace, Menlo, monospace; color: var(--ink); }
+  #profile a { color: var(--accent); }
+  .icon-btn { border: 1px solid var(--line); background: var(--panel); color: inherit;
+    width: 2.4rem; height: 2.4rem; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
+    display: grid; place-items: center; flex: none; }
+  .icon-btn:focus-visible, .composer button:focus-visible, .composer textarea:focus-visible,
+  a:focus-visible, input:focus-visible, select:focus-visible, [role="switch"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* Transcript */
+  #transcript { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .6rem; }
+  .msg { display: flex; }
+  .msg.user { justify-content: flex-end; }
+  .bubble { max-width: 80%; padding: .6rem .85rem; border-radius: 1.1rem; line-height: 1.5;
+    font-size: calc(1rem * var(--aa-font-scale, 1)); white-space: pre-wrap; word-wrap: break-word; }
+  .msg.user .bubble { background: var(--user-bg); color: var(--user-ink); border-bottom-right-radius: .35rem; }
+  .msg.assistant .bubble { background: var(--assist-bg); color: var(--assist-ink); border-bottom-left-radius: .35rem; }
+  .bubble.waiting { display: inline-flex; gap: .3rem; align-items: center; }
+  .bubble.waiting .dot { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; opacity: .35;
+    animation: blink 1.2s infinite ease-in-out; }
+  .bubble.waiting .dot:nth-child(2) { animation-delay: .2s; }
+  .bubble.waiting .dot:nth-child(3) { animation-delay: .4s; }
+  .waiting-stop { align-self: center; border: 1px solid var(--line); color: var(--muted); background: transparent;
+    border-radius: .5rem; padding: .2rem .7rem; font-size: .8rem; cursor: pointer; }
+  .waiting-stop:hover { border-color: #d93025; color: #d93025; background: rgba(217,48,37,.08); }
+  @keyframes blink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+  @media (prefers-reduced-motion: reduce) { .dot { animation: none !important; opacity: .6 !important; } }
+
+  /* Composer (pill, Gemini-like) */
+  .composer { padding: .5rem 1rem 1rem; }
+  #composer-form { display: flex; align-items: center; gap: .5rem; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 1.6rem; padding: .35rem .5rem .35rem 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  #composer-input { flex: 1; border: 0; resize: none; background: transparent; color: inherit;
+    font: inherit; font-size: calc(1rem * var(--aa-font-scale, 1)); padding: .5rem 0; max-height: 8rem; line-height: 1.4; }
+  #composer-input:focus { outline: none; }
+  .composer button { border: 0; border-radius: 50%; width: 2.5rem; height: 2.5rem; cursor: pointer;
+    font-size: 1.15rem; flex: none; display: grid; place-items: center; }
+  #mic { background: var(--pill); color: var(--ink); }
+  #mic.listening { background: #d93025; color: #fff; }
+  #send { background: var(--accent); color: var(--accent-ink); }
+  .hint { text-align: center; color: var(--muted); font-size: .75rem; margin: .4rem 0 0; }
+
+  /* Connection status (reconnecting / connected / failed) for a remote receiver. */
+  .conn { margin: 0 1rem; padding: .4rem .7rem; border-radius: .6rem; font-size: .8rem;
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .conn[hidden] { display: none; }
+  .conn.connecting { background: rgba(26,115,232,.14); color: var(--muted); }
+  .conn.connected { background: rgba(30,142,62,.16); color: #1e8e3e; }
+  .conn.failed, .conn.lost { background: rgba(217,48,37,.14); color: #d93025; }
+  .conn .pulse { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor;
+    animation: blink 1s infinite ease-in-out; }
+  .conn button { border: 1px solid currentColor; background: transparent; color: inherit;
+    border-radius: .4rem; padding: .1rem .5rem; font-size: .75rem; cursor: pointer; }
+
+  /* Settings drawer */
+  #drawer { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: grid; justify-items: start; z-index: 20; }
+  #drawer[hidden] { display: none; }
+  .drawer-panel { width: min(24rem, 94vw); height: 100%; background: var(--panel); border-right: 1px solid var(--line);
+    padding: 1rem 1.1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+  .drawer-panel h2 { font-size: 1rem; margin: 0; display: flex; align-items: center; justify-content: space-between; }
+  .field { display: flex; flex-direction: column; gap: .35rem; font-size: .9rem; }
+  .field label.row { display: flex; align-items: center; gap: .5rem; cursor: pointer; }
+  .field .desc { color: var(--muted); font-size: .78rem; }
+  .field select, .field input[type="text"] { font: inherit; padding: .4rem .5rem; border: 1px solid var(--line);
+    border-radius: .5rem; background: transparent; color: inherit; }
+  .drawer-panel .btn { align-self: flex-start; border: 1px solid var(--line); background: var(--pill); color: inherit;
+    border-radius: .5rem; padding: .35rem .7rem; font-size: .85rem; cursor: pointer; }
+  .drawer-panel hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
+  .drawer-panel a { color: var(--accent); font-size: .85rem; }
+
+  /* The demo app the controller drives — lives INSIDE the settings drawer, so
+     the main chat window stays clean. Adaptations you ask for show up here. */
+  details.demo { border: 1px solid var(--line); border-radius: .6rem; background: var(--bg); }
+  details.demo > summary { cursor: pointer; padding: .5rem .7rem; font-size: .85rem; color: var(--muted); }
+  #demo-app { padding: 0 .7rem .7rem; font-size: .9rem; }
+  #demo-app h3 { font-size: .95rem; margin: .6rem 0 .3rem; }
+  #demo-app p { margin: .3rem 0; }
+  #demo-app aside.ad { border: 1px dashed #b3261e; color: #b3261e; padding: .35rem; font-size: .78rem; border-radius: .4rem; }
+  #drive-note { color: var(--muted); font-size: .78rem; margin: .25rem 0 0; }
+  .btn.danger { border-color: #d93025; color: #d93025; }
+
+  /* The chat WINDOW mirrors adaptations applied via chat (synced from #demo-app
+     by chat.js) — a setting the person asks for also changes the UI they're in. */
+  #surface[style*="--aa-font-scale"] { font-size: calc(1rem * var(--aa-font-scale, 1)); }
+  #surface[style*="--aa-line-height"] #transcript { line-height: var(--aa-line-height, 1.5); }
+  #surface[style*="--aa-letter-spacing"] { letter-spacing: var(--aa-letter-spacing, 0); }
+  #surface.aa-dark { filter: invert(1) hue-rotate(180deg); }
+  #surface.aa-dyslexia { font-family: "Comic Sans MS", "OpenDyslexic", sans-serif; }
+  #surface.aa-reduce-motion * { animation: none !important; transition: none !important; }
+  #surface.aa-focus-mode .bubble { opacity: .65; }
+  #surface.aa-focus-mode .msg:last-child .bubble { opacity: 1; }
+  #surface[data-aa-contrast="yellow-black"] .bubble { background: #000 !important; color: #ff0 !important; }
+  #surface[data-aa-contrast="yellow-black"] #composer-form { background: #000; border-color: #ff0; }
+  #surface[data-aa-contrast="light"] { filter: contrast(0.62); }
+
+  /* Adaptation classes/vars the dom-receiver toggles on #demo-app. */
+  #demo-app[style*="--aa-font-scale"] { font-size: calc(1rem * var(--aa-font-scale, 1)); }
+  #demo-app[style*="--aa-line-height"] { line-height: var(--aa-line-height, 1.5); }
+  #demo-app[style*="--aa-letter-spacing"] { letter-spacing: var(--aa-letter-spacing, 0); }
+  #demo-app.aa-dark { filter: invert(1) hue-rotate(180deg); }
+  #demo-app.aa-dyslexia { font-family: "Comic Sans MS", "OpenDyslexic", sans-serif; }
+  #demo-app.aa-reduce-motion * { animation: none !important; transition: none !important; }
+  #demo-app.aa-hide-distractions .ad, #demo-app.aa-hide-distractions aside { display: none !important; }
+  #demo-app.aa-focus-mode p { opacity: .55; } #demo-app.aa-focus-mode p:hover { opacity: 1; }
+  #demo-app[data-aa-contrast="yellow-black"] { background: #000 !important; color: #ff0 !important; }
+  #demo-app[data-aa-contrast="light"] { filter: contrast(0.62); }
+</style>
+</head>
+<body>
+  <div class="app" id="surface">
+    <header>
+      <button id="hamburger" class="icon-btn" aria-label="Settings" aria-expanded="false" aria-controls="drawer" title="Settings">☰</button>
+      <span class="brand"><span class="spark">✦</span> A11y Toolkit Chat</span>
+      <div id="profile" role="status" aria-live="polite">No profile yet.</div>
+    </header>
+
+    <div id="transcript" role="log" aria-live="polite" aria-label="Conversation"></div>
+
+    <div id="conn-status" class="conn" role="status" aria-live="polite" hidden></div>
+
+    <div class="composer">
+      <form id="composer-form">
+        <textarea id="composer-input" rows="2" placeholder="Message — e.g. “bigger text”, “I’m blind”, “open google and search…”" aria-label="Message"></textarea>
+        <button type="button" id="mic" aria-pressed="false" aria-label="Speak (Ctrl+Space)" title="Speak (Ctrl+Space)">🎤</button>
+        <button type="submit" id="send" aria-label="Send" title="Send">➤</button>
+      </form>
+      <p class="hint">Adapts your profile, this window, or a connected app — by text or voice.</p>
+    </div>
+  </div>
+
+  <!-- Settings drawer (behind the hamburger) -->
+  <div id="drawer" hidden>
+    <div class="drawer-panel" role="dialog" aria-label="Settings" aria-modal="true">
+      <h2>Settings <button id="drawer-close" class="icon-btn" aria-label="Close settings" title="Close">✕</button></h2>
+
+      <div class="field">
+        <button type="button" id="reset-profile" class="btn danger">Reset profile</button>
+        <span class="desc">Forget the current user and clear all applied settings — start fresh, as no specific person.</span>
+      </div>
+
+      <hr>
+
+      <div class="field">
+        <strong style="font-size:.9rem;">What the chat controls</strong>
+        <span class="desc">By default the chat drives the demo preview (below) and this window. Connect a remote receiver to drive a real app instead.</span>
+        <label for="ws-url" style="font-size:.8rem;color:var(--muted);">Connect a remote receiver</label>
+        <input type="text" id="ws-url" placeholder="ws://127.0.0.1:9333">
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+          <button type="button" id="use-local-harness" class="btn">Connect browser-harness</button>
+          <button type="button" id="connect-remote" class="btn">Connect</button>
+        </div>
+        <p id="drive-note">Driving the demo preview + this window.</p>
+      </div>
+
+      <hr>
+
+      <div class="field">
+        <label class="row"><input type="checkbox" id="speak-cb"> Speak replies aloud</label>
+        <span class="desc">Read assistant replies with text-to-speech. Turn off if you use a screen reader.</span>
+      </div>
+
+      <div class="field" id="voice-row">
+        <label for="voice-select">Voice (output)</label>
+        <select id="voice-select" aria-label="Voice for spoken replies"></select>
+        <span class="desc">Which voice speaks replies. “Automatic” picks the best available.</span>
+      </div>
+
+      <div class="field" id="voicein-row">
+        <label class="row"><input type="checkbox" id="voicein-cb"> Voice input (microphone)</label>
+        <span class="desc">Show the mic button so you can speak your message.</span>
+      </div>
+
+      <hr>
+
+      <details class="demo" open>
+        <summary>Demo preview (what the controller drives)</summary>
+        <main id="demo-app" aria-label="Demo article">
+          <h3>Getting started with the toolkit</h3>
+          <p>The AI for Accessibility Toolkit is a platform-agnostic library developers embed to add
+             agentic accessibility to any app. This panel is a stand-in for a real application.</p>
+          <aside class="ad">Sponsored — a distracting advertisement block.</aside>
+          <h3>Reading and motion</h3>
+          <p>You can enlarge the text, raise contrast, reduce motion, or have the page read aloud —
+             all by chatting. Adaptations you ask for show up here.</p>
+        </main>
+      </details>
+
+      <hr>
+      <a href="/onboarding">Open full onboarding →</a>
+      <a href="/controller">Open the floating Controller demo →</a>
+    </div>
+  </div>
+
+  <script type="module" src="/chat.js"></script>
+</body>
+</html>

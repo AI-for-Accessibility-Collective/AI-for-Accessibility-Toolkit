@@ -16,7 +16,7 @@ import { createGeminiCaller } from '../src/gemini.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
 
 // The 36 extension `librarian*` message routes, independently transcribed
-// from personalized-extension/extension/background.js's switch (~lines
+// from a host's `librarian*` switch (~lines
 // 1798-1929) — an oracle kept separate from server/src/routes.js so this test
 // actually checks the server against the extension's alias table, not just
 // against its own copy of it.
@@ -37,11 +37,14 @@ assert.equal(EXTENSION_ALIAS_ROUTES.length, 36, 'the oracle itself must list 36 
 const DIRECT_SURFACE_ROUTES = [
   'interpretNeedsPrompt', 'hasScopedSetting', 'getScopedSetting',
   'removeScopedSetting', 'recordExplicitSetting',
+  // "back to my profile" — the bulk inverse of recordScopedSettings. Unrouted,
+  // a remote host's reset reaches nothing and still reports success.
+  'resetToProfile',
 ];
 // Natural-language notes — routed under their own method names.
 const NOTE_ROUTES = ['addNote', 'listNotes', 'updateNote', 'deleteNote', 'findNotes'];
 const ALL_ROUTES = [...EXTENSION_ALIAS_ROUTES, ...DIRECT_SURFACE_ROUTES, ...NOTE_ROUTES];
-assert.equal(ALL_ROUTES.length, 46, 'contract total must be 46 routes'); // CONTRACT.md "46 routes total"
+assert.equal(ALL_ROUTES.length, 47, 'contract total must be 47 routes'); // CONTRACT.md "47 routes total"
 
 const results = [];
 
@@ -98,7 +101,7 @@ async function main() {
     });
 
     // ---- meta: the full route set --------------------------------------------
-    await test('GET /v1/meta lists all 46 routes (36 extension aliases + 5 direct-surface + 5 notes), all supported', async () => {
+    await test('GET /v1/meta lists all 47 routes (36 extension aliases + 6 direct-surface + 5 notes), all supported', async () => {
       const r = await call('GET', '/v1/meta');
       assert.equal(r.status, 200);
       const methods = r.body.librarian.methods;
@@ -342,6 +345,38 @@ async function main() {
       const bad = Buffer.from('x:wrong-password!').toString('base64');
       const r2 = await fetch(base + '/admin/tokens', { headers: { authorization: `Basic ${bad}` } });
       assert.equal(r2.status, 401);
+    });
+
+    // ---- admin: list + delete user PROFILES (distinct from tokens) ----------
+    await test('admin/users: list includes onboarded profiles, delete wipes one, unauth is 401', async () => {
+      // Onboard two profiles (writing a profile field creates users/<uid>/).
+      for (const uid of ['profile-a', 'profile-b']) {
+        const t = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid, label: 'onboard' } });
+        const w = await call('POST', '/v1/librarian/setProfileField', { token: t.body.token, body: { args: ['supportAreas', ['vision']] } });
+        assert.equal(w.body.ok, true, `setProfileField for ${uid}`);
+      }
+
+      // Unauthorized listing is rejected.
+      const noauth = await call('GET', '/admin/users');
+      assert.equal(noauth.status, 401);
+
+      // List shows both profiles.
+      const list = await call('GET', '/admin/users', { adminToken: ADMIN_PASSWORD });
+      assert.equal(list.status, 200);
+      assert.ok(list.body.users.includes('profile-a'));
+      assert.ok(list.body.users.includes('profile-b'));
+
+      // Delete one; it disappears from the list, the other remains.
+      const del = await call('DELETE', '/admin/users/profile-a', { adminToken: ADMIN_PASSWORD });
+      assert.equal(del.status, 200);
+      assert.equal(del.body.ok, true);
+      const list2 = await call('GET', '/admin/users', { adminToken: ADMIN_PASSWORD });
+      assert.ok(!list2.body.users.includes('profile-a'));
+      assert.ok(list2.body.users.includes('profile-b'));
+
+      // Deleting a non-existent profile -> 404.
+      const missing = await call('DELETE', '/admin/users/nope', { adminToken: ADMIN_PASSWORD });
+      assert.equal(missing.status, 404);
     });
   } finally {
     await new Promise((resolve) => server.close(resolve));

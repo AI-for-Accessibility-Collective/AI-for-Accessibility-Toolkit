@@ -5,7 +5,7 @@
 //
 // Pure data + pure methods — no platform dependencies. The Chrome host wraps
 // this and assigns it to `globalThis.AA_TAXONOMY` (see
-// adapters/chrome/taxonomy.entry.js); other hosts import it directly or
+// platforms/chrome/taxonomy.entry.js); other hosts import it directly or
 // supply their own object implementing the same shape.
 //
 // v2 adds finance / health / government. These are *no-memory zones by

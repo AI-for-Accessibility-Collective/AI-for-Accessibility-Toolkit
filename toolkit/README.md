@@ -4,8 +4,12 @@ The platform-agnostic heart of the AI for Accessibility Toolkit: the **Librarian
 (personal memory/profile agent), the **Datastore** (Global/Mine catalog facade),
 the **ability and surface model**, the **skill layer**, and **cross-app sync**.
 Pure logic — no `chrome.*`, no DOM, no `Date.now()`. Everything platform-specific
-arrives through injected **ports**, so the same engine runs in a Chrome extension
+arrives through injected **ports**, so the same engine runs in a browser host
 today and an iOS or XR host tomorrow.
+
+> The optional **Controller** (a text/voice control surface) is *not* part of the
+> core — it's a repo-root sibling at [`../controller/`](../controller/) that
+> consumes this toolkit's settings vocabulary. The core never depends on it.
 
 ```
 toolkit/
@@ -27,8 +31,8 @@ toolkit/
 ├── sync/                  Cross-app sharing: grants.js (scopes, audience ceiling,
 │                          share-audit trail), blob.js, transport.js
 ├── ports/                 Port contracts a host must provide (JSDoc) + index
-├── adapters/chrome/       Chrome host adapter. build.js bundles these entries
-│                          into personalized-extension/extension/lib/*.js
+├── platforms/chrome/       Chrome host adapter (reference): port impls a
+│                          browser host bundles into its own lib scripts
 ├── hosts/                 Runnable consumers, no browser needed
 │   ├── xr-demo/           node hosts/xr-demo/demo.js
 │   └── skill-demo/        node hosts/skill-demo/demo.js

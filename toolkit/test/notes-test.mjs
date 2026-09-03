@@ -156,5 +156,21 @@ check('a note the PERSON writes is stored even while paused',
   (await L.addNote('I still want to say this.', { topic: 'paused-ok' })).ok === true);
 await L.setMemoryPaused(false);
 
+// ---- issue #6: writer field (person | agent | import) --------------------
+check('addNote defaults writer to person', (await L.addNote('a note', { topic: 'w1' })).note.writer === 'person');
+check('addNote records an agent writer', (await L.addNote('b note', { topic: 'w2', writer: 'agent' })).note.writer === 'agent');
+check('addNote coerces an unknown writer to person', (await L.addNote('c note', { topic: 'w3', writer: 'robot' })).note.writer === 'person');
+check('listNotes exposes writer', (await L.listNotes()).some(n => n.writer === 'agent'));
+
+// ---- issue #5 (label separator) + #6 (writer) on recordScopedSettings -----
+await L.recordScopedSettings('general', { fontScale: 140 }, { scopeLabel: 'everywhere', writer: 'agent' });
+const sf = (await L.listMemories()).memories.find(m => m.aspect === 'setting.fontScale');
+check('scopeLabel without a leading space is separated (#5)', /to 140 everywhere\.$/.test(sf.text), sf && sf.text);
+check('recordScopedSettings stores the writer (#6)', sf.writer === 'agent');
+await L.recordScopedSettings('category:news', { darkMode: true }, {});
+const dm = (await L.listMemories()).memories.find(m => m.aspect === 'setting.darkMode');
+check('built-in scope fallback still reads correctly', / on news sites\.$/.test(dm.text), dm && dm.text);
+check('recordScopedSettings defaults writer to person', dm.writer === 'person');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -6,13 +6,13 @@ authors:
   - name: AI for Accessibility Collective
 url: https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit
 repository-code: https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit
-abstract: AI-powered Chrome extension that adapts any webpage to each user's abilities.
+abstract: A general, platform-agnostic toolkit for adding agentic accessibility to any app — a personalization core that learns a person's needs as a portable, consent-gated ability model, with a developer catalog of adapters and skills.
 keywords:
   - accessibility
-  - chrome extension
   - assistive technology
-  - web accessibility
   - ability-based design
+  - personalization
+  - agentic
   - WCAG
   - AI
 license: Apache-2.0

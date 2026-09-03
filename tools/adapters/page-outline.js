@@ -9,10 +9,12 @@
 // tabindex added so focus() can land on the heading) is tracked in a Set so
 // disable() restores the page exactly.
 import { announce } from '../utils/ai.js';
+import { injectStyle } from './_primitives.js';
 
 export const PageOutline = {
   containerId: 'ai4a11y-page-outline',
   enabled: false,
+  style: null,          // the scoped colour stylesheet (removed on disable)
   addedIds: null,       // Set of headings we gave a generated id (for exact restore)
   addedTabindex: null,  // Set of headings we gave tabindex="-1" (for exact restore)
 
@@ -21,6 +23,21 @@ export const PageOutline = {
     this.enabled = true;
     this.addedIds = new Set();
     this.addedTabindex = new Set();
+
+    // Colour the panel's OWN elements defensively. Setting color on the <nav>
+    // only reaches inherited text — but the outline's contents are <a>, and the
+    // host page's own `a { color }` beats inheritance, so on a dark-themed site
+    // the links keep the page's near-white link colour and vanish on the panel's
+    // white background (measured 1.16:1 on DuckDuckGo dark). A scoped !important
+    // sheet wins over the host stylesheet. Injected UI must paint its own colours.
+    this.style = injectStyle(`${this.containerId}-styles`, `
+#${this.containerId} { background: #ffffff !important; color: #111111 !important; border-color: #333333 !important; }
+#${this.containerId} p, #${this.containerId} li { color: #111111 !important; }
+#${this.containerId} a,
+#${this.containerId} a:link,
+#${this.containerId} a:visited,
+#${this.containerId} a:hover,
+#${this.containerId} a:focus { color: #0b3d91 !important; background: transparent !important; text-decoration: underline !important; }`);
 
     const selector = options.selector || 'h1, h2, h3';
     let headings = [];
@@ -91,6 +108,9 @@ export const PageOutline = {
     if (!this.enabled) return;
     this.enabled = false;
     document.getElementById(this.containerId)?.remove();
+    try { this.style?.remove(); } catch { /* detached */ }
+    try { document.getElementById(`${this.containerId}-styles`)?.remove(); } catch { /* detached */ }
+    this.style = null;
     if (this.addedIds) {
       for (const h of this.addedIds) h.removeAttribute('id');
       this.addedIds.clear();

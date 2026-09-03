@@ -2,21 +2,23 @@
 
 ## Which part(s) does it affect?
 
-- [ ] Auditors (`tools/auditors/`)
-- [ ] Adapters (`tools/adapters/`)
-- [ ] Profiles (`tools/profiles/`)
-- [ ] CLI (`cli/`)
-- [ ] Background / AI (`extension/background.js`)
-- [ ] Popup UI (`extension/popup.*`)
-- [ ] Voice/Text Control (`webapp/`)
+- [ ] Core (`toolkit/core/` — Librarian, datastore, ability model, broker, skill engine)
+- [ ] Ports / surfaces (`toolkit/ports/`, `toolkit/surfaces/`)
+- [ ] Platform bindings / host port impls (`toolkit/platforms/`)
+- [ ] Catalog: auditors (`tools/auditors/`)
+- [ ] Catalog: adapters (`tools/adapters/`)
+- [ ] Catalog: profiles (`tools/profiles/`)
+- [ ] Registry / built-in skills (`toolkit/registry/`, `toolkit/skills/builtin/`)
+- [ ] Hosted service (`server/`)
 - [ ] Docs
 
 ## Who benefits?
 
-Which profiles/disabilities does this help?
+Which needs/profiles/disabilities does this help?
 
 ## How to test
 
-1. `npm install && npm run build`
-2. Load extension in Chrome: `chrome://extensions` → Load unpacked → `extension/`
-3. ...
+1. `npm install`
+2. `npm test` (toolkit + catalog suites)
+3. Relevant demos: `node toolkit/hosts/xr-demo/demo.js`, `node toolkit/hosts/skill-demo/demo.js`, `node server/test/server-test.mjs`
+4. If you changed the core API, regenerate `toolkit/API.md` + the skill and commit the result.

@@ -61,8 +61,11 @@ function boot() {
 }
 
 // Only boot when run directly (`node index.js`), not when imported (e.g. by
-// a future test that wants the boot() function itself).
-if (import.meta.url === `file://${process.argv[1]}`) {
+// a future test that wants the boot() function itself). Compare decoded
+// filesystem paths, not URL strings: import.meta.url is percent-encoded, so a
+// raw `file://` + argv comparison fails on paths with spaces or `~` (e.g. an
+// iCloud checkout) and the server would silently never start.
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
   boot();
 }
 

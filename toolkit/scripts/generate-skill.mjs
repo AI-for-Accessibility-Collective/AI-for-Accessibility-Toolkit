@@ -117,7 +117,7 @@ ${scriptLines}
 
 **Deploying**: \`server/Dockerfile\` builds from the repo root (it copies \`toolkit/\` + \`server/\`); \`cloudbuild.yaml\` + \`server/DEPLOYMENT.md\` document the Cloud Run deployment (small instance, Secret Manager for the two secrets, GCS bucket, IAM). \`server/API.md\` is generated from the route table (\`npm run docs\` in \`server/\`) and the live service serves the same data at \`GET /v1/meta\`. Liveness: use \`/v1/healthz\` (bare \`/healthz\` is intercepted at the run.app edge).
 
-**Extending the wire surface**: add a route entry in \`server/src/routes.js\` (plain \`{route, target, kind}\`, or a custom \`invoke\` for arg-shape dispatch — see \`setPause\`), then regenerate docs and update the oracle list in \`server/test/server-test.mjs\`. The extension-side facade lives in \`personalized-extension/extension/remote-librarian.js\`.`;
+**Extending the wire surface**: add a route entry in \`server/src/routes.js\` (plain \`{route, target, kind}\`, or a custom \`invoke\` for arg-shape dispatch — see \`setPause\`), then regenerate docs and update the oracle list in \`server/test/server-test.mjs\`. A remote-mode host wraps these routes in a Librarian-shaped facade.`;
 }
 
 const ADD_SKILL_SECTION = `This skill ships **inside the toolkit repo** at \`.claude/skills/ai4a11y-toolkit/SKILL.md\`, so anyone opening this repo in Claude Code gets it automatically. To use it from **your own project**:
@@ -222,7 +222,10 @@ Regenerate with: \`npm run docs\` (from \`toolkit/\`). Full reference (surfaces,
 `;
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+// Compare filesystem paths, not URL strings: import.meta.url is
+// percent-encoded (spaces, ~) so a raw `file://` + argv comparison fails on
+// paths like an iCloud checkout. fileURLToPath decodes both to the same form.
+const isMain = fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
   const model = await buildModel();
   const md = renderSkillMd(model);

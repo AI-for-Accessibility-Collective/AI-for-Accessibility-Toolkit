@@ -2,178 +2,172 @@
 
 # AI for Accessibility Toolkit
 
-**AI-powered web accessibility that adapts pages in real time**
+**A general, platform-agnostic toolkit for adding agentic accessibility to any app.**
 
-[![CI](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/actions/workflows/ci.yml)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
-[![Contributors](https://img.shields.io/github/contributors/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit)](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/graphs/contributors)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-
-[Quick Start](#quick-start) · [Examples](#examples) · [How It Works](#how-it-works) · [Profiles](#profiles) · [Docs](docs/README.md) · [Contributing](#contributing)
+[Quick Start](#quick-start) · [Concepts](#core-concepts) · [Using the Toolkit](#using-the-toolkit) · [Controller](#the-controller-optional) · [Catalog](#the-catalog) · [Architecture](docs/architecture.md) · [API](toolkit/API.md)
 
 </div>
 
 ---
 
-[axe-core](https://github.com/dequelabs/axe-core) and [Pa11y](https://github.com/pa11y/pa11y) find accessibility problems and hand you a report. This one fixes them instead, live in the browser and tuned to the person reading the page.
+Most accessibility tooling audits a single surface and hands you a report. This is different: it's an embeddable engine that learns **what a person needs** — bigger text, described images, reduced motion, simpler language — as one portable, consent-gated **AbilityModel**, and lets any host render that understanding natively. Onboard a user once; adapt everywhere they go.
 
-It's a Chrome extension, a developer CLI, and a small platform-agnostic core other apps can build on.
+It is **not an app.** It's a library you build on. Any developer — web, mobile, XR, desktop, server — can wire in a small set of platform ports and get a personalization core, an agent that turns plain-language needs into reusable recipes, and a catalog of ready-made accessibility fixes to draw from.
+
+## Why
+
+- **Understand the person, not just the page.** Per-app settings become one device-independent model of ability (`text.size × 1.4`, `vision.descriptions`, `motion: reduced`), with per-dimension confidence and provenance.
+- **Onboard once, adapt everywhere.** The same model renders to web CSS settings, XR angular text sizing, or any surface you write — no re-interviewing the user per device.
+- **Suggest, never apply.** Everything an inference could be wrong about flows through a proposal/consent queue. Nothing silently changes a person's profile.
+- **Privacy by default.** Single-writer stores, no-memory zones for sensitive categories, and a permission broker that shares understanding with other apps only under explicit, revocable, audited grants.
+- **Bring your own everything.** Inject your own storage, clock, scheduler, consent UI, and LLM. The core touches no platform API directly.
 
 ## Quick Start
 
-### Chrome extension — no code
+The core is plain ES modules. Wire it to the reference Node platform bindings and go — no browser, no build, no API key:
 
-It isn't on the Chrome Web Store yet, so build it once from source:
+```javascript
+import { createToolkit } from './toolkit/index.js';
+import { memoryKV } from './toolkit/platforms/node/kv.js';
+import { nodeClock, nodeScheduler, consoleConsent } from './toolkit/platforms/node/ports.js';
 
-```bash
-git clone https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit.git
-cd AI-for-Accessibility-Toolkit
-npm install && npm run build
+const { datastore, librarian } = createToolkit({
+  kv: memoryKV(),
+  clock: nodeClock(),
+  scheduler: nodeScheduler(),
+  consent: consoleConsent({ silent: true }),
+});
+
+await datastore.runMigrations();
+await librarian.setProfileField('supportAreas', ['vision']);
+
+// One device-independent understanding of the person…
+const model = await librarian.getAbilityModel();
+
+// …rendered for whatever surface you're building:
+import { renderWebSettings } from './toolkit/surfaces/web.js';
+import { renderXRSettings } from './toolkit/surfaces/xr.js';
+renderWebSettings(model);                        // { fontScale: 140, ... }
+renderXRSettings(model, { fovDegrees: 100 });    // { text: { angularSizeDeg, ... }, ... }
 ```
 
-Then load it and try it:
-
-1. Open `chrome://extensions` and turn on **Developer mode** (top-right).
-2. Click **Load unpacked** and choose the `extension/` folder.
-3. Open the [test site](https://ai4a11y-test-site.vercel.app/), click the toolbar icon, pick a profile, and watch the page change.
-
-Most adapters — bigger text, dark mode, wider spacing, a single-column reading view, dismissing popups, keeping focus visible — work right away with **no key**. The AI features (writing alt text, captions, plain-language summaries, translation) need a free [Gemini key](https://aistudio.google.com/apikey); paste it into the popup once.
-
-There's a second, personalized extension that adds onboarding, memory that learns what you need, and the Skill Builder. It builds separately:
+Run the end-to-end demos with no setup:
 
 ```bash
-cd personalized-extension && npm install && npm run build
+node toolkit/hosts/xr-demo/demo.js      # onboard on web → grant → XR renders → insight flows back → accept
+node toolkit/hosts/skill-demo/demo.js   # retrieve → resolve → build → validate → save a skill
+node examples/cross-surface.mjs         # one AbilityModel → web + XR, side by side
 ```
 
-Load `personalized-extension/extension/` the same way. Keep Developer mode on — the adapters it builds for you run as user-scripts, which Chrome only allows there.
+Full method reference: [`toolkit/API.md`](toolkit/API.md).
 
-### Command line — for developers and agents
+## Core Concepts
 
-```bash
-pip install -e . && playwright install chromium
+| Concept | What it is |
+|---|---|
+| **AbilityModel** | The device-independent understanding of a person's needs — relative magnitudes, need-named enums, per-dimension confidence. The thing every surface renders. |
+| **Librarian** | The personal memory/profile agent. Owns the profile and memory, learns from settings over time, retrieves/builds skills, and gatekeeps what other apps may read. |
+| **Engineer** (skill builder) | Turns a plain-language need + the ability profile into a `SKILL.md` recipe that composes adapters. The user validates before it's saved. |
+| **Ports** | The small interfaces a host implements — `KVStore`, `Clock`, `Scheduler`, `Consent`, and an actuation port. The core never calls a platform API directly. |
+| **Surfaces** | Pure renderers (`toolkit/surfaces/*.js`) that map an AbilityModel to platform-specific settings. |
+| **Adapter** | Executable code that performs one accessibility fix (dark mode, bigger text, AI alt text, …). The developer catalog lives in `tools/adapters/`. |
+| **Skill** (`SKILL.md`) | A model-facing recipe naming which adapters to apply, with what settings, for a need — resolves deterministically at apply-time (no LLM). |
 
-ai4a11y session start                    # open a browser
-ai4a11y session go https://example.com
-ai4a11y session audit                    # list what's inaccessible
+See [docs/architecture.md](docs/architecture.md) for how they fit together, and the [`ai4a11y-toolkit` skill](.claude/skills/ai4a11y-toolkit/SKILL.md) for an embedding walkthrough.
+
+## Using the Toolkit
+
+Three ways to build on it, depending on your host:
+
+1. **Embed the core directly (any JS runtime).** `createToolkit({ ports }) → { datastore, librarian }`. Implement the ports for your platform — the Node bindings in [`toolkit/platforms/node/`](toolkit/platforms/node/) are the template; a Chrome host implementation lives in [`toolkit/platforms/chrome/`](toolkit/platforms/chrome/).
+2. **Call the hosted HTTP service (any language).** Run [`server/`](server/) (locally or on Cloud Run) and hit the same Librarian methods over HTTP with a bearer token — for non-JS clients, or to keep the profile server-side. See [server/README.md](server/README.md).
+3. **Draw from the catalog.** Use the ready-made accessibility fixes, detectors, and profiles in [`tools/`](tools/) — and the tools/skills registry in [`toolkit/registry/`](toolkit/registry/) — as building blocks, whether or not you embed the personalization core.
+4. **Drop in the Controller.** Give people a text/voice way to drive your app: implement the `ControlPort` for your surface and mount the [`controller/`](controller/) widget (or connect it to a remote receiver). Optional and independent of the core.
+
+## The Controller (optional)
+
+A ready-made, **platform-neutral text/voice control surface** that lets a person
+drive any app — "bigger text", "reduce motion", "read this", "open wikipedia.org",
+or a free-form task — through one neutral **`ControlPort`**. It's an *optional*
+sibling of the core ([`controller/`](controller/)), not part of it: the toolkit
+never depends on the controller; the controller consumes the toolkit's settings
+vocabulary.
+
+- **One core, any receiver.** A local web page, or a remote app (mobile / desktop /
+  XR / another browser) that implements the `ControlPort` and connects back over a
+  channel — the same controller drives all of them. See
+  [`controller/PROTOCOL.md`](controller/PROTOCOL.md).
+- **Renders itself per operator.** The widget's own input/output (voice vs text,
+  spoken vs a live region, large targets) is derived from the operator's
+  AbilityModel — a screen-reader user hears results in their own voice, never a
+  second TTS voice.
+- **Deterministic first, LLM optional.** A zero-dependency grammar handles the
+  settings vocabulary; a host-supplied LLM lane and a `task` catch-all handle the
+  rest.
+
+`createController({ control, operator }) → { handle, presentation }`. Design +
+milestones: [`controller/DESIGN.md`](controller/DESIGN.md).
+
+## Onboarding + Chat (example service)
+
+[`onboarding/`](onboarding/) is a tiny, zero-dependency web service — a runnable
+reference for the "capture a profile" half of a host. It embeds the toolkit
+locally or proxies a running `server/`, and (with an admin password) lists and
+deletes profiles. It serves three surfaces on one port:
+
+| path | what it is |
+|---|---|
+| **`/chat`** | The front door (`/` redirects here). One conversational input — text or voice — that does **both** halves: describing yourself (*"I'm blind"*) updates your profile; a setting or command (*"bigger text"*, *"turn off captions"*, *"open google and search…"*) is carried to the app through the neutral `ControlPort`. Also: profile always visible, "back to my profile" to undo drift, and a settings drawer for speech in/out. |
+| `/onboarding` | The step-by-step form — pick support areas, describe your needs, hear it read back. |
+| `/controller` | The floating Controller widget driving a demo app (or a remote receiver). |
+
+The chat is deliberately **deterministic-first**: the grammar and the
+self-description heuristic resolve instantly and offline, and anything they
+don't claim is passed to the app rather than guessed at. An LLM lane is
+optional — without a key the surface still works fully for settings and
+onboarding.
+
+## The Catalog
+
+A developer library of reusable accessibility building blocks, usable on their own:
+
+- **Adapters** ([`tools/adapters/`](tools/adapters/)) — 40+ fixes: dark mode, text scaling, AI alt text, captions, reduced motion, reader mode, chart-to-table, and more.
+- **Auditors** ([`tools/auditors/`](tools/auditors/)) — detectors that find issues for adapters to fix (missing alt text, low contrast, unlabeled controls).
+- **Validators** ([`tools/validators/`](tools/validators/)) — the verifier engine for agentic flows: check that a page matches what the person asked an agent for and decide how hard to insist. Pairs with the `contract-mismatch` auditor and the `agent-watch` adapter. Machinery only — a host renders its own validation UI.
+- **Profiles** ([`tools/profiles/`](tools/profiles/)) — evidence-based ability presets (Blind, Low Vision, Dyslexia, Motor, …) mapping to settings.
+- **Registry** ([`toolkit/registry/tools.js`](toolkit/registry/tools.js)) — the single catalog of tools + their settings vocabulary that grounds the Engineer and any host UI.
+- **Starter skills** ([`toolkit/skills/builtin/`](toolkit/skills/builtin/)) — `SKILL.md` recipes composing adapters for common needs.
+
+## Repository Layout
+
 ```
-
-`audit` runs [axe-core](https://github.com/dequelabs/axe-core) and needs no key. The AI commands (`describe`, `simplify`) use Claude — run `export ANTHROPIC_API_KEY=sk-...` first. Add `--json` to any command for output you can pipe into scripts, CI, or an agent.
-
-## Examples
-
-### In the extension
-
-Open the [test site](https://ai4a11y-test-site.vercel.app/) and try these — the first three need no key:
-
-- **Dyslexia** → text grows, line and letter spacing open up, and side clutter dims on a long article.
-- **Low Vision** → 150% text, a bold focus ring that follows your keyboard, and a magnifier that tracks the cursor.
-- **Motor** → bigger click targets, sticky bars unpinned, and a "click again to confirm" guard on Delete / Submit buttons.
-- **Blind** *(needs a Gemini key)* → missing alt text and video captions get written for you; press **Alt+D** on any element to hear what it is.
-- **Skill Builder** *(personalized extension)* → type *"make Reddit calmer to read"* and it assembles a reusable recipe (less motion, fewer popups) you approve before it saves.
-
-### From the command line
-
-```bash
-# 1. What's inaccessible on a page? (JSON pipes straight into CI or an agent)
-ai4a11y session start
-ai4a11y session go https://news.ycombinator.com
-ai4a11y session audit --json
-
-# 2. Adapt the page for someone, then read it back in plain language
-ai4a11y session profile dyslexia
-ai4a11y session enable visualAssist fontScale=150
-ai4a11y session describe
-
-# 3. Scaffold a new fix, pre-wired to the profiles it serves
-ai4a11y create fix-carousels --type adapter --profiles blind,motor
+toolkit/     Platform-agnostic core — Librarian, datastore, ability model, broker,
+             skill engine, ports, sync, protocol, surfaces, reference platform bindings
+tools/       Developer catalog — adapters, auditors, profiles, utils
+controller/  Optional text/voice control surface — ControlPort, grammar, mounts,
+             remote transport, web UI, demo (a sibling; the core never depends on it)
+server/      Hosted HTTP service exposing the core to any language/runtime
+onboarding/  Example web service: /chat (conversational front door), /onboarding
+             (step-by-step form), /controller (Controller demo) — one port
+examples/    Runnable, dependency-free examples
+docs/        Architecture, API, and design docs
 ```
-
-## How It Works
-
-Pick an ability profile. There are twelve, from Low Vision to Dyslexia to Deaf/HoH, and the page adapts as you browse.
-
-Underneath, **auditors** scan for problems like missing alt text or low contrast, and **adapters** fix them (dark mode, bigger text, AI alt text, captions). A **skill** bundles a few adapters into a named recipe for a common case, such as a reading aid that enlarges text and strips clutter at once.
-
-The personalized extension goes further: it remembers what you need, and its Skill Builder turns a plain-language request into a new skill. That engine lives in `toolkit/`, a standalone core meant to run beyond the browser.
-
-<p align="center">
-  <img src="docs/diagrams/toolkit-layers.png" alt="Toolkit layers: every interface runs on the same core" width="440">
-</p>
-
-The [architecture doc](docs/architecture.md) walks through the rest — the Librarian, Engineer, and Assistant agents, and how the core stays portable.
-
-## Profiles
-
-Twelve built-in profiles — Blind, Low Vision, Color Blind, Deaf/HoH, Motor, Dyslexia, ADHD, Cognitive, Older Adult, Anxiety, Sensory, Light Sensitive. Each maps to evidence-based settings (W3C WCAG/COGA, WebAIM, NNGroup) in [`tools/profiles/settings.json`](tools/profiles/settings.json). Combine them and they merge — any profile that enables a fix wins, and the largest text size wins.
 
 ## Contributing
 
-The common contributions:
+Add an adapter or auditor to the catalog, a profile, a `SKILL.md` recipe, a surface renderer, or a platform port. See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/API.md](docs/API.md).
 
-- **Fix an issue** → add an adapter in `tools/adapters/`
-- **Detect an issue** → add an auditor in `tools/auditors/`
-- **Combine adapters for a need** → add a skill (`SKILL.md`) in `toolkit/skills/builtin/`
-- **Add a profile** → edit `tools/profiles/settings.json`
-- **Build on the personalization toolkit** → generated API reference in [toolkit/API.md](toolkit/API.md), hosted-service contract in [server/CONTRACT.md](server/CONTRACT.md)
+## Principles
 
-Scaffold most of it with `ai4a11y create <name> --type adapter|auditor`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide and [docs/API.md](docs/API.md) for the API. The full list of interfaces and teams is in [docs/](docs/README.md).
-
-Working with Claude Code? This repo ships a generated skill at
-[.claude/skills/ai4a11y-toolkit/](.claude/skills/ai4a11y-toolkit/SKILL.md) —
-auto-discovered when you open this repo, and copyable into your own project
-(`cp -r .claude/skills/ai4a11y-toolkit <your-repo>/.claude/skills/`) so Claude
-can embed the toolkit, implement ports, call the hosted service, or stand up
-your own server instance. Regenerate after toolkit changes with `npm run docs`
-in `toolkit/`.
-
-## Roadmap
-
-### Month 1 — Collect
-- [x] Set up repo
-- [x] Define architecture spec
-- [x] Define agent cards
-- [x] Collect agent cards from all teams
-
-### Month 3 — Build
-- [ ] Collect team codebases (in progress)
-- [x] Build Chrome extension (prototype 1)
-- [x] Build personalized extension (onboarding + memory)
-- [x] Build CLI (prototype 2)
-- [x] Implement ability profiles
-- [x] Support multiple ability profiles
-- [x] Build Ability Profile agent (learns your needs over time)
-- [x] Prepopulate basic accessibility tools (alt text, labels, contrast, dark mode, focus mode, etc.)
-- [x] Build skill layer (skills that combine adapters)
-- [x] Build Skill Builder agent (turns a plain-language request into a skill)
-- [x] Build a reusable core that works beyond the browser
-- [x] Add automated tests
-- [ ] Define design principles (in progress)
-- [x] Build adaptive validation interface (people review and correct adaptations)
-- [x] Add privacy and sharing controls (keep private, or share with friends/family/org)
-- [ ] Build evaluation benchmark (test sites arena) (in progress)
-- [ ] Integrate team projects
-- [ ] Unify the two extensions on shared tools (in progress — most adapters now share one source)
-- [x] Co-design with disability community
-
-### Month 6 — Ship
-- [ ] Write documentation (in progress)
-- [ ] Create example applications (in progress)
-- [ ] Test with users (in progress)
-- [ ] Developer validation (hackathon)
-- [ ] Native mobile app (iOS)
-- [ ] XR agent — real-time adaptations in the physical world
-- [ ] Security review before public release
-- [ ] Publish to Chrome Web Store
-- [ ] Publish CLI to PyPI
-- [ ] Release publicly
-
-## Contributors
-
-[![Contributors](https://contrib.rocks/image?repo=AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit)](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit/graphs/contributors)
+- **Ability-based** — adapt to what a person *can* do, not a diagnosis.
+- **Suggest, never apply** — proposals with user validation; no silent changes.
+- **Privacy by default** — single-writer stores, no-memory zones, permission-gated sharing.
+- **Platform-agnostic** — the core stays free of any surface; hosts and surfaces bring the platform.
+- **Build on existing tools** — axe-core, DarkReader, Readability, and your choice of LLM.
 
 ## Security & License
 
-Custom adapters are linted before running but have full page access — only install ones you trust. Report vulnerabilities via [SECURITY.md](SECURITY.md). Licensed under Apache 2.0 ([LICENSE](LICENSE)).
+Report vulnerabilities via [SECURITY.md](SECURITY.md). Licensed under Apache 2.0 ([LICENSE](LICENSE)).
 
 ---
 
@@ -197,5 +191,5 @@ Custom adapters are linted before running but have full page access — only ins
   &nbsp;&nbsp;
   <a href="https://www.google.org/"><img src="docs/logos/google.png" alt="Google.org" height="28"></a>
 </p>
-
+</div>
 </div>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessibility Onboarding</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 44rem; margin: 0 auto; padding: 1.5rem; line-height: 1.5;
+    color: #1a1a1a; background: #fff;
+  }
+  @media (prefers-color-scheme: dark) { body { color: #eee; background: #16181c; } }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
+  .target { font-size: .85rem; color: #667; }
+  .target code { background: rgba(128,128,128,.15); padding: .1rem .35rem; border-radius: 4px; }
+  .current { margin: .5rem 0 0; padding: .6rem .75rem; border: 1px solid rgba(128,128,128,.35);
+             border-radius: 8px; background: rgba(31,111,235,.08); font-size: .95rem; }
+  .current strong { font-family: ui-monospace, Menlo, monospace; }
+  .need-row { display: flex; gap: .5rem; align-items: stretch; }
+  .need-row input { flex: 1; }
+  .need-row button { margin-top: 0; white-space: nowrap; }
+  .mic-btn[aria-pressed="true"] { background: #b3261e; color: #fff; border-color: #b3261e; }
+  .voice-bar { display: flex; gap: .5rem; margin: .5rem 0 .25rem; }
+  .voice-bar button { margin: 0; }
+  section { border: 1px solid rgba(128,128,128,.3); border-radius: 10px; padding: 1.25rem; margin: 1.25rem 0; }
+  h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
+  label { display: block; font-weight: 600; margin: .75rem 0 .25rem; }
+  input[type=text], input[type=password] {
+    width: 100%; padding: .55rem .65rem; font-size: 1rem;
+    border: 1px solid #99a; border-radius: 6px; background: transparent; color: inherit;
+  }
+  .areas { display: flex; flex-wrap: wrap; gap: .5rem .9rem; margin-top: .35rem; }
+  .areas label { display: inline-flex; align-items: center; gap: .35rem; font-weight: 400; margin: 0; }
+  button {
+    margin-top: 1rem; padding: .55rem 1rem; font-size: 1rem; font-weight: 600;
+    border: 0; border-radius: 6px; background: #1f6feb; color: #fff; cursor: pointer;
+  }
+  button:hover { background: #1a5fd0; }
+  button.secondary { background: transparent; color: inherit; border: 1px solid #99a; }
+  button.danger { background: #b3261e; padding: .3rem .6rem; font-size: .85rem; margin: 0; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #ff8c00; outline-offset: 2px; }
+  .status { margin-top: .9rem; padding: .6rem .75rem; border-radius: 6px; font-size: .95rem; }
+  .status.ok { background: rgba(31,122,79,.15); }
+  .status.err { background: rgba(179,38,30,.15); }
+  .muted { color: #778; font-size: .85rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: .75rem; }
+  th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid rgba(128,128,128,.25); font-size: .9rem; }
+  code.uid { font-family: ui-monospace, Menlo, monospace; }
+  .row-actions { text-align: right; }
+</style>
+</head>
+<body>
+  <h1>Accessibility Onboarding</h1>
+  <div class="voice-bar">
+    <button type="button" id="mic2" class="mic-btn secondary" hidden aria-pressed="false" aria-label="Speak your need">🎤 Speak</button>
+    <button type="button" id="hear" class="secondary" hidden>🔊 Hear setting</button>
+    <button type="button" id="add-top">Update profile</button>
+  </div>
+  <p class="target" id="target">Loading…</p>
+  <div id="current" class="current" role="status" aria-live="polite">Current profile: not set</div>
+
+  <section aria-labelledby="add-h">
+    <h2 id="add-h">Add a profile</h2>
+    <p class="muted">Describe the support this person needs. This creates an ability profile the toolkit can adapt to.</p>
+    <form id="add-form">
+      <label for="need">What do you need? <span class="muted">(in your own words)</span></label>
+      <div class="need-row">
+        <input type="text" id="need" name="need" autocomplete="off"
+               placeholder="e.g. small text is hard to read; too much motion is distracting">
+        <button type="button" id="mic" class="mic-btn secondary" hidden aria-pressed="false" aria-label="Speak your need">🎤 Speak</button>
+      </div>
+
+      <label id="areas-label">Specific areas of need</label>
+      <div class="areas" role="group" aria-labelledby="areas-label" id="areas"></div>
+
+      <!-- The "vision" area spans two OPPOSITE populations. Capture WHICH one
+           explicitly rather than guessing from the free text — it is the single
+           most consequential fact about how the page should adapt. -->
+      <fieldset id="vision-kind" hidden
+                style="border:1px solid rgba(128,128,128,.35); border-radius:8px; margin-top:.6rem; padding:.5rem .8rem;">
+        <legend style="font-weight:600; font-size:.9rem; padding:0 .3rem;">Which best describes your vision needs?</legend>
+        <label style="display:block; font-weight:400; margin:.3rem 0;">
+          <input type="radio" name="visionKind" value="blind">
+          I use a screen reader / am blind — structure &amp; descriptions, <strong>no magnification</strong>
+        </label>
+        <label style="display:block; font-weight:400; margin:.3rem 0;">
+          <input type="radio" name="visionKind" value="lowVision">
+          I have low vision — <strong>bigger text</strong> &amp; higher contrast
+        </label>
+      </fieldset>
+
+      <label for="uid">Profile id <span class="muted">(optional — leave blank to auto-generate)</span></label>
+      <input type="text" id="uid" name="uid" autocomplete="off" placeholder="auto">
+
+      <button type="submit">Update profile</button>
+    </form>
+    <div id="add-status" class="status" role="status" aria-live="polite" hidden></div>
+  </section>
+
+  <section aria-labelledby="mng-h">
+    <h2 id="mng-h">Manage profiles</h2>
+    <p class="muted">Enter the admin password to list and delete profiles.</p>
+    <form id="admin-form">
+      <label for="admin-pass">Admin password</label>
+      <input type="password" id="admin-pass" name="admin-pass" autocomplete="off">
+      <button type="submit">Load profiles</button>
+    </form>
+    <div id="admin-status" class="status" role="status" aria-live="polite" hidden></div>
+    <table id="profiles-table" hidden>
+      <thead><tr><th scope="col">Profile</th><th scope="col">Configuration</th><th scope="col" class="row-actions">Action</th></tr></thead>
+      <tbody id="profiles-body"></tbody>
+    </table>
+  </section>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let adminPass = '';
+let currentProfile = null;   // last-loaded {uid, exists, supportAreas, freeText}
+
+// ── Voice (Web Speech API) — optional; hidden if the browser lacks support ──
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const TTS = 'speechSynthesis' in window;
+let recog = null, listening = false, usedVoice = false;
+
+function speak(text) {
+  if (!TTS || !text) return;
+  try { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); } catch (e) {}
+}
+function settingSentence(d) {
+  if (!d || !d.uid) return 'No profile selected.';
+  if (d.exists === false) return 'Profile ' + d.uid + ' is not set yet.';
+  const areas = (d.supportAreas && d.supportAreas.length) ? d.supportAreas.join(', ') : 'none';
+  const needs = d.freeText ? ('You said: ' + d.freeText + '. ') : '';
+  return needs + 'Specific areas of need: ' + areas + '.';
+}
+
+// ── Current-profile banner: the targeted uid's name + configuration ─────────
+function renderCurrent(d) {
+  const el = $('current');
+  el.textContent = '';
+  if (!d || !d.uid) { el.textContent = 'Current profile: not set'; return; }
+  el.append('Current profile: ');
+  const name = document.createElement('strong'); name.textContent = d.uid; el.append(name);
+  if (!d.exists) { el.append(' — not set yet'); return; }
+  const parts = [];
+  if (d.supportAreas && d.supportAreas.length) parts.push('Support areas: ' + d.supportAreas.join(', '));
+  if (d.freeText) parts.push('Needs: “' + d.freeText + '”');  // .append(string) = text node, no HTML
+  el.append(' · ' + (parts.length ? parts.join(' · ') : 'Configuration: not set'));
+}
+
+async function loadCurrent() {
+  const uid = $('uid').value.trim();
+  if (uid) localStorage.setItem('onb-uid', uid); else localStorage.removeItem('onb-uid');
+  if (!uid) { currentProfile = null; renderCurrent(null); return; }
+  try {
+    const d = await (await fetch('/api/profile?uid=' + encodeURIComponent(uid))).json();
+    currentProfile = d; renderCurrent(d);
+  } catch { currentProfile = { uid, exists: false }; renderCurrent(currentProfile); }
+}
+
+function setStatus(el, msg, kind) {
+  el.textContent = msg; el.hidden = false;
+  el.className = 'status ' + (kind || '');
+}
+
+async function loadConfig() {
+  try {
+    const cfg = await (await fetch('/api/config')).json();
+    $('target').innerHTML = cfg.mode === 'remote'
+      ? 'Target: <strong>remote server</strong> <code>' + cfg.target + '</code>'
+      : 'Target: <strong>local library</strong> <code>' + cfg.target + '</code>';
+    const box = $('areas');
+    box.innerHTML = '';
+    (cfg.supportAreas || []).forEach((a) => {
+      const id = 'area-' + a;
+      const lbl = document.createElement('label');
+      lbl.innerHTML = '<input type="checkbox" value="' + a + '" id="' + id + '"> ' + a;
+      box.appendChild(lbl);
+    });
+    if (!cfg.adminEnabled) {
+      setStatus($('admin-status'), 'Admin is disabled — start the service with ADMIN_PASSWORD to list/delete profiles.', 'err');
+    }
+  } catch (e) { $('target').textContent = 'Could not load config: ' + e.message; }
+}
+
+$('add-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const supportAreas = [...document.querySelectorAll('#areas input:checked')].map((c) => c.value);
+  // Explicit blind vs low-vision choice (only when the vision area is selected).
+  const visionKind = supportAreas.includes('vision')
+    ? (document.querySelector('#vision-kind input:checked')?.value || undefined)
+    : undefined;
+  const payload = { uid: $('uid').value.trim() || undefined, freeText: $('need').value.trim(), supportAreas, visionKind };
+  if (!payload.freeText && supportAreas.length === 0) {
+    return setStatus($('add-status'), 'Enter a need or pick at least one area.', 'err');
+  }
+  speak('Updating the profile');    // announce the update on click / Enter
+  setStatus($('add-status'), 'Updating…', '');
+  try {
+    const r = await fetch('/api/onboard', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    const needs = d.freeText ? '“' + d.freeText + '”' : '(none)';
+    const areas = d.supportAreas.length ? d.supportAreas.join(', ') : 'none';
+    setStatus($('add-status'), 'Updated profile “' + d.uid + '” · Needs: ' + needs + ' · Specific areas of need: ' + areas, 'ok');
+    $('add-form').reset();
+    updateVisionKindVisibility();     // reset() cleared the checkboxes — hide the sub-question
+    $('uid').value = d.uid;           // keep the just-updated profile as the current one
+    loadCurrent();
+    usedVoice = false;
+    if (!$('profiles-table').hidden) refreshProfiles();
+  } catch (e) { setStatus($('add-status'), 'Failed: ' + e.message, 'err'); }
+});
+
+async function refreshProfiles() {
+  try {
+    const r = await fetch('/api/profiles', { headers: { 'x-admin-password': adminPass } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    const body = $('profiles-body');
+    body.innerHTML = '';
+    (d.profiles || []).forEach((p) => {
+      const uid = p.uid;
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      const code = document.createElement('code'); code.className = 'uid';
+      code.textContent = uid; tdName.appendChild(code);
+
+      const tdCfg = document.createElement('td');
+      const bits = [];
+      if (p.freeText) bits.push('“' + p.freeText + '”');
+      if (p.supportAreas && p.supportAreas.length) bits.push(p.supportAreas.join(', '));
+      tdCfg.textContent = bits.length ? bits.join(' · ') : 'not set';  // textContent = no HTML injection
+
+      const tdAct = document.createElement('td');
+      tdAct.className = 'row-actions';
+      const btn = document.createElement('button');
+      btn.className = 'danger'; btn.textContent = 'Delete';
+      btn.setAttribute('aria-label', 'Delete profile ' + uid);
+      btn.onclick = () => del(uid);
+      tdAct.appendChild(btn);
+
+      tr.append(tdName, tdCfg, tdAct);
+      body.appendChild(tr);
+    });
+    $('profiles-table').hidden = false;
+    setStatus($('admin-status'), (d.profiles || []).length + ' profile(s).', 'ok');
+  } catch (e) {
+    $('profiles-table').hidden = true;
+    setStatus($('admin-status'), 'Failed: ' + e.message, 'err');
+  }
+}
+
+async function del(uid) {
+  if (!confirm('Delete profile “' + uid + '”? This removes its ability profile and memory.')) return;
+  try {
+    const r = await fetch('/api/profiles/' + encodeURIComponent(uid), { method: 'DELETE', headers: { 'x-admin-password': adminPass } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    refreshProfiles();
+  } catch (e) { setStatus($('admin-status'), 'Delete failed: ' + e.message, 'err'); }
+}
+
+$('admin-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  adminPass = $('admin-pass').value;
+  refreshProfiles();
+});
+
+// Typing/selecting a different profile id updates the banner.
+$('uid').addEventListener('change', loadCurrent);
+
+// Show the blind vs low-vision question only when the vision area is selected.
+function updateVisionKindVisibility() {
+  const on = !!document.querySelector('#areas input[value="vision"]:checked');
+  $('vision-kind').hidden = !on;
+  if (!on) document.querySelectorAll('#vision-kind input:checked').forEach((r) => { r.checked = false; });
+}
+$('areas').addEventListener('change', updateVisionKindVisibility);
+
+// The top Add button submits the same form as the one in the section.
+$('add-top').addEventListener('click', () => $('add-form').requestSubmit());
+
+// Voice input — dictate the need into the field (optional). Two Speak buttons
+// (one at the top, one by the field) share one recognition + listening state.
+const micBtns = ['mic', 'mic2'].map((id) => $(id)).filter(Boolean);
+function setMicState(on) {
+  listening = on;
+  micBtns.forEach((b) => { b.textContent = on ? '⏹ Stop' : '🎤 Speak'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+}
+if (SR) {
+  micBtns.forEach((b) => { b.hidden = false; });
+  recog = new SR(); recog.lang = 'en-US'; recog.interimResults = true; recog.maxAlternatives = 1;
+  recog.onresult = (e) => {
+    let txt = ''; for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
+    $('need').value = txt.replace(/\s+/g, ' ').trim();
+    usedVoice = true;   // the need was dictated (see onend for the read-back)
+  };
+  // Manual typing clears the flag (programmatic value sets above don't fire 'input').
+  $('need').addEventListener('input', () => { usedVoice = false; });
+  recog.onerror = (e) => setStatus($('add-status'),
+    'Voice input: ' + (e.error === 'not-allowed' ? 'microphone permission denied.' : e.error), 'err');
+  recog.onend = () => {
+    setMicState(false);
+    if (usedVoice) {
+      const said = $('need').value.trim();
+      if (said) speak('You said ' + said);   // read the recognized text back
+      $('add-top').focus();                   // …then land on Update so Enter accepts
+    }
+  };
+  micBtns.forEach((b) => b.addEventListener('click', () => {
+    if (listening) { recog.stop(); return; }
+    try {
+      recog.start(); setMicState(true);
+      setStatus($('add-status'), 'Listening… speak your need, then press Stop.', '');
+    } catch (e) {}
+  }));
+}
+
+// Voice output — hear the current setting read aloud (optional).
+if (TTS) {
+  $('hear').hidden = false;
+  $('hear').addEventListener('click', () => speak(settingSentence(currentProfile)));
+}
+
+(async () => {
+  await loadConfig();
+  updateVisionKindVisibility();
+  const saved = localStorage.getItem('onb-uid');
+  if (saved) $('uid').value = saved;
+  loadCurrent();
+})();
+</script>
+</body>
+</html>

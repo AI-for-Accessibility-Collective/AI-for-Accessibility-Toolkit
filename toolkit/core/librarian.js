@@ -9,7 +9,7 @@
 // DOM. It depends only on injected ports — a `datastore`, the `taxonomy`, a
 // `clock`, a `scheduler`, a `consent` channel, and a `demo` hook (see
 // ../ports). The Chrome host wires these and assigns the result to
-// `globalThis.Librarian` (adapters/chrome/librarian.entry.js). Gemini access
+// `globalThis.Librarian` (platforms/chrome/librarian.entry.js). Gemini access
 // is still injected post-construction via `setGeminiCaller`, the pre-existing
 // seam (unchanged in this refactor).
 //
@@ -126,6 +126,7 @@ export function createLibrarian({
       topic: r.aspect && r.aspect.startsWith('note.') ? r.aspect.slice(5) : null,
       scope,
       source: r.source,
+      writer: r.writer || 'person', // who wrote it: person | agent | import (issue #6)
       importance: r.importance,
       status: r.status,
       createdAt: r.createdAt,
@@ -404,11 +405,21 @@ export function createLibrarian({
     async recordScopedSettings(scope, settings, opts = {}) {
       const now = clock.now();
       scope = VALID_SCOPE.test(scope || '') ? scope : 'general';
-      const where = opts.scopeLabel || (
-        scope === 'general' ? '' :
-        scope.startsWith('category:') ? ` on ${scope.slice(9)} sites` :
-        scope.startsWith('origin:') ? ` on ${scope.slice(7)}` :
-        scope.startsWith('context:') ? ` for ${scope.slice(8)} content` : '');
+      // Who is writing this? 'person' (a real user action) vs 'agent' (a
+      // Controller/verifier/insight loop) vs 'import'. Strength stays 'user
+      // -explicit'/confidence 1 — this only lets review surfaces and the proposal
+      // budget tell them apart (issue #6). Defaults to 'person'.
+      const writer = ['person', 'agent', 'import'].includes(opts.writer) ? opts.writer : 'person';
+      // A caller-supplied scopeLabel is user-facing record text; ensure it is
+      // separated from the sentence (the built-in fallbacks already lead with a
+      // space, a caller's "everywhere" would not) — issue #5.
+      const label = opts.scopeLabel;
+      const where = (label != null && label !== '')
+        ? (/^\s/.test(String(label)) ? String(label) : ' ' + label)
+        : (scope === 'general' ? '' :
+          scope.startsWith('category:') ? ` on ${scope.slice(9)} sites` :
+          scope.startsWith('origin:') ? ` on ${scope.slice(7)}` :
+          scope.startsWith('context:') ? ` for ${scope.slice(8)} content` : '');
       const shard = await DS().getMemoryShard(scope);
       const ids = [];
       for (const [key, value] of Object.entries(settings || {})) {
@@ -418,6 +429,7 @@ export function createLibrarian({
         if (rec) {
           rec.settings = sanitizeSettings({ [key]: value }); // coerce at the write boundary
           rec.text = text;
+          rec.writer = writer;
           rec.occurrenceCount = (rec.occurrenceCount || 1) + 1;
           rec.updatedAt = now;
           rec.lastAccessed = now;
@@ -428,6 +440,7 @@ export function createLibrarian({
             source: 'user-explicit', confidence: 1, importance: 8,
             decayClass: 'stable', settings: { [key]: value }, text,
           }, now);
+          rec.writer = writer;
           shard.push(rec);
         }
         ids.push(rec.id);
@@ -471,6 +484,53 @@ export function createLibrarian({
       if (next.length === shard.length) return { removed: false };
       await DS().setMemoryShard(scope, next);
       return { removed: true };
+    },
+
+    // "Forget what I've changed, go back to my profile."
+    //
+    // undoLast is LIFO and per-session; resetUndo clears a journal without
+    // restoring anything. Neither answers "start again from who I am" — and
+    // that is the point of an ability model: once a session has drifted through
+    // a dozen spoken adjustments there must be a way back to the person.
+    //
+    // Drops the durable `user-explicit` records for `setting.*` — the tier that
+    // gets FINAL say in getEffectivePreferences (see the `explicit` deferral
+    // there) — so the next read re-derives from the profile and learned records
+    // alone. Nothing else is touched: notes, non-setting explicit records, and
+    // every weaker tier survive; this forgets deliberate overrides, not the
+    // person.
+    //
+    // @param {{scope?: string, url?: string, contexts?: string[]}} [opts]
+    //   scope — limit to one scope ('general' | 'category:x' | 'origin:x' |
+    //   'context:x' | 'tool:x'); omit to reset EVERY scope.
+    //   url/contexts — what to compute the returned `restored` view for.
+    // @returns {{forgotten: Array<{scope,key,value}>, scopes: string[], restored: object}}
+    async resetToProfile(opts = {}) {
+      const only = opts.scope && VALID_SCOPE.test(opts.scope) ? opts.scope : null;
+      const shards = only
+        ? { [only]: await DS().getMemoryShard(only) }
+        : await DS().allMemoryShards();
+
+      const forgotten = [];
+      const touched = [];
+      for (const [scope, recs] of Object.entries(shards || {})) {
+        const keep = [];
+        let dirty = false;
+        for (const r of recs || []) {
+          const isExplicitSetting = r && r.status === 'active' && r.source === 'user-explicit'
+            && typeof r.aspect === 'string' && r.aspect.startsWith('setting.');
+          if (!isExplicitSetting) { keep.push(r); continue; }
+          const key = r.aspect.slice('setting.'.length);
+          forgotten.push({ scope, key, value: r.settings ? r.settings[key] : undefined });
+          dirty = true;
+        }
+        if (dirty) { await DS().setMemoryShard(scope, keep); touched.push(scope); }
+      }
+
+      // getEffectivePreferences computes on read, so dropping the records IS the
+      // recompute; this returns the profile-derived view the person gets back.
+      const restored = await this.getEffectivePreferences(opts.url || null, opts.contexts || []);
+      return { forgotten, scopes: touched, restored };
     },
 
     // Classify once, cache forever; user override wins and is sticky.
@@ -731,6 +791,7 @@ export function createLibrarian({
       if (!body) return { ok: false, reason: 'empty-text' };
       const scope = VALID_SCOPE.test(opts.scope || '') ? opts.scope : 'general';
       const source = String(opts.source || 'user-explicit');
+      const writer = ['person', 'agent', 'import'].includes(opts.writer) ? opts.writer : 'person'; // who wrote it (issue #6)
       // The pause is a floor for INFERENCE, never for direct user statements —
       // the same rule recordScopedSettings follows. A person typing a sentence
       // about themselves while memory is paused meant to type it.
@@ -749,6 +810,7 @@ export function createLibrarian({
         : null;
       if (rec) {
         rec.text = body.slice(0, NOTE_TEXT_MAX);
+        rec.writer = writer;
         rec.occurrenceCount = (rec.occurrenceCount || 1) + 1;
         rec.updatedAt = now;
         rec.lastAccessed = now;
@@ -766,6 +828,7 @@ export function createLibrarian({
           settings: null,
           text: body,
         }, now);
+        rec.writer = writer;
         shard.push(rec);
       }
       await DS().setMemoryShard(scope, shard);

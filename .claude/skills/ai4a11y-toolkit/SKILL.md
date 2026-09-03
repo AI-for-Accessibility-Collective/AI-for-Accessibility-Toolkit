@@ -15,8 +15,8 @@ Paths below are relative to the `toolkit/` package root (run from there, or adju
 
 ```javascript
 import { createToolkit } from './index.js';
-import { memoryKV } from './adapters/node/kv.js';
-import { nodeClock, nodeScheduler, consoleConsent } from './adapters/node/ports.js';
+import { memoryKV } from './platforms/node/kv.js';
+import { nodeClock, nodeScheduler, consoleConsent } from './platforms/node/ports.js';
 
 const { datastore, librarian } = createToolkit({
   kv: memoryKV(),
@@ -58,6 +58,7 @@ Read directly off a live `createToolkit(...)` instance — call as `toolkit.libr
 | `librarian.hasScopedSetting(scope, key)` | async | Whether a durable user-explicit record for `setting.<key>` exists at `scope`. |
 | `librarian.getScopedSetting(scope, key)` | async | The current value of the user-explicit `setting.<key>` record at `scope`, or undefined if none. |
 | `librarian.removeScopedSetting(scope, key)` | async | Delete the durable user-explicit record for `setting.<key>` at `scope` — the true inverse of recordScopedSettings (which only ever upserts). |
+| `librarian.resetToProfile(opts)` | async | "Forget what I've changed, go back to my profile." undoLast is LIFO and per-session; resetUndo clears a journal without restoring anything. |
 | `librarian.getSiteCategory(origin, opts)` | async | Classify once, cache forever; user override wins and is sticky. |
 | `librarian.setSiteCategoryOverride(origin, category)` | async | (no doc comment) |
 | `librarian.getEffectivePreferences(url, contexts)` | async | Deterministic scope-chain merge of machine-actionable settings. |
@@ -220,7 +221,7 @@ The host-agnostic surface a modality-neutral control layer actuates through.
 | `applySettings` | `(changes: Object<string,*>, scope?: string\|null) => Promise<ApplyResult>` | Validate + clamp `changes` against the settings registry, persist them at the resolved scope, live-apply to the current surface, and journal enough to undo. |
 | `undoLast` | `() => Promise<UndoResult>` | Revert the most recent applySettings call (LIFO); pops the journal only once the revert actually lands, so a failed undo keeps the step retryable. |
 | `resetUndo` | `() => Promise<{ok:true}>` | Clear the undo journal (a fresh control-session starting). |
-| `readPage` | `(mode?: 'outline'\|'text', chunk?: number) => Promise<ReadPageResult>` | Extract page text for TTS/Q&A. |
+| `readPage` | `(mode?: 'outline'\|'text', chunk?: number) => Promise<ReadPageResult>` | Extract page text. |
 | `pageAction` | `(action: string, target?: string, text?: string) => Promise<PageActionResult>` | Perform one page interaction (scroll/click/type/focus-nav/navigate/etc). |
 
 **Provided default/no-op implementations:** `noopDemo` (ports/index.js), `noopSensors` (ports/index.js), `noopConsent` (ports/index.js), `noopScheduler` (ports/index.js), `systemClock` (ports/index.js), `noopActuation` (ports/actuation.js).
@@ -324,13 +325,15 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   methods (called by the voice side panel on the Librarian object rather than
   via `librarian*` messages) are first-class routes under their own names:
   `interpretNeedsPrompt`, `hasScopedSetting`, `getScopedSetting`,
-  `removeScopedSetting`, `recordExplicitSetting`.
+  `removeScopedSetting`, `recordExplicitSetting`, `resetToProfile`
+  ("back to my profile": the bulk inverse of `recordScopedSettings` — without a
+  wire route a remote host's reset reaches nothing and reports success anyway).
 - The natural-language note methods — `addNote`, `listNotes`, `updateNote`,
   `deleteNote`, `findNotes` — are routes under their own names too. Notes are
   the free-form text the person wrote about their own needs; a hosted instance
   partitions them by uid like every other record, and they remain outside
   `GRANT_SCOPES`, so no other app can read one.
-- 46 routes total.
+- 47 routes total.
 
 ## Connecting to a hosted instance (URL + token)
 
@@ -394,7 +397,7 @@ DATA_DIR=./data ADMIN_PASSWORD=dev PORT=8080 node server/index.js
 
 **Deploying**: `server/Dockerfile` builds from the repo root (it copies `toolkit/` + `server/`); `cloudbuild.yaml` + `server/DEPLOYMENT.md` document the Cloud Run deployment (small instance, Secret Manager for the two secrets, GCS bucket, IAM). `server/API.md` is generated from the route table (`npm run docs` in `server/`) and the live service serves the same data at `GET /v1/meta`. Liveness: use `/v1/healthz` (bare `/healthz` is intercepted at the run.app edge).
 
-**Extending the wire surface**: add a route entry in `server/src/routes.js` (plain `{route, target, kind}`, or a custom `invoke` for arg-shape dispatch — see `setPause`), then regenerate docs and update the oracle list in `server/test/server-test.mjs`. The extension-side facade lives in `personalized-extension/extension/remote-librarian.js`.
+**Extending the wire surface**: add a route entry in `server/src/routes.js` (plain `{route, target, kind}`, or a custom `invoke` for arg-shape dispatch — see `setPause`), then regenerate docs and update the oracle list in `server/test/server-test.mjs`. A remote-mode host wraps these routes in a Librarian-shaped facade.
 
 ## Adding this skill to your project
 

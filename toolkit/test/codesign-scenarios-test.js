@@ -34,7 +34,7 @@ import { TAXONOMY } from '../core/taxonomy.js';
 // the point: "an adapter exists for this need" must mean the actual catalog
 // has it, not a hand-copied list.
 import { skillRegistry, settingsMeta as REAL_META, getSkillById, getRegistryForPrompt }
-  from '../../personalized-extension/skills/registry.js';
+  from '../registry/tools.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const BUILTIN_DIR = join(HERE, '..', 'skills', 'builtin');
@@ -59,7 +59,7 @@ const BUILTINS = readdirSync(BUILTIN_DIR).filter(f => f.endsWith('.md'))
 
 function makeSystem() {
   // In-memory KVStore, shaped like the chain's KVStore port (get/set/getAll
-  // per area) — see toolkit/ports/index.js and adapters/chrome/ports.js chromeKV.
+  // per area) — see toolkit/ports/index.js and platforms/chrome/ports.js chromeKV.
   const mem = { local: {}, sync: {} };
   const kv = {
     async get(area, key) { return mem[area][key] === undefined ? undefined : structuredClone(mem[area][key]); },

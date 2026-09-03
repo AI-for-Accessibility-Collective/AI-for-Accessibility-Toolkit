@@ -14,7 +14,7 @@ import { createToolkit } from '../index.js';
 import { renderWebSettings } from '../surfaces/web.js';
 import { renderXRSettings } from '../surfaces/xr.js';
 import { renderMobileSettings } from '../surfaces/mobile.js';
-import { deriveWebSettings, resolveWebPreferences } from '../adapters/chrome/web-surface.js';
+import { deriveWebSettings, resolveWebPreferences } from '../platforms/chrome/web-surface.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -31,7 +31,7 @@ function memKV() {
   };
 }
 
-// Every key WEB_DERIVATION (adapters/chrome/web-surface.js) can produce, so
+// Every key WEB_DERIVATION (platforms/chrome/web-surface.js) can produce, so
 // the ability baseline coerces cleanly and nothing in this test is reported
 // `unmet` by surprise.
 const settingsMeta = {
@@ -93,7 +93,7 @@ const { librarian } = createToolkit({ kv: memKV(), toolsRegistry: { settingsMeta
   await librarian.recordExplicitSetting('darkMode', true, 'popup');
 
   // DISCOVERY: recordExplicitSetting/recordScopedSettings alone do NOT reach
-  // the AbilityModel. WEB_DERIVATION (adapters/chrome/web-surface.js) only
+  // the AbilityModel. WEB_DERIVATION (platforms/chrome/web-surface.js) only
   // maps needs -> settings; there is no settings -> needs reverse. getAbilityModel()
   // (toolkit/core/ability.js#toAbilityModel) reads ONLY profile.fields.needs,
   // which recordScopedSettings never writes. See docs/design/cross-surface-analysis.md
@@ -206,7 +206,7 @@ const { librarian } = createToolkit({ kv: memKV(), toolsRegistry: { settingsMeta
 
   // surfaces/web.js is a thin delegate over deriveWebSettings — same object,
   // single source of truth for "what a need renders as on the web".
-  check('surfaces/web.js delegates verbatim to adapters/chrome/web-surface.js#deriveWebSettings',
+  check('surfaces/web.js delegates verbatim to platforms/chrome/web-surface.js#deriveWebSettings',
     JSON.stringify(webAfterXR) === JSON.stringify(deriveWebSettings(afterXR).settings));
 
   // getEffectivePreferences' full composition (explicit records UNDER the

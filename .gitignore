@@ -2,8 +2,6 @@ node_modules/
 .DS_Store
 *.log
 .env
-content.bundle.js.map
-cli-tools.bundle.js.map
 
 # Python
 __pycache__/
@@ -14,12 +12,7 @@ build/
 *.egg
 .claude/worktrees/
 
-# The analysis, copied in from the research repository by its install script.
-# Mechanism lives here; the corpus text does not.
-personalized-extension/extension/validation/corpus.json
-
-# Client config for the personalized extension: the hosted toolkit service URL
-# + a live access token. Per-checkout, never committed; build.js bakes it into
-# the (also gitignored) generated remote-config.js the service worker reads.
-personalized-extension/extension-config.local.json
-personalized-extension/extension/lib/remote-config.js
+# Runtime datastores (profiles, memory, admin tokens) — never commit
+/data/
+/server/data/
+onboarding/onboarding-data/

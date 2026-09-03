@@ -1,6 +1,6 @@
 # tools/
 
-Shared JavaScript modules used by both the Chrome extension and CLI.
+The developer **catalog**: browser-native accessibility building blocks — auditors, adapters, profiles, and utils — that any host can draw from, on their own or alongside the `toolkit/` personalization core.
 
 ## Structure
 
@@ -42,16 +42,13 @@ tools/
 
 ## AI Provider Abstraction
 
-`tools/utils/ai.js` provides a unified interface for AI operations that works across contexts:
-
-- **Extension:** Routes through `chrome.runtime.sendMessage` to background.js → Gemini API
-- **CLI:** Routes through `page.expose_function` to Claude
+`tools/utils/ai.js` provides a unified interface for AI operations, decoupled from any concrete model or SDK. The **host** supplies a provider (bridging to whatever LLM it uses — e.g. a browser extension routing through its background worker to Gemini, or a server calling an API directly); the adapters call the same abstraction regardless.
 
 ```javascript
 import { setAIProvider, describeImage, simplifyText } from './utils/ai.js';
 
-// Provider is set by the host (extension/CLI)
-// Then all tools can use the same API:
+// The host sets the provider once…
+// …then all tools use the same API:
 const alt = await describeImage(dataUrl);
 const simple = await simplifyText(complexText);
 ```

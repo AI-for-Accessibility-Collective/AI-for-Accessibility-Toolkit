@@ -27,7 +27,7 @@ import { renderXRSettings } from '../../surfaces/xr.js';
 import { getShareAudit } from '../../sync/grants.js';
 
 // ---- in-memory ports, shaped like the chain's KVStore port (get/set/getAll
-// per area) — see toolkit/ports/index.js and adapters/chrome/ports.js
+// per area) — see toolkit/ports/index.js and platforms/chrome/ports.js
 // chromeKV, and the same pattern toolkit/hosts/skill-demo/demo.js uses. A
 // real host swaps this for its platform (chrome.storage, a native store, …).
 const mem = { local: {}, sync: {} };

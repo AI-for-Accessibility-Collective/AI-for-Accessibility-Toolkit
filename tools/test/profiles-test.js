@@ -12,15 +12,15 @@ let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('FAIL:', name); } }
 
 // Every setting a profile is allowed to enable. Kept in sync with the settings
-// vocabulary (personalized-extension/skills/registry.js `settingsMeta`) plus
+// vocabulary (toolkit/registry/tools.js `settingsMeta`) plus
 // `fixContrast`, which the basic extension + CLI consume directly. A profile key
 // outside this set is a dead setting nothing applies.
 const RECOGNIZED = new Set([
-  'autoCaptions', 'autoDescribe', 'autoFixLabels', 'autoSimplify', 'autoSummarize',
+  'showCaptions', 'liveCaptions', 'autoCaptions', 'autoDescribe', 'autoFixLabels', 'autoSimplify', 'autoSummarize',
   'announceUpdates', 'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'bionicReading', 'colorBlindMode', 'confirmActions', 'contrastMode', 'darkMode',
   'defineWords', 'describeOnDemand', 'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'flashGuard', 'focusLocator', 'focusMode', 'fontScale', 'hideDistractions',
   'colorFilter', 'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'magnifier', 'motionReducer', 'muteSounds',
-  'pageOutline', 'persistentHover', 'readerMode', 'readingRuler', 'reduceBrightness', 'reflowColumn', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'mathAccessible', 'translatePage', 'translateTo', 'unpinSticky', 'readingGuide', 'showProgress', 'soundVisualizer', 'speechRate', 'stopAutoAdvance', 'voiceCommands',
+  'pageOutline', 'persistentHover', 'readerMode', 'readingRuler', 'reduceBrightness', 'reflowColumn', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'fixLandmarks', 'readAloud', 'mathAccessible', 'translatePage', 'translateTo', 'unpinSticky', 'readingGuide', 'showProgress', 'soundVisualizer', 'speechRate', 'stopAutoAdvance', 'voiceCommands',
   'fixContrast',
 ]);
 const NUMERIC_RANGE = { fontScale: [50, 300], lineHeight: [1, 3], letterSpacing: [0, 1], speechRate: [0.3, 4] };
@@ -45,12 +45,18 @@ for (const id of EXPECTED_PROFILES) {
   }
 }
 
+// Reachability: the blind preset's landmark repair must resolve to the adapter
+// (regression guard for the fixLandmarks → fix-landmarks wiring).
+check('blind preset enables fix-landmarks (landmark repair is reachable)', getEnabledAdapters('blind').includes('fix-landmarks'));
+
 check('defaults exists and is an object', defaults && typeof defaults === 'object');
 check('getAllProfiles lists all 12 with id/name', getAllProfiles().length === 12 && getAllProfiles().every(p => p.id && p.name));
 
 // ── EVIDENCE-BASED REGRESSION GUARDS ──────────────────────────────────────────
 // Deaf/HoH is about sound, not sight: captions ON, visual description OFF.
 check('deaf: captions on', profiles.deaf.tools.autoCaptions === true);
+check('deaf: showCaptions on (baseline, no-AI)', profiles.deaf.tools.showCaptions === true);
+check('deaf: getEnabledAdapters includes show-captions', getEnabledAdapters('deaf').includes('show-captions'));
 check('deaf: image description OFF (regression guard)', profiles.deaf.tools.autoDescribe === false);
 check('deaf: video description OFF (regression guard)', profiles.deaf.tools.autoVideoDescribe === false);
 check('deaf: getEnabledAdapters never enables alt-text', !getEnabledAdapters('deaf').includes('generate-alt'));

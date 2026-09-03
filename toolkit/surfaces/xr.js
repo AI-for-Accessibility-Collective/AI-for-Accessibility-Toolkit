@@ -42,7 +42,7 @@ function resolveNeeds(model) {
 
 // Collapse the needs AbilityModel into the plain magnitudes this module's
 // geometry consumes, defaulting every unset dimension to its neutral value.
-// The dimension names mirror adapters/chrome/web-surface.js's WEB_DERIVATION
+// The dimension names mirror platforms/chrome/web-surface.js's WEB_DERIVATION
 // (the live needs→web mapping) so XR and web read the exact same vocabulary
 // — one set of need names, two renderings.
 function needsToMagnitudes(model) {

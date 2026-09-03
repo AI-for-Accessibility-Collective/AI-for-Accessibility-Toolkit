@@ -1,13 +1,13 @@
 // Canonical built-in tools registry — the single source of truth for the
 // "global Tools db" tier of the toolkit datastore. LIVES IN THE TOOLKIT so
 // every host (Chrome extension, server, XR, mobile) shares one settings
-// vocabulary; personalized-extension/skills/registry.js is a re-export shim.
+// vocabulary shared by every host.
 //
 // Consumed three ways:
 //   1. Directly as ESM by node-side code (toolkit hosts, the service in
-//      server/, personalized-extension/utils/recommender.js, tests).
+//      server/, host recommenders, tests).
 //   2. Generated into extension/lib/tools-registry.js (a classic script
-//      assigning globalThis.AA_TOOLS) by personalized-extension/build.js.
+//      assigning globalThis.AA_TOOLS) by a browser host's bundler.
 //   3. As a live AA_TOOLS-shaped object via asAATools() below (what
 //      createToolkit's `toolsRegistry` port expects).
 //
@@ -463,8 +463,8 @@ export const skillRegistry = [
   },
   {
     id: 'voice-commands',
-    name: 'Voice Commands',
-    description: 'Web Speech API fallback for hands-free browsing when voice mode is not available. Voice mode (Gemini Live) provides better speech understanding including for non-standard speech. Fixes: word-boundary command matching, mic-denied loop prevention, mutual exclusion with voice mode.',
+    name: 'Hands-Free Navigation',
+    description: 'Fixed spatial voice commands for MOTOR users browsing without a keyboard or mouse — movement only (scroll/page/top/bottom/back/forward) plus "click" on the focused element, with visual feedback. This is NOT voice access for blind users: it can only say WHERE to move, not WHAT you want, and shows recognized text visually. For semantic voice control ("read me the third result") use voice mode in a host with a real microphone. (Web Speech API fallback when voice mode is unavailable.)',
     supportAreas: ['motor'],
     siteRelevance: ['all'],
     requiresAI: false,
@@ -474,9 +474,21 @@ export const skillRegistry = [
     settings: { voiceCommands: true },
   },
   {
+    id: 'show-captions',
+    name: 'Show Captions',
+    description: 'Turns ON captions the media already has — switches the right <video> text track to showing (preferring your language), or clicks the player’s CC button (YouTube, Vimeo). No AI, no latency: the common case where captions exist and just need enabling. Re-applies as new videos load (SPA nav, autoplay playlists) and never re-enables captions you turned off.',
+    supportAreas: ['hearing'],
+    siteRelevance: ['video', 'social', 'education'],
+    requiresAI: false,
+    icon: 'closed_caption',
+    emoji: '\u{1F4DD}',
+    quickStart: true,
+    settings: { showCaptions: true },
+  },
+  {
     id: 'captions',
-    name: 'Captions',
-    description: 'Auto-enables native CC on YouTube pages and iframes. For reachable http(s) media, transcribes audio in ~15s chunks via cloud AI and attaches an AI-generated caption track or expandable transcript (requires Gemini API key). blob:/DRM/MSE media shows a notice to try Chrome Live Caption instead. Not live captioning.',
+    name: 'Generate Captions',
+    description: 'For media with NO caption track: transcribes reachable http(s) audio in ~15s chunks via cloud AI and attaches an AI-generated caption track or expandable transcript (requires Gemini API key). blob:/DRM/MSE media shows a notice to try Chrome Live Caption instead. Not live captioning. For media that already has captions, use Show Captions instead (no AI).',
     supportAreas: ['hearing'],
     siteRelevance: ['video', 'social', 'education'],
     requiresAI: true,
@@ -505,16 +517,28 @@ export const skillRegistry = [
   // available under Visual Assist. The dyslexiaFont VA sub-setting remains
   // active for existing users; settingsMeta and PROMPT_GROUPS intact.
   {
+    id: 'fix-landmarks',
+    name: 'Fix Landmarks',
+    description: 'Adds missing ARIA landmark roles (main, navigation, banner, contentinfo) to div-soup pages so screen-reader users can jump between regions instead of reading top-to-bottom. Deterministic (no AI); labels only what it can identify with confidence, never mislabels.',
+    supportAreas: ['vision'],
+    siteRelevance: ['all'],
+    requiresAI: false,
+    icon: 'dashboard',
+    emoji: '\u{1F9ED}',
+    quickStart: false,
+    settings: { fixLandmarks: true },
+  },
+  {
     id: 'read-aloud',
     name: 'Read Aloud',
-    description: 'Text-to-speech for the current page. Splits text into sentence chunks to avoid Chrome remote-voice stalls. No further investment: for richer reading support use your OS/browser built-in read-aloud tools or voice mode\'s read-page command.',
-    supportAreas: ['vision', 'reading', 'cognitive'],
+    description: 'Text-to-speech for the current page. Splits text into sentence chunks to avoid Chrome remote-voice stalls. Intended for low-vision, dyslexic, and cognitive users — NOT screen-reader (blind) users, whose own screen reader owns the voice.',
+    supportAreas: ['reading', 'cognitive'],
     siteRelevance: ['all'],
     requiresAI: false,
     icon: 'volume_up',
     emoji: '\u{1F50A}',
     quickStart: false,
-    settings: {},
+    settings: { readAloud: true },
   },
   {
     id: 'generate-labels',
@@ -601,6 +625,8 @@ export const settingsMeta = {
   exploreChart:    { type: 'boolean', description: 'Read a chart or graph as a navigable data table (AI)' },
   spaFocus:        { type: 'boolean', description: 'Announce and move focus on single-page-app navigations' },
   skipLinks:       { type: 'boolean', description: 'Add skip-to-content and skip-to-navigation links' },
+  fixLandmarks:    { type: 'boolean', description: 'Add missing ARIA landmarks (main, navigation, banner, contentinfo) so screen-reader users can navigate by region' },
+  readAloud:       { type: 'boolean', description: 'Read the page text aloud with text-to-speech' },
   mathAccessible:  { type: 'boolean', description: 'Give math and equations an accessible name for screen readers' },
   keyboardNav:     { type: 'boolean', description: 'Enhanced keyboard navigation' },
   voiceCommands:   { type: 'boolean', description: 'Voice-controlled browsing' },
@@ -612,7 +638,13 @@ export const settingsMeta = {
   wcagRiskyFixes:  { type: 'boolean', description: 'Enable risky WCAG fixes (heading re-tag, ARIA strip, target size) — default off' },
   autoDescribe:    { type: 'boolean', description: 'AI image descriptions' },
   autoFixLabels:   { type: 'boolean', description: 'AI-generated form labels' },
-  autoCaptions:    { type: 'boolean', description: 'Auto captions on video' },
+  showCaptions:    { type: 'boolean', description: 'Turn on captions the media already has (no AI)' },
+  // Distinct from showCaptions: a BROWSER/OS feature that captions any audio
+  // on-device (Chrome Live Caption), including audio with no caption track of
+  // its own. A platform capability, not a page adapter — only a receiver that
+  // owns the browser can toggle it, so it has no entry in the tools catalog.
+  liveCaptions:    { type: 'boolean', description: 'Browser-generated captions for any audio (Chrome Live Caption)' },
+  autoCaptions:    { type: 'boolean', description: 'Generate captions for media that has none (AI)' },
   autoSimplify:    { type: 'boolean', description: 'Simplify complex text' },
   autoSummarize:   { type: 'boolean', description: 'Add summaries to long content' },
 };
@@ -664,7 +696,7 @@ export function getRegistryForPrompt() {
 
 
 // ---------------------------------------------------------------------------
-// AA_TOOLS-shaped live registry — the exact object personalized-extension's
+// AA_TOOLS-shaped live registry — the exact object a browser host's
 // build.js bakes into extension/lib/tools-registry.js, exported here so any
 // host can hand it to createToolkit({ toolsRegistry: asAATools() }).
 export function asAATools() {

@@ -28,7 +28,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { createToolkit } from '../index.js';
-import { memoryKV } from '../adapters/node/kv.js';
+import { memoryKV } from '../platforms/node/kv.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..'); // toolkit/
@@ -263,6 +263,7 @@ const CONCERN_MAP = {
   'librarian:hasScopedSetting': 'profile/ability',
   'librarian:getScopedSetting': 'profile/ability',
   'librarian:removeScopedSetting': 'profile/ability',
+  'librarian:resetToProfile': 'profile/ability',
 
   // ---- memory ----
   'librarian:recall': 'memory',

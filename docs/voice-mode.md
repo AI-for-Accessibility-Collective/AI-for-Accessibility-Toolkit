@@ -1,172 +1,145 @@
-# Voice Mode — Full Toolkit Control via Gemini Live
+# Voice Mode — hands-free control via the Controller
 
-The extension's voice mode (side panel + offscreen document) is a hands-free
-control surface for the whole toolkit. It streams microphone audio to the
-Gemini Live API over a raw WebSocket and acts through **function calls** that
-route back through the extension's existing, consent-guarded machinery. This
-phase graduates it from "explain mode" (narrate the browser agent) to full
-control: settings, page Q&A, browser tasks, capability suggestions, and the
-memory layer.
+Voice mode is how a person drives an app by **speaking (or typing)** instead of
+pointing. In this repo it is the **Controller** ([`controller/`](../controller/))
+— a platform-neutral text/voice control surface — not a bundled browser-extension
+feature. The extension's old voice mode (Gemini Live over a raw WebSocket, an
+offscreen document, `chrome.runtime.sendMessage` to a service worker) was retired
+in the re-architecture; the toolkit kept the **port** and rebuilt the **UI**
+host-agnostic. No `chrome.*`, no required cloud model, no API key.
 
-## Architecture
+> Full design + wire contract: [`controller/DESIGN.md`](../controller/DESIGN.md)
+> and [`controller/PROTOCOL.md`](../controller/PROTOCOL.md). This page is the
+> "how voice works" view.
+
+## The shape
 
 ```
-Side panel UI  ←(voiceState via storage)←  Offscreen doc                     Service worker
- - transcript + captions                    - Live WS client (client.js)      - voice-routes.js (5 data routes)
- - action chips + Undo button               - tools.js: 12 declarations,      - librarian* routes (memory)
- - type-instead-of-speak input                dispatch, undo stack,           - bhAgent* routes (browser agent)
- - pending-suggestions pill                   seen-id consent gates           - chrome.tabs / scripting / zoom
-                                            - prompt.js: builder + vocabulary
+Person speaks / types  →  Controller (web/ui.js + core)  →  ControlPort  →  the app
+   mic / text field          recognize → resolve → dispatch   7 methods + stop  (local or remote)
+   ← live region + TTS + earcons  ←  deliver result  ←───────────────────────────────┘
 ```
 
-The offscreen document has no `chrome.tabs`/`chrome.scripting` access, so every
-tool is a `chrome.runtime.sendMessage` to the SW. The permission semantics live
-in the Librarian and are not bypassed — the voice surface only calls the same
-routes the popup uses.
+Two surfaces run this same stack: the **floating widget**
+([`controller/web/ui.js`](../controller/web/ui.js), mounted on any page) and the
+**chat window** at `/chat` — a different shape over the same `createController`
+core, where the same utterance can also update the person's profile.
 
-## Tool surface (offscreen/src/live/tools.js)
+- **Input** — the Web Speech `SpeechRecognition` API (feature-detected; the same
+  code `onboarding/` uses). A 🎤 Speak button dictates into the field and
+  auto-submits when recognition ends; **Ctrl+Space** toggles it from anywhere; a
+  text field is always available too (speech-impaired users, noisy rooms,
+  deterministic tests). Starting dictation **silences playback first** — it
+  cancels any in-progress TTS and pauses local media, and asks a connected
+  receiver to `muteAudio` so other tabs don't get transcribed (a page can't reach
+  them itself).
+- **Understanding** — a **hybrid** engine, no model required
+  ([`controller/grammar.js`](../controller/grammar.js) +
+  [`router.js`](../controller/router.js)): a zero-dependency grammar over the
+  registry `settingsMeta` vocabulary ("bigger text", "dark mode", "high contrast",
+  "reduce motion", "read this", "undo", "speak slower", "scroll down"), an
+  **optional** host-supplied LLM lane for free-form phrasing
+  ([`llm-lane.js`](../controller/llm-lane.js)), and a `task` catch-all that hands
+  anything else to a task-capable app (e.g. an agent).
+- **Action** — every effect goes through the neutral **`ControlPort`**:
+  `applySettings` / `undoLast` (adaptations), `getContent` (read the page),
+  `performAction` (scroll / activate / navigate / search / back / task),
+  `getContext` / `describeCapabilities`. Same contract whether the receiver is a
+  local DOM page or a remote mobile / XR / desktop app.
+- **Output** — results land in an **ARIA live region** so a screen reader
+  announces them in the person's own voice, and are **spoken via TTS** when the
+  "Speak results aloud" toggle is on. The voice is **chosen, not inherited**
+  (`bestVoice`: a local Premium/Enhanced voice, else a network one, else the
+  platform default — the OS default is often a poor compact voice), and is
+  selectable and persisted. Spoken text is stripped of markdown first
+  (`forSpeech`) so a task's `**bold**` and backticks aren't read aloud as
+  punctuation. While a task runs, an animated waiting indicator + a Web-Audio
+  "thinking" earcon play, with a **Stop** control that calls the port's `stop()`,
+  then a done / error chime.
 
-| Tool | What it does |
+## Voice output that doesn't fight a screen reader
+
+The single most important correctness rule: a port method that *returns* text must
+not itself speak, and the Controller must not put a second synthetic voice over a
+screen reader (the failure mode for exactly the users it serves).
+
+- `getContent` **returns** text; the Controller decides delivery.
+- Delivery follows the operator's **presentation**
+  ([`controller/presentation.js`](../controller/presentation.js), derived from
+  their AbilityModel): a screen-reader operator (`output.assistiveTech`) gets the
+  **live region only** — their own voice, at their rate; a speech-output profile
+  also gets TTS.
+- The **"Speak results aloud"** toggle (default on, persisted) makes it the
+  person's *choice*, not an inference — a blind person on an AT-less kiosk can
+  turn TTS on; a low-vision person with a screen reader running can turn it off.
+  Either way the live region always carries the text.
+- **Two live regions**: acknowledgements and errors are `assertive` (they confirm
+  an action just started and are the only chance to catch a mis-recognition);
+  task results and content reads are `polite`.
+- **Earcons** (ported from browser-harness): a repeating 440+620 Hz "thinking"
+  pulse while a task runs, a 660+880 done chime, a 300+210 error chime.
+  Non-verbal, so they don't collide with a screen reader and play regardless of
+  the TTS toggle.
+
+## Consent & safety
+
+- **Confirmation** — a state-changing command (activate / submit / navigate)
+  waits for a spoken or typed "yes" when the operator's profile asks for it
+  (`presentation.confirmActions`, e.g. motor / cognitive). Benign navigation
+  (scroll / back) is never gated.
+- **Adaptations are explicit** — a spoken "bigger text" is an explicit local
+  request and applies immediately (with `undoLast`), the same posture the old
+  voice mode took for direct user intent.
+- **Untrusted content** — `getContent` marks its text `source:
+  'untrusted-content'` (data, never instructions); the optional LLM lane only
+  ever sees the person's own utterance + the receiver's capabilities, never page
+  content, so there is no injection surface.
+- **Read the utterance back** — the task acknowledgement is `Ok, running:
+  <utterance>`, the only chance for a blind user to catch a mis-recognition
+  before the app spends a minute on it.
+
+## Driving a remote app (e.g. `browser-harness-a11y`)
+
+A web Controller can drive a receiver in another process or on another device: the
+receiver hosts a WebSocket endpoint and implements the `ControlPort`; the
+Controller connects out with `connectRemoteReceiver('ws://…')`
+([`controller/transport/remote.js`](../controller/transport/remote.js)). Because a
+real browsing task takes 30–120s (past the 10s request timeout), the receiver
+pushes the result later as an out-of-band `{ kind: "aa-control-note", text }`
+message the Controller routes into its live region. A "Return to controller after
+running" flag (default on) rides along as `meta.returnToController`, asking the
+app — which owns the browser over CDP — to bring focus back to the Controller's
+tab when the task finishes; a background notification is the web-native fallback.
+When driving a URL, **raw mode** sends *all* input to the app as tasks (no local
+grammar). Receiver spec: [`controller/PROTOCOL.md`](../controller/PROTOCOL.md).
+
+## What changed from the extension voice mode
+
+| Then (retired) | Now (the Controller) |
 |---|---|
-| `get_context` | Tab title/origin, page zoom, non-default settings (+ site-scoped keys), memoryPaused |
-| `adjust_settings` | Batched settings + virtual `pageZoom`; persists (popup semantics: provenance-scoped or one `sync.set`) **and** live-applies; pushes previous values for undo |
-| `undo_last_change` | Pops the session undo stack and replays previous values (LIFO) |
-| `get_page_content` | Reads the active tab via `chrome.scripting` — outline or 4000-char text chunks |
-| `start_browser_task` / `get_browser_status` / `stop_browser_task` | Browser agent (`use_current_tab` → `tabMode:'current'`) |
-| `suggest_capabilities` | `Librarian.interpretNeedsPrompt` + Gemini → compact suggestion the model reads aloud |
-| `get_memory` | Profile + memories (≤12, with ids) + pending proposals (≤5); ids feed the seen-sets |
-| `remember` | `logObservation({type:'voice', weight:3})` — distilled by extraction; respects memoryPaused |
-| `forget_memory` / `respond_to_proposal` | Gated: the id must have been returned by `get_memory` this session, and the prompt requires read-aloud + explicit verbal yes |
+| Gemini Live over a raw WebSocket, offscreen doc, service worker | No required cloud model; deterministic grammar + optional host LLM lane |
+| `chrome.tabs` / `chrome.scripting` / `chrome.storage` via `chrome.runtime.sendMessage` | The neutral `ControlPort` (a local object or a remote proxy over a channel) |
+| 12 tool `function` declarations generated from `settingsMeta` | Intents dispatched to 7 `ControlPort` methods; grammar built from `settingsMeta` |
+| Speak everything via `speechSynthesis` | Live-region-first delivery gated per operator; TTS optional; earcons |
+| Extension-bound (Chrome MV3 lifecycle) | Host-agnostic surface; web today, native later |
 
-The `adjust_settings` schema and the prompt's capability vocabulary are both
-**generated from `skills/registry.js` `settingsMeta`** — one source of truth
-with the popup.
-
-## Consent model
-
-- **Immediate-apply** (a spoken request = explicit local user intent, same as
-  tapping the popup): `adjust_settings`, `undo_last_change`, `remember`.
-  Contract: the model narrates the change and mentions undo; the panel shows an
-  action chip with an Undo button on the newest undoable change.
-- **Confirm class**: `forget_memory`, `respond_to_proposal` — prompt-enforced
-  read-back + explicit yes, plus the mechanical seen-id gate (a hallucinated id
-  cannot delete anything).
-- Librarian invariants (weekly proposal budget, suppressions, cooldowns,
-  memoryPaused, sharingPaused) apply unchanged — voice calls existing routes.
-
-## Session grounding
-
-At connect, `index.js` fetches `voiceGetContext` + `voiceGetMemory` (1.5s
-timeout each, sections dropped on failure) and composes them into the system
-instruction via `buildSystemInstruction()` — the model starts knowing the
-current tab, non-default settings, a two-line profile summary, and the pending
-proposal count, and is instructed to trust tool results over that snapshot.
-
-## Panel affordances (non-technical audience)
-
-- **Action chips**: every state-changing tool call renders "✓ Text size: 150%".
-- **Undo button** on the newest undoable chip while connected (the undo stack
-  lives in the offscreen page); pressing it also injects a `[UI update]` turn
-  so the model knows.
-- **Type instead of speaking**: a text input that submits `voiceTextTurn` into
-  the same conversation — for speech-impaired users, noisy rooms, and
-  deterministic tests.
-- **Pending-suggestions pill**: click → asks the agent "What suggestions are
-  waiting for me?" (visual consent cards stay in the popup).
+The consent invariants the old design fought for — narrate + reversible undo,
+untrusted page content, explicit user intent, no silent cross-app grants — carry
+over: they now live in the Controller's presentation / confirmation flow and the
+toolkit's Librarian, which still owns the memory / proposal / sharing rules any
+host writes through.
 
 ## Testing
 
-- `node test/voice-tools-test.mjs` — 70 unit checks (mocked chrome): dispatch
-  mapping, clamping, provenance-scoped persistence, the full-merge
-  VisualAssist guard, undo LIFO, seen-id gates, prompt builder.
-- `node test/run-tests.js` — static wiring checks (tool names ⟷ prompt ⟷
-  routes ⟷ panel).
-- `node test/voice-e2e.js` — real Chrome, **no API key**: drives tools through
-  `voiceDebugToolCall` (offscreen → SW → storage → content script), asserts the
-  page actually changes, undo reverts, chips land.
-- `node test/voice-e2e.js --live` (with `GEMINI_API_KEY`) — opens a real Live
-  session with fake-device mic, drives it over the typed path, and checks the
-  model performs `adjust_settings`. Model-behavior assertions degrade to WARN.
+The Controller ships its own suite in [`controller/test/`](../controller/test/)
+(run from the repo root with `npm test`, or a file individually):
 
-## Adversarial review
-
-A three-lens Fable review (consent/safety, correctness, MV3 lifecycle) with
-per-finding verification ran against the tool surface. It confirmed 21 issues;
-the fixed ones:
-
-- **Undo scope/tab corruption (mustFix)**: undo re-resolved each setting's
-  scope against whatever tab was active at undo time, so a cross-tab undo
-  clobbered the global baseline instead of reverting the real record. Fixed by
-  capturing a precise per-key restore plan (`{writes:[{key,value,scope}],
-  pageZoom:{value,tabId}}`) at change time and replaying it to the exact
-  scopes/tab — no re-resolution.
-- **Undo consumed the entry before the revert landed**: now peeks and only pops
-  on success.
-- **Scope silently coerced to global**: `origin:YouTube.com` (or a category not
-  in the taxonomy) was accepted by voice but coerced to a global change by the
-  Librarian. Now validated/lowercased and rejected up front.
-- **Out-of-scope live preview**: an explicitly scoped change re-styled the
-  current tab even when it didn't match the scope. Now gated by
-  `scopeMatchesTab`.
-- **Cross-app grant via voice**: grant/insight proposals are excluded from the
-  voice listing and resolution — they belong on the popup's visual consent
-  cards.
-- **Prompt injection**: page content and the page title are labeled untrusted
-  and the prompt forbids treating them as instructions; the title is stripped
-  of control characters before it can reach the system instruction.
-- **Concurrent connect / goAway reconnect race**: an in-flight `connecting`
-  guard + cancellable goAway timer prevent two billed Live sessions.
-- Also: `forget_memory` chip names the deleted memory; `get_browser_status`
-  uses the storage shim; the panel Undo button has a double-activation guard;
-  autoscroll only when at bottom.
-
-### Follow-up fixes (undo becomes truly reversible)
-
-A second pass turned the remaining undo residuals into real fixes:
-
-- **Delete primitive** — the Librarian gained `hasScopedSetting` and
-  `removeScopedSetting` (the true inverse of the upsert-only
-  `recordScopedSettings`). Undo now *deletes* a record the change created rather
-  than shadowing it with a stale value; a set+undo of a previously-unset key is
-  a genuine no-op. A created *global* key is `sync.remove`d (not pinned to the
-  default), and the observation listener skips removes so it can't re-mint a
-  durable record.
-- **SW-owned undo journal (17)** — the undo stack moved from the offscreen page
-  into `chrome.storage.local` (`voiceUndoStack`), written as part of the apply
-  commit *before* the response is sent. A write that lands but whose response is
-  lost (a 30s client timeout, the panel closing) is still undoable, and undo
-  history survives an offscreen teardown+resume. The journal records
-  created-vs-updated per key so undo takes the right action for each.
-- **liveApplied honesty (13)** — `liveApply` reports real success; when the
-  current page had no content script to receive the change, the tool result
-  says so and the prompt has the model tell the user it applies on reload.
-- **Render dedup (20)** — the side panel skips the storage-echo re-render when
-  nothing the UI shows actually changed.
-
-A follow-up adversarial review of that work found and fixed further edge cases:
-the voice apply/undo/reset routes are **serialized** (a promise chain) so
-concurrent tool-calls in one Live turn can't lose a journal entry or clobber a
-same-scope record; the observation listener **re-checks the live value** before
-minting a record, so an undo that already removed a key can't be shadowed by a
-late re-mint; undo of a created record **verifies the record still holds what
-the change wrote** (via `getScopedSetting`) before deleting, so a later popup
-edit folded into the same record isn't destroyed; undo **reports and previews
-the true post-delete effective value** (a lower-scope fallback, not the global
-default); and `voiceResetUndo` is **awaited before a new session opens**.
-
-## Accepted limitations (prototype-scoped)
-
-- `storage.sync` write quota (120/min): writes are batched per tool call;
-  quota errors surface as tool errors. A pathologically chatty model is an
-  accepted residual.
-- A true SW crash in the sub-millisecond window *between* the setting commit and
-  the journal push can still lose one undo entry — unavoidable without a
-  write-ahead log, accepted for a prototype. The 30s-timeout / lost-response
-  cases are now covered.
-- Undo is not transactional across the sync + Librarian stores: if a storage
-  write fails partway through a multi-key undo, the revert can be partial (the
-  journal entry is kept, so re-issuing "undo" retries). A rare storage-error
-  edge on a first-party prototype.
-- `start_browser_task`/`remember`/`adjust_settings` remain immediate (no
-  mechanical confirm dialog); page text is defended by the untrusted-data
-  framing + the narrate+undo contract, not a gate. First-party threat model.
+- `controller.test.mjs` — grammar + dispatch + presentation (M0/M1).
+- `controller-web.test.mjs` — the DOM `ControlPort` receiver.
+- `controller-llm.test.mjs` — the optional LLM lane (offline, a fake `complete`).
+- `controller-cmd.test.mjs` — command intents, confirmation, navigate / search,
+  the `task` catch-all + `rawToTask`.
+- `controller-remote.test.mjs` — the remote transport, `websocketChannel`, and
+  the receiver→Controller note.
+- `controller-ui.test.mjs` — the web UI: two live regions, the Speak-results
+  toggle, waiting dots, notifications, `returnToController`.

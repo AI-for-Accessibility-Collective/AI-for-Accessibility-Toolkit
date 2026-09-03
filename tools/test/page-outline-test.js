@@ -73,6 +73,21 @@ async function run() {
     PageOutline.disable(); // disabling twice is safe
     check('outline: disable cleans up on the empty page too', doc.querySelector('#ai4a11y-page-outline') === null && PageOutline.enabled === false);
   }
+
+  // Contrast (#7): on a dark-themed site the host's a{color} beat inheritance and
+  // left the links near-white on the panel's white. The panel must paint its own
+  // link colour with a scoped !important sheet the host can't override.
+  {
+    const doc = mount(`<style>a{color:#eee}</style><h2>One</h2><h3>Two</h3>`);
+    PageOutline.enable();
+    const styleEl = doc.getElementById('ai4a11y-page-outline-styles');
+    const css = styleEl?.textContent || '';
+    check('outline: injects a scoped colour stylesheet', styleEl !== null);
+    check('outline: sets link colour on the <a> with !important', /#ai4a11y-page-outline a[\s,][^{]*\{[^}]*color:\s*#0b3d91\s*!important/i.test(css));
+    check('outline: enforces the panel background with !important', /#ai4a11y-page-outline\s*\{[^}]*background:\s*#ffffff\s*!important/i.test(css));
+    PageOutline.disable();
+    check('outline: disable removes the colour stylesheet', doc.getElementById('ai4a11y-page-outline-styles') === null);
+  }
 }
 
 run().then(() => {
