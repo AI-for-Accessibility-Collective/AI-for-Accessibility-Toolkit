@@ -91,12 +91,27 @@ const RULES = [
   // — dark / light —
   { re: /\bdark( mode| theme)?\b/, build: (_m, u) => adapt(u, { changes: { darkMode: true }, say: 'Turning on dark mode' }) },
 
-  // — contrast — negation first
-  offRule('(?:high[- ]?)?contrast', { contrastMode: 'none' }, 'Removing high contrast', `\\bless ${DET}(?:high[- ]?)?contrast\\b`),
-  { re: /\bhigh[- ]?contrast\b|\bmore contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'yellow-black' }, say: 'Turning on high contrast' }) },
+  // — contrast — negation first, then LOW (the 'light' level), then HIGH.
+  // Order matters: "no/remove/turn off (high) contrast" turns it off; "less high
+  // contrast" also turns it off; "low/lower/reduce/less contrast" selects the
+  // low-contrast level; "high/more contrast" the high one.
+  offRule('(?:high[- ]?)?contrast', { contrastMode: 'none' }, 'Removing high contrast', `\\bless ${DET}high[- ]?contrast\\b`),
+  { re: /\b(low|lower|reduce|reduced|less|soft|softer)( the| a)? contrast\b|\blow[- ]?contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'light' }, say: 'Lowering the contrast' }) },
+  { re: /\bhigh[- ]?contrast\b|\b(more|high|higher|strong|stronger) contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'yellow-black' }, say: 'Turning on high contrast' }) },
 
   // — motion —
   { re: /\b(reduce|stop|less|no) (motion|animation|animations)\b|\bmotion reducer\b/, build: (_m, u) => adapt(u, { changes: { motionReducer: true }, say: 'Reducing motion' }) },
+
+  // — LIVE captions — the browser's own on-device captioning (Chrome Live
+  // Caption), which captions ANY audio, including media with no caption track.
+  // A different thing from a media file's own captions, so it must precede the
+  // generic caption rules below — those would otherwise swallow "live".
+  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?live (caption(s|ing)?|cc)\b|\blive caption(s|ing)? off\b/, build: (_m, u) => adapt(u, { changes: { liveCaptions: false }, say: 'Turning live captions off' }) },
+  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?live (caption(s|ing)?|cc)\b|\blive caption(s|ing)? on\b|^live caption(s|ing)?$/, build: (_m, u) => adapt(u, { changes: { liveCaptions: true }, say: 'Turning live captions on' }) },
+
+  // — captions — the media's OWN track (incl. "closed captions"). Negation first.
+  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?(closed )?(caption(s|ing)?|subtitl(es?|ing)|cc)\b|\b(caption(s|ing)?|subtitl(es?|ing)) off\b/, build: (_m, u) => adapt(u, { changes: { showCaptions: false }, say: 'Turning captions off' }) },
+  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?(closed )?(caption(s|ing)?|subtitl(es?|ing)|cc)\b|\b(caption(s|ing)?|subtitl(es?|ing)) on\b|^(closed )?(caption(s|ing)?|subtitl(es?|ing))$/, build: (_m, u) => adapt(u, { changes: { showCaptions: true }, say: 'Turning captions on' }) },
 
   // — focus / distraction —
   { re: /\bfocus mode\b/, build: (_m, u) => adapt(u, { changes: { focusMode: true }, say: 'Turning on focus mode' }) },
@@ -165,6 +180,10 @@ const PREFIX_FILLER = new Set([
   'i', "i'd", 'id', "i'll", 'like', 'want', 'to', "let's", 'lets', 'just',
   'make', 'set', 'turn', 'on', 'the', 'a', 'an', 'my', 'this', 'some', 'more',
   'it', 'them', 'give', 'me', 'use', 'put', 'go',
+  // Question lead-ins, so "what are my settings" still reads as a whole query.
+  // NOTE: "about" is deliberately absent — "tell me about dark mode" should go
+  // to the app, not flip a setting.
+  'what', "what's", 'whats', 'are', 'is', 'show', 'tell',
 ]);
 // A second clause: another instruction tacked on. Any of these downstream of a
 // match means the utterance is compound and must go to the app whole.
@@ -215,7 +234,7 @@ export { STEP };
 export function vocabularyKeys() {
   const keys = new Set();
   for (const k of Object.keys(STEP)) if (settingsMeta[k]) keys.add(k);
-  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'dyslexiaFont', 'readingGuide', 'largeCursor', 'bigTargets']) {
+  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'dyslexiaFont', 'readingGuide', 'largeCursor', 'bigTargets', 'showCaptions', 'liveCaptions']) {
     if (settingsMeta[k]) keys.add(k);
   }
   return [...keys];

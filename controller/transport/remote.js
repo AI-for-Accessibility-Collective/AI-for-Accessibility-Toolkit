@@ -20,7 +20,7 @@ const RES = 'aa-control-res';
 const NOTE = 'aa-control-note';
 // The exact ControlPort surface we proxy. Each is async and returns a result
 // object (never throws) — matching the contract in control-port.js.
-const METHODS = ['describeCapabilities', 'getContext', 'applySettings', 'undoLast', 'resetUndo', 'getContent', 'performAction'];
+const METHODS = ['describeCapabilities', 'getContext', 'applySettings', 'undoLast', 'resetUndo', 'getContent', 'performAction', 'stop'];
 
 /**
  * Serve a local ControlPort over a channel. Attach on the RECEIVER side.

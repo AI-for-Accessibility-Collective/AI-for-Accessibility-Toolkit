@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-08-26T00:06:44.086Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-09-03T20:51:59.397Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -25,7 +25,7 @@ Version: `0.1.0`
 - Application error: `200 {"ok":false, "error": "<message>"} (application errors are data, not transport failures)`
 - Unknown method: `404 {"error":"unknown-method"}`
 
-### Methods (46, 0 unsupported)
+### Methods (47, 0 unsupported)
 
 `{method}` is the route (`{"method"}` segment in the POST path). `target` is the underlying
 Librarian (or, for `shareAudit`, datastore) call it resolves to; `alias` marks the 7 routes
@@ -74,6 +74,7 @@ whose wire name differs from the call it makes.
 | `getScopedSetting` | `getScopedSetting` |  | 2 | librarian |
 | `removeScopedSetting` | `removeScopedSetting` |  | 2 | librarian |
 | `recordExplicitSetting` | `recordExplicitSetting` |  | 3 | librarian |
+| `resetToProfile` | `resetToProfile` |  | 0 | librarian |
 | `addNote` | `addNote` |  | 1 | librarian |
 | `listNotes` | `listNotes` |  | 0 | librarian |
 | `updateNote` | `updateNote` |  | 1 | librarian |

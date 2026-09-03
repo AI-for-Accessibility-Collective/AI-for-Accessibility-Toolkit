@@ -58,6 +58,7 @@ Read directly off a live `createToolkit(...)` instance — call as `toolkit.libr
 | `librarian.hasScopedSetting(scope, key)` | async | Whether a durable user-explicit record for `setting.<key>` exists at `scope`. |
 | `librarian.getScopedSetting(scope, key)` | async | The current value of the user-explicit `setting.<key>` record at `scope`, or undefined if none. |
 | `librarian.removeScopedSetting(scope, key)` | async | Delete the durable user-explicit record for `setting.<key>` at `scope` — the true inverse of recordScopedSettings (which only ever upserts). |
+| `librarian.resetToProfile(opts)` | async | "Forget what I've changed, go back to my profile." undoLast is LIFO and per-session; resetUndo clears a journal without restoring anything. |
 | `librarian.getSiteCategory(origin, opts)` | async | Classify once, cache forever; user override wins and is sticky. |
 | `librarian.setSiteCategoryOverride(origin, category)` | async | (no doc comment) |
 | `librarian.getEffectivePreferences(url, contexts)` | async | Deterministic scope-chain merge of machine-actionable settings. |
@@ -324,13 +325,15 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   methods (called by the voice side panel on the Librarian object rather than
   via `librarian*` messages) are first-class routes under their own names:
   `interpretNeedsPrompt`, `hasScopedSetting`, `getScopedSetting`,
-  `removeScopedSetting`, `recordExplicitSetting`.
+  `removeScopedSetting`, `recordExplicitSetting`, `resetToProfile`
+  ("back to my profile": the bulk inverse of `recordScopedSettings` — without a
+  wire route a remote host's reset reaches nothing and reports success anyway).
 - The natural-language note methods — `addNote`, `listNotes`, `updateNote`,
   `deleteNote`, `findNotes` — are routes under their own names too. Notes are
   the free-form text the person wrote about their own needs; a hosted instance
   partitions them by uid like every other record, and they remain outside
   `GRANT_SCOPES`, so no other app can read one.
-- 46 routes total.
+- 47 routes total.
 
 ## Connecting to a hosted instance (URL + token)
 
@@ -357,9 +360,20 @@ TOOLKIT_SERVER_TOKEN=aat_...                   # UID-bound access token, minted 
    `Authorization: Bearer $TOOLKIT_SERVER_TOKEN` returns the token's
    `{uid, label}`.
 
-The browser extension does **not** use `.env` — its equivalent config is the
-extension's Options page (stored in `chrome.storage.sync` as
-`toolkitServerUrl` / `toolkitServerToken`).
+The browser extension does **not** use `.env`. Its config lives in
+`chrome.storage.sync` (`toolkitServerUrl` / `toolkitServerToken`), written by
+the extension's Options page. For a demo build that should already be pointed
+at an instance, put the same two values in an untracked
+`personalized-extension/extension-config.local.json`:
+
+```json
+{ "toolkitServerUrl": "https://<your-instance>", "toolkitServerToken": "aat_..." }
+```
+
+`npm run build` bakes it into the (gitignored) `extension/lib/remote-config.js`,
+and the service worker seeds those storage keys once per browser profile. The
+Options page still owns every write after that — including "Use local (clear)",
+which stays cleared. No local config file = no generated file = local mode.
 
 ## Running or deploying your own toolkit service
 
