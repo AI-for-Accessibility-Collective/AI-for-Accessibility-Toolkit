@@ -20,6 +20,31 @@ function norm(s) {
   return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+// Determiners a person naturally puts in front of the setting's noun: "turn
+// off MY dark mode", "without A dark theme". Defined once and shared by every
+// off rule, for the same reason the builder below exists at all: a determiner
+// group hand-copied into each rule drifts, and the rule that gets missed does
+// the OPPOSITE of what the person asked. Accepting only "the" is how "turn off
+// my dark mode" turned dark mode ON.
+const DET = '(?:(?:the|my|your|a|an)\\s+)?';
+
+// Build the "off" rule for one boolean toggle. Matches the common off
+// phrasings for the toggle's noun: "<noun> off" (which also covers "turn the
+// <noun> off"), "turn off / switch off / disable / stop / remove / no /
+// no more / without <noun>", each allowing a determiner, plus any per-toggle
+// aliases in `extraSrc`.
+// One shared builder instead of a hand-kept phrase list per setting: the
+// hand-kept list is how "dark mode off" turned dark mode ON.
+function offRule(nounSrc, changes, say, extraSrc) {
+  const noun = `(?:${nounSrc})`;
+  const parts = [
+    `\\b${noun}\\s+off\\b`,
+    `\\b(?:turn off|switch off|disable|stop|remove|no more|no|without)\\s+${DET}${noun}\\b`,
+  ];
+  if (extraSrc) parts.push(extraSrc);
+  return { re: new RegExp(parts.join('|')), build: (_m, u) => adapt(u, { changes, say }) };
+}
+
 /** @type {Array<{re: RegExp, build: (m: RegExpMatchArray, u: string) => import('./intent.js').Intent}>} */
 const RULES = [
   // — meta —
@@ -43,16 +68,50 @@ const RULES = [
   // — spacing —
   { re: /\b(more |extra )?(line )?spacing\b|\bspace out the lines\b/, build: (_m, u) => adapt(u, { deltas: { lineHeight: +STEP.lineHeight }, say: 'Increasing line spacing' }) },
 
-  // — dark / light — negation first
-  { re: /\b(light mode|no dark|turn off dark)\b/, build: (_m, u) => adapt(u, { changes: { darkMode: false }, say: 'Turning dark mode off' }) },
+  // — toggles off — before every positive toggle rule, so an off phrasing can
+  // never fall through to the positive rule and do the opposite of what the
+  // person asked. Contrast keeps its own line further down, next to the
+  // positive contrast rule, but is built the same way.
+  //
+  // Distractions is the one toggle that CANNOT use the shared builder: the
+  // builder's verb list contains "remove", and "remove distractions" means
+  // HIDE them, not show them again. So it keeps a narrower hand-written rule.
+  // Motion is safe in the builder because its noun is the compound
+  // ("motion reducer" / "reduced motion"), so "stop motion" and "no motion"
+  // still fall through to the positive rule and reduce motion, as intended.
+  offRule('dark(?: mode| theme)?', { darkMode: false }, 'Turning dark mode off', '\\blight mode\\b'),
+  offRule('focus mode', { focusMode: false }, 'Turning focus mode off'),
+  offRule('dyslexi[ac](?: friendly)?(?: font)?', { dyslexiaFont: false }, 'Back to the standard font'),
+  offRule('reading (?:guide|ruler)', { readingGuide: false }, 'Turning the reading guide off'),
+  offRule('(?:large|big|bigger) cursor', { largeCursor: false }, 'Back to the normal cursor', '\\bnormal cursor\\b'),
+  offRule('(?:big|large|bigger) (?:targets|buttons|controls)', { bigTargets: false }, 'Back to normal-size controls'),
+  offRule('motion reducer|reduced? motion', { motionReducer: false }, 'Allowing motion again', '\\ballow (?:motion|animations?)(?: again)?\\b'),
+  { re: new RegExp(`\\b(?:show|bring back|stop hiding) ${DET}(?:distractions?|ads)\\b`), build: (_m, u) => adapt(u, { changes: { hideDistractions: false }, say: 'Showing everything again' }) },
+
+  // — dark / light —
   { re: /\bdark( mode| theme)?\b/, build: (_m, u) => adapt(u, { changes: { darkMode: true }, say: 'Turning on dark mode' }) },
 
-  // — contrast — negation first
-  { re: /\b(no|remove|less) contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'none' }, say: 'Removing high contrast' }) },
-  { re: /\bhigh[- ]?contrast\b|\bmore contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'yellow-black' }, say: 'Turning on high contrast' }) },
+  // — contrast — negation first, then LOW (the 'light' level), then HIGH.
+  // Order matters: "no/remove/turn off (high) contrast" turns it off; "less high
+  // contrast" also turns it off; "low/lower/reduce/less contrast" selects the
+  // low-contrast level; "high/more contrast" the high one.
+  offRule('(?:high[- ]?)?contrast', { contrastMode: 'none' }, 'Removing high contrast', `\\bless ${DET}high[- ]?contrast\\b`),
+  { re: /\b(low|lower|reduce|reduced|less|soft|softer)( the| a)? contrast\b|\blow[- ]?contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'light' }, say: 'Lowering the contrast' }) },
+  { re: /\bhigh[- ]?contrast\b|\b(more|high|higher|strong|stronger) contrast\b/, build: (_m, u) => adapt(u, { changes: { contrastMode: 'yellow-black' }, say: 'Turning on high contrast' }) },
 
   // — motion —
   { re: /\b(reduce|stop|less|no) (motion|animation|animations)\b|\bmotion reducer\b/, build: (_m, u) => adapt(u, { changes: { motionReducer: true }, say: 'Reducing motion' }) },
+
+  // — LIVE captions — the browser's own on-device captioning (Chrome Live
+  // Caption), which captions ANY audio, including media with no caption track.
+  // A different thing from a media file's own captions, so it must precede the
+  // generic caption rules below — those would otherwise swallow "live".
+  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?live (caption(s|ing)?|cc)\b|\blive caption(s|ing)? off\b/, build: (_m, u) => adapt(u, { changes: { liveCaptions: false }, say: 'Turning live captions off' }) },
+  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?live (caption(s|ing)?|cc)\b|\blive caption(s|ing)? on\b|^live caption(s|ing)?$/, build: (_m, u) => adapt(u, { changes: { liveCaptions: true }, say: 'Turning live captions on' }) },
+
+  // — captions — the media's OWN track (incl. "closed captions"). Negation first.
+  { re: /\b(no|stop|hide|turn off|switch off|disable|remove|drop) (the )?(closed )?(caption(s|ing)?|subtitl(es?|ing)|cc)\b|\b(caption(s|ing)?|subtitl(es?|ing)) off\b/, build: (_m, u) => adapt(u, { changes: { showCaptions: false }, say: 'Turning captions off' }) },
+  { re: /\b(show|turn on|switch on|enable|start|give me|put on|with) (the )?(closed )?(caption(s|ing)?|subtitl(es?|ing)|cc)\b|\b(caption(s|ing)?|subtitl(es?|ing)) on\b|^(closed )?(caption(s|ing)?|subtitl(es?|ing))$/, build: (_m, u) => adapt(u, { changes: { showCaptions: true }, say: 'Turning captions on' }) },
 
   // — focus / distraction —
   { re: /\bfocus mode\b/, build: (_m, u) => adapt(u, { changes: { focusMode: true }, say: 'Turning on focus mode' }) },
@@ -121,6 +180,10 @@ const PREFIX_FILLER = new Set([
   'i', "i'd", 'id', "i'll", 'like', 'want', 'to', "let's", 'lets', 'just',
   'make', 'set', 'turn', 'on', 'the', 'a', 'an', 'my', 'this', 'some', 'more',
   'it', 'them', 'give', 'me', 'use', 'put', 'go',
+  // Question lead-ins, so "what are my settings" still reads as a whole query.
+  // NOTE: "about" is deliberately absent — "tell me about dark mode" should go
+  // to the app, not flip a setting.
+  'what', "what's", 'whats', 'are', 'is', 'show', 'tell',
 ]);
 // A second clause: another instruction tacked on. Any of these downstream of a
 // match means the utterance is compound and must go to the app whole.
@@ -171,7 +234,7 @@ export { STEP };
 export function vocabularyKeys() {
   const keys = new Set();
   for (const k of Object.keys(STEP)) if (settingsMeta[k]) keys.add(k);
-  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'dyslexiaFont', 'readingGuide', 'largeCursor', 'bigTargets']) {
+  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'dyslexiaFont', 'readingGuide', 'largeCursor', 'bigTargets', 'showCaptions', 'liveCaptions']) {
     if (settingsMeta[k]) keys.add(k);
   }
   return [...keys];

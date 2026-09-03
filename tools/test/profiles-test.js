@@ -16,7 +16,7 @@ function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('F
 // `fixContrast`, which the basic extension + CLI consume directly. A profile key
 // outside this set is a dead setting nothing applies.
 const RECOGNIZED = new Set([
-  'autoCaptions', 'autoDescribe', 'autoFixLabels', 'autoSimplify', 'autoSummarize',
+  'showCaptions', 'liveCaptions', 'autoCaptions', 'autoDescribe', 'autoFixLabels', 'autoSimplify', 'autoSummarize',
   'announceUpdates', 'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'bionicReading', 'colorBlindMode', 'confirmActions', 'contrastMode', 'darkMode',
   'defineWords', 'describeOnDemand', 'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'flashGuard', 'focusLocator', 'focusMode', 'fontScale', 'hideDistractions',
   'colorFilter', 'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'magnifier', 'motionReducer', 'muteSounds',
@@ -55,6 +55,8 @@ check('getAllProfiles lists all 12 with id/name', getAllProfiles().length === 12
 // ── EVIDENCE-BASED REGRESSION GUARDS ──────────────────────────────────────────
 // Deaf/HoH is about sound, not sight: captions ON, visual description OFF.
 check('deaf: captions on', profiles.deaf.tools.autoCaptions === true);
+check('deaf: showCaptions on (baseline, no-AI)', profiles.deaf.tools.showCaptions === true);
+check('deaf: getEnabledAdapters includes show-captions', getEnabledAdapters('deaf').includes('show-captions'));
 check('deaf: image description OFF (regression guard)', profiles.deaf.tools.autoDescribe === false);
 check('deaf: video description OFF (regression guard)', profiles.deaf.tools.autoVideoDescribe === false);
 check('deaf: getEnabledAdapters never enables alt-text', !getEnabledAdapters('deaf').includes('generate-alt'));

@@ -135,7 +135,10 @@ old "voice mode": the toolkit kept the *port* and rebuilt the *UI* host-agnostic
 never imports the controller; the controller imports only the toolkit's settings
 vocabulary (`../toolkit/registry/tools.js`). Full design + staged milestones:
 [`controller/DESIGN.md`](../controller/DESIGN.md). The [`onboarding/`](../onboarding/)
-example service serves a runnable demo at `/controller`.
+example service serves runnable demos of both shapes on one port: the floating
+widget at `/controller`, and at `/chat` (the front door) a chat window over the
+same `createController` core — one conversational input that both updates the
+person's profile and drives the app.
 
 ## XR Agent (future direction)
 

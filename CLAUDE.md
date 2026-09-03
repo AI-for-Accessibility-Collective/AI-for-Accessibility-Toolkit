@@ -8,8 +8,10 @@ ports and consume the core, the catalog, or the hosted service.
 ## Architecture
 
 - `toolkit/` — the platform-agnostic core. Sub-parts:
-  - `core/` — Librarian (memory/profile agent), datastore, ability-model,
-    broker, and the skill engine (`skill.js`, `skill-builder.js`). Imports only
+  - `core/` — Librarian (memory/profile agent), datastore, the ability model
+    (`ability.js`, `surface.js`, `strength.js`, `units.js`, `memory-class.js`,
+    `taxonomy.js`), and the skill engine (`skill.js`, `skill-builder.js`). The
+    old broker was folded into `sync/grants.js` and the Librarian. Imports only
     `ports/` and `sync/` — never a surface, adapter, or catalog.
   - `ports/` — the interfaces a host implements (KVStore, Clock, Scheduler,
     Consent, actuation). The core reaches every platform capability through these.
@@ -30,6 +32,12 @@ ports and consume the core, the catalog, or the hosted service.
   through a neutral `ControlPort`. It *consumes* the toolkit (imports
   `../toolkit/registry/tools.js` for the settings vocabulary); the toolkit never
   depends on it. See `controller/DESIGN.md` + `controller/PROTOCOL.md`.
+- `onboarding/` — a zero-dep example host serving three surfaces on one port:
+  `/chat` (the front door; `/` redirects there — one conversational input doing
+  both profile capture and app control, over the same `createController` core),
+  `/onboarding` (the step-by-step form), and `/controller` (the widget demo).
+  Runs `local` (its own data dir) or `remote` (proxying `server/`) — in local
+  mode alongside a running service it warns about the two-store split.
 - `examples/`, `docs/` — runnable examples and documentation.
 
 `createToolkit({ kv, clock, scheduler, consent, ... }) → { datastore, librarian }`

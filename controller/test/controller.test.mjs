@@ -29,6 +29,35 @@ function check(name, cond) {
   check('grammar: "dark mode" → darkMode true', parse('dark mode please').changes.darkMode === true);
   check('grammar: "light mode" negation → darkMode false', parse('switch to light mode').changes.darkMode === false);
   check('grammar: "high contrast" → contrastMode enum', parse('high contrast').changes.contrastMode === 'yellow-black');
+  check('grammar: "low contrast" → contrastMode light', parse('low contrast').changes.contrastMode === 'light');
+  check('grammar: "lower the contrast" → contrastMode light', parse('lower the contrast').changes.contrastMode === 'light');
+  check('grammar: "less contrast" → contrastMode light', parse('less contrast').changes.contrastMode === 'light');
+  check('grammar: "no contrast" → contrastMode none', parse('no contrast').changes.contrastMode === 'none');
+  // The media's OWN caption track.
+  check('grammar: "show captions" → showCaptions true', parse('show captions').changes.showCaptions === true);
+  check('grammar: "turn on subtitles" → showCaptions true', parse('turn on subtitles').changes.showCaptions === true);
+  check('grammar: "captions off" → showCaptions false', parse('captions off').changes.showCaptions === false);
+  check('grammar: "turn off captions" → showCaptions false', parse('turn off captions').changes.showCaptions === false);
+  check('grammar: "stop closed captions" → showCaptions false', parse('stop closed captions').changes.showCaptions === false);
+  // Chrome's Live Caption — a DIFFERENT setting, and it must not be conflated:
+  // turning live captions off must leave the video's own subtitles running.
+  check('grammar: "turn off live captions" → liveCaptions false', parse('turn off live captions').changes.liveCaptions === false);
+  check('grammar: "stop live captions" → liveCaptions false', parse('stop live captions').changes.liveCaptions === false);
+  check('grammar: "no live captions" → liveCaptions false', parse('no live captions').changes.liveCaptions === false);
+  check('grammar: "turn on live captions" → liveCaptions true', parse('turn on live captions').changes.liveCaptions === true);
+  check('grammar: "live captions" → liveCaptions true', parse('live captions').changes.liveCaptions === true);
+  check('grammar: live-caption rules never set showCaptions', !('showCaptions' in parse('turn off live captions').changes));
+  check('grammar: plain caption rules never set liveCaptions', !('liveCaptions' in parse('turn off captions').changes));
+  // -ing forms: "captioning" / "subtitling" are how people actually say it, and
+  // anything the grammar misses goes to an agent that may claim it succeeded.
+  check('grammar: "turn off live captioning" → liveCaptions false', parse('turn off live captioning').changes.liveCaptions === false);
+  check('grammar: "turn on live captioning" → liveCaptions true', parse('turn on live captioning').changes.liveCaptions === true);
+  check('grammar: "live captioning" alone → liveCaptions true', parse('live captioning').changes.liveCaptions === true);
+  check('grammar: "turn off captioning" → showCaptions false', parse('turn off captioning').changes.showCaptions === false);
+  check('grammar: "show captioning" → showCaptions true', parse('show captioning').changes.showCaptions === true);
+  // "subtitling" drops the e — the stem must be subtitl(es?|ing), not subtitle(s|ing)?
+  check('grammar: "turn off subtitling" → showCaptions false', parse('turn off subtitling').changes.showCaptions === false);
+  check('grammar: "turn off subtitles" still works', parse('turn off subtitles').changes.showCaptions === false);
   check('grammar: "reduce motion" → motionReducer true', parse('please reduce motion').changes.motionReducer === true);
   check('grammar: "read this" → query content text', (() => { const i = parse('read this to me'); return i.type === 'query' && i.ask === 'content' && i.mode === 'text'; })());
   check('grammar: "what\'s on screen" → query content outline', (() => { const i = parse("what's on screen"); return i.type === 'query' && i.ask === 'content'; })());

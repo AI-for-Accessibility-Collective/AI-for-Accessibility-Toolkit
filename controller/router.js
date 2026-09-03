@@ -42,52 +42,54 @@ function validate(key, value) {
  *   Optional NL lane; runs only when the grammar returns null.
  */
 export function createRouter({ control, llm = null, rawToTask = false }) {
+  // The grammar is deliberately NARROW, and the app is the default.
+  //
+  //   1. A grammar rule only claims an utterance it consumes WHOLE
+  //      (consumesWholeUtterance). A rule that matches a substring of a longer
+  //      sentence is a coincidence, not an intent — "tell me about dark matter"
+  //      must not turn on dark mode.
+  //   2. When the receiver takes tasks, only the SETTINGS vocabulary stays
+  //      deterministic (adapt with keys it declared / undo / query): those are
+  //      ~150 ms through applySettings, persist in the profile, and are
+  //      undoable. Everything else — commands (scroll/navigate/search/activate)
+  //      and anything unparsed — goes to the app, which does them at least as
+  //      well and keeps compound phrasing ("open google and search for apples")
+  //      whole.
+  //   3. Only when there is NO task-capable app do we fall back to acting on a
+  //      whole-utterance command locally, then the LLM lane, then an honest
+  //      "didn't catch that" — so nothing is silently faked.
+  //
+  // Capabilities are fetched lazily so the common rawToTask path (straight to a
+  // task) still costs no extra round trip.
   async function resolve(utterance) {
-    // rawToTask (the Controller is driving a URL): the host asserted this
-    // receiver takes tasks, so free-form input goes straight through as a task
-    // — an 8-second agent turn per utterance. We keep ONE deterministic fast
-    // path in front of that: an utterance that maps cleanly onto the settings
-    // vocabulary the receiver actually declared. "bigger text" / "dark mode" /
-    // "undo" / "read this to me" are ~150 ms through applySettings, persist in
-    // the profile, and can be undone — no reason to spend a model call on them.
-    //
-    // The guard is deliberately narrow so it can't reintroduce the
-    // compound-instruction bug (see below): only adapt/undo/query intents that
-    // `consumesWholeUtterance` (no trailing second clause), and — for adapt —
-    // only when every target key is in the receiver's `settingKeys`. Anything
-    // partial, unrecognized, or a `command` (scroll/navigate/search/activate —
-    // things the agent does at least as well, and the reason compound phrasing
-    // like "open google and search for apples" must reach the app whole) falls
-    // through to a task, exactly as before.
-    if (rawToTask) {
-      const det = parse(utterance);
-      if (det && consumesWholeUtterance(utterance)) {
-        if (det.type === 'undo' || det.type === 'query') return det;
-        if (det.type === 'adapt') {
-          const caps = await control.describeCapabilities();
-          const supported = new Set(caps.settingKeys || []);
-          const keys = [...Object.keys(det.changes || {}), ...Object.keys(det.deltas || {})];
-          if (keys.length && keys.every((k) => supported.has(k))) return det;
-        }
-      }
-      return taskCommand(utterance);
-    }
+    let _caps = null;
+    const caps = async () => (_caps || (_caps = await control.describeCapabilities()));
 
     const det = parse(utterance);
-    if (det) return det;
-    const caps = await control.describeCapabilities();
+    if (det && consumesWholeUtterance(utterance)) {
+      // undo/query are core ControlPort methods — always deterministic.
+      if (det.type === 'undo' || det.type === 'query') return det;
+      const c = await caps();
+      const canTask = rawToTask || (c.actions || []).includes('task');
+      // No app to hand it to → act on it (or let dispatch refuse honestly).
+      if (!canTask) return det;
+      if (det.type === 'adapt') {
+        const supported = new Set(c.settingKeys || []);
+        const keys = [...Object.keys(det.changes || {}), ...Object.keys(det.deltas || {})];
+        if (keys.length && keys.every((k) => supported.has(k))) return det;
+      }
+      // A command, or a setting this receiver can't do → the app handles it.
+    }
+
+    if (rawToTask) return taskCommand(utterance);
+    const c = await caps();
+    if ((c.actions || []).includes('task')) return taskCommand(utterance);
     if (llm) {
       try {
-        const it = await llm.resolve(utterance, caps);
+        const it = await llm.resolve(utterance, c);
         if (it && it.type) return it;
       } catch { /* fall through — the LLM lane is best-effort */ }
     }
-    // Catch-all: hand the raw utterance to a receiver that declares a 'task'
-    // action ("give me anything you couldn't parse"). This routes everything the
-    // grammar/LLM didn't claim to an app that can act on free instructions (e.g.
-    // an agent), instead of dying in the Controller — the grammar stays
-    // deterministic for the settings vocabulary; the rest goes to the app.
-    if ((caps.actions || []).includes('task')) return taskCommand(utterance);
     return noMatch(utterance);
   }
 

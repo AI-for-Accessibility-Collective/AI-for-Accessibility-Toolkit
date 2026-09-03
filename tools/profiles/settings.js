@@ -131,7 +131,8 @@ export function getEnabledAdapters(profileId) {
   if (tools.autoSummarize) enabled.push('simplify-text'); // summarization
   if (tools.autoWcagFix) enabled.push('wcag-fixes');
   if (tools.autoFixLabels) enabled.push('generate-labels');
-  if (tools.autoCaptions) enabled.push('generate-captions');
+  if (tools.showCaptions) enabled.push('show-captions'); // turn on existing captions (no AI)
+  if (tools.autoCaptions) enabled.push('generate-captions'); // transcribe media that has none (AI)
   if (tools.fixContrast) enabled.push('fix-contrast');
   if (tools.darkMode) enabled.push('dark-mode');
   if (tools.dyslexiaFont) enabled.push('visual-assist');

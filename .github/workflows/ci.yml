@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "release-candidate/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "release-candidate/**"]
 
 jobs:
   test:
@@ -29,22 +29,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Toolkit core tests
-        run: |
-          for t in toolkit/test/*-test.js; do echo "== $t"; node "$t" || exit 1; done
-          for t in toolkit/test/*.test.mjs; do echo "== $t"; node "$t" || exit 1; done
+      - name: Test suites (same command developers run)
+        # npm test covers toolkit/test, tools/test, controller/test, and
+        # onboarding/test — the one list CONTRIBUTING points contributors at,
+        # so CI cannot drift from it. browser-validate.js is intentionally NOT
+        # a *-test.js file — it needs a real Chromium and runs locally only.
+        run: npm test
 
       - name: Reference hosts run
         run: |
           node toolkit/hosts/xr-demo/demo.js
           node toolkit/hosts/skill-demo/demo.js
-
-      - name: Adapter / auditor / profile catalog tests
-        # tools/ is the developer catalog of adapters, auditors, and profiles.
-        # browser-validate.js is intentionally NOT a *-test.js file — it needs a
-        # real Chromium and runs locally only.
-        run: |
-          for t in tools/test/*-test.js; do echo "== $t"; node "$t" || exit 1; done
 
   server:
     runs-on: ubuntu-latest
@@ -56,4 +51,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Toolkit service tests
-        run: node server/test/server-test.mjs
+        run: |
+          node server/test/server-test.mjs
+          node server/test/delete-cascade.test.mjs
+          node server/test/gcs-pagination.test.mjs
+
+      - name: Toolkit package self-check
+        # Validates the package exactly as npm would publish it, catching
+        # manifest drift (files list vs exports map) that in-repo tests cannot
+        # see because they resolve against the working tree.
+        run: |
+          cd toolkit
+          npm pack --dry-run
+          npx --yes publint

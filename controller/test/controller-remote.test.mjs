@@ -117,6 +117,27 @@ async function run() {
     check('onNote: unsubscribe stops delivery', got === null);
   }
 
+  // ── stop(): interrupt a running task across the wire ──────────────────────
+  {
+    const recv = createMockReceiver({ actions: ['task'] });
+    const [cc, sc] = createDirectChannelPair();
+    serveControl(sc, recv);
+    const remote = remoteControl({ channel: cc });
+    const c = createController({ control: remote, rawToTask: true });
+
+    const caps = await remote.describeCapabilities();
+    check('stop: canStop advertised across the wire (task receiver)', caps.canStop === true);
+
+    // Nothing running yet → stop is a no-op.
+    check('stop: no-op when nothing is running', (await c.stop()).stopped === false);
+
+    // Kick off a task, then stop it — the interrupt reaches the far receiver.
+    await c.handle('find me a lasagna recipe');
+    const s = await c.stop();
+    check('stop: interrupts the running task across the wire', s.ok === true && s.stopped === true);
+    check('stop: a second stop reports nothing running', (await c.stop()).stopped === false);
+  }
+
   console.log(`\nController M5 (remote transport): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }

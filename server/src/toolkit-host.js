@@ -104,5 +104,14 @@ export function createToolkitHost({ store, geminiCaller, cap = DEFAULT_CAP }) {
     return built;
   }
 
-  return { getInstance, _cacheSizeForTest: () => cache.size };
+  /** Drop a uid's cached instance (e.g. after its data partition is deleted,
+   *  so a stale in-memory instance cannot write the partition back). Safe
+   *  because instances are stateless by construction (noopScheduler — no
+   *  timers to leak, see the header); data is never touched, only the
+   *  in-memory object. */
+  function evict(uid) {
+    return cache.delete(uid);
+  }
+
+  return { getInstance, evict, _cacheSizeForTest: () => cache.size };
 }

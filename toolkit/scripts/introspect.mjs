@@ -253,6 +253,7 @@ const CONCERN_MAP = {
   // ---- profile / ability ----
   'librarian:getProfile': 'profile/ability',
   'librarian:setProfileField': 'profile/ability',
+  'librarian:setProfileFields': 'profile/ability',
   'librarian:getAbilityModel': 'profile/ability',
   'librarian:interpretNeedsPrompt': 'profile/ability',
   'librarian:getSiteCategory': 'profile/ability',
@@ -263,6 +264,7 @@ const CONCERN_MAP = {
   'librarian:hasScopedSetting': 'profile/ability',
   'librarian:getScopedSetting': 'profile/ability',
   'librarian:removeScopedSetting': 'profile/ability',
+  'librarian:resetToProfile': 'profile/ability',
 
   // ---- memory ----
   'librarian:recall': 'memory',

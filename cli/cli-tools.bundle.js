@@ -541,7 +541,7 @@
       }
     }
   };
-  window.__ai4a11yDarkMode = DarkMode;
+  if (typeof window !== "undefined") window.__ai4a11yDarkMode = DarkMode;
 
   // tools/adapters/motion-reducer.js
   var MotionReducer = {
@@ -945,7 +945,7 @@
       }
     }
   };
-  window.__ai4a11yFocusMode = FocusMode;
+  if (typeof window !== "undefined") window.__ai4a11yFocusMode = FocusMode;
 
   // tools/adapters/read-aloud.js
   var ReadAloud = {
@@ -1875,7 +1875,7 @@
       }
     }
   };
-  window.__ai4a11yColorBlindMode = ColorBlindMode;
+  if (typeof window !== "undefined") window.__ai4a11yColorBlindMode = ColorBlindMode;
 
   // tools/adapters/dismiss-overlays.js
   var OVERLAY_NAME_RE = /(cookie|consent|gdpr|ccpa|newsletter|subscribe|sign[-_]?up|paywall|interstitial|pop[-_]?up|lightbox|backdrop|promo[-_]?(bar|banner)|notification[-_]?bar)/i;
@@ -5639,7 +5639,7 @@ ${scope} table {
       else this.enable();
     }
   };
-  window.__ai4a11yAutoTranscriber = AutoTranscriber;
+  if (typeof window !== "undefined") window.__ai4a11yAutoTranscriber = AutoTranscriber;
 
   // tools/utils/dom.js
   function isVisible(el) {
@@ -6977,6 +6977,117 @@ ${chunk}
   };
   if (typeof window !== "undefined") window.__ai4a11yFixLandmarks = FixLandmarks;
 
+  // tools/adapters/show-captions.js
+  var logFix16 = globalThis.ai4a11yLogFix || (() => {
+  });
+  function preferredLang() {
+    const l = typeof navigator !== "undefined" && navigator.language || "en";
+    return String(l).slice(0, 2).toLowerCase();
+  }
+  var PLAYERS = [
+    {
+      name: "youtube",
+      button: () => document.querySelector(".ytp-subtitles-button"),
+      isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
+    },
+    {
+      name: "vimeo",
+      button: () => document.querySelector('.vp-captions-button, button[aria-label*="aptions" i]'),
+      isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
+    }
+  ];
+  var DATA = "ai4a11yCaptions";
+  var ShowCaptions = {
+    enabled: false,
+    _restore: [],
+    // [{ track, prevMode }] for native tracks we switched on
+    _clicked: null,
+    // Set of "player|url" we've already turned on (once per URL)
+    _unregister: null,
+    // Enable the best caption/subtitle track on each <video> that has one, once.
+    _enableNativeTracks() {
+      const lang = preferredLang();
+      for (const v of document.querySelectorAll("video")) {
+        if (v.dataset[DATA]) continue;
+        const list = v.textTracks ? [...v.textTracks] : [];
+        const tracks = list.filter((t) => t && (t.kind === "captions" || t.kind === "subtitles"));
+        if (!tracks.length) continue;
+        const want = tracks.find((t) => (t.language || "").toLowerCase().startsWith(lang)) || tracks[0];
+        this._restore.push({ track: want, prevMode: want.mode });
+        try {
+          want.mode = "showing";
+        } catch {
+        }
+        v.dataset[DATA] = "on";
+        logFix16("showCaptions", v, "(off)", "showing");
+      }
+    },
+    // Turn on captions for players that own their CC UI — at most once per URL, so
+    // the user turning them back off isn't overridden by the next mutation.
+    _enablePlayerCaptions() {
+      const url = typeof location !== "undefined" ? location.href : "";
+      for (const p of PLAYERS) {
+        let btn;
+        try {
+          btn = p.button();
+        } catch {
+          btn = null;
+        }
+        if (!btn) continue;
+        const key = p.name + "|" + url;
+        if (this._clicked.has(key)) continue;
+        this._clicked.add(key);
+        if (!p.isOn(btn)) {
+          try {
+            btn.click();
+          } catch {
+          }
+          logFix16("showCaptions", btn, "(off)", "on");
+        }
+      }
+    },
+    _sweep() {
+      if (!this.enabled) return;
+      this._enableNativeTracks();
+      this._enablePlayerCaptions();
+    },
+    enable() {
+      if (this.enabled) {
+        this._sweep();
+        return;
+      }
+      this.enabled = true;
+      this._restore = [];
+      this._clicked = /* @__PURE__ */ new Set();
+      this._sweep();
+      this._unregister = registerSweep("show-captions", () => this._sweep(), { debounceMs: 400 });
+      console.log("[AI4A11y] Show Captions enabled");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this._unregister) {
+        this._unregister();
+        this._unregister = null;
+      }
+      for (const { track, prevMode } of this._restore) {
+        try {
+          track.mode = prevMode;
+        } catch {
+        }
+      }
+      this._restore = [];
+      for (const v of document.querySelectorAll("video[data-ai4a11y-captions]")) delete v.dataset[DATA];
+      this._clicked = null;
+      console.log("[AI4A11y] Show Captions disabled");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yShowCaptions = ShowCaptions;
+
   // tools/adapters/index.js
   var axeHandlers7 = {
     ...axeHandlers,
@@ -7239,6 +7350,8 @@ ${chunk}
         name: "Deaf/HoH",
         description: "Auto captions for media, visual focus for non-audio navigation",
         tools: {
+          showCaptions: true,
+          liveCaptions: true,
           autoCaptions: true,
           enhanceFocus: true,
           autoDescribe: false,

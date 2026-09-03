@@ -24,8 +24,9 @@ export function createMockReceiver({
   const settings = { ...initial };
   const journal = []; // LIFO of { key: previousValueOrUndefined }
   let focus = content ? 'document' : null;
+  let running = false; // a long-running task is in flight (set by performAction('task'))
 
-  const capabilities = { platform, settingKeys: [...settingKeys], actions: [...actions], canReadContent: !!content };
+  const capabilities = { platform, settingKeys: [...settingKeys], actions: [...actions], canReadContent: !!content, canStop: actions.includes('task') };
 
   return {
     settings,               // exposed for assertions/demos
@@ -80,8 +81,15 @@ export function createMockReceiver({
 
     async performAction(action, target) {
       if (!capabilities.actions.includes(action)) return { ok: false, detail: `unsupported action: ${action}` };
+      if (action === 'task') running = true; // a long task begins; its result would arrive later as a note
       focus = target ? `${action}:${target}` : action; // record it so tests can observe the effect
       return { ok: true, detail: `${action}${target ? ' ' + target : ''}` };
+    },
+
+    async stop() {
+      if (!running) return { ok: true, stopped: false, detail: 'nothing running' };
+      running = false;
+      return { ok: true, stopped: true, detail: 'cancelled the running task' };
     },
   };
 }

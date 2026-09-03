@@ -53,11 +53,13 @@ Read directly off a live `createToolkit(...)` instance — call as `toolkit.libr
 | `librarian.getProfile()` | async | (no doc comment) |
 | `librarian.getAbilityModel()` | async | The modality-agnostic AbilityModel view (../core/ability). |
 | `librarian.setProfileField(path, value)` | async | User-initiated edit — bypasses the proposal gate by design (the gate exists for *inferred* changes; explicit user intent needs no consent). |
+| `librarian.setProfileFields(fields)` | async | Set SEVERAL profile paths in ONE write. |
 | `librarian.recordExplicitSetting(key, value, origin)` | async | Fast lane for manual setting flips (popup toggle, onboarding choice). |
 | `librarian.recordScopedSettings(scope, settings, opts)` | async | Generalized explicit-setting writer: upserts one durable user-explicit record PER setting key at the given scope (general \| category:<id> \| origin:<host> \| context:<id>). |
 | `librarian.hasScopedSetting(scope, key)` | async | Whether a durable user-explicit record for `setting.<key>` exists at `scope`. |
 | `librarian.getScopedSetting(scope, key)` | async | The current value of the user-explicit `setting.<key>` record at `scope`, or undefined if none. |
 | `librarian.removeScopedSetting(scope, key)` | async | Delete the durable user-explicit record for `setting.<key>` at `scope` — the true inverse of recordScopedSettings (which only ever upserts). |
+| `librarian.resetToProfile(opts)` | async | "Forget what I've changed, go back to my profile." undoLast is LIFO and per-session; resetUndo clears a journal without restoring anything. |
 | `librarian.getSiteCategory(origin, opts)` | async | Classify once, cache forever; user override wins and is sticky. |
 | `librarian.setSiteCategoryOverride(origin, category)` | async | (no doc comment) |
 | `librarian.getEffectivePreferences(url, contexts)` | async | Deterministic scope-chain merge of machine-actionable settings. |
@@ -324,13 +326,21 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   methods (called by the voice side panel on the Librarian object rather than
   via `librarian*` messages) are first-class routes under their own names:
   `interpretNeedsPrompt`, `hasScopedSetting`, `getScopedSetting`,
-  `removeScopedSetting`, `recordExplicitSetting`.
+  `removeScopedSetting`, `recordExplicitSetting`, `resetToProfile`
+  ("back to my profile": the bulk inverse of `recordScopedSettings`. Without a
+  wire route a remote host's reset reaches nothing and reports success anyway).
+- `setProfileFields` is a first-class route under its own name for the same
+  reason, with no extension message behind it. Every profile field lives in one
+  stored record, so a caller that writes four fields in four requests writes
+  that record four times and a failure between any two of them leaves a profile
+  that contradicts itself. Fields belonging to one form go over the wire
+  together.
 - The natural-language note methods — `addNote`, `listNotes`, `updateNote`,
   `deleteNote`, `findNotes` — are routes under their own names too. Notes are
   the free-form text the person wrote about their own needs; a hosted instance
   partitions them by uid like every other record, and they remain outside
   `GRANT_SCOPES`, so no other app can read one.
-- 46 routes total.
+- 48 routes total.
 
 ## Connecting to a hosted instance (URL + token)
 
@@ -357,9 +367,20 @@ TOOLKIT_SERVER_TOKEN=aat_...                   # UID-bound access token, minted 
    `Authorization: Bearer $TOOLKIT_SERVER_TOKEN` returns the token's
    `{uid, label}`.
 
-The browser extension does **not** use `.env` — its equivalent config is the
-extension's Options page (stored in `chrome.storage.sync` as
-`toolkitServerUrl` / `toolkitServerToken`).
+The browser extension does **not** use `.env`. Its config lives in
+`chrome.storage.sync` (`toolkitServerUrl` / `toolkitServerToken`), written by
+the extension's Options page. For a demo build that should already be pointed
+at an instance, put the same two values in an untracked
+`personalized-extension/extension-config.local.json`:
+
+```json
+{ "toolkitServerUrl": "https://<your-instance>", "toolkitServerToken": "aat_..." }
+```
+
+`npm run build` bakes it into the (gitignored) `extension/lib/remote-config.js`,
+and the service worker seeds those storage keys once per browser profile. The
+Options page still owns every write after that — including "Use local (clear)",
+which stays cleared. No local config file = no generated file = local mode.
 
 ## Running or deploying your own toolkit service
 

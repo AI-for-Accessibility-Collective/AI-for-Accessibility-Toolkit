@@ -1,17 +1,30 @@
 // REAL-BROWSER validation — launches actual headless Chromium (via Playwright),
-// loads a real page with real layout + CSS cascade, injects the shipped adapter
-// bundle (cli/cli-tools.bundle.js → window.ai4a11y), and asserts each adapter's
-// REAL effect and its exact reversal. This is the layer jsdom can't cover: real
-// getComputedStyle, real animation, real fixed-positioning, real font sizing.
+// loads a real page with real layout + CSS cascade, injects the adapter bundle
+// (built here from validate-entry.js → window.ai4a11y), and asserts each
+// adapter's REAL effect and its exact reversal. This is the layer jsdom can't
+// cover: real getComputedStyle, real animation, real fixed-positioning, real
+// font sizing.
 //
-// Local only (needs a Chromium download); not in CI. Run after `npm run build`:
+// Local only (needs a Chromium download); not in CI. No prior build needed —
+// the bundle is built on the fly with esbuild (a dev dependency) into a temp
+// file. Run:
 //   node tools/test/browser-validate.js
 import { chromium } from 'playwright';
+import { build } from 'esbuild';
 import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
+import { dirname, resolve, join } from 'path';
+import { mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const BUNDLE = resolve(HERE, '..', '..', 'cli', 'cli-tools.bundle.js');
+const BUNDLE = join(mkdtempSync(join(tmpdir(), 'ai4a11y-validate-')), 'tools.bundle.js');
+await build({
+  entryPoints: [resolve(HERE, 'validate-entry.js')],
+  bundle: true,
+  format: 'iife',
+  outfile: BUNDLE,
+  logLevel: 'silent',
+});
 
 const PAGE = `<!DOCTYPE html><html><head><style>
   @keyframes aa-spin { to { transform: rotate(360deg); } }

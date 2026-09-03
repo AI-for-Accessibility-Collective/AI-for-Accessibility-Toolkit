@@ -23,6 +23,16 @@
  * @property {string[]} settingKeys       registry `settingsMeta` keys this receiver can applySettings.
  * @property {string[]} actions           performAction ids this receiver supports (e.g. 'scroll','activate','back').
  * @property {boolean} canReadContent     True iff getContent returns real content.
+ * @property {boolean} [canStop]          True iff stop() can interrupt in-flight long-running work (e.g. a running
+ *                                        `task`). Lets the Controller offer a Stop affordance only where it does something.
+ */
+
+/**
+ * @typedef {Object} StopResult
+ * @property {boolean} ok                 True once the receiver has handled the stop request.
+ * @property {boolean} [stopped]          True iff something in-flight was actually interrupted (false = nothing running).
+ * @property {string} [detail]            Human-readable note (e.g. 'cancelled the running task').
+ * @property {string} [error]             Set if the receiver cannot stop (or hit an error trying).
  */
 
 /**
@@ -73,6 +83,10 @@
  * @property {() => Promise<{ok:true}>} resetUndo
  * @property {(mode?: 'outline'|'text', chunk?: number) => Promise<ContentResult>} getContent
  * @property {(actionId: string, target?: string, text?: string) => Promise<ActionResult>} performAction
+ * @property {() => Promise<StopResult>} [stop]  OPTIONAL. Interrupt any in-flight long-running work started via
+ *   performAction (e.g. a `task` an agent is still running). Must return promptly. Receivers with nothing
+ *   long-running may omit it (the remote proxy then reports it unsupported) or implement a no-op returning
+ *   `{ ok:true, stopped:false }`. Advertise support with `canStop` in describeCapabilities().
  */
 
 /**
@@ -82,7 +96,7 @@
  */
 export const noopControl = {
   async describeCapabilities() {
-    return { platform: 'none', settingKeys: [], actions: [], canReadContent: false };
+    return { platform: 'none', settingKeys: [], actions: [], canReadContent: false, canStop: false };
   },
   async getContext() {
     return { focus: null, activeSettings: {}, capabilities: await this.describeCapabilities() };
@@ -101,6 +115,9 @@ export const noopControl = {
   },
   async performAction() {
     return { ok: false, detail: 'no control surface on this receiver' };
+  },
+  async stop() {
+    return { ok: true, stopped: false, detail: 'nothing running on this receiver' };
   },
 };
 
