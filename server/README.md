@@ -57,6 +57,9 @@ DATA_DIR=./data ADMIN_PASSWORD=dev PORT=8080 npm start
 `users/<uid>/local.json`, `users/<uid>/sync.json` (the KVStore's two areas,
 per CONTRACT.md), `admin/tokens.json`. Under `fileStore`, these are literal
 files under `DATA_DIR`; under `gcsStore`, object names in `TOOLKIT_BUCKET`.
+`admin/tokens.json` is the one document every instance writes, so its writes
+are conditional (content hash under a lock file, or the GCS object generation)
+and retried on conflict; see CONTRACT.md, Tokens.
 
 ## Docker
 

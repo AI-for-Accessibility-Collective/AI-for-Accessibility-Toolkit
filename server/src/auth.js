@@ -17,19 +17,53 @@ async function loadTokens(store) {
   return Array.isArray(doc?.tokens) ? doc.tokens : [];
 }
 
-async function saveTokens(store, tokens) {
-  await store.writeJSON(TOKENS_DOC, { tokens });
-}
-
-// Every mutation is a load, change, save of one shared document. The per-uid
-// lock in app.js does not cover it (a token issue for one uid can interleave
-// with a revocation for another), so the mutations queue behind each other
-// here. One process only; two service instances on one bucket still race.
+// Every mutation is a load, change, save of one shared document. Two things
+// keep a concurrent issue from overwriting a revocation:
+//
+//   - In one process, the mutations queue behind each other here. The per-uid
+//     lock in app.js does not cover this document (a token issue for one uid
+//     can interleave with a revocation for another).
+//   - Across processes (two service instances on one bucket or directory), the
+//     save is a conditional write: store.writeJSONIf refuses when the document
+//     moved since store.readDoc, and the mutation reloads and retries. A read
+//     that catches the document mid-change reports the same conflict. Five
+//     attempts is far more than the admin routes ever contend for.
+//
+// A store without the conditional pair falls back to the plain load and save,
+// which is the single-process guarantee only.
 let tokenQueue = Promise.resolve();
 function withTokenLock(fn) {
   const run = tokenQueue.then(fn, fn);
   tokenQueue = run.catch(() => {});
   return run;
+}
+
+const MAX_ATTEMPTS = 5;
+
+// Run `change(tokens)` against the current document and save it. `change`
+// returns `{ save, result }`: `save` false skips the write (nothing changed),
+// `result` is handed back to the caller.
+function mutateTokens(store, change) {
+  const conditional = typeof store.readDoc === 'function' && typeof store.writeJSONIf === 'function';
+  return withTokenLock(async () => {
+    if (!conditional) {
+      const tokens = await loadTokens(store);
+      const { save, result } = change(tokens);
+      if (save) await store.writeJSON(TOKENS_DOC, { tokens });
+      return result;
+    }
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const doc = await store.readDoc(TOKENS_DOC);
+        const tokens = Array.isArray(doc.value?.tokens) ? doc.value.tokens : [];
+        const { save, result } = change(tokens);
+        if (save) await store.writeJSONIf(TOKENS_DOC, { tokens }, doc.version);
+        return result;
+      } catch (e) {
+        if (e?.code !== 'CONFLICT' || attempt >= MAX_ATTEMPTS) throw e;
+      }
+    }
+  });
 }
 
 /** Mint a new token for `uid`, persist its hash, and return the raw token —
@@ -47,10 +81,9 @@ export async function issueToken(store, { uid, label } = {}) {
     createdAt: Date.now(),
     revoked: false,
   };
-  await withTokenLock(async () => {
-    const tokens = await loadTokens(store);
+  await mutateTokens(store, (tokens) => {
     tokens.push(record);
-    await saveTokens(store, tokens);
+    return { save: true, result: true };
   });
   return { token: raw, uid: record.uid };
 }
@@ -66,13 +99,11 @@ export async function listTokens(store) {
  *  Revocation flips a flag rather than deleting — verifyToken checks it and
  *  a revoked token's audit trail (id/uid/label/createdAt) survives. */
 export function revokeToken(store, id) {
-  return withTokenLock(async () => {
-    const tokens = await loadTokens(store);
+  return mutateTokens(store, (tokens) => {
     const rec = tokens.find((t) => t.id === id);
-    if (!rec) return false;
+    if (!rec) return { save: false, result: false };
     rec.revoked = true;
-    await saveTokens(store, tokens);
-    return true;
+    return { save: true, result: true };
   });
 }
 
@@ -81,8 +112,7 @@ export function revokeToken(store, id) {
  *  recreates the partition). Same flip-the-flag semantics as revokeToken, so
  *  the audit trail survives. Returns how many tokens were newly revoked. */
 export function revokeTokensFor(store, uid) {
-  return withTokenLock(async () => {
-    const tokens = await loadTokens(store);
+  return mutateTokens(store, (tokens) => {
     let n = 0;
     for (const rec of tokens) {
       if (rec.uid === uid && !rec.revoked) {
@@ -90,8 +120,7 @@ export function revokeTokensFor(store, uid) {
         n++;
       }
     }
-    if (n) await saveTokens(store, tokens);
-    return n;
+    return { save: n > 0, result: n };
   });
 }
 
