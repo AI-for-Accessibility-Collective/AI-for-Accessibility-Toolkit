@@ -254,12 +254,17 @@ const librarian = createLibrarian({ datastore, taxonomy: TAXONOMY, clock });
   // one: the observation text, the dedup compare and matchSkill all read the
   // stored field back as a list, and a bare string used to be spread into
   // characters or throw on .join after the skill was already written.
-  const strSave = await librarian.saveSkill({
-    name: 'string-fields', description: 'Bigger text on news sites.',
-    supportAreas: 'vision', siteRelevance: 'news',
-    recipe: { adapters: [{ id: 'visual-assist', settings: { fontScale: 140 } }] }, body: '# String Fields',
-  });
-  check('saveSkill accepts single-string vocabulary fields without throwing', strSave.saved === true);
+  // The throw is the failure under test, so catch it and report a failed
+  // check rather than letting it abort the rest of the suite.
+  let strSave = null;
+  try {
+    strSave = await librarian.saveSkill({
+      name: 'string-fields', description: 'Bigger text on news sites.',
+      supportAreas: 'vision', siteRelevance: 'news',
+      recipe: { adapters: [{ id: 'visual-assist', settings: { fontScale: 140 } }] }, body: '# String Fields',
+    });
+  } catch { /* reported by the check below */ }
+  check('saveSkill accepts single-string vocabulary fields without throwing', strSave?.saved === true);
   const stored = (await librarian.listSkills()).find(s => s.name === 'string-fields');
   check('saveSkill stores the list form it validated',
     JSON.stringify(stored?.supportAreas) === '["vision"]' && JSON.stringify(stored?.siteRelevance) === '["news"]');
