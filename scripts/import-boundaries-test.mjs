@@ -155,17 +155,7 @@ const KNOWN_EDGES = {
 // debt with a reason, not a declaration. Each entry names the importer, the
 // target path, and why it is tolerated for now. Empty means every edge lands
 // on a public file.
-const KNOWN_BREAKS = [
-  // FLAG(review): server/src embeds the core over the node reference ports,
-  // but toolkit/package.json exposes ./platforms/chrome/*.js and not
-  // ./platforms/node/*.js. Works in this repo, fails for anyone who installs
-  // the package. Either the exports map grows a node entry or the server
-  // stops reaching for these files.
-  { from: 'server/src/toolkit-host.js', to: 'toolkit/platforms/node/ports.js',
-    why: 'nodeClock lives only in the node platform module' },
-  { from: 'server/src/meta.js', to: 'toolkit/platforms/node/kv.js',
-    why: 'memoryKV lives only in the node platform module' },
-];
+const KNOWN_BREAKS = [];
 
 // ── Public surface per package ─────────────────────────────────────────────
 

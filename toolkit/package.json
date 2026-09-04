@@ -18,6 +18,7 @@
     "./core/skill-builder": "./core/skill-builder.js",
     "./platforms/chrome/web-surface": "./platforms/chrome/web-surface.js",
     "./platforms/chrome/*.js": "./platforms/chrome/*.js",
+    "./platforms/node/*.js": "./platforms/node/*.js",
     "./package.json": "./package.json",
     "./surfaces/web": "./surfaces/web.js",
     "./surfaces/xr": "./surfaces/xr.js",
