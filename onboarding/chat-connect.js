@@ -16,7 +16,10 @@
  * Follow a socket's lifecycle and report it as connection states.
  *
  *   onConnected: the socket is open, already or on its 'open' event.
- *   onFailed:    it never opened, an error or a close before any open.
+ *   onFailed:    it never opened, an error or a close before any open. A
+ *                socket that errors and then closes reports both, so onFailed
+ *                can run twice for one connection: keep what it does
+ *                idempotent, the way re-rendering a status line is.
  *   onLost:      it closed after having opened.
  *
  * `live()` answers whether this socket is still the one being driven. No
