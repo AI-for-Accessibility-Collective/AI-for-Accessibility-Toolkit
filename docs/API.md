@@ -274,7 +274,7 @@ The frontmatter + body are **model-facing** (an agent reads them); the fenced JS
 import { parseSkill, validateSkill, resolveSkill, matchSkill, matchSkillToNeed } from './toolkit/core/skill.js';
 
 const skill = parseSkill(markdown);              // → { name, description, supportAreas, siteRelevance, recipe, body }
-validateSkill(skill, { tools });                 // → { valid, errors[] } (checks adapter ids + setting keys vs the registry)
+validateSkill(skill, { tools });                 // → { valid, errors[] } (checks adapter ids + setting keys vs the registry, supportAreas vs SUPPORT_AREAS, siteRelevance vs the taxonomy + 'all')
 resolveSkill(skill);                             // → { settings: {...}, adapterIds: [...], actions: [...] } — the apply-plan
 matchSkill(skill, { supportAreas, category });   // → score, for page-based retrieval
 matchSkillToNeed(skill, need);                   // → score, for "does this need already have a skill?"

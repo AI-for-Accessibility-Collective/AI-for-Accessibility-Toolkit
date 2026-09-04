@@ -38,7 +38,7 @@ import { memoryClassOf } from './memory-class.js';
 import { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes,
   audienceAllowed, recordShareAudit } from '../sync/grants.js';
 import { buildProfileBlob, validateProfileBlob } from '../sync/blob.js';
-import { resolveSkill, matchSkill, matchSkillToNeed, validateSkill } from './skill.js';
+import { resolveSkill, matchSkill, matchSkillToNeed, validateSkill, vocabList } from './skill.js';
 import { buildSkill } from './skill-builder.js';
 
 /**
@@ -596,12 +596,28 @@ export function createLibrarian({
       return category;
     },
 
+    // Record the person's own category for an origin. Returns
+    // { ok: false, reason: 'bad-category' } for a value outside the taxonomy,
+    // { ok: false, reason: 'bad-origin' } for an empty origin, and { ok: true }
+    // once stored, so a caller can tell a refusal from a save. A user override
+    // is returned by getSiteCategory as-is (source 'user' skips the
+    // taxonomy-version check), and everything keyed by category downstream
+    // only ever matches taxonomy ids: memory scopes,
+    // auto-replay profiles, and the siteRelevance of a task saved as a skill.
+    // Refusing here, the same way logObservation ignores such a value, means
+    // no store carries a category nothing can match.
     async setSiteCategoryOverride(origin, category) {
       origin = (origin || '').toLowerCase().replace(/^www\./, '');
+      // getSiteCategory returns null for an empty origin, so an entry stored
+      // under '' could never be read back. Refuse it rather than answer
+      // { ok: true } for a save nothing can use.
+      if (!origin) return { ok: false, reason: 'bad-origin' };
+      if (!TAX().categoryIds().includes(category)) return { ok: false, reason: 'bad-category' };
       await DS().patch('mine.siteIndex', (cur) => {
         cur[origin] = { ...(cur[origin] || {}), category, source: 'user', classifiedAt: clock.now(), taxonomyVersion: TAX().version };
         return cur;
       });
+      return { ok: true };
     },
 
     // Deterministic scope-chain merge of machine-actionable settings.
@@ -1090,10 +1106,18 @@ export function createLibrarian({
     },
 
     // Persist a user-validated skill to their Skills db (mine.skillDocs).
-    // Re-validates against the registry so a malformed skill can't be stored.
+    // Re-validates against the registry and the vocabularies so a malformed
+    // skill, or one no retrieval could ever find, can't be stored.
     async saveSkill(skill) {
-      const { valid, errors } = validateSkill(skill, { tools: DS().global.tools() });
+      const { valid, errors } = validateSkill(skill, { tools: DS().global.tools(), taxonomy: TAX() });
       if (!valid) return { saved: false, errors };
+      // validateSkill reads a single string as a one-item list, so a caller
+      // that hands us `supportAreas: 'vision'` validates. Store the list form
+      // it was checked as: everything that reads a stored skill back (the
+      // observation text below, the dedup compare in respondToProposal,
+      // matchSkill) expects a list, and a string would be spread into
+      // characters or throw on .join.
+      skill = { ...skill, supportAreas: vocabList(skill.supportAreas), siteRelevance: vocabList(skill.siteRelevance) };
       await DS().patch('mine.skillDocs', (skills) => {
         const idx = skills.findIndex(s => s.name === skill.name);
         const entry = { ...skill, savedAt: clock.now() };
@@ -1431,7 +1455,14 @@ Return ONLY valid JSON with:
       // which only ever survived because that reassignment path is unreached
       // outside demo mode; esbuild's static check surfaced the latent bug.)
       let origin = obs.origin || originOf(obs.url || '');
-      let category = obs.category || null;
+      // A caller-supplied category is honored only when it is a taxonomy id.
+      // Anything else falls through to the site index and the host map, the
+      // same way a missing category does. Everything keyed by category
+      // downstream (memory scopes, the auto-replay profile match, and the
+      // siteRelevance of a task saved as a skill) only ever matches taxonomy
+      // ids, so a value outside the vocabulary would be logged and then
+      // never found again (issue #34).
+      let category = TAX().categoryIds().includes(obs.category) ? obs.category : null;
       if (origin) {
         const idx = await DS().get('mine.siteIndex');
         const entry = idx[origin];
@@ -1631,7 +1662,13 @@ Return ONLY valid JSON with:
               const names = new Set(skills.map(s => s.name));
               let name = slug;
               for (let n = 2; names.has(name); n++) name = `${slug}-${n}`;
-              await this.saveSkill({
+              // siteTypes come from the observation's category. logObservation
+              // and setSiteCategoryOverride both accept only taxonomy ids, so
+              // saveSkill's siteRelevance check passes here. A refusal is still
+              // reported through the catch below rather than dropped: the
+              // profile action above is already saved, and a silent drop would
+              // leave the person without the skill.
+              const res = await this.saveSkill({
                 name,
                 description: `Runs "${prompt}" for you. Use it on ${cats.join(', ')} sites.`,
                 supportAreas: [],
@@ -1639,12 +1676,14 @@ Return ONLY valid JSON with:
                 recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt }] },
                 body: `# ${prop.change.action.name}\n\nSaved from a task the assistant completed for you. Applying this skill runs the same task on the current page.`,
               });
+              if (!res.saved) throw new Error(res.errors.join('; '));
             }
+            // Only claim a stored skill once one exists (new or already there).
+            demo.trace('skill', 'skillsdb', 'saved as skill.md');
+            demo.trace('skill', 'autoenable', 'skill stored');
           } catch (e) {
             console.warn('[Librarian] could not save accepted task as a skill:', e.message);
           }
-          demo.trace('skill', 'skillsdb', 'saved as skill.md');
-          demo.trace('skill', 'autoenable', 'skill stored');
           demo.trace('skill', 'profiledb_skill', 'trigger registered');
           demo.trace('personal', 'continual', 'continual update');
         } else if (prop.change?.op === 'add-memory' && prop.change.record) {
