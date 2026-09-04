@@ -13,6 +13,19 @@
 //
 // Pure + platform-agnostic.
 
+// The support-area vocabulary: the areas of support a person's profile can
+// name (`supportAreas` on the profile and the AbilityModel), and the areas a
+// registry entry or a skill says it helps. One list, so the Librarian's
+// retrieval (matchSkill overlaps a skill's areas with the profile's) never
+// compares two vocabularies that drifted apart. Registry entries
+// (toolkit/registry/tools.js) and skills (validateSkill in core/skill.js)
+// are checked against it; a value outside the list fails at authoring time
+// instead of scoring zero at retrieval time (issue #34).
+// FLAG(review): onboarding/server.js keeps its own list with a seventh value,
+// 'attention', that no registry entry or builtin skill uses. Profiles are not
+// validated here, so that list is left alone; see the PR for the tradeoff.
+export const SUPPORT_AREAS = Object.freeze(['vision', 'hearing', 'motor', 'cognitive', 'reading', 'sensory']);
+
 // A modality-NEUTRAL need: a dimension of support the user requires, expressed
 // without committing to any one surface's units. Surfaces translate dimensions
 // into their own settings (see adapters/*/derive*). `value` is interpreted per

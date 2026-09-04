@@ -348,6 +348,7 @@ Everything importable from `@ai4a11y/toolkit` (the package root).
 | `clampSettings` | re-export | ./core/units.js |
 | `toAbilityModel` | re-export | ./core/ability.js |
 | `normalizeNeed` | re-export | ./core/ability.js |
+| `SUPPORT_AREAS` | re-export | ./core/ability.js |
 | `STRENGTH_RANK` | re-export | ./core/strength.js |
 | `rankOf` | re-export | ./core/strength.js |
 | `GRANT_SCOPES` | re-export | ./sync/index.js |
