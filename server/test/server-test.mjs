@@ -14,6 +14,7 @@ import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createGeminiCaller } from '../src/gemini.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
+import { HTTP_ENDPOINTS } from '../src/meta.js';
 
 // The 36 extension `librarian*` message routes, independently transcribed
 // from a host's `librarian*` switch (~lines
@@ -390,6 +391,71 @@ async function main() {
       // Deleting a non-existent profile -> 404.
       const missing = await call('DELETE', '/admin/users/nope', { adminToken: ADMIN_PASSWORD });
       assert.equal(missing.status, 404);
+    });
+
+    // The endpoint table is hand-maintained in two places: HTTP_ENDPOINTS
+    // (which generates server/API.md and what the live service answers at
+    // /v1/meta) and CONTRACT.md's table (which the toolkit skill copies).
+    // Nothing tied either to the paths app.js actually serves, so
+    // /admin/users and /admin/users/{uid} were live, tested, and in no
+    // document at all. This reads the three sets and requires them to agree.
+    await test('the documented endpoint table covers exactly the paths app.js serves', async () => {
+      const appSrc = await fs.readFile(new URL('../src/app.js', import.meta.url), 'utf8');
+
+      // app.js dispatches two ways: `pathname === '<literal>'` and
+      // `pathname.startsWith(<CONST>_PREFIX)` against a const holding the
+      // prefix. Collect both.
+      const literals = [...appSrc.matchAll(/pathname\s*===\s*'([^']+)'/g)].map((m) => m[1]);
+      const prefixConsts = Object.fromEntries(
+        [...appSrc.matchAll(/const\s+(\w+_PREFIX)\s*=\s*'([^']+)'/g)].map((m) => [m[1], m[2]]),
+      );
+      const usedPrefixes = [...appSrc.matchAll(/pathname\.startsWith\((\w+_PREFIX)/g)]
+        .map((m) => prefixConsts[m[1]])
+        .filter(Boolean);
+
+      // A prefix serves a collection and its members. Both are documented
+      // shapes, so normalize the table's `{placeholder}` paths onto the
+      // prefix they belong to and compare prefixes to prefixes.
+      const norm = (p) => {
+        for (const prefix of usedPrefixes) {
+          const bare = prefix.replace(/\/$/, '');
+          if (p === bare || p.startsWith(bare + '/')) return bare;
+        }
+        return p;
+      };
+
+      const served = new Set([...literals, ...usedPrefixes.map((p) => norm(p))].map(norm));
+      assert.ok(served.size > 0, 'parsed no paths out of app.js — the parser has gone stale');
+
+      const documented = new Set(HTTP_ENDPOINTS.map((e) => norm(e.path)));
+
+      const undocumented = [...served].filter((p) => !documented.has(p));
+      const stale = [...documented].filter((p) => !served.has(p));
+      assert.deepEqual(
+        undocumented, [],
+        `app.js serves ${undocumented.join(', ')}, which HTTP_ENDPOINTS does not list`,
+      );
+      assert.deepEqual(
+        stale, [],
+        `HTTP_ENDPOINTS lists ${stale.join(', ')}, which app.js does not serve`,
+      );
+
+      // CONTRACT.md's own table is what the toolkit skill reproduces, so it
+      // has to name the same paths.
+      const contractMd = await fs.readFile(new URL('../CONTRACT.md', import.meta.url), 'utf8');
+      const contractPaths = new Set(
+        [...contractMd.matchAll(/^\|\s*(?:GET|POST|DELETE|PUT|PATCH)\s*\|\s*`([^`]+)`/gm)]
+          .map((m) => norm(m[1])),
+      );
+      assert.ok(contractPaths.size > 0, 'parsed no rows out of CONTRACT.md — the parser has gone stale');
+      assert.deepEqual(
+        [...served].filter((p) => !contractPaths.has(p)), [],
+        'CONTRACT.md is missing a path app.js serves',
+      );
+      assert.deepEqual(
+        [...contractPaths].filter((p) => !served.has(p)), [],
+        'CONTRACT.md lists a path app.js does not serve',
+      );
     });
   } finally {
     await new Promise((resolve) => server.close(resolve));
