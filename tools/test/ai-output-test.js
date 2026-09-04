@@ -88,6 +88,15 @@ check('passage refusal: "I do not have the ability to translate this" is a refus
 check('passage refusal: "I\'m not allowed to summarize this content" is a refusal', opensWithFirstPersonRefusal("I'm not allowed to summarize this content."));
 check('passage refusal: "I couldn\'t care less" is content', !opensWithFirstPersonRefusal("I couldn't care less what the committee decides."));
 check('passage refusal: "I won\'t be there" is content', !opensWithFirstPersonRefusal("I won't be there on Friday, so send the notes."));
+// Testimony from people with disabilities opens the same way a refusal does.
+// The object after the verb decides: "the screen" is not the task.
+check('passage refusal: "I cannot see the screen well, so I use a magnifier" is content', !opensWithFirstPersonRefusal('I cannot see the screen well, so I use a magnifier every day.'));
+check('passage refusal: "I cannot read the instructions without a screen reader" is content', !opensWithFirstPersonRefusal('I cannot read the instructions without a screen reader.'));
+check('passage refusal: "I cannot see the point ..." is content', !opensWithFirstPersonRefusal('I cannot see the point of the new form.'));
+check('passage refusal: "I can\'t access my account" is content', !opensWithFirstPersonRefusal("I can't access my account when the captcha has no audio."));
+check('passage refusal: "I cannot translate it." is a refusal', opensWithFirstPersonRefusal('I cannot translate it.'));
+check('passage refusal: "I cannot read the text." is a refusal', opensWithFirstPersonRefusal('I cannot read the text.'));
+check('passage refusal: "I cannot summarize this page." is a refusal', opensWithFirstPersonRefusal('I cannot summarize this page.'));
 
 // ── rejectShortText (aria-label, <th>) ───────────────────────────────────────
 check('short: the default cap is 60 characters', MAX_SHORT_TEXT_CHARS === 60);

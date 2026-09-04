@@ -66,14 +66,22 @@ export function containsUncertainty(text) {
 // or "I'm sorry" or "I can't" standing alone as the whole answer.
 // FLAG(review): English only. A model that declines in the target language
 // of a translation passes this check. The verb and object lists are a
-// judgment call: "I cannot do this alone" is still rejected, and a refusal
-// built on a verb that is not listed goes through.
+// judgment call: "I cannot do this alone" is still rejected, a refusal
+// built on a verb that is not listed goes through, and so does one whose
+// object is not a listed task noun ("I cannot process the document").
 const REFUSAL_VERBS = 'translate|simplify|summari[sz]e|rewrite|rephrase|restate|interpret|render|make\\s+out'
   + '|help|assist|provide|process|read|access|determine|identify|see|view|do|fulfill|complete|comply'
   + '|generate|produce|answer|respond|perform|proceed|continue|work';
 // What the verb must point at for the sentence to be about the task rather
-// than an ordinary first-person opening ("I can't help but", "I can't see why").
-const TASK_OBJECT = 'this|that|these|those|the|it|your|you|a|an|any|with|what|text|content|passage|as';
+// than an ordinary first-person opening ("I can't help but", "I can't see
+// why") or testimony ("I cannot see the screen well", "I cannot read the
+// instructions without a screen reader"). Only words that name the task
+// count: a demonstrative on its own, "it" as the last word, or a task noun
+// with an optional article. "the screen" and "the instructions" are not the
+// task, so those sentences are content.
+const TASK_NOUN = 'text|content|passage|page|request|translation|simplification|summary|rewrite|rephrasing';
+const TASK_OBJECT = String.raw`(?:with\s+|on\s+)?(?:(?:translat|simplify|summari[sz]|rewrit|rephras)ing\s+)?`
+  + String.raw`(?:(?:this|that|these|those)\b|it[,.!]?\s*$|(?:(?:a|an|the|this|that|these|those|your|any)\s+)?(?:${TASK_NOUN})\b)`;
 const APOLOGY = String.raw`unfortunately|sorry|i(?:['’]m| am) sorry|i apologi[sz]e|as an ai(?: language model| assistant| model)?`;
 // "I" plus a negated modal: can't, cannot, could not, won't, will not.
 const CANNOT = String.raw`i\s+(?:can(?:['’]t|not)|could(?:n['’]t|\s+not)|won['’]t|will\s+not)`;
@@ -88,7 +96,7 @@ const FIRST_PERSON_REFUSAL_RE = new RegExp(
   + String.raw`|(?:${CANNOT})(?:\s+(?:${REFUSAL_VERBS}))?[,.!]?\s*$`
   + String.raw`|(?:${UNABLE})\s+(?:${REFUSAL_VERBS})\b`
   + String.raw`|i do(?:n['’]t| not) know\s+(?:what|which|the|this|that|enough)\b`
-  + String.raw`|(?:${CANNOT})\s+(?:${REFUSAL_VERBS})\s+(?:${TASK_OBJECT})\b)`,
+  + String.raw`|(?:${CANNOT})\s+(?:${REFUSAL_VERBS})\s+${TASK_OBJECT})`,
   'i',
 );
 
