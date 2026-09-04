@@ -189,10 +189,15 @@ export function adaptersForTools(tools) {
   // Two names for one setting: profiles (settings.json) say colorFilter, the
   // registry and settingsMeta say colorBlindMode, and both hosts (the
   // extension's content script and applyProfileByName in cli/cli-tools.js)
-  // accept either. Read both here so a registry entry and a profile both
-  // reach the adapter.
-  const colorMode = tools.colorFilter || tools.colorBlindMode;
-  if (colorMode && colorMode !== 'none') enabled.push('color-blind');
+  // accept either. 'none' under one name must not hide a filter set under
+  // the other: settings.json's defaults carry colorFilter: 'none', so any
+  // settings object built over the defaults has colorFilter present.
+  // FLAG(review): two names for one key. mergeProfileTools above still
+  // special-cases only colorFilter, so a colorBlindMode value is merged as a
+  // plain boolean. Which name should survive is a decision to log, not one
+  // this file makes.
+  const colorMode = [tools.colorFilter, tools.colorBlindMode].find((v) => v && v !== 'none');
+  if (colorMode) enabled.push('color-blind');
   // FLAG(review): the registry's agent-watch entry sets this key, but no host
   // has a line for it yet, so a profile that sets agentWatch lists the
   // adapter here without anything switching it on.
