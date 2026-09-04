@@ -183,8 +183,8 @@ rather than hand-editing.
 The six top-level directories are packages with one direction of dependency.
 `toolkit/` (the core) and `tools/` (the catalog) import from no sibling.
 `server/`, `controller/`, and `cli/` depend inward on those two. `onboarding/`
-is the one edge between neighbors: it reuses the server's auth, store, and
-toolkit host, and serves the controller's modules to its chat page.
+is the one edge between neighbors: it reuses the server's auth, LLM caller,
+store, and toolkit host, and serves the controller's modules to its chat page.
 
 Four rules keep that shape, and `npm test` checks them
 (`scripts/import-boundaries-test.mjs`):
