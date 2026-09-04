@@ -504,7 +504,11 @@ async function runBothModesAndCompare() {
       check(`${tag} both modes ran the scenario`, !!l && !!r,
         `      local ${l ? 'ran' : 'skipped'}, remote ${r ? 'ran' : 'skipped'}`);
       if (!l || !r) continue;
-      check(`${tag} both modes ${scen.ok ? 'resolve' : 'reject'}`, l.ok === r.ok,
+      // Whether the outcome is the RIGHT one is the per-mode child's check.
+      // This one only says the two modes did the same thing, so its name must
+      // not claim which thing: two modes that both reject a row the table says
+      // resolves agree, and the line would otherwise read "both modes resolve".
+      check(`${tag} both modes agree on whether onboard() resolves`, l.ok === r.ok,
         `      local ${l.ok ? 'resolved' : 'rejected'}, remote ${r.ok ? 'resolved' : 'rejected'}`);
       check(`${tag} same call sequence with the same arguments in both modes`,
         canon(l.trace) === canon(r.trace),
