@@ -131,6 +131,14 @@ export function getEnabledAdapters(profileId) {
   if (tools.autoSummarize) enabled.push('simplify-text'); // summarization
   if (tools.autoWcagFix) enabled.push('wcag-fixes');
   if (tools.autoFixLabels) enabled.push('generate-labels');
+  // The extension's content script runs the link-text and table-header
+  // repairs under the same key as label generation, so a profile that turns
+  // on autoFixLabels reaches these two as well. They have no registry entry
+  // or key of their own.
+  // FLAG(review): recorded from the host's behavior. If link text and table
+  // headers should be switchable on their own, they need their own registry
+  // entries and setting keys instead of riding on autoFixLabels.
+  if (tools.autoFixLabels) enabled.push('fix-links', 'fix-tables');
   if (tools.showCaptions) enabled.push('show-captions'); // turn on existing captions (no AI)
   if (tools.autoCaptions) enabled.push('generate-captions'); // transcribe media that has none (AI)
   if (tools.fixContrast) enabled.push('fix-contrast');
@@ -175,7 +183,12 @@ export function getEnabledAdapters(profileId) {
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');
   if (tools.voiceCommands) enabled.push('voice-commands');
-  if (tools.colorFilter && tools.colorFilter !== 'none') enabled.push('color-blind');
+  // Two names for one setting: profiles (settings.json) say colorFilter, the
+  // registry and settingsMeta say colorBlindMode, and hosts accept either.
+  // Read both here so a registry entry and a profile both reach the adapter.
+  const colorMode = tools.colorFilter || tools.colorBlindMode;
+  if (colorMode && colorMode !== 'none') enabled.push('color-blind');
+  if (tools.agentWatch) enabled.push('agent-watch');
 
   return [...new Set(enabled)]; // Remove duplicates
 }
