@@ -34,7 +34,12 @@ export const LiveRegionAnnouncer = {
     region.id = REGION_ID;
     region.setAttribute('aria-live', 'polite');
     region.setAttribute('aria-atomic', 'false');
-    region.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;';
+    // `fixed`, not `absolute`: this is appended to <body>, and an absolute box
+    // still resolves against a positioned ancestor and sits at its static
+    // position. Fixed pins it to the viewport and guarantees it can never take
+    // a slot in a grid/flex body layout (see skip-links.js). Costs nothing —
+    // it's visually hidden either way.
+    region.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;';
     (document.body || document.documentElement).appendChild(region);
     this.region = region;
 
