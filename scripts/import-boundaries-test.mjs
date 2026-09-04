@@ -298,6 +298,22 @@ function specifiersIn(src) {
   return [...out];
 }
 
+// Where a specifier lands. esbuild bundles cli/, and a bundler resolves an
+// extensionless or a directory specifier, so '../tools' is a legal way to
+// write '../tools/index.js' there. Take those steps before deciding which file
+// the edge points at; without them the edge lands on the package root, and
+// rule 1 reports it as a path the exports map does not expose, which is a
+// false alarm on code that builds. A specifier that resolves to nothing is
+// left as it is, and the existence check names it.
+function resolveSpecifier(fromFile, spec) {
+  const base = path.resolve(path.dirname(fromFile), spec);
+  if (existsSync(base) && statSync(base).isFile()) return base;
+  for (const candidate of [`${base}.js`, `${base}.mjs`, path.join(base, 'index.js')]) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return base;
+}
+
 // Paths are kept with '/' so they compare with KNOWN_EDGES on any OS.
 const posix = (p) => p.split(path.sep).join('/');
 
@@ -310,7 +326,7 @@ for (const pkg of PACKAGES) {
     const from = posix(path.relative(ROOT, file));
     for (const spec of specifiersIn(readFileSync(file, 'utf8'))) {
       if (!spec.startsWith('./') && !spec.startsWith('../')) continue;
-      const to = posix(path.relative(ROOT, path.resolve(path.dirname(file), spec)));
+      const to = posix(path.relative(ROOT, resolveSpecifier(file, spec)));
       const toPkg = to.split('/')[0];
       if (toPkg === pkg) continue;
       edges.push({ from, fromPkg: pkg, to, toPkg, rel: to.split('/').slice(1).join('/') });
