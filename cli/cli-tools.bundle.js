@@ -6900,21 +6900,22 @@ ${chunk}
       console.log("[AI4A11y] Made nested link non-interactive");
     }
   }
+  var TARGET_SIZE_PX = 44;
   function fixTargetSize(element) {
     const rect = element.getBoundingClientRect();
-    if (rect.width >= 44 && rect.height >= 44) return;
-    const needWidth = Math.max(0, (44 - rect.width) / 2);
-    const needHeight = Math.max(0, (44 - rect.height) / 2);
+    if (rect.width >= TARGET_SIZE_PX && rect.height >= TARGET_SIZE_PX) return;
+    const needWidth = Math.max(0, (TARGET_SIZE_PX - rect.width) / 2);
+    const needHeight = Math.max(0, (TARGET_SIZE_PX - rect.height) / 2);
     const display = getComputedStyle(element).display;
     element.style.boxSizing = "border-box";
     element.style.padding = `${needHeight}px ${needWidth}px`;
-    element.style.minWidth = "44px";
-    element.style.minHeight = "44px";
+    element.style.minWidth = `${TARGET_SIZE_PX}px`;
+    element.style.minHeight = `${TARGET_SIZE_PX}px`;
     if (display === "inline") {
       element.style.display = "inline-block";
     }
     incrementStat7("wcag");
-    logFix14("target-size", element, `${Math.round(rect.width)}x${Math.round(rect.height)}`, "44x44");
+    logFix14("target-size", element, `${Math.round(rect.width)}x${Math.round(rect.height)}`, `${TARGET_SIZE_PX}x${TARGET_SIZE_PX}`);
     console.log("[AI4A11y] Increased touch target size");
   }
   function fixViewportMeta(element) {
@@ -6946,7 +6947,40 @@ ${chunk}
   function randomSuffix() {
     return Math.random().toString(36).substring(2, 7);
   }
-  var axeHandlers6 = {
+  var fixTiers = {
+    "html-has-lang": "safe",
+    "html-lang-valid": "safe",
+    "valid-lang": "safe",
+    "duplicate-id": "safe",
+    "duplicate-id-aria": "safe",
+    "duplicate-id-active": "safe",
+    "heading-order": "risky",
+    "tabindex": "safe",
+    "aria-valid-attr": "risky",
+    "aria-roles": "risky",
+    "aria-allowed-role": "risky",
+    "aria-deprecated-role": "safe",
+    "aria-required-attr": "safe",
+    "nested-interactive": "risky",
+    "target-size": "risky",
+    "meta-viewport": "safe",
+    "meta-viewport-large": "safe",
+    "meta-refresh": "safe",
+    "blink": "safe",
+    "marquee": "safe"
+  };
+  function isRiskyFix(ruleId) {
+    return fixTiers[ruleId] === "risky";
+  }
+  function gate(ruleId, fix) {
+    if (!isRiskyFix(ruleId)) return fix;
+    return function gatedFix(element, settings2) {
+      if (settings2?.wcagRiskyFixes === true) return fix(element);
+      console.info(`[AI4A11y] Skipped risky fix ${ruleId} (wcagRiskyFixes is off)`);
+      return false;
+    };
+  }
+  var rawHandlers = {
     "html-has-lang": fixMissingLang,
     "html-lang-valid": fixInvalidLang,
     "valid-lang": fixInvalidLang,
@@ -6968,6 +7002,9 @@ ${chunk}
     "blink": replaceObsoleteElement,
     "marquee": replaceObsoleteElement
   };
+  var axeHandlers6 = Object.fromEntries(
+    Object.entries(rawHandlers).map(([ruleId, fix]) => [ruleId, gate(ruleId, fix)])
+  );
 
   // tools/adapters/fix-links.js
   var logFix15 = globalThis.ai4a11yLogFix || (() => {
@@ -8039,32 +8076,15 @@ ${chunk}
       if (!handler) return { error: `No handler for rule: ${ruleId}` };
       const el = document.querySelector(selector);
       if (!el) return { error: `Element not found: ${selector}` };
-      await handler(el);
+      const risky = isRiskyFix(ruleId);
+      const applied = risky ? await handler(el, getActiveProfileSettings()) : await handler(el);
+      if (risky && applied === false) {
+        return { skipped: "risky", error: `Risky fix ${ruleId} is off (the active profile does not set wcagRiskyFixes)` };
+      }
       return { success: true };
     }
   };
-  var nonAiFixes = {
-    "html-has-lang": fixMissingLang,
-    "html-lang-valid": fixInvalidLang,
-    "valid-lang": fixInvalidLang,
-    "duplicate-id": fixDuplicateId,
-    "duplicate-id-aria": fixDuplicateId,
-    "duplicate-id-active": fixDuplicateId,
-    "heading-order": fixHeadingOrder,
-    "tabindex": fixPositiveTabindex,
-    "aria-valid-attr": fixInvalidAriaAttr,
-    "aria-roles": fixInvalidAriaRole,
-    "aria-allowed-role": fixInvalidAriaRole,
-    "aria-deprecated-role": fixDeprecatedRole,
-    "aria-required-attr": fixMissingAriaAttrs,
-    "nested-interactive": fixNestedInteractive,
-    "target-size": fixTargetSize,
-    "meta-viewport": fixViewportMeta,
-    "meta-viewport-large": fixViewportMeta,
-    "meta-refresh": removeMetaRefresh,
-    "blink": replaceObsoleteElement,
-    "marquee": replaceObsoleteElement
-  };
+  var nonAiFixes = axeHandlers6;
   var aiRequiredRules = /* @__PURE__ */ new Set([
     "image-alt",
     "input-image-alt",
@@ -8082,8 +8102,9 @@ ${chunk}
     const results = {
       violations: [],
       fixed: { nonAi: 0, ai: 0 },
-      skipped: { needsAi: [], noHandler: [] }
+      skipped: { needsAi: [], noHandler: [], risky: [] }
     };
+    const settings2 = getActiveProfileSettings();
     const violations = await runAxeAnalysis();
     results.violations = violations.map((v) => ({ id: v.id, count: v.nodes?.length || 0 }));
     for (const violation of violations) {
@@ -8096,8 +8117,11 @@ ${chunk}
         if (!el || el.dataset.ai4a11yProcessed) continue;
         if (nonAiFixes[ruleId]) {
           try {
-            nonAiFixes[ruleId](el);
-            results.fixed.nonAi++;
+            if (nonAiFixes[ruleId](el, settings2) === false) {
+              results.skipped.risky.push(ruleId);
+            } else {
+              results.fixed.nonAi++;
+            }
           } catch (e) {
             console.warn(`[AI4A11y] Failed to fix ${ruleId}:`, e);
           }
@@ -8113,7 +8137,6 @@ ${chunk}
     fixTargetBlankLinks();
     fixPositiveTabindexElements();
     fixDuplicateIds();
-    const settings2 = getActiveProfileSettings();
     if (settings2.autoSimplify) {
       const complexText = findComplexText();
       results.textProcessing = results.textProcessing || {};

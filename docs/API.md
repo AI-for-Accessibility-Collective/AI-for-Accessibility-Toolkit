@@ -181,6 +181,21 @@ export const axeHandlers = {
 
 The main content script automatically routes violations to registered handlers.
 
+Every handler takes the element as its first argument. The second argument is
+the adapter's own; there is no shared contract for it, so a dispatcher that
+routes rules from more than one adapter has to know which handler it is
+calling. `fixLowContrast`, for example, takes a color there.
+
+The `wcag-fixes` handlers that change page structure (`heading-order`,
+`aria-valid-attr`, `aria-roles`, `aria-allowed-role`, `nested-interactive`,
+`target-size`) take a settings object as their second argument, and run only
+when `settings.wcagRiskyFixes` is `true`. When they skip they return `false`,
+so a host can count and report the skips; the CLI passes the active profile's
+tools and lists what was held back. `fixTiers` and `isRiskyFix(ruleId)` from
+`tools/adapters/wcag-fixes.js` say which handlers those are, so a host can
+tell a person before it dispatches, and can pass the settings object to those
+handlers alone.
+
 ## Profiles
 
 Profiles configure tool combinations for specific needs. Profile **data** lives in `tools/profiles/settings.json` (single source of truth, read by every host); merge/apply **logic** lives in `tools/profiles/settings.js`.
