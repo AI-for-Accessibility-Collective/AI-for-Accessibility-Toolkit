@@ -497,7 +497,7 @@ async function runBothModesAndCompare() {
   }
 
   console.log('\n── cross-mode ──');
-  const [local, remote] = MODES.map((m) => reports[m]);
+  const { local, remote } = reports;
   check('both modes produced a report', !!local && !!remote,
     `      exit codes: local ${exits.local}, remote ${exits.remote}`);
   if (local && remote) {
