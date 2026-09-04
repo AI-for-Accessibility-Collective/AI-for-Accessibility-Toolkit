@@ -1,14 +1,18 @@
-import { isVisible, wasProcessed, getLabelledByText } from '../utils/dom.js';
+import { isVisible, wasProcessed, getLabelledByText, hasAccessibleName } from '../utils/dom.js';
 import { isLikelyDecorative, getImageSize } from '../utils/image.js';
 
 // Pixel cutoffs. None of these come from WCAG: 1.1.1 (Non-text Content) says
 // which images need a text alternative and which are decorative, but gives no
 // size. They are guesses that separate icons and spacers from images a person
 // would want described, and a large icon or a small chart lands on the wrong
-// side. Heuristic, best-effort.
-const CONTENT_IMAGE_MIN_PX = 100; // an <img alt=""> or a background image wider AND taller than this may be content
-const CANVAS_MIN_PX = 50;         // a <canvas> wider AND taller than this may be a chart or drawing worth describing
-const SVG_ICON_MAX_PX = 50;       // an <svg> narrower OR shorter than this is skipped as an icon
+// side. Every comparison is strict, so an image exactly this size falls on
+// the "not content" side and an SVG exactly SVG_ICON_MAX_PX is not an icon.
+// findEmptyAltImages also defers to isLikelyDecorative in utils/image.js,
+// which has its own 20px floor; that floor sits inside the 100px cutoff, so
+// it changes nothing here. Heuristic, best-effort.
+const CONTENT_IMAGE_MIN_PX = 100; // an <img alt=""> or a background image strictly wider AND taller than this may be content
+const CANVAS_MIN_PX = 50;         // a <canvas> strictly wider AND taller than this may be a chart or drawing worth describing
+const SVG_ICON_MAX_PX = 50;       // an <svg> strictly narrower OR shorter than this is skipped as an icon
 
 // Alt text that names the file or the medium instead of the content. WCAG
 // 1.1.1 asks for a text alternative that serves the same purpose as the image;
@@ -125,6 +129,17 @@ export function findSvgWithoutAlt() {
   return Array.from(document.querySelectorAll('svg'))
     .filter(svg => {
       if (wasProcessed(svg)) return false;
+
+      // Marked decorative, or hidden from assistive technology by itself or
+      // an ancestor (icon libraries set aria-hidden on every inline SVG)
+      if (svg.closest('[aria-hidden="true"]')) return false;
+      const role = svg.getAttribute('role');
+      if (role === 'presentation' || role === 'none') return false;
+
+      // Inside a link or button that already has a name, the icon is not
+      // what a screen reader announces
+      const control = svg.parentElement?.closest('a[href], button, [role="button"], [role="link"]');
+      if (control && hasAccessibleName(control)) return false;
 
       // Skip if has accessible name
       if (svg.getAttribute('aria-label')) return false;

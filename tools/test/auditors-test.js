@@ -274,7 +274,13 @@ function run() {
     check('svg: a labelledby pointing at a missing id is reported', reports(svgs, doc, 'svg-lbl-missing'));
     check('svg: a labelledby pointing at an empty element is reported', reports(svgs, doc, 'svg-lbl-empty'));
     check('svg: an id list where one id resolves counts', !reports(svgs, doc, 'svg-lbl-list'));
+    check('svg: aria-hidden is skipped', !reports(svgs, doc, 'svg-hidden'));
+    check('svg: an aria-hidden ancestor is skipped', !reports(svgs, doc, 'svg-hidden-parent'));
+    check('svg: role=presentation is skipped', !reports(svgs, doc, 'svg-pres'));
+    check('svg: role=none is skipped', !reports(svgs, doc, 'svg-none'));
+    check('svg: inside a named button, the icon is not reported', !reports(svgs, doc, 'svg-in-named-btn'));
     check('svg: inside a nameless button, the icon is reported', reports(svgs, doc, 'svg-in-bare-btn'));
+    check('svg: exactly five reported on this page', svgs.length === 5);
   }
 
   // ── VIDEO, AUDIO, EMBEDS ───────────────────────────────────────────────────
