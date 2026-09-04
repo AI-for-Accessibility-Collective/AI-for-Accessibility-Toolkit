@@ -63,10 +63,12 @@ const IDS = skillRegistry.map((e) => e.id);
 check('every registry id is unique', new Set(IDS).size === IDS.length);
 
 // ── registry -> barrel ─────────────────────────────────────────────────────
-// Keys that only shape a parent key's adapter and reach nothing on their own.
-// The extension hands these two to FocusMode.enable() under focusMode, and
-// the CLI ignores them, so neither host switches anything on for them alone.
-const SUB_SETTINGS = ['hideDistractions', 'showProgress'];
+// Keys that only shape a parent key's adapter and reach nothing on their own,
+// listed per entry id so a key exempted on one entry is still checked on
+// every other entry that names it. The extension hands these two to
+// FocusMode.enable() under focusMode, and the CLI ignores them, so neither
+// host switches anything on for them alone.
+const SUB_SETTINGS = { 'focus-mode': ['hideDistractions', 'showProgress'] };
 
 const reached = new Set();
 const entriesReachingNothing = [];
@@ -77,8 +79,9 @@ for (const entry of skillRegistry) {
   const mods = adaptersForTools(settings);
   if (!mods.some((m) => MODULES.includes(m))) entriesReachingNothing.push(entry.id);
   for (const m of mods) (MODULES.includes(m) ? reached : notExported).add(m);
+  const subSettings = SUB_SETTINGS[entry.id] || [];
   for (const [key, value] of Object.entries(settings)) {
-    if (SUB_SETTINGS.includes(key)) continue;
+    if (subSettings.includes(key)) continue;
     if (adaptersForTools({ [key]: value }).length === 0) keysReachingNothing.push(`${entry.id}.${key}`);
   }
 }
