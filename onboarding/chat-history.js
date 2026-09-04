@@ -38,7 +38,10 @@ export function createHistory({ load, save, max = 50 } = {}) {
   let entries = [];
   try {
     const raw = load ? load() : null;
-    if (Array.isArray(raw)) entries = raw.filter((x) => typeof x === 'string');
+    // The cap applies to what comes OUT of the store too: an older build (or a
+    // hand-edited store) can hold more than `max`, and without this the extra
+    // entries survive until the next push.
+    if (Array.isArray(raw)) entries = raw.filter((x) => typeof x === 'string').slice(-max);
   } catch { entries = []; }
 
   let index = entries.length; // one past the newest = "the current draft"

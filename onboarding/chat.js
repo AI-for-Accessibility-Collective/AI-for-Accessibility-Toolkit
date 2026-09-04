@@ -118,6 +118,7 @@ async function applyResetToProfile() {
   if (!d.ok) throw new Error(d.error || 'reset failed');
   await loadProfile();
   rebuildController();
+  await applyProfileSettings(); // the answer says the overrides are forgotten — make the page say it too
   return resetReply(d);
 }
 

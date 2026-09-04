@@ -16,6 +16,8 @@
 
 import http from 'node:http';
 import { mkdtempSync, rmSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -25,7 +27,9 @@ process.env.ONBOARD_MODE = 'local';
 process.env.ADMIN_PASSWORD = 'test-admin';
 delete process.env.GEMINI_API_KEY;
 
-const { server } = await import('../server.js');
+const mod = await import('../server.js');
+const TOOLKIT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'toolkit');
+const { server } = mod;
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -79,7 +83,9 @@ try {
 
   // ── module assets the pages import ─────────────────────────────────────────
   {
-    for (const p of ['/chat.js', '/chat-routing.js']) {
+    // Every module the chat page imports, read from the server's own list so
+    // the allowlist and this check cannot disagree.
+    for (const p of mod.CHAT_MODULES) {
       const r = await get(p);
       check(`${p} serves JavaScript`, r.status === 200 && /javascript/.test(r.headers.get('content-type')));
     }
@@ -92,10 +98,34 @@ try {
     // The chat page derives the settings a profile implies with the toolkit's
     // own web surface, so that subtree is served and its relative imports have
     // to resolve under the same prefix.
-    const surface = await get('/toolkit/surfaces/web.js');
-    check('the toolkit web surface is served', surface.status === 200 && /javascript/.test(surface.headers.get('content-type')));
-    check('…and what it imports resolves under the same prefix', (await get('/toolkit/platforms/chrome/web-surface.js')).status === 200);
+    for (const p of mod.TOOLKIT_MODULES) {
+      const r = await get(p);
+      check(`${p} is served`, r.status === 200 && /javascript/.test(r.headers.get('content-type')));
+    }
     check('a missing toolkit file is a 404', (await get('/toolkit/nope.js')).status === 404);
+    // An allowlist, not the whole tree: real files outside it are not reachable.
+    check('toolkit/package.json is not served', (await get('/toolkit/package.json')).status === 404);
+    check('toolkit/test/ is not served', (await get('/toolkit/test/skill-test.js')).status === 404);
+
+    // An allowlist goes stale silently: add an import to one of these toolkit
+    // files and the chat page 404s on it in the browser, where CI cannot see.
+    // So walk the real import graph and require the list to cover it.
+    const walked = new Set();
+    const queue = ['/toolkit/surfaces/web.js'];
+    const missing = [];
+    while (queue.length) {
+      const spec = queue.shift();
+      if (walked.has(spec)) continue;
+      walked.add(spec);
+      if (!mod.TOOLKIT_MODULES.includes(spec)) { missing.push(spec); continue; }
+      const src = await readFile(path.join(TOOLKIT_DIR, spec.slice('/toolkit/'.length)), 'utf8');
+      for (const m of src.matchAll(/^\s*(?:import|export)[^'"]*from\s+['"](\.[^'"]+)['"]/gm)) {
+        queue.push('/toolkit/' + path.normalize(path.join(path.dirname(spec.slice('/toolkit/'.length)), m[1])));
+      }
+    }
+    check('the toolkit allowlist covers the whole import graph', missing.length === 0
+      || (console.log('   not served:', missing.join(', ')), false));
+    check('…and the graph was actually walked', walked.size >= mod.TOOLKIT_MODULES.length);
   }
 
   // ── the static guard ───────────────────────────────────────────────────────
@@ -118,9 +148,10 @@ try {
     const dots = await rawGet('/controller/lib/%2e%2e%2f%2e%2e%2fpackage.json');
     check('a fully-encoded traversal finds nothing', dots.status === 404 && !/"name"/.test(dots.body));
 
-    // The same guard has to hold on the toolkit prefix, which is newer.
+    // The toolkit prefix is an allowlist, so a traversal never reaches the
+    // file guard at all: anything not on the list is a plain 404.
     const tk = await rawGet('/toolkit/..%2f..%2fpackage.json');
-    check('the toolkit prefix rejects an encoded traversal', tk.status === 400 && /bad-path/.test(tk.body));
+    check('the toolkit prefix rejects an encoded traversal', tk.status === 404 && !/"name"/.test(tk.body));
     const tkPlain = await rawGet('/toolkit/../../package.json');
     check('…and a plain one serves nothing from outside it', tkPlain.status === 404 || !/"name"/.test(tkPlain.body));
   }

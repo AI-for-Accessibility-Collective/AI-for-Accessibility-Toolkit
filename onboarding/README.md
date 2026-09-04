@@ -53,7 +53,8 @@ the composer history).
 The real-browser test is separate, because it needs a local Chromium:
 
 ```bash
-npm run test:e2e     # drives /chat in headless Chromium; not run in CI
+npx playwright install chromium   # one-time browser download; npm install does not do it
+npm run test:e2e                  # drives /chat in headless Chromium; not run in CI
 ```
 
 It is named `chat-e2e.mjs` rather than `*.test.mjs` so `npm test` skips it, the

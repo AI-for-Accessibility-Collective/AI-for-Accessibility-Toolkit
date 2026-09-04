@@ -143,10 +143,26 @@ try {
   }
 
   // ── back to the profile: overrides are forgotten ───────────────────────────
+  // The reply says "I forgot N changes you'd made", so the page has to agree
+  // with it. Reset re-renders the profile, which restores every key the profile
+  // governs; a key the profile never mentions is a separate question, checked
+  // below.
   {
+    await say('dark mode');                       // a manual change the profile never asked for
+    const darkBefore = await page.evaluate(() => document.getElementById('demo-app').classList.contains('aa-dark'));
+    check('a manual change applies', darkBefore === true);
+
+    await page.evaluate(() => document.getElementById('demo-app').classList.remove('aa-dyslexia'));
+
     await say('back to my profile');
     check('a reset phrase is answered', (await lastReply()).trim().length > 0);
     check('the profile itself is not deleted by a reset', /^You:/.test((await profileText()).trim()));
+    check('a reset re-renders what the profile governs', await page.evaluate(
+      () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
+    ));
+
+    const darkAfter = await page.evaluate(() => document.getElementById('demo-app').classList.contains('aa-dark'));
+    check('KNOWN: a setting the profile never mentions survives a reset', darkAfter === true);
   }
 } finally {
   await browser.close();

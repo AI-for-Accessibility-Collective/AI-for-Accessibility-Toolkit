@@ -44,6 +44,10 @@ const ta = (text) => ({ value: text.replace('|', ''), selectionStart: text.index
   for (const t of ['a', 'b', 'c', 'd', 'e']) h.push(t);
   check('the ring is capped', h.size === 3);
   check('the OLDEST entries are the ones dropped', h.entries.join('') === 'cde');
+
+  // A store written by an older build (or edited by hand) can be over the cap.
+  const loaded = createHistory({ max: 2, load: () => ['a', 'b', 'c', 'd'] });
+  check('an over-long stored history is capped on load', loaded.entries.join('') === 'cd');
 }
 
 // ── recall ───────────────────────────────────────────────────────────────────
@@ -77,7 +81,10 @@ const ta = (text) => ({ value: text.replace('|', ''), selectionStart: text.index
   h.prev('my draft');
   h.push('sent something else');
   check('sending resets the position to the draft end', h.atDraft === true);
-  check('…and the remembered draft is cleared', h.prev('') === 'sent something else' && h.next() === '');
+  // push() also clears the remembered draft, but that is state hygiene with no
+  // observable effect: prev() at the draft end always overwrites it first, so
+  // it cannot be asserted through the public API and is not.
+  check('…and Up then recalls the text just sent', h.prev('') === 'sent something else');
 }
 
 {

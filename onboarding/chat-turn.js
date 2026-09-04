@@ -12,7 +12,9 @@
 //      command.
 //   2. a self-description ("I'm blind", "I have dyslexia") → onboarding. What
 //      someone tells us about themselves is durable, and outranks reading the
-//      same words as a one-off command.
+//      same words as a one-off command — unless the utterance opens with an
+//      imperative verb, which makes it an instruction rather than a disclosure
+//      ("turn off my dyslexia font"). See IMPERATIVE_LEAD.
 //   3. otherwise a deterministic controller command ("bigger text", "read
 //      this") — an action, not a profile edit.
 //   4. otherwise hand it to the controller, which may answer, run a task, or
@@ -36,6 +38,16 @@
 // this repo's controller and chat test corpora, exactly four are claimed by
 // both matchers, and all four are dyslexia disclosures.
 
+// An utterance that OPENS with an imperative verb is an instruction, not a
+// disclosure: "turn off my dyslexia font", "read this to me in plain language",
+// "stop the flashing for me". Each of those carries a condition word AND a
+// first-person word ("my", "me"), which is all detectOnboarding asks for, so
+// without this guard the ladder above would record them as self-descriptions
+// and apply the setting the person just asked to remove. A real disclosure
+// never starts this way: it leads with "I…", "my <condition>…", or is the bare
+// condition itself.
+const IMPERATIVE_LEAD = /^(please\s+|can you\s+|could you\s+)*(turn|switch|toggle|enable|disable|activate|deactivate|stop|start|hide|show|read|use|make|set|apply|remove|clear|increase|decrease|raise|lower|reduce|open|close|play|pause|undo|redo|zoom|scroll|go)\b/i;
+
 /**
  * Decide what a turn is. Pure: both matchers are passed in, and nothing here
  * touches the DOM, the network, or module state.
@@ -54,8 +66,11 @@ export function routeTurn(text, { isResetToProfile, detectOnboarding }) {
 
   // A self-description is checked first: what someone tells us about themselves
   // should be recorded, even when the same words would also parse as a command.
-  const onboarding = detectOnboarding(u);
-  if (onboarding) return { kind: 'onboard', onboarding };
+  // An utterance that opens as an instruction is exempt — see IMPERATIVE_LEAD.
+  if (!IMPERATIVE_LEAD.test(u)) {
+    const onboarding = detectOnboarding(u);
+    if (onboarding) return { kind: 'onboard', onboarding };
+  }
 
   return { kind: 'controller' };
 }

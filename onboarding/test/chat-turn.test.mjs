@@ -84,6 +84,27 @@ const kindOf = (text, deps = REAL) => routeTurn(text, deps).kind;
   }
 }
 
+// ── an instruction is never a disclosure ─────────────────────────────────────
+// These carry a condition word AND a first-person word ("my", "me"), which is
+// everything detectOnboarding asks for. Routing them to onboarding would record
+// a need the person never claimed and, worse, APPLY the setting they just asked
+// to remove: "turn off my dyslexia font" would turn the dyslexia font on.
+{
+  for (const cmd of [
+    'turn off my dyslexia font', 'disable the dyslexia font for me',
+    'turn on my screen reader', 'read this to me in plain language',
+    'stop the flashing for me', 'use plain language for me',
+    'switch to my keyboard only mode',
+  ]) {
+    check(`“${cmd}” is an instruction, not a disclosure`, kindOf(cmd) === 'controller');
+  }
+
+  // …without costing the disclosures the precedence exists for.
+  check('“I have dyslexia” still onboards', kindOf('I have dyslexia') === 'onboard');
+  check('a bare “dyslexia” still onboards', kindOf('dyslexia') === 'onboard');
+  check('“my hearing aid stopped working” still onboards', kindOf('my hearing aid stopped working') === 'onboard');
+}
+
 // ── a reset phrase beats BOTH ────────────────────────────────────────────────
 // It runs before the grammar on purpose: "reset my settings" contains a settings
 // word, and would otherwise be handled as a settings command.
