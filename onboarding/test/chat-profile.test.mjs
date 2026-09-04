@@ -194,6 +194,13 @@ const merge = (prev, next) => mergeOnboarding(prev, next, visionKindOf);
   check('…is still reported as showing', unknown.showing.join() === 'mystery');
   check('…and nothing is sent for it', !('mystery' in unknown.clear));
 
+  // A receiver is free to report any key at all, and the registry is a plain
+  // object, so a key that names one of Object.prototype's members must not read
+  // as a registry entry with a not-set value of its own.
+  const inherited = plan({ forgotten: [], active: { toString: 'x', constructor: true }, profile: {} });
+  check('a key inherited from Object.prototype is not treated as a registry entry',
+    Object.keys(inherited.clear).length === 0 && inherited.unclearable.join() === 'toString,constructor');
+
   const unknownStored = plan({ forgotten: [{ key: 'textSize' }], active: {}, profile: {} });
   check('a forgotten key the registry does not know, and the page does not show, is ignored',
     Object.keys(unknownStored.clear).length === 0 && unknownStored.unclearable.length === 0);

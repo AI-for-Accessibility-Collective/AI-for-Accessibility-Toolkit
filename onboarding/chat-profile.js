@@ -186,7 +186,9 @@ export function resetChanges({ forgotten, active, profile } = {}, meta) {
   const clear = {}, showing = [], unclearable = [];
   for (const key of new Set([...activeKeys, ...forgottenKeys])) {
     if (profileKeys.has(key)) continue; // the profile's own render restores it
-    const off = notSetValue(meta && meta[key]);
+    // Own keys only: a receiver is free to report anything, and `meta.toString`
+    // would otherwise resolve to Object.prototype's and read as a registry entry.
+    const off = notSetValue(meta && Object.prototype.hasOwnProperty.call(meta, key) ? meta[key] : null);
     const value = active ? active[key] : undefined;
     const isShowing = key in (active || {}) && value != null && value !== off;
     if (isShowing) showing.push(key);
