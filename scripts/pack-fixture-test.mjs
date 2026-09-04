@@ -6,8 +6,9 @@
 // missing from `exports`; this is the only check that can.
 //
 // The asserted surface is the one the extension repository's builds use
-// (josifiin/AI-for-Accessibility-Extension#2). If an assertion here blocks a
-// change, the consumer needs updating in the same breath.
+// (josifiin/AI-for-Accessibility-Extension#2), plus the node reference port
+// modules server/src imports. If an assertion here blocks a change, the consumer
+// needs updating in the same breath.
 //
 // Run from the repository root: node scripts/pack-fixture-test.mjs
 
@@ -74,6 +75,27 @@ await check('platforms/chrome entry files', () => {
     const resolved = require.resolve('@ai4a11y/toolkit/platforms/chrome/' + name + '.entry.js');
     assert.ok(existsSync(resolved), name + '.entry.js resolved but missing on disk');
   }
+});
+await check('platforms/node reference ports', async () => {
+  // server/src embeds the core over kv.js and ports.js; an installer of the
+  // package must be able to reach them the same way (see
+  // scripts/import-boundaries-test.mjs). shared-store.js is the third port
+  // module in that directory and is listed with them.
+  const ports = await import('@ai4a11y/toolkit/platforms/node/ports.js');
+  assert.equal(typeof ports.nodeClock, 'function');
+  const kv = await import('@ai4a11y/toolkit/platforms/node/kv.js');
+  assert.equal(typeof kv.memoryKV, 'function');
+  const shared = await import('@ai4a11y/toolkit/platforms/node/shared-store.js');
+  assert.equal(typeof shared.fileSharedStore, 'function');
+});
+await check('platforms/node/host.js stays out of exports', () => {
+  // FLAG(review): host.js is the runnable demo (npm run demo:node). It calls
+  // main() and process.exit() when imported, so the exports map names the
+  // three port modules one by one instead of a platforms/node/*.js pattern.
+  // The file still ships in the tarball (files: platforms/); it is only not
+  // resolvable through the package name.
+  assert.throws(() => require.resolve('@ai4a11y/toolkit/platforms/node/host.js'),
+    (e) => e.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED');
 });
 await check('skills/builtin shipped as files', async () => {
   const pkgRoot = path.dirname(require.resolve('@ai4a11y/toolkit/package.json'));

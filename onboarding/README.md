@@ -45,10 +45,25 @@ ONBOARD_MODE=remote TOOLKIT_URL=http://127.0.0.1:8080 ADMIN_PASSWORD=<server-adm
 ## Tests
 
 `npm test` (from the repo root) runs every `onboarding/test/*.test.mjs`. They
-cover three layers: the profile logic against a real toolkit over a temp file
-store, the HTTP routes against the real server on an ephemeral port, and the
+cover four layers: the profile logic against a real toolkit over a temp file
+store, the HTTP routes against the real server on an ephemeral port, the
 chat surface's own logic (routing precedence, the additive onboarding merge,
-the composer history, when a remote receiver counts as connected).
+the composer history, when a remote receiver counts as connected), and the
+two write modes: how the remote path handles
+a failed write (`remote-write-failure.test.mjs`, against a stubbed toolkit
+service), and the contract both paths must satisfy
+(`onboard-contract.test.mjs`).
+
+`onboard-contract.test.mjs` runs one scenario table against local mode and
+remote mode and then compares the two: the same Librarian calls in the same
+order with the same arguments, the same profile fields, the same uid handling,
+the same result, and a stop at the first failed write. Both modes write to a
+real toolkit over a temp file store; in remote mode that toolkit sits behind
+the real service (`server/src/app.js`), booted in the test process on an
+ephemeral port, so nothing about the service is stubbed. The test spawns
+itself once per mode, because `server.js` reads `ONBOARD_MODE` at module
+load; `onboard-contract.hooks.mjs` is its helper for recording the local
+branch.
 
 The real-browser test is separate, because it needs a local Chromium:
 

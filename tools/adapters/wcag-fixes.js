@@ -193,8 +193,7 @@ export function fixDeprecatedRole(element) {
 // of) tells a screen reader user something that may not be true — an
 // actively misleading "fix", not a safe one. There's no safe default for
 // widget state we don't control. Kept as a function (rather than deleted) so
-// the 'aria-required-attr' axeHandlers entry — and the CLI, which imports
-// this export by name — still resolve.
+// the 'aria-required-attr' axeHandlers entry still resolves.
 export function fixMissingAriaAttrs(_element) {
   console.info('[AI4A11y] fixMissingAriaAttrs: no-op (backfilling ARIA state would lie to screen readers)');
 }
@@ -223,26 +222,31 @@ export function fixNestedInteractive(element) {
   }
 }
 
+// Touch-target threshold in CSS px. WCAG 2.5.8 Target Size (Minimum, AA)
+// asks for 24x24; 44x44 is the WCAG 2.5.5 Target Size (Enhanced, AAA) size,
+// and the one big-targets.js aims for too, so the two adapters agree.
+export const TARGET_SIZE_PX = 44;
+
 // Fix small touch targets
 export function fixTargetSize(element) {
   const rect = element.getBoundingClientRect();
-  if (rect.width >= 44 && rect.height >= 44) return;
+  if (rect.width >= TARGET_SIZE_PX && rect.height >= TARGET_SIZE_PX) return;
 
-  const needWidth = Math.max(0, (44 - rect.width) / 2);
-  const needHeight = Math.max(0, (44 - rect.height) / 2);
+  const needWidth = Math.max(0, (TARGET_SIZE_PX - rect.width) / 2);
+  const needHeight = Math.max(0, (TARGET_SIZE_PX - rect.height) / 2);
   const display = getComputedStyle(element).display;
 
   element.style.boxSizing = 'border-box';
   element.style.padding = `${needHeight}px ${needWidth}px`;
-  element.style.minWidth = '44px';
-  element.style.minHeight = '44px';
+  element.style.minWidth = `${TARGET_SIZE_PX}px`;
+  element.style.minHeight = `${TARGET_SIZE_PX}px`;
 
   if (display === 'inline') {
     element.style.display = 'inline-block';
   }
 
   incrementStat('wcag');
-  logFix('target-size', element, `${Math.round(rect.width)}x${Math.round(rect.height)}`, '44x44');
+  logFix('target-size', element, `${Math.round(rect.width)}x${Math.round(rect.height)}`, `${TARGET_SIZE_PX}x${TARGET_SIZE_PX}`);
   console.log('[AI4A11y] Increased touch target size');
 }
 
@@ -267,8 +271,7 @@ export function fixViewportMeta(element) {
 // old version removed the element and logged "Removed meta refresh" anyway —
 // a fix that silently didn't work is worse than one that admits it can't.
 // Kept as a function (rather than deleted) so the 'meta-refresh'
-// axeHandlers entry — and the CLI, which imports this export by name —
-// still resolve.
+// axeHandlers entry still resolves.
 export function removeMetaRefresh(_element) {
   console.info('[AI4A11y] removeMetaRefresh: no-op (the refresh timer is already armed by document_idle; removing the tag cannot cancel it)');
 }
@@ -294,8 +297,65 @@ function randomSuffix() {
   return Math.random().toString(36).substring(2, 7);
 }
 
-// Axe rule ID to handler mapping
-export const axeHandlers = {
+// ---------------------------------------------------------------------------
+// Safety tiers, keyed by axe rule id. Every axeHandlers entry has one.
+//
+//   safe   Runs whenever the adapter is on. Adds or normalises an attribute
+//          the page left wrong, and leaves the page's structure alone.
+//   risky  Changes structure or removes author markup: re-tags a heading,
+//          strips aria-* attributes or a role, unwraps a nested control, or
+//          pads a control's box (which can push it into its neighbours). A
+//          wrong guess here is felt by the very people the fix is for, so a
+//          risky fix runs only when the `wcagRiskyFixes` setting (see
+//          settingsMeta in toolkit/registry/tools.js) is true. Off by default.
+//
+// The named fix functions above are the raw fixes and do not check the
+// setting; the gate is applied when they are placed in axeHandlers, so every
+// dispatcher that goes through the map gets the default-off behaviour.
+// ---------------------------------------------------------------------------
+export const fixTiers = {
+  'html-has-lang': 'safe',
+  'html-lang-valid': 'safe',
+  'valid-lang': 'safe',
+  'duplicate-id': 'safe',
+  'duplicate-id-aria': 'safe',
+  'duplicate-id-active': 'safe',
+  'heading-order': 'risky',
+  'tabindex': 'safe',
+  'aria-valid-attr': 'risky',
+  'aria-roles': 'risky',
+  'aria-allowed-role': 'risky',
+  'aria-deprecated-role': 'safe',
+  'aria-required-attr': 'safe',
+  'nested-interactive': 'risky',
+  'target-size': 'risky',
+  'meta-viewport': 'safe',
+  'meta-viewport-large': 'safe',
+  'meta-refresh': 'safe',
+  'blink': 'safe',
+  'marquee': 'safe'
+};
+
+export function isRiskyFix(ruleId) {
+  return fixTiers[ruleId] === 'risky';
+}
+
+// Wrap a risky fix so it runs only when settings.wcagRiskyFixes === true.
+// Returns false when it skipped, so a host can count and report the skips.
+// Safe fixes are returned as they are (they ignore a settings argument).
+function gate(ruleId, fix) {
+  if (!isRiskyFix(ruleId)) return fix;
+  return function gatedFix(element, settings) {
+    if (settings?.wcagRiskyFixes === true) return fix(element);
+    console.info(`[AI4A11y] Skipped risky fix ${ruleId} (wcagRiskyFixes is off)`);
+    return false;
+  };
+}
+
+// Axe rule ID to handler mapping. Handlers take (element, settings); the
+// settings object is the active profile's tools (the CLI passes
+// getActiveProfileSettings(); a host with no settings may omit it).
+const rawHandlers = {
   'html-has-lang': fixMissingLang,
   'html-lang-valid': fixInvalidLang,
   'valid-lang': fixInvalidLang,
@@ -317,3 +377,7 @@ export const axeHandlers = {
   'blink': replaceObsoleteElement,
   'marquee': replaceObsoleteElement
 };
+
+export const axeHandlers = Object.fromEntries(
+  Object.entries(rawHandlers).map(([ruleId, fix]) => [ruleId, gate(ruleId, fix)])
+);
