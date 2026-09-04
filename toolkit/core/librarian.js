@@ -38,7 +38,7 @@ import { memoryClassOf } from './memory-class.js';
 import { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes,
   audienceAllowed, recordShareAudit } from '../sync/grants.js';
 import { buildProfileBlob, validateProfileBlob } from '../sync/blob.js';
-import { resolveSkill, matchSkill, matchSkillToNeed, validateSkill } from './skill.js';
+import { resolveSkill, matchSkill, matchSkillToNeed, validateSkill, vocabList } from './skill.js';
 import { buildSkill } from './skill-builder.js';
 
 /**
@@ -597,16 +597,21 @@ export function createLibrarian({
     },
 
     // Record the person's own category for an origin. Returns
-    // { ok: false, reason: 'bad-category' } for a value outside the taxonomy
-    // and { ok: true } once stored, so a caller can tell a refusal from a
-    // save. A user override is returned by getSiteCategory as-is (source
-    // 'user' skips the taxonomy-version check), and everything keyed by
-    // category downstream only ever matches taxonomy ids: memory scopes,
+    // { ok: false, reason: 'bad-category' } for a value outside the taxonomy,
+    // { ok: false, reason: 'bad-origin' } for an empty origin, and { ok: true }
+    // once stored, so a caller can tell a refusal from a save. A user override
+    // is returned by getSiteCategory as-is (source 'user' skips the
+    // taxonomy-version check), and everything keyed by category downstream
+    // only ever matches taxonomy ids: memory scopes,
     // auto-replay profiles, and the siteRelevance of a task saved as a skill.
     // Refusing here, the same way logObservation ignores such a value, means
     // no store carries a category nothing can match.
     async setSiteCategoryOverride(origin, category) {
       origin = (origin || '').toLowerCase().replace(/^www\./, '');
+      // getSiteCategory returns null for an empty origin, so an entry stored
+      // under '' could never be read back. Refuse it rather than answer
+      // { ok: true } for a save nothing can use.
+      if (!origin) return { ok: false, reason: 'bad-origin' };
       if (!TAX().categoryIds().includes(category)) return { ok: false, reason: 'bad-category' };
       await DS().patch('mine.siteIndex', (cur) => {
         cur[origin] = { ...(cur[origin] || {}), category, source: 'user', classifiedAt: clock.now(), taxonomyVersion: TAX().version };
@@ -1106,6 +1111,13 @@ export function createLibrarian({
     async saveSkill(skill) {
       const { valid, errors } = validateSkill(skill, { tools: DS().global.tools(), taxonomy: TAX() });
       if (!valid) return { saved: false, errors };
+      // validateSkill reads a single string as a one-item list, so a caller
+      // that hands us `supportAreas: 'vision'` validates. Store the list form
+      // it was checked as: everything that reads a stored skill back (the
+      // observation text below, the dedup compare in respondToProposal,
+      // matchSkill) expects a list, and a string would be spread into
+      // characters or throw on .join.
+      skill = { ...skill, supportAreas: vocabList(skill.supportAreas), siteRelevance: vocabList(skill.siteRelevance) };
       await DS().patch('mine.skillDocs', (skills) => {
         const idx = skills.findIndex(s => s.name === skill.name);
         const entry = { ...skill, savedAt: clock.now() };

@@ -122,6 +122,15 @@ const oneString = validateSkill({ ...reading, supportAreas: 'vision' }, { tools 
 check('a single-string supportAreas is treated as a one-item list', oneString.valid);
 check('a non-iterable supportAreas does not throw',
   validateSkill({ ...reading, supportAreas: {} }, { tools }).valid === false);
+// Whatever validation calls valid, retrieval must be able to score. A skill
+// stored with a single string scored 0 on its area while validating clean,
+// which is the "saved but never found again" failure this check guards.
+const oneStringSkill = { ...reading, supportAreas: 'vision', siteRelevance: 'news' };
+check('a single-string supportAreas still scores at retrieval',
+  matchSkill(oneStringSkill, { supportAreas: ['vision'], category: 'news' })
+    === matchSkill({ ...reading, supportAreas: ['vision'], siteRelevance: ['news'] }, { supportAreas: ['vision'], category: 'news' }));
+check('a single-string supportAreas is not iterated per character',
+  matchSkill(oneStringSkill, { supportAreas: ['v', 'i', 's'], category: null }) === 0);
 // parseSkill normalizes the two list fields, so the validator rejects only
 // true vocabulary misses: a bare comma list and a capitalized id are slips.
 const slipped = parseSkill('---\nname: slip\ndescription: A formatting slip.\nsupportAreas: Vision, reading\nsiteRelevance: [News, ALL]\n---\n# Slip\n```json\n{"adapters":[],"actions":[{"name":"x","prompt":"do x"}]}\n```');
@@ -139,6 +148,10 @@ check('Engineer output with a vocabulary slip is still invalid after normalizati
 const registryAreas = new Set(skillRegistry.flatMap(e => e.supportAreas || []));
 check('every registry entry supportArea is in SUPPORT_AREAS',
   [...registryAreas].every(a => SUPPORT_AREAS.includes(a)));
+// This second direction is a coverage claim, not a vocabulary rule: it fires
+// when a value is added to SUPPORT_AREAS that no adapter serves yet, which is
+// a profile that would be offered nothing. Adding a value means either adding
+// an entry that helps it or deciding this check should not hold.
 check('every SUPPORT_AREAS value is helped by at least one registry entry',
   SUPPORT_AREAS.every(a => registryAreas.has(a)));
 const registrySites = new Set(skillRegistry.flatMap(e => e.siteRelevance || []));
@@ -235,6 +248,22 @@ const librarian = createLibrarian({ datastore, taxonomy: TAXONOMY, clock });
   const saveEntry = [...(log.entries || [])].reverse().find(e => e.type === 'saved-action');
   check('saving a skill records ability context and triggers',
     !!saveEntry && saveEntry.data.supportAreas?.includes('vision') && saveEntry.data.triggers?.includes('shopping'));
+
+  // A caller may hand saveSkill a single string where a list belongs.
+  // validateSkill reads it as a one-item list, so it must also be STORED as
+  // one: the observation text, the dedup compare and matchSkill all read the
+  // stored field back as a list, and a bare string used to be spread into
+  // characters or throw on .join after the skill was already written.
+  const strSave = await librarian.saveSkill({
+    name: 'string-fields', description: 'Bigger text on news sites.',
+    supportAreas: 'vision', siteRelevance: 'news',
+    recipe: { adapters: [{ id: 'visual-assist', settings: { fontScale: 140 } }] }, body: '# String Fields',
+  });
+  check('saveSkill accepts single-string vocabulary fields without throwing', strSave.saved === true);
+  const stored = (await librarian.listSkills()).find(s => s.name === 'string-fields');
+  check('saveSkill stores the list form it validated',
+    JSON.stringify(stored?.supportAreas) === '["vision"]' && JSON.stringify(stored?.siteRelevance) === '["news"]');
+  await librarian.deleteSkill('string-fields');
 
   // saveSkill rejects an invalid skill.
   const badSave = await librarian.saveSkill({ name: 'broken', description: 'x', recipe: { adapters: [{ id: 'nope' }] }, supportAreas: [], siteRelevance: [] });
