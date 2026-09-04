@@ -19,7 +19,7 @@ cd <your clone> && npm install
 npm test        # tools, toolkit, controller, and onboarding suites
 ```
 
-Pure ES modules — the core has no build step. There is no browser extension in
+Pure ES modules; the core has no build step. There is no browser extension in
 this repo; hosts (web/mobile/XR/server) live in their own projects and consume
 this toolkit. There is an experimental Python CLI in `cli/`, which drives a real
 Chromium page and injects the catalog; see [cli/README.md](cli/README.md) for

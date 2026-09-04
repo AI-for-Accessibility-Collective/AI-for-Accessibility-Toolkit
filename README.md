@@ -21,20 +21,20 @@ It is **not an app.** It's a library you build on. Any developer — web, mobile
 - **Developers contributing skills and adapters** to the catalog: start at [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Developers building applications on the toolkit**: start at [Using the Toolkit](#using-the-toolkit) and [What a host implements](#what-a-host-implements).
 - **Builders of agentic AI** who mainly want the design principles: start at [docs/architecture.md](docs/architecture.md) and [Principles](#principles).
-- **People who want to try the browser extensions**: they live in the [extension repository](https://github.com/josifiin/AI-for-Accessibility-Extension), which has a no-code install guide.
+- **People who want to try the browser extensions**: they live in the [extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension), which has a no-code install guide.
 
 Per-audience documentation beyond this map is a later project activity.
 
 ## Where things moved
 
-The repository used to hold the extensions, the CLI, and team projects alongside the core. They now live in the [extension repository](https://github.com/josifiin/AI-for-Accessibility-Extension), split out with **full history preserved** in both repositories.
+The repository used to hold the extensions, the CLI, and team projects alongside the core. The extensions and team projects now live in the [extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension), split out with **full history preserved** in both repositories. The CLI is back in this repository under `cli/`.
 
 | Old path | Now |
 |---|---|
 | `extension/`, `personalized-extension/` | The extension repository. |
 | `webapp/` | The extension repository, as candidates to return to their originating teams. |
 | `projects/` | The extension repository; the canonical list stays at [docs/projects.md](docs/projects.md). |
-| `cli/` | Proposed to return here as a draft pull request; its history is preserved in both repositories meanwhile. |
+| `cli/` | Back in this repository at `cli/`, with its own [README](cli/README.md), test harness, and workflow. Its history is preserved in both repositories. |
 | `toolkit/adapters/` | Renamed in place to `toolkit/platforms/`, to keep "adapter" for the catalog's accessibility fixes. |
 
 ## Why
@@ -169,7 +169,7 @@ onboarding.
 
 A developer library of reusable accessibility building blocks, usable on their own:
 
-- **Adapters** ([`tools/adapters/`](tools/adapters/)) — 48 fixes: dark mode, text scaling, AI alt text, captions, reduced motion, reader mode, chart-to-table, and more. 12 of the 48 can call an AI provider; the rest run with no key and no cost, built on DOM, CSS, and browser APIs such as Web Speech and Web Audio.
+- **Adapters** ([`tools/adapters/`](tools/adapters/)): 49 modules (the count the conformance test reports): dark mode, text scaling, AI alt text, captions, reduced motion, reader mode, chart-to-table, and more. Some can call an AI provider; the rest run with no key and no cost, built on DOM, CSS, and browser APIs such as Web Speech and Web Audio.
 - **Auditors** ([`tools/auditors/`](tools/auditors/)) — detectors that find issues for adapters to fix (missing alt text, low contrast, unlabeled controls).
 - **Validators** ([`tools/validators/`](tools/validators/)) — the verifier engine for agentic flows: check that a page matches what the person asked an agent for and decide how hard to insist. Pairs with the `contract-mismatch` auditor and the `agent-watch` adapter. Machinery only — a host renders its own validation UI.
 - **Profiles** ([`tools/profiles/`](tools/profiles/)) — evidence-based ability presets (Blind, Low Vision, Dyslexia, Motor, …) mapping to settings.
@@ -197,7 +197,7 @@ About half the session commands reach the locally installed Claude Code CLI, whi
 ## Repository Layout
 
 ```
-toolkit/     Platform-agnostic core — Librarian, datastore, ability model, grants,
+toolkit/     Platform-agnostic core: Librarian, datastore, ability model, grants,
              skill engine, ports, sync, protocol, surfaces, reference platform bindings
 tools/       Developer catalog — adapters, auditors, profiles, utils
 controller/  Optional text/voice control surface — ControlPort, grammar, mounts,

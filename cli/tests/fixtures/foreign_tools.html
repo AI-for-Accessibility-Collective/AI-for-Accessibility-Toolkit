@@ -10,9 +10,9 @@
      other than, the one the CLI expects. Each hash below is one way such an
      object fails to withdraw a profile.</p>
   <script>
-    // #stale     — no setSessionState, the shape an older bundle had.
-    // #throws    — listTools raises, the shape a half-loaded one has.
-    // #stubborn  — disableTool reports failure and the tool stays on.
+    // #stale:      no setSessionState, the shape an older bundle had.
+    // #throws:     listTools raises, the shape a half-loaded one has.
+    // #stubborn:   disableTool reports failure and the tool stays on.
     const mode = location.hash.slice(1) || 'stale';
     const tools = [
       { name: 'defineWords', enabled: true, description: 'stand-in' },
