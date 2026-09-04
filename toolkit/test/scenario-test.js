@@ -276,6 +276,13 @@ async function scenarioB() {
     ((await DS.get('mine.siteIndex'))['nytimes.com'] || {}).category !== 'blog');
   check('B: a taxonomy override is accepted',
     (await L.setSiteCategoryOverride('www.nytimes.com', 'news')).ok === true);
+  // getSiteCategory returns null for an empty origin, so an entry stored under
+  // '' could never be read back. Refused rather than reported as saved.
+  const noOrigin = await L.setSiteCategoryOverride('', 'news');
+  check('B: an override with no origin is refused',
+    noOrigin?.ok === false && noOrigin.reason === 'bad-origin');
+  check('B: the refused override wrote no empty-origin entry',
+    !('' in (await DS.get('mine.siteIndex'))));
 
   // A caller-supplied category outside the taxonomy is not trusted: the
   // observation is classified from the host instead, so the proposal, the
