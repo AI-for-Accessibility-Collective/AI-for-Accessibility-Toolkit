@@ -177,7 +177,10 @@ function notSetValue(m) {
  *   clear: {key: notSetValue} to apply, with the profile spread over it.
  *   showing: the active keys that were visibly set and not the profile's, the
  *   ones the person will notice change (or fail to).
- *   unclearable: the showing keys with no known not-set value.
+ *   unclearable: the showing keys with no known not-set value. The chat caller
+ *   derives what it could not clear from what the receiver reported instead, so
+ *   nothing reads this today; it is here for a caller that wants to say why a
+ *   key stayed.
  */
 export function resetChanges({ forgotten, active, profile } = {}, meta) {
   const profileKeys = new Set(Object.keys(profile || {}));
@@ -219,11 +222,21 @@ export function resetReply(d, page = {}) {
   if (!n && !cleared.length && !kept.length) return 'You’re already on your profile. There were no changes to forget.';
 
   const did = [];
-  if (n) {
-    const keys = [...new Set(forgotten.map((f) => f.key))];
-    did.push(`forgot ${n} change${n === 1 ? '' : 's'} you'd made (${keys.join(', ')})`);
+  const keys = n ? [...new Set(forgotten.map((f) => f.key))] : [];
+  if (n) did.push(`forgot ${n} change${n === 1 ? '' : 's'} you'd made (${keys.join(', ')})`);
+  if (cleared.length) {
+    // A key the store forgot is usually the same key the page was showing.
+    // Naming it in both clauses reads as two separate changes, so the page
+    // clause names only what the store clause did not. "them" stands in only
+    // when every key the store clause named was cleared on the page too;
+    // otherwise the page clause names its own keys, repetition and all, rather
+    // than claim a key the page never cleared.
+    const alsoOnPage = cleared.filter((k) => !keys.includes(k));
+    const allOfThem = keys.length > 0 && keys.every((k) => cleared.includes(k));
+    did.push(alsoOnPage.length ? `cleared ${alsoOnPage.join(', ')} on this page`
+      : allOfThem ? 'cleared them on this page'
+      : `cleared ${cleared.join(', ')} on this page`);
   }
-  if (cleared.length) did.push(`cleared ${cleared.join(', ')} on this page`);
 
   const lead = did.length
     ? `Back to your profile. I ${did.join(' and ')}.`

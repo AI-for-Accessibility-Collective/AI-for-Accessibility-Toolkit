@@ -220,6 +220,21 @@ const merge = (prev, next) => mergeOnboarding(prev, next, visionKindOf);
   check('…names what was cleared', /cleared fontScale, darkMode on this page/.test(pageOnly));
   check('…and does not claim a stored change', !/forgot/.test(pageOnly) && !/already on your profile/.test(pageOnly));
 
+  // The usual case: the key the store forgot is the key the page was showing.
+  const same = resetReply({ forgotten: [{ key: 'fontScale' }, { key: 'darkMode' }] }, { cleared: ['fontScale', 'darkMode'], kept: [] });
+  check('a key forgotten and cleared is named once, not once per clause', !/darkMode.*darkMode/.test(same));
+  check('…and the page is still said to have been cleared', /\(fontScale, darkMode\) and cleared them on this page\./.test(same));
+
+  const overlap = resetReply({ forgotten: [{ key: 'fontScale' }] }, { cleared: ['fontScale', 'darkMode'], kept: [] });
+  check('a partial overlap names only the keys the store clause did not', /and cleared darkMode on this page\./.test(overlap));
+
+  // The store forgot a key the page was never showing, so the page clause
+  // cannot stand in for the whole list without claiming a clear that did not
+  // happen.
+  const fewer = resetReply({ forgotten: [{ key: 'fontScale' }, { key: 'darkMode' }] }, { cleared: ['fontScale'], kept: [] });
+  check('the page clause does not stand in for a key the page did not clear',
+    /\(fontScale, darkMode\) and cleared fontScale on this page\./.test(fewer));
+
   const kept = resetReply({ forgotten: [{ key: 'textSize' }] }, { cleared: [], kept: ['textSize'] });
   check('a key the page could not clear is admitted', /couldn’t clear textSize on this page/.test(kept));
   check('…and said to stay as it was', /stays as you left it/.test(kept));
