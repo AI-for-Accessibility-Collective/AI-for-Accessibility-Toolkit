@@ -327,8 +327,13 @@ function writeTarget(scen, input, rawTrace, outcome, uids) {
   return uidOutcome(scen, input, seen[0], uids);
 }
 
+// `written` is absent on a row that makes no writes, and a row that does make
+// writes could be added without one. Fall back to the empty answers rather
+// than throwing here, including for deriveDefaultNeeds, which needs an
+// iterable: a row missing `written` has to read as a failed argument check on
+// one call, not as a TypeError that takes the whole child's report with it.
 function expectedArgs(method, written, deriveDefaultNeeds) {
-  const { supportAreas, freeText, visionKind } = written;
+  const { supportAreas = [], freeText = '', visionKind } = written || {};
   switch (method) {
     case 'addNote': return [freeText, NOTE_OPTS];
     case 'listNotes': return [{ topic: TOPIC }];
