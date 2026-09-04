@@ -175,21 +175,59 @@ function publicSurfaceOf(pkg) {
   }
   const json = JSON.parse(readFileSync(manifest, 'utf8'));
   if (!json.exports) return { kind: 'no-exports-map', ok: () => true };
-  const targets = [];
-  for (const [key, value] of Object.entries(json.exports)) {
-    if (typeof value !== 'string') {
-      throw new Error(`${pkg}/package.json exports["${key}"] is not a string; this test only handles string targets`);
+  // The map is read the way Node reads it. A file is public when some
+  // subpath resolves to it. For one subpath Node takes an exact key first,
+  // else the pattern key with the longest prefix before '*' (the longest
+  // whole key on a tie), and a null target on the key it picked blocks the
+  // subpath even when another key would have matched. Every string under a
+  // key counts as a target here: a plain string, a conditional object
+  // ({ import: ..., default: ... }) or a fallback array. That is a superset
+  // of what one Node condition set would hand out, which errs toward
+  // calling a file public.
+  const map = typeof json.exports === 'string' ? { '.': json.exports } : json.exports;
+  const strip = (p) => p.replace(/^\.\//, '');
+  const strings = (v) => typeof v === 'string' ? [v]
+    : Array.isArray(v) ? v.flatMap(strings)
+    : v && typeof v === 'object' ? Object.values(v).flatMap(strings)
+    : [];
+  // Node's key selection for one subpath, or null when no key matches.
+  const keyFor = (subpath) => {
+    if (Object.hasOwn(map, subpath) && !subpath.includes('*')) return subpath;
+    let best = null;
+    for (const key of Object.keys(map)) {
+      const star = key.indexOf('*');
+      if (star === -1 || key.lastIndexOf('*') !== star) continue;
+      if (!subpath.startsWith(key.slice(0, star)) || subpath.length < key.length || !subpath.endsWith(key.slice(star + 1))) continue;
+      if (best === null || star > best.indexOf('*') || (star === best.indexOf('*') && key.length > best.length)) best = key;
     }
-    targets.push(value.replace(/^\.\//, ''));
-  }
+    return best;
+  };
+  // The files one subpath hands out; empty when the key it lands on is null.
+  const filesFor = (subpath) => {
+    const key = keyFor(subpath);
+    if (key === null || map[key] === null) return [];
+    const star = key.indexOf('*');
+    const captured = star === -1 ? '' : subpath.slice(star, subpath.length - (key.length - star - 1));
+    return strings(map[key]).map((t) => strip(t.replaceAll('*', captured)));
+  };
+  // The subpaths whose own key names a file: the candidates to resolve.
+  const subpathsFor = (rel) => {
+    const out = [];
+    for (const [key, value] of Object.entries(map)) {
+      for (const t of strings(value).map(strip)) {
+        const star = t.indexOf('*');
+        if (star === -1) { if (t === rel) out.push(key); continue; }
+        const prefix = t.slice(0, star), suffix = t.slice(star + 1);
+        if (key.includes('*') && rel.startsWith(prefix) && rel.endsWith(suffix) && rel.length > prefix.length + suffix.length) {
+          out.push(key.replace('*', rel.slice(prefix.length, rel.length - suffix.length)));
+        }
+      }
+    }
+    return out;
+  };
   return {
     kind: 'exports-map',
-    ok: (rel) => targets.some((t) => {
-      const star = t.indexOf('*');
-      if (star === -1) return t === rel;
-      const prefix = t.slice(0, star), suffix = t.slice(star + 1);
-      return rel.startsWith(prefix) && rel.endsWith(suffix) && rel.length > prefix.length + suffix.length;
-    }),
+    ok: (rel) => subpathsFor(rel).some((subpath) => filesFor(subpath).includes(rel)),
   };
 }
 
@@ -243,19 +281,22 @@ function specifiersIn(src) {
   return out;
 }
 
+// Paths are kept with '/' so they compare with KNOWN_EDGES on any OS.
+const posix = (p) => p.split(path.sep).join('/');
+
 const edges = []; // { from, fromPkg, to, toPkg, rel }
 let filesScanned = 0;
 for (const pkg of PACKAGES) {
   const pkgDir = path.join(ROOT, pkg);
   for (const file of walk(pkgDir)) {
     filesScanned++;
-    const from = path.relative(ROOT, file);
+    const from = posix(path.relative(ROOT, file));
     for (const spec of specifiersIn(stripComments(readFileSync(file, 'utf8')))) {
       if (!spec.startsWith('./') && !spec.startsWith('../')) continue;
-      const to = path.relative(ROOT, path.resolve(path.dirname(file), spec));
-      const toPkg = to.split(path.sep)[0];
+      const to = posix(path.relative(ROOT, path.resolve(path.dirname(file), spec)));
+      const toPkg = to.split('/')[0];
       if (toPkg === pkg) continue;
-      edges.push({ from, fromPkg: pkg, to, toPkg, rel: to.split(path.sep).slice(1).join('/') });
+      edges.push({ from, fromPkg: pkg, to, toPkg, rel: to.split('/').slice(1).join('/') });
     }
   }
 }
@@ -309,7 +350,7 @@ check('every edge lands on a file the target package exposes (or is a listed bre
 check('every listed break is still a break (else remove it from KNOWN_BREAKS)',
   KNOWN_BREAKS.filter((b) => {
     const e = edges.find((x) => x.from === b.from && x.to === b.to);
-    return !e || surfaces[e.toPkg].ok(e.rel);
+    return !e || !surfaces[e.toPkg] || surfaces[e.toPkg].ok(e.rel);
   }).map((b) => `${b.from} -> ${b.to}`));
 
 // snapshot
