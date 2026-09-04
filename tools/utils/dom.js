@@ -92,6 +92,10 @@ export function getNativeName(el) {
 // <input type="submit"> is announced and is not an unlabeled field. An image
 // input without alt also gets "Submit Query" there, but that name says
 // nothing about the image, so it is left out and the input stays reported.
+// Limitation: the browser localizes that default, and this helper does not.
+// It returns the two English words on every page. The auditors only ask
+// whether a name exists, so they give the same answer in any language; a
+// caller that shows the name to a person gets English.
 function getDefaultName(el) {
   if (el.localName !== 'input') return '';
   const type = (el.getAttribute('type') || 'text').toLowerCase();
