@@ -64,7 +64,7 @@ export function fileKV(dir) {
   };
 }
 
-/** A KVStore over a plain in-process object — no disk I/O, no persistence
+/** A KVStore over a plain in-process object: no disk I/O, no persistence
  *  across runs. Same contract as fileKV; useful for a script that only needs
  *  one process lifetime, or a test. */
 export function memoryKV() {

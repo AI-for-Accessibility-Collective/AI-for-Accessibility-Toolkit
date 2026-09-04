@@ -13,9 +13,9 @@ export function createWebSurface(settingsMeta?: Record<string, {
 /**
  * Derive baseline web settings from an AbilityModel. Returns
  * `{ settings, strengthByKey, unmet }`. Empty `needs[]` (every current user)
- * returns the empty triple — the inertness short-circuit. On a collision the
+ * returns the empty triple, the inertness short-circuit. On a collision the
  * stronger need wins (ties: last need wins). `unmet` lists ability needs whose
- * dimension has NO web rendering (e.g. a cross-app dimension) — that is the
+ * dimension has NO web rendering (e.g. a cross-app dimension), that is the
  * genuine web cannot-satisfy signal. Values are left raw; the caller clamps.
  */
 export function deriveWebSettings(abilityModel: any): {
@@ -30,13 +30,13 @@ export function deriveWebSettings(abilityModel: any): {
  * SurfaceAdapter for an honest cannot-satisfy verdict.
  *
  * Identity by construction: the response starts from the authoritative merge
- * VERBATIM and never drops or alters a key the merge produced — so for today's
+ * VERBATIM and never drops or alters a key the merge produced, so for today's
  * empty-needs data, `settings === prefs.settings` exactly (same keys, values,
  * and order), regardless of whether a key is in the registry, a string-typed
  * numeric, etc. The derived baseline only FILLS keys the merge did NOT set (a
  * real record at any strength beats it; derived values are clamped to range).
- * `surface.unmet` reports ABILITY NEEDS the web can't render — NOT arbitrary
- * merge keys — so it is empty for every current user and the content.js
+ * `surface.unmet` reports ABILITY NEEDS the web can't render, NOT arbitrary
+ * merge keys, so it is empty for every current user and the content.js
  * cannot-satisfy branch stays silent. Full strength-aware composition (a derived
  * FLOOR tightening a soft pref) is deferred until structured needs exist.
  *

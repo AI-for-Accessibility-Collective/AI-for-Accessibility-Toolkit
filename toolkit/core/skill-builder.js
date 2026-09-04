@@ -30,7 +30,7 @@ import { parseSkill, serializeSkill, validateSkill } from './skill.js';
  * catalog + settings vocabulary so it can only reference things that exist.
  *
  * When the person tried a previous attempt and it wasn't right, pass it back
- * with their feedback (`previous` + `feedback`) — the diagrams' evaluation
+ * with their feedback (`previous` + `feedback`), the diagrams' evaluation
  * loop where a failed validation returns to the skill builder agent.
  *
  * @overload
@@ -126,7 +126,7 @@ export function parseBuiltSkill(llmOutput, { tools } = {}) {
 /**
  * Full build helper: prompt the injected LLM, parse + validate, and (if the
  * model referenced anything invalid) return the errors so the caller can
- * re-prompt. Does not persist — the caller (Librarian) owns storage + consent.
+ * re-prompt. Does not persist; the caller (Librarian) owns storage + consent.
  *
  * @overload
  * @param {string} need

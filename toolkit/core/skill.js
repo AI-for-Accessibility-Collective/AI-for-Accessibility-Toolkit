@@ -35,7 +35,7 @@
  * @property {string} body         - full markdown (instructions), sans frontmatter
  *
  * A recipe can compose two kinds of steps: adapters (page-fixing code applied
- * directly) and actions (tasks the browser agent performs — how a reusable
+ * directly) and actions (tasks the browser agent performs, how a reusable
  * task saved from the Assistant becomes a skill). Most skills use only one.
  */
 
@@ -291,7 +291,7 @@ function tokenLike(a, b) {
 /**
  * Score how well a skill covers a plain-language NEED (the diagrams' "does
  * the skill exist in the db?" check, before the Engineer builds a new one).
- * Deterministic keyword overlap — each need word counts once, at the weight
+ * Deterministic keyword overlap: each need word counts once, at the weight
  * of the best field it appears in. 0 = no meaningful overlap.
  * @param {Skill} skill
  * @param {string} need

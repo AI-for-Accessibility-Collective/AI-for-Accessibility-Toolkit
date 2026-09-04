@@ -63,7 +63,7 @@ export function buildProfileBlob(profile, abilityModel, now) {
 }
 
 /** True iff `blob` is a structurally valid profile blob this version reads.
- *  `exportedAt` MUST be a finite positive number — a NaN/Infinity timestamp
+ *  `exportedAt` MUST be a finite positive number: a NaN/Infinity timestamp
  *  would defeat the last-write-wins guard (all comparisons against NaN are
  *  false; Infinity freezes the device), so it is rejected here.
  *  @param {any} blob

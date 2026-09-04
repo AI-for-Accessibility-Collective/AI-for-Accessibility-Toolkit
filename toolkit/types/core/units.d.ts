@@ -12,7 +12,7 @@ export function unitOf(key: string): Unit | null;
  */
 export function coerceSetting(key: string, value: any, meta?: SettingsMeta | null): any;
 /** Coerce every key in a settings object. Non-object input passes through.
- *  This is the INGEST normalizer — run once where untrusted/raw values enter
+ *  This is the INGEST normalizer: run once where untrusted/raw values enter
  *  (record writes, the LLM extract ops, the one-time migration).
  *  @param {any} settings
  *  @param {SettingsMeta|null} [meta]

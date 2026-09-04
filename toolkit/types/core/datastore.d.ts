@@ -6,7 +6,7 @@
  * @param {import('./skill.js').ToolsRegistry|null} [deps.toolsRegistry]  The built-in tools registry (AA_TOOLS), or null.
  * @param {import('./skill.js').Skill[]} [deps.builtinSkills] Built-in SKILL.md playbooks shipped with the host
  *   (parsed Skill objects, e.g. globalThis.AA_SKILLS), or []. Read-only global tier,
- *   exposed via global.skills() — see ./skill.js for the Skill shape.
+ *   exposed via global.skills(); see ./skill.js for the Skill shape.
  * @returns the Datastore facade.
  */
 export function createDatastore({ kv, clock, taxonomy, toolsRegistry, builtinSkills }: {

@@ -8,7 +8,7 @@
  *     speech: {rate},
  *     simplifyLanguage,
  *     touch: {largeTargets, minTargetPt} }
- *   A neutral (empty-needs) model renders every value at its OS default —
+ *   A neutral (empty-needs) model renders every value at its OS default:
  *   no phantom adaptations.
  */
 export function renderMobileSettings(model: import("../core/ability.js").AbilityModel): {

@@ -111,7 +111,7 @@ const MIN_TARGET_PT_LARGE = 48;   // Android accessibility-guidance minimum
  *     speech: {rate},
  *     simplifyLanguage,
  *     touch: {largeTargets, minTargetPt} }
- *   A neutral (empty-needs) model renders every value at its OS default —
+ *   A neutral (empty-needs) model renders every value at its OS default:
  *   no phantom adaptations.
  */
 export function renderMobileSettings(model) {

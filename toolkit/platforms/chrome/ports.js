@@ -74,7 +74,7 @@ export function chromeScheduler() {
   };
 }
 
-/** Consent surface — today, the toolbar badge that counts pending proposals.
+/** Consent surface: today, the toolbar badge that counts pending proposals.
  *  Failures (no `chrome.action` in some contexts) are swallowed. */
 export function chromeConsent() {
   return {
@@ -87,7 +87,7 @@ export function chromeConsent() {
   };
 }
 
-/** Demo hook — bridges the core to the extension's live-diagram globals
+/** Demo hook: bridges the core to the extension's live-diagram globals
  *  (`globalThis.AA_DEMO_MODE`, `globalThis.aaDemoTrace`), read live each call
  *  so a runtime demo-mode toggle is reflected immediately. */
 export function chromeDemo() {

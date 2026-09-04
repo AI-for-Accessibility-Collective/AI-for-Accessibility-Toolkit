@@ -21,11 +21,11 @@ export function normalizeGrant(raw: any): Grant;
 /** True iff `audience` is covered by the profile's current `sharing` level.
  *  Fail CLOSED on unrecognized values: an unknown/missing sharing level
  *  counts as 'personal' (the narrowest ceiling), and an unknown audience
- *  never passes — a corrupted field must narrow access, never widen it.
+ *  never passes: a corrupted field must narrow access, never widen it.
  *
  *  Pure by design (no I/O), so it composes wherever both operands are in
- *  scope: core/librarian.js's exportAbilityModel calls it directly — the
- *  portable enforcement point every host gets for free — and
+ *  scope: core/librarian.js's exportAbilityModel calls it directly, the
+ *  portable enforcement point every host gets for free, and
  *  background.js's grant routes are now thin pass-throughs to the Librarian
  *  rather than re-implementing the check.
  *  @param {string} audience  The grant holder's audience tier.
@@ -61,7 +61,7 @@ export function recordShareAudit(datastore: () => AuditStore, entry: Omit<ShareA
  *  @returns {Promise<ShareAuditEntry[]>} */
 export function getShareAudit(datastore: () => AuditStore): Promise<ShareAuditEntry[]>;
 /** A grant is active iff it has an appId and at least one valid scope. Revoke
- *  is a DELETE, so there is no revoked/expired state to check — a stored grant
+ *  is a DELETE, so there is no revoked/expired state to check: a stored grant
  *  that still exists is active.
  *  @param {Partial<Grant>|null|undefined} grant
  *  @returns {boolean} */
