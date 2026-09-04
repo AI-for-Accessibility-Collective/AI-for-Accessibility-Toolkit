@@ -24,19 +24,25 @@
 // mode, and compares the two reports. Run with --mode=local or --mode=remote
 // it is the per-mode child.
 //
-// Recording. The remote branch's writes are fetch() calls, so a fetch stub
-// records them (the same way remote-write-failure.test.mjs does) and answers
-// in the service's real envelope. The local branch builds its Librarian
-// inside server.js and exports no handle to it, so the local child registers
-// onboard-contract.hooks.mjs, which swaps the toolkit host module server.js
-// imports for a wrapper that returns a recording Librarian. Nothing outside
-// this test changes for either mode.
+// Recording. Both modes record at the same seam: the Librarian that a toolkit
+// host's getInstance(uid) hands back is wrapped in a Proxy that logs each
+// call with the uid it was made for, and throws when the scenario says that
+// call must fail. In remote mode the toolkit host belongs to the real service
+// (server/src/app.js), booted in this process on an ephemeral port the way
+// server/test/server-test.mjs boots it, and TOOLKIT_URL points at it; a
+// throw inside the proxy is what the service answers `200 {ok:false}` for.
+// In local mode the host is built inside server.js, which exports no handle
+// to it, so the local child registers onboard-contract.hooks.mjs, which swaps
+// the toolkit host module server.js imports for a wrapper that returns the
+// same recording Librarian. Nothing outside this test changes for either
+// mode, and no part of the service is stubbed.
 //
 //   node onboarding/test/onboard-contract.test.mjs
 //   node onboarding/test/onboard-contract.test.mjs --mode=local   (one mode)
 
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import http from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -61,8 +67,9 @@ const CHILD_TIMEOUT_MS = 60_000;
 //
 // `input`   what the form (or any caller) sends to onboard().
 // `uidFrom` run against the uid an earlier scenario produced.
-// `failAt`  make the Nth Librarian call fail (the envelope says ok:false in
-//           remote mode; the method throws in local mode).
+// `failAt`  make the Nth Librarian call fail: the method throws in both
+//           modes, and in remote mode the service reports that throw in its
+//           `200 {ok:false, error}` envelope.
 // `written` the values the profile write must carry after normalization;
 //           needs are derived from them with the same deriveDefaultNeeds.
 // `calls`   the exact Librarian call sequence, in order, and nothing after.
@@ -201,6 +208,7 @@ async function runOneMode(mode) {
   process.env.ONBOARD_MODE = mode;
   delete process.env.GEMINI_API_KEY;
   let dataDir = null;
+  let service = null;
   const report = { mode, scenarios: [] };
   const uids = {}; // scenario key -> the uid it produced
   try {
@@ -209,17 +217,18 @@ async function runOneMode(mode) {
     // behind. The store goes under the parent's report directory when there
     // is one: a child the parent has to kill never reaches the finally below,
     // and the parent removes its own directory either way.
+    dataDir = mkdtempSync(path.join(outFile ? path.dirname(outFile) : tmpdir(), 'onboard-contract-'));
     if (mode === 'local') {
-      dataDir = mkdtempSync(path.join(outFile ? path.dirname(outFile) : tmpdir(), 'onboard-contract-'));
       process.env.DATA_DIR = dataDir;
       installLocalRecorder(state);
       await installHooks();
     } else {
-      process.env.TOOLKIT_URL = 'http://toolkit.test';
       process.env.ADMIN_PASSWORD = 'test-only-not-a-real-secret';
-      installRemoteStub(state);
+      service = await startService(state, dataDir, process.env.ADMIN_PASSWORD);
+      process.env.TOOLKIT_URL = service.url;
     }
     const { onboard, deriveDefaultNeeds } = await import('../server.js');
+
     for (const scen of SCENARIOS) {
       const input = { ...scen.input };
       if (scen.uidFrom) {
@@ -256,9 +265,10 @@ async function runOneMode(mode) {
     // which is also what a broken onboard() looks like. Say which it was.
     check(mode === 'local'
       ? 'local: the module hook wrapped the toolkit host that server.js built (onboard-contract.hooks.mjs)'
-      : 'remote: the fetch stub answered the Librarian calls server.js made',
+      : 'remote: the in-process service reached the recording toolkit host for the calls server.js sent it',
       state.reached > 0);
   } finally {
+    if (service) await service.close();
     if (dataDir) rmSync(dataDir, { recursive: true, force: true });
   }
 
@@ -377,125 +387,75 @@ function assertScenario(mode, scen, entry, outcome, deriveDefaultNeeds) {
   }
 }
 
-// ── local mode: a recording Librarian ────────────────────────────────────────
-// onboard-contract.hooks.mjs hands every Librarian that server.js obtains to
-// this function. The proxy records each method call, throws when the call is
-// the one the scenario says must fail, and otherwise delegates unchanged.
-function installLocalRecorder(state) {
-  globalThis.__onboardContractRecord = (librarian, uid) => {
-    state.reached++;
-    return new Proxy(librarian, {
-      get(target, key) {
-        const v = target[key];
-        if (typeof key !== 'string' || typeof v !== 'function') return v;
-        return async (...args) => {
-          const entry = { method: key, args: structuredClone(args), uid };
-          const n = state.trace.push(entry);
-          if (state.failAt === n) throw new Error('injected failure');
-          const result = await v.apply(target, args);
-          if (key === 'listNotes') entry.listed = (result || []).map((x) => x.id);
-          return result;
-        };
-      },
-    });
-  };
+// ── the recording Librarian, shared by both modes ────────────────────────────
+// Wraps the Librarian a toolkit host's getInstance(uid) returned. The proxy
+// records each method call with the uid, throws when the call is the one the
+// scenario says must fail, and otherwise delegates unchanged.
+function recordLibrarian(state, librarian, uid) {
+  state.reached++;
+  return new Proxy(librarian, {
+    get(target, key) {
+      const v = target[key];
+      if (typeof key !== 'string' || typeof v !== 'function') return v;
+      return async (...args) => {
+        const entry = { method: key, args: structuredClone(args), uid };
+        const n = state.trace.push(entry);
+        if (state.failAt === n) throw new Error('injected failure');
+        const result = await v.apply(target, args);
+        if (key === 'listNotes') entry.listed = (result || []).map((x) => x.id);
+        return result;
+      };
+    },
+  });
 }
 
-// ── remote mode: a stub of the toolkit service ───────────────────────────────
-// Answers in the service's real envelope (server/CONTRACT.md): a success is
-// `200 {ok:true, result}`, a method that threw is `200 {ok:false, error}`.
-// The failure injected here takes the second shape, because that is what an
-// unreachable datastore looks like from onboarding. The stub keeps just
-// enough state per uid (notes by topic, the profile, which uids hold data)
-// for the scenarios above to play out the way the real service plays them.
-//
-// Which uids /admin/users lists: every uid with a `users/<uid>/` partition
-// (store.listUsers). The service builds a uid's toolkit instance before it
-// invokes any librarian method, and building it runs the datastore
-// migrations, which write that partition. So a uid exists from its first
-// librarian call onward, even one whose method then throws; minting a token
-// alone creates nothing. The stub follows that: the uid is added when a
-// librarian call reaches it, before the injected failure is applied. No
-// scenario can observe the difference (a failed onboard() returns no uid to
-// reuse), but the stub should not claim a rule the service does not have.
-//
-// The admin routes check what the service checks (server/src/app.js): the
-// base URL, the method, and `Authorization: Bearer <ADMIN_PASSWORD>`. A
-// remoteAdmin() that dropped the header or changed the method would fail
-// against the service, so it fails here too. A per-user token is the uid
-// with a prefix, since server.js treats it as opaque and the stub only needs
-// to get the uid back.
-// FLAG(review): the stub is the test's own reading of the service; a change
-// in the real service's note upsert or listUsers rule would not show up here.
-function installRemoteStub(state) {
-  const users = new Set();
-  const notes = new Map();   // uid -> [{id, text, topic}]
-  const TOKEN_PREFIX = 'tok-';
-  let nextNote = 0;
+// Local mode: onboard-contract.hooks.mjs hands every Librarian that server.js
+// obtains to this global, from inside the module it swapped in.
+function installLocalRecorder(state) {
+  globalThis.__onboardContractRecord = (librarian, uid) => recordLibrarian(state, librarian, uid);
+}
 
-  function librarian(uid, method, args) {
-    const mine = notes.get(uid) || [];
-    notes.set(uid, mine);
-    switch (method) {
-      case 'addNote': {
-        const [text, opts = {}] = args;
-        const body = String(text ?? '').trim();
-        if (!body) return { ok: false, reason: 'empty-text' };
-        const existing = mine.find((n) => n.topic === opts.topic);
-        const note = existing || { id: 'note-' + (++nextNote), topic: opts.topic };
-        note.text = body;
-        if (!existing) mine.push(note);
-        return { ok: true, id: note.id, note: { ...note } };
-      }
-      case 'listNotes': {
-        const [filter = {}] = args;
-        return mine.filter((n) => !filter.topic || n.topic === filter.topic).map((n) => ({ ...n }));
-      }
-      case 'deleteNote': {
-        const i = mine.findIndex((n) => n.id === args[0]);
-        if (i < 0) return { ok: false, removed: false, reason: 'not-found' };
-        mine.splice(i, 1);
-        return { ok: true, removed: true };
-      }
-      case 'setProfileFields': return args[0];
-      default: return undefined;
-    }
-  }
-
-  globalThis.fetch = async (url, opts = {}) => {
-    const u = String(url);
-    const method = String(opts.method || 'GET').toUpperCase();
-    const reply = (status, obj) => ({ status, json: async () => obj });
-    const base = process.env.TOOLKIT_URL;
-    if (!u.startsWith(base + '/')) throw new Error('unexpected fetch: ' + u + ' ' + method);
-    const route = u.slice(base.length);
-    const auth = new Headers(opts.headers || {}).get('authorization') || '';
-    const body = opts.body ? JSON.parse(opts.body) : {};
-    if (route === '/admin/users' || route === '/admin/tokens') {
-      if (auth !== 'Bearer ' + process.env.ADMIN_PASSWORD) return reply(401, { error: 'unauthorized' });
-      // The service answers other methods on these paths with something
-      // else (a token listing, not-found); either way no token comes back.
-      if (route === '/admin/users') {
-        return method === 'GET' ? reply(200, { users: [...users].sort() }) : reply(404, { error: 'not-found' });
-      }
-      if (method !== 'POST') return reply(404, { error: 'not-found' });
-      return reply(200, { token: TOKEN_PREFIX + body.uid, uid: body.uid });
-    }
-    const m = /^\/v1\/librarian\/([^/?]+)$/.exec(route);
-    if (!m) throw new Error('unexpected fetch: ' + u + ' ' + method);
-    const bearer = 'Bearer ' + TOKEN_PREFIX;
-    const uid = auth.startsWith(bearer) ? auth.slice(bearer.length) : null;
-    if (!uid) return reply(401, { error: 'unauthorized' });
-    const args = body.args || [];
-    users.add(uid); // getInstance ran; see the note above
-    state.reached++;
-    const entry = { method: m[1], args, uid };
-    const n = state.trace.push(entry);
-    if (state.failAt === n) return reply(200, { ok: false, error: 'injected failure' });
-    const result = librarian(uid, m[1], args);
-    if (result === undefined) return reply(404, { error: 'unknown-method' });
-    if (m[1] === 'listNotes') entry.listed = result.map((x) => x.id);
-    return reply(200, { ok: true, result });
+// ── remote mode: the real service, in this process ───────────────────────────
+// Boots server/src/app.js the way server/test/server-test.mjs does: a file
+// store under the test's temp dir, a toolkit host over it, createApp() on an
+// ephemeral port. server.js then talks to it over real HTTP, so token
+// minting, /admin/users, the note upsert by topic, and the response envelope
+// are all the service's own, not a reading of them. The one thing added is
+// the recording proxy on the host's getInstance, the same wrapper the local
+// hooks apply, so both modes record at the same seam. The service turns a
+// throw from the proxy into `200 {ok:false, error}` (handleLibrarianCall),
+// which is the failure shape onboard() has to stop at.
+//
+// The service builds a uid's toolkit instance before it invokes any librarian
+// method, and building it runs the datastore migrations, which write the
+// uid's partition. So /admin/users lists a uid from its first librarian call
+// onward, even one whose method then threw; minting a token alone creates
+// nothing. No scenario can observe the difference (a failed onboard() returns
+// no uid to reuse); it is noted so nobody adds a rule here that the service
+// does not have.
+async function startService(state, dataDir, adminPassword) {
+  const { createApp } = await import('../../server/src/app.js');
+  const { fileStore } = await import('../../server/src/store.js');
+  const { createToolkitHost } = await import('../../server/src/toolkit-host.js');
+  const store = fileStore(dataDir);
+  const host = createToolkitHost({
+    store,
+    // Onboarding never needs the LLM lane; the same throwing caller
+    // server.js uses in local mode.
+    geminiCaller: async () => { throw new Error('no-llm-in-contract-test'); },
+  });
+  const recordingHost = {
+    ...host,
+    getInstance: async (uid) => {
+      const instance = await host.getInstance(uid);
+      return { ...instance, librarian: recordLibrarian(state, instance.librarian, uid) };
+    },
+  };
+  const server = http.createServer(createApp({ store, adminPassword, toolkitHost: recordingHost, version: 'contract-test' }));
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  return {
+    url: `http://127.0.0.1:${server.address().port}`,
+    close: () => new Promise((resolve) => server.close(resolve)),
   };
 }
 
