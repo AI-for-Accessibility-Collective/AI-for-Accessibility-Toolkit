@@ -34,7 +34,7 @@ jobs:
         # onboarding/test — the one list CONTRIBUTING points contributors at,
         # so CI cannot drift from it. browser-validate.js is intentionally NOT
         # a *-test.js file. It needs a real Chromium, so it runs in the
-        # separate, non-blocking browser.yml instead of here.
+        # separate browser.yml instead of here, which is not a required check.
         run: npm test
 
       - name: Reference hosts run

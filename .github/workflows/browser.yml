@@ -9,12 +9,19 @@
 # download is slow and can fail for reasons unrelated to the change under test.
 # This job keeps that risk out of ci.yml.
 #
-# It does not block a merge. The job is marked continue-on-error, so a red run
-# is visible on the pull request but the workflow still reports success. The
-# suites here are the ones most likely to be flaky, and a flaky required check
-# gets ignored or bypassed; a visible optional one is the middle ground
-# proposed in issue #29. Promote it to required only once it has been green
-# for a while.
+# It does not block a merge, and the reason is branch protection, not this
+# file. A check blocks a merge only when it is listed as a required status
+# check on the target branch, and at the time of writing main lists none. A
+# red run here shows on the pull request and in the Actions tab like any
+# other failure, and the maintainer decides what to do with it. The job is
+# deliberately not marked continue-on-error: on a job, that keyword only turns
+# the workflow run green in the Actions tab and stops the failure
+# notification, and it does not change whether the check blocks. The suites
+# here are the ones most likely to be flaky, and a flaky required check gets
+# ignored or bypassed; a visible optional one is the middle ground proposed
+# in issue #29. Add this job to the required list only once it has been green
+# for a while, and drop the paths filter in the same change, or pull requests
+# outside those paths will wait on a check that never reports.
 #
 # The two suites run one after the other, never in parallel: two Chromium
 # instances on a shared runner are how browser tests time out.
@@ -46,8 +53,9 @@ on:
 jobs:
   real-browser:
     runs-on: ubuntu-latest
-    # Non-blocking: see the header comment.
-    continue-on-error: true
+    # FLAG(review): the first run of this job took 7 min 34 s, 7 min 1 s of it
+    # in npm ci, so 20 is a ceiling with room for a slow registry, not a tuned
+    # number. If it fires, the check reads as a failure unrelated to the change.
     timeout-minutes: 20
 
     steps:
@@ -62,7 +70,8 @@ jobs:
         run: npm ci
 
       # Both suites import the npm `playwright` package, so the browser comes
-      # from npx, not from `python -m playwright` as in cli.yml.
+      # from npx after `npm ci`, which pins it to the version in
+      # package-lock.json, not from `python -m playwright` as in cli.yml.
       - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
 
@@ -80,12 +89,12 @@ jobs:
         if: ${{ always() }}
         run: |
           {
-            echo "## Real-browser suites (non-blocking)"
+            echo "## Real-browser suites"
             echo
             echo "| Suite | Outcome |"
             echo "|---|---|"
             echo "| tools/test/browser-validate.js | ${{ steps.validate.outcome }} |"
             echo "| onboarding/test/chat-e2e.mjs | ${{ steps.e2e.outcome }} |"
             echo
-            echo "This job does not block a merge. A failure here is worth reading, not ignoring."
+            echo "This job is not a required status check, so it does not block a merge. A failure here is worth reading, not ignoring."
           } >> "$GITHUB_STEP_SUMMARY"

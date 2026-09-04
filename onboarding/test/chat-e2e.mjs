@@ -11,11 +11,10 @@
 // into importable modules without silently changing what the page does.
 //
 // Needs a Chromium download (`npx playwright install chromium`), so it is named
-// *-e2e.mjs rather than *.test.mjs and `npm test` does not pick it up — the
-// same split tools/test/browser-validate.js uses. CI runs it in the separate,
-// non-blocking `browser` workflow (.github/workflows/browser.yml) when
-// onboarding/, controller/, toolkit/, server/src/ or the package files change.
-// Run:
+// *-e2e.mjs rather than *.test.mjs and `npm test` does not pick it up, the
+// same split tools/test/browser-validate.js uses. CI runs it in the separate
+// `browser` workflow (.github/workflows/browser.yml), which is not a required
+// check and triggers on the paths listed there. Run:
 //   npm run test:e2e
 //
 // The assist lane is deliberately left unconfigured (no GEMINI_API_KEY), so the
