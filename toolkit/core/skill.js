@@ -13,11 +13,12 @@
 //     to the same settings object the adapter apply-path already consumes, so
 //     applying a skill needs no LLM at apply-time.
 //
-// Pure and dependency-free (no YAML lib, no DOM): frontmatter is simple
-// `key: value` lines; the recipe is a ```json fenced block. Parsed/validated/
-// resolved here; authored as .md files in toolkit/skills/builtin/. The only
-// imports are two pure vocabularies: the support areas (core/ability.js) and
-// the site categories (core/taxonomy.js) that validateSkill checks against.
+// Pure, with no platform or library dependency (no YAML lib, no DOM):
+// frontmatter is simple `key: value` lines; the recipe is a ```json fenced
+// block. Parsed/validated/resolved here; authored as .md files in
+// toolkit/skills/builtin/. The only imports are two pure vocabularies: the
+// support areas (core/ability.js) and the site categories (core/taxonomy.js)
+// that validateSkill checks against.
 
 import { SUPPORT_AREAS } from './ability.js';
 import { taxonomy as defaultTaxonomy } from './taxonomy.js';
@@ -149,20 +150,29 @@ export function serializeSkill(skill) {
  * @param {Skill} skill
  * @param {{ tools?: any, taxonomy?: any }} deps
  *   tools    = the AA_TOOLS registry (byId + settingsMeta)
- *   taxonomy = the site taxonomy (categoryIds); defaults to the bundled one
+ *   taxonomy = the site taxonomy; defaults to the bundled one when absent or
+ *              null. A host object may carry `categoryIds()` or just a
+ *              `categories` list of `{ id }` (the documented shape).
  * @returns {{ valid: boolean, errors: string[] }}
  */
-export function validateSkill(skill, { tools, taxonomy = defaultTaxonomy } = {}) {
+export function validateSkill(skill, { tools, taxonomy } = {}) {
   const errors = [];
   if (!skill.name) errors.push('missing name');
   if (!skill.description) errors.push('missing description');
-  for (const a of (skill.supportAreas || [])) {
+  // Hand-built skill objects (saveSkill callers, tests) may carry a single
+  // string where a list is expected; treat it as a one-item list rather than
+  // iterating its characters, and never throw on a non-iterable value.
+  const listOf = (v) => Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]);
+  for (const a of listOf(skill.supportAreas)) {
     if (!SUPPORT_AREAS.includes(a)) errors.push(`supportArea "${a}" not one of ${SUPPORT_AREAS.join(', ')}`);
   }
   // 'all' is not a taxonomy category; it is the skill layer's own "any site"
   // value (matchSkill scores it separately), so it is allowed here by name.
-  const categories = taxonomy.categoryIds();
-  for (const c of (skill.siteRelevance || [])) {
+  const tax = taxonomy || defaultTaxonomy;
+  const categories = typeof tax.categoryIds === 'function'
+    ? tax.categoryIds()
+    : (tax.categories || []).map(c => c.id);
+  for (const c of listOf(skill.siteRelevance)) {
     if (c !== 'all' && !categories.includes(c)) errors.push(`siteRelevance "${c}" not one of ${categories.join(', ')}, all`);
   }
   const steps = skill.recipe?.adapters || [];
