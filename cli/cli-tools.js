@@ -766,7 +766,9 @@ function fixDuplicateIds() {
 // either number (3.1.5 Reading Level is about lower secondary education
 // level, which this does not measure). Heuristic, English-leaning (sentences
 // split on . ! ?), best-effort. The simplify-text adapter uses a different
-// definition (100 to 10,000 characters); one shared definition is issue #35.
+// definition (100 to 10,000 characters), the browser validation harness in
+// tools/test/validate-entry.js carries a copy of this function, and the
+// extension has a third cutoff; one shared definition is issue #35.
 const COMPLEX_TEXT_MIN_CHARS = 200;
 const COMPLEX_SENTENCE_MIN_WORDS = 15;
 function findComplexText() {
