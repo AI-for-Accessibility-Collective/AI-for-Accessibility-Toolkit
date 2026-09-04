@@ -39,6 +39,9 @@ import { parseSkill, serializeSkill, validateSkill } from './skill.js';
  * @returns {string}
  */
 /**
+ * FLAG(review): the overload signature above exists so `tools` is required
+ * for callers while the runtime default (`= {}`) stays; the alternative is
+ * Partial<>, which would let a call with no tools typecheck.
  * The implementation signature keeps the runtime default (`= {}`) legal for
  * the checker; callers see the overload above, where `tools` is required.
  * @param {string} need

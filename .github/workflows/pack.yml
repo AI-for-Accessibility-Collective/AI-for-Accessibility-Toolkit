@@ -24,5 +24,8 @@ jobs:
           cache: 'npm'
       # The fixture's typecheck step runs the repository's pinned tsc against
       # the installed tarballs, so the root dev dependencies are needed here.
+      # FLAG(review): this installs every root dev dependency for one tool;
+      # if the added minutes matter, the fixture could skip its typecheck with
+      # a visible notice when tsc is absent, which weakens the proof.
       - run: npm ci
       - run: node scripts/pack-fixture-test.mjs

@@ -7,6 +7,8 @@
  * One modality-neutral need. `value` is read per dimension by each surface (a
  * number for textSize, a boolean for reduceMotion, a variant string for
  * contrast), so it stays `unknown` here and every reader narrows it.
+ * FLAG(review): a per-dimension union would be tighter; it belongs here if
+ * consumers want it, and the surfaces' `Record<string, unknown>` maps follow.
  * @property {string} dimension
  * @property {unknown} value
  * @property {NeedStrength} strength
@@ -57,6 +59,8 @@ export type NeedUnit = import("./units.js").Unit;
  * One modality-neutral need. `value` is read per dimension by each surface (a
  * number for textSize, a boolean for reduceMotion, a variant string for
  * contrast), so it stays `unknown` here and every reader narrows it.
+ * FLAG(review): a per-dimension union would be tighter; it belongs here if
+ * consumers want it, and the surfaces' `Record<string, unknown>` maps follow.
  */
 export type Need = {
     dimension: string;

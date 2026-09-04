@@ -41,6 +41,10 @@ import { systemClock, noopScheduler, noopConsent, noopDemo } from './ports/index
  * @returns {Toolkit}
  */
 /**
+ * FLAG(review): the overload signature above exists so `kv` is required for
+ * callers; the alternative is Partial<ToolkitPorts>, which would let a call
+ * with no kv typecheck. Check that types/index.d.ts reads the way a consumer
+ * should see it.
  * The implementation signature keeps the runtime default (`= {}`) legal for
  * the checker so the missing-kv error below stays a plain Error; callers see
  * the overload above, where `kv` is required.

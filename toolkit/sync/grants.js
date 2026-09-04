@@ -162,6 +162,9 @@ export async function recordShareAudit(datastore, entry) {
   const DS = datastore;
   await DS().patch(AUDIT_STORE, (log) => {
     log = Array.isArray(log) ? log : [];
+    // FLAG(review): the only direct Date.now() in the core; every other
+    // timestamp comes from the injected Clock. Left as is in this PR (no
+    // runtime change), so a fixed test clock still sees wall-clock audit times.
     log.push({ ts: Date.now(), ...entry });
     if (log.length > AUDIT_MAX) log.splice(0, log.length - AUDIT_MAX);
     return log;
