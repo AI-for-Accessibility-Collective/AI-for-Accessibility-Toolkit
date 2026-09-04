@@ -211,7 +211,8 @@ function useRemote(url) {
   // socket's late open/close/error can't clobber the status of a newer
   // connection, or apply the profile to it. The profile goes out on the open
   // transition, not here: the socket is still connecting when useRemote()
-  // returns, so applying now would race it.
+  // returns, and a request posted now would wait in the channel's outbox with
+  // its timeout already running (see chat-connect.js).
   setConnStatus('connecting', url);
   const myChannel = remoteChannel, sock = remoteChannel.socket;
   const live = () => remoteChannel === myChannel;

@@ -3,11 +3,14 @@
 //
 // The profile has to reach whatever /chat is driving. For the local preview
 // that is immediate. For a remote receiver the socket is still opening when
-// useRemote() returns, so applying there would race the connection; the right
-// moment is the socket's own open event. And a socket the person has since
-// replaced (Connect clicked twice, or a fall-back to the preview) must never
-// report anything, or a slow first connection could apply over the second.
-// That guard is `live`, and it is what the profile application rides on.
+// useRemote() returns. websocketChannel would hold a request posted then and
+// send it on open, but remoteControl starts the request's timeout the moment
+// it is posted, so a slow connection could time the application out and a
+// failed one would leave it pending until that timeout. The right moment is
+// the socket's own open event. And a socket the person has since replaced
+// (Connect clicked twice, or a fall-back to the preview) must never report
+// anything, or a slow first connection could apply over the second. That
+// guard is `live`, and it is what the profile application rides on.
 
 /**
  * Follow a socket's lifecycle and report it as connection states.

@@ -3,7 +3,8 @@
 //
 // /chat applies the person's profile to whatever it drives. For a remote
 // receiver that has to wait for the socket to open: useRemote() returns before
-// the connection exists, so applying there is a race. And a socket the person
+// the connection exists, and a request posted then waits in the channel's
+// outbox with its timeout already running. And a socket the person
 // has since replaced (they clicked Connect twice, or fell back to the preview)
 // must never apply anything, or a slow first connection could stomp the second.
 // watchConnection() is the small piece of chat.js that decides both, lifted out
