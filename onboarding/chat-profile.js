@@ -213,7 +213,7 @@ export function resetReply(d, page = {}) {
   const forgotten = (d && d.forgotten) || [];
   const n = forgotten.length;
   const cleared = page.cleared || [], kept = page.kept || [];
-  if (!n && !cleared.length && !kept.length) return 'You’re already on your profile — there were no changes to forget.';
+  if (!n && !cleared.length && !kept.length) return 'You’re already on your profile. There were no changes to forget.';
 
   const did = [];
   if (n) {
@@ -223,7 +223,7 @@ export function resetReply(d, page = {}) {
   if (cleared.length) did.push(`cleared ${cleared.join(', ')} on this page`);
 
   const lead = did.length
-    ? `Back to your profile — I ${did.join(' and ')}.`
+    ? `Back to your profile. I ${did.join(' and ')}.`
     : 'There were no stored changes to forget, but';
   const stayed = kept.length
     ? ` I couldn’t clear ${kept.join(', ')} on this page, so ${kept.length === 1 ? 'it stays as you left it' : 'they stay as you left them'}.`
