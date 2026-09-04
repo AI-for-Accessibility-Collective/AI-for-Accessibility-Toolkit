@@ -2514,11 +2514,61 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yUnpinSticky = UnpinSticky;
 
+  // tools/utils/ai-output.js
+  var REFUSAL_PREFIXES = ["I cannot", "I'm unable", "I am unable", "Sorry", "I cannot describe", "Unfortunately"];
+  var UNCERTAINTY_TERMS = ["unsure", "I don't know", "unclear", "I cannot tell", "cannot determine"];
+  var REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|n\/a|unknown|no label|not (sure|available)|unsure)/i;
+  var MAX_SHORT_TEXT_CHARS = 60;
+  function startsWithRefusal(text) {
+    if (typeof text !== "string") return false;
+    const t = text.trim();
+    const lower = t.toLowerCase();
+    return REFUSAL_RE.test(t) || REFUSAL_PREFIXES.some((p) => lower.startsWith(p.toLowerCase()));
+  }
+  function containsUncertainty(text) {
+    if (typeof text !== "string") return false;
+    const lower = text.toLowerCase();
+    return UNCERTAINTY_TERMS.some((term) => lower.includes(term.toLowerCase()));
+  }
+  var REFUSAL_VERBS = "translate|simplify|summarize|rewrite|rephrase|help|assist|provide|process|read|access|determine|see|view|do|fulfill|complete|comply|generate|produce|answer|respond|perform|proceed|continue|work";
+  var FIRST_PERSON_REFUSAL_RE = new RegExp(
+    String.raw`^(?:(?:unfortunately|sorry|i(?:'m| am) sorry)\b[,\s]*(?:but\s+)?)*` + String.raw`(?:i(?:'m| am) sorry\b|i(?:'m| am)(?: not able| unable)\b|i do(?:n't| not) know\b` + String.raw`|i can(?:'t|not)\s+(?:${REFUSAL_VERBS})\b)`,
+    "i"
+  );
+  function opensWithFirstPersonRefusal(text) {
+    if (typeof text !== "string") return false;
+    return FIRST_PERSON_REFUSAL_RE.test(text.trim());
+  }
+  function rejectShortText(text, maxChars = MAX_SHORT_TEXT_CHARS) {
+    if (typeof text !== "string") return "not a string";
+    const t = text.trim();
+    if (!t) return "empty";
+    if (t.length > maxChars) return `longer than ${maxChars} characters`;
+    if (/[\r\n]/.test(t)) return "contains a line break";
+    if (startsWithRefusal(t)) return "reads as a refusal";
+    if (containsUncertainty(t)) return "reads as uncertain";
+    return null;
+  }
+  function rejectRewrite(output, input, { minRatio = 0, maxRatio = Infinity } = {}) {
+    if (typeof output !== "string") return "not a string";
+    const out = output.trim();
+    if (!out) return "empty";
+    if (opensWithFirstPersonRefusal(out)) return "reads as a refusal";
+    const inLen = typeof input === "string" ? input.trim().length : 0;
+    if (inLen > 0) {
+      if (out.length < inLen * minRatio) return `shorter than ${minRatio} of the input`;
+      if (out.length > inLen * maxRatio) return `longer than ${maxRatio} times the input`;
+    }
+    return null;
+  }
+
   // tools/adapters/translate-page.js
   var BLOCK_SEL = "p, li, h1, h2, h3, h4, h5, h6, blockquote, figcaption, caption, dd, dt, th, td, summary";
   var SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="true"]';
   var MAX_BLOCKS = 80;
   var BATCH = 4;
+  var MIN_TRANSLATED_RATIO = 0.25;
+  var MAX_TRANSLATED_RATIO = 4;
   var TranslatePage = {
     enabled: false,
     translated: null,
@@ -2555,7 +2605,12 @@ ${scope(":focus")} {
           } catch {
             return;
           }
-          if (!out || !this.enabled || !el.isConnected) return;
+          if (out == null || !this.enabled || !el.isConnected) return;
+          const rejected = rejectRewrite(out, original, { minRatio: MIN_TRANSLATED_RATIO, maxRatio: MAX_TRANSLATED_RATIO });
+          if (rejected) {
+            console.warn(`[AI4A11y] Translate: left a block untouched, rejected model output (${rejected})`);
+            return;
+          }
           const originalNodes = [...el.childNodes];
           el.textContent = out;
           this.translated.add({ el, originalNodes });
@@ -5889,8 +5944,6 @@ ${scope} table {
   });
   var incrementStat2 = globalThis.ai4a11yIncrementStat || (() => {
   });
-  var REFUSAL_PREFIXES = ["I cannot", "I'm unable", "I am unable", "Sorry", "I cannot describe", "Unfortunately"];
-  var UNCERTAINTY_TERMS = ["unsure", "I don't know", "unclear", "I cannot tell", "cannot determine"];
   var GENERIC_JUNK = /* @__PURE__ */ new Set(["image", "picture", "photo", "photograph", "graphic", "icon", "logo", "img"]);
   function isConfidentDescription(text) {
     if (typeof text !== "string") return false;
@@ -6153,7 +6206,6 @@ ${scope} table {
   function isJunkName(name) {
     return !name || JUNK_NAME_RE.test(name.trim());
   }
-  var REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|n\/a|unknown|no label|not (sure|available)|unsure)/i;
   function isValidLabel(label) {
     if (!label || typeof label !== "string") return false;
     const trimmed = label.trim();
@@ -6467,6 +6519,9 @@ ${chunk}
   };
 
   // tools/adapters/simplify-text.js
+  var MIN_SIMPLIFIED_RATIO = 0.3;
+  var MAX_SIMPLIFIED_RATIO = 2;
+  var MAX_SUMMARY_RATIO = 1;
   var logFix12 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
@@ -6485,7 +6540,11 @@ ${chunk}
     }
     try {
       const simplified = await simplifyText(originalText);
-      if (simplified) {
+      const rejected = simplified == null ? null : rejectRewrite(simplified, originalText, { minRatio: MIN_SIMPLIFIED_RATIO, maxRatio: MAX_SIMPLIFIED_RATIO });
+      if (rejected) {
+        console.warn(`[AI4A11y] simplifyText: rejected model output (${rejected})`);
+      }
+      if (simplified && !rejected) {
         element.dataset.ai4a11yOriginal = originalText;
         element.classList.add("ai4a11y-simplified");
         const originalWrapper = document.createElement("span");
@@ -6547,8 +6606,13 @@ ${chunk}
       return null;
     }
     try {
-      const summary = await summarizeText(text.substring(0, 3e3));
-      if (summary) {
+      const excerpt = text.substring(0, 3e3);
+      const summary = await summarizeText(excerpt);
+      const rejected = summary == null ? null : rejectRewrite(summary, excerpt, { maxRatio: MAX_SUMMARY_RATIO });
+      if (rejected) {
+        console.warn(`[AI4A11y] summarizeContent: rejected model output (${rejected})`);
+      }
+      if (summary && !rejected) {
         const summaryBox = document.createElement("div");
         summaryBox.className = "ai4a11y-summary-box";
         summaryBox.setAttribute("role", "region");
@@ -6982,7 +7046,10 @@ ${chunk}
     const context = link.closest("p, li, td, article, section")?.textContent?.trim().substring(0, 200) || "";
     try {
       const improved = await improveLinkText(text, link.href, context);
-      if (improved && improved.toLowerCase() !== text.toLowerCase()) {
+      const rejected = improved == null ? null : rejectShortText(improved);
+      if (rejected) {
+        console.warn(`[AI4A11y] improveAmbiguousLink: rejected model output (${rejected})`);
+      } else if (improved && improved.toLowerCase() !== text.toLowerCase()) {
         link.setAttribute("aria-label", improved);
         link.classList.add("ai4a11y-adapted");
         markProcessed(link, "done");
@@ -7052,7 +7119,12 @@ ${chunk}
       const headers = [];
       for (let col = 0; col < columnCount; col++) {
         const samples = rows.slice(0, 5).map((r) => r.querySelectorAll("td")[col]?.textContent?.trim()).filter(Boolean);
-        const header = col < MAX_AI_COLUMNS && samples.length >= 2 ? await inferColumnHeader(samples) : null;
+        const answer = col < MAX_AI_COLUMNS && samples.length >= 2 ? await inferColumnHeader(samples) : null;
+        const rejected = answer == null ? null : rejectShortText(answer);
+        if (rejected) {
+          console.warn(`[AI4A11y] fixTableHeaders: rejected model output for column ${col + 1} (${rejected})`);
+        }
+        const header = rejected ? null : answer;
         headers.push(header || `Column ${col + 1}`);
       }
       const thead = document.createElement("thead");
