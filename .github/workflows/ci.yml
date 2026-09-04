@@ -32,9 +32,10 @@ jobs:
       - name: Test suites (same command developers run)
         # npm test covers toolkit/test, tools/test, controller/test, and
         # onboarding/test — the one list CONTRIBUTING points contributors at,
-        # so CI cannot drift from it. browser-validate.js is intentionally NOT
-        # a *-test.js file. It needs a real Chromium, so it runs in the
-        # separate browser.yml instead of here, which is not a required check.
+        # so CI cannot drift from it. tools/test/browser-validate.js and
+        # onboarding/test/chat-e2e.mjs are intentionally not matched by those
+        # globs. They need a real Chromium, so they run in the separate
+        # browser.yml instead of here, which is not a required check.
         run: npm test
 
       - name: Reference hosts run

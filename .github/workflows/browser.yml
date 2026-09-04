@@ -1,5 +1,5 @@
 # Runs the two real-browser suites in headless Chromium:
-#   node tools/test/browser-validate.js   each adapter's real effect and its
+#   npm run validate:browser              each adapter's real effect and its
 #                                         exact reversal in a real layout
 #   npm run test:e2e                      onboarding/test/chat-e2e.mjs, the only
 #                                         test that executes onboarding/chat.js
@@ -27,6 +27,9 @@
 # instances on a shared runner are how browser tests time out.
 name: browser
 
+# FLAG(review): the two paths lists below are a hand reading of what the
+# suites import at this commit, not something checked by code. A new import
+# from a directory outside them stops triggering this job, and nothing warns.
 on:
   push:
     branches: [main]
@@ -36,6 +39,7 @@ on:
       - 'tools/**'
       - 'toolkit/**'
       - 'server/src/**'
+      - 'server/package.json'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/browser.yml'
@@ -46,6 +50,7 @@ on:
       - 'tools/**'
       - 'toolkit/**'
       - 'server/src/**'
+      - 'server/package.json'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/browser.yml'
@@ -72,17 +77,22 @@ jobs:
       # Both suites import the npm `playwright` package, so the browser comes
       # from npx after `npm ci`, which pins it to the version in
       # package-lock.json, not from `python -m playwright` as in cli.yml.
+      # Both suites launch headless with no channel, which Playwright runs on
+      # chromium-headless-shell, so only that build is downloaded. Drop
+      # --only-shell if a suite ever launches headed or names a channel.
       - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps --only-shell chromium
 
       - name: Adapter validation in a real layout
         id: validate
-        run: node tools/test/browser-validate.js
+        run: npm run validate:browser
 
-      # Runs even when the previous suite failed, so one run shows both results.
+      # Runs even when the previous suite failed, so one run shows both results,
+      # but not when a setup step failed before validate could start: then the
+      # summary would blame this suite for a missing Chromium or node_modules.
       - name: Chat end-to-end
         id: e2e
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.validate.outcome != 'skipped' }}
         run: npm run test:e2e
 
       - name: Record the outcome
