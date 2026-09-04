@@ -30,10 +30,11 @@ jobs:
         run: npm ci
 
       - name: Test suites (same command developers run)
-        # npm test covers toolkit/test, tools/test, controller/test, and
-        # onboarding/test — the one list CONTRIBUTING points contributors at,
-        # so CI cannot drift from it. browser-validate.js is intentionally NOT
-        # a *-test.js file — it needs a real Chromium and runs locally only.
+        # npm test covers toolkit/test, tools/test, controller/test,
+        # onboarding/test, and scripts/import-boundaries-test.mjs — the one
+        # list CONTRIBUTING points contributors at, so CI cannot drift from
+        # it. browser-validate.js is intentionally NOT a *-test.js file — it
+        # needs a real Chromium and runs locally only.
         run: npm test
 
       - name: Reference hosts run
