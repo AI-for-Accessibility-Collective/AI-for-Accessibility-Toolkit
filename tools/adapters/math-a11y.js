@@ -16,6 +16,7 @@
 import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
 import { registerSweep } from '../utils/observe.js';
+import { getLabelledByText } from '../utils/dom.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 
@@ -34,8 +35,9 @@ const SKIP_TAGS = new Set(['annotation', 'annotation-xml', 'mphantom']);
 function hasAccessibleName(el) {
   const label = el.getAttribute('aria-label');
   if (label && label.trim()) return true;
-  const labelledby = el.getAttribute('aria-labelledby');
-  return !!(labelledby && labelledby.trim());
+  // Same rule as the auditors: an aria-labelledby only counts when it
+  // resolves to a name
+  return !!getLabelledByText(el);
 }
 
 // Walk a MathML subtree into spoken words: layout tags become the phrases a

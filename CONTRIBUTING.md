@@ -175,6 +175,20 @@ node toolkit/hosts/skill-demo/demo.js    # retrieve → resolve → build → va
 node server/test/server-test.mjs         # hosted service
 ```
 
+Two suites drive a real headless Chromium and are kept out of `npm test` on
+purpose, because they need a browser download that `npm install` does not do:
+
+```bash
+npx playwright install chromium          # one-time browser download
+npm run validate:browser                 # each adapter's real effect and reversal in a real layout
+npm run test:e2e                         # the /chat page end to end; the only test that runs onboarding/chat.js
+```
+
+Run both before opening a PR that touches `onboarding/`, `controller/`,
+`tools/`, `toolkit/`, or `server/src/`. CI also runs them for such changes in
+a separate job (`.github/workflows/browser.yml`) that does not block a merge;
+a red result there is still worth reading before you ask for review.
+
 `toolkit/API.md` and the `ai4a11y-toolkit` skill are **generated** — if you
 change the core API, regenerate them (see the note at the top of each file)
 rather than hand-editing. So is `toolkit/types/`, the core's type
@@ -184,7 +198,9 @@ fails when it is stale.
 ## PR guidelines
 
 - One feature per PR.
-- Tests must pass (`npm test` + the demos above).
+- Tests must pass (`npm test` + the demos above, plus the two browser suites
+  if you touched `onboarding/`, `controller/`, `tools/`, `toolkit/`, or
+  `server/src/`).
 - Regenerate `toolkit/API.md` / the skill if you changed the core surface,
   and `toolkit/types/` (`npm run build:types`) if you changed a signature.
 - Describe who benefits (which disability/need).

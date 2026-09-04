@@ -98,6 +98,24 @@ async function run() {
   })());
   DefineWords.disable();
   check('double disable is safe', DefineWords.enabled === false);
+
+  // A thrown provider error is handled like null (no tooltip) and logged.
+  {
+    const doc2 = mount('<main><p id="p1">An extraordinary tale of two tiny cats.</p></main>');
+    setAIProvider({ defineWord: async () => { throw new Error('provider down'); }, announce() {} });
+    const warnings = [];
+    const realWarn = console.warn;
+    console.warn = (...a) => { warnings.push(a.map(String).join(' ')); };
+    DefineWords.enable();
+    const span2 = doc2.querySelector('.ai4a11y-define');
+    span2.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true }));
+    await tick();
+    console.warn = realWarn;
+    const tip2 = doc2.getElementById('ai4a11y-define-tooltip');
+    check('a thrown provider error shows no tooltip', !tip2 || tip2.style.display !== 'block');
+    check('a thrown provider error is logged', warnings.some(w => w.includes('provider down')));
+    DefineWords.disable();
+  }
 }
 
 run().then(() => {

@@ -5,9 +5,12 @@
 // cover: real getComputedStyle, real animation, real fixed-positioning, real
 // font sizing.
 //
-// Local only (needs a Chromium download); not in CI. No prior build needed —
-// the bundle is built on the fly with esbuild (a dev dependency) into a temp
-// file. Run:
+// Needs a Chromium download (`npx playwright install chromium`), so `npm test`
+// skips it: this file is deliberately not named *-test.js. CI runs it in the
+// separate `browser` workflow (.github/workflows/browser.yml), which is not a
+// required check and triggers on the paths listed there. No prior build
+// needed: the bundle is built on the fly with esbuild (a dev dependency) into
+// a temp file. Run:
 //   node tools/test/browser-validate.js
 import { chromium } from 'playwright';
 import { build } from 'esbuild';

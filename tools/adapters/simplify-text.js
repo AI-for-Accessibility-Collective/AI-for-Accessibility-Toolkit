@@ -1,7 +1,46 @@
 import { simplifyText as aiSimplifyText, summarizeText as aiSummarizeText } from '../utils/ai.js';
+import { rejectRewrite, startsWithRefusal } from '../utils/ai-output.js';
+
+// Output gate bands. A plain-language rewrite does get shorter, since it
+// drops jargon and filler, but a result under this share of the input has
+// almost certainly dropped ideas, and the reader cannot see what is missing.
+// A result over this multiple of the input is not a simplification either;
+// it is usually preamble or explanation. A summary is short by design, so
+// it has no ratio floor, but it cannot be longer than the text it
+// summarizes, and it has a small absolute floor: "Ok." or "N/A" is not a
+// summary, and with no ratio floor nothing else would stop it from becoming
+// the Summary region.
+// FLAG(review): 0.3, 2, 1 and 20 are judgment calls with no measured basis yet.
+const MIN_SIMPLIFIED_RATIO = 0.3;
+const MAX_SIMPLIFIED_RATIO = 2;
+const MAX_SUMMARY_RATIO = 1;
+const MIN_SUMMARY_CHARS = 20;
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
+
+// Children whose text is not prose the reader sees: element.textContent
+// includes a <style> or <script> body, a <noscript> or <template>, and
+// anything carrying the hidden attribute or aria-hidden="true". Measuring
+// the floor and the ratio against that would reject a faithful rewrite of
+// the visible prose and mark the element failed for good, and the model
+// would be sent text the reader never saw.
+// FLAG(review): only those markers. Text hidden by CSS alone (display:none
+// from a stylesheet or a class) is still counted, because reading it back
+// needs getComputedStyle on every node, which is a layout cost on a pass
+// that runs over every candidate on the page.
+const NOT_PROSE_SEL = 'style, script, noscript, template, [hidden], [aria-hidden="true"]';
+
+// The visible prose of an element: its text with the children above removed,
+// trimmed. Computed on a clone so the page is untouched. This is what is
+// sent to the model, what the length checks measure, and what the CLI's
+// candidate selection counts.
+export function proseText(element) {
+  if (!element || typeof element.cloneNode !== 'function') return '';
+  const clone = element.cloneNode(true);
+  clone.querySelectorAll(NOT_PROSE_SEL).forEach((n) => n.remove());
+  return clone.textContent?.trim() || '';
+}
 
 // Simplify complex text for easier reading
 export async function simplifyText(element) {
@@ -14,7 +53,7 @@ export async function simplifyText(element) {
     return null;
   }
 
-  const originalText = element.textContent?.trim();
+  const originalText = proseText(element);
   // Min 100 chars, max 10000 chars to prevent API overload
   if (!originalText || originalText.length < 100 || originalText.length > 10000) {
     element.dataset.ai4a11ySimplified = 'skipped';
@@ -24,7 +63,16 @@ export async function simplifyText(element) {
   try {
     const simplified = await aiSimplifyText(originalText);
 
-    if (simplified) {
+    // Gate the answer before it replaces what the reader sees. A refusal
+    // sentence or a fragment would stand in for the whole passage with no
+    // sign that anything was lost. Rejected answers degrade like null.
+    const rejected = simplified == null ? null
+      : rejectRewrite(simplified, originalText, { minRatio: MIN_SIMPLIFIED_RATIO, maxRatio: MAX_SIMPLIFIED_RATIO });
+    if (rejected) {
+      console.warn(`[AI4A11y] simplifyText: rejected model output (${rejected})`);
+    }
+
+    if (simplified && !rejected) {
 
       element.dataset.ai4a11yOriginal = originalText;
       element.classList.add('ai4a11y-simplified');
@@ -93,16 +141,27 @@ export async function summarizeContent(element) {
     return null;
   }
 
-  const text = element.textContent?.trim();
+  const text = proseText(element);
   if (!text || text.length < 500) {
     element.dataset.ai4a11ySummarize = 'skipped';
     return null;
   }
 
   try {
-    const summary = await aiSummarizeText(text.substring(0, 3000));
+    const excerpt = text.substring(0, 3000);
+    const summary = await aiSummarizeText(excerpt);
 
-    if (summary) {
+    // A summary is short, so the shared refusal prefixes ("Sorry", "N/A",
+    // "Unknown") are checked too; for a passage that short they are far
+    // more likely a non-answer than the first word of content.
+    const rejected = summary == null ? null
+      : (startsWithRefusal(summary) ? 'reads as a refusal'
+        : rejectRewrite(summary, excerpt, { maxRatio: MAX_SUMMARY_RATIO, minChars: MIN_SUMMARY_CHARS }));
+    if (rejected) {
+      console.warn(`[AI4A11y] summarizeContent: rejected model output (${rejected})`);
+    }
+
+    if (summary && !rejected) {
 
       // Create summary box (build DOM to prevent XSS)
       const summaryBox = document.createElement('div');

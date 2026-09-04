@@ -66,7 +66,7 @@ import {
   getAxeHandler,
   axeHandlers
 } from '../adapters/index.js';
-import { simplifyText, summarizeContent } from '../adapters/simplify-text.js';
+import { simplifyText, summarizeContent, proseText } from '../adapters/simplify-text.js';
 
 // Import non-AI WCAG fixes. The three named fixes drive the page sweeps in
 // runFullScan; the axe-driven dispatch goes through the adapter's own
@@ -701,7 +701,7 @@ async function runFullScan() {
     results.textProcessing = results.textProcessing || {};
     results.textProcessing.simplify = complexText.map(el => ({
       selector: getSelector(el),
-      textLength: el.textContent?.length || 0
+      textLength: proseText(el).length
     }));
   }
   if (settings.autoSummarize) {
@@ -709,7 +709,7 @@ async function runFullScan() {
     results.textProcessing = results.textProcessing || {};
     results.textProcessing.summarize = longContent.map(el => ({
       selector: getSelector(el),
-      textLength: el.textContent?.length || 0
+      textLength: proseText(el).length
     }));
   }
 
@@ -744,16 +744,33 @@ function fixDuplicateIds() {
   });
 }
 
-// Text processing for cognitive profiles
+// Text processing for cognitive profiles. Mirrors cli/cli-tools.js; keep
+// the two in step.
+//
+// What "complex" means here: the block is longer than COMPLEX_TEXT_MIN_CHARS
+// and at least one sentence has more than COMPLEX_SENTENCE_MIN_WORDS words.
+// No syllable count, no readability formula, and no WCAG criterion behind
+// either number (3.1.5 Reading Level is about lower secondary education
+// level, which this does not measure). Heuristic, English-leaning (sentences
+// split on . ! ?), best-effort. The simplify-text adapter uses a different
+// definition (100 to 10,000 characters); one shared definition is issue #35.
+const COMPLEX_TEXT_MIN_CHARS = 200;
+const COMPLEX_SENTENCE_MIN_WORDS = 15;
 function findComplexText() {
   return Array.from(document.querySelectorAll('p, li, td, div'))
     .filter(el => {
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.dataset.ai4a11ySimplified) return false;
       if (el.querySelector('p, div, article, section')) return false;
-      const text = el.textContent?.trim() || '';
-      // Complex = long sentences or many syllables
-      return text.length > 200 && text.split(/[.!?]/).some(s => s.trim().split(/\s+/).length > 15);
+      // Cheap first pass: proseText() only removes nodes, so it can never be
+      // longer than textContent. Elements that cannot clear the bar even at
+      // full length are dropped before the clone proseText() has to make.
+      if ((el.textContent?.length || 0) <= COMPLEX_TEXT_MIN_CHARS) return false;
+      // The same visible prose the adapter measures (see cli/cli-tools.js).
+      const text = proseText(el);
+      // Complex = a long block with at least one long sentence (see the constants above)
+      return text.length > COMPLEX_TEXT_MIN_CHARS &&
+        text.split(/[.!?]/).some(s => s.trim().split(/\s+/).length > COMPLEX_SENTENCE_MIN_WORDS);
     })
     .slice(0, 10); // Limit to avoid overwhelming AI
 }
@@ -764,7 +781,10 @@ function findLongContent() {
       if (el.dataset.ai4a11ySummarized) return false;
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.closest('[data-ai4a11y-summarized]')) return false;
-      const text = el.textContent?.trim() || '';
+      // Cheap first pass, as in findComplexText(): skip the clone for an
+      // element that is too short even before the non-prose nodes come out.
+      if ((el.textContent?.length || 0) <= 500) return false;
+      const text = proseText(el);
       return text.length > 500;
     })
     .slice(0, 5); // Limit to avoid overwhelming AI
