@@ -278,11 +278,11 @@ function stripComments(src) {
 
 // Specifiers from the import forms these packages can use: `import ... from`,
 // `export ... from`, `import('...')`, the bare side-effect `import '...'`, and
-// `require('...')`, which a .cjs file would use and the walk picks .cjs files
-// up. `from` is matched on its own so multi-line `import { a, b } from '...'`
-// blocks are found too. The specifier itself may not span a line: a stray
-// `from "` in prose would otherwise match up to the next quote in the file and
-// could eat a real import.
+// `require('...')`, the form a .cjs file uses. The walk picks up .cjs files,
+// so the scan has to read that form as well. `from` is matched on its own so
+// multi-line `import { a, b } from '...'` blocks are found too. The specifier
+// itself may not span a line: a stray `from "` in prose would otherwise match
+// up to the next quote in the file and could eat a real import.
 const FROM_RE = /\bfrom\s*['"]([^'"\n]+)['"]/g;
 const DYNAMIC_RE = /\bimport\s*\(\s*['"]([^'"\n]+)['"]\s*\)/g;
 const BARE_RE = /^\s*import\s*['"]([^'"\n]+)['"]/gm;
