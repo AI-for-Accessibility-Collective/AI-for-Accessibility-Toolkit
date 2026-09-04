@@ -181,6 +181,15 @@ export const axeHandlers = {
 
 The main content script automatically routes violations to registered handlers.
 
+Handlers are called as `handler(element, settings)`, where `settings` is the
+active profile's tools (the CLI passes the active profile; a host with no
+settings may omit it). The `wcag-fixes` entries that change page structure
+(`heading-order`, `aria-valid-attr`, `aria-roles`, `aria-allowed-role`,
+`nested-interactive`, `target-size`) run only when `settings.wcagRiskyFixes`
+is `true`, and return `false` when they skip. `fixTiers` and `isRiskyFix(ruleId)`
+from `tools/adapters/wcag-fixes.js` say which entries those are, so a host can
+tell a person before it dispatches.
+
 ## Profiles
 
 Profiles configure tool combinations for specific needs. Profile **data** lives in `tools/profiles/settings.json` (single source of truth, read by every host); merge/apply **logic** lives in `tools/profiles/settings.js`.
