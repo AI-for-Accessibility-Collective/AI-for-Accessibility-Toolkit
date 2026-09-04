@@ -150,27 +150,41 @@ try {
     check('…and still offers what it CAN do', /bigger text/i.test(reply));
   }
 
-  // ── back to the profile: overrides are forgotten ───────────────────────────
-  // The reply says "I forgot N changes you'd made", so the page has to agree
-  // with it. Reset re-renders the profile, which restores every key the profile
-  // governs; a key the profile never mentions is a separate question, checked
-  // below.
+  // ── back to the profile: the page matches it again ─────────────────────────
+  // The reply says the changes are forgotten, so the page has to agree with it.
+  // Re-rendering the profile restores every key the profile governs; a key the
+  // profile never mentions (dark mode or a text size set by hand) has to be
+  // cleared as well, or it survives a reset the reply says forgot it (issue
+  // #26). Both are set here rather than relied on from earlier turns: the
+  // reload above gave the page a fresh receiver.
   {
-    await say('dark mode');                       // a manual change the profile never asked for
+    await say('bigger text');                     // a manual number the profile never asked for
+    check('a manual text size applies', await page.evaluate(
+      () => !!document.getElementById('demo-app').style.getPropertyValue('--aa-font-scale'),
+    ));
+    await say('dark mode');                       // a manual boolean the profile never asked for
     const darkBefore = await page.evaluate(() => document.getElementById('demo-app').classList.contains('aa-dark'));
     check('a manual change applies', darkBefore === true);
 
     await page.evaluate(() => document.getElementById('demo-app').classList.remove('aa-dyslexia'));
 
     await say('back to my profile');
-    check('a reset phrase is answered', (await lastReply()).trim().length > 0);
+    const reply = await lastReply();
+    check('a reset phrase is answered', reply.trim().length > 0);
     check('the profile itself is not deleted by a reset', /^You:/.test((await profileText()).trim()));
     check('a reset re-renders what the profile governs', await page.evaluate(
       () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
     ));
 
     const darkAfter = await page.evaluate(() => document.getElementById('demo-app').classList.contains('aa-dark'));
-    check('KNOWN: a setting the profile never mentions survives a reset', darkAfter === true);
+    check('a setting the profile never mentions is cleared by a reset', darkAfter === false);
+    check('…and so is the manual text size', await page.evaluate(
+      () => document.getElementById('demo-app').style.getPropertyValue('--aa-font-scale') === '',
+    ));
+    check('the reply names what it cleared on this page', /cleared fontScale, darkMode on this page/.test(reply));
+    // The chat surface stores no manual change, so the server has nothing to
+    // forget here; the reply must not claim otherwise.
+    check('…and does not claim a stored change that never existed', !/forgot \d+ change/.test(reply));
   }
 } finally {
   await browser.close();
