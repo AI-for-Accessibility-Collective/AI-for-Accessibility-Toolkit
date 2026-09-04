@@ -2851,7 +2851,9 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
             # when the active profile sets wcagRiskyFixes. Say which were held
             # back so the count above is not read as "everything was fixed".
             rules = ", ".join(sorted(set(skipped_risky)))
-            say(f"      Held back {len(skipped_risky)} risky fixes, off unless the "
+            count = len(skipped_risky)
+            say(f"      Held back {count} risky "
+                f"{'fix' if count == 1 else 'fixes'}, off unless the "
                 f"profile sets wcagRiskyFixes: {rules}", flush=True)
 
         # Step 3: AI fixes
