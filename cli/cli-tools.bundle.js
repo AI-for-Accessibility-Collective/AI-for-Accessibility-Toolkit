@@ -2519,15 +2519,18 @@ ${scope(":focus")} {
   var UNCERTAINTY_TERMS = ["unsure", "I don't know", "unclear", "I cannot tell", "cannot determine"];
   var REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|not sure|(n\/a|unknown|no label|not available|unsure)[.!]?\s*$)/i;
   var MAX_SHORT_TEXT_CHARS = 60;
+  function straightenApostrophes(text) {
+    return text.replace(/[’ʼ]/g, "'");
+  }
   function startsWithRefusal(text) {
     if (typeof text !== "string") return false;
-    const t = text.trim();
+    const t = straightenApostrophes(text.trim());
     const lower = t.toLowerCase();
     return REFUSAL_RE.test(t) || REFUSAL_PREFIXES.some((p) => lower.startsWith(p.toLowerCase()));
   }
   function containsUncertainty(text) {
     if (typeof text !== "string") return false;
-    const lower = text.toLowerCase();
+    const lower = straightenApostrophes(text).toLowerCase();
     return UNCERTAINTY_TERMS.some((term) => lower.includes(term.toLowerCase()));
   }
   var REFUSAL_VERBS = "translate|simplify|summari[sz]e|rewrite|rephrase|restate|interpret|render|make\\s+out|help|assist|provide|process|read|access|determine|identify|see|view|do|fulfill|complete|comply|generate|produce|answer|respond|perform|proceed|continue|work";
@@ -2552,23 +2555,29 @@ ${scope(":focus")} {
     if (typeof text !== "string") return false;
     return PASSIVE_REFUSAL_RE.test(text.trim());
   }
-  var WRAPPED_RE = /^(?:"(.*)"|'(.*)'|\u201c(.*)\u201d|\u2018(.*)\u2019|\*\*(.*)\*\*|`(.*)`)$/s;
+  var WRAP_PAIRS = [['"', '"'], ["'", "'"], ["\u201C", "\u201D"], ["\u2018", "\u2019"], ["**", "**"], ["`", "`"]];
   var LABEL_PREFIX_RE = /^[A-Za-z][A-Za-z-]*(?:\s+[A-Za-z][A-Za-z-]*)?:\s+(?=\S)/;
+  function unwrapOnce(value) {
+    for (const [open, close] of WRAP_PAIRS) {
+      if (value.length < open.length + close.length) continue;
+      if (!value.startsWith(open) || !value.endsWith(close)) continue;
+      const inner = value.slice(open.length, value.length - close.length);
+      const nested = inner.startsWith(open) && inner.endsWith(close);
+      if (inner.includes(open) && !nested) continue;
+      return inner.trim();
+    }
+    return value;
+  }
   function cleanShortText(text) {
     if (typeof text !== "string") return text;
-    let t = text.trim();
-    const unwrap = () => {
-      const m = WRAPPED_RE.exec(t);
-      if (m) t = m.slice(1).find((g) => g !== void 0).trim();
-    };
-    unwrap();
+    let t = unwrapOnce(text.trim());
     const unlabeled = t.replace(LABEL_PREFIX_RE, "");
     if (unlabeled !== t) {
-      t = unlabeled;
-      unwrap();
+      t = unwrapOnce(unlabeled);
     }
     return t;
   }
+  var SHORT_NON_ANSWER_RE = /^(?:i(?:'m| am) not sure|i do not know|(?:i have )?no idea)\b/i;
   function rejectShortText(text, maxChars = MAX_SHORT_TEXT_CHARS) {
     if (typeof text !== "string") return "not a string";
     const t = cleanShortText(text);
@@ -2576,6 +2585,8 @@ ${scope(":focus")} {
     if (t.length > maxChars) return `longer than ${maxChars} characters`;
     if (/[\r\n]/.test(t)) return "contains a line break";
     if (startsWithRefusal(t)) return "reads as a refusal";
+    if (opensWithFirstPersonRefusal(t) || opensWithPassiveRefusal(t)) return "reads as a refusal";
+    if (SHORT_NON_ANSWER_RE.test(straightenApostrophes(t))) return "reads as a refusal";
     if (containsUncertainty(t)) return "reads as uncertain";
     return null;
   }
@@ -8279,6 +8290,7 @@ ${chunk}
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.dataset.ai4a11ySimplified) return false;
       if (el.querySelector("p, div, article, section")) return false;
+      if ((el.textContent?.length || 0) <= 200) return false;
       const text = proseText(el);
       return text.length > 200 && text.split(/[.!?]/).some((s) => s.trim().split(/\s+/).length > 15);
     }).slice(0, 10);
@@ -8288,6 +8300,7 @@ ${chunk}
       if (el.dataset.ai4a11ySummarized) return false;
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.closest("[data-ai4a11y-summarized]")) return false;
+      if ((el.textContent?.length || 0) <= 500) return false;
       const text = proseText(el);
       return text.length > 500;
     }).slice(0, 5);
