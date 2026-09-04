@@ -5305,17 +5305,19 @@ ${scope} table {
     if (type === "reset") return "Reset";
     return "";
   }
+  var NO_EMBEDDED_VALUE_TYPES = ["submit", "reset", "button", "image", "hidden", "checkbox", "radio", "password"];
   function getEmbeddedValue(el) {
     const tag = el.localName;
     if (tag === "textarea") return (el.value || "").trim();
     if (tag === "select") return Array.from(el.selectedOptions || []).map((o) => o.textContent.trim()).join(" ").trim();
     if (tag === "input") {
       const type = (el.getAttribute("type") || "text").toLowerCase();
-      if (!["submit", "reset", "button", "image", "hidden", "checkbox", "radio"].includes(type)) return (el.value || "").trim();
+      if (!NO_EMBEDDED_VALUE_TYPES.includes(type)) return (el.value || "").trim();
     }
     return "";
   }
   var NO_NAME_FROM_CONTENT = /* @__PURE__ */ new Set(["input", "select", "textarea", "iframe"]);
+  var NOT_RENDERED = /* @__PURE__ */ new Set(["style", "script", "template", "noscript"]);
   function getNameFromContent(el) {
     if (NO_NAME_FROM_CONTENT.has(el.localName)) return "";
     const parts = [];
@@ -5327,6 +5329,7 @@ ${scope} table {
         }
         if (child.nodeType !== 1) continue;
         if (child.getAttribute("aria-hidden") === "true") continue;
+        if (NOT_RENDERED.has(child.localName)) continue;
         const label = child.getAttribute("aria-label");
         if (label && label.trim()) {
           parts.push(label);
@@ -5334,6 +5337,10 @@ ${scope} table {
         }
         if (child.localName === "img" || child.localName === "area") {
           parts.push(child.getAttribute("alt") || "");
+          continue;
+        }
+        if (NO_NAME_FROM_CONTENT.has(child.localName)) {
+          parts.push(getEmbeddedValue(child));
           continue;
         }
         walk(child);
@@ -7037,7 +7044,7 @@ ${chunk}
   async function improveAmbiguousLink(link) {
     if (link.dataset.ai4a11yProcessed) return null;
     markProcessed(link, "pending");
-    const text = link.textContent?.trim() || "";
+    const text = getAccessibleName(link);
     const context = link.closest("p, li, td, article, section")?.textContent?.trim().substring(0, 200) || "";
     try {
       const improved = await improveLinkText(text, link.href, context);
