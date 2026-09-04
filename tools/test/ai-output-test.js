@@ -1,4 +1,4 @@
-// AI output gates — unit tests for tools/utils/ai-output.js, plus a pin on
+// AI output gates: unit tests for tools/utils/ai-output.js, plus a pin on
 // the two gates that existed before it (isConfidentDescription in
 // generate-alt.js, isValidLabel in generate-labels.js). Those two now import
 // their refusal lists from the shared module, and these cases exist so a
@@ -56,6 +56,26 @@ check('passage refusal: "I cannot stress this enough." is content', !opensWithFi
 check('passage refusal: "I am unable to help with this request." is a refusal', opensWithFirstPersonRefusal('I am unable to help with this request.'));
 check('passage refusal: "I don\'t know what this text says." is a refusal', opensWithFirstPersonRefusal("I don't know what this text says."));
 check('passage refusal: a non-string is handled without throwing', opensWithFirstPersonRefusal(undefined) === false);
+// Ordinary first-person openings that a looser pattern rejected.
+check('passage refusal: "I have a dream ..." is content', !opensWithFirstPersonRefusal('I have a dream that one day this nation will rise up.'));
+check('passage refusal: a quoted "I cannot go on" is content', !opensWithFirstPersonRefusal('"I cannot go on," she said. "Not tonight."'));
+check('passage refusal: "I can\'t help but think ..." is content', !opensWithFirstPersonRefusal("I can't help but think the plan was wrong from the start."));
+check('passage refusal: "I can\'t see why ..." is content', !opensWithFirstPersonRefusal("I can't see why anyone would object to the new rule."));
+check('passage refusal: "I\'m sorry for your loss." is content', !opensWithFirstPersonRefusal("I'm sorry for your loss."));
+check('passage refusal: "I am not able to attend ..." is content', !opensWithFirstPersonRefusal('I am not able to attend the meeting on Friday.'));
+check('passage refusal: "I\'m unable to sleep ..." is content', !opensWithFirstPersonRefusal("I'm unable to sleep most nights, and the doctors have no answer."));
+check('passage refusal: "I don\'t know why, but ..." is content', !opensWithFirstPersonRefusal("I don't know why, but the results improved after the change."));
+check('passage refusal: "I can\'t read without my glasses" is content', !opensWithFirstPersonRefusal("I can't read without my glasses anymore."));
+// Refusal phrasings that a looser pattern missed.
+check('passage refusal: "I\'m sorry." alone is a refusal', opensWithFirstPersonRefusal("I'm sorry."));
+check('passage refusal: "I can\'t." alone is a refusal', opensWithFirstPersonRefusal("I can't."));
+check('passage refusal: "I cannot translate." alone is a refusal', opensWithFirstPersonRefusal('I cannot translate.'));
+check('passage refusal: "As an AI language model, I cannot ..." is a refusal', opensWithFirstPersonRefusal('As an AI language model, I cannot translate this.'));
+check('passage refusal: "I apologize, but I cannot simplify this text." is a refusal', opensWithFirstPersonRefusal('I apologize, but I cannot simplify this text.'));
+check('passage refusal: "I cannot provide a translation ..." is a refusal', opensWithFirstPersonRefusal('I cannot provide a translation of this content.'));
+check('passage refusal: "I cannot restate this passage." is a refusal', opensWithFirstPersonRefusal('I cannot restate this passage.'));
+check('passage refusal: "I can\'t assist with translating this." is a refusal', opensWithFirstPersonRefusal("I can't assist with translating this."));
+check('passage refusal: a curly apostrophe still reads as a refusal', opensWithFirstPersonRefusal('I can\u2019t help with that request.'));
 
 // ── rejectShortText (aria-label, <th>) ───────────────────────────────────────
 check('short: the default cap is 60 characters', MAX_SHORT_TEXT_CHARS === 60);

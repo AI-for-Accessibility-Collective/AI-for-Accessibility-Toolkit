@@ -1,4 +1,4 @@
-// AI output gates — shared checks a model answer must pass before an adapter
+// AI output gates: shared checks a model answer must pass before an adapter
 // writes it into the page.
 //
 // Every AI adapter faces the same failure: the model refuses, hedges, or
@@ -55,18 +55,30 @@ export function containsUncertainty(text) {
 // A passage that opens with the model declining in the first person. The
 // short-value lists above are too broad for a passage: "Unfortunately, the
 // museum is closed on Mondays." and "Sorry, we could not find that page."
-// are content and must be kept, and so is "I can't wait to see you." What
-// is rejected is an opening like "Unfortunately, I cannot translate this",
-// "I'm sorry, but I can't help with that", or "I am unable to simplify
-// this": an apology or a hedge, then "I", then a refusal verb.
+// are content and must be kept, and so are ordinary first-person openings
+// such as "I can't help but think", "I can't see why", "I'm sorry for your
+// loss", "I am not able to attend" and "I don't know why, but". What is
+// rejected is an apology or a hedge, then "I", then a refusal verb pointed
+// at the task ("I cannot translate this text", "I'm sorry, but I can't help
+// with that", "I am unable to simplify this passage"), or "I'm sorry" or
+// "I can't" standing alone as the whole answer.
 // FLAG(review): English only. A model that declines in the target language
-// of a translation passes this check. The verb list is a judgment call.
-const REFUSAL_VERBS = 'translate|simplify|summarize|rewrite|rephrase|help|assist|provide|process|read|access'
-  + '|determine|see|view|do|fulfill|complete|comply|generate|produce|answer|respond|perform|proceed|continue|work';
+// of a translation passes this check. The verb and object lists are a
+// judgment call: "I cannot do this alone" is still rejected, and a refusal
+// built on a verb that is not listed ("I cannot render this") goes through.
+const REFUSAL_VERBS = 'translate|simplify|summarize|rewrite|rephrase|restate|help|assist|provide|process|read|access'
+  + '|determine|identify|see|view|do|fulfill|complete|comply|generate|produce|answer|respond|perform|proceed|continue|work';
+// What the verb must point at for the sentence to be about the task rather
+// than an ordinary first-person opening ("I can't help but", "I can't see why").
+const TASK_OBJECT = 'this|that|these|those|the|it|your|you|a|an|any|with|what|text|content|passage|as';
+const APOLOGY = String.raw`unfortunately|sorry|i(?:['’]m| am) sorry|i apologi[sz]e|as an ai(?: language model| assistant| model)?`;
 const FIRST_PERSON_REFUSAL_RE = new RegExp(
-  String.raw`^(?:(?:unfortunately|sorry|i(?:'m| am) sorry)\b[,\s]*(?:but\s+)?)*`
-  + String.raw`(?:i(?:'m| am) sorry\b|i(?:'m| am)(?: not able| unable)\b|i do(?:n't| not) know\b`
-  + String.raw`|i can(?:'t|not)\s+(?:${REFUSAL_VERBS})\b)`,
+  String.raw`^(?:(?:${APOLOGY})\b[,\s]*(?:but\s+)?)*`
+  + String.raw`(?:i(?:['’]m| am) sorry[,.!]?\s*$`
+  + String.raw`|i can(?:['’]t|not)(?:\s+(?:${REFUSAL_VERBS}))?[,.!]?\s*$`
+  + String.raw`|i(?:['’]m| am)(?: not able| unable)\s+to\s+(?:${REFUSAL_VERBS})\b`
+  + String.raw`|i do(?:n['’]t| not) know\s+(?:what|which|the|this|that|enough)\b`
+  + String.raw`|i can(?:['’]t|not)\s+(?:${REFUSAL_VERBS})\s+(?:${TASK_OBJECT})\b)`,
   'i',
 );
 
