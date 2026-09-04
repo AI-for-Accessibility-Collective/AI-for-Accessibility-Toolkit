@@ -65,6 +65,8 @@ export function ensureMainLandmark() {
 // banner, and matching it mislabels nav components. `\bheader\b` already covers
 // site-header / page-header (word boundaries at the hyphen).
 const HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
+// "banner" also names cookie and consent bars, which are not the masthead.
+const NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo/i;
 const FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|copyright)\b/i;
 const COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
 const hint = (re, el) => re.test(el.className || '') || re.test(el.id || '');
@@ -75,7 +77,7 @@ const hint = (re, el) => re.test(el.className || '') || re.test(el.id || '');
 export function ensureBanner() {
   if (document.querySelector('header, [role="banner"]')) return false;
   const el = Array.from(document.querySelectorAll('div, section, td, aside'))
-    .filter((e) => !e.getAttribute('role') && hint(HEADER_HINT, e))
+    .filter((e) => !e.getAttribute('role') && hint(HEADER_HINT, e) && !hint(NOT_HEADER, e))
     .filter((e) => !e.querySelector('main, [role="main"]'))
     .filter((e) => (e.textContent?.trim().length || 0) < 2000)[0];
   if (!el) return false;
