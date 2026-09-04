@@ -6,7 +6,7 @@
     "node": "^20.19.0 || ^22.13.0 || >=24.0.0"
   },
   "scripts": {
-    "test": "for f in tools/test/*-test.js toolkit/test/*-test.js toolkit/test/*-test.mjs toolkit/test/*.test.mjs controller/test/*.test.mjs onboarding/test/*.test.mjs; do node \"$f\" || exit 1; done",
+    "test": "for f in tools/test/*-test.js toolkit/test/*-test.js toolkit/test/*-test.mjs toolkit/test/*.test.mjs controller/test/*.test.mjs onboarding/test/*.test.mjs scripts/import-boundaries-test.mjs; do node \"$f\" || exit 1; done",
     "validate:browser": "node tools/test/browser-validate.js",
     "test:e2e": "node onboarding/test/chat-e2e.mjs",
     "build:cli": "esbuild cli/cli-tools.js --bundle --format=iife --outfile=cli/cli-tools.bundle.js"

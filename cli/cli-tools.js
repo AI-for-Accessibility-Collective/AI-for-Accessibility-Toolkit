@@ -65,23 +65,16 @@ import {
 } from '../tools/adapters/index.js';
 import { simplifyText, summarizeContent } from '../tools/adapters/simplify-text.js';
 
-// Import non-AI WCAG fixes
+// Import non-AI WCAG fixes. The three named fixes drive the page sweeps in
+// runFullScan; the axe-driven dispatch goes through the adapter's own
+// axeHandlers map so the wcagRiskyFixes gate applies here as well, and
+// isRiskyFix says which rule ids that gate covers.
 import {
-  fixInvalidLang,
-  fixMissingLang,
+  axeHandlers as wcagAxeHandlers,
+  isRiskyFix,
   fixDuplicateId,
-  fixHeadingOrder,
   fixPositiveTabindex,
-  fixTargetBlank,
-  fixInvalidAriaAttr,
-  fixInvalidAriaRole,
-  fixDeprecatedRole,
-  fixMissingAriaAttrs,
-  fixNestedInteractive,
-  fixTargetSize,
-  fixViewportMeta,
-  removeMetaRefresh,
-  replaceObsoleteElement
+  fixTargetBlank
 } from '../tools/adapters/wcag-fixes.js';
 
 // Import auditors
@@ -627,34 +620,28 @@ const aiFixes = {
     if (!handler) return { error: `No handler for rule: ${ruleId}` };
     const el = document.querySelector(selector);
     if (!el) return { error: `Element not found: ${selector}` };
-    await handler(el);
+    // Only the wcag-fixes handlers read a settings object from their second
+    // parameter. The other adapters in the merged map use that slot for
+    // something else (fixLowContrast takes a color there), and several of
+    // them return false to mean "nothing to do" rather than "held back", so
+    // the settings argument and the false check are both scoped to the
+    // rules the gate actually covers.
+    const risky = isRiskyFix(ruleId);
+    const applied = risky
+      ? await handler(el, getActiveProfileSettings())
+      : await handler(el);
+    if (risky && applied === false) {
+      return { skipped: 'risky', error: `Risky fix ${ruleId} is off (the active profile does not set wcagRiskyFixes)` };
+    }
     return { success: true };
   }
 };
 
-// Non-AI fix handlers (pure DOM manipulation)
-const nonAiFixes = {
-  'html-has-lang': fixMissingLang,
-  'html-lang-valid': fixInvalidLang,
-  'valid-lang': fixInvalidLang,
-  'duplicate-id': fixDuplicateId,
-  'duplicate-id-aria': fixDuplicateId,
-  'duplicate-id-active': fixDuplicateId,
-  'heading-order': fixHeadingOrder,
-  'tabindex': fixPositiveTabindex,
-  'aria-valid-attr': fixInvalidAriaAttr,
-  'aria-roles': fixInvalidAriaRole,
-  'aria-allowed-role': fixInvalidAriaRole,
-  'aria-deprecated-role': fixDeprecatedRole,
-  'aria-required-attr': fixMissingAriaAttrs,
-  'nested-interactive': fixNestedInteractive,
-  'target-size': fixTargetSize,
-  'meta-viewport': fixViewportMeta,
-  'meta-viewport-large': fixViewportMeta,
-  'meta-refresh': removeMetaRefresh,
-  'blink': replaceObsoleteElement,
-  'marquee': replaceObsoleteElement
-};
+// Non-AI fix handlers (pure DOM manipulation). This is the adapter's own
+// map, not a copy: a risky entry (heading re-tag, ARIA strip, nested control
+// unwrap, target size) runs only when the active profile sets
+// wcagRiskyFixes, and returns false when it skipped.
+const nonAiFixes = wcagAxeHandlers;
 
 // AI-requiring fixes (need Claude callback)
 const aiRequiredRules = new Set([
@@ -668,8 +655,12 @@ async function runFullScan() {
   const results = {
     violations: [],
     fixed: { nonAi: 0, ai: 0 },
-    skipped: { needsAi: [], noHandler: [] }
+    skipped: { needsAi: [], noHandler: [], risky: [] }
   };
+
+  // The active profile's tools. Read once: the risky-fix gate consults it for
+  // every violation, and the text passes below read it too.
+  const settings = getActiveProfileSettings();
 
   // Run axe analysis
   const violations = await runAxeAnalysis();
@@ -690,8 +681,11 @@ async function runFullScan() {
       // Check if we have a non-AI handler
       if (nonAiFixes[ruleId]) {
         try {
-          nonAiFixes[ruleId](el);
-          results.fixed.nonAi++;
+          if (nonAiFixes[ruleId](el, settings) === false) {
+            results.skipped.risky.push(ruleId);
+          } else {
+            results.fixed.nonAi++;
+          }
         } catch (e) {
           console.warn(`[AI4A11y] Failed to fix ${ruleId}:`, e);
         }
@@ -715,7 +709,6 @@ async function runFullScan() {
   fixDuplicateIds();
 
   // Check for text processing needs (cognitive profile features)
-  const settings = getActiveProfileSettings();
   if (settings.autoSimplify) {
     const complexText = findComplexText();
     results.textProcessing = results.textProcessing || {};

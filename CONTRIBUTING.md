@@ -16,7 +16,7 @@ catalog, a **surface** renderer, or a **platform port**.
 ```bash
 git clone <your fork>
 cd <your clone> && npm install
-npm test        # tools, toolkit, controller, and onboarding suites
+npm test        # tools, toolkit, controller, and onboarding suites, plus the import-boundary check
 ```
 
 Pure ES modules; the core has no build step. There is no browser extension in
@@ -149,6 +149,11 @@ Strips clutter and boosts contrast so text is easy to focus on.
 
 - The `Recipe` JSON is the runnable truth. Reference only adapter ids and setting
   keys that exist in the registry — `validateSkill` rejects unknown ones.
+- `supportAreas` values come from `SUPPORT_AREAS` in
+  [`toolkit/core/ability.js`](toolkit/core/ability.js); `siteRelevance` values
+  are taxonomy categories ([`toolkit/core/taxonomy.js`](toolkit/core/taxonomy.js))
+  or `all`. `validateSkill` rejects anything else, because retrieval matches on
+  these two fields and a skill outside the vocabulary is never found again.
 - Keep it minimal (1–4 adapters). Verify with `node toolkit/test/skill-test.js`.
 
 A host's **Engineer** (`toolkit/core/skill-builder.js`) can also author skills
@@ -164,7 +169,7 @@ in your host's provider. Keep prompts and the provider host-side.
 ## Testing
 
 ```bash
-npm test                                 # tools, toolkit, controller, and onboarding suites
+npm test                                 # tools, toolkit, controller, and onboarding suites, plus the import-boundary check
 node toolkit/hosts/xr-demo/demo.js       # cross-surface + grants loop
 node toolkit/hosts/skill-demo/demo.js    # retrieve → resolve → build → validate → save
 node server/test/server-test.mjs         # hosted service
@@ -187,6 +192,51 @@ rather than hand-editing.
 - Use the AI provider abstraction for AI features — no concrete SDK in core/catalog.
 - Document which needs/profiles a feature helps.
 - No large binaries — link externally.
+
+## Package boundaries
+
+Six of the top-level directories are packages with one direction of
+dependency: `toolkit/`, `tools/`, `server/`, `controller/`, `onboarding/`, and
+`cli/`. `toolkit/` (the core) and `tools/` (the catalog) import from no sibling.
+`server/`, `controller/`, and `cli/` depend inward on those two. `onboarding/`
+is the one edge between neighbors: it reuses the server's auth, LLM caller,
+store, and toolkit host, and serves the controller's modules to its chat page.
+
+Four rules keep that shape, and `npm test` checks them inside those six
+directories (`scripts/import-boundaries-test.mjs`). `examples/`, `scripts/`,
+and `docs/` are outside the walk, so an import from there into a package is
+not checked; keep it on a path the package's `exports` map exposes.
+
+1. **No relative import reaches past another package's public exports.**
+   `toolkit/package.json` and `tools/package.json` have `exports` maps; an
+   import into either has to land on a path the map exposes. A deep path the
+   map does not list works in this repository and fails for anyone who
+   installs the package. `server/` and `onboarding/` have a manifest but no
+   exports map yet, and `controller/` and `cli/` have no manifest; the test
+   treats every file as reachable in a package that has a manifest but no
+   map, and only the root `.js` files in a directory with no manifest. An
+   import that has to land on a path the map does not expose goes in the
+   test's `KNOWN_BREAKS` list with the reason it is tolerated, and the test
+   fails again once it stops being a break.
+2. **A cross-package import is a dependency the importing package declares.**
+   There are no npm workspaces yet, so "declares" means the edge is in the
+   test's `ALLOWED` table (which package may import from which) and its
+   `KNOWN_EDGES` list (which file imports what, with a one-line reason). When
+   workspaces land, the declaration moves to `dependencies`.
+3. **The graph stays acyclic.** The test checks both the table and what the
+   code does.
+4. **A new edge gets called out in review.** Add it to `KNOWN_EDGES` with its
+   reason in the same change and say so in the PR description. The test fails
+   until the entry exists, and fails again if the import goes away and the
+   entry stays.
+
+The test reads relative import specifiers only. An import through a URL path
+a server mounts (the way `onboarding/chat.js` loads `/controller/lib/...`) is
+an edge too; call it out the same way. A file read by path is not an import
+and is not checked: `toolkit/scripts/generate-skill.mjs` reads
+`server/CONTRACT.md` and the server source when it generates the skill file,
+and that script is not in the package's `files` list, so the published
+package does not carry the reach.
 
 ## Ethics
 
