@@ -42,12 +42,17 @@ export function updateSettings(newSettings) {
 /**
  * Merge the tool settings of multiple profiles into one settings object.
  * Booleans: OR (any profile enabling a feature wins, except explicit false
- * only yields when no other profile set true). Numbers: MAX. Color filter:
- * last non-none wins. Shared by the popup presets and applyProfiles so the
- * extension UI and the profiles module can never disagree.
+ * only yields when no other profile set true). Numbers: MAX. Enum settings
+ * whose off value is the string 'none' (colorFilter, colorBlindMode,
+ * contrastMode): last non-none wins, because 'none' is truthy and would
+ * otherwise hide a real value set by a later profile. Shared by the popup
+ * presets and applyProfiles so the extension UI and the profiles module can
+ * never disagree.
  */
 export function mergeProfileTools(profileIds) {
   const numericKeys = ['fontScale', 'lineHeight', 'letterSpacing'];
+  // Enums whose off value is the truthy string 'none'.
+  const noneKeys = ['colorFilter', 'colorBlindMode', 'contrastMode'];
   const merged = {};
 
   for (const profileId of profileIds) {
@@ -57,7 +62,7 @@ export function mergeProfileTools(profileIds) {
     for (const [key, value] of Object.entries(profile.tools)) {
       if (numericKeys.includes(key) && typeof value === 'number') {
         merged[key] = Math.max(merged[key] || 0, value);
-      } else if ((key === 'colorFilter' || key === 'contrastMode') && value !== 'none') {
+      } else if (noneKeys.includes(key) && value !== 'none') {
         merged[key] = value;
       } else {
         merged[key] = merged[key] || value;
@@ -200,10 +205,10 @@ export function adaptersForTools(tools) {
   // accept either. 'none' under one name must not hide a filter set under
   // the other: settings.json's defaults carry colorFilter: 'none', so any
   // settings object built over the defaults has colorFilter present.
-  // FLAG(review): two names for one key. mergeProfileTools above still
-  // special-cases only colorFilter, so a colorBlindMode value is merged as a
-  // plain boolean. Which name should survive is a decision to log, not one
-  // this file makes.
+  // FLAG(review): two names for one key. mergeProfileTools above now merges
+  // both names under the same last-non-none rule, so the two stay in step.
+  // Which name should survive is still a decision to log, not one this file
+  // makes.
   const colorMode = [tools.colorFilter, tools.colorBlindMode].find((v) => v && v !== 'none');
   if (colorMode) enabled.push('color-blind');
   // FLAG(review): the personalized extension enables AgentWatch on this key
