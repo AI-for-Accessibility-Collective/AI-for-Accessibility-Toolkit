@@ -15,9 +15,72 @@
 // Both are "prototype scope" like every other adapter here: read-modify-write
 // with no locking, no optimistic concurrency, no retries. Fine for a
 // single-writer-per-uid personal toolkit; not a production multi-writer store.
+//
+// The one exception is the document every instance shares, `admin/tokens.json`.
+// For it, both backends also offer a conditional pair: `readDoc(key)` returns
+// `{value, version}` and `writeJSONIf(key, value, version)` writes only if the
+// document still carries that version, throwing StoreConflict otherwise. The
+// file backend's version is a hash of the file's bytes, checked under a lock
+// file so two processes on one directory cannot both pass the check; the GCS
+// backend's version is the object generation, enforced by GCS itself through
+// `ifGenerationMatch`. auth.js retries its mutations on conflict.
 
+import crypto from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+
+/** Thrown by writeJSONIf when the document changed since it was read. */
+export class StoreConflict extends Error {
+  constructor(key) {
+    super(`store: ${key} changed since it was read`);
+    this.name = 'StoreConflict';
+    this.code = 'CONFLICT';
+  }
+}
+
+// The version of a file document: a hash of its bytes, or null when absent.
+async function fileVersion(file) {
+  try {
+    const text = await fs.readFile(file, 'utf8');
+    return { text, version: crypto.createHash('sha256').update(text, 'utf8').digest('hex') };
+  } catch (e) {
+    if (e.code === 'ENOENT') return { text: null, version: null };
+    throw e;
+  }
+}
+
+// Serialize writers of one file across processes with a lock file created
+// exclusively (`wx`). A lock older than LOCK_STALE_MS belongs to a process that
+// died holding it and is taken over.
+const LOCK_WAIT_MS = 5000;
+const LOCK_STALE_MS = 5000;
+async function withFileLock(file, fn) {
+  const lock = `${file}.lock`;
+  const deadline = Date.now() + LOCK_WAIT_MS;
+  for (;;) {
+    try {
+      const handle = await fs.open(lock, 'wx');
+      await handle.close();
+      break;
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      try {
+        const st = await fs.stat(lock);
+        if (Date.now() - st.mtimeMs > LOCK_STALE_MS) {
+          await fs.rm(lock, { force: true });
+          continue;
+        }
+      } catch {}
+      if (Date.now() > deadline) throw new Error(`store: could not lock ${file}`);
+      await new Promise((r) => setTimeout(r, 10));
+    }
+  }
+  try {
+    return await fn();
+  } finally {
+    await fs.rm(lock, { force: true });
+  }
+}
 
 function assertSafeKey(key) {
   // Documents are always constructed by this module's own callers
@@ -57,6 +120,25 @@ export function fileStore(dir) {
       const file = path.join(dir, key);
       await fs.mkdir(path.dirname(file), { recursive: true });
       await fs.writeFile(file, JSON.stringify(value), 'utf8');
+    },
+    async readDoc(key) {
+      assertSafeKey(key);
+      const { text, version } = await fileVersion(path.join(dir, key));
+      return { value: text === null ? null : JSON.parse(text), version };
+    },
+    async writeJSONIf(key, value, version) {
+      assertSafeKey(key);
+      const file = path.join(dir, key);
+      await fs.mkdir(path.dirname(file), { recursive: true });
+      await withFileLock(file, async () => {
+        const current = (await fileVersion(file)).version;
+        if (current !== version) throw new StoreConflict(key);
+        // Write beside the file and rename over it, so a reader never sees a
+        // half-written document.
+        const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
+        await fs.writeFile(tmp, JSON.stringify(value), 'utf8');
+        await fs.rename(tmp, file);
+      });
     },
     // Every uid that has a `users/<uid>/` directory (i.e. a stored profile).
     async listUsers() {
@@ -148,6 +230,39 @@ export function gcsStore(bucket) {
         body: JSON.stringify(value),
       });
       if (!resp.ok) throw new Error(`gcsStore: write ${key} failed (${resp.status}): ${await resp.text()}`);
+    },
+    // The version is the object generation, which GCS changes on every write.
+    // A media download carries it in the x-goog-generation header; when a
+    // proxy strips that header, a metadata read supplies it.
+    async readDoc(key) {
+      assertSafeKey(key);
+      const token = await accessToken();
+      const base = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o/${encodeURIComponent(key)}`;
+      const resp = await fetch(`${base}?alt=media`, { headers: { Authorization: `Bearer ${token}` } });
+      if (resp.status === 404) return { value: null, version: '0' };
+      if (!resp.ok) throw new Error(`gcsStore: read ${key} failed (${resp.status}): ${await resp.text()}`);
+      const value = await resp.json();
+      let version = resp.headers && typeof resp.headers.get === 'function' ? resp.headers.get('x-goog-generation') : null;
+      if (!version) {
+        const meta = await fetch(`${base}?fields=generation`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!meta.ok) throw new Error(`gcsStore: metadata ${key} failed (${meta.status}): ${await meta.text()}`);
+        version = (await meta.json()).generation;
+      }
+      return { value, version: String(version) };
+    },
+    // `ifGenerationMatch` makes GCS refuse the upload (412) when the object's
+    // generation moved since readDoc; '0' means "only if it does not exist".
+    async writeJSONIf(key, value, version) {
+      assertSafeKey(key);
+      const token = await accessToken();
+      const url = `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(bucket)}/o?uploadType=media&name=${encodeURIComponent(key)}&ifGenerationMatch=${encodeURIComponent(String(version))}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(value),
+      });
+      if (resp.status === 412) throw new StoreConflict(key);
+      if (!resp.ok) throw new Error(`gcsStore: conditional write ${key} failed (${resp.status}): ${await resp.text()}`);
     },
     async listUsers() {
       // delimiter='/' collapses each users/<uid>/... into one prefix entry.
