@@ -210,15 +210,30 @@ function* walk(dir) {
   }
 }
 
+// FLAG(review): this is a regular expression pass, not a parser. Two limits
+// follow from that, and both fail loud rather than quiet:
+//   - a specifier inside a string or template literal is read as an import
+//     (toolkit/scripts/generate-api-docs.mjs carries the README quick start
+//     as text and is the live example; its specifiers stay inside toolkit/,
+//     so no edge comes of it). A phantom edge shows up as an unknown edge
+//     and someone looks at it;
+//   - only comments that open at the start of a line are removed. A block
+//     comment that opens after code on the same line is kept, so its text
+//     can also produce a phantom edge. The reason for the limit is that
+//     toolkit/core/librarian.js has "/*" inside a prompt string; removing
+//     every "/*...*/" pair would swallow real code up to the next "*/", and
+//     that could hide an edge, which is the failure this test must not have.
 function stripComments(src) {
-  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  return src.replace(/^\s*\/\*[\s\S]*?\*\//gm, '').replace(/^\s*\/\/.*$/gm, '');
 }
 
 // Specifiers from the three import forms. `from` is matched on its own so
-// multi-line `import { a, b } from '...'` blocks are found too.
-const FROM_RE = /\bfrom\s*['"]([^'"]+)['"]/g;
-const DYNAMIC_RE = /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
-const BARE_RE = /^\s*import\s*['"]([^'"]+)['"]/gm;
+// multi-line `import { a, b } from '...'` blocks are found too. The specifier
+// itself may not span a line: a stray `from "` in prose would otherwise
+// match up to the next quote in the file and could eat a real import.
+const FROM_RE = /\bfrom\s*['"]([^'"\n]+)['"]/g;
+const DYNAMIC_RE = /\bimport\s*\(\s*['"]([^'"\n]+)['"]\s*\)/g;
+const BARE_RE = /^\s*import\s*['"]([^'"\n]+)['"]/gm;
 
 function specifiersIn(src) {
   const out = [];
