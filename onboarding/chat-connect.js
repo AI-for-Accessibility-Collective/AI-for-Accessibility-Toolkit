@@ -30,8 +30,11 @@
 export function watchConnection(sock, { live = () => true, onConnected, onFailed, onLost }) {
   let opened = false;
   const connected = () => { opened = true; if (live()) onConnected(); };
-  if (sock.readyState === 1) connected();
-  else sock.addEventListener('open', connected);
+  // Listen before reporting. For a socket that is already open, onConnected
+  // runs inside this call; a caller that throws there would otherwise leave
+  // the socket unwatched, and its later close would never be reported.
   sock.addEventListener('error', () => { if (live() && !opened) onFailed(); });
   sock.addEventListener('close', () => { if (live()) (opened ? onLost : onFailed)(); });
+  if (sock.readyState === 1) connected();
+  else sock.addEventListener('open', connected);
 }

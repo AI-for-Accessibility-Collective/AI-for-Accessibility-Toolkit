@@ -126,5 +126,24 @@ function watch(sock, live = () => true) {
   check('closing the socket the person left does not report a loss', seen.lost === 0 && seen.connected === 1);
 }
 
+// ── a caller that throws must not leave the socket unwatched ───────────────
+// For a socket that is already open, onConnected runs inside watchConnection().
+// chat.js wraps that call in try/catch, so a throw there is swallowed. If the
+// close listener had not been attached yet, the page would keep showing
+// "Connected" long after the receiver went away.
+{
+  const s = new FakeSocket(1);
+  let lost = 0;
+  try {
+    watchConnection(s, {
+      onConnected: () => { throw new Error('the caller broke'); },
+      onFailed: () => {},
+      onLost: () => { lost++; },
+    });
+  } catch { /* chat.js swallows it the same way */ }
+  s.close();
+  check('a socket whose onConnected threw is still watched', lost === 1);
+}
+
 console.log(`\nChat connect: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
