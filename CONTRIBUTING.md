@@ -139,6 +139,11 @@ Strips clutter and boosts contrast so text is easy to focus on.
 
 - The `Recipe` JSON is the runnable truth. Reference only adapter ids and setting
   keys that exist in the registry — `validateSkill` rejects unknown ones.
+- `supportAreas` values come from `SUPPORT_AREAS` in
+  [`toolkit/core/ability.js`](toolkit/core/ability.js); `siteRelevance` values
+  are taxonomy categories ([`toolkit/core/taxonomy.js`](toolkit/core/taxonomy.js))
+  or `all`. `validateSkill` rejects anything else, because retrieval matches on
+  these two fields and a skill outside the vocabulary is never found again.
 - Keep it minimal (1–4 adapters). Verify with `node toolkit/test/skill-test.js`.
 
 A host's **Engineer** (`toolkit/core/skill-builder.js`) can also author skills
