@@ -34,7 +34,7 @@ The repository used to hold the extensions, the CLI, and team projects alongside
 | `extension/`, `personalized-extension/` | The extension repository. |
 | `webapp/` | The extension repository, as candidates to return to their originating teams. |
 | `projects/` | The extension repository; the canonical list stays at [docs/projects.md](docs/projects.md). |
-| `cli/` | Back in this repository at `cli/`, with its own [README](cli/README.md), test harness, and workflow. Its history is preserved in both repositories. |
+| `cli/` | Still here, at `cli/`. It launches a Chromium and runs the catalog's adapters, auditors, and profiles against a live page from a terminal. See [cli/README.md](cli/README.md). |
 | `toolkit/adapters/` | Renamed in place to `toolkit/platforms/`, to keep "adapter" for the catalog's accessibility fixes. |
 
 ## Why
@@ -181,11 +181,12 @@ A developer library of reusable accessibility building blocks, usable on their o
 
 ## The CLI (experimental)
 
-[`cli/`](cli/) is the toolkit's command line, restored from the pre-split tree and rewired to this repository's catalog. It drives a real Chromium page over the Chrome DevTools Protocol and injects the same adapters, auditors, and profiles the catalog ships, so a developer or a coding agent can try them on a live page from a terminal:
+[`cli/`](cli/) is the toolkit's command line. It drives a real Chromium page over the Chrome DevTools Protocol and injects the same adapters, auditors, and profiles the catalog ships, so a developer or a coding agent can try them on a live page from a terminal:
 
 ```bash
-pip install -e .       # installs the ai4a11y command (Python 3.10+)
-npm run build:cli      # bundle the catalog for injection
+pip install -e .                        # installs the ai4a11y command (Python 3.10+)
+python -m playwright install chromium   # the browser the session commands drive
+npm run build:cli                       # only after editing tools/; the bundle is committed
 
 ai4a11y list tools               # every auditor and adapter, from tools/
 ai4a11y session start            # launch a persistent Chromium
