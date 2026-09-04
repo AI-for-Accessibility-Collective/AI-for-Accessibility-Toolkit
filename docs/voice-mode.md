@@ -27,7 +27,9 @@ core, where the same utterance can also update the person's profile.
 
 - **Input** — the Web Speech `SpeechRecognition` API (feature-detected; the same
   code `onboarding/` uses). A 🎤 Speak button dictates into the field and
-  auto-submits when recognition ends; **Ctrl+Space** toggles it from anywhere; a
+  auto-submits when recognition ends; **Ctrl+Space** toggles it from anywhere in
+  the chat's own document (and an **embedder** can reach the same action — see
+  below, for when the chat is framed beside a page under test); a
   text field is always available too (speech-impaired users, noisy rooms,
   deterministic tests). Starting dictation **silences playback first** — it
   cancels any in-progress TTS and pauses local media, and asks a connected
@@ -56,6 +58,41 @@ core, where the same utterance can also update the person's profile.
   punctuation. While a task runs, an animated waiting indicator + a Web-Audio
   "thinking" earcon play, with a **Stop** control that calls the port's `stop()`,
   then a done / error chime.
+
+## Driving the chat from an embedder (a framed chat)
+
+A framed chat can't be given its keyboard shortcuts. `document` only sees a press
+while focus is *inside* the chat, and a press landing in a neighbouring panel
+can't be forwarded: a cross-origin frame refuses synthetic events, and
+`contentWindow.focus()` from the embedder is ignored. The best an embedder can do
+alone is focus the frame so the *next* press works — a poor answer for voice in
+particular, since the person reaching for it is often the person for whom
+pressing twice is the friction they were avoiding.
+
+So the chat accepts one command message from its embedder:
+
+```js
+frame.contentWindow.postMessage({ kind: 'aa-chat-command', name: 'voice' }, '*');
+// ← { kind: 'aa-chat-command-result', name: 'voice', ok: true, detail: 'listening' }
+```
+
+`name` is one of `voice` (toggle), `voice-start`, `voice-stop`, `focus`. One door
+for every shortcut, rather than a message per key. The chat replies with an ack
+so the embedder can tell whether it landed — and fall back to focusing the frame
+if it didn't (e.g. voice input switched off, or no `SpeechRecognition`).
+
+Two things this rests on, both settled rather than assumed:
+
+- **It works without a user gesture.** Verified in Chrome: recognition starts
+  from a `message` handler with `navigator.userActivation.isActive === false`,
+  once the microphone permission is granted. (The first grant still needs a real
+  gesture — and the frame needs `allow="microphone"`.)
+- **Only the embedder may send it.** Any page can frame the chat — it sends no
+  framing headers — and "start the microphone" must not be a message from any of
+  them. The handler requires `event.source === window.parent` and ignores
+  everything else, including a page posting to itself. The parent is the only
+  party that can grant the frame a microphone at all, so narrowing to it grants
+  no new power.
 
 ## Voice output that doesn't fight a screen reader
 

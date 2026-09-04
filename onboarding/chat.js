@@ -537,6 +537,65 @@ function silenceAudioForDictation() {
     }
   } catch {}
 }
+// ── commands an EMBEDDER can send ────────────────────────────────────────────
+// A framed chat can't be given its keyboard shortcuts: `document` only sees a
+// press while focus is inside the chat, and a press landing in a neighbouring
+// panel can't be forwarded (a cross-origin frame refuses synthetic events, and
+// contentWindow.focus() from the embedder is ignored). The best an embedder can
+// do alone is focus the frame so the NEXT press works — a poor answer for this
+// shortcut in particular, since the person reaching for voice is often the
+// person for whom pressing twice is the friction they were avoiding.
+//
+// So: one door for every shortcut, rather than a message per key later.
+//   parent.postMessage({ kind: 'aa-chat-command', name: 'voice' }, '*')
+// Verified in Chrome that recognition starts with NO user activation once the
+// microphone permission is granted (the first grant still needs a gesture).
+const CHAT_COMMANDS = {
+  voice() {
+    if (!SR) return { ok: false, detail: 'speech recognition is unavailable in this browser' };
+    if (!voiceInOn || !recog) return { ok: false, detail: 'voice input is switched off in settings' };
+    toggleMic();
+    return { ok: true, detail: listening ? 'listening' : 'stopped' };
+  },
+  'voice-start'() {
+    if (!SR) return { ok: false, detail: 'speech recognition is unavailable in this browser' };
+    if (!voiceInOn || !recog) return { ok: false, detail: 'voice input is switched off in settings' };
+    if (listening) return { ok: true, detail: 'already listening' };
+    toggleMic();
+    return { ok: true, detail: 'listening' };
+  },
+  'voice-stop'() {
+    if (!recog || !listening) return { ok: true, detail: 'not listening' };
+    toggleMic();
+    return { ok: true, detail: 'stopped' };
+  },
+  focus() { try { $('composer-input').focus(); } catch {} return { ok: true, detail: 'focused' }; },
+};
+
+function runChatCommand(name) {
+  const fn = CHAT_COMMANDS[name];
+  if (!fn) return { ok: false, detail: `unknown command: ${name}` };
+  try { return fn(); } catch (e) { return { ok: false, detail: (e && e.message) || 'command failed' }; }
+}
+
+function initEmbedderCommands() {
+  window.addEventListener('message', (ev) => {
+    const m = ev && ev.data;
+    if (!m || m.kind !== 'aa-chat-command') return;
+    // ONLY the embedder. Any page can frame this chat (it sends no framing
+    // headers), and "start the microphone" must not be a message from any of
+    // them. The parent is the only party that can grant this frame a microphone
+    // at all, so it already holds that power — narrowing to it grants nothing
+    // new. (An origin allowlist would be firmer if the chat ever gains a way to
+    // be configured with one.)
+    if (window.parent === window || ev.source !== window.parent) return;
+    const res = runChatCommand(m.name);
+    // Tell the embedder whether it landed, so it can fall back to focusing the
+    // frame rather than silently doing nothing.
+    try { ev.source.postMessage({ kind: 'aa-chat-command-result', name: m.name, ...res }, '*'); } catch {}
+  });
+}
+
 function initVoiceInput() {
   const b = $('mic');
   if (!SR || !voiceInOn) { if (b) b.hidden = true; return; }
@@ -640,14 +699,17 @@ async function boot() {
   $('composer-form').addEventListener('submit', (e) => { e.preventDefault(); handleTurn($('composer-input').value); });
   $('composer-input').addEventListener('keydown', onComposerKey); // Enter to send, Up/Down to recall history
 
-  // Ctrl+Space anywhere starts/stops voice input (only when the mic is available
-  // and enabled). Note: on macOS Ctrl+Space may also be the OS input-source
+  // Ctrl+Space anywhere in THIS document starts/stops voice input. The same
+  // action is reachable by an embedder as the 'voice' command (see
+  // CHAT_COMMANDS) — one door, so a framed chat isn't cut off from its own
+  // shortcuts. Note: on macOS Ctrl+Space may also be the OS input-source
   // switcher; the toggle here fires regardless.
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && (e.code === 'Space' || e.key === ' ')) {
-      if (SR && voiceInOn && recog) { e.preventDefault(); toggleMic(); }
+      if (SR && voiceInOn && recog) { e.preventDefault(); runChatCommand('voice'); }
     }
   });
+  initEmbedderCommands();
 
   addMessage('assistant', 'Hi — I set up your ability profile and adapt your connected application. Try “I’m blind”, “I need bigger text”, “dark mode”, or tell me what you need. Say “help” for more.');
   $('composer-input').focus();
