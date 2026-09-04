@@ -14,7 +14,7 @@ import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createGeminiCaller } from '../src/gemini.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
-import { HTTP_ENDPOINTS } from '../src/meta.js';
+import { HTTP_ENDPOINTS, buildMeta, generateMarkdown } from '../src/meta.js';
 
 // The 36 extension `librarian*` message routes, independently transcribed
 // from a host's `librarian*` switch (~lines
@@ -458,6 +458,30 @@ async function main() {
       assert.deepEqual(
         [...contractPaths].filter((p) => !served.has(p)), [],
         'CONTRACT.md lists a path app.js does not serve',
+      );
+    });
+
+    // server/API.md is generated from the same table, but nothing checked it
+    // matched. toolkit/API.md and the skill have that gate; this file did not,
+    // because its first line carries a generation timestamp, so a byte
+    // comparison always differs. Compare everything but that line instead.
+    // Without this, editing HTTP_ENDPOINTS and forgetting `npm run docs`
+    // leaves API.md quietly stating the old contract, which is exactly what
+    // happened to the DELETE /admin/users row.
+    await test('server/API.md on disk matches a fresh render (ignoring the timestamp line)', async () => {
+      const onDisk = await fs.readFile(new URL('../API.md', import.meta.url), 'utf8');
+      const pkg = JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'));
+      const fresh = generateMarkdown(buildMeta({ version: pkg.version }));
+
+      // The timestamp lives on one `_Generated <ISO> by ...` line.
+      const TIMESTAMP = /^_Generated .* by /m;
+      assert.ok(TIMESTAMP.test(onDisk), 'API.md has no _Generated line, so this check cannot strip it');
+      assert.ok(TIMESTAMP.test(fresh), 'a fresh render has no _Generated line, so this check cannot strip it');
+      const strip = (md) => md.split('\n').filter((l) => !TIMESTAMP.test(l)).join('\n');
+
+      assert.equal(
+        strip(onDisk), strip(fresh),
+        'server/API.md is stale: run `npm run docs` in server/ and commit the result',
       );
     });
   } finally {

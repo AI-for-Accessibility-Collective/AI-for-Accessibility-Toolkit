@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-09-04T02:05:20.344Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-09-04T03:06:36.986Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -17,7 +17,7 @@ Version: `0.1.0`
 | GET | `/admin/tokens` | admin | list {id, uid, label, createdAt, revoked} (no token values) |
 | DELETE | `/admin/tokens/{id}` | admin | revoke |
 | GET | `/admin/users` | admin | list {users: uid[]}, every uid holding stored state |
-| DELETE | `/admin/users/{uid}` | admin | delete that uid's partition and revoke its tokens -> {deleted, revokedTokens} |
+| DELETE | `/admin/users/{uid}` | admin | delete that uid's partition and revoke its tokens -> {ok, uid, revokedTokens} (a count); 404 when the uid had neither data nor live tokens |
 | GET | `/admin` | admin (HTTP Basic. An unauthenticated GET answers 401 + WWW-Authenticate, so the browser prompts, then attaches the cached credential to the page's own fetches) | minimal HTML config interface |
 
 ## `/v1/librarian/{method}`
