@@ -29,10 +29,13 @@ function ok(name, cond, detail) {
 }
 
 // ── A mock bucket with generations and ifGenerationMatch ──────────────────
-function mockBucket() {
+// `stripGeneration` plays a proxy that drops the x-goog-generation header, so
+// readDoc has to take its metadata-then-pinned-download path. `state.afterMeta`
+// runs after a metadata read, which is where another instance can slip in.
+function mockBucket({ stripGeneration = false } = {}) {
   const objects = new Map(); // name -> { gen, body }
   let nextGen = 1;
-  const state = { conflicts: 0, uploads: 0 };
+  const state = { conflicts: 0, uploads: 0, afterMeta: null };
   const json = (body, status = 200) => ({
     ok: status < 300, status, json: async () => body, text: async () => JSON.stringify(body),
   });
@@ -59,10 +62,16 @@ function mockBucket() {
       const o = objects.get(name);
       if (!o) return json({ error: 'not found' }, 404);
       const params = new URL(u).searchParams;
-      if (params.get('fields') === 'generation') return json({ generation: String(o.gen) });
+      if (params.get('fields') === 'generation') {
+        const reply = json({ generation: String(o.gen) });
+        if (state.afterMeta) { const hook = state.afterMeta; state.afterMeta = null; await hook(); }
+        return reply;
+      }
+      const pinned = params.get('generation');
+      if (pinned !== null && pinned !== String(o.gen)) return json({ error: 'not found' }, 404);
       return {
         ok: true, status: 200,
-        headers: new Headers({ 'x-goog-generation': String(o.gen) }),
+        headers: new Headers(stripGeneration ? {} : { 'x-goog-generation': String(o.gen) }),
         json: async () => JSON.parse(o.body), text: async () => o.body,
       };
     }
@@ -138,6 +147,26 @@ async function raceScenario(label, storeA, storeB) {
     await b.writeJSONIf('admin/other.json', { tokens: [] }, null).then(() => true));
   const leftovers = (await fs.readdir(path.join(dir, 'admin'))).filter((f) => f.endsWith('.lock') || f.endsWith('.tmp'));
   ok('file: no lock or temp files are left behind', leftovers.length === 0, leftovers.join(','));
+
+  // A lock left by a process that died is taken over, and the write lands.
+  const lock = path.join(dir, TOKENS_DOC + '.lock');
+  await fs.writeFile(lock, 'dead-process');
+  const old = new Date(Date.now() - 60000);
+  await fs.utimes(lock, old, old);
+  const before = await a.readDoc(TOKENS_DOC);
+  await a.writeJSONIf(TOKENS_DOC, { tokens: [{ id: 'after-stale' }] }, before.version);
+  ok('file: a stale lock is taken over', (await a.readDoc(TOKENS_DOC)).value.tokens[0].id === 'after-stale');
+  const afterStale = (await fs.readdir(path.join(dir, 'admin'))).filter((f) => f.includes('.lock'));
+  ok('file: the taken-over lock is gone afterwards', afterStale.length === 0, afterStale.join(','));
+
+  // A lock someone else still holds is never removed by a writer that does
+  // not own it, and that writer does not rename over the document.
+  await fs.writeFile(lock, 'other-owner');
+  const stolen = await a.readDoc(TOKENS_DOC);
+  const err = await a.writeJSONIf(TOKENS_DOC, { tokens: [] }, stolen.version).then(() => null, (e) => e);
+  ok('file: a fresh lock held by another owner is not stolen', err?.code === 'LOCK_TIMEOUT', err?.message);
+  ok('file: and that owner\'s lock is still there', (await fs.readFile(lock, 'utf8')) === 'other-owner');
+  ok('file: and the document was not touched', (await a.readDoc(TOKENS_DOC)).version === stolen.version);
   await fs.rm(dir, { recursive: true, force: true });
 }
 
@@ -151,6 +180,38 @@ async function raceScenario(label, storeA, storeB) {
   const doc = await a.readDoc(TOKENS_DOC);
   ok('gcs: the version is the object generation', /^\d+$/.test(doc.version) && doc.version !== '0', doc.version);
   ok('gcs: a missing document reads as generation 0', (await a.readDoc('admin/none.json')).version === '0');
+}
+
+// ── GCS behind a proxy that strips x-goog-generation ───────────────────────
+{
+  const bucket = mockBucket({ stripGeneration: true });
+  const a = gcsStore('test-bucket');
+  const b = gcsStore('test-bucket');
+  await raceScenario('gcs, no generation header', a, b);
+  const doc = await a.readDoc(TOKENS_DOC);
+  ok('gcs, no generation header: the version still comes from the metadata read', /^\d+$/.test(doc.version) && doc.version !== '0', doc.version);
+
+  // Another instance writes between the metadata read and the pinned
+  // download: the read must not pair the newer version with an older body.
+  bucket.afterMeta = async () => {
+    const { value, version } = await b.readDoc(TOKENS_DOC);
+    value.tokens.push({ id: 'slipped-in', uid: 'fourth-user', label: '', hash: 'e'.repeat(64), createdAt: 1, revoked: false });
+    await b.writeJSONIf(TOKENS_DOC, value, version);
+  };
+  const midRead = await a.readDoc(TOKENS_DOC).then(() => null, (e) => e);
+  ok('gcs, no generation header: a document that moves mid-read is a conflict, not a stale body', midRead instanceof StoreConflict, midRead?.message);
+
+  // And the mutation loop rides that conflict out: the token issued during
+  // the read survives alongside the one issued after it.
+  bucket.afterMeta = async () => {
+    const { value, version } = await b.readDoc(TOKENS_DOC);
+    value.tokens.push({ id: 'slipped-in-2', uid: 'fifth-user', label: '', hash: 'd'.repeat(64), createdAt: 1, revoked: false });
+    await b.writeJSONIf(TOKENS_DOC, value, version);
+  };
+  await issueToken(a, { uid: 'sixth-user', label: 'after the slip' });
+  const all = await listTokens(a);
+  ok('gcs, no generation header: the write that slipped in mid-read is kept', all.some((t) => t.id === 'slipped-in-2'));
+  ok('gcs, no generation header: and the token issued around it landed', all.some((t) => t.uid === 'sixth-user'));
 }
 
 // ── A store without the conditional pair still works, single-process ───────

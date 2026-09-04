@@ -25,7 +25,8 @@ async function loadTokens(store) {
 //     can interleave with a revocation for another).
 //   - Across processes (two service instances on one bucket or directory), the
 //     save is a conditional write: store.writeJSONIf refuses when the document
-//     moved since store.readDoc, and the mutation reloads and retries. Five
+//     moved since store.readDoc, and the mutation reloads and retries. A read
+//     that catches the document mid-change reports the same conflict. Five
 //     attempts is far more than the admin routes ever contend for.
 //
 // A store without the conditional pair falls back to the plain load and save,
@@ -45,24 +46,18 @@ const MAX_ATTEMPTS = 5;
 function mutateTokens(store, change) {
   const conditional = typeof store.readDoc === 'function' && typeof store.writeJSONIf === 'function';
   return withTokenLock(async () => {
-    for (let attempt = 1; ; attempt++) {
-      let tokens;
-      let version;
-      if (conditional) {
-        const doc = await store.readDoc(TOKENS_DOC);
-        tokens = Array.isArray(doc.value?.tokens) ? doc.value.tokens : [];
-        version = doc.version;
-      } else {
-        tokens = await loadTokens(store);
-      }
+    if (!conditional) {
+      const tokens = await loadTokens(store);
       const { save, result } = change(tokens);
-      if (!save) return result;
-      if (!conditional) {
-        await store.writeJSON(TOKENS_DOC, { tokens });
-        return result;
-      }
+      if (save) await store.writeJSON(TOKENS_DOC, { tokens });
+      return result;
+    }
+    for (let attempt = 1; ; attempt++) {
       try {
-        await store.writeJSONIf(TOKENS_DOC, { tokens }, version);
+        const doc = await store.readDoc(TOKENS_DOC);
+        const tokens = Array.isArray(doc.value?.tokens) ? doc.value.tokens : [];
+        const { save, result } = change(tokens);
+        if (save) await store.writeJSONIf(TOKENS_DOC, { tokens }, doc.version);
         return result;
       } catch (e) {
         if (e?.code !== 'CONFLICT' || attempt >= MAX_ATTEMPTS) throw e;

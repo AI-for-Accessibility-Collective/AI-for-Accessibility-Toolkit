@@ -99,7 +99,9 @@ KVStore port per uid: areas `local`/`sync` → backend documents
   backend checks a content hash under a lock file, the GCS backend passes the
   object generation as `ifGenerationMatch`. A change that loses the race is
   reloaded and retried, so two service instances sharing one bucket cannot
-  overwrite each other's revocations.
+  overwrite each other's revocations. A change that still loses after five
+  attempts, or a lock file that never frees, answers `503` with
+  `Retry-After: 1`; the request was fine and can be repeated as is.
 
 ## Extension remote mode
 

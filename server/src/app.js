@@ -76,8 +76,14 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
   return function listener(req, res) {
     handle(req, res).catch((e) => {
-      if (!res.headersSent) sendJSON(res, 500, { error: 'internal-error', message: e.message });
-      else res.end();
+      if (res.headersSent) return res.end();
+      // A token-document write that lost the race to another instance, or a
+      // lock that never freed: the request is fine, the moment was not.
+      if (e?.code === 'CONFLICT' || e?.code === 'LOCK_TIMEOUT') {
+        res.setHeader('Retry-After', '1');
+        return sendJSON(res, 503, { error: 'busy', message: e.message });
+      }
+      sendJSON(res, 500, { error: 'internal-error', message: e.message });
     });
   };
 
@@ -196,25 +202,25 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     if (method === 'DELETE' && pathname.startsWith(ADMIN_USERS_PREFIX + '/')) {
       const uid = decodeURIComponent(pathname.slice((ADMIN_USERS_PREFIX + '/').length));
       if (!uid) return sendJSON(res, 404, { error: 'not-found' });
-      let deleted, revokedTokens;
-      try {
-        // Inside the uid's queue, so an already-authenticated write either
-        // lands entirely before this runs or is rejected after it.
-        ({ deleted, revokedTokens } = await withUserLock(uid, async () => {
-          // Order still matters within the turn: cut off the ways the partition
-          // could be rewritten (cached instance, live tokens) before removing
-          // the data.
-          toolkitHost.evict?.(uid);
-          const revoked = await revokeTokensFor(store, uid);
-          const wiped = await store.deleteUser(uid);
-          // Evict again. Anything that read the partition during the wipe could
-          // have re-cached an instance holding pre-delete state.
-          toolkitHost.evict?.(uid);
-          return { deleted: wiped, revokedTokens: revoked };
-        }));
-      } catch (e) {
-        return sendJSON(res, 400, { error: e.message });
-      }
+      // The only client error here is a uid that is not one path segment.
+      // Anything the store throws after this point is the server's problem
+      // and goes to the listener's handler.
+      try { assertSafeUid(uid); } catch (e) { return sendJSON(res, 400, { error: e.message }); }
+      // Inside the uid's queue, so an already-authenticated write either
+      // lands entirely before this runs or is rejected after it.
+      const { deleted, revokedTokens } = await withUserLock(uid, async () => {
+        // Order still matters within the turn: cut off the ways the partition
+        // could be rewritten (cached instance, live tokens) before removing
+        // the data. If the revoke fails, the data is untouched and the call
+        // can simply be repeated.
+        toolkitHost.evict?.(uid);
+        const revoked = await revokeTokensFor(store, uid);
+        const wiped = await store.deleteUser(uid);
+        // Evict again. Anything that read the partition during the wipe could
+        // have re-cached an instance holding pre-delete state.
+        toolkitHost.evict?.(uid);
+        return { deleted: wiped, revokedTokens: revoked };
+      });
       // 404 only when there was nothing at all: no data AND no live tokens.
       if (!deleted && !revokedTokens) return sendJSON(res, 404, { error: 'not-found' });
       return sendJSON(res, 200, { ok: true, uid, revokedTokens });
