@@ -18,6 +18,11 @@
 // go in ONE write, so the record either takes the new answers or keeps the old.
 // The tests below pin the call SHAPE, because that shape is the guarantee.
 //
+// Remote mode only, on purpose: the failure shapes here (a non-200 status, a
+// missing envelope) exist only on the wire. That the local branch makes the
+// same writes in the same order is onboard-contract.test.mjs's job, which runs
+// one scenario table against both modes.
+//
 //   node onboarding/test/remote-write-failure.test.mjs
 
 process.env.ONBOARD_MODE = 'remote';
