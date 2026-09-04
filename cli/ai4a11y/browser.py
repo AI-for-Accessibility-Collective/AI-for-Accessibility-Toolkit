@@ -11,6 +11,8 @@ import json
 import subprocess
 import signal as _signal
 import urllib.request
+import urllib.parse
+import socket
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -143,7 +145,16 @@ def _read_session(verify=True):
             f"Quit that browser yourself, delete {SESSION_FILE}, and run "
             "'ai4a11y session start'."
         )
-    live = _cdp_browser_id(info.get('cdp', ''))
+    live = _cdp_browser_id(info.get('cdp', ''), timeout=5)
+    if live is None and _port_is_listening(info.get('cdp', '')):
+        # Something holds the port but did not answer in time: a busy browser,
+        # most likely this session's. Saying it is gone would drop the only
+        # handle on it, so keep the file and say what happened instead.
+        raise ForeignBrowser(
+            f"The browser on {info.get('cdp')} did not answer within 5 seconds, "
+            "so it could not be matched to this session. Nothing was touched. "
+            "Try again in a moment."
+        )
     if live is None or live != info.get('browser'):
         raise ForeignBrowser(
             "The browser this session recorded is gone, and what is on "
@@ -152,6 +163,16 @@ def _read_session(verify=True):
             stale=True,
         )
     return info
+
+
+def _port_is_listening(cdp):
+    """True if something accepts a TCP connection on the CDP endpoint's port."""
+    try:
+        parts = urllib.parse.urlsplit(cdp)
+        with socket.create_connection((parts.hostname or '127.0.0.1', parts.port or 9222), timeout=1):
+            return True
+    except OSError:
+        return False
 
 
 def session_start():

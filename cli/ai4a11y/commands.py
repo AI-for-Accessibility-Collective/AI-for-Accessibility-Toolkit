@@ -1471,6 +1471,7 @@ Rules: never invent indices. If only one target is in the list, return {{"error"
         fi, ti = choice.get('from_el'), choice.get('to_el')
         text_ok = (isinstance(fi, int) and isinstance(ti, int)
                    and 1 <= fi <= len(candidates) and 1 <= ti <= len(candidates))
+        fallback_reason = choice.get('error', 'no indices')
         if text_ok:
             src = candidates[fi - 1]
             dst = candidates[ti - 1]
@@ -1478,8 +1479,9 @@ Rules: never invent indices. If only one target is in the list, return {{"error"
             if not src['visible']:
                 src = _scroll_into_view(page, src)
                 if src is None:
-                    print("Drag source element lost after scroll — falling to vision", flush=True)
+                    print("Drag source element lost after scroll, falling to vision", flush=True)
                     text_ok = False
+                    fallback_reason = 'source lost after scroll'
                 else:
                     refreshed = get_interactables_full(page)
                     dst = next((r for r in refreshed
@@ -1487,10 +1489,13 @@ Rules: never invent indices. If only one target is in the list, return {{"error"
             if text_ok:
                 x1, y1 = src['cx'], src['cy_vp']
                 x2, y2 = dst['cx'], dst['cy_vp']
-        else:
+        # `if`, not `else`: text grounding can also fail after the pick, when
+        # the source is lost on scroll, and that path needs the coordinates
+        # too or the drag below raises UnboundLocalError.
+        if not text_ok:
             # Vision fallback: canvas/WebGL sliders have no a11y endpoints. Ask Claude
             # for fractional viewport coords of the start and end points.
-            print(f"Text-grounding failed for drag ({choice.get('error', 'no indices')}) — vision fallback", flush=True)
+            print(f"Text-grounding failed for drag ({fallback_reason}), vision fallback", flush=True)
             run_dir = OUT / f"session_drag_{_os.getpid()}_{int(time.time())}"
             run_dir.mkdir(parents=True, exist_ok=True)
             shot = run_dir / "drag.png"
@@ -1565,6 +1570,15 @@ Include reason_from/reason_to so your own work is auditable — this improves ac
                 flush=True)
         else:
             print("State diff: NONE — drag may not have taken effect (wrong target or page ignored it)", flush=True)
+
+
+def _clock(seconds):
+    """m:ss for a finite number of seconds, else '?'."""
+    try:
+        whole = int(seconds)
+    except (TypeError, ValueError, OverflowError):
+        return "?"
+    return f"{whole // 60}:{whole % 60:02d}"
 
 
 def session_diff():
@@ -1771,8 +1785,10 @@ def session_media(action, value=None):
         else:
             dur = result.get('duration', 0)
             cur = result.get('currentTime', 0)
-            dur_str = f"{int(dur // 60)}:{int(dur % 60):02d}" if dur else "?"
-            cur_str = f"{int(cur // 60)}:{int(cur % 60):02d}"
+            # A live stream reports Infinity and a not-yet-loaded track NaN;
+            # neither is a clock time.
+            dur_str = _clock(dur) if dur else "?"
+            cur_str = _clock(cur)
             state = "paused" if result.get('paused') else "playing"
             print(f"{result.get('msg', 'OK')}", flush=True)
             print(f"[{result.get('type', 'media')}] {cur_str} / {dur_str} ({state}, {result.get('playbackRate', 1)}x)", flush=True)
