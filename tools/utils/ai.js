@@ -22,7 +22,10 @@
 //   refusal that slips past the gate reaches a screen reader as if it were
 //   the answer.
 // - A thrown error is handled the same way as null by every adapter: the
-//   element is left alone and the error is logged.
+//   element is left alone (or, for a panel the person opened, the panel
+//   shows the same fixed sentence a null answer gets) and the error is
+//   logged to the console. The error's text never reaches the page: a host's
+//   message can carry internal detail, and a panel is read aloud.
 // - Answer in the language of the input unless the function says otherwise.
 // - Keep the reader in mind: these answers are read aloud by a screen
 //   reader, shown as a tooltip, or put in place of the text a person came to

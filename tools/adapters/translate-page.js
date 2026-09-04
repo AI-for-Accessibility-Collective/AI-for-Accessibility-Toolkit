@@ -64,7 +64,10 @@ export const TranslatePage = {
         const original = el.textContent;
         let out;
         try { out = await translateText(original, this.targetLang); }
-        catch { return; } // provider failure → leave this block untouched
+        catch (e) { // provider failure: leave this block untouched, and say why
+          console.warn('[AI4A11y] Translate: left a block untouched, provider error:', e);
+          return;
+        }
         if (out == null || !this.enabled || !el.isConnected) return;
         // Gate the answer before it replaces the block. A refusal or a
         // fragment would silently replace what the reader came for; leave the

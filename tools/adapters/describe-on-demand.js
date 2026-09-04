@@ -14,6 +14,8 @@ import { imageToDataUrl } from '../utils/image.js';
 import { injectStyle } from './_primitives.js';
 
 export const DescribeOnDemand = {
+  // Shown when the provider throws. Fixed on purpose; see describe() below.
+  PROVIDER_ERROR_TEXT: 'No description is available. The AI provider reported an error; check its settings and try again.',
   styleId: 'ai4a11y-describe-styles',
   enabled: false,
   panel: null,
@@ -84,7 +86,7 @@ export const DescribeOnDemand = {
     const token = ++this._reqSeq; // a slow answer for an earlier request must
                                   // not overwrite the answer for a newer one.
     this.show('Describing…');
-    let desc = null, errMsg = null;
+    let desc = null, failed = false;
     try {
       if (el.tagName === 'IMG' && (el.currentSrc || el.src)) {
         // Providers require a data URL, not a page URL — convert first (fetch/
@@ -103,11 +105,16 @@ export const DescribeOnDemand = {
         if (text.length > 60) desc = await summarizeText(text);
         else desc = label || text || `A ${el.tagName.toLowerCase()} with no readable content.`;
       }
-    } catch (e) { desc = null; errMsg = (e && e.message) ? e.message : null; }
+    } catch (e) {
+      // The provider's own text is not shown: a host's error message can
+      // carry internal detail (an endpoint, a key fragment, a stack), and
+      // the panel is read aloud. It goes to the console, where a person
+      // fixing the setup can find it; the panel gets a fixed sentence.
+      console.warn('[AI4A11y] Describe: no description shown, provider error:', e);
+      desc = null; failed = true;
+    }
     if (token !== this._reqSeq) return; // a newer request superseded this one
-    // Prefer the real reason (e.g. "Gemini API key not set. Open extension
-    // settings.") so the user knows what to fix, not just that it didn't work.
-    this.show(desc || errMsg || 'No description is available for that element.');
+    this.show(desc || (failed ? this.PROVIDER_ERROR_TEXT : 'No description is available for that element.'));
   },
 
   show(text) {

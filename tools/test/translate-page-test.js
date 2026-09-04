@@ -118,6 +118,19 @@ async function run() {
       check(`translate: a short block "${src}" accepts a much longer translation`, doc.querySelector('#p').textContent === out);
       TranslatePage.disable();
     }
+    // A thrown provider error is handled like null, and logged (ai.js contract).
+    {
+      const doc = mount(`<main><p id="p">${PARA}</p></main>`);
+      setAIProvider({ translateText: async () => { throw new Error('provider down'); }, announce() {} });
+      const warnings = [];
+      const realWarn = console.warn;
+      console.warn = (...a) => { warnings.push(a.map(String).join(' ')); };
+      await TranslatePage.enable({ targetLang: 'Spanish' });
+      console.warn = realWarn;
+      check('translate: a thrown provider error leaves the block untouched', doc.querySelector('#p').textContent === PARA && TranslatePage.translated.size === 0);
+      check('translate: a thrown provider error is logged', warnings.some(w => w.includes('provider down')));
+      TranslatePage.disable();
+    }
     {
       const doc = mount(`<main><p id="p">${PARA}</p></main>`);
       setAIProvider({ translateText: async () => (PARA + ' ').repeat(9), announce() {} });
