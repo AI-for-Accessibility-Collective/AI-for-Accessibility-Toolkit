@@ -27,6 +27,7 @@ import { detectOnboarding, visionKindOf, isResetToProfile } from '/chat-routing.
 import { routeTurn, classifyControllerResult, fallbackHelp, generalAnswerPrompt } from '/chat-turn.js';
 import { mergeOnboarding, onboardingReply, resetReply, NO_PROFILE_TO_RESET, profilePill, appliedSummary } from '/chat-profile.js';
 import { createHistory, onFirstLine, onLastLine } from '/chat-history.js';
+import { watchConnection } from '/chat-connect.js';
 import { renderWebSettings } from '/toolkit/surfaces/web.js';
 import { settingsMeta } from '/controller/toolkit/registry/tools.js';
 
@@ -100,6 +101,11 @@ async function applyOnboarding(o) {
 // only the keys the profile actually asked for, so it merges over settings the
 // person set by hand instead of stomping them, and a receiver drops any key it
 // does not support.
+//
+// Runs at boot, after each onboarding turn, and whenever what we drive changes:
+// useLocal() and, for a remote receiver, the moment its socket opens. The
+// profile follows the person onto whatever /chat is driving, so an app
+// connected after boot (browser-harness from Settings) learns it too.
 async function applyProfileSettings() {
   let settings;
   try { settings = renderWebSettings(operatorModel || {}); } catch { return null; }
@@ -185,6 +191,7 @@ function useLocal() {
   setConnStatus('hidden');
   $('drive-note').textContent = 'Driving the demo preview + this window.';
   rebuildController();
+  applyProfileSettings(); // a disclosure made while a remote app was driven never reached the preview
   if (unNote) { unNote(); unNote = null; }
   wireNotes();
 }
@@ -201,18 +208,20 @@ function useRemote(url) {
   wireNotes();
 
   // Reflect the socket lifecycle. Guard with the channel identity so a previous
-  // socket's late close/error can't clobber the status of a newer connection.
+  // socket's late open/close/error can't clobber the status of a newer
+  // connection, or apply the profile to it. The profile goes out on the open
+  // transition, not here: the socket is still connecting when useRemote()
+  // returns, so applying now would race it.
   setConnStatus('connecting', url);
   const myChannel = remoteChannel, sock = remoteChannel.socket;
-  let opened = false;
   const live = () => remoteChannel === myChannel;
   try {
-    if (sock.readyState === 1) { opened = true; setConnStatus('connected', url); }
-    else {
-      sock.addEventListener('open', () => { opened = true; if (live()) setConnStatus('connected', url); });
-      sock.addEventListener('error', () => { if (live() && !opened) setConnStatus('failed', url); });
-      sock.addEventListener('close', () => { if (live()) setConnStatus(opened ? 'lost' : 'failed', url); });
-    }
+    watchConnection(sock, {
+      live,
+      onConnected: () => { setConnStatus('connected', url); applyProfileSettings(); },
+      onFailed: () => setConnStatus('failed', url),
+      onLost: () => setConnStatus('lost', url),
+    });
   } catch {}
 }
 
@@ -509,7 +518,9 @@ async function boot() {
   initSettings();
   initVoiceInput();
 
-  // Reconnect to the receiver we were driving before a refresh, if any.
+  // Reconnect to the receiver we were driving before a refresh, if any. The
+  // profile above went to the preview; the receiver gets it when its socket
+  // opens (useRemote), since it is not connected yet.
   let savedWs = ''; try { savedWs = localStorage.getItem(WS_KEY) || ''; } catch {}
   if (savedWs) useRemote(savedWs);
 
