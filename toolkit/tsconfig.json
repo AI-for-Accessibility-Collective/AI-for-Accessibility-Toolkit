@@ -1,5 +1,15 @@
 // Checks the core's JSDoc types and emits type declarations to types/, with
-// no build step change: the core stays plain ES modules, esbuild is untouched.
+// no build step change: the core stays plain ES modules and no bundler config
+// is edited.
+//
+// FLAG(review): esbuild does read this file. It looks up the nearest
+// tsconfig.json for every file it bundles and honors `strict`, so a bundle
+// built from a checkout of toolkit/ (not from the packed tarball, which does
+// not carry this file) starts with a "use strict" prologue. That is the only
+// line that changes, measured on the four platforms/chrome/*.entry.js IIFE
+// bundles and platforms/node/host.js. Every file here is an ES module, which
+// is strict already. A build that wants the old output byte for byte can
+// pass --tsconfig-raw={} to esbuild.
 //
 //   npm run types              (from toolkit/)
 //   npm run build:types        (from the repository root)
