@@ -171,6 +171,49 @@ async function run() {
     check('links: null AI result marks the link failed', link.dataset.ai4a11yProcessed === 'failed');
   }
 
+  // Output gate: what the model answers becomes the link's accessible name,
+  // so a refusal or a hedge must be dropped, not written. Every rejected
+  // answer leaves the link exactly as a null answer does.
+  {
+    const cases = [
+      ['a refusal', 'I cannot determine where this link goes'],
+      ['a hedge', 'Unclear destination'],
+      ['whitespace', '   '],
+      ['a non-string', 42],
+      ['an over-long label (61 chars)', 'x'.repeat(61)],
+      ['a label with a newline', 'Open the\nQ3 report'],
+    ];
+    for (const [what, answer] of cases) {
+      const doc = mount(`<p><a href="https://example.com/q3">click here</a></p>`);
+      fakeAI({ improveLinkText: () => answer });
+      const link = doc.querySelector('a');
+      const r = await improveAmbiguousLink(link);
+      check(`links: ${what} from the model sets no aria-label`, r === null && !link.hasAttribute('aria-label'));
+      check(`links: ${what} from the model marks the link failed`, link.dataset.ai4a11yProcessed === 'failed' && !link.classList.contains('ai4a11y-adapted'));
+    }
+    const doc = mount(`<p><a href="https://example.com/q3">click here</a></p>`);
+    fakeAI({ improveLinkText: () => 'Open the Q3 report' });
+    const link = doc.querySelector('a');
+    const r = await improveAmbiguousLink(link);
+    check('links: a good answer is still applied after the gate', r === 'Open the Q3 report' && link.getAttribute('aria-label') === 'Open the Q3 report');
+    const doc60 = mount(`<p><a href="https://example.com/q3">click here</a></p>`);
+    fakeAI({ improveLinkText: () => 'y'.repeat(60) });
+    await improveAmbiguousLink(doc60.querySelector('a'));
+    check('links: a label of exactly 60 characters is accepted', doc60.querySelector('a').getAttribute('aria-label') === 'y'.repeat(60));
+    const docNl = mount(`<p><a href="https://example.com/q3">click here</a></p>`);
+    fakeAI({ improveLinkText: () => 'Open the Q3 report\n' });
+    await improveAmbiguousLink(docNl.querySelector('a'));
+    check('links: a trailing newline from the provider is trimmed, not rejected', docNl.querySelector('a').getAttribute('aria-label') === 'Open the Q3 report');
+    // The contract forbids quotes, markdown and a label prefix, but a model
+    // adds them anyway; the cleaned value is what reaches aria-label.
+    for (const [what, answer] of [['quotes', '"Open the Q3 report"'], ['bold markdown', '**Open the Q3 report**'], ['a label prefix', 'Link text: Open the Q3 report']]) {
+      const d = mount(`<p><a href="https://example.com/q3">click here</a></p>`);
+      fakeAI({ improveLinkText: () => answer });
+      const r = await improveAmbiguousLink(d.querySelector('a'));
+      check(`links: ${what} from the provider are stripped before aria-label is set`, r === 'Open the Q3 report' && d.querySelector('a').getAttribute('aria-label') === 'Open the Q3 report');
+    }
+  }
+
   // ── TABLES ───────────────────────────────────────────────────────────────────
 
   // A real header row (short, distinct labels) → converted deterministically.
@@ -257,6 +300,60 @@ async function run() {
     check('tables: header-cell content survives promotion into <th>', !!btn);
     btn?.click();
     check('tables: a listener on promoted header content still fires', clicked === 1);
+  }
+
+  // Output gate: a generated <th> is announced for every cell in its column,
+  // so a refusal, a hedge, or a multi-line answer must fall back to the same
+  // "Column N" a null answer gets. Good answers in other columns still land.
+  {
+    const rejected = {
+      1: 'I cannot determine a header',
+      2: 'Amount\nUSD',
+      3: '   ',
+      4: { name: 'Region' },
+      5: 'h'.repeat(61),
+      6: 'unclear',
+    };
+    const doc = mount(`
+      <table>
+        <tr><td>NYC</td><td>100</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td></tr>
+        <tr><td>LA</td><td>200</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td></tr>
+        <tr><td>NYC</td><td>300</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td></tr>
+        <tr><td>SF</td><td>400</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td></tr>
+      </table>`);
+    let col = 0;
+    fakeAI({ inferColumnHeader: () => { const i = col++; return i === 0 ? 'City\n' : rejected[i]; } });
+    const table = doc.querySelector('table');
+    const changed = await fixTableHeaders(table);
+    const ths = Array.from(table.querySelectorAll('thead th')).map(t => t.textContent);
+    check('tables: the gate does not stop the header row from being generated', changed === true && ths.length === 7);
+    check('tables: a good answer is still used, trimmed of the trailing newline', ths[0] === 'City');
+    check('tables: a refusal falls back to "Column N"', ths[1] === 'Column 2');
+    check('tables: a header with a newline falls back to "Column N"', ths[2] === 'Column 3');
+    check('tables: a whitespace answer falls back to "Column N"', ths[3] === 'Column 4');
+    check('tables: a non-string answer falls back to "Column N"', ths[4] === 'Column 5');
+    check('tables: an over-long answer (61 chars) falls back to "Column N"', ths[5] === 'Column 6');
+    check('tables: a hedge falls back to "Column N"', ths[6] === 'Column 7');
+    check('tables: no refusal text reaches any header cell', !ths.some(t => /cannot|unclear/i.test(t)));
+  }
+
+  // Quotes, markdown and a label prefix are stripped before the <th> is written.
+  {
+    const wrapped = ['"City"', '**Amount**', 'Header: Region'];
+    const doc = mount(`
+      <table>
+        <tr><td>NYC</td><td>100</td><td>a</td></tr>
+        <tr><td>LA</td><td>200</td><td>a</td></tr>
+        <tr><td>NYC</td><td>300</td><td>a</td></tr>
+        <tr><td>SF</td><td>400</td><td>a</td></tr>
+      </table>`);
+    let col = 0;
+    fakeAI({ inferColumnHeader: () => wrapped[col++] });
+    await fixTableHeaders(doc.querySelector('table'));
+    const ths = Array.from(doc.querySelectorAll('thead th')).map(t => t.textContent);
+    check('tables: quotes are stripped from a header', ths[0] === 'City');
+    check('tables: bold markdown is stripped from a header', ths[1] === 'Amount');
+    check('tables: a label prefix is stripped from a header', ths[2] === 'Region');
   }
 
   // ── AUDITOR ──────────────────────────────────────────────────────────────────

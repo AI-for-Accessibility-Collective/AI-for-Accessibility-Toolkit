@@ -71,6 +71,74 @@ async function run() {
     check('translate: second enable is a no-op (no double translation)', doc.querySelector('p').textContent === once);
     TranslatePage.disable();
   }
+  // Output gate: a translated block replaces what the reader sees, so a
+  // refusal, a fragment, or a non-string must leave the block untouched, the
+  // same way a null answer does. A real translation still lands.
+  {
+    const PARA = 'Please read the documentation carefully before you install anything on the server.';
+    const cases = [
+      ['a first-person refusal', "I'm sorry, I cannot translate this text."],
+      ['an empty string', ''],
+      ['whitespace', '   \n'],
+      ['a non-string', 42],
+      ['a fragment (under a tenth of the source)', 'Sí.'],
+      ['an answer over eight times the source', (PARA + ' ').repeat(9)],
+    ];
+    for (const [what, answer] of cases) {
+      const doc = mount(`<main><p id="p">${PARA}</p></main>`);
+      setAIProvider({ translateText: async () => answer, announce() {} });
+      await TranslatePage.enable({ targetLang: 'Spanish' });
+      check(`translate: ${what} leaves the block untouched`, doc.querySelector('#p').textContent === PARA);
+      check(`translate: ${what} is not counted as translated`, TranslatePage.translated.size === 0);
+      TranslatePage.disable();
+      check(`translate: disable after ${what} is safe`, doc.querySelector('#p').textContent === PARA);
+    }
+    {
+      const doc = mount(`<main><p id="p">${PARA}</p></main>`);
+      const OUT = 'Unfortunately, the server is closed for maintenance until Tuesday morning.';
+      setAIProvider({ translateText: async () => OUT, announce() {} });
+      await TranslatePage.enable({ targetLang: 'English' });
+      check('translate: a passage opening "Unfortunately, the ..." is content, not a refusal', doc.querySelector('#p').textContent === OUT);
+      TranslatePage.disable();
+    }
+    {
+      const doc = mount(`<main><p id="p">${PARA}</p></main>`);
+      const SHORT = '安装前请仔细阅读服务器文档。'; // 14 chars against 82: 0.17, the shape of a real English-to-Chinese ratio
+      setAIProvider({ translateText: async () => SHORT, announce() {} });
+      await TranslatePage.enable({ targetLang: 'Chinese' });
+      check('translate: a much shorter script (0.17 of the source) is accepted', doc.querySelector('#p').textContent === SHORT);
+      TranslatePage.disable();
+    }
+    // A block of a few characters has no useful ratio: "目录" to "Table of
+    // contents" is 8.5 times the source and a correct translation.
+    for (const [src, out] of [['目录', 'Table of contents'], ['谢谢', 'Thank you very much']]) {
+      const doc = mount(`<main><p id="p">${src}</p></main>`);
+      setAIProvider({ translateText: async () => out, announce() {} });
+      await TranslatePage.enable({ targetLang: 'English' });
+      check(`translate: a short block "${src}" accepts a much longer translation`, doc.querySelector('#p').textContent === out);
+      TranslatePage.disable();
+    }
+    // A thrown provider error is handled like null, and logged (ai.js contract).
+    {
+      const doc = mount(`<main><p id="p">${PARA}</p></main>`);
+      setAIProvider({ translateText: async () => { throw new Error('provider down'); }, announce() {} });
+      const warnings = [];
+      const realWarn = console.warn;
+      console.warn = (...a) => { warnings.push(a.map(String).join(' ')); };
+      await TranslatePage.enable({ targetLang: 'Spanish' });
+      console.warn = realWarn;
+      check('translate: a thrown provider error leaves the block untouched', doc.querySelector('#p').textContent === PARA && TranslatePage.translated.size === 0);
+      check('translate: a thrown provider error is logged', warnings.some(w => w.includes('provider down')));
+      TranslatePage.disable();
+    }
+    {
+      const doc = mount(`<main><p id="p">${PARA}</p></main>`);
+      setAIProvider({ translateText: async () => (PARA + ' ').repeat(9), announce() {} });
+      await TranslatePage.enable({ targetLang: 'Spanish' });
+      check('translate: a paragraph that comes back nine times longer is still rejected', doc.querySelector('#p').textContent === PARA);
+      TranslatePage.disable();
+    }
+  }
 }
 
 run().then(() => {

@@ -2514,11 +2514,104 @@ ${scope(":focus")} {
   };
   if (typeof window !== "undefined") window.__ai4a11yUnpinSticky = UnpinSticky;
 
+  // tools/utils/ai-output.js
+  var REFUSAL_PREFIXES = ["I cannot", "I'm unable", "I am unable", "Sorry", "I cannot describe", "Unfortunately"];
+  var UNCERTAINTY_TERMS = ["unsure", "I don't know", "unclear", "I cannot tell", "cannot determine"];
+  var REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|not sure|(n\/a|unknown|no label|not available|unsure)[.!]?\s*$)/i;
+  var MAX_SHORT_TEXT_CHARS = 60;
+  function straightenApostrophes(text) {
+    return text.replace(/[’ʼ]/g, "'");
+  }
+  function startsWithRefusal(text) {
+    if (typeof text !== "string") return false;
+    const t = straightenApostrophes(text.trim());
+    const lower = t.toLowerCase();
+    return REFUSAL_RE.test(t) || REFUSAL_PREFIXES.some((p) => lower.startsWith(p.toLowerCase()));
+  }
+  function containsUncertainty(text) {
+    if (typeof text !== "string") return false;
+    const lower = straightenApostrophes(text).toLowerCase();
+    return UNCERTAINTY_TERMS.some((term) => lower.includes(term.toLowerCase()));
+  }
+  var REFUSAL_VERBS = "translate|simplify|summari[sz]e|rewrite|rephrase|restate|interpret|render|make\\s+out|help|assist|provide|process|read|access|determine|identify|see|view|do|fulfill|complete|comply|generate|produce|answer|respond|perform|proceed|continue|work";
+  var TASK_NOUN = "text|content|passage|page|request|translation|simplification|summary|rewrite|rephrasing";
+  var TASK_OBJECT = String.raw`(?:with\s+|on\s+)?(?:(?:translat|simplify|summari[sz]|rewrit|rephras)ing\s+)?` + String.raw`(?:(?:this|that|these|those)\b|it[,.!]?\s*$|(?:(?:a|an|the|this|that|these|those|your|any)\s+)?(?:${TASK_NOUN})\b)`;
+  var APOLOGY = String.raw`unfortunately|sorry|i(?:['’]m| am) sorry|i apologi[sz]e|as an ai(?: language model| assistant| model)?`;
+  var CANNOT = String.raw`i\s+(?:can(?:['’]t|not)|could(?:n['’]t|\s+not)|won['’]t|will\s+not)`;
+  var UNABLE = String.raw`i(?:['’]m|\s+am)\s+(?:unable|not\s+(?:able|permitted|allowed))\s+to` + String.raw`|i\s+do(?:n['’]t|\s+not)\s+have\s+(?:the\s+)?(?:ability|permission)\s+to`;
+  var FIRST_PERSON_REFUSAL_RE = new RegExp(
+    String.raw`^(?:(?:${APOLOGY})\b[,\s]*(?:but\s+)?)*` + String.raw`(?:i(?:['’]m| am) sorry[,.!]?\s*$` + String.raw`|(?:${CANNOT})(?:\s+(?:${REFUSAL_VERBS}))?[,.!]?\s*$` + String.raw`|(?:${UNABLE})\s+(?:${REFUSAL_VERBS})\b` + String.raw`|i do(?:n['’]t| not) know\s+(?:what|which|the|this|that|enough)\b` + String.raw`|(?:${CANNOT})\s+(?:${REFUSAL_VERBS})\s+${TASK_OBJECT})`,
+    "i"
+  );
+  function opensWithFirstPersonRefusal(text) {
+    if (typeof text !== "string") return false;
+    return FIRST_PERSON_REFUSAL_RE.test(text.trim());
+  }
+  var PASSIVE_REFUSAL_RE = new RegExp(
+    String.raw`^(?:(?:${APOLOGY})\b[,\s]*(?:but\s+)?)*` + String.raw`(?:this|that|the|your)\s+(?:${TASK_NOUN})\s+` + String.raw`(?:can(?:['’]t|not)|could(?:n['’]t|\s+not)|won['’]t|will\s+not)\s+be\s+` + String.raw`(?:translated|simplified|summari[sz]ed|rewritten|rephrased|restated|interpreted|rendered|processed)\b`,
+    "i"
+  );
+  function opensWithPassiveRefusal(text) {
+    if (typeof text !== "string") return false;
+    return PASSIVE_REFUSAL_RE.test(text.trim());
+  }
+  var WRAP_PAIRS = [['"', '"'], ["'", "'"], ["\u201C", "\u201D"], ["\u2018", "\u2019"], ["**", "**"], ["`", "`"]];
+  var LABEL_PREFIX_RE = /^[A-Za-z][A-Za-z-]*(?:\s+[A-Za-z][A-Za-z-]*)?:\s+(?=\S)/;
+  function unwrapOnce(value) {
+    for (const [open, close] of WRAP_PAIRS) {
+      if (value.length < open.length + close.length) continue;
+      if (!value.startsWith(open) || !value.endsWith(close)) continue;
+      const inner = value.slice(open.length, value.length - close.length);
+      const nested = inner.startsWith(open) && inner.endsWith(close);
+      if (inner.includes(open) && !nested) continue;
+      return inner.trim();
+    }
+    return value;
+  }
+  function cleanShortText(text) {
+    if (typeof text !== "string") return text;
+    let t = unwrapOnce(text.trim());
+    const unlabeled = t.replace(LABEL_PREFIX_RE, "");
+    if (unlabeled !== t) {
+      t = unwrapOnce(unlabeled);
+    }
+    return t;
+  }
+  var SHORT_NON_ANSWER_RE = /^(?:i(?:'m| am) not sure|i do not know|(?:i have )?no idea)\b/i;
+  function rejectShortText(text, maxChars = MAX_SHORT_TEXT_CHARS) {
+    if (typeof text !== "string") return "not a string";
+    const t = cleanShortText(text);
+    if (!t) return "empty";
+    if (t.length > maxChars) return `longer than ${maxChars} characters`;
+    if (/[\r\n]/.test(t)) return "contains a line break";
+    if (startsWithRefusal(t)) return "reads as a refusal";
+    if (opensWithFirstPersonRefusal(t) || opensWithPassiveRefusal(t)) return "reads as a refusal";
+    if (SHORT_NON_ANSWER_RE.test(straightenApostrophes(t))) return "reads as a refusal";
+    if (containsUncertainty(t)) return "reads as uncertain";
+    return null;
+  }
+  var RATIO_MIN_INPUT_CHARS = 16;
+  function rejectRewrite(output, input, { minRatio = 0, maxRatio = Infinity, minChars = 0 } = {}) {
+    if (typeof output !== "string") return "not a string";
+    const out = output.trim();
+    if (!out) return "empty";
+    if (opensWithFirstPersonRefusal(out) || opensWithPassiveRefusal(out)) return "reads as a refusal";
+    if (out.length < minChars) return `shorter than ${minChars} characters`;
+    const inLen = typeof input === "string" ? input.trim().length : 0;
+    if (inLen >= RATIO_MIN_INPUT_CHARS) {
+      if (out.length < inLen * minRatio) return `shorter than ${minRatio} of the input`;
+      if (out.length > inLen * maxRatio) return `longer than ${maxRatio} times the input`;
+    }
+    return null;
+  }
+
   // tools/adapters/translate-page.js
   var BLOCK_SEL = "p, li, h1, h2, h3, h4, h5, h6, blockquote, figcaption, caption, dd, dt, th, td, summary";
   var SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="true"]';
   var MAX_BLOCKS = 80;
   var BATCH = 4;
+  var MIN_TRANSLATED_RATIO = 0.1;
+  var MAX_TRANSLATED_RATIO = 8;
   var TranslatePage = {
     enabled: false,
     translated: null,
@@ -2552,10 +2645,16 @@ ${scope(":focus")} {
           let out;
           try {
             out = await translateText(original, this.targetLang);
-          } catch {
+          } catch (e) {
+            console.warn("[AI4A11y] Translate: left a block untouched, provider error:", e);
             return;
           }
-          if (!out || !this.enabled || !el.isConnected) return;
+          if (out == null || !this.enabled || !el.isConnected) return;
+          const rejected = rejectRewrite(out, original, { minRatio: MIN_TRANSLATED_RATIO, maxRatio: MAX_TRANSLATED_RATIO });
+          if (rejected) {
+            console.warn(`[AI4A11y] Translate: left a block untouched, rejected model output (${rejected})`);
+            return;
+          }
           const originalNodes = [...el.childNodes];
           el.textContent = out;
           this.translated.add({ el, originalNodes });
@@ -2850,7 +2949,8 @@ ${scope(":focus")} {
         let def2;
         try {
           def2 = await defineWord(word, this.sentenceContext(span));
-        } catch {
+        } catch (e) {
+          console.warn("[AI4A11y] Define Words: no definition shown, provider error:", e);
           def2 = null;
         }
         if (!this.enabled || !this.definitions) return;
@@ -3619,6 +3719,8 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
 
   // tools/adapters/describe-on-demand.js
   var DescribeOnDemand = {
+    // Shown when the provider throws. Fixed on purpose; see describe() below.
+    PROVIDER_ERROR_TEXT: "No description is available. The AI provider reported an error; check its settings and try again.",
     styleId: "ai4a11y-describe-styles",
     enabled: false,
     panel: null,
@@ -3680,7 +3782,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       }
       const token = ++this._reqSeq;
       this.show("Describing\u2026");
-      let desc = null, errMsg = null;
+      let desc = null, failed = false;
       try {
         if (el.tagName === "IMG" && (el.currentSrc || el.src)) {
           const dataUrl = await imageToDataUrl(el);
@@ -3700,11 +3802,12 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
           else desc = label || text || `A ${el.tagName.toLowerCase()} with no readable content.`;
         }
       } catch (e) {
+        console.warn("[AI4A11y] Describe: no description shown, provider error:", e);
         desc = null;
-        errMsg = e && e.message ? e.message : null;
+        failed = true;
       }
       if (token !== this._reqSeq) return;
-      this.show(desc || errMsg || "No description is available for that element.");
+      this.show(desc || (failed ? this.PROVIDER_ERROR_TEXT : "No description is available for that element."));
     },
     show(text) {
       if (!this.panel) {
@@ -4853,19 +4956,19 @@ ${scope} table {
       }
       const token = ++this._reqSeq;
       this.showMessage("Reading chart data\u2026");
-      let data = null, errMsg = null;
+      let data = null;
       try {
         const dataUrl = await this.capture(chart);
         data = dataUrl ? await extractChartData(dataUrl, this.contextText(chart)) : null;
       } catch (e) {
+        console.warn("[AI4A11y] Explore a Chart: no table shown, provider error:", e);
         data = null;
-        errMsg = e && e.message ? e.message : null;
       }
       if (token !== this._reqSeq || !this.enabled) return;
       if (data && Array.isArray(data.headers) && Array.isArray(data.rows)) {
         this.showTable(data);
       } else {
-        this.showMessage(errMsg || "Couldn't read this chart's data. Check that your AI key is set in the extension settings.");
+        this.showMessage("Couldn't read this chart's data. Check that your AI key is set in the extension settings.");
       }
     },
     // A data URL of the chart's pixels, whatever it is rendered with.
@@ -5955,8 +6058,6 @@ ${scope} table {
   });
   var incrementStat2 = globalThis.ai4a11yIncrementStat || (() => {
   });
-  var REFUSAL_PREFIXES = ["I cannot", "I'm unable", "I am unable", "Sorry", "I cannot describe", "Unfortunately"];
-  var UNCERTAINTY_TERMS = ["unsure", "I don't know", "unclear", "I cannot tell", "cannot determine"];
   var GENERIC_JUNK = /* @__PURE__ */ new Set(["image", "picture", "photo", "photograph", "graphic", "icon", "logo", "img"]);
   function isConfidentDescription(text) {
     if (typeof text !== "string") return false;
@@ -6219,7 +6320,6 @@ ${scope} table {
   function isJunkName(name) {
     return !name || JUNK_NAME_RE.test(name.trim());
   }
-  var REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|n\/a|unknown|no label|not (sure|available)|unsure)/i;
   function isValidLabel(label) {
     if (!label || typeof label !== "string") return false;
     const trimmed = label.trim();
@@ -6533,10 +6633,21 @@ ${chunk}
   };
 
   // tools/adapters/simplify-text.js
+  var MIN_SIMPLIFIED_RATIO = 0.3;
+  var MAX_SIMPLIFIED_RATIO = 2;
+  var MAX_SUMMARY_RATIO = 1;
+  var MIN_SUMMARY_CHARS = 20;
   var logFix12 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
   });
+  var NOT_PROSE_SEL = 'style, script, noscript, template, [hidden], [aria-hidden="true"]';
+  function proseText(element) {
+    if (!element || typeof element.cloneNode !== "function") return "";
+    const clone = element.cloneNode(true);
+    clone.querySelectorAll(NOT_PROSE_SEL).forEach((n) => n.remove());
+    return clone.textContent?.trim() || "";
+  }
   async function simplifyText2(element) {
     if (element.dataset.ai4a11ySimplified) return null;
     element.dataset.ai4a11ySimplified = "pending";
@@ -6544,14 +6655,18 @@ ${chunk}
       element.dataset.ai4a11ySimplified = "skipped";
       return null;
     }
-    const originalText = element.textContent?.trim();
+    const originalText = proseText(element);
     if (!originalText || originalText.length < 100 || originalText.length > 1e4) {
       element.dataset.ai4a11ySimplified = "skipped";
       return null;
     }
     try {
       const simplified = await simplifyText(originalText);
-      if (simplified) {
+      const rejected = simplified == null ? null : rejectRewrite(simplified, originalText, { minRatio: MIN_SIMPLIFIED_RATIO, maxRatio: MAX_SIMPLIFIED_RATIO });
+      if (rejected) {
+        console.warn(`[AI4A11y] simplifyText: rejected model output (${rejected})`);
+      }
+      if (simplified && !rejected) {
         element.dataset.ai4a11yOriginal = originalText;
         element.classList.add("ai4a11y-simplified");
         const originalWrapper = document.createElement("span");
@@ -6607,14 +6722,19 @@ ${chunk}
       element.dataset.ai4a11ySummarize = "skipped";
       return null;
     }
-    const text = element.textContent?.trim();
+    const text = proseText(element);
     if (!text || text.length < 500) {
       element.dataset.ai4a11ySummarize = "skipped";
       return null;
     }
     try {
-      const summary = await summarizeText(text.substring(0, 3e3));
-      if (summary) {
+      const excerpt = text.substring(0, 3e3);
+      const summary = await summarizeText(excerpt);
+      const rejected = summary == null ? null : startsWithRefusal(summary) ? "reads as a refusal" : rejectRewrite(summary, excerpt, { maxRatio: MAX_SUMMARY_RATIO, minChars: MIN_SUMMARY_CHARS });
+      if (rejected) {
+        console.warn(`[AI4A11y] summarizeContent: rejected model output (${rejected})`);
+      }
+      if (summary && !rejected) {
         const summaryBox = document.createElement("div");
         summaryBox.className = "ai4a11y-summary-box";
         summaryBox.setAttribute("role", "region");
@@ -7084,8 +7204,12 @@ ${chunk}
     const text = getAccessibleName(link);
     const context = link.closest("p, li, td, article, section")?.textContent?.trim().substring(0, 200) || "";
     try {
-      const improved = await improveLinkText(text, link.href, context);
-      if (improved && improved.toLowerCase() !== text.toLowerCase()) {
+      const answer = await improveLinkText(text, link.href, context);
+      const rejected = answer == null ? null : rejectShortText(answer);
+      const improved = rejected || answer == null ? null : cleanShortText(answer);
+      if (rejected) {
+        console.warn(`[AI4A11y] improveAmbiguousLink: rejected model output (${rejected})`);
+      } else if (improved && improved.toLowerCase() !== text.toLowerCase()) {
         link.setAttribute("aria-label", improved);
         link.classList.add("ai4a11y-adapted");
         markProcessed(link, "done");
@@ -7155,7 +7279,12 @@ ${chunk}
       const headers = [];
       for (let col = 0; col < columnCount; col++) {
         const samples = rows.slice(0, 5).map((r) => r.querySelectorAll("td")[col]?.textContent?.trim()).filter(Boolean);
-        const header = col < MAX_AI_COLUMNS && samples.length >= 2 ? await inferColumnHeader(samples) : null;
+        const answer = col < MAX_AI_COLUMNS && samples.length >= 2 ? await inferColumnHeader(samples) : null;
+        const rejected = answer == null ? null : rejectShortText(answer);
+        if (rejected) {
+          console.warn(`[AI4A11y] fixTableHeaders: rejected model output for column ${col + 1} (${rejected})`);
+        }
+        const header = rejected || answer == null ? null : cleanShortText(answer);
         headers.push(header || `Column ${col + 1}`);
       }
       const thead = document.createElement("thead");
@@ -8209,7 +8338,7 @@ ${chunk}
       results.textProcessing = results.textProcessing || {};
       results.textProcessing.simplify = complexText.map((el) => ({
         selector: getSelector(el),
-        textLength: el.textContent?.length || 0
+        textLength: proseText(el).length
       }));
     }
     if (settings2.autoSummarize) {
@@ -8217,7 +8346,7 @@ ${chunk}
       results.textProcessing = results.textProcessing || {};
       results.textProcessing.summarize = longContent.map((el) => ({
         selector: getSelector(el),
-        textLength: el.textContent?.length || 0
+        textLength: proseText(el).length
       }));
     }
     return results;
@@ -8253,7 +8382,8 @@ ${chunk}
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.dataset.ai4a11ySimplified) return false;
       if (el.querySelector("p, div, article, section")) return false;
-      const text = el.textContent?.trim() || "";
+      if ((el.textContent?.length || 0) <= COMPLEX_TEXT_MIN_CHARS) return false;
+      const text = proseText(el);
       return text.length > COMPLEX_TEXT_MIN_CHARS && text.split(/[.!?]/).some((s) => s.trim().split(/\s+/).length > COMPLEX_SENTENCE_MIN_WORDS);
     }).slice(0, 10);
   }
@@ -8262,7 +8392,8 @@ ${chunk}
       if (el.dataset.ai4a11ySummarized) return false;
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.closest("[data-ai4a11y-summarized]")) return false;
-      const text = el.textContent?.trim() || "";
+      if ((el.textContent?.length || 0) <= 500) return false;
+      const text = proseText(el);
       return text.length > 500;
     }).slice(0, 5);
   }

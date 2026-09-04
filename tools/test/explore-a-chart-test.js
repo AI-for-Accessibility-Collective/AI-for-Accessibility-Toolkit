@@ -85,6 +85,27 @@ async function run() {
     ExploreAChart.disable();
   }
 
+  // A thrown provider error shows the same fixed fallback, never the
+  // provider's text (it can carry internal detail and is read aloud), and
+  // is logged.
+  {
+    const doc = mount('<canvas id="c3"></canvas>');
+    setAIProvider({ extractChartData: async () => { throw new Error('Gemini API key not set. token=abc123'); }, announce() {} });
+    doc.getElementById('c3').toDataURL = () => 'data:image/png;base64,iVBORw0KGgo=';
+    const warnings = [];
+    const realWarn = console.warn;
+    console.warn = (...a) => { warnings.push(a.map(String).join(' ')); };
+    ExploreAChart.enable();
+    doc.querySelector('.ai4a11y-chart-btn').dispatchEvent(new doc.defaultView.MouseEvent('click', { bubbles: true }));
+    await tick(); await tick();
+    console.warn = realWarn;
+    const panel = doc.getElementById('ai4a11y-chart-panel');
+    check('chart: a thrown provider error shows the fixed fallback message', !!panel && panel.textContent.includes("Couldn't read this chart's data"));
+    check('chart: the provider\'s error text is not shown in the panel', !!panel && !panel.textContent.includes('Gemini') && !panel.textContent.includes('abc123'));
+    check('chart: the provider error is logged', warnings.some(w => w.includes('abc123')));
+    ExploreAChart.disable();
+  }
+
   // Idempotency + double-disable safety.
   {
     const doc = mount('<canvas></canvas>');

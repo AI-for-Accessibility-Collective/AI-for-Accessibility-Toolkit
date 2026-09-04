@@ -80,21 +80,29 @@ async function run() {
     check('describe: double disable is safe', DescribeOnDemand.enabled === false);
   }
 
-  // A provider failure (e.g. a missing API key) is SHOWN to the user, not
-  // swallowed into a blank "no description".
+  // A provider failure is not swallowed into a blank panel, and its message
+  // is not shown either: a host's error text can carry internal detail and
+  // the panel is read aloud. The panel gets a fixed sentence; the error is
+  // logged (ai.js contract: a thrown error is handled like null and logged).
   {
     const doc = mount('<p id="para" tabindex="-1">' + 'A long paragraph that goes to the summarizer path. '.repeat(3) + '</p>');
     setAIProvider({
-      summarizeText: async () => { throw new Error('Gemini API key not set. Open extension settings.'); },
+      summarizeText: async () => { throw new Error('Gemini API key not set. Open extension settings. token=abc123'); },
       describeImage: async () => null,
       announce() {},
     });
+    const warnings = [];
+    const realWarn = console.warn;
+    console.warn = (...a) => { warnings.push(a.map(String).join(' ')); };
     DescribeOnDemand.enable();
     doc.getElementById('para').focus();
     doc.dispatchEvent(new doc.defaultView.KeyboardEvent('keydown', { code: 'KeyD', key: 'd', altKey: true }));
     await tick(); await tick();
+    console.warn = realWarn;
     const panel = doc.getElementById('ai4a11y-describe-panel');
-    check('describe: a provider error message is surfaced to the user', !!panel && panel.textContent.includes('Gemini API key not set'));
+    check('describe: a provider error shows the fixed unavailable sentence', !!panel && panel.textContent.includes(DescribeOnDemand.PROVIDER_ERROR_TEXT) && DescribeOnDemand.PROVIDER_ERROR_TEXT.length > 0);
+    check('describe: the provider\'s error text is not shown in the panel', !!panel && !panel.textContent.includes('Gemini') && !panel.textContent.includes('abc123'));
+    check('describe: the provider error is logged', warnings.some(w => w.includes('abc123')));
     DescribeOnDemand.disable();
   }
 }

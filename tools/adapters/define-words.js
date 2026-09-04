@@ -193,7 +193,10 @@ export const DefineWords = {
     } else {
       let def2;
       try { def2 = await defineWord(word, this.sentenceContext(span)); }
-      catch { def2 = null; }  // provider failure → same as unavailable
+      catch (e) {  // provider failure: same as unavailable, and say why
+        console.warn('[AI4A11y] Define Words: no definition shown, provider error:', e);
+        def2 = null;
+      }
       if (!this.enabled || !this.definitions) return;  // disabled mid-flight
       this.definitions.set(key, def2 || null);
       def = def2;

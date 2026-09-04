@@ -1,6 +1,7 @@
 import { inferLabel } from '../utils/ai.js';
 import { markProcessed, hasAccessibleName, isVisible } from '../utils/dom.js';
 import { IFRAME_PATTERNS } from '../constants.js';
+import { REFUSAL_RE } from '../utils/ai-output.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -20,9 +21,9 @@ export function isJunkName(name) {
 // AI confidence gate for inferLabel output — 1-60 chars, no newlines, not a
 // refusal. Mirrors the trust tiering used for AI-generated alt text: an
 // unfiltered "I cannot determine this" written as aria-label is worse than
-// leaving the element unlabeled.
+// leaving the element unlabeled. REFUSAL_RE is shared with the other output
+// gates via utils/ai-output.js; the check here is unchanged.
 // ---------------------------------------------------------------------------
-const REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|n\/a|unknown|no label|not (sure|available)|unsure)/i;
 
 export function isValidLabel(label) {
   if (!label || typeof label !== 'string') return false;

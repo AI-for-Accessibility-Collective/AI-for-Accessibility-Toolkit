@@ -2,6 +2,7 @@
 import { describeImage, describeVideo } from '../utils/ai.js';
 import { imageToDataUrl, captureVideoFrames } from '../utils/image.js';
 import { markProcessed } from '../utils/dom.js';
+import { REFUSAL_PREFIXES, UNCERTAINTY_TERMS } from '../utils/ai-output.js';
 
 // Stats tracking (injected by extension)
 const logFix = globalThis.ai4a11yLogFix || (() => {});
@@ -13,10 +14,13 @@ const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
 // returns junk ("image", "photo") instead of a real description; writing that
 // straight into `alt` is worse than leaving the image unlabeled (it reads to
 // a screen reader as false confidence). Every generate* function below runs
-// its result through this gate first.
+// its result through this gate first. The refusal and uncertainty lists are
+// shared with the other output gates via utils/ai-output.js; the checks here
+// are unchanged.
+// FLAG(review): this gate matches its prefixes case-sensitively, so a
+// lowercase "sorry, ..." passes it, while rejectShortText() in ai-output.js
+// is case-insensitive. Left as it was to keep this gate's behavior unchanged.
 // ---------------------------------------------------------------------------
-const REFUSAL_PREFIXES = ['I cannot', "I'm unable", 'I am unable', 'Sorry', 'I cannot describe', 'Unfortunately'];
-const UNCERTAINTY_TERMS = ['unsure', "I don't know", 'unclear', 'I cannot tell', 'cannot determine'];
 const GENERIC_JUNK = new Set(['image', 'picture', 'photo', 'photograph', 'graphic', 'icon', 'logo', 'img']);
 
 // Exported for unit tests.

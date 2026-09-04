@@ -166,17 +166,23 @@ export const ExploreAChart = {
     const token = ++this._reqSeq; // a slow answer for an earlier chart must
                                   // not overwrite the answer for a newer one.
     this.showMessage('Reading chart data…');
-    let data = null, errMsg = null;
+    let data = null;
     try {
       const dataUrl = await this.capture(chart);
       data = dataUrl ? await extractChartData(dataUrl, this.contextText(chart)) : null;
-    } catch (e) { data = null; errMsg = (e && e.message) ? e.message : null; }
+    } catch (e) {
+      // The provider's own text is not shown: a host's error message can
+      // carry internal detail (an endpoint, a key fragment, a stack), and
+      // the panel is read aloud. It goes to the console; the panel gets the
+      // same fixed sentence a null answer gets.
+      console.warn('[AI4A11y] Explore a Chart: no table shown, provider error:', e);
+      data = null;
+    }
     if (token !== this._reqSeq || !this.enabled) return; // superseded, or disabled mid-flight
     if (data && Array.isArray(data.headers) && Array.isArray(data.rows)) {
       this.showTable(data);
     } else {
-      // Prefer the provider's real reason (e.g. a missing API key) when there is one.
-      this.showMessage(errMsg || "Couldn't read this chart's data. Check that your AI key is set in the extension settings.");
+      this.showMessage("Couldn't read this chart's data. Check that your AI key is set in the extension settings.");
     }
   },
 
