@@ -5262,6 +5262,96 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11ySkipLinks = SkipLinks;
 
+  // tools/utils/dom.js
+  function isVisible(el) {
+    if (!el) return false;
+    const style = getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    if (parseFloat(style.opacity) === 0) return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }
+  function getAccessibleName(el) {
+    return getLabelledByText(el) || (el.getAttribute("aria-label") || "").trim() || getNativeName(el) || getNameFromContent(el) || (el.getAttribute("title") || "").trim() || getDefaultName(el);
+  }
+  function hasAccessibleName(el) {
+    return !!getAccessibleName(el);
+  }
+  function getLabelledByText(el) {
+    const attr = el.getAttribute("aria-labelledby");
+    if (!attr) return "";
+    return attr.split(/\s+/).map((id) => {
+      const target = document.getElementById(id);
+      return target ? nameOfReferenced(target) : "";
+    }).filter(Boolean).join(" ");
+  }
+  function nameOfReferenced(el) {
+    return (el.getAttribute("aria-label") || "").trim() || getNativeName(el) || getEmbeddedValue(el) || getNameFromContent(el) || (el.getAttribute("title") || "").trim() || getDefaultName(el);
+  }
+  function getNativeName(el) {
+    const tag = el.localName;
+    if (tag === "img" || tag === "area") return (el.getAttribute("alt") || "").trim();
+    if (tag === "input") {
+      const type = (el.getAttribute("type") || "text").toLowerCase();
+      if (type === "image") return (el.getAttribute("alt") || "").trim();
+      if (type === "submit" || type === "reset" || type === "button") return (el.value || "").trim();
+    }
+    return "";
+  }
+  function getDefaultName(el) {
+    if (el.localName !== "input") return "";
+    const type = (el.getAttribute("type") || "text").toLowerCase();
+    if (type === "submit") return "Submit";
+    if (type === "reset") return "Reset";
+    return "";
+  }
+  function getEmbeddedValue(el) {
+    const tag = el.localName;
+    if (tag === "textarea") return (el.value || "").trim();
+    if (tag === "select") return Array.from(el.selectedOptions || []).map((o) => o.textContent.trim()).join(" ").trim();
+    if (tag === "input") {
+      const type = (el.getAttribute("type") || "text").toLowerCase();
+      if (!["submit", "reset", "button", "image", "hidden", "checkbox", "radio"].includes(type)) return (el.value || "").trim();
+    }
+    return "";
+  }
+  var NO_NAME_FROM_CONTENT = /* @__PURE__ */ new Set(["input", "select", "textarea", "iframe"]);
+  function getNameFromContent(el) {
+    if (NO_NAME_FROM_CONTENT.has(el.localName)) return "";
+    const parts = [];
+    const walk = (node) => {
+      for (const child of node.childNodes) {
+        if (child.nodeType === 3) {
+          parts.push(child.nodeValue);
+          continue;
+        }
+        if (child.nodeType !== 1) continue;
+        if (child.getAttribute("aria-hidden") === "true") continue;
+        const label = child.getAttribute("aria-label");
+        if (label && label.trim()) {
+          parts.push(label);
+          continue;
+        }
+        if (child.localName === "img" || child.localName === "area") {
+          parts.push(child.getAttribute("alt") || "");
+          continue;
+        }
+        walk(child);
+      }
+    };
+    walk(el);
+    return parts.join(" ").replace(/\s+/g, " ").trim();
+  }
+  function looksLikeNavClass(el) {
+    return Array.from(el.classList || []).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
+  }
+  function markProcessed(el, status = "done") {
+    el.dataset.ai4a11yProcessed = status;
+  }
+  function wasProcessed(el) {
+    return !!el.dataset.ai4a11yProcessed;
+  }
+
   // tools/adapters/math-a11y.js
   var logFix6 = globalThis.ai4a11yLogFix || (() => {
   });
@@ -5272,11 +5362,10 @@ ${scope} table {
   var MAX_DEPTH = 20;
   var LEAF_TAGS = /* @__PURE__ */ new Set(["mi", "mn", "mo", "mtext", "ms"]);
   var SKIP_TAGS3 = /* @__PURE__ */ new Set(["annotation", "annotation-xml", "mphantom"]);
-  function hasAccessibleName(el) {
+  function hasAccessibleName2(el) {
     const label = el.getAttribute("aria-label");
     if (label && label.trim()) return true;
-    const labelledby = el.getAttribute("aria-labelledby");
-    return !!(labelledby && labelledby.trim());
+    return !!getLabelledByText(el);
   }
   function serializeMath(el, depth = 0) {
     if (depth > MAX_DEPTH) return "";
@@ -5384,7 +5473,7 @@ ${scope} table {
       for (const math of document.querySelectorAll("math")) {
         if (this.records.length >= this.cap) break;
         if (math.getAttribute("aria-hidden") === "true") continue;
-        if (hasAccessibleName(math)) continue;
+        if (hasAccessibleName2(math)) continue;
         const attrs = [];
         this.setTracked(math, "aria-label", deriveLabel(math), attrs);
         if (!math.hasAttribute("role")) this.setTracked(math, "role", "math", attrs);
@@ -5751,35 +5840,6 @@ ${scope} table {
     }
   };
   if (typeof window !== "undefined") window.__ai4a11yShowCaptions = ShowCaptions;
-
-  // tools/utils/dom.js
-  function isVisible(el) {
-    if (!el) return false;
-    const style = getComputedStyle(el);
-    if (style.display === "none" || style.visibility === "hidden") return false;
-    if (parseFloat(style.opacity) === 0) return false;
-    const rect = el.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 0;
-  }
-  function hasAccessibleName2(el) {
-    if (el.getAttribute("aria-label")) return true;
-    if (el.getAttribute("title")) return true;
-    if (el.textContent?.trim()) return true;
-    return !!getLabelledByText(el);
-  }
-  function getLabelledByText(el) {
-    const ids = (el.getAttribute("aria-labelledby") || "").trim().split(/\s+/).filter(Boolean);
-    return ids.map((id) => document.getElementById(id)?.textContent?.trim() || "").filter(Boolean).join(" ");
-  }
-  function looksLikeNavClass(el) {
-    return Array.from(el.classList || []).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
-  }
-  function markProcessed(el, status = "done") {
-    el.dataset.ai4a11yProcessed = status;
-  }
-  function wasProcessed(el) {
-    return !!el.dataset.ai4a11yProcessed;
-  }
 
   // tools/adapters/fix-landmarks.js
   var logFix8 = globalThis.ai4a11yLogFix || (() => {
@@ -6164,7 +6224,7 @@ ${scope} table {
   async function generateLinkLabel(link) {
     if (link.dataset.ai4a11yProcessed) return null;
     if (!isVisible(link)) return null;
-    if (hasAccessibleName2(link)) return null;
+    if (hasAccessibleName(link)) return null;
     markProcessed(link, "pending");
     const href = link.href || "";
     const existingText = link.textContent?.trim() || "";
@@ -6196,7 +6256,7 @@ ${scope} table {
   async function generateButtonLabel(button) {
     if (button.dataset.ai4a11yProcessed) return null;
     if (!isVisible(button)) return null;
-    if (hasAccessibleName2(button)) return null;
+    if (hasAccessibleName(button)) return null;
     markProcessed(button, "pending");
     const inferred = inferButtonLabel(button);
     if (inferred) {
@@ -6233,7 +6293,7 @@ ${scope} table {
   async function generateIframeTitle(iframe) {
     if (iframe.dataset.ai4a11yProcessed) return null;
     if (!isVisible(iframe)) return null;
-    if (hasAccessibleName2(iframe)) return null;
+    if (hasAccessibleName(iframe)) return null;
     markProcessed(iframe, "pending");
     const src = iframe.src || "";
     for (const [pattern, title] of Object.entries(IFRAME_PATTERNS)) {
@@ -6263,7 +6323,7 @@ ${scope} table {
   async function generateFormLabel(input) {
     if (input.dataset.ai4a11yProcessed) return null;
     if (!isVisible(input)) return null;
-    if (hasAccessibleName2(input)) return null;
+    if (hasAccessibleName(input)) return null;
     markProcessed(input, "pending");
     if (input.placeholder && !isJunkName(input.placeholder)) {
       const label = input.placeholder.trim();
@@ -7192,14 +7252,14 @@ ${chunk}
     return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
       if (wasProcessed(link)) return false;
       if (!isVisible(link)) return false;
-      return !hasAccessibleName2(link);
+      return !hasAccessibleName(link);
     });
   }
   function findAmbiguousLinks() {
     return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
       if (wasProcessed(link)) return false;
       if (!isVisible(link)) return false;
-      const text = link.textContent?.trim().toLowerCase();
+      const text = getAccessibleName(link).toLowerCase();
       return text && AMBIGUOUS_LINK_TEXTS.includes(text);
     });
   }
@@ -7211,7 +7271,7 @@ ${chunk}
     return buttons.filter((btn) => {
       if (wasProcessed(btn)) return false;
       if (!isVisible(btn)) return false;
-      return !hasAccessibleName2(btn);
+      return !hasAccessibleName(btn);
     });
   }
   function findUnlabeledInputs() {
@@ -7220,14 +7280,12 @@ ${chunk}
       if (wasProcessed(input)) return false;
       if (!isVisible(input)) return false;
       if (input.type === "hidden") return false;
-      if (input.getAttribute("aria-label")) return false;
-      if (getLabelledByText(input)) return false;
+      if (getAccessibleName(input)) return false;
       if (input.id) {
         const label = document.querySelector(`label[for="${CSS.escape(input.id)}"]`);
         if (label) return false;
       }
       if (input.closest("label")) return false;
-      if (input.title) return false;
       return true;
     });
   }
