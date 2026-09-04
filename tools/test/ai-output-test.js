@@ -176,6 +176,17 @@ check('rewrite: a 15-character input skips the ratio checks', rejectRewrite('x',
 check('rewrite: a 16-character input is held to the ratio', rejectRewrite('x', 'a'.repeat(16), { minRatio: 0.5 }) === 'shorter than 0.5 of the input');
 check('rewrite: a short input padded with whitespace still skips the ratio', rejectRewrite('x', '   ' + 'a'.repeat(15) + '   ', { minRatio: 0.5 }) === null);
 check('rewrite: a refusal for a short input is still rejected', rejectRewrite('I cannot translate this.', '目录') === 'reads as a refusal');
+// An absolute floor, for a task with no ratio floor (a summary).
+check('rewrite: minChars rejects a shorter answer', rejectRewrite('Ok.', INPUT, { minChars: 20 }) === 'shorter than 20 characters');
+check('rewrite: minChars accepts an answer of exactly that length', rejectRewrite('a'.repeat(20), INPUT, { minChars: 20 }) === null);
+check('rewrite: minChars is measured after trimming', rejectRewrite('  ' + 'a'.repeat(19) + '  ', INPUT, { minChars: 20 }) === 'shorter than 20 characters');
+check('rewrite: with no minChars a short answer passes', rejectRewrite('Ok.', INPUT) === null);
+// A refusal in the passive voice is about the task too.
+check('rewrite: "This text cannot be summarized." is a refusal', rejectRewrite('This text cannot be summarized.', INPUT) === 'reads as a refusal');
+check('rewrite: "The passage could not be translated." is a refusal', rejectRewrite('The passage could not be translated.', INPUT) === 'reads as a refusal');
+check('rewrite: "This content can\'t be simplified further." is a refusal', rejectRewrite("This content can't be simplified further.", INPUT) === 'reads as a refusal');
+check('rewrite: "This text cannot be read aloud in court." is content', rejectRewrite('This text cannot be read aloud in court. '.repeat(3), INPUT) === null);
+check('rewrite: "The page cannot be printed." is content', rejectRewrite('The page cannot be printed without a login. '.repeat(3), INPUT) === null);
 
 // ── pins on the two pre-existing gates ───────────────────────────────────────
 check('alt gate: a real description passes', isConfidentDescription('A red bicycle leaning against a brick wall.'));

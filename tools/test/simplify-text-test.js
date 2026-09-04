@@ -129,6 +129,23 @@ async function run() {
     const { el, result } = await summarizeWith(LONG + ' ' + LONG);
     check('summarize: a "summary" longer than the text adds no summary box', result === null && !el.querySelector('.ai4a11y-summary-box'));
   }
+  // A summary has no ratio floor, so a short non-answer needs its own checks:
+  // an absolute floor, the shared refusal prefixes, and the passive form.
+  for (const [what, answer] of [
+    ['"Sorry."', 'Sorry.'],
+    ['"N/A"', 'N/A'],
+    ['"Unknown"', 'Unknown'],
+    ['"This text cannot be summarized."', 'This text cannot be summarized.'],
+    ['a three-character answer', 'Ok.'],
+    ['a 19-character answer', 'a'.repeat(19)],
+  ]) {
+    const { el, result } = await summarizeWith(answer);
+    check(`summarize: ${what} adds no summary box`, result === null && !el.querySelector('.ai4a11y-summary-box') && el.dataset.ai4a11ySummarize === 'failed');
+  }
+  {
+    const { el, result } = await summarizeWith('a'.repeat(20));
+    check('summarize: a 20-character answer is applied (the floor)', result !== null && !!el.querySelector('.ai4a11y-summary-box'));
+  }
 }
 
 run().then(() => {

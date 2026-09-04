@@ -109,6 +109,22 @@ export function opensWithFirstPersonRefusal(text) {
   return FIRST_PERSON_REFUSAL_RE.test(text.trim());
 }
 
+// The same refusal in the passive voice: "This text cannot be summarized."
+// The subject must be a task noun and the participle a task verb, so "The
+// page cannot be printed" is content.
+const PASSIVE_REFUSAL_RE = new RegExp(
+  String.raw`^(?:(?:${APOLOGY})\b[,\s]*(?:but\s+)?)*`
+  + String.raw`(?:this|that|the|your)\s+(?:${TASK_NOUN})\s+`
+  + String.raw`(?:can(?:['’]t|not)|could(?:n['’]t|\s+not)|won['’]t|will\s+not)\s+be\s+`
+  + String.raw`(?:translated|simplified|summari[sz]ed|rewritten|rephrased|restated|interpreted|rendered|processed)\b`,
+  'i',
+);
+
+export function opensWithPassiveRefusal(text) {
+  if (typeof text !== 'string') return false;
+  return PASSIVE_REFUSAL_RE.test(text.trim());
+}
+
 // One layer of the wrapping a model adds to a short value despite the
 // contract in ai.js: matching straight or curly quotes, ** or backticks, and
 // a one- or two-word label ("Header: City", "Link text: Open the report").
@@ -163,12 +179,15 @@ export const RATIO_MIN_INPUT_CHARS = 16;
 // because the right length depends on the task: a simplification is a bit
 // shorter, a translation into another script can be much shorter or longer,
 // a summary is short by design. Each adapter passes the band that fits it.
-// Newlines are allowed: this is passage text, not an attribute.
-export function rejectRewrite(output, input, { minRatio = 0, maxRatio = Infinity } = {}) {
+// Newlines are allowed: this is passage text, not an attribute. minChars is
+// an absolute floor for a task that has no ratio floor: a summary is short
+// by design, but "Ok." is not a summary.
+export function rejectRewrite(output, input, { minRatio = 0, maxRatio = Infinity, minChars = 0 } = {}) {
   if (typeof output !== 'string') return 'not a string';
   const out = output.trim();
   if (!out) return 'empty';
-  if (opensWithFirstPersonRefusal(out)) return 'reads as a refusal';
+  if (opensWithFirstPersonRefusal(out) || opensWithPassiveRefusal(out)) return 'reads as a refusal';
+  if (out.length < minChars) return `shorter than ${minChars} characters`;
   const inLen = typeof input === 'string' ? input.trim().length : 0;
   if (inLen >= RATIO_MIN_INPUT_CHARS) {
     if (out.length < inLen * minRatio) return `shorter than ${minRatio} of the input`;

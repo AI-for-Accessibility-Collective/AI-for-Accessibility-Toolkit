@@ -1,16 +1,20 @@
 import { simplifyText as aiSimplifyText, summarizeText as aiSummarizeText } from '../utils/ai.js';
-import { rejectRewrite } from '../utils/ai-output.js';
+import { rejectRewrite, startsWithRefusal } from '../utils/ai-output.js';
 
 // Output gate bands. A plain-language rewrite does get shorter, since it
 // drops jargon and filler, but a result under this share of the input has
 // almost certainly dropped ideas, and the reader cannot see what is missing.
 // A result over this multiple of the input is not a simplification either;
 // it is usually preamble or explanation. A summary is short by design, so
-// it has no floor, but it cannot be longer than the text it summarizes.
-// FLAG(review): 0.3, 2 and 1 are judgment calls with no measured basis yet.
+// it has no ratio floor, but it cannot be longer than the text it
+// summarizes, and it has a small absolute floor: "Ok." or "N/A" is not a
+// summary, and with no ratio floor nothing else would stop it from becoming
+// the Summary region.
+// FLAG(review): 0.3, 2, 1 and 20 are judgment calls with no measured basis yet.
 const MIN_SIMPLIFIED_RATIO = 0.3;
 const MAX_SIMPLIFIED_RATIO = 2;
 const MAX_SUMMARY_RATIO = 1;
+const MIN_SUMMARY_CHARS = 20;
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -124,8 +128,12 @@ export async function summarizeContent(element) {
     const excerpt = text.substring(0, 3000);
     const summary = await aiSummarizeText(excerpt);
 
+    // A summary is short, so the shared refusal prefixes ("Sorry", "N/A",
+    // "Unknown") are checked too; for a passage that short they are far
+    // more likely a non-answer than the first word of content.
     const rejected = summary == null ? null
-      : rejectRewrite(summary, excerpt, { maxRatio: MAX_SUMMARY_RATIO });
+      : (startsWithRefusal(summary) ? 'reads as a refusal'
+        : rejectRewrite(summary, excerpt, { maxRatio: MAX_SUMMARY_RATIO, minChars: MIN_SUMMARY_CHARS }));
     if (rejected) {
       console.warn(`[AI4A11y] summarizeContent: rejected model output (${rejected})`);
     }

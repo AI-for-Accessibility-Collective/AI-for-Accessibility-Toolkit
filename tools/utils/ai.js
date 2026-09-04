@@ -156,9 +156,10 @@ export async function generateLabels(context) {
  * Consumed by simplify-text.js, which inserts the result in a labeled
  * "Summary" region before the content, and by describe-on-demand.js, which
  * shows it in a panel. simplify-text.js gates the answer with
- * rejectRewrite(): a string, not empty, not opening with a first-person
- * refusal, and not longer than the text it summarizes. There is no floor: a
- * summary is short by design.
+ * rejectRewrite(): a string, at least 20 characters, not opening with a
+ * refusal (the shared prefixes as well as the first-person and passive
+ * forms), and not longer than the text it summarizes. There is no ratio
+ * floor: a summary is short by design.
  */
 export async function summarizeText(text) {
   if (!provider?.summarizeText) {
