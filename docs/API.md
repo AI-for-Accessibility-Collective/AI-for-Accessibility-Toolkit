@@ -54,6 +54,8 @@ Methods you don't provide degrade gracefully: required ones (`describeImage`, `s
 | `transcribeVideo` / `transcribeAudio` | `url: string` | `{ type, text }` | Transcript, audio description, or silence marker |
 | `getYouTubeTranscript` | `videoId: string` | `string` | Fetch YouTube's own captions |
 
+This table is the shape of each call. The contract a host implements from, meaning what each function is for, what a good result looks like, what to return when the model cannot answer, and which adapter consumes the result and how it is checked before it reaches the page, is in the doc comments in `tools/utils/ai.js`. The shared checks are in `tools/utils/ai-output.js`.
+
 ## Auditors
 
 Auditors find accessibility issues. Located in `tools/auditors/`.
