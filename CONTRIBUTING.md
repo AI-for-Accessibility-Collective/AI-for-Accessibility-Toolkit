@@ -199,7 +199,10 @@ not checked; keep it on a path the package's `exports` map exposes.
    installs the package. `server/` and `onboarding/` have a manifest but no
    exports map yet, and `controller/` and `cli/` have no manifest; the test
    treats every file as reachable in a package that has a manifest but no
-   map, and only the root `.js` files in a directory with no manifest.
+   map, and only the root `.js` files in a directory with no manifest. An
+   import that has to land on a path the map does not expose goes in the
+   test's `KNOWN_BREAKS` list with the reason it is tolerated, and the test
+   fails again once it stops being a break.
 2. **A cross-package import is a dependency the importing package declares.**
    There are no npm workspaces yet, so "declares" means the edge is in the
    test's `ALLOWED` table (which package may import from which) and its
