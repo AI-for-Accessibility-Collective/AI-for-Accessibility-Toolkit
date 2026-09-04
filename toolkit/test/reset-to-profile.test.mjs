@@ -95,9 +95,13 @@ async function fresh() {
   check('scoped reset: the other scope is untouched', (await L.getScopedSetting('general', 'fontScale')) === 150);
   check('scoped reset: the named scope is cleared', (await L.getScopedSetting('origin:news.example', 'fontScale')) === undefined);
 
-  // An invalid scope is treated as 'general' (same as every other scope writer).
+  // An invalid scope is treated as 'general' (same as every other scope writer),
+  // and never widened into a reset of every scope.
+  await L.recordScopedSettings('general', { fontScale: 150 });
+  await L.recordScopedSettings('origin:news.example', { fontScale: 250 });
   await L.resetToProfile({ scope: 'nonsense!!' });
   check('scoped reset: an invalid scope falls back to general', (await L.getScopedSetting('general', 'fontScale')) === undefined);
+  check('scoped reset: an invalid scope leaves the other scopes alone', (await L.getScopedSetting('origin:news.example', 'fontScale')) === 250);
 }
 
 console.log(`\nresetToProfile: ${pass} passed, ${fail} failed`);
