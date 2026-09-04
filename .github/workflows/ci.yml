@@ -33,7 +33,8 @@ jobs:
         # npm test covers toolkit/test, tools/test, controller/test, and
         # onboarding/test — the one list CONTRIBUTING points contributors at,
         # so CI cannot drift from it. browser-validate.js is intentionally NOT
-        # a *-test.js file — it needs a real Chromium and runs locally only.
+        # a *-test.js file. It needs a real Chromium, so it runs in the
+        # separate, non-blocking browser.yml instead of here.
         run: npm test
 
       - name: Reference hosts run

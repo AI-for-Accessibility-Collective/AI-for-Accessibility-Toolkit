@@ -10,9 +10,12 @@
 // It exists to PIN today's behavior so the logic can be lifted out of chat.js
 // into importable modules without silently changing what the page does.
 //
-// Local only (needs a Chromium download); not in CI, and named *-e2e.mjs rather
-// than *.test.mjs so `npm test` does not pick it up — the same split
-// tools/test/browser-validate.js uses. Run:
+// Needs a Chromium download (`npx playwright install chromium`), so it is named
+// *-e2e.mjs rather than *.test.mjs and `npm test` does not pick it up — the
+// same split tools/test/browser-validate.js uses. CI runs it in the separate,
+// non-blocking `browser` workflow (.github/workflows/browser.yml) when
+// onboarding/, controller/, toolkit/, server/src/ or the package files change.
+// Run:
 //   npm run test:e2e
 //
 // The assist lane is deliberately left unconfigured (no GEMINI_API_KEY), so the

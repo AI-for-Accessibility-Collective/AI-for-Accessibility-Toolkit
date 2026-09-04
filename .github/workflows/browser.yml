@@ -1,0 +1,91 @@
+# Runs the two real-browser suites in headless Chromium:
+#   node tools/test/browser-validate.js   each adapter's real effect and its
+#                                         exact reversal in a real layout
+#   npm run test:e2e                      onboarding/test/chat-e2e.mjs, the only
+#                                         test that executes onboarding/chat.js
+#
+# A separate workflow file on purpose. ci.yml runs `npm test`, which excludes
+# anything that needs a browser, and that split is deliberate: a Chromium
+# download is slow and can fail for reasons unrelated to the change under test.
+# This job keeps that risk out of ci.yml.
+#
+# It does not block a merge. The job is marked continue-on-error, so a red run
+# is visible on the pull request but the workflow still reports success. The
+# suites here are the ones most likely to be flaky, and a flaky required check
+# gets ignored or bypassed; a visible optional one is the middle ground
+# proposed in issue #29. Promote it to required only once it has been green
+# for a while.
+#
+# The two suites run one after the other, never in parallel: two Chromium
+# instances on a shared runner are how browser tests time out.
+name: browser
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'onboarding/**'
+      - 'controller/**'
+      - 'tools/**'
+      - 'toolkit/**'
+      - 'server/src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/browser.yml'
+  pull_request:
+    paths:
+      - 'onboarding/**'
+      - 'controller/**'
+      - 'tools/**'
+      - 'toolkit/**'
+      - 'server/src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/browser.yml'
+
+jobs:
+  real-browser:
+    runs-on: ubuntu-latest
+    # Non-blocking: see the header comment.
+    continue-on-error: true
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Both suites import the npm `playwright` package, so the browser comes
+      # from npx, not from `python -m playwright` as in cli.yml.
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Adapter validation in a real layout
+        id: validate
+        run: node tools/test/browser-validate.js
+
+      # Runs even when the previous suite failed, so one run shows both results.
+      - name: Chat end-to-end
+        id: e2e
+        if: ${{ !cancelled() }}
+        run: npm run test:e2e
+
+      - name: Record the outcome
+        if: ${{ always() }}
+        run: |
+          {
+            echo "## Real-browser suites (non-blocking)"
+            echo
+            echo "| Suite | Outcome |"
+            echo "|---|---|"
+            echo "| tools/test/browser-validate.js | ${{ steps.validate.outcome }} |"
+            echo "| onboarding/test/chat-e2e.mjs | ${{ steps.e2e.outcome }} |"
+            echo
+            echo "This job does not block a merge. A failure here is worth reading, not ignoring."
+          } >> "$GITHUB_STEP_SUMMARY"
