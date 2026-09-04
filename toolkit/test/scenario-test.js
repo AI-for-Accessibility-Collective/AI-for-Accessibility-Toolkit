@@ -275,7 +275,7 @@ async function scenarioB() {
   check('B: the refused override is not stored',
     ((await DS.get('mine.siteIndex'))['nytimes.com'] || {}).category !== 'blog');
   check('B: a taxonomy override is accepted',
-    (await L.setSiteCategoryOverride('www.nytimes.com', 'news')).ok === true);
+    (await L.setSiteCategoryOverride('www.nytimes.com', 'news'))?.ok === true);
   // getSiteCategory returns null for an empty origin, so an entry stored under
   // '' could never be read back. Refused rather than reported as saved.
   const noOrigin = await L.setSiteCategoryOverride('', 'news');
