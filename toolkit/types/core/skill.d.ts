@@ -125,9 +125,11 @@ export type ToolEntry = {
 export type ToolPromptEntry = Pick<ToolEntry, "id" | "name" | "description" | "supportAreas" | "siteRelevance">;
 /**
  * The AA_TOOLS-shaped registry a host injects (registry/tools.js `asAATools()`
- * builds the reference one). Only `settingsMeta` and `settingsVocabularyLines`
- * are read on the core's main paths; the rest serve skill validation and the
- * skill builder, so a minimal host may leave them out.
+ * builds the reference one). Only `settingsMeta` is read on the core's main
+ * paths, and every such read guards it. The Librarian's LLM paths
+ * (`interpretNeedsPrompt`, `buildSkill`, `extract`) also call
+ * `settingsVocabularyLines` and `forPrompt` unguarded, and skill validation
+ * reads `byId`; a host that never reaches those paths may leave them out.
  * FLAG(review): the optional members mirror what the core guards for at
  * runtime today, not a design decision about the registry contract.
  */
@@ -138,7 +140,7 @@ export type ToolsRegistry = {
     /**
      * One prompt-ready line per setting.
      */
-    settingsVocabularyLines: () => string[];
+    settingsVocabularyLines?: (() => string[]) | undefined;
     byId?: ((id: string) => ToolEntry | null | undefined) | undefined;
     byArea?: ((area: string) => ToolEntry[]) | undefined;
     settingsFor?: ((ids: string[]) => Record<string, any>) | undefined;

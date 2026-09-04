@@ -713,10 +713,11 @@ export function getRegistryForPrompt() {
 // AA_TOOLS-shaped live registry — the exact object a browser host's
 // build.js bakes into extension/lib/tools-registry.js, exported here so any
 // host can hand it to createToolkit({ toolsRegistry: asAATools() }).
-// The return type is inferred from the literal below, which satisfies the
-// core's ToolsRegistry contract (core/skill.js) with every member present.
+// The return type is inferred from the literal below; the @satisfies cast
+// makes tsc check that it meets the core's ToolsRegistry contract
+// (core/skill.js) with every member present, without widening the type.
 export function asAATools() {
-  return {
+  return /** @satisfies {Required<import('../core/skill.js').ToolsRegistry>} */ ({
     version: 1,
     list: skillRegistry,
     settingsMeta,
@@ -749,5 +750,5 @@ export function asAATools() {
         supportAreas: s.supportAreas, siteRelevance: s.siteRelevance,
       }));
     },
-  };
+  });
 }

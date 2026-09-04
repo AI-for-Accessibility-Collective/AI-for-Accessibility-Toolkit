@@ -623,11 +623,13 @@ export function createLibrarian({
     async getEffectivePreferences(url, contexts = []) {
       const now = clock.now();
       const { scopes, shards, origin, category } = await loadScopeShards(url, contexts);
+      /** @type {Record<string, any>} */
       const merged = {};
       const applied = [];
       // provenance: key -> scope of the record that set its final value, so a
       // consumer (the popup) can write a change back to the same scope rather
       // than clobbering the global baseline.
+      /** @type {Record<string, any>} */
       const provenance = {};
       // Strength gate: a stronger requirement (floor > preference > hint) is
       // never overwritten by a weaker one, regardless of scope specificity;
@@ -1412,6 +1414,10 @@ export function createLibrarian({
     // on the ability profile — not a hand-maintained vocabulary copy.
     // Fast lane: builds a string, never calls the LLM itself.
     async interpretNeedsPrompt(text) {
+      // FLAG(review): `tools` is null when the host passed no toolsRegistry
+      // (the createToolkit default), and the two calls below throw on it.
+      // The main paths guard the registry (datastore.js, getSettingsMeta);
+      // these LLM paths do not. Left as is: no runtime change in this PR.
       const tools = DS().global.tools();
       const profile = await getOrInitProfile();
       const profileBlock = (profile.supportAreas.length || profile.freeText)
@@ -1816,6 +1822,8 @@ Return ONLY valid JSON with:
         .map(s => s.aspect);
       const profile = await getOrInitProfile();
 
+      // FLAG(review): the settingsVocabularyLines() call in this prompt throws
+      // when the host passed no toolsRegistry; see interpretNeedsPrompt.
       const prompt = `You maintain the memory of a browser accessibility assistant. Convert raw observations into durable memory operations.
 
 ## Setting keys and their EXACT units/ranges (use these units in every "settings" object)

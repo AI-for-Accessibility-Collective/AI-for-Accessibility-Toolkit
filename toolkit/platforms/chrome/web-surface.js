@@ -98,7 +98,9 @@ export const WEB_DERIVATION = {
  * genuine web cannot-satisfy signal. Values are left raw; the caller clamps.
  */
 export function deriveWebSettings(abilityModel) {
+  /** @type {Record<string, any>} */
   const settings = {};
+  /** @type {Record<string, string>} */
   const strengthByKey = {};
   const unmet = [];
   const needs = (abilityModel && abilityModel.needs) || [];

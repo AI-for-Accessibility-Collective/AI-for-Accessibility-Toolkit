@@ -57,15 +57,17 @@
  *
  * @typedef {Object} ToolsRegistry
  * The AA_TOOLS-shaped registry a host injects (registry/tools.js `asAATools()`
- * builds the reference one). Only `settingsMeta` and `settingsVocabularyLines`
- * are read on the core's main paths; the rest serve skill validation and the
- * skill builder, so a minimal host may leave them out.
+ * builds the reference one). Only `settingsMeta` is read on the core's main
+ * paths, and every such read guards it. The Librarian's LLM paths
+ * (`interpretNeedsPrompt`, `buildSkill`, `extract`) also call
+ * `settingsVocabularyLines` and `forPrompt` unguarded, and skill validation
+ * reads `byId`; a host that never reaches those paths may leave them out.
  * FLAG(review): the optional members mirror what the core guards for at
  * runtime today, not a design decision about the registry contract.
  * @property {number} [version]
  * @property {ToolEntry[]} [list]
  * @property {import('./units.js').SettingsMeta} settingsMeta
- * @property {() => string[]} settingsVocabularyLines  One prompt-ready line per setting.
+ * @property {() => string[]} [settingsVocabularyLines]  One prompt-ready line per setting.
  * @property {(id: string) => ToolEntry|null|undefined} [byId]
  * @property {(area: string) => ToolEntry[]} [byArea]
  * @property {(ids: string[]) => Record<string, any>} [settingsFor]

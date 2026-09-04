@@ -19,8 +19,8 @@ export function createWebSurface(settingsMeta?: Record<string, {
  * genuine web cannot-satisfy signal. Values are left raw; the caller clamps.
  */
 export function deriveWebSettings(abilityModel: any): {
-    settings: {};
-    strengthByKey: {};
+    settings: Record<string, any>;
+    strengthByKey: Record<string, string>;
     unmet: any[];
 };
 /**

@@ -36,14 +36,14 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
         }[];
         scopes: string[];
         restored: {
-            settings: {};
+            settings: Record<string, any>;
             applied: {
                 id: any;
                 scope: any;
                 text: any;
                 explicit: boolean;
             }[];
-            provenance: {};
+            provenance: Record<string, any>;
             category: any;
             origin: string | null;
         };
@@ -51,14 +51,14 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
     getSiteCategory(origin: any, opts?: {}): Promise<any>;
     setSiteCategoryOverride(origin: any, category: any): Promise<void>;
     getEffectivePreferences(url: any, contexts?: any[]): Promise<{
-        settings: {};
+        settings: Record<string, any>;
         applied: {
             id: any;
             scope: any;
             text: any;
             explicit: boolean;
         }[];
-        provenance: {};
+        provenance: Record<string, any>;
         category: any;
         origin: string | null;
     }>;
