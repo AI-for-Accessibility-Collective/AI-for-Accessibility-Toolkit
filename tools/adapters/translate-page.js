@@ -21,8 +21,12 @@ const BATCH = 4;         // concurrency bound
 // 1.75 to 6.5 times, so a floor of 0.25 and a ceiling of 4 each rejected 4
 // of the 20. The band is wide on purpose: it catches a block that came back
 // as almost nothing, or as several times the source, and nothing finer.
+// A block under RATIO_MIN_INPUT_CHARS (16 characters, in ai-output.js) is
+// not held to the band at all: "目录" to "Table of contents" is 8.5 times
+// the source.
 // FLAG(review): 0.1 and 8 rest on those 20 hand-written pairs, not on model
-// output, and a fragment above a tenth of the source passes.
+// output, a fragment above a tenth of the source passes, and a block under
+// 16 characters accepts any length.
 const MIN_TRANSLATED_RATIO = 0.1;
 const MAX_TRANSLATED_RATIO = 8;
 

@@ -109,6 +109,22 @@ async function run() {
       check('translate: a much shorter script (0.17 of the source) is accepted', doc.querySelector('#p').textContent === SHORT);
       TranslatePage.disable();
     }
+    // A block of a few characters has no useful ratio: "目录" to "Table of
+    // contents" is 8.5 times the source and a correct translation.
+    for (const [src, out] of [['目录', 'Table of contents'], ['谢谢', 'Thank you very much']]) {
+      const doc = mount(`<main><p id="p">${src}</p></main>`);
+      setAIProvider({ translateText: async () => out, announce() {} });
+      await TranslatePage.enable({ targetLang: 'English' });
+      check(`translate: a short block "${src}" accepts a much longer translation`, doc.querySelector('#p').textContent === out);
+      TranslatePage.disable();
+    }
+    {
+      const doc = mount(`<main><p id="p">${PARA}</p></main>`);
+      setAIProvider({ translateText: async () => (PARA + ' ').repeat(9), announce() {} });
+      await TranslatePage.enable({ targetLang: 'Spanish' });
+      check('translate: a paragraph that comes back nine times longer is still rejected', doc.querySelector('#p').textContent === PARA);
+      TranslatePage.disable();
+    }
   }
 }
 

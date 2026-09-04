@@ -15,7 +15,7 @@ global.document = dom.window.document;
 const {
   REFUSAL_PREFIXES, UNCERTAINTY_TERMS, REFUSAL_RE,
   startsWithRefusal, containsUncertainty, opensWithFirstPersonRefusal,
-  rejectShortText, rejectRewrite, cleanShortText, MAX_SHORT_TEXT_CHARS,
+  rejectShortText, rejectRewrite, cleanShortText, MAX_SHORT_TEXT_CHARS, RATIO_MIN_INPUT_CHARS,
 } = await import('../utils/ai-output.js');
 const { isConfidentDescription } = await import('../adapters/generate-alt.js');
 const { isValidLabel } = await import('../adapters/generate-labels.js');
@@ -168,6 +168,14 @@ check('rewrite: output over the ratio is rejected', rejectRewrite('y'.repeat(INP
 check('rewrite: with no maxRatio a long output passes', rejectRewrite('y'.repeat(INPUT.length * 5), INPUT) === null);
 check('rewrite: a non-string input skips the ratio checks', rejectRewrite('Anything.', undefined, { minRatio: 0.5 }) === null);
 check('rewrite: newlines inside a passage are allowed', rejectRewrite('One line.\nTwo lines.\nThree lines of plain text here. '.repeat(3), INPUT, { minRatio: 0.3 }) === null);
+// A ratio means nothing for a block of a few characters.
+check('rewrite: the ratio floor for the input is 16 characters', RATIO_MIN_INPUT_CHARS === 16);
+check('rewrite: "目录" to "Table of contents" (8.5 times) passes', rejectRewrite('Table of contents', '目录', { minRatio: 0.1, maxRatio: 8 }) === null);
+check('rewrite: "谢谢" to "Thank you very much" (9.5 times) passes', rejectRewrite('Thank you very much', '谢谢', { minRatio: 0.1, maxRatio: 8 }) === null);
+check('rewrite: a 15-character input skips the ratio checks', rejectRewrite('x', 'a'.repeat(15), { minRatio: 0.5 }) === null);
+check('rewrite: a 16-character input is held to the ratio', rejectRewrite('x', 'a'.repeat(16), { minRatio: 0.5 }) === 'shorter than 0.5 of the input');
+check('rewrite: a short input padded with whitespace still skips the ratio', rejectRewrite('x', '   ' + 'a'.repeat(15) + '   ', { minRatio: 0.5 }) === null);
+check('rewrite: a refusal for a short input is still rejected', rejectRewrite('I cannot translate this.', '目录') === 'reads as a refusal');
 
 // ── pins on the two pre-existing gates ───────────────────────────────────────
 check('alt gate: a real description passes', isConfidentDescription('A red bicycle leaning against a brick wall.'));

@@ -151,6 +151,13 @@ export function rejectShortText(text, maxChars = MAX_SHORT_TEXT_CHARS) {
   return null;
 }
 
+// Shortest input (trimmed) that a length ratio is judged against. A block of
+// a few characters has no useful ratio: "目录" to "Table of contents" is 8.5
+// times the source and a correct translation. Below this the ratio checks
+// are skipped and only the shape checks run; a paragraph that comes back at
+// five times its length is still caught.
+export const RATIO_MIN_INPUT_CHARS = 16;
+
 // Gate for a rewrite that replaces or stands in for a passage (simplify,
 // translate, summarize). Length is judged against the input as a ratio,
 // because the right length depends on the task: a simplification is a bit
@@ -163,7 +170,7 @@ export function rejectRewrite(output, input, { minRatio = 0, maxRatio = Infinity
   if (!out) return 'empty';
   if (opensWithFirstPersonRefusal(out)) return 'reads as a refusal';
   const inLen = typeof input === 'string' ? input.trim().length : 0;
-  if (inLen > 0) {
+  if (inLen >= RATIO_MIN_INPUT_CHARS) {
     if (out.length < inLen * minRatio) return `shorter than ${minRatio} of the input`;
     if (out.length > inLen * maxRatio) return `longer than ${maxRatio} times the input`;
   }

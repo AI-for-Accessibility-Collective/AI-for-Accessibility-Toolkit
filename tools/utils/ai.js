@@ -366,7 +366,8 @@ export async function inferColumnHeader(sampleData) {
  * with a first-person refusal, and between 0.1 and 8 times the length of
  * the input, a band wide enough for English into Chinese or Japanese and
  * back, so it only catches a block that came back as almost nothing or as
- * several times the source. A rejected answer leaves the block untouched.
+ * several times the source. A block under 16 characters is not held to the
+ * band. A rejected answer leaves the block untouched.
  */
 export async function translateText(text, targetLang) {
   if (!provider?.translateText) {
