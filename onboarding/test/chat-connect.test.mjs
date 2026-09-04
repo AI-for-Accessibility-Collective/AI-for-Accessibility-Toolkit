@@ -60,6 +60,8 @@ function watch(sock, live = () => true) {
   const s = new FakeSocket(1);
   const seen = watch(s);
   check('an already-open socket is connected at once', seen.connected === 1);
+  s.close();
+  check('…and its later close is still a loss', seen.lost === 1 && seen.failed === 0);
 }
 
 // ── a replaced socket never reports, so it can never apply ───────────────────

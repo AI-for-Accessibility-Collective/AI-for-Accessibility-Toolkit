@@ -27,8 +27,8 @@
 export function watchConnection(sock, { live = () => true, onConnected, onFailed, onLost }) {
   let opened = false;
   const connected = () => { opened = true; if (live()) onConnected(); };
-  if (sock.readyState === 1) { connected(); return; }
-  sock.addEventListener('open', connected);
+  if (sock.readyState === 1) connected();
+  else sock.addEventListener('open', connected);
   sock.addEventListener('error', () => { if (live() && !opened) onFailed(); });
   sock.addEventListener('close', () => { if (live()) (opened ? onLost : onFailed)(); });
 }
