@@ -138,6 +138,26 @@ check('short: "I don\u2019t know" is rejected', rejectShortText('I don\u2019t kn
 // are not straightened, so this stays visible if that ever changes.
 check('short: isValidLabel is unchanged by the straightening', isValidLabel('I can\u2019t tell where this link goes') === true);
 check('short: isConfidentDescription is unchanged by the straightening', isConfidentDescription('I can\u2019t tell what this image shows') === true);
+// The passage gate's patterns run here too, so an opener the lists miss is
+// still caught before it becomes an accessible name.
+check('short: "As an AI, I cannot do this" is rejected', rejectShortText('As an AI, I cannot do this') === 'reads as a refusal');
+check('short: "I apologize, but I cannot" is rejected', rejectShortText('I apologize, but I cannot') === 'reads as a refusal');
+check('short: "I could not determine this" is rejected', rejectShortText('I could not determine this') === 'reads as a refusal');
+check('short: a passive refusal is rejected', rejectShortText('This text cannot be summarized.') === 'reads as a refusal');
+// The short-value non-answers. These are content in a paragraph, so the
+// passage gate does not carry them.
+check('short: "I\u2019m not sure what this does" is rejected', rejectShortText('I\u2019m not sure what this does') === 'reads as a refusal');
+check('short: "I am not sure" is rejected', rejectShortText('I am not sure') === 'reads as a refusal');
+check('short: "I do not know" is rejected', rejectShortText('I do not know') === 'reads as a refusal');
+check('short: "No idea" is rejected', rejectShortText('No idea') === 'reads as a refusal');
+check('short: "I have no idea" is rejected', rejectShortText('I have no idea') === 'reads as a refusal');
+// and the names that must survive all of the above.
+check('short: "I Will Not Be Silenced (film)" passes', rejectShortText('I Will Not Be Silenced (film)') === null);
+check('short: "Cannot Buy My Love" passes', rejectShortText('Cannot Buy My Love') === null);
+check('short: "No Ideas But In Things" passes', rejectShortText('No Ideas But In Things') === null);
+check('short: "Nuclear safety report" passes', rejectShortText('Nuclear safety report') === null);
+check('short: a non-English header passes', rejectShortText('城市') === null);
+check('short: a Spanish header passes', rejectShortText('Fecha de nacimiento') === null);
 
 // ── cleanShortText (the wrapping a model adds despite the contract) ──────────
 check('clean: straight double quotes are stripped', cleanShortText('"City"') === 'City');

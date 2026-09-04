@@ -175,6 +175,18 @@ export function cleanShortText(text) {
   return t;
 }
 
+// A first-person non-answer, in a value that is on its way to an attribute
+// or a header cell. The passage gate cannot use these openings, because in a
+// paragraph they are ordinary content ("I'm not sure I agree with that",
+// "I do not know why he left"). In a value of at most 60 characters that
+// becomes a link's accessible name or a column header, they are the model
+// saying it could not answer. "I don't know" is already covered by
+// UNCERTAINTY_TERMS; this adds the spelled-out and the "not sure" forms.
+// FLAG(review): a real name that opens this way ("I Do Not Know Where I Am",
+// a record on No Idea Records) is rejected, and the element is left as it
+// was, which is the same place a null answer leaves it.
+const SHORT_NON_ANSWER_RE = /^(?:i(?:'m| am) not sure|i do not know|(?:i have )?no idea)\b/i;
+
 // Gate for a short, single-line value that lands in an attribute or a header
 // cell (fix-links aria-label, fix-tables <th>). The value is judged after
 // cleanShortText(), so an adapter should write the cleaned value.
@@ -185,6 +197,12 @@ export function rejectShortText(text, maxChars = MAX_SHORT_TEXT_CHARS) {
   if (t.length > maxChars) return `longer than ${maxChars} characters`;
   if (/[\r\n]/.test(t)) return 'contains a line break';
   if (startsWithRefusal(t)) return 'reads as a refusal';
+  // The passage gate's patterns too. They catch the openers the lists above
+  // miss ("As an AI, I cannot do this", "I apologize, but I cannot",
+  // "I could not determine this"), and they are anchored, so they do not
+  // widen the lists that generate-alt.js and generate-labels.js share.
+  if (opensWithFirstPersonRefusal(t) || opensWithPassiveRefusal(t)) return 'reads as a refusal';
+  if (SHORT_NON_ANSWER_RE.test(straightenApostrophes(t))) return 'reads as a refusal';
   if (containsUncertainty(t)) return 'reads as uncertain';
   return null;
 }
