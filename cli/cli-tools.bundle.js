@@ -5765,12 +5765,11 @@ ${scope} table {
     if (el.getAttribute("aria-label")) return true;
     if (el.getAttribute("title")) return true;
     if (el.textContent?.trim()) return true;
-    const labelledBy = el.getAttribute("aria-labelledby");
-    if (labelledBy) {
-      const target = document.getElementById(labelledBy);
-      if (target?.textContent?.trim()) return true;
-    }
-    return false;
+    return !!getLabelledByText(el);
+  }
+  function getLabelledByText(el) {
+    const ids = (el.getAttribute("aria-labelledby") || "").trim().split(/\s+/).filter(Boolean);
+    return ids.map((id) => document.getElementById(id)?.textContent?.trim() || "").filter(Boolean).join(" ");
   }
   function looksLikeNavClass(el) {
     return Array.from(el.classList || []).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
@@ -7119,6 +7118,8 @@ ${chunk}
   }
 
   // tools/auditors/missing-alt.js
+  var CONTENT_IMAGE_MIN_PX = 100;
+  var CANVAS_MIN_PX = 50;
   function findImagesWithoutAlt() {
     return Array.from(document.querySelectorAll("img")).filter((img) => {
       if (wasProcessed(img)) return false;
@@ -7133,18 +7134,19 @@ ${chunk}
       if (!isVisible(img)) return false;
       if (isLikelyDecorative(img)) return false;
       const { width, height } = getImageSize(img);
-      return width > 100 && height > 100;
+      return width > CONTENT_IMAGE_MIN_PX && height > CONTENT_IMAGE_MIN_PX;
     });
   }
   function findCanvasElements() {
     return Array.from(document.querySelectorAll("canvas")).filter((canvas) => {
       if (wasProcessed(canvas)) return false;
       const rect = canvas.getBoundingClientRect();
-      return rect.width > 50 && rect.height > 50;
+      return rect.width > CANVAS_MIN_PX && rect.height > CANVAS_MIN_PX;
     });
   }
 
   // tools/auditors/missing-captions.js
+  var TRANSCRIPT_HINT = "transcript";
   function findVideosWithoutCaptions() {
     return Array.from(document.querySelectorAll("video")).filter((video) => {
       if (wasProcessed(video)) return false;
@@ -7168,13 +7170,24 @@ ${chunk}
       const parent = audio.parentElement;
       if (!parent) return true;
       const text = parent.textContent?.toLowerCase() || "";
-      if (text.includes("transcript")) return false;
+      if (text.includes(TRANSCRIPT_HINT)) return false;
       if (audio.querySelector("track")) return false;
       return true;
     });
   }
 
   // tools/auditors/missing-labels.js
+  var AMBIGUOUS_LINK_TEXTS = [
+    "click here",
+    "here",
+    "read more",
+    "more",
+    "learn more",
+    "continue",
+    "link",
+    "this",
+    "this link"
+  ];
   function findEmptyLinks() {
     return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
       if (wasProcessed(link)) return false;
@@ -7183,22 +7196,11 @@ ${chunk}
     });
   }
   function findAmbiguousLinks() {
-    const ambiguousTexts = [
-      "click here",
-      "here",
-      "read more",
-      "more",
-      "learn more",
-      "continue",
-      "link",
-      "this",
-      "this link"
-    ];
     return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
       if (wasProcessed(link)) return false;
       if (!isVisible(link)) return false;
       const text = link.textContent?.trim().toLowerCase();
-      return text && ambiguousTexts.includes(text);
+      return text && AMBIGUOUS_LINK_TEXTS.includes(text);
     });
   }
   function findEmptyButtons() {
@@ -7219,7 +7221,7 @@ ${chunk}
       if (!isVisible(input)) return false;
       if (input.type === "hidden") return false;
       if (input.getAttribute("aria-label")) return false;
-      if (input.getAttribute("aria-labelledby")) return false;
+      if (getLabelledByText(input)) return false;
       if (input.id) {
         const label = document.querySelector(`label[for="${CSS.escape(input.id)}"]`);
         if (label) return false;
@@ -7278,12 +7280,13 @@ ${chunk}
     if (document.querySelector('[role="contentinfo"]')) return true;
     return Array.from(document.querySelectorAll("footer")).some((f) => !f.closest(SECTIONING));
   }
+  var NAV_LIKE_MIN_LINKS = 3;
   function findUnmarkedNavigation() {
     return Array.from(document.querySelectorAll('div[class*="nav" i]:not([role])')).filter((el) => {
       if (!looksLikeNavClass(el)) return false;
       if (!isVisible(el)) return false;
       if (el.closest('nav, [role="navigation"]')) return false;
-      return el.querySelectorAll("a").length >= 3;
+      return el.querySelectorAll("a").length >= NAV_LIKE_MIN_LINKS;
     });
   }
   function auditLandmarks() {
@@ -8156,13 +8159,15 @@ ${chunk}
       seen.add(el.id);
     });
   }
+  var COMPLEX_TEXT_MIN_CHARS = 200;
+  var COMPLEX_SENTENCE_MIN_WORDS = 15;
   function findComplexText() {
     return Array.from(document.querySelectorAll("p, li, td, div")).filter((el) => {
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.dataset.ai4a11ySimplified) return false;
       if (el.querySelector("p, div, article, section")) return false;
       const text = el.textContent?.trim() || "";
-      return text.length > 200 && text.split(/[.!?]/).some((s) => s.trim().split(/\s+/).length > 15);
+      return text.length > COMPLEX_TEXT_MIN_CHARS && text.split(/[.!?]/).some((s) => s.trim().split(/\s+/).length > COMPLEX_SENTENCE_MIN_WORDS);
     }).slice(0, 10);
   }
   function findLongContent() {
