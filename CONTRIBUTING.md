@@ -89,6 +89,16 @@ export const axeHandlers = { 'aria-required-attr': fixCarouselControls };
 Then in `tools/adapters/index.js` add the export and spread its handlers, and
 register the tool in `toolkit/registry/tools.js` (id, `supportAreas`,
 `settings`, one-line `description`) plus any new setting keys in `settingsMeta`.
+Then add one line to `adaptersForTools` in `tools/profiles/settings.js` that
+maps the new setting key to the adapter's module name;
+`node tools/test/registry-parity-test.js` fails until the barrel, the registry,
+and that mapping agree, and it checks every key of an entry on its own. Each
+host keeps its own copy of the mapping (for the CLI, `applyProfileByName` in
+`cli/cli-tools.js`), so an adapter a profile switches on needs a line there as
+well. That test carries two lists for the cases the rule cannot express: add a
+key that only shapes another key's adapter to `SUB_SETTINGS` under its entry
+id, and a barrel module that is deliberately left without a registry entry to
+`KNOWN_UNREACHABLE`, with the reason in a comment either way.
 Read `tools/adapters/fix-tables.js` (heuristic + AI fallback) or
 `tools/adapters/fix-landmarks.js` (deterministic) for a full example.
 

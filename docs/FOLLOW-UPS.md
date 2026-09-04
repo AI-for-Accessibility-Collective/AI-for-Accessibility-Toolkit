@@ -79,7 +79,7 @@ applies. Decide before adding more agent-lane surface.
 
 ### `auto-transcriber` is catalog-unreachable
 `tools/adapters/auto-transcriber.js` is exported but no `settingsMeta` key maps
-to it in `getEnabledAdapters` (`tools/profiles/settings.js`) — the same
+to it in `adaptersForTools` (`tools/profiles/settings.js`) — the same
 reachability gap `fix-landmarks` / `read-aloud` once had. It's AI-powered
 (`getYouTubeTranscript`). **Decide:** wire it to `autoCaptions` (the AI
 caption-generation key) or drop it from the catalog. Surfaced in

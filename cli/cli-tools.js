@@ -365,7 +365,11 @@ function applyProfileByName(profileId) {
     }
   }
 
-  // Apply profile settings via adapters
+  // Apply profile settings via adapters.
+  // FLAG(review): this is the CLI's own copy of the key-to-adapter mapping.
+  // The catalog's copy is adaptersForTools in tools/profiles/settings.js; the
+  // two are kept in step by hand, and the parity test checks only the
+  // catalog's.
   const profileTools = profile.tools || {};
 
   // Visual settings
@@ -417,9 +421,11 @@ function applyProfileByName(profileId) {
   if (profileTools.mathAccessible) MathA11y.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.voiceCommands) VoiceCommands.enable();
-  if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
-    ColorBlindMode.enable(profileTools.colorFilter);
-  }
+  // Profiles say colorFilter, the registry says colorBlindMode; read both,
+  // the same way the extension's content script and adaptersForTools do, and
+  // do not let 'none' under one name hide a filter set under the other.
+  const colorMode = [profileTools.colorFilter, profileTools.colorBlindMode].find((v) => v && v !== 'none');
+  if (colorMode) ColorBlindMode.enable(colorMode);
   if (profileTools.autoCaptions) AutoTranscriber.enable();
   if (profileTools.showCaptions) ShowCaptions.enable();
   if (profileTools.fixLandmarks) FixLandmarks.enable();

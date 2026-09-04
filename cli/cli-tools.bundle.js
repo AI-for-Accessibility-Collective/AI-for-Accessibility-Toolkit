@@ -7899,9 +7899,8 @@ ${chunk}
     if (profileTools.mathAccessible) MathA11y.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.voiceCommands) VoiceCommands.enable();
-    if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
-      ColorBlindMode.enable(profileTools.colorFilter);
-    }
+    const colorMode = [profileTools.colorFilter, profileTools.colorBlindMode].find((v) => v && v !== "none");
+    if (colorMode) ColorBlindMode.enable(colorMode);
     if (profileTools.autoCaptions) AutoTranscriber.enable();
     if (profileTools.showCaptions) ShowCaptions.enable();
     if (profileTools.fixLandmarks) FixLandmarks.enable();
