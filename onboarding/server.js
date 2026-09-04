@@ -356,7 +356,11 @@ async function profileConfig(uid) {
     const { librarian } = await host.getInstance(uid);
     profile = await librarian.getProfile();
   }
-  return { supportAreas: profile.supportAreas || [], freeText: profile.freeText || '' };
+  // visionKind too: the form has to show back the blind / low-vision answer,
+  // or the most consequential fact about how the page adapts silently resets
+  // on the next update.
+  return { supportAreas: profile.supportAreas || [], freeText: profile.freeText || '',
+           visionKind: (profile.fields && profile.fields.visionKind) || profile.visionKind || '' };
 }
 
 async function profileSummary(uid) {
