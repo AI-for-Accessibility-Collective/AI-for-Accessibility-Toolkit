@@ -5641,6 +5641,117 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11yAutoTranscriber = AutoTranscriber;
 
+  // tools/adapters/show-captions.js
+  var logFix7 = globalThis.ai4a11yLogFix || (() => {
+  });
+  function preferredLang() {
+    const l = typeof navigator !== "undefined" && navigator.language || "en";
+    return String(l).slice(0, 2).toLowerCase();
+  }
+  var PLAYERS = [
+    {
+      name: "youtube",
+      button: () => document.querySelector(".ytp-subtitles-button"),
+      isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
+    },
+    {
+      name: "vimeo",
+      button: () => document.querySelector('.vp-captions-button, button[aria-label*="aptions" i]'),
+      isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
+    }
+  ];
+  var DATA = "ai4a11yCaptions";
+  var ShowCaptions = {
+    enabled: false,
+    _restore: [],
+    // [{ track, prevMode }] for native tracks we switched on
+    _clicked: null,
+    // Set of "player|url" we've already turned on (once per URL)
+    _unregister: null,
+    // Enable the best caption/subtitle track on each <video> that has one, once.
+    _enableNativeTracks() {
+      const lang = preferredLang();
+      for (const v of document.querySelectorAll("video")) {
+        if (v.dataset[DATA]) continue;
+        const list = v.textTracks ? [...v.textTracks] : [];
+        const tracks = list.filter((t) => t && (t.kind === "captions" || t.kind === "subtitles"));
+        if (!tracks.length) continue;
+        const want = tracks.find((t) => (t.language || "").toLowerCase().startsWith(lang)) || tracks[0];
+        this._restore.push({ track: want, prevMode: want.mode });
+        try {
+          want.mode = "showing";
+        } catch {
+        }
+        v.dataset[DATA] = "on";
+        logFix7("showCaptions", v, "(off)", "showing");
+      }
+    },
+    // Turn on captions for players that own their CC UI — at most once per URL, so
+    // the user turning them back off isn't overridden by the next mutation.
+    _enablePlayerCaptions() {
+      const url = typeof location !== "undefined" ? location.href : "";
+      for (const p of PLAYERS) {
+        let btn;
+        try {
+          btn = p.button();
+        } catch {
+          btn = null;
+        }
+        if (!btn) continue;
+        const key = p.name + "|" + url;
+        if (this._clicked.has(key)) continue;
+        this._clicked.add(key);
+        if (!p.isOn(btn)) {
+          try {
+            btn.click();
+          } catch {
+          }
+          logFix7("showCaptions", btn, "(off)", "on");
+        }
+      }
+    },
+    _sweep() {
+      if (!this.enabled) return;
+      this._enableNativeTracks();
+      this._enablePlayerCaptions();
+    },
+    enable() {
+      if (this.enabled) {
+        this._sweep();
+        return;
+      }
+      this.enabled = true;
+      this._restore = [];
+      this._clicked = /* @__PURE__ */ new Set();
+      this._sweep();
+      this._unregister = registerSweep("show-captions", () => this._sweep(), { debounceMs: 400 });
+      console.log("[AI4A11y] Show Captions enabled");
+    },
+    disable() {
+      if (!this.enabled) return;
+      this.enabled = false;
+      if (this._unregister) {
+        this._unregister();
+        this._unregister = null;
+      }
+      for (const { track, prevMode } of this._restore) {
+        try {
+          track.mode = prevMode;
+        } catch {
+        }
+      }
+      this._restore = [];
+      for (const v of document.querySelectorAll("video[data-ai4a11y-captions]")) delete v.dataset[DATA];
+      this._clicked = null;
+      console.log("[AI4A11y] Show Captions disabled");
+    },
+    toggle() {
+      if (this.enabled) this.disable();
+      else this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yShowCaptions = ShowCaptions;
+
   // tools/utils/dom.js
   function isVisible(el) {
     if (!el) return false;
@@ -5671,10 +5782,112 @@ ${scope} table {
     return !!el.dataset.ai4a11yProcessed;
   }
 
-  // tools/adapters/generate-alt.js
-  var logFix7 = globalThis.ai4a11yLogFix || (() => {
+  // tools/adapters/fix-landmarks.js
+  var logFix8 = globalThis.ai4a11yLogFix || (() => {
   });
   var incrementStat = globalThis.ai4a11yIncrementStat || (() => {
+  });
+  var LANDMARK_SELECTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
+  function ensureMainLandmark() {
+    if (document.querySelector('main, [role="main"]')) return false;
+    const isCandidate = (el) => {
+      const tag = el.tagName.toLowerCase();
+      if (["header", "footer", "nav", "aside", "script", "style", "noscript"].includes(tag)) return false;
+      if (el.getAttribute("role")) return false;
+      if ((el.textContent?.trim().length || 0) <= 100) return false;
+      if (el.querySelector(LANDMARK_SELECTOR)) return false;
+      return true;
+    };
+    let level = Array.from(document.body.children);
+    let candidates = level.filter(isCandidate);
+    if (candidates.length === 0) {
+      const shell = level.find((el) => (el.textContent?.trim().length || 0) > 100 && el.querySelector(LANDMARK_SELECTOR));
+      if (shell) candidates = Array.from(shell.children).filter(isCandidate);
+    }
+    if (candidates.length === 0) return false;
+    const main = candidates.reduce((a, b) => (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b);
+    main.setAttribute("role", "main");
+    markProcessed(main, "done");
+    incrementStat("wcag");
+    logFix8("landmark", main, "(no main landmark)", 'role="main"');
+    console.log('[AI4A11y] Added role="main" landmark');
+    return true;
+  }
+  var HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
+  var NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo/i;
+  var FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|copyright)\b/i;
+  var COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
+  var hint = (re, el) => re.test(el.className || "") || re.test(el.id || "");
+  function ensureBanner() {
+    if (document.querySelector('header, [role="banner"]')) return false;
+    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e) && !hint(NOT_HEADER, e)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => (e.textContent?.trim().length || 0) < 2e3)[0];
+    if (!el) return false;
+    el.setAttribute("role", "banner");
+    incrementStat("wcag");
+    logFix8("landmark", el, "(unmarked header)", 'role="banner"');
+    return true;
+  }
+  function ensureContentinfo() {
+    if (document.querySelector('footer, [role="contentinfo"]')) return false;
+    const cands = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role")).filter((e) => hint(FOOTER_HINT, e) || COPYRIGHT_RE.test((e.textContent || "").slice(-400))).filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]')).filter((e) => (e.textContent?.trim().length || 0) < 1500);
+    const el = cands[cands.length - 1];
+    if (!el) return false;
+    el.setAttribute("role", "contentinfo");
+    incrementStat("wcag");
+    logFix8("landmark", el, "(unmarked footer)", 'role="contentinfo"');
+    return true;
+  }
+  function ensureStructuralLandmarks() {
+    let fixed = 0;
+    document.querySelectorAll('div[class*="nav" i]:not([role])').forEach((el) => {
+      if (!looksLikeNavClass(el)) return;
+      if (el.closest('nav, [role="navigation"]')) return;
+      const links = el.querySelectorAll("a").length;
+      const textLength = el.textContent?.trim().length || 1;
+      if (links >= 3 && links * 15 / textLength > 0.5) {
+        el.setAttribute("role", "navigation");
+        incrementStat("wcag");
+        logFix8("landmark", el, "(unmarked nav)", 'role="navigation"');
+        fixed++;
+      }
+    });
+    if (ensureBanner()) fixed++;
+    if (ensureContentinfo()) fixed++;
+    return fixed;
+  }
+  function fixLandmarks() {
+    let count = 0;
+    if (ensureMainLandmark()) count++;
+    count += ensureStructuralLandmarks();
+    return count;
+  }
+  var axeHandlers = {
+    "landmark-one-main": () => ensureMainLandmark()
+  };
+  var FixLandmarks = {
+    id: "fix-landmarks",
+    enabled: false,
+    enable() {
+      if (this.enabled) return;
+      this.enabled = true;
+      try {
+        fixLandmarks();
+      } catch {
+      }
+    },
+    disable() {
+      this.enabled = false;
+    },
+    toggle() {
+      this.enabled ? this.disable() : this.enable();
+    }
+  };
+  if (typeof window !== "undefined") window.__ai4a11yFixLandmarks = FixLandmarks;
+
+  // tools/adapters/generate-alt.js
+  var logFix9 = globalThis.ai4a11yLogFix || (() => {
+  });
+  var incrementStat2 = globalThis.ai4a11yIncrementStat || (() => {
   });
   var REFUSAL_PREFIXES = ["I cannot", "I'm unable", "I am unable", "Sorry", "I cannot describe", "Unfortunately"];
   var UNCERTAINTY_TERMS = ["unsure", "I don't know", "unclear", "I cannot tell", "cannot determine"];
@@ -5706,8 +5919,8 @@ ${scope} table {
         const altText = result.trim();
         img.setAttribute("alt", altText);
         markProcessed(img, "done");
-        incrementStat("images");
-        logFix7("alt text", img, "(empty)", altText);
+        incrementStat2("images");
+        logFix9("alt text", img, "(empty)", altText);
         console.log("[AI4A11y] Generated alt:", altText);
         return altText;
       }
@@ -5737,8 +5950,8 @@ ${scope} table {
         title.textContent = description;
         svg.setAttribute("role", "img");
         markProcessed(svg, "done");
-        incrementStat("images");
-        logFix7("svg description", svg, "(none)", description);
+        incrementStat2("images");
+        logFix9("svg description", svg, "(none)", description);
         return description;
       }
       markProcessed(svg, "failed");
@@ -5749,7 +5962,7 @@ ${scope} table {
       return null;
     }
   }
-  var axeHandlers = {
+  var axeHandlers2 = {
     "image-alt": generateImageAlt,
     "svg-img-alt": generateSvgDescription
   };
@@ -5932,9 +6145,9 @@ ${scope} table {
   };
 
   // tools/adapters/generate-labels.js
-  var logFix8 = globalThis.ai4a11yLogFix || (() => {
+  var logFix10 = globalThis.ai4a11yLogFix || (() => {
   });
-  var incrementStat2 = globalThis.ai4a11yIncrementStat || (() => {
+  var incrementStat3 = globalThis.ai4a11yIncrementStat || (() => {
   });
   var JUNK_NAME_RE = /^(q|s|utf8|token|id|csrf.*|_csrf.*|authenticity_token|__RequestVerificationToken)$/i;
   function isJunkName(name) {
@@ -5973,8 +6186,8 @@ ${scope} table {
       const trimmed = label.trim();
       link.setAttribute("aria-label", trimmed);
       markProcessed(link, "done");
-      incrementStat2("labels");
-      logFix8("link label", link, existingText || "(empty)", trimmed);
+      incrementStat3("labels");
+      logFix10("link label", link, existingText || "(empty)", trimmed);
       console.log("[AI4A11y] Generated link label:", trimmed);
       return trimmed;
     }
@@ -5990,8 +6203,8 @@ ${scope} table {
     if (inferred) {
       button.setAttribute("aria-label", inferred);
       markProcessed(button, "done");
-      incrementStat2("labels");
-      logFix8("button label", button, "(empty)", inferred);
+      incrementStat3("labels");
+      logFix10("button label", button, "(empty)", inferred);
       return inferred;
     }
     const context = getContextForElement(button);
@@ -6011,8 +6224,8 @@ ${scope} table {
       const trimmed = label.trim();
       button.setAttribute("aria-label", trimmed);
       markProcessed(button, "done");
-      incrementStat2("labels");
-      logFix8("button label", button, "(empty)", trimmed);
+      incrementStat3("labels");
+      logFix10("button label", button, "(empty)", trimmed);
       return trimmed;
     }
     markProcessed(button, "failed");
@@ -6028,8 +6241,8 @@ ${scope} table {
       if (src.includes(pattern)) {
         iframe.setAttribute("title", title);
         markProcessed(iframe, "done");
-        incrementStat2("labels");
-        logFix8("iframe title", iframe, "(empty)", title);
+        incrementStat3("labels");
+        logFix10("iframe title", iframe, "(empty)", title);
         return title;
       }
     }
@@ -6038,8 +6251,8 @@ ${scope} table {
       const title = `Embedded content from ${url.hostname}`;
       iframe.setAttribute("title", title);
       markProcessed(iframe, "done");
-      incrementStat2("labels");
-      logFix8("iframe title", iframe, "(empty)", title);
+      incrementStat3("labels");
+      logFix10("iframe title", iframe, "(empty)", title);
       return title;
     } catch {
       const title = "Embedded content";
@@ -6057,8 +6270,8 @@ ${scope} table {
       const label = input.placeholder.trim();
       input.setAttribute("aria-label", label);
       markProcessed(input, "done");
-      incrementStat2("labels");
-      logFix8("form label", input, "(empty)", label);
+      incrementStat3("labels");
+      logFix10("form label", input, "(empty)", label);
       return label;
     }
     if (input.name && !isJunkName(input.name)) {
@@ -6066,8 +6279,8 @@ ${scope} table {
       if (label) {
         input.setAttribute("aria-label", label);
         markProcessed(input, "done");
-        incrementStat2("labels");
-        logFix8("form label", input, "(empty)", label);
+        incrementStat3("labels");
+        logFix10("form label", input, "(empty)", label);
         return label;
       }
     }
@@ -6075,8 +6288,8 @@ ${scope} table {
     if (nearbyText && !isJunkName(nearbyText)) {
       input.setAttribute("aria-label", nearbyText);
       markProcessed(input, "done");
-      incrementStat2("labels");
-      logFix8("form label", input, "(empty)", nearbyText);
+      incrementStat3("labels");
+      logFix10("form label", input, "(empty)", nearbyText);
       return nearbyText;
     }
     markProcessed(input, "skipped");
@@ -6135,7 +6348,7 @@ ${scope} table {
     }
     return null;
   }
-  var axeHandlers2 = {
+  var axeHandlers3 = {
     "link-name": generateLinkLabel,
     "button-name": generateButtonLabel,
     "frame-title": generateIframeTitle,
@@ -6144,9 +6357,9 @@ ${scope} table {
   };
 
   // tools/adapters/generate-captions.js
-  var logFix9 = globalThis.ai4a11yLogFix || (() => {
+  var logFix11 = globalThis.ai4a11yLogFix || (() => {
   });
-  var incrementStat3 = globalThis.ai4a11yIncrementStat || (() => {
+  var incrementStat4 = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function generateVideoCaptions(video) {
     if (video.dataset.ai4a11yCaptioned) return null;
@@ -6162,8 +6375,8 @@ ${scope} table {
         const text = result.text;
         addCaptionTrack(video, text);
         video.dataset.ai4a11yCaptioned = "done";
-        incrementStat3("captions");
-        logFix9("captions", video, "(none)", "(generated)");
+        incrementStat4("captions");
+        logFix11("captions", video, "(none)", "(generated)");
         console.log("[AI4A11y] Added video captions");
         return text;
       }
@@ -6189,8 +6402,8 @@ ${scope} table {
         const text = result.text;
         addTranscriptBlock(audio, text);
         audio.dataset.ai4a11yCaptioned = "done";
-        incrementStat3("captions");
-        logFix9("transcript", audio, "(none)", "(generated)");
+        incrementStat4("captions");
+        logFix11("transcript", audio, "(none)", "(generated)");
         console.log("[AI4A11y] Added audio transcript");
         return text;
       }
@@ -6248,15 +6461,15 @@ ${chunk}
     const s = Math.floor(seconds % 60);
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}.000`;
   }
-  var axeHandlers3 = {
+  var axeHandlers4 = {
     "video-caption": generateVideoCaptions,
     "audio-caption": generateAudioCaptions
   };
 
   // tools/adapters/simplify-text.js
-  var logFix10 = globalThis.ai4a11yLogFix || (() => {
+  var logFix12 = globalThis.ai4a11yLogFix || (() => {
   });
-  var incrementStat4 = globalThis.ai4a11yIncrementStat || (() => {
+  var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
   });
   async function simplifyText2(element) {
     if (element.dataset.ai4a11ySimplified) return null;
@@ -6308,8 +6521,8 @@ ${chunk}
         element.appendChild(textContainer);
         element.appendChild(toggleBtn);
         element.dataset.ai4a11ySimplified = "done";
-        incrementStat4("text");
-        logFix10("simplify", element, "(complex)", "(simplified)");
+        incrementStat5("text");
+        logFix12("simplify", element, "(complex)", "(simplified)");
         console.log("[AI4A11y] Simplified text");
         return simplified;
       }
@@ -6356,8 +6569,8 @@ ${chunk}
         summaryBox.appendChild(content);
         element.insertBefore(summaryBox, element.firstChild);
         element.dataset.ai4a11ySummarize = "done";
-        incrementStat4("text");
-        logFix10("summarize", element, "(long)", "(summarized)");
+        incrementStat5("text");
+        logFix12("summarize", element, "(long)", "(summarized)");
         return summary;
       }
       element.dataset.ai4a11ySummarize = "failed";
@@ -6478,9 +6691,9 @@ ${chunk}
   }
 
   // tools/adapters/fix-contrast.js
-  var logFix11 = globalThis.ai4a11yLogFix || (() => {
+  var logFix13 = globalThis.ai4a11yLogFix || (() => {
   });
-  var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
+  var incrementStat6 = globalThis.ai4a11yIncrementStat || (() => {
   });
   function isLargeText(element) {
     const style = getComputedStyle(element);
@@ -6525,8 +6738,8 @@ ${chunk}
     element.style.color = fixedColor;
     element.classList.add("ai4a11y-contrast-fixed");
     markProcessed(element, "done");
-    incrementStat5("wcag");
-    logFix11("contrast", element, color, fixedColor);
+    incrementStat6("wcag");
+    logFix13("contrast", element, color, fixedColor);
     console.log("[AI4A11y] Fixed contrast:", color, "->", fixedColor);
     return fixedColor;
   }
@@ -6534,20 +6747,20 @@ ${chunk}
     if (wasProcessed(link)) return;
     markProcessed(link, "done");
     link.style.textDecoration = "underline";
-    incrementStat5("wcag");
-    logFix11("link-underline", link, "(none)", "underline");
+    incrementStat6("wcag");
+    logFix13("link-underline", link, "(none)", "underline");
     console.log("[AI4A11y] Added underline to link");
   }
-  var axeHandlers4 = {
+  var axeHandlers5 = {
     "color-contrast": fixLowContrast,
     "color-contrast-enhanced": fixLowContrast,
     "link-in-text-block": fixIndistinguishableLink
   };
 
   // tools/adapters/wcag-fixes.js
-  var logFix12 = globalThis.ai4a11yLogFix || (() => {
+  var logFix14 = globalThis.ai4a11yLogFix || (() => {
   });
-  var incrementStat6 = globalThis.ai4a11yIncrementStat || (() => {
+  var incrementStat7 = globalThis.ai4a11yIncrementStat || (() => {
   });
   function isValidBcp47(tag) {
     if (!tag || typeof tag !== "string") return false;
@@ -6575,8 +6788,8 @@ ${chunk}
       return;
     }
     element.setAttribute("lang", fixed);
-    incrementStat6("wcag");
-    logFix12("lang", element, currentLang, fixed);
+    incrementStat7("wcag");
+    logFix14("lang", element, currentLang, fixed);
     console.log("[AI4A11y] Normalised lang attribute:", currentLang, "->", fixed);
   }
   function fixMissingLang(_element) {
@@ -6587,8 +6800,8 @@ ${chunk}
     const newId = `${originalId}_${randomSuffix()}`;
     element.id = newId;
     markProcessed(element, "done");
-    incrementStat6("wcag");
-    logFix12("duplicate-id", element, originalId, newId);
+    incrementStat7("wcag");
+    logFix14("duplicate-id", element, originalId, newId);
     console.log("[AI4A11y] Renamed duplicate ID:", originalId, "->", newId);
   }
   function fixHeadingOrder(element) {
@@ -6610,8 +6823,8 @@ ${chunk}
         newHeading.setAttribute(attr.name, attr.value);
       }
       element.replaceWith(newHeading);
-      incrementStat6("wcag");
-      logFix12("heading-order", newHeading, `h${currentLevel}`, `h${newLevel}`);
+      incrementStat7("wcag");
+      logFix14("heading-order", newHeading, `h${currentLevel}`, `h${newLevel}`);
       console.log(`[AI4A11y] Fixed heading: h${currentLevel} -> h${newLevel}`);
     }
   }
@@ -6619,8 +6832,8 @@ ${chunk}
     const oldVal = element.getAttribute("tabindex");
     element.setAttribute("tabindex", "0");
     markProcessed(element, "done");
-    incrementStat6("wcag");
-    logFix12("tabindex", element, oldVal, "0");
+    incrementStat7("wcag");
+    logFix14("tabindex", element, oldVal, "0");
     console.log("[AI4A11y] Fixed positive tabindex");
   }
   function fixTargetBlank(element) {
@@ -6630,8 +6843,8 @@ ${chunk}
     if (!parts.includes("noreferrer")) parts.push("noreferrer");
     element.setAttribute("rel", parts.join(" "));
     markProcessed(element, "done");
-    incrementStat6("wcag");
-    logFix12("target-blank", element, rel || "(empty)", parts.join(" "));
+    incrementStat7("wcag");
+    logFix14("target-blank", element, rel || "(empty)", parts.join(" "));
     console.log('[AI4A11y] Added rel="noopener noreferrer"');
   }
   function fixInvalidAriaAttr(element) {
@@ -6643,14 +6856,14 @@ ${chunk}
         console.log("[AI4A11y] Removed invalid ARIA attr:", attr.name);
       }
     }
-    if (fixed) incrementStat6("wcag");
+    if (fixed) incrementStat7("wcag");
   }
   function fixInvalidAriaRole(element) {
     const role = element.getAttribute("role");
     if (role && !VALID_ARIA_ROLES.has(role)) {
       element.removeAttribute("role");
-      incrementStat6("wcag");
-      logFix12("aria-role", element, role, "(removed)");
+      incrementStat7("wcag");
+      logFix14("aria-role", element, role, "(removed)");
       console.log("[AI4A11y] Removed invalid role:", role);
     }
   }
@@ -6658,8 +6871,8 @@ ${chunk}
     const role = element.getAttribute("role");
     if (role && DEPRECATED_ROLES[role]) {
       element.setAttribute("role", DEPRECATED_ROLES[role]);
-      incrementStat6("wcag");
-      logFix12("aria-role", element, role, DEPRECATED_ROLES[role]);
+      incrementStat7("wcag");
+      logFix14("aria-role", element, role, DEPRECATED_ROLES[role]);
       console.log("[AI4A11y] Replaced deprecated role:", role);
     }
   }
@@ -6676,14 +6889,14 @@ ${chunk}
       }
       span.className = element.className;
       element.replaceWith(span);
-      incrementStat6("wcag");
-      logFix12("nested-interactive", span, "button", "span");
+      incrementStat7("wcag");
+      logFix14("nested-interactive", span, "button", "span");
       console.log("[AI4A11y] Replaced nested button with span");
     } else if (element.tagName === "A") {
       element.removeAttribute("href");
       element.setAttribute("role", "presentation");
-      incrementStat6("wcag");
-      logFix12("nested-interactive", element, "a[href]", "a[role=presentation]");
+      incrementStat7("wcag");
+      logFix14("nested-interactive", element, "a[href]", "a[role=presentation]");
       console.log("[AI4A11y] Made nested link non-interactive");
     }
   }
@@ -6700,8 +6913,8 @@ ${chunk}
     if (display === "inline") {
       element.style.display = "inline-block";
     }
-    incrementStat6("wcag");
-    logFix12("target-size", element, `${Math.round(rect.width)}x${Math.round(rect.height)}`, "44x44");
+    incrementStat7("wcag");
+    logFix14("target-size", element, `${Math.round(rect.width)}x${Math.round(rect.height)}`, "44x44");
     console.log("[AI4A11y] Increased touch target size");
   }
   function fixViewportMeta(element) {
@@ -6711,8 +6924,8 @@ ${chunk}
     content = content.replace(/user-scalable\s*=\s*(no|0)/gi, "user-scalable=yes");
     if (content === oldContent) return;
     element.setAttribute("content", content);
-    incrementStat6("wcag");
-    logFix12("viewport", element, oldContent, content);
+    incrementStat7("wcag");
+    logFix14("viewport", element, oldContent, content);
     console.log("[AI4A11y] Fixed viewport meta");
   }
   function removeMetaRefresh(_element) {
@@ -6726,14 +6939,14 @@ ${chunk}
       newEl.appendChild(element.firstChild);
     }
     element.replaceWith(newEl);
-    incrementStat6("wcag");
-    logFix12("obsolete", newEl, `<${tag}>`, `<${replacement}>`);
+    incrementStat7("wcag");
+    logFix14("obsolete", newEl, `<${tag}>`, `<${replacement}>`);
     console.log(`[AI4A11y] Replaced <${tag}> with <${replacement}>`);
   }
   function randomSuffix() {
     return Math.random().toString(36).substring(2, 7);
   }
-  var axeHandlers5 = {
+  var axeHandlers6 = {
     "html-has-lang": fixMissingLang,
     "html-lang-valid": fixInvalidLang,
     "valid-lang": fixInvalidLang,
@@ -6757,9 +6970,9 @@ ${chunk}
   };
 
   // tools/adapters/fix-links.js
-  var logFix13 = globalThis.ai4a11yLogFix || (() => {
+  var logFix15 = globalThis.ai4a11yLogFix || (() => {
   });
-  var incrementStat7 = globalThis.ai4a11yIncrementStat || (() => {
+  var incrementStat8 = globalThis.ai4a11yIncrementStat || (() => {
   });
   var MAX_LINKS_PER_PAGE = 10;
   async function improveAmbiguousLink(link) {
@@ -6773,8 +6986,8 @@ ${chunk}
         link.setAttribute("aria-label", improved);
         link.classList.add("ai4a11y-adapted");
         markProcessed(link, "done");
-        incrementStat7("labels");
-        logFix13("link text", link, text, improved);
+        incrementStat8("labels");
+        logFix15("link text", link, text, improved);
         return improved;
       }
     } catch (e) {
@@ -6793,9 +7006,9 @@ ${chunk}
   }
 
   // tools/adapters/fix-tables.js
-  var logFix14 = globalThis.ai4a11yLogFix || (() => {
+  var logFix16 = globalThis.ai4a11yLogFix || (() => {
   });
-  var incrementStat8 = globalThis.ai4a11yIncrementStat || (() => {
+  var incrementStat9 = globalThis.ai4a11yIncrementStat || (() => {
   });
   var MAX_AI_TABLES_PER_PAGE = 10;
   var MAX_AI_COLUMNS = 12;
@@ -6826,8 +7039,8 @@ ${chunk}
         cell.replaceWith(th);
       });
       markProcessed(table, "done");
-      incrementStat8("wcag");
-      logFix14("table headers", table, "(no headers)", "first row \u2192 column headers");
+      incrementStat9("wcag");
+      logFix16("table headers", table, "(no headers)", "first row \u2192 column headers");
       return true;
     }
     if (rows.length < 4) {
@@ -6854,8 +7067,8 @@ ${chunk}
       thead.appendChild(headerRow);
       table.prepend(thead);
       markProcessed(table, "done");
-      incrementStat8("wcag");
-      logFix14("table headers", table, "(no headers)", headers.join(", "));
+      incrementStat9("wcag");
+      logFix16("table headers", table, "(no headers)", headers.join(", "));
       return true;
     } catch (e) {
       console.warn("[AI4A11y] fixTableHeaders failed:", e);
@@ -6876,226 +7089,14 @@ ${chunk}
     return results.filter(Boolean).length;
   }
 
-  // tools/adapters/fix-landmarks.js
-  var logFix15 = globalThis.ai4a11yLogFix || (() => {
-  });
-  var incrementStat9 = globalThis.ai4a11yIncrementStat || (() => {
-  });
-  var LANDMARK_SELECTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
-  function ensureMainLandmark() {
-    if (document.querySelector('main, [role="main"]')) return false;
-    const isCandidate = (el) => {
-      const tag = el.tagName.toLowerCase();
-      if (["header", "footer", "nav", "aside", "script", "style", "noscript"].includes(tag)) return false;
-      if (el.getAttribute("role")) return false;
-      if ((el.textContent?.trim().length || 0) <= 100) return false;
-      if (el.querySelector(LANDMARK_SELECTOR)) return false;
-      return true;
-    };
-    let level = Array.from(document.body.children);
-    let candidates = level.filter(isCandidate);
-    if (candidates.length === 0) {
-      const shell = level.find((el) => (el.textContent?.trim().length || 0) > 100 && el.querySelector(LANDMARK_SELECTOR));
-      if (shell) candidates = Array.from(shell.children).filter(isCandidate);
-    }
-    if (candidates.length === 0) return false;
-    const main = candidates.reduce((a, b) => (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b);
-    main.setAttribute("role", "main");
-    markProcessed(main, "done");
-    incrementStat9("wcag");
-    logFix15("landmark", main, "(no main landmark)", 'role="main"');
-    console.log('[AI4A11y] Added role="main" landmark');
-    return true;
-  }
-  var HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
-  var FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|copyright)\b/i;
-  var COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
-  var hint = (re, el) => re.test(el.className || "") || re.test(el.id || "");
-  function ensureBanner() {
-    if (document.querySelector('header, [role="banner"]')) return false;
-    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => (e.textContent?.trim().length || 0) < 2e3)[0];
-    if (!el) return false;
-    el.setAttribute("role", "banner");
-    incrementStat9("wcag");
-    logFix15("landmark", el, "(unmarked header)", 'role="banner"');
-    return true;
-  }
-  function ensureContentinfo() {
-    if (document.querySelector('footer, [role="contentinfo"]')) return false;
-    const cands = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role")).filter((e) => hint(FOOTER_HINT, e) || COPYRIGHT_RE.test((e.textContent || "").slice(-400))).filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]')).filter((e) => (e.textContent?.trim().length || 0) < 1500);
-    const el = cands[cands.length - 1];
-    if (!el) return false;
-    el.setAttribute("role", "contentinfo");
-    incrementStat9("wcag");
-    logFix15("landmark", el, "(unmarked footer)", 'role="contentinfo"');
-    return true;
-  }
-  function ensureStructuralLandmarks() {
-    let fixed = 0;
-    document.querySelectorAll('div[class*="nav" i]:not([role])').forEach((el) => {
-      if (!looksLikeNavClass(el)) return;
-      if (el.closest('nav, [role="navigation"]')) return;
-      const links = el.querySelectorAll("a").length;
-      const textLength = el.textContent?.trim().length || 1;
-      if (links >= 3 && links * 15 / textLength > 0.5) {
-        el.setAttribute("role", "navigation");
-        incrementStat9("wcag");
-        logFix15("landmark", el, "(unmarked nav)", 'role="navigation"');
-        fixed++;
-      }
-    });
-    if (ensureBanner()) fixed++;
-    if (ensureContentinfo()) fixed++;
-    return fixed;
-  }
-  function fixLandmarks() {
-    let count = 0;
-    if (ensureMainLandmark()) count++;
-    count += ensureStructuralLandmarks();
-    return count;
-  }
-  var axeHandlers6 = {
-    "landmark-one-main": () => ensureMainLandmark()
-  };
-  var FixLandmarks = {
-    id: "fix-landmarks",
-    enabled: false,
-    enable() {
-      if (this.enabled) return;
-      this.enabled = true;
-      try {
-        fixLandmarks();
-      } catch {
-      }
-    },
-    disable() {
-      this.enabled = false;
-    },
-    toggle() {
-      this.enabled ? this.disable() : this.enable();
-    }
-  };
-  if (typeof window !== "undefined") window.__ai4a11yFixLandmarks = FixLandmarks;
-
-  // tools/adapters/show-captions.js
-  var logFix16 = globalThis.ai4a11yLogFix || (() => {
-  });
-  function preferredLang() {
-    const l = typeof navigator !== "undefined" && navigator.language || "en";
-    return String(l).slice(0, 2).toLowerCase();
-  }
-  var PLAYERS = [
-    {
-      name: "youtube",
-      button: () => document.querySelector(".ytp-subtitles-button"),
-      isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
-    },
-    {
-      name: "vimeo",
-      button: () => document.querySelector('.vp-captions-button, button[aria-label*="aptions" i]'),
-      isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
-    }
-  ];
-  var DATA = "ai4a11yCaptions";
-  var ShowCaptions = {
-    enabled: false,
-    _restore: [],
-    // [{ track, prevMode }] for native tracks we switched on
-    _clicked: null,
-    // Set of "player|url" we've already turned on (once per URL)
-    _unregister: null,
-    // Enable the best caption/subtitle track on each <video> that has one, once.
-    _enableNativeTracks() {
-      const lang = preferredLang();
-      for (const v of document.querySelectorAll("video")) {
-        if (v.dataset[DATA]) continue;
-        const list = v.textTracks ? [...v.textTracks] : [];
-        const tracks = list.filter((t) => t && (t.kind === "captions" || t.kind === "subtitles"));
-        if (!tracks.length) continue;
-        const want = tracks.find((t) => (t.language || "").toLowerCase().startsWith(lang)) || tracks[0];
-        this._restore.push({ track: want, prevMode: want.mode });
-        try {
-          want.mode = "showing";
-        } catch {
-        }
-        v.dataset[DATA] = "on";
-        logFix16("showCaptions", v, "(off)", "showing");
-      }
-    },
-    // Turn on captions for players that own their CC UI — at most once per URL, so
-    // the user turning them back off isn't overridden by the next mutation.
-    _enablePlayerCaptions() {
-      const url = typeof location !== "undefined" ? location.href : "";
-      for (const p of PLAYERS) {
-        let btn;
-        try {
-          btn = p.button();
-        } catch {
-          btn = null;
-        }
-        if (!btn) continue;
-        const key = p.name + "|" + url;
-        if (this._clicked.has(key)) continue;
-        this._clicked.add(key);
-        if (!p.isOn(btn)) {
-          try {
-            btn.click();
-          } catch {
-          }
-          logFix16("showCaptions", btn, "(off)", "on");
-        }
-      }
-    },
-    _sweep() {
-      if (!this.enabled) return;
-      this._enableNativeTracks();
-      this._enablePlayerCaptions();
-    },
-    enable() {
-      if (this.enabled) {
-        this._sweep();
-        return;
-      }
-      this.enabled = true;
-      this._restore = [];
-      this._clicked = /* @__PURE__ */ new Set();
-      this._sweep();
-      this._unregister = registerSweep("show-captions", () => this._sweep(), { debounceMs: 400 });
-      console.log("[AI4A11y] Show Captions enabled");
-    },
-    disable() {
-      if (!this.enabled) return;
-      this.enabled = false;
-      if (this._unregister) {
-        this._unregister();
-        this._unregister = null;
-      }
-      for (const { track, prevMode } of this._restore) {
-        try {
-          track.mode = prevMode;
-        } catch {
-        }
-      }
-      this._restore = [];
-      for (const v of document.querySelectorAll("video[data-ai4a11y-captions]")) delete v.dataset[DATA];
-      this._clicked = null;
-      console.log("[AI4A11y] Show Captions disabled");
-    },
-    toggle() {
-      if (this.enabled) this.disable();
-      else this.enable();
-    }
-  };
-  if (typeof window !== "undefined") window.__ai4a11yShowCaptions = ShowCaptions;
-
   // tools/adapters/index.js
   var axeHandlers7 = {
-    ...axeHandlers,
     ...axeHandlers2,
     ...axeHandlers3,
     ...axeHandlers4,
     ...axeHandlers5,
-    ...axeHandlers6
+    ...axeHandlers6,
+    ...axeHandlers
   };
   function getAxeHandler(ruleId) {
     return axeHandlers7[ruleId] || null;
@@ -7675,7 +7676,9 @@ ${chunk}
     exploreChart: ExploreAChart,
     spaFocus: SpaFocus,
     skipLinks: SkipLinks,
-    mathAccessible: MathA11y
+    mathAccessible: MathA11y,
+    showCaptions: ShowCaptions,
+    fixLandmarks: FixLandmarks
   };
   function normalizeTool(name) {
     const lower = name.toLowerCase().replace(/[-_]/g, "");
@@ -7694,6 +7697,10 @@ ${chunk}
       "colorfilter": "colorBlindMode",
       "autotranscriber": "autoTranscriber",
       "autocaptions": "autoTranscriber",
+      "showcaptions": "showCaptions",
+      "captions": "showCaptions",
+      "fixlandmarks": "fixLandmarks",
+      "landmarks": "fixLandmarks",
       "dismissoverlays": "dismissOverlays",
       "dismisspopups": "dismissOverlays",
       "bigtargets": "bigTargets",
@@ -7859,6 +7866,8 @@ ${chunk}
       ColorBlindMode.enable(profileTools.colorFilter);
     }
     if (profileTools.autoCaptions) AutoTranscriber.enable();
+    if (profileTools.showCaptions) ShowCaptions.enable();
+    if (profileTools.fixLandmarks) FixLandmarks.enable();
     return {
       success: true,
       profile: profileId,
@@ -7888,6 +7897,8 @@ ${chunk}
       keyboardNav: "Enhanced keyboard navigation",
       colorBlindMode: "Color vision deficiency filters",
       autoTranscriber: "Auto-generate captions for media",
+      showCaptions: "Switch on the captions media already carries (no AI)",
+      fixLandmarks: "Add missing main, banner, and contentinfo landmarks",
       dismissOverlays: "Hide cookie banners, newsletter popups, and blocking modals",
       bigTargets: "Enlarge and space out small clickable controls (WCAG 2.5.8)",
       highlightLinks: "Underline and strengthen links and reveal where each one leads",

@@ -50,6 +50,8 @@ import { SpaFocus } from '../tools/adapters/spa-focus.js';
 import { SkipLinks } from '../tools/adapters/skip-links.js';
 import { MathA11y } from '../tools/adapters/math-a11y.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
+import { ShowCaptions } from '../tools/adapters/show-captions.js';
+import { FixLandmarks } from '../tools/adapters/fix-landmarks.js';
 
 // Import AI-powered adapters
 import {
@@ -221,6 +223,8 @@ const tools = {
   spaFocus: SpaFocus,
   skipLinks: SkipLinks,
   mathAccessible: MathA11y,
+  showCaptions: ShowCaptions,
+  fixLandmarks: FixLandmarks,
 };
 
 // Normalize tool name (handles case variations)
@@ -241,6 +245,10 @@ function normalizeTool(name) {
     'colorfilter': 'colorBlindMode',
     'autotranscriber': 'autoTranscriber',
     'autocaptions': 'autoTranscriber',
+    'showcaptions': 'showCaptions',
+    'captions': 'showCaptions',
+    'fixlandmarks': 'fixLandmarks',
+    'landmarks': 'fixLandmarks',
     'dismissoverlays': 'dismissOverlays',
     'dismisspopups': 'dismissOverlays',
     'bigtargets': 'bigTargets',
@@ -420,6 +428,8 @@ function applyProfileByName(profileId) {
     ColorBlindMode.enable(profileTools.colorFilter);
   }
   if (profileTools.autoCaptions) AutoTranscriber.enable();
+  if (profileTools.showCaptions) ShowCaptions.enable();
+  if (profileTools.fixLandmarks) FixLandmarks.enable();
 
   return {
     success: true,
@@ -455,6 +465,8 @@ function getToolDescription(name) {
     keyboardNav: 'Enhanced keyboard navigation',
     colorBlindMode: 'Color vision deficiency filters',
     autoTranscriber: 'Auto-generate captions for media',
+    showCaptions: 'Switch on the captions media already carries (no AI)',
+    fixLandmarks: 'Add missing main, banner, and contentinfo landmarks',
     dismissOverlays: 'Hide cookie banners, newsletter popups, and blocking modals',
     bigTargets: 'Enlarge and space out small clickable controls (WCAG 2.5.8)',
     highlightLinks: 'Underline and strengthen links and reveal where each one leads',
