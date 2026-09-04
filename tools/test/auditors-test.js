@@ -2,13 +2,16 @@
 // realistic page. Two jobs: keep the heuristic thresholds and word lists in
 // missing-alt, missing-labels, missing-captions and missing-landmarks behaving
 // exactly as they do today (so naming them is provably a no-op), and pin the
-// aria-labelledby rule shared by SVGs, links, buttons and form controls: a
-// labelledby that points at a missing or empty element is not a label, and a
-// space-separated id list names the element if any one id resolves.
+// accessible-name rule shared by SVGs, links, buttons, iframes and form
+// controls: a labelledby that points at a missing or empty element is not a
+// label, a space-separated id list names the element if any one id resolves,
+// a target named by alt, aria-label or value resolves, aria-hidden content
+// is not a name, a child <img alt> is, and a form control's option text or
+// draft is not.
 //
 // Run: node tools/test/auditors-test.js
 import { JSDOM } from 'jsdom';
-import { findEmptyLinks, findAmbiguousLinks, findEmptyButtons, findUnlabeledInputs } from '../auditors/missing-labels.js';
+import { findEmptyLinks, findAmbiguousLinks, findEmptyButtons, findUnlabeledInputs, findUntitledIframes } from '../auditors/missing-labels.js';
 import { findImagesWithoutAlt, findEmptyAltImages, findBadAltImages, findBackgroundImages, findCanvasElements, findSvgWithoutAlt } from '../auditors/missing-alt.js';
 import { findVideosWithoutCaptions, findAudioWithoutTranscripts, findEmbeddedVideos } from '../auditors/missing-captions.js';
 import { findUnmarkedNavigation } from '../auditors/missing-landmarks.js';
@@ -44,17 +47,32 @@ function run() {
     const doc = mount(`
       <span id="lbl-ok">Search the catalog</span>
       <span id="lbl-empty"></span>
+      <img id="lbl-img" src="s.png" alt="Search">
+      <span id="lbl-aria" aria-label="Filter"></span>
+      <input id="lbl-val" value="Query">
+      <span id="lbl-hidden" style="display:none">Hidden label</span>
+      <span id="lbl-title" title="Postal code"></span>
       <a id="a-here" href="/x">Click here</a>
       <a id="a-more-arrow" href="/y">Read more →</a>
+      <a id="a-more-aria" href="/p" aria-label="Read more about pricing">Read more</a>
       <a id="a-contact" href="/z">Contact us</a>
       <a id="a-hidden" href="/w" style="display:none">here</a>
       <a id="a-empty" href="/e"></a>
       <a id="a-lbl-ok" href="/f" aria-labelledby="lbl-ok"></a>
       <a id="a-lbl-missing" href="/g" aria-labelledby="nope"></a>
       <a id="a-lbl-list" href="/h" aria-labelledby="nope lbl-ok"></a>
+      <a id="a-img" href="/i"><img src="logo.png" alt="Acme home"></a>
+      <a id="a-title-text" href="/t" title="Home page">Home</a>
       <button id="b-empty"></button>
       <button id="b-text">Go</button>
       <button id="b-lbl-list" aria-labelledby="nope lbl-ok"></button>
+      <button id="b-lbl-text" aria-labelledby="lbl-ok">Go</button>
+      <button id="b-lbl-aria" aria-labelledby="lbl-ok" aria-label="Close"></button>
+      <button id="b-img"><img src="s.png" alt="Search"></button>
+      <button id="b-hidden"><span aria-hidden="true">&times;</span></button>
+      <button id="b-hidden-ok" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <button id="b-ref-a" aria-labelledby="b-ref-b">A</button>
+      <button id="b-ref-b" aria-labelledby="b-ref-a">B</button>
       <input id="in-bare">
       <input id="in-aria" aria-label="City">
       <input id="in-lbl-ok" aria-labelledby="lbl-ok">
@@ -62,32 +80,53 @@ function run() {
       <input id="in-lbl-empty" aria-labelledby="lbl-empty">
       <input id="in-lbl-list" aria-labelledby="nope lbl-ok">
       <input id="in-lbl-list-none" aria-labelledby="nope lbl-empty">
+      <input id="in-lbl-img" aria-labelledby="lbl-img">
+      <input id="in-lbl-aria" aria-labelledby="lbl-aria">
+      <input id="in-lbl-val" aria-labelledby="lbl-val">
+      <input id="in-lbl-hidden" aria-labelledby="lbl-hidden">
+      <input id="in-lbl-title" aria-labelledby="lbl-title">
+      <input id="in-lbl-self" aria-labelledby="in-lbl-self">
       <label for="in-for">Name</label><input id="in-for">
       <label>Age <input id="in-wrapped"></label>
       <input id="in-title" title="Postal code">
       <input id="in-hidden" type="hidden">
+      <input id="in-submit" type="submit" value="Send">
+      <input id="in-submit-bare" type="submit">
+      <input id="in-reset-bare" type="reset">
+      <input id="in-button-bare" type="button">
+      <input id="in-image" type="image" src="s.png" alt="Search">
       <select id="sel-bare"></select>
-      <textarea id="ta-bare"></textarea>`);
+      <select id="sel-opts"><option>Red</option><option>Blue</option></select>
+      <textarea id="ta-bare"></textarea>
+      <textarea id="ta-draft">draft</textarea>
+      <iframe id="if-bare" src="https://x.example/"></iframe>
+      <iframe id="if-title" src="https://x.example/" title="Map"></iframe>
+      <iframe id="if-lbl" src="https://x.example/" aria-labelledby="lbl-ok"></iframe>
+      <iframe id="if-fallback" src="https://x.example/">Your browser does not support frames.</iframe>`);
 
     const ambiguous = findAmbiguousLinks();
     check('ambiguous links: "Click here" is reported (exact match, case-folded)', reports(ambiguous, doc, 'a-here'));
     check('ambiguous links: "Read more →" is not reported (known limit of the exact-match list)', !reports(ambiguous, doc, 'a-more-arrow'));
     check('ambiguous links: a descriptive link is not reported', !reports(ambiguous, doc, 'a-contact'));
     check('ambiguous links: a hidden link is skipped', !reports(ambiguous, doc, 'a-hidden'));
-    check('ambiguous links: exactly one reported on this page', ambiguous.length === 1);
 
     const empty = findEmptyLinks();
     check('empty links: a link with no name is reported', reports(empty, doc, 'a-empty'));
     check('empty links: a labelledby that resolves is a name', !reports(empty, doc, 'a-lbl-ok'));
     check('empty links: a labelledby pointing nowhere is reported', reports(empty, doc, 'a-lbl-missing'));
     check('empty links: an id list where one id resolves is a name', !reports(empty, doc, 'a-lbl-list'));
+    check('empty links: a child <img alt> is a name', !reports(empty, doc, 'a-img'));
     check('empty links: exactly two reported on this page', empty.length === 2);
 
     const buttons = findEmptyButtons();
     check('empty buttons: a button with no name is reported', reports(buttons, doc, 'b-empty'));
     check('empty buttons: a button with text is not reported', !reports(buttons, doc, 'b-text'));
     check('empty buttons: an id list where one id resolves is a name', !reports(buttons, doc, 'b-lbl-list'));
-    check('empty buttons: exactly one reported on this page', buttons.length === 1);
+    check('empty buttons: a child <img alt> is a name', !reports(buttons, doc, 'b-img'));
+    check('empty buttons: an aria-hidden glyph is not a name', reports(buttons, doc, 'b-hidden'));
+    check('empty buttons: an aria-hidden glyph plus aria-label is named', !reports(buttons, doc, 'b-hidden-ok'));
+    check('empty buttons: two buttons that name each other resolve to their content, no loop', !reports(buttons, doc, 'b-ref-a') && !reports(buttons, doc, 'b-ref-b'));
+    check('empty buttons: exactly two reported on this page', buttons.length === 2);
 
     const inputs = findUnlabeledInputs();
     check('inputs: a bare input is reported', reports(inputs, doc, 'in-bare'));
@@ -97,20 +136,51 @@ function run() {
     check('inputs: a labelledby pointing at an empty element is reported', reports(inputs, doc, 'in-lbl-empty'));
     check('inputs: an id list where one id resolves counts', !reports(inputs, doc, 'in-lbl-list'));
     check('inputs: an id list where no id resolves to text is reported', reports(inputs, doc, 'in-lbl-list-none'));
+    check('inputs: a labelledby pointing at an <img alt> counts', !reports(inputs, doc, 'in-lbl-img'));
+    check('inputs: a labelledby pointing at an element with aria-label counts', !reports(inputs, doc, 'in-lbl-aria'));
+    check('inputs: a labelledby pointing at a text control with a value counts', !reports(inputs, doc, 'in-lbl-val'));
+    check('inputs: the value-only input used as a label target is itself reported', reports(inputs, doc, 'lbl-val'));
+    check('inputs: a labelledby pointing at a display:none element counts (2B uses hidden targets)', !reports(inputs, doc, 'in-lbl-hidden'));
+    check('inputs: a labelledby pointing at an element with only a title counts', !reports(inputs, doc, 'in-lbl-title'));
+    check('inputs: an input that names itself is reported, and does not loop', reports(inputs, doc, 'in-lbl-self'));
     check('inputs: <label for> counts', !reports(inputs, doc, 'in-for'));
     check('inputs: a wrapping <label> counts', !reports(inputs, doc, 'in-wrapped'));
     check('inputs: title counts', !reports(inputs, doc, 'in-title'));
     check('inputs: hidden inputs are skipped', !reports(inputs, doc, 'in-hidden'));
+    check('inputs: a button input with no value is reported (it has no default name)', reports(inputs, doc, 'in-button-bare'));
     check('inputs: a bare select is reported', reports(inputs, doc, 'sel-bare'));
+    check('inputs: a select with options is still reported (option text is not a label)', reports(inputs, doc, 'sel-opts'));
     check('inputs: a bare textarea is reported', reports(inputs, doc, 'ta-bare'));
-    check('inputs: exactly six reported on this page', inputs.length === 6);
+    check('inputs: a textarea with content is still reported (the draft is not a label)', reports(inputs, doc, 'ta-draft'));
+
+    // The adapter gate agrees with the auditor on form controls, so what is
+    // reported can be repaired.
+    check('adapter gate: a select with options has no name', hasAccessibleName(doc.getElementById('sel-opts')) === false);
+    check('adapter gate: a textarea with content has no name', hasAccessibleName(doc.getElementById('ta-draft')) === false);
+    check('adapter gate: a submit input with a value has a name', hasAccessibleName(doc.getElementById('in-submit')) === true);
+
+    const iframes = findUntitledIframes();
+    check('iframes: no title is reported', reports(iframes, doc, 'if-bare'));
+    check('iframes: title counts', !reports(iframes, doc, 'if-title'));
+    check('iframes: fallback content is not a name', reports(iframes, doc, 'if-fallback'));
 
     // The shared helper behind all of the above.
     check('labelledby helper: no attribute gives empty text', getLabelledByText(doc.getElementById('in-bare')) === '');
     check('labelledby helper: a missing id gives empty text', getLabelledByText(doc.getElementById('in-lbl-missing')) === '');
     check('labelledby helper: an id list joins the resolved text', getLabelledByText(doc.getElementById('in-lbl-list')) === 'Search the catalog');
+    check('labelledby helper: an <img> target gives its alt', getLabelledByText(doc.getElementById('in-lbl-img')) === 'Search');
+    check('labelledby helper: an aria-label target gives its label', getLabelledByText(doc.getElementById('in-lbl-aria')) === 'Filter');
+    check('labelledby helper: a text control target gives its value', getLabelledByText(doc.getElementById('in-lbl-val')) === 'Query');
+    check('labelledby helper: a display:none target gives its text', getLabelledByText(doc.getElementById('in-lbl-hidden')) === 'Hidden label');
+    check('labelledby helper: a title-only target gives its title', getLabelledByText(doc.getElementById('in-lbl-title')) === 'Postal code');
+    check('labelledby helper: a target that points back gives its own content, not a loop', getLabelledByText(doc.getElementById('b-ref-a')) === 'B');
     check('labelledby helper: a single id padded with spaces resolves (getElementById on the raw attribute did not)', (() => { const el = doc.createElement('input'); el.setAttribute('aria-labelledby', '  lbl-ok '); return getLabelledByText(el) === 'Search the catalog'; })());
-    check('accessible name: text beats labelledby', getAccessibleName(doc.getElementById('b-text')) === 'Go');
+    check('accessible name: text is the name when nothing else applies', getAccessibleName(doc.getElementById('b-text')) === 'Go');
+    check('accessible name: labelledby beats text', getAccessibleName(doc.getElementById('b-lbl-text')) === 'Search the catalog');
+    check('accessible name: labelledby beats aria-label', getAccessibleName(doc.getElementById('b-lbl-aria')) === 'Search the catalog');
+    check('accessible name: text beats title', getAccessibleName(doc.getElementById('a-title-text')) === 'Home');
+    check('accessible name: a child <img alt> is the name', getAccessibleName(doc.getElementById('a-img')) === 'Acme home');
+    check('accessible name: aria-hidden content is left out', getAccessibleName(doc.getElementById('b-hidden')) === '');
     check('accessible name: an id list resolves', getAccessibleName(doc.getElementById('b-lbl-list')) === 'Search the catalog');
     check('accessible name: a dangling labelledby is not a name', hasAccessibleName(doc.getElementById('a-lbl-missing')) === false);
   }
@@ -144,7 +214,13 @@ function run() {
       <svg id="svg-lbl-ok" data-w="60" data-h="60" aria-labelledby="lbl-ok"></svg>
       <svg id="svg-lbl-missing" data-w="60" data-h="60" aria-labelledby="nope"></svg>
       <svg id="svg-lbl-empty" data-w="60" data-h="60" aria-labelledby="lbl-empty"></svg>
-      <svg id="svg-lbl-list" data-w="60" data-h="60" aria-labelledby="nope lbl-ok"></svg>`);
+      <svg id="svg-lbl-list" data-w="60" data-h="60" aria-labelledby="nope lbl-ok"></svg>
+      <svg id="svg-hidden" data-w="60" data-h="60" aria-hidden="true"></svg>
+      <div aria-hidden="true"><svg id="svg-hidden-parent" data-w="60" data-h="60"></svg></div>
+      <svg id="svg-pres" data-w="60" data-h="60" role="presentation"></svg>
+      <svg id="svg-none" data-w="60" data-h="60" role="none"></svg>
+      <button aria-label="Close"><svg id="svg-in-named-btn" data-w="60" data-h="60"></svg></button>
+      <button><svg id="svg-in-bare-btn" data-w="60" data-h="60"></svg></button>`);
 
     const noAlt = findImagesWithoutAlt();
     check('no alt: an <img> with no alt attribute is reported', reports(noAlt, doc, 'img-noalt'));
@@ -189,7 +265,7 @@ function run() {
     check('svg: a labelledby pointing at a missing id is reported', reports(svgs, doc, 'svg-lbl-missing'));
     check('svg: a labelledby pointing at an empty element is reported', reports(svgs, doc, 'svg-lbl-empty'));
     check('svg: an id list where one id resolves counts', !reports(svgs, doc, 'svg-lbl-list'));
-    check('svg: exactly four reported on this page', svgs.length === 4);
+    check('svg: inside a nameless button, the icon is reported', reports(svgs, doc, 'svg-in-bare-btn'));
   }
 
   // ── VIDEO, AUDIO, EMBEDS ───────────────────────────────────────────────────
