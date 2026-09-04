@@ -38,6 +38,16 @@ check('refusal: leading whitespace does not hide a refusal', startsWithRefusal('
 check('refusal: a plain label is not a refusal', !startsWithRefusal('Open the Q3 report'));
 check('refusal: a refusal phrase later in the text does not count', !startsWithRefusal('The Q3 report, which I cannot recommend enough'));
 check('refusal: a non-string is handled without throwing', startsWithRefusal(null) === false);
+// A bare non-answer ("Unknown", "n/a") is a refusal only when it is the whole
+// value; the same word opening a real label is content.
+check('refusal: "Unknown Pleasures album" is content', !startsWithRefusal('Unknown Pleasures album'));
+check('refusal: "Not available in your region" is content', !startsWithRefusal('Not available in your region'));
+check('refusal: "Unknown." with a full stop is a refusal', startsWithRefusal('Unknown.'));
+check('refusal: "not available" alone is a refusal', startsWithRefusal('not available'));
+check('refusal: "No label" alone is a refusal', startsWithRefusal('No label'));
+check('refusal: "unsure" alone is a refusal', startsWithRefusal('unsure'));
+check('refusal: "I cannot" stays a prefix', startsWithRefusal('I cannot tell you where this goes'));
+check('refusal: "Not sure" stays a prefix', startsWithRefusal('Not sure where this leads'));
 
 // ── containsUncertainty ──────────────────────────────────────────────────────
 check('uncertainty: "unclear" anywhere counts', containsUncertainty('The destination is unclear'));
@@ -114,6 +124,8 @@ check('short: a carriage return is rejected', rejectShortText('Open\rreport') ==
 check('short: surrounding whitespace is not a line break', rejectShortText('  Open report\n') === null);
 check('short: a refusal is rejected', rejectShortText('I cannot determine where this link goes') === 'reads as a refusal');
 check('short: "n/a" is rejected as a refusal', rejectShortText('n/a') === 'reads as a refusal');
+check('short: "Unknown Pleasures album" passes', rejectShortText('Unknown Pleasures album') === null);
+check('short: "Not available in your region" passes', rejectShortText('Not available in your region') === null);
 check('short: a hedge is rejected as uncertain', rejectShortText('Unclear destination') === 'reads as uncertain');
 check('short: type is checked before length', rejectShortText(['a']) === 'not a string');
 
@@ -149,6 +161,10 @@ check('alt gate: prefix matching is case-sensitive (unchanged behavior)', isConf
 check('label gate: a real label passes', isValidLabel('Search'));
 check('label gate: "n/a" fails', !isValidLabel('n/a'));
 check('label gate: "Unknown" fails', !isValidLabel('Unknown'));
+check('label gate: "Unknown Pleasures album" passes', isValidLabel('Unknown Pleasures album'));
+check('label gate: "Not available in your region" passes', isValidLabel('Not available in your region'));
+check('label gate: "No label" fails', !isValidLabel('No label'));
+check('label gate: "Not available" fails', !isValidLabel('Not available'));
 check('label gate: "I don\'t know" fails', !isValidLabel("I don't know"));
 check('label gate: lowercase "sorry" fails', !isValidLabel('sorry, no idea'));
 check('label gate: a newline fails', !isValidLabel('Search\nbox'));

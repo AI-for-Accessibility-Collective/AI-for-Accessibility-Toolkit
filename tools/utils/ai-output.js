@@ -29,8 +29,12 @@ export const REFUSAL_PREFIXES = ['I cannot', "I'm unable", 'I am unable', 'Sorry
 // a long passage can use "unclear" legitimately.
 export const UNCERTAINTY_TERMS = ['unsure', "I don't know", 'unclear', 'I cannot tell', 'cannot determine'];
 // The label gate's anchored, case-insensitive form of the same idea, with the
-// short non-answers a model gives when asked for one or two words.
-export const REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|n\/a|unknown|no label|not (sure|available)|unsure)/i;
+// short non-answers a model gives when asked for one or two words. The
+// sentence openers ("I cannot", "sorry", "not sure") match as prefixes. The
+// bare non-answers ("n/a", "unknown", "no label", "not available", "unsure")
+// must be the whole value, with at most closing punctuation after them:
+// "Unknown Pleasures album" and "Not available in your region" are labels.
+export const REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable to|not sure|(n\/a|unknown|no label|not available|unsure)[.!]?\s*$)/i;
 
 // Longest value that may land in an attribute or a header cell. Matches the
 // cap isValidLabel() already applies to aria-label.
