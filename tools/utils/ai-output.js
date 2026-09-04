@@ -40,11 +40,21 @@ export const REFUSAL_RE = /^(i (cannot|can't|am unable|don't know)|sorry|unable 
 // cap isValidLabel() already applies to aria-label.
 export const MAX_SHORT_TEXT_CHARS = 60;
 
+// A model often returns a typographic apostrophe, so "I can't" arrives as
+// "I can’t". The lists above are written with a straight one, and
+// generate-alt.js and generate-labels.js match them character for character,
+// so the two checks below straighten the text they judge rather than the
+// lists themselves. Only the comparison is straightened; the value an
+// adapter writes keeps the apostrophe the model sent.
+function straightenApostrophes(text) {
+  return text.replace(/[’ʼ]/g, "'");
+}
+
 // True when the text opens like a refusal. Case-insensitive and anchored at
 // the start: a refusal is how the model begins, not a word it uses later.
 export function startsWithRefusal(text) {
   if (typeof text !== 'string') return false;
-  const t = text.trim();
+  const t = straightenApostrophes(text.trim());
   const lower = t.toLowerCase();
   return REFUSAL_RE.test(t) || REFUSAL_PREFIXES.some((p) => lower.startsWith(p.toLowerCase()));
 }
@@ -52,7 +62,7 @@ export function startsWithRefusal(text) {
 // True when the text hedges anywhere ("unclear", "cannot determine").
 export function containsUncertainty(text) {
   if (typeof text !== 'string') return false;
-  const lower = text.toLowerCase();
+  const lower = straightenApostrophes(text).toLowerCase();
   return UNCERTAINTY_TERMS.some((term) => lower.includes(term.toLowerCase()));
 }
 

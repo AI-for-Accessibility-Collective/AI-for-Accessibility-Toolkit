@@ -129,6 +129,16 @@ check('short: "Not available in your region" passes', rejectShortText('Not avail
 check('short: a hedge is rejected as uncertain', rejectShortText('Unclear destination') === 'reads as uncertain');
 check('short: type is checked before length', rejectShortText(['a']) === 'not a string');
 
+// A typographic apostrophe is what a model usually sends, and the lists are
+// written with a straight one, so the comparison straightens the value first.
+check('short: a typographic apostrophe does not hide a refusal', rejectShortText('I can\u2019t tell where this link goes') === 'reads as a refusal');
+check('short: "I\u2019m unable to name this column" is rejected', rejectShortText('I\u2019m unable to name this column') === 'reads as a refusal');
+check('short: "I don\u2019t know" is rejected', rejectShortText('I don\u2019t know') === 'reads as a refusal');
+// The two gates that match the lists directly keep their own behavior: they
+// are not straightened, so this stays visible if that ever changes.
+check('short: isValidLabel is unchanged by the straightening', isValidLabel('I can\u2019t tell where this link goes') === true);
+check('short: isConfidentDescription is unchanged by the straightening', isConfidentDescription('I can\u2019t tell what this image shows') === true);
+
 // ── cleanShortText (the wrapping a model adds despite the contract) ──────────
 check('clean: straight double quotes are stripped', cleanShortText('"City"') === 'City');
 check('clean: straight single quotes are stripped', cleanShortText("'City'") === 'City');
