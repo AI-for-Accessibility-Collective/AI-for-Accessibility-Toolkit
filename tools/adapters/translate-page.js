@@ -5,6 +5,7 @@
 // re-attached on disable — the translated view is flat text, but restore is
 // lossless.
 import { translateText, announce } from '../utils/ai.js';
+import { rejectRewrite } from '../utils/ai-output.js';
 
 // Leaf text blocks worth translating (a block containing another block is
 // skipped so we never translate the same text twice).
@@ -12,6 +13,14 @@ const BLOCK_SEL = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, figcaption, captio
 const SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="true"]';
 const MAX_BLOCKS = 80;   // per-page AI cost bound
 const BATCH = 4;         // concurrency bound
+
+// Output gate band. Character counts move a lot between scripts: English
+// into Chinese or Japanese lands near a third of the source length, and the
+// reverse near three times, so the band is wide and only catches a block that
+// came back as a fragment, or as a translation plus commentary.
+// FLAG(review): 0.25 and 4 are judgment calls with no measured basis yet.
+const MIN_TRANSLATED_RATIO = 0.25;
+const MAX_TRANSLATED_RATIO = 4;
 
 export const TranslatePage = {
   enabled: false,
@@ -48,7 +57,15 @@ export const TranslatePage = {
         let out;
         try { out = await translateText(original, this.targetLang); }
         catch { return; } // provider failure → leave this block untouched
-        if (!out || !this.enabled || !el.isConnected) return;
+        if (out == null || !this.enabled || !el.isConnected) return;
+        // Gate the answer before it replaces the block. A refusal or a
+        // fragment would silently replace what the reader came for; leave the
+        // block untouched instead, the same as a null answer.
+        const rejected = rejectRewrite(out, original, { minRatio: MIN_TRANSLATED_RATIO, maxRatio: MAX_TRANSLATED_RATIO });
+        if (rejected) {
+          console.warn(`[AI4A11y] Translate: left a block untouched, rejected model output (${rejected})`);
+          return;
+        }
         // Keep the EXACT original child nodes (detached but referenced) so
         // disable() can re-attach them — links/listeners survive the round-trip.
         const originalNodes = [...el.childNodes];

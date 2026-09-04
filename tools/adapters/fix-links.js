@@ -1,6 +1,7 @@
 // Improve ambiguous link text ("click here", "read more") for screen reader users
 import { improveLinkText } from '../utils/ai.js';
 import { markProcessed } from '../utils/dom.js';
+import { rejectShortText } from '../utils/ai-output.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -22,7 +23,13 @@ export async function improveAmbiguousLink(link) {
 
   try {
     const improved = await improveLinkText(text, link.href, context);
-    if (improved && improved.toLowerCase() !== text.toLowerCase()) {
+    // Gate the answer before it becomes the accessible name. A refusal or a
+    // hedge in aria-label is announced as the link's name, which is worse
+    // than the "click here" it replaced. Rejected answers degrade like null.
+    const rejected = improved == null ? null : rejectShortText(improved);
+    if (rejected) {
+      console.warn(`[AI4A11y] improveAmbiguousLink: rejected model output (${rejected})`);
+    } else if (improved && improved.toLowerCase() !== text.toLowerCase()) {
       link.setAttribute('aria-label', improved);
       link.classList.add('ai4a11y-adapted');
       markProcessed(link, 'done');

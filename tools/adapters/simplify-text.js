@@ -1,4 +1,16 @@
 import { simplifyText as aiSimplifyText, summarizeText as aiSummarizeText } from '../utils/ai.js';
+import { rejectRewrite } from '../utils/ai-output.js';
+
+// Output gate bands. A plain-language rewrite does get shorter, since it
+// drops jargon and filler, but a result under this share of the input has
+// almost certainly dropped ideas, and the reader cannot see what is missing.
+// A result over this multiple of the input is not a simplification either;
+// it is usually preamble or explanation. A summary is short by design, so
+// it has no floor, but it cannot be longer than the text it summarizes.
+// FLAG(review): 0.3, 2 and 1 are judgment calls with no measured basis yet.
+const MIN_SIMPLIFIED_RATIO = 0.3;
+const MAX_SIMPLIFIED_RATIO = 2;
+const MAX_SUMMARY_RATIO = 1;
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -24,7 +36,16 @@ export async function simplifyText(element) {
   try {
     const simplified = await aiSimplifyText(originalText);
 
-    if (simplified) {
+    // Gate the answer before it replaces what the reader sees. A refusal
+    // sentence or a fragment would stand in for the whole passage with no
+    // sign that anything was lost. Rejected answers degrade like null.
+    const rejected = simplified == null ? null
+      : rejectRewrite(simplified, originalText, { minRatio: MIN_SIMPLIFIED_RATIO, maxRatio: MAX_SIMPLIFIED_RATIO });
+    if (rejected) {
+      console.warn(`[AI4A11y] simplifyText: rejected model output (${rejected})`);
+    }
+
+    if (simplified && !rejected) {
 
       element.dataset.ai4a11yOriginal = originalText;
       element.classList.add('ai4a11y-simplified');
@@ -100,9 +121,16 @@ export async function summarizeContent(element) {
   }
 
   try {
-    const summary = await aiSummarizeText(text.substring(0, 3000));
+    const excerpt = text.substring(0, 3000);
+    const summary = await aiSummarizeText(excerpt);
 
-    if (summary) {
+    const rejected = summary == null ? null
+      : rejectRewrite(summary, excerpt, { maxRatio: MAX_SUMMARY_RATIO });
+    if (rejected) {
+      console.warn(`[AI4A11y] summarizeContent: rejected model output (${rejected})`);
+    }
+
+    if (summary && !rejected) {
 
       // Create summary box (build DOM to prevent XSS)
       const summaryBox = document.createElement('div');

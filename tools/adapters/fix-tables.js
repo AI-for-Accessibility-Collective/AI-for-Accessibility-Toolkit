@@ -1,6 +1,7 @@
 // Fix data tables without header rows so screen readers can announce columns
 import { inferColumnHeader } from '../utils/ai.js';
 import { markProcessed } from '../utils/dom.js';
+import { rejectShortText } from '../utils/ai-output.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -81,7 +82,15 @@ export async function fixTableHeaders(table) {
       const samples = rows.slice(0, 5)
         .map(r => r.querySelectorAll('td')[col]?.textContent?.trim())
         .filter(Boolean);
-      const header = (col < MAX_AI_COLUMNS && samples.length >= 2) ? await inferColumnHeader(samples) : null;
+      const answer = (col < MAX_AI_COLUMNS && samples.length >= 2) ? await inferColumnHeader(samples) : null;
+      // A generated <th> is announced for every cell in its column, so a
+      // refusal, a hedge, or a multi-line answer falls back to the same
+      // "Column N" a null answer gets.
+      const rejected = answer == null ? null : rejectShortText(answer);
+      if (rejected) {
+        console.warn(`[AI4A11y] fixTableHeaders: rejected model output for column ${col + 1} (${rejected})`);
+      }
+      const header = rejected ? null : answer;
       headers.push(header || `Column ${col + 1}`);
     }
 
