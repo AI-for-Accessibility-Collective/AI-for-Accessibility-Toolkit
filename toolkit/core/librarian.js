@@ -1650,11 +1650,12 @@ Return ONLY valid JSON with:
               const names = new Set(skills.map(s => s.name));
               let name = slug;
               for (let n = 2; names.has(name); n++) name = `${slug}-${n}`;
-              // siteTypes come from the observation's category, which
-              // logObservation only accepts as a taxonomy id, so saveSkill's
-              // siteRelevance check passes here. Keep the refusal visible all
-              // the same: the profile action above is already saved, and a
-              // silent drop would leave the person without the skill.
+              // siteTypes come from the observation's category. logObservation
+              // and setSiteCategoryOverride both accept only taxonomy ids, so
+              // saveSkill's siteRelevance check passes here. A refusal is still
+              // reported through the catch below rather than dropped: the
+              // profile action above is already saved, and a silent drop would
+              // leave the person without the skill.
               const res = await this.saveSkill({
                 name,
                 description: `Runs "${prompt}" for you. Use it on ${cats.join(', ')} sites.`,
@@ -1663,13 +1664,14 @@ Return ONLY valid JSON with:
                 recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt }] },
                 body: `# ${prop.change.action.name}\n\nSaved from a task the assistant completed for you. Applying this skill runs the same task on the current page.`,
               });
-              if (!res.saved) console.warn('[Librarian] accepted task not saved as a skill:', res.errors.join('; '));
+              if (!res.saved) throw new Error(res.errors.join('; '));
             }
+            // Only claim a stored skill once one exists (new or already there).
+            demo.trace('skill', 'skillsdb', 'saved as skill.md');
+            demo.trace('skill', 'autoenable', 'skill stored');
           } catch (e) {
             console.warn('[Librarian] could not save accepted task as a skill:', e.message);
           }
-          demo.trace('skill', 'skillsdb', 'saved as skill.md');
-          demo.trace('skill', 'autoenable', 'skill stored');
           demo.trace('skill', 'profiledb_skill', 'trigger registered');
           demo.trace('personal', 'continual', 'continual update');
         } else if (prop.change?.op === 'add-memory' && prop.change.record) {
