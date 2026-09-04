@@ -63,6 +63,9 @@ const { datastore, librarian } = createToolkit({
 
 await datastore.runMigrations();
 await librarian.setProfileField('supportAreas', ['vision']);
+await librarian.setProfileField('fields.needs', [
+  { dimension: 'textSize', value: 1.4, strength: 'preference', source: 'onboarding' },
+]);
 
 // One device-independent understanding of the person…
 const model = await librarian.getAbilityModel();
