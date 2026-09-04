@@ -108,6 +108,19 @@ async function run() {
     check('undo: reports nothing to undo when journal empty', r2.ok === false);
   }
 
+  // ── 3b. A receiver that reports a cleared key as null ─────────────────────
+  // The mock keeps a null it was given, so its activeSettings carries
+  // { fontScale: null } after a clear. That is "not set", not zero: a relative
+  // step must start from the baseline, or "bigger text" lands on the minimum.
+  {
+    const recv = createMockReceiver({ initial: { fontScale: 130 } });
+    const c = createController({ control: recv });
+    await recv.applySettings({ fontScale: null });
+    check('null active: the mock reports the key as null', (await recv.getContext()).activeSettings.fontScale === null);
+    const r = await c.handle('bigger text');
+    check('null active: relative step starts from the baseline, not 0', r.ok && recv.settings.fontScale === 110);
+  }
+
   // ── 4. Honesty: a receiver that can't do a key says so, doesn't fake it ───
   {
     const recv = createMockReceiver({ settingKeys: ['fontScale'] }); // no darkMode

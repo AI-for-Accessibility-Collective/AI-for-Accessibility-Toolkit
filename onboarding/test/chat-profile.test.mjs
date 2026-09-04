@@ -8,7 +8,7 @@
 //
 //   node onboarding/test/chat-profile.test.mjs
 
-import { mergeOnboarding, onboardingReply, resetReply, NO_PROFILE_TO_RESET, profilePill, appliedSummary } from '../chat-profile.js';
+import { mergeOnboarding, onboardingReply, resetReply, resetChanges, NO_PROFILE_TO_RESET, profilePill, appliedSummary } from '../chat-profile.js';
 import { visionKindOf } from '../chat-routing.js';
 
 let pass = 0, fail = 0;
@@ -145,6 +145,110 @@ const merge = (prev, next) => mergeOnboarding(prev, next, visionKindOf);
 
   check('the reset reply promises the profile itself is unchanged', /profile itself is unchanged/.test(one));
   check('with no profile at all, it explains rather than erroring', /nothing to go back to/.test(NO_PROFILE_TO_RESET));
+}
+
+// ── a reset has to reach the page, not only the store ────────────────────────
+// Re-rendering the profile restores the keys the profile governs and nothing
+// else, so a change the profile never mentions (dark mode, turned on by hand)
+// survived a reset the reply said had forgotten it (issue #26). resetChanges
+// decides which keys to send back to their "not set" value: the ones the server
+// forgot, plus the ones the receiver reports as active, minus the ones the
+// profile is about to render anyway.
+{
+  const meta = {
+    darkMode:     { type: 'boolean' },
+    dyslexiaFont: { type: 'boolean' },
+    fontScale:    { type: 'number', range: [50, 200] },
+    contrastMode: { type: 'enum', options: ['none', 'light', 'yellow-black'] },
+    translateTo:  { type: 'string' },
+  };
+  const plan = (input) => resetChanges(input, meta);
+
+  const stored = plan({ forgotten: [{ key: 'darkMode' }], active: {}, profile: {} });
+  check('a forgotten key the profile never mentions is cleared', stored.clear.darkMode === false);
+  check('…but a key that was never showing is not reported as cleared', stored.showing.length === 0);
+
+  const types = plan({ forgotten: [{ key: 'darkMode' }, { key: 'fontScale' }, { key: 'contrastMode' }, { key: 'translateTo' }], active: {}, profile: {} });
+  check('a boolean clears to false', types.clear.darkMode === false);
+  check('a number clears to null, the receiver’s not-set value', types.clear.fontScale === null);
+  check('an enum clears to its first option', types.clear.contrastMode === 'none');
+  check('a string clears to null', types.clear.translateTo === null);
+
+  const governed = plan({ forgotten: [{ key: 'dyslexiaFont' }], active: { dyslexiaFont: false }, profile: { dyslexiaFont: true } });
+  check('a key the profile governs is left to the profile', !('dyslexiaFont' in governed.clear));
+  check('…and is not reported as cleared either', governed.showing.length === 0);
+
+  // The chat surface stores nothing, so in a chat-only session the server
+  // forgets nothing and the receiver is the only record of a manual change.
+  const session = plan({ forgotten: [], active: { darkMode: true, fontScale: 120, dyslexiaFont: true }, profile: { dyslexiaFont: true } });
+  check('a key active on the page is cleared even when nothing was stored', session.clear.darkMode === false && session.clear.fontScale === null);
+  check('…and reported as showing', session.showing.join() === 'darkMode,fontScale');
+  check('…while the profile’s own key is left alone', !('dyslexiaFont' in session.clear));
+
+  const quiet = plan({ forgotten: [], active: { darkMode: false, fontScale: null, contrastMode: 'none' }, profile: {} });
+  check('a key already at its not-set value is not showing', quiet.showing.length === 0);
+  check('…and nothing is sent for it', Object.keys(quiet.clear).length === 0);
+
+  const unknown = plan({ forgotten: [], active: { mystery: true }, profile: {} });
+  check('a showing key the registry does not know cannot be cleared', unknown.unclearable.join() === 'mystery');
+  check('…is still reported as showing', unknown.showing.join() === 'mystery');
+  check('…and nothing is sent for it', !('mystery' in unknown.clear));
+
+  // A receiver is free to report any key at all, and the registry is a plain
+  // object, so a key that names one of Object.prototype's members must not read
+  // as a registry entry with a not-set value of its own.
+  const inherited = plan({ forgotten: [], active: { toString: 'x', constructor: true }, profile: {} });
+  check('a key inherited from Object.prototype is not treated as a registry entry',
+    Object.keys(inherited.clear).length === 0 && inherited.unclearable.join() === 'toString,constructor');
+
+  const unknownStored = plan({ forgotten: [{ key: 'textSize' }], active: {}, profile: {} });
+  check('a forgotten key the registry does not know, and the page does not show, is ignored',
+    Object.keys(unknownStored.clear).length === 0 && unknownStored.unclearable.length === 0);
+
+  const empty = resetChanges({}, meta);
+  check('missing inputs are treated as empty', Object.keys(empty.clear).length === 0 && empty.showing.length === 0 && empty.unclearable.length === 0);
+}
+
+// ── and the reply says only what happened ────────────────────────────────────
+{
+  const both = resetReply({ forgotten: [{ key: 'textSize' }] }, { cleared: ['darkMode'], kept: [] });
+  check('a stored change and a page change are both reported', /forgot 1 change/.test(both) && /cleared darkMode on this page/.test(both));
+  check('…in one sentence', /\(textSize\) and cleared darkMode on this page\./.test(both));
+
+  const pageOnly = resetReply({ forgotten: [] }, { cleared: ['fontScale', 'darkMode'], kept: [] });
+  check('with nothing stored, a page change alone still goes back to the profile', /^Back to your profile/.test(pageOnly));
+  check('…names what was cleared', /cleared fontScale, darkMode on this page/.test(pageOnly));
+  check('…and does not claim a stored change', !/forgot/.test(pageOnly) && !/already on your profile/.test(pageOnly));
+
+  // The usual case: the key the store forgot is the key the page was showing.
+  const same = resetReply({ forgotten: [{ key: 'fontScale' }, { key: 'darkMode' }] }, { cleared: ['fontScale', 'darkMode'], kept: [] });
+  check('a key forgotten and cleared is named once, not once per clause', !/darkMode.*darkMode/.test(same));
+  check('…and the page is still said to have been cleared', /\(fontScale, darkMode\) and cleared them on this page\./.test(same));
+
+  const overlap = resetReply({ forgotten: [{ key: 'fontScale' }] }, { cleared: ['fontScale', 'darkMode'], kept: [] });
+  check('a partial overlap names only the keys the store clause did not', /and cleared darkMode on this page\./.test(overlap));
+
+  // The store forgot a key the page was never showing, so the page clause
+  // cannot stand in for the whole list without claiming a clear that did not
+  // happen.
+  const fewer = resetReply({ forgotten: [{ key: 'fontScale' }, { key: 'darkMode' }] }, { cleared: ['fontScale'], kept: [] });
+  check('the page clause does not stand in for a key the page did not clear',
+    /\(fontScale, darkMode\) and cleared fontScale on this page\./.test(fewer));
+
+  const kept = resetReply({ forgotten: [{ key: 'textSize' }] }, { cleared: [], kept: ['textSize'] });
+  check('a key the page could not clear is admitted', /couldn’t clear textSize on this page/.test(kept));
+  check('…and said to stay as it was', /stays as you left it/.test(kept));
+
+  const keptTwo = resetReply({ forgotten: [] }, { cleared: [], kept: ['textSize', 'darkMode'] });
+  check('two kept keys read as plural', /they stay as you left them/.test(keptTwo));
+  check('with nothing forgotten and nothing cleared, the reply does not say “back to your profile”', !/Back to your profile/.test(keptTwo));
+  check('…but says why', /no stored changes to forget/.test(keptTwo));
+
+  check('the new branches still promise the profile itself is unchanged',
+    [both, pageOnly, kept, keptTwo].every((r) => /profile itself is unchanged/.test(r)));
+  check('a missing page report keeps the old wording', /forgot 1 change you'd made \(textSize\)\. Your profile/.test(resetReply({ forgotten: [{ key: 'textSize' }] })));
+  check('nothing stored and nothing on the page is still “already on your profile”',
+    /already on your profile/.test(resetReply({ forgotten: [] }, { cleared: [], kept: [] })));
 }
 
 // ── the pill ─────────────────────────────────────────────────────────────────

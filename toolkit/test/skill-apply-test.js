@@ -88,7 +88,7 @@ const BUILT = `Here is your skill:
 name: night-reader
 description: Calm, dark, large-text reading for late-night articles.
 supportAreas: [vision, reading]
-siteRelevance: [news, blog]
+siteRelevance: [news, reference]
 ---
 # Night Reader
 \`\`\`json
@@ -101,6 +101,11 @@ siteRelevance: [news, blog]
 \`\`\``;
 const built = parseBuiltSkill(BUILT, { tools });
 check('Engineer output (with preamble + fences) parses to a valid skill', built.valid && built.skill.name === 'night-reader');
+// The same output with a siteRelevance outside the taxonomy ('blog' is not a
+// category; blogs classify as news) must not validate (issue #34).
+const slipped = parseBuiltSkill(BUILT.replace('[news, reference]', '[news, blog]'), { tools });
+check('Engineer output with a siteRelevance slip is rejected, naming the value',
+  !slipped.valid && slipped.errors.some(e => e.includes('"blog"')));
 {
   const plan = resolveSkill(built.skill);
   const orphans = Object.keys(plan.settings).filter(k => !APPLY_KEYS.has(k));

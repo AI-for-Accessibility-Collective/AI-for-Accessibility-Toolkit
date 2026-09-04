@@ -25,8 +25,9 @@ import { createLlmLane } from '/controller/lib/llm-lane.js';
 import { bestVoice, forSpeech, earconThinkPulse, earconDone, earconError } from '/controller/lib/web/ui.js';
 import { detectOnboarding, visionKindOf, isResetToProfile } from '/chat-routing.js';
 import { routeTurn, classifyControllerResult, fallbackHelp, generalAnswerPrompt } from '/chat-turn.js';
-import { mergeOnboarding, onboardingReply, resetReply, NO_PROFILE_TO_RESET, profilePill, appliedSummary } from '/chat-profile.js';
+import { mergeOnboarding, onboardingReply, resetReply, resetChanges, NO_PROFILE_TO_RESET, profilePill, appliedSummary } from '/chat-profile.js';
 import { createHistory, onFirstLine, onLastLine } from '/chat-history.js';
+import { watchConnection } from '/chat-connect.js';
 import { renderWebSettings } from '/toolkit/surfaces/web.js';
 import { settingsMeta } from '/controller/toolkit/registry/tools.js';
 
@@ -100,20 +101,51 @@ async function applyOnboarding(o) {
 // only the keys the profile actually asked for, so it merges over settings the
 // person set by hand instead of stomping them, and a receiver drops any key it
 // does not support.
-async function applyProfileSettings() {
-  let settings;
-  try { settings = renderWebSettings(operatorModel || {}); } catch { return null; }
-  if (!settings || !Object.keys(settings).length) return null;
+//
+// Runs at boot, after each onboarding turn, and whenever what we drive changes:
+// useLocal() and, for a remote receiver, the moment its socket opens. The
+// profile follows the person onto whatever /chat is driving, so an app
+// connected after boot (browser-harness from Settings) learns it too.
+//
+// `extra` is applied in the same call, underneath the profile: a reset uses it
+// to clear keys the profile does not govern, and the profile wins where both
+// name a key.
+function profileSettings() {
+  try { return renderWebSettings(operatorModel || {}) || {}; } catch { return {}; }
+}
+async function applyProfileSettings(extra = null) {
+  const settings = { ...(extra || {}), ...profileSettings() };
+  if (!Object.keys(settings).length) return null;
   try {
     const res = await currentControl.applySettings(settings);
     return (res && res.applied) || null; // what the receiver actually took, not what we asked for
   } catch { return null; } // a receiver that refuses must not break the turn
 }
 
+// What the receiver says it has applied. Empty when it cannot say.
+async function activeSettings() {
+  try {
+    const ctx = await currentControl.getContext();
+    return (ctx && ctx.activeSettings) || {};
+  } catch { return {}; }
+}
+
 // Drop the durable user-explicit setting overrides so the profile is the source
 // again (librarian.resetToProfile via /api/reset-to-profile). Does NOT forget who
 // the person is — support areas, free text and needs all survive; that's what the
 // Reset-profile button in Settings does.
+//
+// The answer says the changes are forgotten, so the page has to agree with it.
+// Re-rendering the profile only restores the keys the profile governs; the keys
+// it never mentions (dark mode, turned on by hand) are cleared here as well, in
+// the same apply, and the reply names only what the receiver actually took.
+//
+// FLAG(review): the keys cleared are the server's `forgotten` list AND the keys
+// the receiver reports active. Issue #26 asks for the first; the second is
+// needed because this surface stores no manual change, so in a chat-only
+// session `forgotten` is empty and the receiver is the only record of "dark
+// mode". Without it the reply would say "no changes to forget" over a page
+// that is still dark.
 async function applyResetToProfile() {
   const uid = currentUid();
   if (!uid) return NO_PROFILE_TO_RESET;
@@ -122,8 +154,11 @@ async function applyResetToProfile() {
   if (!d.ok) throw new Error(d.error || 'reset failed');
   await loadProfile();
   rebuildController();
-  await applyProfileSettings(); // the answer says the overrides are forgotten — make the page say it too
-  return resetReply(d);
+  const plan = resetChanges({ forgotten: d.forgotten, active: await activeSettings(), profile: profileSettings() }, settingsMeta);
+  const applied = await applyProfileSettings(plan.clear);
+  const cleared = plan.showing.filter((k) => applied && k in applied);
+  const kept = plan.showing.filter((k) => !cleared.includes(k));
+  return resetReply(d, { cleared, kept });
 }
 
 // ── the driven app (controller half) ─────────────────────────────────────────
@@ -185,6 +220,7 @@ function useLocal() {
   setConnStatus('hidden');
   $('drive-note').textContent = 'Driving the demo preview + this window.';
   rebuildController();
+  applyProfileSettings(); // a disclosure made while a remote app was driven never reached the preview
   if (unNote) { unNote(); unNote = null; }
   wireNotes();
 }
@@ -201,18 +237,21 @@ function useRemote(url) {
   wireNotes();
 
   // Reflect the socket lifecycle. Guard with the channel identity so a previous
-  // socket's late close/error can't clobber the status of a newer connection.
+  // socket's late open/close/error can't clobber the status of a newer
+  // connection, or apply the profile to it. The profile goes out on the open
+  // transition, not here: the socket is still connecting when useRemote()
+  // returns, and a request posted now would wait in the channel's outbox with
+  // its timeout already running (see chat-connect.js).
   setConnStatus('connecting', url);
   const myChannel = remoteChannel, sock = remoteChannel.socket;
-  let opened = false;
   const live = () => remoteChannel === myChannel;
   try {
-    if (sock.readyState === 1) { opened = true; setConnStatus('connected', url); }
-    else {
-      sock.addEventListener('open', () => { opened = true; if (live()) setConnStatus('connected', url); });
-      sock.addEventListener('error', () => { if (live() && !opened) setConnStatus('failed', url); });
-      sock.addEventListener('close', () => { if (live()) setConnStatus(opened ? 'lost' : 'failed', url); });
-    }
+    watchConnection(sock, {
+      live,
+      onConnected: () => { setConnStatus('connected', url); applyProfileSettings(); },
+      onFailed: () => setConnStatus('failed', url),
+      onLost: () => setConnStatus('lost', url),
+    });
   } catch {}
 }
 
@@ -509,7 +548,9 @@ async function boot() {
   initSettings();
   initVoiceInput();
 
-  // Reconnect to the receiver we were driving before a refresh, if any.
+  // Reconnect to the receiver we were driving before a refresh, if any. The
+  // profile above went to the preview; the receiver gets it when its socket
+  // opens (useRemote), since it is not connected yet.
   let savedWs = ''; try { savedWs = localStorage.getItem(WS_KEY) || ''; } catch {}
   if (savedWs) useRemote(savedWs);
 

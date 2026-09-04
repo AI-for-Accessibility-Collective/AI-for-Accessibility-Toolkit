@@ -42,12 +42,17 @@ export function updateSettings(newSettings) {
 /**
  * Merge the tool settings of multiple profiles into one settings object.
  * Booleans: OR (any profile enabling a feature wins, except explicit false
- * only yields when no other profile set true). Numbers: MAX. Color filter:
- * last non-none wins. Shared by the popup presets and applyProfiles so the
- * extension UI and the profiles module can never disagree.
+ * only yields when no other profile set true). Numbers: MAX. Enum settings
+ * whose off value is the string 'none' (colorFilter, colorBlindMode,
+ * contrastMode): last non-none wins, because 'none' is truthy and would
+ * otherwise hide a real value set by a later profile. Shared by the popup
+ * presets and applyProfiles so the extension UI and the profiles module can
+ * never disagree.
  */
 export function mergeProfileTools(profileIds) {
   const numericKeys = ['fontScale', 'lineHeight', 'letterSpacing'];
+  // Enums whose off value is the truthy string 'none'.
+  const noneKeys = ['colorFilter', 'colorBlindMode', 'contrastMode'];
   const merged = {};
 
   for (const profileId of profileIds) {
@@ -57,7 +62,7 @@ export function mergeProfileTools(profileIds) {
     for (const [key, value] of Object.entries(profile.tools)) {
       if (numericKeys.includes(key) && typeof value === 'number') {
         merged[key] = Math.max(merged[key] || 0, value);
-      } else if ((key === 'colorFilter' || key === 'contrastMode') && value !== 'none') {
+      } else if (noneKeys.includes(key) && value !== 'none') {
         merged[key] = value;
       } else {
         merged[key] = merged[key] || value;
@@ -116,13 +121,16 @@ export function getSetting(key) {
   return settings[key];
 }
 
-// Get list of enabled adapters for a profile
-export function getEnabledAdapters(profileId) {
-  const profile = profiles[profileId];
-  if (!profile?.tools) return [];
+// Map a settings object (a profile's `tools`, a registry entry's `settings`,
+// or a skill's resolved settings) to the adapter module names it reaches.
+// This is the catalog's statement of which key reaches which module. The
+// hosts keep their own copies (applyProfileByName in cli/cli-tools.js, the
+// extension's content script), and tools/test/registry-parity-test.js checks
+// this one against the registry.
+export function adaptersForTools(tools) {
+  if (!tools) return [];
 
   const enabled = [];
-  const tools = profile.tools;
 
   // Map tool settings to adapter names
   if (tools.autoDescribe) enabled.push('generate-alt');
@@ -130,7 +138,17 @@ export function getEnabledAdapters(profileId) {
   if (tools.autoSimplify) enabled.push('simplify-text');
   if (tools.autoSummarize) enabled.push('simplify-text'); // summarization
   if (tools.autoWcagFix) enabled.push('wcag-fixes');
-  if (tools.autoFixLabels) enabled.push('generate-labels');
+  // The extension's content script runs the link-text and table-header
+  // repairs under the same key as label generation, so a profile that turns
+  // on autoFixLabels reaches all three. fix-links and fix-tables have no
+  // registry entry or key of their own.
+  // FLAG(review): recorded from one host of three. The CLI (applyProfileByName
+  // in cli/cli-tools.js) has no autoFixLabels line and runs these two only as
+  // explicit commands, and the personalized extension enables only
+  // GenerateLabels on this key. If link text and table headers should be
+  // switchable on their own, they need their own registry entries and setting
+  // keys instead of riding on autoFixLabels.
+  if (tools.autoFixLabels) enabled.push('generate-labels', 'fix-links', 'fix-tables');
   if (tools.showCaptions) enabled.push('show-captions'); // turn on existing captions (no AI)
   if (tools.autoCaptions) enabled.push('generate-captions'); // transcribe media that has none (AI)
   if (tools.fixContrast) enabled.push('fix-contrast');
@@ -140,6 +158,23 @@ export function getEnabledAdapters(profileId) {
   if (tools.enhanceFocus) enabled.push('visual-assist');
   if (tools.readingGuide) enabled.push('visual-assist');
   if (tools.fontScale && tools.fontScale !== 100) enabled.push('visual-assist');
+  // Spacing reaches VisualAssist too. The extension's content script enables
+  // it when lineHeight is not 1.5 or letterSpacing is not 0 (the settings.json
+  // defaults), and the CLI passes either value through whenever a profile
+  // sets it.
+  if (tools.lineHeight && tools.lineHeight !== 1.5) enabled.push('visual-assist');
+  if (tools.letterSpacing) enabled.push('visual-assist');
+  // High contrast is VisualAssist's too: tools/adapters/visual-assist.js reads
+  // contrastMode and paints the light and yellow-black themes from it. 'none'
+  // is the off value, and it is truthy, so it needs the same guard the color
+  // filter gets below. controller/grammar.js can produce this key from chat
+  // ("high contrast"), so it is a key a person reaches today.
+  // FLAG(review): the CLI's applyProfileByName builds visualOpts without
+  // contrastMode, so a profile carrying it would list visual-assist here and
+  // still get no contrast change under the CLI. No shipped profile sets the
+  // key, so nothing changes today. This is the same host divergence the other
+  // FLAG notes in this function record.
+  if (tools.contrastMode && tools.contrastMode !== 'none') enabled.push('visual-assist');
   if (tools.motionReducer) enabled.push('motion-reducer');
   if (tools.dismissOverlays) enabled.push('dismiss-overlays');
   if (tools.bigTargets) enabled.push('big-targets');
@@ -175,9 +210,32 @@ export function getEnabledAdapters(profileId) {
   if (tools.focusMode) enabled.push('focus-mode');
   if (tools.keyboardNav) enabled.push('keyboard-nav');
   if (tools.voiceCommands) enabled.push('voice-commands');
-  if (tools.colorFilter && tools.colorFilter !== 'none') enabled.push('color-blind');
+  // Two names for one setting: profiles (settings.json) say colorFilter, the
+  // registry and settingsMeta say colorBlindMode, and both hosts (the
+  // extension's content script and applyProfileByName in cli/cli-tools.js)
+  // accept either. 'none' under one name must not hide a filter set under
+  // the other: settings.json's defaults carry colorFilter: 'none', so any
+  // settings object built over the defaults has colorFilter present.
+  // FLAG(review): two names for one key. mergeProfileTools above now merges
+  // both names under the same last-non-none rule, so the two stay in step.
+  // Which name should survive is still a decision to log, not one this file
+  // makes.
+  const colorMode = [tools.colorFilter, tools.colorBlindMode].find((v) => v && v !== 'none');
+  if (colorMode) enabled.push('color-blind');
+  // FLAG(review): the personalized extension enables AgentWatch on this key
+  // (personalized-extension/extension/content/content.js line 400 in the
+  // extension repo at cf86b69). The CLI (applyProfileByName in
+  // cli/cli-tools.js) and the extension's main content script have no line
+  // for it, so under those two hosts a profile that sets agentWatch lists the
+  // adapter here without anything switching it on.
+  if (tools.agentWatch) enabled.push('agent-watch');
 
   return [...new Set(enabled)]; // Remove duplicates
+}
+
+// Get list of enabled adapters for a profile
+export function getEnabledAdapters(profileId) {
+  return adaptersForTools(profiles[profileId]?.tools);
 }
 
 // Export settings object for direct access
