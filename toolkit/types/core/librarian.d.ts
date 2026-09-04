@@ -45,7 +45,7 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
             }[];
             provenance: {};
             category: any;
-            origin: string | null;
+            origin: any;
         };
     }>;
     getSiteCategory(origin: any, opts?: {}): Promise<any>;
@@ -60,14 +60,14 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
         }[];
         provenance: {};
         category: any;
-        origin: string | null;
+        origin: any;
     }>;
     recall(url: any, task?: string, contexts?: any[]): Promise<{
         block: string;
         facts: any[];
         profile: any;
         category: any;
-        origin: string | null;
+        origin: any;
         procedural: ({
             kind: string;
             id: any;
