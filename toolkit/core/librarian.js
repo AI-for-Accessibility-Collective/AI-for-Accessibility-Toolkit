@@ -533,7 +533,10 @@ export function createLibrarian({
     //   url/contexts — what to compute the returned `restored` view for.
     // @returns {{forgotten: Array<{scope,key,value}>, scopes: string[], restored: object}}
     async resetToProfile(opts = {}) {
-      const only = opts.scope && VALID_SCOPE.test(opts.scope) ? opts.scope : null;
+      // No scope means every scope. A scope that is supplied but invalid
+      // narrows to 'general', the same as every other scope writer here; it
+      // must never widen a scoped reset into a reset of everything.
+      const only = opts.scope ? (VALID_SCOPE.test(opts.scope) ? opts.scope : 'general') : null;
       const shards = only
         ? { [only]: await DS().getMemoryShard(only) }
         : await DS().allMemoryShards();

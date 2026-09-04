@@ -8,7 +8,7 @@ ports and consume the core, the catalog, or the hosted service.
 ## Architecture
 
 - `toolkit/` — the platform-agnostic core. Sub-parts:
-  - `core/` — Librarian (memory/profile agent), datastore, the ability model
+  - `core/`: Librarian (memory/profile agent), datastore, the ability model
     (`ability.js`, `surface.js`, `strength.js`, `units.js`, `memory-class.js`,
     `taxonomy.js`), and the skill engine (`skill.js`, `skill-builder.js`). The
     old broker was folded into `sync/grants.js` and the Librarian. Imports only
@@ -27,6 +27,9 @@ ports and consume the core, the catalog, or the hosted service.
   `auditors/` (issue detectors), `profiles/` (ability presets), `utils/`.
 - `server/` — hosted HTTP service exposing the Librarian methods to any
   language/runtime.
+- `cli/` — the Python CLI (`ai4a11y`) that drives a real page over the
+  DevTools Protocol and bundles the catalog as `cli/cli-tools.bundle.js`.
+  Rebuild the bundle with `npm run build:cli` and commit it; CI fails on drift.
 - `controller/` — an **optional** UI layer (a sibling of the toolkit, not part
   of the core): the default text/voice control surface that drives any app
   through a neutral `ControlPort`. It *consumes* the toolkit (imports
@@ -73,7 +76,8 @@ skill for the full surface.
 
 ## Build & Test
 
-Pure ES modules — no build step for the core. Run the suites:
+Pure ES modules, no build step for the core. The one generated file is
+`cli/cli-tools.bundle.js` (`npm run build:cli`). Run the suites:
 
 ```bash
 npm test                       # tools, toolkit, controller, and onboarding suites

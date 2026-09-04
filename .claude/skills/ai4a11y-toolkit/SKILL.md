@@ -367,20 +367,11 @@ TOOLKIT_SERVER_TOKEN=aat_...                   # UID-bound access token, minted 
    `Authorization: Bearer $TOOLKIT_SERVER_TOKEN` returns the token's
    `{uid, label}`.
 
-The browser extension does **not** use `.env`. Its config lives in
-`chrome.storage.sync` (`toolkitServerUrl` / `toolkitServerToken`), written by
-the extension's Options page. For a demo build that should already be pointed
-at an instance, put the same two values in an untracked
-`personalized-extension/extension-config.local.json`:
-
-```json
-{ "toolkitServerUrl": "https://<your-instance>", "toolkitServerToken": "aat_..." }
-```
-
-`npm run build` bakes it into the (gitignored) `extension/lib/remote-config.js`,
-and the service worker seeds those storage keys once per browser profile. The
-Options page still owns every write after that — including "Use local (clear)",
-which stays cleared. No local config file = no generated file = local mode.
+The browser extensions do **not** use `.env` and do not live in this
+repository. Their config lives in `chrome.storage.sync` (`toolkitServerUrl` /
+`toolkitServerToken`), written by each extension's Options page. Do not write a
+token into any file in this repository; the extension repository documents its
+own demo-build configuration.
 
 ## Running or deploying your own toolkit service
 
@@ -399,7 +390,7 @@ DATA_DIR=./data ADMIN_PASSWORD=dev PORT=8080 node server/index.js
 
 **npm scripts** (`server/package.json`):
 - `npm run start` — `node index.js`
-- `npm run test` — `node test/server-test.mjs`
+- `npm run test` — `node test/server-test.mjs && node test/delete-cascade.test.mjs && node test/gcs-pagination.test.mjs`
 - `npm run docs` — `node scripts/generate-docs.mjs`
 
 **Deploying**: `server/Dockerfile` builds from the repo root (it copies `toolkit/` + `server/`); `cloudbuild.yaml` + `server/DEPLOYMENT.md` document the Cloud Run deployment (small instance, Secret Manager for the two secrets, GCS bucket, IAM). `server/API.md` is generated from the route table (`npm run docs` in `server/`) and the live service serves the same data at `GET /v1/meta`. Liveness: use `/v1/healthz` (bare `/healthz` is intercepted at the run.app edge).

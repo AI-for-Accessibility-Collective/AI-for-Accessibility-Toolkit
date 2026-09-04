@@ -9,6 +9,7 @@
 // anything under toolkit/ directly.
 
 import { verifyToken, verifyAdminHeader, issueToken, listTokens, revokeToken, revokeTokensFor } from './auth.js';
+import { assertSafeUid } from './store.js';
 import { LIBRARIAN_ROUTES_BY_NAME, invokeLibrarianRoute } from './routes.js';
 import { buildMeta } from './meta.js';
 import { renderAdminPage } from './admin-page.js';
@@ -153,6 +154,10 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       if (!body || typeof body.uid !== 'string' || !body.uid.trim()) {
         return sendJSON(res, 400, { error: 'uid is required' });
       }
+      // A uid is one path segment: the store lists and deletes partitions by
+      // it, so a uid with a separator would be listed under, and deleted with,
+      // another user's partition.
+      try { assertSafeUid(body.uid); } catch (e) { return sendJSON(res, 400, { error: e.message }); }
       const result = await issueToken(store, { uid: body.uid, label: body.label });
       return sendJSON(res, 200, result);
     }
@@ -293,9 +298,18 @@ function sendJSON(res, status, obj) {
   res.end(body);
 }
 
+const MAX_BODY_BYTES = 1e6;
 async function readJSONBody(req) {
   const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > MAX_BODY_BYTES) {
+      req.destroy();
+      throw new Error('body too large');
+    }
+    chunks.push(chunk);
+  }
   if (!chunks.length) return {};
   const text = Buffer.concat(chunks).toString('utf8');
   if (!text.trim()) return {};

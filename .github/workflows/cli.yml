@@ -3,7 +3,7 @@ name: CLI
 # Runs only when the CLI or the catalog it bundles can have changed.
 on:
   push:
-    branches: [main, rearch-experiment]
+    branches: [main, rearch-experiment, "release-candidate/**"]
     paths: ['cli/**', 'tools/**', 'pyproject.toml', 'package.json', 'package-lock.json', '.github/workflows/cli.yml']
   pull_request:
     paths: ['cli/**', 'tools/**', 'pyproject.toml', 'package.json', 'package-lock.json', '.github/workflows/cli.yml']
@@ -47,9 +47,13 @@ jobs:
           python - <<'PY'
           import glob, pathlib, sys, zipfile
           wheel = glob.glob('dist-check/*.whl')[0]
-          shipped = {n for n in zipfile.ZipFile(wheel).namelist() if n.endswith('.js')}
+          shipped = set(zipfile.ZipFile(wheel).namelist())
           wanted = {p.as_posix() for p in pathlib.Path('cli/js').glob('*.js')}
           wanted |= {'cli/lib/readability.js', 'cli/cli-tools.bundle.js', 'cli/axe-core.min.js'}
+          # The catalog the CLI lists and scaffolds from; tools/ is a namespace
+          # package, so it only ships through package-data.
+          wanted |= {p.as_posix() for p in pathlib.Path('tools/adapters').glob('*.js')}
+          wanted |= {'tools/profiles/settings.json', 'tools/auditors/wcag-issues.js'}
           missing = sorted(wanted - shipped)
           if missing:
               print('Missing from the wheel. Without these an installed ai4a11y')
@@ -58,5 +62,5 @@ jobs:
               for name in missing:
                   print('  ' + name)
               sys.exit(1)
-          print(f'{len(shipped)} JavaScript files ship in the wheel')
+          print(f'{len(shipped)} files ship in the wheel')
           PY

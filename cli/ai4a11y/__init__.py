@@ -271,7 +271,7 @@ from .commands import (  # noqa: F401
 # One thing this does change, stated because the commit that added the list
 # said the opposite: a star import is narrower than it was. The single-module
 # engine declared no __all__, which is not the same as having no star-import
-# behavior — it exported every name that did not start with an underscore, 103
+# behavior: it exported every name that did not start with an underscore, 103
 # of them, `json` and `re` among them. That set is now 59. Nothing in this
 # repository imports that way, and the distribution ships `cli*` and `tools*`,
 # so an installed consumer reaches this as `cli.ai4a11y` and gets each name by

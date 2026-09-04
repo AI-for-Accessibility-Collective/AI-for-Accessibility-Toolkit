@@ -183,6 +183,14 @@ async function main() {
       assert.equal(r.body.error, 'unauthorized');
     });
 
+    await test('admin: 400 for a uid that is not one path segment', async () => {
+      for (const uid of ['alice/x', '..', 'a\\b']) {
+        const r = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid, label: 'nested' } });
+        assert.equal(r.status, 400, uid);
+        assert.match(r.body.error, /unsafe uid/);
+      }
+    });
+
     await test('admin: create tokens for user-a and user-b', async () => {
       const ra = await call('POST', '/admin/tokens', { adminToken: ADMIN_PASSWORD, body: { uid: 'user-a', label: 'A' } });
       assert.equal(ra.status, 200);

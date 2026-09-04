@@ -7,7 +7,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node test/server-test.mjs",
+    "test": "node test/server-test.mjs && node test/delete-cascade.test.mjs && node test/gcs-pagination.test.mjs",
     "docs": "node scripts/generate-docs.mjs"
   },
   "engines": {

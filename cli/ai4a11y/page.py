@@ -113,11 +113,11 @@ def _withdraw_active_profile(page):
     halves happened, names what is still running, and carries the reason it
     could not finish:
 
-        published  — the page took the cleared session state
-        turnedOff  — the tools this call switched off, by name
-        stillOn    — the tools still enabled after it, by name
-        reason     — why the withdrawal did not finish, or None
-        withdrew   — both halves done and nothing left running
+        published: the page took the cleared session state
+        turnedOff: the tools this call switched off, by name
+        stillOn: the tools still enabled after it, by name
+        reason: why the withdrawal did not finish, or None
+        withdrew: both halves done and nothing left running
     """
     report = {'published': _publish_active_profile(page),
               'turnedOff': [], 'stillOn': [], 'reason': None}

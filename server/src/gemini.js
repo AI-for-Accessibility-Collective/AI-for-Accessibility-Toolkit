@@ -18,8 +18,10 @@
 const GEMINI_MODEL = 'gemini-3.5-flash';
 const REQUEST_TIMEOUT_MS = 30_000;
 
-function apiUrl(apiKey, model) {
-  return `https://generativelanguage.googleapis.com/v1beta/models/${model || GEMINI_MODEL}:generateContent?key=${apiKey}`;
+// The key goes in the x-goog-api-key header, never the query string, so it
+// stays out of access logs and error traces on the deployer's host.
+function apiUrl(model) {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model || GEMINI_MODEL}:generateContent`;
 }
 
 /** Build the caller function `toolkit-host.js` hands to `setGeminiCaller`.
@@ -38,9 +40,9 @@ export function createGeminiCaller({ apiKey } = {}) {
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     let resp;
     try {
-      resp = await fetch(apiUrl(apiKey), {
+      resp = await fetch(apiUrl(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { temperature: 0.7 },

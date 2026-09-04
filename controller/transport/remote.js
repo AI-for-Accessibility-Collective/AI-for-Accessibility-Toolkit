@@ -33,7 +33,11 @@ export function serveControl(channel, port) {
     if (!msg || msg.kind !== REQ) return;
     let result, error;
     try {
-      const fn = port[msg.method];
+      // Only the port's own methods, never anything every object has
+      // (`constructor`, `hasOwnProperty`, ...), which a remote caller could
+      // otherwise name.
+      const name = typeof msg.method === 'string' ? msg.method : '';
+      const fn = name && !(name in Object.prototype) ? port[name] : undefined;
       result = typeof fn === 'function' ? await fn.apply(port, msg.args || []) : { error: `unknown method: ${msg.method}` };
     } catch (e) {
       error = (e && e.message) || String(e);

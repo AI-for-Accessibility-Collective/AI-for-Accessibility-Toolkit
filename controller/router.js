@@ -23,7 +23,17 @@ const BASELINE = { fontScale: 100, lineHeight: 1.5, letterSpacing: 0, speechRate
 function validate(key, value) {
   const meta = settingsMeta[key];
   if (!meta) return null;
-  if (meta.type === 'boolean') return Boolean(value);
+  if (meta.type === 'boolean') {
+    // A model answers in text, so "false" and "off" arrive as strings and
+    // Boolean("false") is true. Read the words; reject anything else.
+    if (typeof value === 'string') {
+      const s = value.trim().toLowerCase();
+      if (['true', 'on', 'yes', '1'].includes(s)) return true;
+      if (['false', 'off', 'no', '0'].includes(s)) return false;
+      return null;
+    }
+    return Boolean(value);
+  }
   if (meta.type === 'string') return value == null ? null : String(value);
   if (meta.type === 'enum') return meta.options.includes(value) ? value : null;
   if (meta.type === 'number') {
@@ -140,7 +150,7 @@ export function createRouter({ control, llm = null, rawToTask = false }) {
     if (applyRes && applyRes.error) return result(false, intent, `That didn't work: ${applyRes.error}.`, applyRes);
     const say = intent.say || 'Done';
     const tail = unsupported.length ? ` (this app can't do: ${unsupported.join(', ')})` : '';
-    return result(true, intent, say + '.' + tail, { applied: applyRes.applied || final, unsupported, rejected });
+    return result(true, intent, say + '.' + tail, { applied: (applyRes && applyRes.applied) || final, unsupported, rejected });
   }
 
   async function dispatchUndo(intent) {

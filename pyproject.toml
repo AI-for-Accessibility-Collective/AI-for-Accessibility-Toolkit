@@ -37,6 +37,21 @@ cli = [
     "cli-tools.bundle.js",
     "axe-core.min.js",
 ]
+# tools/ has no __init__.py, so it is found as a namespace package and ships
+# nothing unless its files are named here. The CLI reads the catalog from it
+# (`list tools`, `list profiles`, `new adapter`), so an installed ai4a11y
+# without it lists nothing and says so with exit 0.
+tools = [
+    "*.js",
+    "*.json",
+    "README.md",
+    "adapters/*.js",
+    "auditors/*.js",
+    "insights/*.js",
+    "profiles/*",
+    "utils/*.js",
+    "validators/*.js",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["cli/tests"]

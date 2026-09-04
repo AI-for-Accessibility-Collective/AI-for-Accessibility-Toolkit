@@ -30,8 +30,10 @@ import { deriveControllerPresentation } from './presentation.js';
 // profile asks for it (motor/cognitive → presentation.confirmActions). Benign
 // navigation (scroll/back/forward) never needs confirming.
 const CONFIRMABLE_ACTIONS = new Set(['activate', 'submit', 'navigate']);
-const AFFIRM = /^(yes|yeah|yep|yup|confirm|do it|ok|okay|sure|go ahead|please do)\b/;
-const DENY = /^(no|nope|cancel|stop|never ?mind|don'?t)\b/;
+// Whole-utterance matches: "okay now make the text bigger" is a new request
+// that happens to start with a yes-word, not a yes.
+const AFFIRM = /^(yes|yeah|yep|yup|confirm|do it|ok|okay|sure|go ahead|please do|yes please|okay do it|ok do it)[.!]?$/;
+const DENY = /^(no|nope|cancel|stop|never ?mind|don'?t|no thanks|cancel that|stop that)[.!]?$/;
 
 export function createController({ control = noopControl, llm = null, operator = null, rawToTask = false } = {}) {
   const router = createRouter({ control, llm, rawToTask });
