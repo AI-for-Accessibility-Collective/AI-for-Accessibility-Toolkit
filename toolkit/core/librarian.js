@@ -78,6 +78,13 @@ export function createLibrarian({
     return `${prefix}-${clock.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
+  // The explicit types are for the declaration emitter: with `lib` at ES2022
+  // only, the checker does not know the URL global, so without them the
+  // `origin` fields in types/core/librarian.d.ts fall back to `any`.
+  /**
+   * @param {string|null|undefined} url
+   * @returns {string|null}
+   */
   function originOf(url) {
     try { return new URL(url).hostname.toLowerCase().replace(/^www\./, ''); }
     catch { return null; }
