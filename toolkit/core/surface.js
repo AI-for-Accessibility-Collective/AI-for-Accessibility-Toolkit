@@ -21,6 +21,21 @@
  */
 
 /**
+ * @typedef {Object} UnmetSetting
+ * @property {string} key
+ * @property {any} value
+ * @property {'unsupported'|'not-representable'} reason
+ */
+
+/**
+ * @typedef {Object} SurfaceApplyResult
+ * @property {Record<string, any>} applied     What this surface will actually render.
+ * @property {UnmetSetting[]} unmet            Keys it could not render, and why.
+ * @property {Record<string, any>} degradedTo  Keys whose value was lowered to a representable fallback.
+ * @property {boolean} satisfied               True iff nothing was unmet (degraded still counts as met).
+ */
+
+/**
  * @param {Object} spec
  * @param {string} spec.id
  * @param {Record<string, SurfaceSupport>} spec.supports  Keys this surface can render.
@@ -35,16 +50,19 @@ export function createSurfaceAdapter(spec) {
     supportedKeys() { return Object.keys(supports); },
 
     /**
-     * @param {Record<string, any>} settings  merged settings (canonical units).
-     * @returns {{applied:Object, unmet:Array, degradedTo:Object, satisfied:boolean}}
+     * @param {Record<string, any>|null|undefined} settings  merged settings (canonical units).
+     * @returns {SurfaceApplyResult}
      *   - applied: what this surface will actually render.
      *   - unmet:   [{key, value, reason: 'unsupported' | 'not-representable'}].
      *   - degradedTo: keys whose value was lowered to a representable fallback.
      *   - satisfied: true iff nothing was unmet (degraded still counts as met).
      */
     apply(settings) {
+      /** @type {Record<string, any>} */
       const applied = {};
+      /** @type {UnmetSetting[]} */
       const unmet = [];
+      /** @type {Record<string, any>} */
       const degradedTo = {};
       for (const [key, value] of Object.entries(settings || {})) {
         const s = supports[key];

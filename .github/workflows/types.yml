@@ -1,0 +1,50 @@
+# Checks the toolkit core's JSDoc types with tsc and fails when the committed
+# type declarations under toolkit/types/ are stale. The declarations are
+# generated from the JavaScript (toolkit/tsconfig.json) and committed, the
+# same way the CLI bundle is committed and gated in cli.yml, so a consumer
+# installing from a commit gets declarations that match that commit.
+#
+# A separate workflow file on purpose, following pack.yml: ci.yml is edited
+# by open PRs and this check is independent of the test suites.
+name: types
+
+on:
+  push:
+    branches: [main, "release-candidate/**"]
+  pull_request:
+
+jobs:
+  typecheck-and-declarations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Typecheck the core and regenerate its declarations
+        # Files that opt out carry a `// @ts-nocheck` header naming their
+        # error count; everything else in toolkit/ is checked under strict.
+        run: npm run build:types
+
+      - name: Emitted declarations resolve on their own
+        # A file opted out with @ts-nocheck can still emit a declaration that
+        # names a type it never imported (tsc's "cannot be named" error is
+        # silenced with the rest). Consumers check with skipLibCheck off by
+        # default, so check the emitted files that way here.
+        run: |
+          find toolkit/types -name '*.d.ts' -print0 | xargs -0 node_modules/.bin/tsc --noEmit --strict \
+            --module nodenext --moduleResolution nodenext --target es2022 --lib es2022 --pretty false
+
+      - name: Committed declarations are fresh
+        # `git status` rather than `git diff` so a new source file whose
+        # .d.ts was never committed also fails, not only an edited one.
+        run: |
+          if [ -n "$(git status --porcelain toolkit/types)" ]; then
+            echo "toolkit/types/ is stale. Run 'npm run build:types' and commit the result."
+            git status --porcelain toolkit/types
+            git diff toolkit/types
+            exit 1
+          fi

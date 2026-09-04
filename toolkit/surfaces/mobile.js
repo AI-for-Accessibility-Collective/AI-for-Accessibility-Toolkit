@@ -54,8 +54,11 @@ import { rankOf } from '../core/strength.js';
 // rule to xr.js / web-surface.js's deriveWebSettings: stronger strength wins,
 // ties go to the later entry — so all three surfaces agree on one outcome
 // for the same needs[].
+/** @param {import('../core/ability.js').AbilityModel|null|undefined} model */
 function resolveNeeds(model) {
+  /** @type {Record<string, unknown>} */
   const winners = {};
+  /** @type {Record<string, string>} */
   const strengthByDim = {};
   const needs = (model && model.needs) || [];
   for (const need of needs) {
@@ -75,6 +78,7 @@ function resolveNeeds(model) {
 // local copy rather than an import so each surface stays a single, readable
 // file a platform team can fork without pulling in XR's geometry code; the
 // two are asserted in sync by toolkit/test/cross-surface-translation-test.js.
+/** @param {import('../core/ability.js').AbilityModel|null|undefined} model */
 function needsToMagnitudes(model) {
   const w = resolveNeeds(model);
   return {
@@ -98,8 +102,8 @@ const MIN_TARGET_PT_DEFAULT = 44; // iOS Human Interface Guidelines baseline
 const MIN_TARGET_PT_LARGE = 48;   // Android accessibility-guidance minimum
 
 /**
- * @param {ReturnType<import('../core/ability.js').toAbilityModel>} model - the needs AbilityModel (librarian.getAbilityModel() shape)
- * @returns {object} mobile OS accessibility settings:
+ * @param {import('../core/ability.js').AbilityModel} model - the needs AbilityModel (librarian.getAbilityModel() shape)
+ * @returns mobile OS accessibility settings:
  *   { text: {scalePercent, lineSpacing, boldText},
  *     display: {darkMode, highContrast, reduceTransparency},
  *     motion: {reduceMotion},
@@ -107,7 +111,7 @@ const MIN_TARGET_PT_LARGE = 48;   // Android accessibility-guidance minimum
  *     speech: {rate},
  *     simplifyLanguage,
  *     touch: {largeTargets, minTargetPt} }
- *   A neutral (empty-needs) model renders every value at its OS default —
+ *   A neutral (empty-needs) model renders every value at its OS default:
  *   no phantom adaptations.
  */
 export function renderMobileSettings(model) {

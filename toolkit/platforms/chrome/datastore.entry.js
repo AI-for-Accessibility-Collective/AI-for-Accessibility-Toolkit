@@ -1,3 +1,7 @@
+// @ts-nocheck
+// FLAG(review): 2 errors under toolkit/tsconfig.json's strict check at the
+// time this count was taken. Type declarations still emit from this file;
+// remove these lines and fix the errors to opt it into the check.
 // esbuild entry → a Chrome host bundles this into its own lib/datastore.js
 // (classic IIFE). Constructs the datastore against chrome-backed ports and
 // assigns globalThis.Datastore, preserving the load contract the service

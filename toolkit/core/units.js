@@ -12,6 +12,20 @@
 // `settingsMeta` (passed in), so this module stays the single *unit* authority
 // without duplicating the registry.
 
+/** @typedef {'percent'|'ratio'|'em'|'boolean'|'enum'} Unit */
+
+/**
+ * @typedef {Object} SettingMeta
+ * One entry of a host's `settingsMeta` (the registry's typed vocabulary for
+ * one setting key).
+ * @property {string} type          'number' | 'boolean' | 'enum' | 'string'
+ * @property {number[]} [range]     [min, max] for a numeric setting
+ * @property {string[]} [options]   allowed values for an enum setting
+ * @property {string} [description]
+ */
+
+/** @typedef {Record<string, SettingMeta>} SettingsMeta */
+
 /** Canonical unit tags. */
 export const UNIT = Object.freeze({
   percent: 'percent', // 100 = no change (fontScale)
@@ -32,9 +46,15 @@ export const SETTING_UNITS = Object.freeze({
   speechRate: UNIT.ratio,
 });
 
-/** The canonical unit for a setting key, or null if untyped here. */
+/**
+ * The canonical unit for a setting key, or null if untyped here.
+ * @param {string} key
+ * @returns {Unit|null}
+ */
 export function unitOf(key) {
-  return SETTING_UNITS[key] || null;
+  // The cast lets the checker index the frozen literal by any key; an
+  // untyped key falls through to null.
+  return /** @type {Readonly<Record<string, Unit | undefined>>} */ (SETTING_UNITS)[key] || null;
 }
 
 // Coerce a raw value into the canonical unit/range declared by `meta` (the
@@ -46,6 +66,12 @@ export function unitOf(key) {
 // This is still a *guess* for values that arrive without a declared unit. Once
 // every writer tags units end-to-end the multiplier branch can be dropped; for
 // now it is the safety net the extension already depends on.
+/**
+ * @param {string} key
+ * @param {any} value
+ * @param {SettingsMeta|null} [meta]
+ * @returns {any}
+ */
 export function coerceSetting(key, value, meta) {
   const m = meta && meta[key];
   if (!(m && m.type === 'number' && Array.isArray(m.range) && typeof value === 'number')) {
@@ -58,10 +84,14 @@ export function coerceSetting(key, value, meta) {
 }
 
 /** Coerce every key in a settings object. Non-object input passes through.
- *  This is the INGEST normalizer — run once where untrusted/raw values enter
- *  (record writes, the LLM extract ops, the one-time migration). */
+ *  This is the INGEST normalizer: run once where untrusted/raw values enter
+ *  (record writes, the LLM extract ops, the one-time migration).
+ *  @param {any} settings
+ *  @param {SettingsMeta|null} [meta]
+ *  @returns {any} */
 export function coerceSettings(settings, meta) {
   if (!settings || typeof settings !== 'object') return settings;
+  /** @type {Record<string, any>} */
   const out = {};
   for (const [k, v] of Object.entries(settings)) out[k] = coerceSetting(k, v, meta);
   return out;
@@ -71,6 +101,12 @@ export function coerceSettings(settings, meta) {
 // already coerced to canonical units at write time (the typed-unit contract),
 // so it does NOT guess multipliers — it only bounds a numeric to its declared
 // range. This is what replaced the old read-side `>10` %-vs-multiplier heuristic.
+/**
+ * @param {string} key
+ * @param {any} value
+ * @param {SettingsMeta|null} [meta]
+ * @returns {any}
+ */
 export function clampSetting(key, value, meta) {
   const m = meta && meta[key];
   if (!(m && m.type === 'number' && Array.isArray(m.range) && typeof value === 'number')) {
@@ -80,9 +116,13 @@ export function clampSetting(key, value, meta) {
   return Math.min(max, Math.max(min, value));
 }
 
-/** Clamp every key in a settings object. Non-object input passes through. */
+/** Clamp every key in a settings object. Non-object input passes through.
+ *  @param {any} settings
+ *  @param {SettingsMeta|null} [meta]
+ *  @returns {any} */
 export function clampSettings(settings, meta) {
   if (!settings || typeof settings !== 'object') return settings;
+  /** @type {Record<string, any>} */
   const out = {};
   for (const [k, v] of Object.entries(settings)) out[k] = clampSetting(k, v, meta);
   return out;
