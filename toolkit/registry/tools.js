@@ -643,7 +643,7 @@ export const settingsMeta = {
   speechRate:      { type: 'number', range: [0.5, 2.0], description: 'Text-to-speech rate' },
   fixContrast:     { type: 'boolean', description: 'Fix low-contrast text' },
   autoWcagFix:     { type: 'boolean', description: 'Auto-fix accessibility issues' },
-  wcagRiskyFixes:  { type: 'boolean', description: 'Enable risky WCAG fixes (heading re-tag, ARIA strip, target size) — default off' },
+  wcagRiskyFixes:  { type: 'boolean', description: 'Also run the risky WCAG fixes that change page structure (heading re-tag, ARIA strip, nested control unwrap, target size). Off by default' },
   autoDescribe:    { type: 'boolean', description: 'AI image descriptions' },
   autoFixLabels:   { type: 'boolean', description: 'AI-generated form labels' },
   showCaptions:    { type: 'boolean', description: 'Turn on captions the media already has (no AI)' },
