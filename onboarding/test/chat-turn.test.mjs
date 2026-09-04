@@ -12,7 +12,9 @@ import { routeTurn, classifyControllerResult, fallbackHelp, generalAnswerPrompt 
 import { detectOnboarding, isResetToProfile } from '../chat-routing.js';
 import { parse } from '../../controller/grammar.js';
 
-const REAL = { isResetToProfile, parse, detectOnboarding };
+// routeTurn does not consult the grammar; `parse` is imported to prove the
+// keyword collision that makes the precedence matter is genuinely there.
+const REAL = { isResetToProfile, detectOnboarding };
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -43,19 +45,43 @@ const kindOf = (text, deps = REAL) => routeTurn(text, deps).kind;
   check('…and names the vision support area', r.onboarding.supportAreas.includes('vision'));
 }
 
-// ── FLAG(review): a dyslexia disclosure does NOT reach the profile ───────────
-// "dyslexia" is also a settings keyword, so the grammar claims the whole
-// utterance and the turn becomes a font change. The person said something
-// durable about themselves and got a session setting: "I'm blind" updates the
-// profile, "I have dyslexia" does not.
-//
-// Pinned as-is rather than fixed, because changing the precedence is a behavior
-// change and this branch is scoped to tests. Raised in the PR description.
+// ── a disclosure reaches the profile even when it parses as a command ────────
+// "dyslexia" is also a settings keyword. While the grammar was consulted first,
+// these turned into a font change for the session and never reached the
+// profile, unlike every disclosure with no keyword collision.
 {
-  check('KNOWN: “I have dyslexia” is taken as a font command, not a disclosure', kindOf('I have dyslexia') === 'controller');
-  check('KNOWN: “I’m dyslexic” likewise', kindOf("I'm dyslexic") === 'controller');
-  check('the onboarding matcher DOES recognize it, so only precedence hides it',
-    (detectOnboarding('I have dyslexia') || {}).supportAreas?.includes('reading') === true);
+  check('“I have dyslexia” onboards, it is not just a font command', kindOf('I have dyslexia') === 'onboard');
+  check('“I’m dyslexic” onboards', kindOf("I'm dyslexic") === 'onboard');
+  check('a bare “dyslexia” onboards', kindOf('dyslexia') === 'onboard');
+
+  // The worst case of the old order: the hearing half was lost outright.
+  const compound = routeTurn('I am deaf and I have dyslexia', REAL);
+  check('a compound disclosure onboards', compound.kind === 'onboard');
+  check('…and keeps BOTH areas', ['hearing', 'reading'].every((a) => compound.onboarding.supportAreas.includes(a)));
+
+  check('the reading area is what gets recorded', routeTurn('I have dyslexia', REAL).onboarding.supportAreas.includes('reading'));
+}
+
+// ── …without swallowing commands ─────────────────────────────────────────────
+// Onboarding going first is only safe because detectOnboarding is conservative:
+// its keywords exclude command words, and it needs first-person phrasing or a
+// bare condition. These are the cases that would break if that ever loosened.
+{
+  for (const cmd of [
+    'bigger text', 'dark mode', 'hide distractions', 'read this', 'undo',
+    'high contrast', 'show captions', 'stop live captions', 'reduce motion',
+  ]) {
+    check(`“${cmd}” is still a command`, kindOf(cmd) === 'controller');
+  }
+
+  // First-person phrasing that is a REQUEST, not a disclosure. These carry a
+  // settings word rather than a condition word, so detectOnboarding ignores them.
+  for (const req of [
+    'I need bigger text', 'make the text bigger for me', 'I want dark mode',
+    'can you read this to me', 'my text is too small',
+  ]) {
+    check(`“${req}” is a request, not a disclosure`, kindOf(req) === 'controller');
+  }
 }
 
 // ── a reset phrase beats BOTH ────────────────────────────────────────────────
@@ -77,23 +103,33 @@ const kindOf = (text, deps = REAL) => routeTurn(text, deps).kind;
   check('null is inert', kindOf(null) === 'controller');
 }
 
+// ── the collision the precedence exists to resolve is real ───────────────────
+// If the grammar ever stopped claiming these, the ordering above would be
+// untested by accident rather than by design.
+{
+  check('the grammar really does claim “I have dyslexia”', !!parse('I have dyslexia'));
+  check('…and a bare “dyslexia”', !!parse('dyslexia'));
+  check('…while it claims neither “I’m blind”', !parse("I'm blind"));
+  check('…nor “I have ADHD”', !parse('I have ADHD'));
+}
+
 // ── precedence is the ladder, proven with stubs ──────────────────────────────
 // With every matcher claiming the utterance at once, the order must hold.
 {
-  const all = { isResetToProfile: () => true, parse: () => ({ hit: true }), detectOnboarding: () => ({ supportAreas: ['vision'] }) };
-  check('reset wins over both a command and a self-description', kindOf('anything', all) === 'reset');
+  const both = { isResetToProfile: () => true, detectOnboarding: () => ({ supportAreas: ['vision'] }) };
+  check('reset wins over a self-description', kindOf('anything', both) === 'reset');
 
-  const cmdAndOnb = { isResetToProfile: () => false, parse: () => ({ hit: true }), detectOnboarding: () => ({ supportAreas: ['vision'] }) };
-  check('a command wins over a self-description', kindOf('anything', cmdAndOnb) === 'controller');
+  const onb = { isResetToProfile: () => false, detectOnboarding: () => ({ supportAreas: ['vision'] }) };
+  check('a self-description is onboarding', kindOf('anything', onb) === 'onboard');
 
-  const onbOnly = { isResetToProfile: () => false, parse: () => null, detectOnboarding: () => ({ supportAreas: ['vision'] }) };
-  check('a self-description wins when no command matched', kindOf('anything', onbOnly) === 'onboard');
+  const none = { isResetToProfile: () => false, detectOnboarding: () => null };
+  check('anything else goes to the controller', kindOf('anything', none) === 'controller');
 
-  // The grammar is consulted only as a claim check; a hit must suppress the
-  // onboarding heuristic without the heuristic ever being asked.
+  // A reset must settle the turn without the onboarding heuristic ever running:
+  // "forget what I changed" would otherwise risk being read as a disclosure.
   let asked = false;
-  routeTurn('bigger text', { isResetToProfile: () => false, parse: () => ({ hit: true }), detectOnboarding: () => { asked = true; return null; } });
-  check('a grammar hit short-circuits the onboarding check', asked === false);
+  routeTurn('back to my profile', { isResetToProfile: () => true, detectOnboarding: () => { asked = true; return null; } });
+  check('a reset short-circuits the onboarding check', asked === false);
 }
 
 // ── what the controller's answer means ───────────────────────────────────────

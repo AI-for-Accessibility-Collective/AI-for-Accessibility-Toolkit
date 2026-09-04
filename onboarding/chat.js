@@ -22,7 +22,6 @@ import { createController } from '/controller/lib/createController.js';
 import { createDomReceiver } from '/controller/lib/web/dom-receiver.js';
 import { websocketChannel, remoteControl } from '/controller/lib/transport/remote.js';
 import { createLlmLane } from '/controller/lib/llm-lane.js';
-import { parse } from '/controller/lib/grammar.js';
 import { bestVoice, forSpeech, earconThinkPulse, earconDone, earconError } from '/controller/lib/web/ui.js';
 import { detectOnboarding, visionKindOf, isResetToProfile } from '/chat-routing.js';
 import { routeTurn, classifyControllerResult, fallbackHelp, generalAnswerPrompt } from '/chat-turn.js';
@@ -326,7 +325,7 @@ async function handleTurn(text) {
     // The precedence between a reset, a command and a self-description lives in
     // routeTurn() (chat-turn.js, unit-tested). What stays here is what a turn
     // DOES once it is classified.
-    const route = routeTurn(u, { isResetToProfile, parse, detectOnboarding });
+    const route = routeTurn(u, { isResetToProfile, detectOnboarding });
 
     if (route.kind === 'reset') {
       const reply = await applyResetToProfile();

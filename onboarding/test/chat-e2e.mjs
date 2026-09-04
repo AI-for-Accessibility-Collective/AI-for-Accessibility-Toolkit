@@ -99,6 +99,33 @@ try {
     check('a settings command leaves the profile alone', (await profileText()) === pillBefore);
   }
 
+  // ── a disclosure whose condition is also a settings keyword ───────────────
+  // "dyslexia" parses as a dyslexia-font command too, and used to be handled as
+  // one, so it never reached the profile. It now onboards like any other
+  // disclosure.
+  {
+    await say('I have dyslexia');
+    const pill = await profileText();
+    check('a dyslexia disclosure reaches the profile', /reading/i.test(pill));
+    check('…without dropping what was already known', /vision/i.test(pill));
+  }
+
+  // ── KNOWN GAP: a disclosure does not adapt the page ───────────────────────
+  // /chat has no profile-to-page path: boot() loads the profile and rebuilds the
+  // controller's own presentation, but page adaptations only ever come from
+  // explicit commands. This is true of EVERY disclosure — "I'm blind" adapts
+  // nothing either — and is pinned here so the gap is visible rather than
+  // assumed. Raised in the PR description; fixing it means deriving settings
+  // from the ability model, which is a feature, not a routing change.
+  {
+    const adapted = await page.evaluate(() => {
+      const el = document.getElementById('demo-app');
+      return { dyslexia: el.classList.contains('aa-dyslexia'), any: el.className.includes('aa-') };
+    });
+    check('KNOWN: a disclosure does not apply its derived settings', adapted.dyslexia === false);
+    check('KNOWN: …and this is not specific to dyslexia', adapted.any === false);
+  }
+
   // ── an unrecognized request explains itself rather than failing silently ───
   {
     await say('play a podcast from spotify');
