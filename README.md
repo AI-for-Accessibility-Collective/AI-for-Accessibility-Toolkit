@@ -196,7 +196,7 @@ ai4a11y session profile lowVision
 ai4a11y session stop
 ```
 
-About half the session commands reach the locally installed Claude Code CLI, which means a screenshot or the page's text leaves the browser, once per item rather than once per command. The rest run entirely locally. [`cli/README.md`](cli/README.md) lists which are which, what each sends, and what it costs. Without that CLI the AI-backed commands write nothing to the page and say `needs-ai`. Details in [`cli/README.md`](cli/README.md). Experimental and pre-alpha, like the rest of this repository.
+Thirteen of the 51 `ai4a11y session` commands call the locally installed Claude Code CLI, and say so in their own help text. Five more reach it as well: `summary`, `diff`, and `fix-all` call it directly, while `go` and `profile` leave AI-backed adapters running on the tab. For all eighteen, a screenshot or the page's text leaves the browser, once per item rather than once per command. The rest run entirely locally. Without that CLI the AI-backed commands write nothing to the page and say `needs-ai`. [`cli/README.md`](cli/README.md) lists which commands are which, what each one sends, and what it costs. Experimental and pre-alpha, like the rest of this repository.
 
 ## Repository Layout
 
