@@ -202,8 +202,10 @@ Thirteen of the 51 `ai4a11y session` commands call the locally installed Claude 
 
 ```
 toolkit/     Platform-agnostic core: Librarian, datastore, ability model, grants,
-             skill engine, ports, sync, protocol, surfaces, reference platform bindings
-tools/       Developer catalog — adapters, auditors, profiles, utils
+             skill engine, ports, sync, protocol, surfaces, the tools registry,
+             reference platform bindings, and the runnable demo hosts
+tools/       Developer catalog: adapters, auditors, validators, profiles, utils,
+             and the ArtInsight knowledge module under insights/
 controller/  Optional text/voice control surface — ControlPort, grammar, mounts,
              remote transport, web UI, demo (a sibling; the core never depends on it)
 server/      Hosted HTTP service exposing the core to any language/runtime
