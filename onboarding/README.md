@@ -5,9 +5,10 @@ into a toolkit ability profile**, and — with the admin password — **list and
 delete profiles**. From the same port it also serves the **Controller** UI (the
 text/voice control surface, `controller/`) at `/controller`.
 
-Routes: `/onboarding` (the onboarding page, also the redirect target of `/`) and
-`/controller` (the Controller demo; its ESM loads under `/controller/lib` and the
-toolkit settings vocabulary it imports under `/controller/toolkit/registry`).
+Routes: `/chat` (the conversational front door, and the redirect target of `/`),
+`/onboarding` (the step-by-step form) and `/controller` (the Controller demo; its
+ESM loads under `/controller/lib` and the toolkit settings vocabulary it imports
+under `/controller/toolkit/registry`).
 
 > **Run this on localhost or a trusted network only. Do not deploy it to the
 > public internet as it is.** The onboarding and profile-view routes are
@@ -41,8 +42,35 @@ ONBOARD_MODE=remote TOOLKIT_URL=http://127.0.0.1:8080 ADMIN_PASSWORD=<server-adm
   node onboarding/server.js
 ```
 
+## Tests
+
+`npm test` (from the repo root) runs every `onboarding/test/*.test.mjs`. They
+cover three layers: the profile logic against a real toolkit over a temp file
+store, the HTTP routes against the real server on an ephemeral port, and the
+chat surface's own logic (routing precedence, the additive onboarding merge,
+the composer history).
+
+The real-browser test is separate, because it needs a local Chromium:
+
+```bash
+npx playwright install chromium   # one-time browser download; npm install does not do it
+npm run test:e2e                  # drives /chat in headless Chromium; not run in CI
+```
+
+It is named `chat-e2e.mjs` rather than `*.test.mjs` so `npm test` skips it, the
+same split `tools/test/browser-validate.js` uses. It is the only test that
+executes `chat.js` itself: the page loads it as an ES module over HTTP, which
+jsdom cannot run.
+
 ## The page
 
+- **Chat** (`/chat`, the front door) — one input doing both halves. A
+  self-description ("I'm blind", "I have dyslexia") updates the profile; a
+  command ("bigger text", "read this") drives the app. A disclosure wins when
+  the same words would parse as both, so a condition that shares a word with a
+  setting still reaches the profile. Onboarding then renders the profile onto
+  the page through the toolkit's web surface, and does so again on load, so a
+  returning person's page matches their profile before they ask for anything.
 - **Add a profile** — a free-text "what do you need?" field + support-area
   checkboxes. Submitting creates/updates an ability profile (a `uid`),
   recording `supportAreas`, `freeText`, and a natural-language note.
