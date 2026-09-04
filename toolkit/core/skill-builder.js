@@ -19,7 +19,7 @@ import { parseSkill, serializeSkill, validateSkill } from './skill.js';
  * @typedef {Object} SkillBuildOptions
  * @property {import('./ability.js').ProfileRecord} [profile]  ability profile (supportAreas, freeText)
  * @property {SkillBuilderTools} tools                          AA_TOOLS registry (forPrompt + settingsVocabularyLines)
- * @property {{ categoryIds: () => string[] }} [taxonomy]       AA_TAXONOMY (categoryIds) for siteRelevance
+ * @property {Pick<import('./taxonomy.js').Taxonomy, 'categoryIds'>} [taxonomy]  AA_TAXONOMY (categoryIds) for siteRelevance
  * @property {Skill|null} [previous]                            the prior built Skill the person rejected
  * @property {string} [feedback]                                what the person said was wrong with it
  */

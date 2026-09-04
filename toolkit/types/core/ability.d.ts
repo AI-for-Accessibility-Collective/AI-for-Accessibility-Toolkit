@@ -1,6 +1,6 @@
 /**
  * @typedef {'floor'|'preference'|'hint'} NeedStrength
- * @typedef {'ratio'|'em'|'percent'|'boolean'|'enum'} NeedUnit
+ * @typedef {import('./units.js').Unit} NeedUnit
  */
 /**
  * @typedef {Object} Need
@@ -52,7 +52,7 @@ export function normalizeNeed(n: any): Need | null;
 export function toAbilityModel(profile: ProfileRecord | null | undefined): AbilityModel;
 export default toAbilityModel;
 export type NeedStrength = "floor" | "preference" | "hint";
-export type NeedUnit = "ratio" | "em" | "percent" | "boolean" | "enum";
+export type NeedUnit = import("./units.js").Unit;
 /**
  * One modality-neutral need. `value` is read per dimension by each surface (a
  * number for textSize, a boolean for reduceMotion, a variant string for
@@ -62,7 +62,7 @@ export type Need = {
     dimension: string;
     value: unknown;
     strength: NeedStrength;
-    unit?: NeedUnit | undefined;
+    unit?: import("./units.js").Unit | undefined;
     confidence?: number | undefined;
     source?: string | undefined;
 };

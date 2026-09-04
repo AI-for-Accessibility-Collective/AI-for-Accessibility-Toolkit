@@ -67,9 +67,7 @@ export type SkillBuildOptions = {
     /**
      * AA_TAXONOMY (categoryIds) for siteRelevance
      */
-    taxonomy?: {
-        categoryIds: () => string[];
-    } | undefined;
+    taxonomy?: Pick<import("./taxonomy.js").Taxonomy, "categoryIds"> | undefined;
     /**
      * the prior built Skill the person rejected
      */

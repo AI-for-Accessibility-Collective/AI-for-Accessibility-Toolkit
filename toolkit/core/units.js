@@ -39,7 +39,6 @@ export const UNIT = Object.freeze({
 // disambiguation; booleans/enums are pass-through and may be omitted here.
 // Surfaces that introduce their own dimensions (e.g. XR `angularTextHeight` in
 // degrees) extend this in their own adapter, not here.
-/** @type {Readonly<Record<string, Unit | undefined>> & { readonly fontScale: 'percent', readonly lineHeight: 'ratio', readonly letterSpacing: 'em', readonly speechRate: 'ratio' }} */
 export const SETTING_UNITS = Object.freeze({
   fontScale: UNIT.percent,
   lineHeight: UNIT.ratio,
@@ -53,7 +52,9 @@ export const SETTING_UNITS = Object.freeze({
  * @returns {Unit|null}
  */
 export function unitOf(key) {
-  return SETTING_UNITS[key] || null;
+  // The cast lets the checker index the frozen literal by any key; an
+  // untyped key falls through to null.
+  return /** @type {Readonly<Record<string, Unit | undefined>>} */ (SETTING_UNITS)[key] || null;
 }
 
 // Coerce a raw value into the canonical unit/range declared by `meta` (the

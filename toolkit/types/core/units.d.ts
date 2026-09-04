@@ -49,13 +49,12 @@ export const UNIT: Readonly<{
     boolean: "boolean";
     enum: "enum";
 }>;
-/** @type {Readonly<Record<string, Unit | undefined>> & { readonly fontScale: 'percent', readonly lineHeight: 'ratio', readonly letterSpacing: 'em', readonly speechRate: 'ratio' }} */
-export const SETTING_UNITS: Readonly<Record<string, Unit | undefined>> & {
-    readonly fontScale: "percent";
-    readonly lineHeight: "ratio";
-    readonly letterSpacing: "em";
-    readonly speechRate: "ratio";
-};
+export const SETTING_UNITS: Readonly<{
+    fontScale: "percent";
+    lineHeight: "ratio";
+    letterSpacing: "em";
+    speechRate: "ratio";
+}>;
 export type Unit = "percent" | "ratio" | "em" | "boolean" | "enum";
 /**
  * One entry of a host's `settingsMeta` (the registry's typed vocabulary for

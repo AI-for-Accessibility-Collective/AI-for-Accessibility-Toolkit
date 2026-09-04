@@ -3,7 +3,6 @@
 // (a soft choice) > hint (a weak nudge). A missing/unknown strength reads as
 // 'preference' so untagged data behaves exactly as it did before strength
 // existed.
-/** @type {Readonly<Record<string, number | undefined>> & { readonly hint: 0, readonly preference: 1, readonly floor: 2 }} */
 export const STRENGTH_RANK = Object.freeze({ hint: 0, preference: 1, floor: 2 });
 
 /**
@@ -13,6 +12,8 @@ export const STRENGTH_RANK = Object.freeze({ hint: 0, preference: 1, floor: 2 })
  * @returns {number}
  */
 export function rankOf(strength) {
-  const r = STRENGTH_RANK[/** @type {string} */ (strength)];
+  // The cast lets the checker index the frozen literal by any label, which is
+  // what the unknown-label fallback below is for.
+  const r = /** @type {Readonly<Record<string, number | undefined>>} */ (STRENGTH_RANK)[/** @type {string} */ (strength)];
   return r === undefined ? STRENGTH_RANK.preference : r;
 }

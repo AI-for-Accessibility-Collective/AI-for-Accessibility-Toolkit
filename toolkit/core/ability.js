@@ -22,7 +22,7 @@ const VALID_UNIT = ['ratio', 'em', 'percent', 'boolean', 'enum'];
 
 /**
  * @typedef {'floor'|'preference'|'hint'} NeedStrength
- * @typedef {'ratio'|'em'|'percent'|'boolean'|'enum'} NeedUnit
+ * @typedef {import('./units.js').Unit} NeedUnit
  */
 
 /**
