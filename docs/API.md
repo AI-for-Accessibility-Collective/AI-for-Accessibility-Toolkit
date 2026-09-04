@@ -181,14 +181,20 @@ export const axeHandlers = {
 
 The main content script automatically routes violations to registered handlers.
 
-Handlers are called as `handler(element, settings)`, where `settings` is the
-active profile's tools (the CLI passes the active profile; a host with no
-settings may omit it). The `wcag-fixes` entries that change page structure
-(`heading-order`, `aria-valid-attr`, `aria-roles`, `aria-allowed-role`,
-`nested-interactive`, `target-size`) run only when `settings.wcagRiskyFixes`
-is `true`, and return `false` when they skip. `fixTiers` and `isRiskyFix(ruleId)`
-from `tools/adapters/wcag-fixes.js` say which entries those are, so a host can
-tell a person before it dispatches.
+Every handler takes the element as its first argument. The second argument is
+the adapter's own; there is no shared contract for it, so a dispatcher that
+routes rules from more than one adapter has to know which handler it is
+calling. `fixLowContrast`, for example, takes a color there.
+
+The `wcag-fixes` handlers that change page structure (`heading-order`,
+`aria-valid-attr`, `aria-roles`, `aria-allowed-role`, `nested-interactive`,
+`target-size`) take a settings object as their second argument, and run only
+when `settings.wcagRiskyFixes` is `true`. When they skip they return `false`,
+so a host can count and report the skips; the CLI passes the active profile's
+tools and lists what was held back. `fixTiers` and `isRiskyFix(ruleId)` from
+`tools/adapters/wcag-fixes.js` say which handlers those are, so a host can
+tell a person before it dispatches, and can pass the settings object to those
+handlers alone.
 
 ## Profiles
 
