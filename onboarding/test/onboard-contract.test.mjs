@@ -61,7 +61,9 @@ const CHILD_TIMEOUT_MS = 60_000;
 // `written` the values the profile write must carry after normalization;
 //           needs are derived from them with the same deriveDefaultNeeds.
 // `calls`   the exact Librarian call sequence, in order, and nothing after.
-// `uid`     'generated' (a fresh capability id) or 'same-as:<key>'.
+// `uid`     'generated' (a fresh capability id) or 'same-as:<key>': the uid
+//           every write lands under and, when onboard() resolves, the uid it
+//           returns. The two must be the same uid.
 // `ok`      whether onboard() resolves.
 const SCENARIOS = [
   {
@@ -118,14 +120,14 @@ const SCENARIOS = [
     failAt: 1,
     input: { supportAreas: ['vision'], freeText: 'I need bigger text', visionKind: 'lowVision' },
     written: { supportAreas: ['vision'], freeText: 'I need bigger text', visionKind: 'lowVision' },
-    calls: ['addNote'], ok: false,
+    calls: ['addNote'], uid: 'generated', ok: false,
   },
   {
     key: 'profile-write-fails',
     failAt: 2,
     input: { supportAreas: ['vision'], freeText: 'I need bigger text', visionKind: 'lowVision' },
     written: { supportAreas: ['vision'], freeText: 'I need bigger text', visionKind: 'lowVision' },
-    calls: ['addNote', 'setProfileFields'], ok: false,
+    calls: ['addNote', 'setProfileFields'], uid: 'generated', ok: false,
   },
   {
     key: 'existing-uid-restores-text',
@@ -140,7 +142,7 @@ const SCENARIOS = [
     failAt: 2,
     input: { supportAreas: ['reading'], freeText: '' },
     written: { supportAreas: ['reading'], freeText: '', visionKind: undefined },
-    calls: ['listNotes', 'deleteNote'], ok: false,
+    calls: ['listNotes', 'deleteNote'], uid: 'same-as:fresh-text', ok: false,
   },
 ];
 
@@ -179,8 +181,9 @@ async function runOneMode(mode) {
   const outArg = process.argv.find((a) => a.startsWith('--out='));
   const outFile = outArg ? outArg.slice('--out='.length) : null;
 
-  // Shared by both recorders: every Librarian call lands here, in order, and
-  // `failAt` names the one call that must fail for the current scenario.
+  // Shared by both recorders: every Librarian call lands here, in order, with
+  // the uid it was made for, and `failAt` names the one call that must fail
+  // for the current scenario.
   const state = { trace: [], failAt: 0 };
 
   process.env.ONBOARD_MODE = mode;
@@ -221,6 +224,7 @@ async function runOneMode(mode) {
         trace,
         profileFields: trace.find((c) => c.method === 'setProfileFields')?.args[0] ?? null,
         uidOutcome: outcome.ok ? uidOutcome(scen, input, outcome.value.uid, uids) : null,
+        wroteUnder: writeTarget(scen, input, state.trace, outcome, uids),
         returned: outcome.ok ? { ...outcome.value, uid: undefined } : null,
       };
       report.scenarios.push(entry);
@@ -272,6 +276,19 @@ function uidOutcome(scen, input, uid, uids) {
   return UID_SHAPE.test(uid) ? 'generated' : 'other';
 }
 
+// Which uid the Librarian calls were made for, as a label that reads the same
+// in both modes. The returned uid is what a person is handed, so a run that
+// resolves must have written under that uid and no other: a token minted for
+// one id and a result naming another would hand out a capability for an
+// empty profile, and the trace of {method, args} alone would not show it.
+function writeTarget(scen, input, rawTrace, outcome, uids) {
+  const seen = [...new Set(rawTrace.map((c) => c.uid))];
+  if (!seen.length) return null;
+  if (seen.length > 1) return 'several: ' + seen.join(', ');
+  if (outcome.ok) return seen[0] === outcome.value.uid ? 'returned' : 'not the returned uid: ' + seen[0];
+  return uidOutcome(scen, input, seen[0], uids);
+}
+
 function expectedArgs(method, written, deriveDefaultNeeds) {
   const { supportAreas, freeText, visionKind } = written;
   switch (method) {
@@ -303,6 +320,12 @@ function assertScenario(mode, scen, entry, outcome, deriveDefaultNeeds) {
     got.join(',') === scen.calls.join(','),
     `      got: ${got.join(' then ') || '(no calls)'}`);
 
+  // Every call lands under the one uid the scenario names: the returned uid
+  // when onboard() resolves, and the table's `uid` when it does not.
+  const target = !scen.calls.length ? null : scen.ok ? 'returned' : scen.uid;
+  check(`${tag} every call is made for ${target === 'returned' ? 'the returned uid' : target ?? 'no uid (no calls)'}`,
+    entry.wroteUnder === target, `      got: ${entry.wroteUnder}`);
+
   for (let i = 0; i < scen.calls.length; i++) {
     const method = scen.calls[i];
     const call = entry.trace[i];
@@ -331,12 +354,12 @@ function assertScenario(mode, scen, entry, outcome, deriveDefaultNeeds) {
 // this function. The proxy records each method call, throws when the call is
 // the one the scenario says must fail, and otherwise delegates unchanged.
 function installLocalRecorder(state) {
-  globalThis.__onboardContractRecord = (librarian) => new Proxy(librarian, {
+  globalThis.__onboardContractRecord = (librarian, uid) => new Proxy(librarian, {
     get(target, key) {
       const v = target[key];
       if (typeof key !== 'string' || typeof v !== 'function') return v;
       return async (...args) => {
-        const entry = { method: key, args: structuredClone(args) };
+        const entry = { method: key, args: structuredClone(args), uid };
         const n = state.trace.push(entry);
         if (state.failAt === n) throw new Error('injected failure');
         const result = await v.apply(target, args);
@@ -364,13 +387,16 @@ function installLocalRecorder(state) {
 // librarian call reaches it, before the injected failure is applied. No
 // scenario can observe the difference (a failed onboard() returns no uid to
 // reuse), but the stub should not claim a rule the service does not have.
+//
+// A per-user token is the uid with a prefix, since server.js treats it as
+// opaque and the stub only needs to get the uid back.
 // FLAG(review): the stub is the test's own reading of the service; a change
 // in the real service's note upsert or listUsers rule would not show up here.
 function installRemoteStub(state) {
   const users = new Set();
   const notes = new Map();   // uid -> [{id, text, topic}]
-  const tokens = new Map();  // token -> uid
-  let nextToken = 0, nextNote = 0;
+  const TOKEN_PREFIX = 'tok-';
+  let nextNote = 0;
 
   function librarian(uid, method, args) {
     const mine = notes.get(uid) || [];
@@ -407,17 +433,17 @@ function installRemoteStub(state) {
     const body = opts.body ? JSON.parse(opts.body) : {};
     if (u.endsWith('/admin/users')) return reply(200, { users: [...users].sort() });
     if (u.endsWith('/admin/tokens')) {
-      const token = 'tok-' + (++nextToken);
-      tokens.set(token, body.uid);
-      return reply(200, { token, uid: body.uid });
+      return reply(200, { token: TOKEN_PREFIX + body.uid, uid: body.uid });
     }
     const m = /\/v1\/librarian\/([^/?]+)$/.exec(u);
     if (!m) throw new Error('unexpected fetch: ' + u + ' ' + (opts.method || 'GET'));
-    const uid = tokens.get(String(opts.headers?.authorization || '').replace(/^Bearer /, ''));
+    const bearer = 'Bearer ' + TOKEN_PREFIX;
+    const auth = String(opts.headers?.authorization || '');
+    const uid = auth.startsWith(bearer) ? auth.slice(bearer.length) : null;
     if (!uid) return reply(401, { error: 'unauthorized' });
     const args = body.args || [];
     users.add(uid); // getInstance ran; see the note above
-    const entry = { method: m[1], args };
+    const entry = { method: m[1], args, uid };
     const n = state.trace.push(entry);
     if (state.failAt === n) return reply(200, { ok: false, error: 'injected failure' });
     const result = librarian(uid, m[1], args);
@@ -478,6 +504,8 @@ async function runBothModesAndCompare() {
       check(`${tag} same profile fields written in both modes`,
         canon(l?.profileFields) === canon(r?.profileFields),
         `      local:  ${canon(l?.profileFields)}\n      remote: ${canon(r?.profileFields)}`);
+      check(`${tag} calls made for the same uid in both modes`, l?.wroteUnder === r?.wroteUnder,
+        `      local ${l?.wroteUnder}, remote ${r?.wroteUnder}`);
       if (scen.ok) {
         check(`${tag} same uid outcome in both modes`, l?.uidOutcome === r?.uidOutcome,
           `      local ${l?.uidOutcome}, remote ${r?.uidOutcome}`);
