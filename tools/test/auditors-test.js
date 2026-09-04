@@ -50,6 +50,7 @@ function run() {
       <img id="lbl-img" src="s.png" alt="Search">
       <span id="lbl-aria" aria-label="Filter"></span>
       <input id="lbl-val" value="Query">
+      <input id="lbl-pw" type="password" value="hunter2">
       <span id="lbl-hidden" style="display:none">Hidden label</span>
       <span id="lbl-title" title="Postal code"></span>
       <a id="a-here" href="/x">Click here</a>
@@ -86,6 +87,7 @@ function run() {
       <input id="in-lbl-hidden" aria-labelledby="lbl-hidden">
       <input id="in-lbl-title" aria-labelledby="lbl-title">
       <input id="in-lbl-self" aria-labelledby="in-lbl-self">
+      <input id="in-lbl-pw" aria-labelledby="lbl-pw">
       <label for="in-for">Name</label><input id="in-for">
       <label>Age <input id="in-wrapped"></label>
       <input id="in-title" title="Postal code">
@@ -142,6 +144,8 @@ function run() {
     check('inputs: a labelledby pointing at an element with aria-label counts', !reports(inputs, doc, 'in-lbl-aria'));
     check('inputs: a labelledby pointing at a text control with a value counts', !reports(inputs, doc, 'in-lbl-val'));
     check('inputs: the value-only input used as a label target is itself reported', reports(inputs, doc, 'lbl-val'));
+    check('inputs: a labelledby pointing at a password field is reported (its value is not a name)', reports(inputs, doc, 'in-lbl-pw'));
+    check('inputs: the password field used as a label target is itself reported', reports(inputs, doc, 'lbl-pw'));
     check('inputs: a labelledby pointing at a display:none element counts (2B uses hidden targets)', !reports(inputs, doc, 'in-lbl-hidden'));
     check('inputs: a labelledby pointing at an element with only a title counts', !reports(inputs, doc, 'in-lbl-title'));
     check('inputs: an input that names itself is reported, and does not loop', reports(inputs, doc, 'in-lbl-self'));
@@ -158,7 +162,7 @@ function run() {
     check('inputs: a select with options is still reported (option text is not a label)', reports(inputs, doc, 'sel-opts'));
     check('inputs: a bare textarea is reported', reports(inputs, doc, 'ta-bare'));
     check('inputs: a textarea with content is still reported (the draft is not a label)', reports(inputs, doc, 'ta-draft'));
-    check('inputs: exactly eleven reported on this page', inputs.length === 11);
+    check('inputs: exactly thirteen reported on this page', inputs.length === 13);
 
     // The adapter gate agrees with the auditor on form controls, so what is
     // reported can be repaired.
@@ -180,6 +184,7 @@ function run() {
     check('labelledby helper: an <img> target gives its alt', getLabelledByText(doc.getElementById('in-lbl-img')) === 'Search');
     check('labelledby helper: an aria-label target gives its label', getLabelledByText(doc.getElementById('in-lbl-aria')) === 'Filter');
     check('labelledby helper: a text control target gives its value', getLabelledByText(doc.getElementById('in-lbl-val')) === 'Query');
+    check('labelledby helper: a password target gives nothing (browsers keep the value out of the accessibility tree)', getLabelledByText(doc.getElementById('in-lbl-pw')) === '');
     check('labelledby helper: a display:none target gives its text', getLabelledByText(doc.getElementById('in-lbl-hidden')) === 'Hidden label');
     check('labelledby helper: a title-only target gives its title', getLabelledByText(doc.getElementById('in-lbl-title')) === 'Postal code');
     check('labelledby helper: a target that points back gives its own content, not a loop', getLabelledByText(doc.getElementById('b-ref-a')) === 'B');

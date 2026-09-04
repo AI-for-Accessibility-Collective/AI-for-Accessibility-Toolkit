@@ -104,6 +104,14 @@ function getDefaultName(el) {
   return '';
 }
 
+// Input types whose value is not an embedded control value. The button-like
+// types are named by getNativeName instead, a hidden input is not in the
+// tree, a checkbox or radio has no text value, and a password field is left
+// out on purpose: browsers keep its value out of the accessibility tree, and
+// reading it back here would put a secret into a name that callers log,
+// display and send to a model.
+const NO_EMBEDDED_VALUE_TYPES = ['submit', 'reset', 'button', 'image', 'hidden', 'checkbox', 'radio', 'password'];
+
 // What a form control contributes when something else's aria-labelledby
 // points at it (step 2E): a text control gives its value, a select the text
 // of its chosen option.
@@ -113,7 +121,7 @@ function getEmbeddedValue(el) {
   if (tag === 'select') return Array.from(el.selectedOptions || []).map(o => o.textContent.trim()).join(' ').trim();
   if (tag === 'input') {
     const type = (el.getAttribute('type') || 'text').toLowerCase();
-    if (!['submit', 'reset', 'button', 'image', 'hidden', 'checkbox', 'radio'].includes(type)) return (el.value || '').trim();
+    if (!NO_EMBEDDED_VALUE_TYPES.includes(type)) return (el.value || '').trim();
   }
   return '';
 }
