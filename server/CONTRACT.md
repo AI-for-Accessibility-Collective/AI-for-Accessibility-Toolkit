@@ -95,6 +95,11 @@ KVStore port per uid: areas `local`/`sync` → backend documents
 - Record: `{id, uid, label, hash, createdAt, revoked}` in the storage backend
   under `admin/tokens.json`.
 - A uid may hold multiple tokens; revocation is per-token.
+- Every change to `admin/tokens.json` is a conditional write: the file
+  backend checks a content hash under a lock file, the GCS backend passes the
+  object generation as `ifGenerationMatch`. A change that loses the race is
+  reloaded and retried, so two service instances sharing one bucket cannot
+  overwrite each other's revocations.
 
 ## Extension remote mode
 

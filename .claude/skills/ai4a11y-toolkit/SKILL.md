@@ -390,7 +390,7 @@ DATA_DIR=./data ADMIN_PASSWORD=dev PORT=8080 node server/index.js
 
 **npm scripts** (`server/package.json`):
 - `npm run start` — `node index.js`
-- `npm run test` — `node test/server-test.mjs && node test/delete-cascade.test.mjs && node test/gcs-pagination.test.mjs`
+- `npm run test` — `node test/server-test.mjs && node test/delete-cascade.test.mjs && node test/gcs-pagination.test.mjs && node test/token-conflict.test.mjs`
 - `npm run docs` — `node scripts/generate-docs.mjs`
 
 **Deploying**: `server/Dockerfile` builds from the repo root (it copies `toolkit/` + `server/`); `cloudbuild.yaml` + `server/DEPLOYMENT.md` document the Cloud Run deployment (small instance, Secret Manager for the two secrets, GCS bucket, IAM). `server/API.md` is generated from the route table (`npm run docs` in `server/`) and the live service serves the same data at `GET /v1/meta`. Liveness: use `/v1/healthz` (bare `/healthz` is intercepted at the run.app edge).
