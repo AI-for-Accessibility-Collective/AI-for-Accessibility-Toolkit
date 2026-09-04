@@ -10,10 +10,10 @@
 // It is also part of `npm test`.
 //
 // How it works. The test walks the six package directories, skips tests,
-// bundles and node_modules, and parses four import forms from every .js,
+// bundles and node_modules, and parses five import forms from every .js,
 // .mjs and .cjs file: `import ... from '...'`, `export ... from '...'`,
-// `import('...')` with a string specifier, and the bare side-effect
-// `import '...'`. Only relative specifiers that
+// `import('...')` with a string specifier, the bare side-effect
+// `import '...'`, and `require('...')`. Only relative specifiers that
 // resolve outside the importing file's package root count as edges. Each edge
 // then has to pass:
 //
@@ -274,18 +274,22 @@ function stripComments(src) {
   return src.replace(/^\s*\/\*[\s\S]*?\*\//gm, '').replace(/^\s*\/\/.*$/gm, '');
 }
 
-// Specifiers from the four import forms. `from` is matched on its own so
-// multi-line `import { a, b } from '...'` blocks are found too. The specifier
-// itself may not span a line: a stray `from "` in prose would otherwise
-// match up to the next quote in the file and could eat a real import.
+// Specifiers from the import forms these packages can use: `import ... from`,
+// `export ... from`, `import('...')`, the bare side-effect `import '...'`, and
+// `require('...')`, which a .cjs file would use and the walk picks .cjs files
+// up. `from` is matched on its own so multi-line `import { a, b } from '...'`
+// blocks are found too. The specifier itself may not span a line: a stray
+// `from "` in prose would otherwise match up to the next quote in the file and
+// could eat a real import.
 const FROM_RE = /\bfrom\s*['"]([^'"\n]+)['"]/g;
 const DYNAMIC_RE = /\bimport\s*\(\s*['"]([^'"\n]+)['"]\s*\)/g;
 const BARE_RE = /^\s*import\s*['"]([^'"\n]+)['"]/gm;
+const REQUIRE_RE = /\brequire\s*\(\s*['"]([^'"\n]+)['"]\s*\)/g;
 
 function specifiersIn(src) {
   const out = new Set();
   for (const text of [src, stripComments(src)]) {
-    for (const re of [FROM_RE, DYNAMIC_RE, BARE_RE]) {
+    for (const re of [FROM_RE, DYNAMIC_RE, BARE_RE, REQUIRE_RE]) {
       for (const m of text.matchAll(re)) out.add(m[1]);
     }
   }
