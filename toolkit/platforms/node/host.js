@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @ts-nocheck
-// FLAG(review): 16 errors under toolkit/tsconfig.json's strict check at the
-// time this header was added. Type declarations still emit from this file;
+// FLAG(review): 18 errors under toolkit/tsconfig.json's strict check at the
+// time this count was taken. Type declarations still emit from this file;
 // remove these lines and fix the errors to opt it into the check.
 // Node reference host (Gap 3, deliverable 2) — the template an XR / mobile
 // (any JS-runtime) host copies wholesale: real node ports (file-backed KV +

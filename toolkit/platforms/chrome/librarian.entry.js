@@ -1,6 +1,6 @@
 // @ts-nocheck
 // FLAG(review): 4 errors under toolkit/tsconfig.json's strict check at the
-// time this header was added. Type declarations still emit from this file;
+// time this count was taken. Type declarations still emit from this file;
 // remove these lines and fix the errors to opt it into the check.
 // esbuild entry → a Chrome host bundles this into its own lib/librarian.js
 // (classic IIFE). Constructs the Librarian against chrome-backed ports +

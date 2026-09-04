@@ -1,6 +1,6 @@
 // @ts-nocheck
-// FLAG(review): 34 errors under toolkit/tsconfig.json's strict check at the
-// time this header was added. Type declarations still emit from this file;
+// FLAG(review): 31 errors under toolkit/tsconfig.json's strict check at the
+// time this count was taken. Type declarations still emit from this file;
 // remove these lines and fix the errors to opt it into the check.
 // The web SurfaceAdapter — how the Chrome extension renders the merged
 // settings. The browser natively supports every key in the host's settings

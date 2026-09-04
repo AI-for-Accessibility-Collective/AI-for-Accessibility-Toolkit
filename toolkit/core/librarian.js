@@ -1,6 +1,6 @@
 // @ts-nocheck
-// FLAG(review): 276 errors under toolkit/tsconfig.json's strict check at the
-// time this header was added. Type declarations still emit from this file;
+// FLAG(review): 287 errors under toolkit/tsconfig.json's strict check at the
+// time this count was taken. Type declarations still emit from this file;
 // remove these lines and fix the errors to opt it into the check.
 // Librarian — the personal memory/profile agent. Sole writer of the
 // Librarian-owned stores (mine.profile, mine.suppressions, mine.episodicLog,

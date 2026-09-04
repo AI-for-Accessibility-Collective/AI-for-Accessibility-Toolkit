@@ -1,6 +1,6 @@
 // @ts-nocheck
-// FLAG(review): 42 errors under toolkit/tsconfig.json's strict check at the
-// time this header was added. Type declarations still emit from this file;
+// FLAG(review): 44 errors under toolkit/tsconfig.json's strict check at the
+// time this count was taken. Type declarations still emit from this file;
 // remove these lines and fix the errors to opt it into the check.
 // Toolkit datastore facade — the single place that knows where every store
 // physically lives (storage area + key + version). Everything else resolves

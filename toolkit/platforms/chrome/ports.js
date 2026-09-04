@@ -1,6 +1,6 @@
 // @ts-nocheck
-// FLAG(review): 34 errors under toolkit/tsconfig.json's strict check at the
-// time this header was added. Type declarations still emit from this file;
+// FLAG(review): 36 errors under toolkit/tsconfig.json's strict check at the
+// time this count was taken. Type declarations still emit from this file;
 // remove these lines and fix the errors to opt it into the check.
 // Chrome platform adapters — concrete implementations of the Toolkit ports
 // backed by `chrome.*` and the service-worker globals. These are the ONLY
