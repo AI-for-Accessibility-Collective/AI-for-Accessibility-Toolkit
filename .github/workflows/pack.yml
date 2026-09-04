@@ -21,4 +21,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'
+      # The fixture's typecheck step runs the repository's pinned tsc against
+      # the installed tarballs, so the root dev dependencies are needed here.
+      - run: npm ci
       - run: node scripts/pack-fixture-test.mjs

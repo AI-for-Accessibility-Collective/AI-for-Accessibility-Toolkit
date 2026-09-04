@@ -9,10 +9,17 @@
 // (josifiin/AI-for-Accessibility-Extension#2). If an assertion here blocks a
 // change, the consumer needs updating in the same breath.
 //
-// Run from the repository root: node scripts/pack-fixture-test.mjs
+// The second half typechecks two small consumer files against the installed
+// toolkit tarball with the repository's pinned tsc: one that calls
+// createToolkit with wrong shapes and must fail, one that calls it correctly
+// and must pass. That is the proof the shipped declarations travel with the
+// package and describe the real API, which the import checks above cannot
+// give (they prove the exports exist, not their shapes).
+//
+// Run from the repository root, after `npm ci`: node scripts/pack-fixture-test.mjs
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +29,31 @@ const tmp = mkdtempSync(path.join(tmpdir(), 'ai4a11y-pack-'));
 
 function run(cmd, args, cwd) {
   return execFileSync(cmd, args, { cwd, encoding: 'utf8' });
+}
+
+// The repository's own tsc (root devDependency, pinned), not a download: the
+// version that emitted toolkit/types/ is the version that checks against it.
+const tsc = path.join(repoRoot, 'node_modules', 'typescript', 'bin', 'tsc');
+if (!existsSync(tsc)) {
+  console.error('pack-fixture-test: typescript is not installed; run `npm ci` at the repository root first');
+  process.exit(1);
+}
+
+// Typecheck one consumer file inside the scratch project. Returns the tsc
+// exit code and its output; a non-zero code with no `error TS` line means
+// tsc itself failed to run, which the caller treats as a fixture bug.
+function typecheck(consumer, file) {
+  const args = [
+    tsc, '--noEmit', '--strict', '--allowJs', '--checkJs',
+    '--module', 'nodenext', '--moduleResolution', 'nodenext', '--target', 'es2022',
+    '--lib', 'es2022', '--skipLibCheck', '--pretty', 'false',
+    file,
+  ];
+  try {
+    return { code: 0, out: execFileSync(process.execPath, args, { cwd: consumer, encoding: 'utf8' }) };
+  } catch (e) {
+    return { code: e.status ?? 1, out: String(e.stdout || '') + String(e.stderr || '') };
+  }
 }
 
 try {
@@ -140,6 +172,68 @@ if (failures.length) {
 console.log('pack fixture: all consumer-surface checks passed');
 `);
   run('node', ['check.mjs'], consumer);
+
+  // 4. The shapes travel. Both files are checked JavaScript, the way the
+  //    extension repository consumes the toolkit, so what fails here fails
+  //    for it too. tsc resolves '@ai4a11y/toolkit' through the tarball's
+  //    exports map `types` conditions; if those were missing, the RIGHT file
+  //    would fail on an unresolved module, so it also guards the manifest.
+  writeFileSync(path.join(consumer, 'types-right.js'), `// @ts-check
+import { createToolkit } from '@ai4a11y/toolkit';
+import { parseSkill } from '@ai4a11y/toolkit/core/skill';
+import { renderXRSettings } from '@ai4a11y/toolkit/surfaces/xr';
+
+/** @type {import('@ai4a11y/toolkit').KVStore} */
+const kv = {
+  get: async () => undefined,
+  set: async () => {},
+  getAll: async () => ({}),
+};
+const { librarian, datastore } = createToolkit({ kv, clock: { now: () => 0 } });
+await datastore.runMigrations();
+const model = await librarian.getAbilityModel();
+const xr = renderXRSettings(model, { fovDegrees: 90 });
+const skill = parseSkill('---\\nname: demo\\n---\\n');
+export const summary = { angular: xr.text.angularSizeDeg, needs: model.needs.length, name: skill.name };
+`);
+
+  // Each statement below is one wrong call. The expected error count is the
+  // number of statements, so a stray error elsewhere (say, a declaration
+  // that stopped resolving) would also be caught as a mismatch.
+  const wrongCalls = [
+    // kv is required
+    "createToolkit({});",
+    // a KVStore needs set and getAll, not only get
+    "createToolkit({ kv: { get: async () => undefined } });",
+    // a Clock returns a number
+    "createToolkit({ kv, clock: { now: () => 'soon' } });",
+    // a surface renders an AbilityModel, not a bare string
+    "renderXRSettings('vision');",
+  ];
+  writeFileSync(path.join(consumer, 'types-wrong.js'), `// @ts-check
+import { createToolkit } from '@ai4a11y/toolkit';
+import { renderXRSettings } from '@ai4a11y/toolkit/surfaces/xr';
+
+/** @type {import('@ai4a11y/toolkit').KVStore} */
+const kv = { get: async () => undefined, set: async () => {}, getAll: async () => ({}) };
+${wrongCalls.join('\n')}
+`);
+
+  const right = typecheck(consumer, 'types-right.js');
+  if (right.code !== 0) {
+    console.error('PACK FIXTURE FAILURE: a correct call against the packed toolkit did not typecheck:');
+    console.error(right.out);
+    process.exit(1);
+  }
+  const wrong = typecheck(consumer, 'types-wrong.js');
+  const errorLines = wrong.out.split('\n').filter((l) => /error TS\d+/.test(l));
+  if (wrong.code === 0 || errorLines.length !== wrongCalls.length) {
+    console.error('PACK FIXTURE FAILURE: expected exactly ' + wrongCalls.length
+      + ' type errors from wrong calls against the packed toolkit, got ' + errorLines.length + ':');
+    console.error(wrong.out);
+    process.exit(1);
+  }
+  console.log('pack fixture: shipped declarations reject ' + wrongCalls.length + ' wrong calls and accept a right one');
   console.log('pack-fixture-test: PASS');
 } finally {
   rmSync(tmp, { recursive: true, force: true });
