@@ -21,4 +21,5 @@ Which needs/profiles/disabilities does this help?
 1. `npm install`
 2. `npm test` (tools, toolkit, controller, and onboarding suites)
 3. Relevant demos: `node toolkit/hosts/xr-demo/demo.js`, `node toolkit/hosts/skill-demo/demo.js`, `node server/test/server-test.mjs`
-4. If you changed the core API, regenerate `toolkit/API.md` + the skill and commit the result.
+4. If you touched `onboarding/`, `controller/`, `tools/`, `toolkit/`, or `server/src/`: `npx playwright install chromium` once, then `npm run validate:browser` and `npm run test:e2e` (see Testing in CONTRIBUTING.md)
+5. If you changed the core API, regenerate `toolkit/API.md` + the skill and commit the result.

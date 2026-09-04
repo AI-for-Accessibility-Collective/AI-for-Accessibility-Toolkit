@@ -181,7 +181,9 @@ rather than hand-editing.
 ## PR guidelines
 
 - One feature per PR.
-- Tests must pass (`npm test` + the demos above).
+- Tests must pass (`npm test` + the demos above, plus the two browser suites
+  if you touched `onboarding/`, `controller/`, `tools/`, `toolkit/`, or
+  `server/src/`).
 - Regenerate `toolkit/API.md` / the skill if you changed the core surface.
 - Describe who benefits (which disability/need).
 
