@@ -116,13 +116,16 @@ export function getSetting(key) {
   return settings[key];
 }
 
-// Get list of enabled adapters for a profile
-export function getEnabledAdapters(profileId) {
-  const profile = profiles[profileId];
-  if (!profile?.tools) return [];
+// Map a settings object (a profile's `tools`, a registry entry's `settings`,
+// or a skill's resolved settings) to the adapter module names it reaches.
+// This is the catalog's statement of which key reaches which module. The
+// hosts keep their own copies (applyProfileByName in cli/cli-tools.js, the
+// extension's content script), and tools/test/registry-parity-test.js checks
+// this one against the registry.
+export function adaptersForTools(tools) {
+  if (!tools) return [];
 
   const enabled = [];
-  const tools = profile.tools;
 
   // Map tool settings to adapter names
   if (tools.autoDescribe) enabled.push('generate-alt');
@@ -196,6 +199,11 @@ export function getEnabledAdapters(profileId) {
   if (tools.agentWatch) enabled.push('agent-watch');
 
   return [...new Set(enabled)]; // Remove duplicates
+}
+
+// Get list of enabled adapters for a profile
+export function getEnabledAdapters(profileId) {
+  return adaptersForTools(profiles[profileId]?.tools);
 }
 
 // Export settings object for direct access
