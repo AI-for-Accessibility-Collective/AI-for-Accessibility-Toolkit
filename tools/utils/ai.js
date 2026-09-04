@@ -360,9 +360,10 @@ export async function inferColumnHeader(sampleData) {
  * Consumed by translate-page.js, which puts the result in place of the
  * block's content (the original nodes are kept and restored on disable).
  * The answer is gated with rejectRewrite(): a string, not empty, not opening
- * with a first-person refusal, and between 0.25 and 4 times the length of
- * the input, a wide band because character counts differ a lot between
- * scripts. A rejected answer leaves the block untouched.
+ * with a first-person refusal, and between 0.1 and 8 times the length of
+ * the input, a band wide enough for English into Chinese or Japanese and
+ * back, so it only catches a block that came back as almost nothing or as
+ * several times the source. A rejected answer leaves the block untouched.
  */
 export async function translateText(text, targetLang) {
   if (!provider?.translateText) {

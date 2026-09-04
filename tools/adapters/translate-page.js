@@ -14,13 +14,17 @@ const SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="tru
 const MAX_BLOCKS = 80;   // per-page AI cost bound
 const BATCH = 4;         // concurrency bound
 
-// Output gate band. Character counts move a lot between scripts: English
-// into Chinese or Japanese lands near a third of the source length, and the
-// reverse near three times, so the band is wide and only catches a block that
-// came back as a fragment, or as a translation plus commentary.
-// FLAG(review): 0.25 and 4 are judgment calls with no measured basis yet.
-const MIN_TRANSLATED_RATIO = 0.25;
-const MAX_TRANSLATED_RATIO = 4;
+// Output gate band. Character counts move a lot between scripts. On 20
+// short English and Chinese or Japanese pairs written by hand for this check
+// (menu labels, headings, one or two sentences), English into Chinese or
+// Japanese ran from 0.15 to 0.57 of the source length and the reverse from
+// 1.75 to 6.5 times, so a floor of 0.25 and a ceiling of 4 each rejected 4
+// of the 20. The band is wide on purpose: it catches a block that came back
+// as almost nothing, or as several times the source, and nothing finer.
+// FLAG(review): 0.1 and 8 rest on those 20 hand-written pairs, not on model
+// output, and a fragment above a tenth of the source passes.
+const MIN_TRANSLATED_RATIO = 0.1;
+const MAX_TRANSLATED_RATIO = 8;
 
 export const TranslatePage = {
   enabled: false,

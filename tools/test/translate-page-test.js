@@ -81,8 +81,8 @@ async function run() {
       ['an empty string', ''],
       ['whitespace', '   \n'],
       ['a non-string', 42],
-      ['a fragment (under a quarter of the source)', 'Por favor.'],
-      ['an answer over four times the source', (PARA + ' ').repeat(5)],
+      ['a fragment (under a tenth of the source)', 'Sí.'],
+      ['an answer over eight times the source', (PARA + ' ').repeat(9)],
     ];
     for (const [what, answer] of cases) {
       const doc = mount(`<main><p id="p">${PARA}</p></main>`);
@@ -104,9 +104,9 @@ async function run() {
     {
       const doc = mount(`<main><p id="p">${PARA}</p></main>`);
       const SHORT = '安装前请仔细阅读服务器文档。'; // 14 chars against 82: 0.17, the shape of a real English-to-Chinese ratio
-      setAIProvider({ translateText: async () => SHORT + SHORT, announce() {} }); // 28 chars, 0.34
+      setAIProvider({ translateText: async () => SHORT, announce() {} });
       await TranslatePage.enable({ targetLang: 'Chinese' });
-      check('translate: a much shorter script within the ratio band is accepted', doc.querySelector('#p').textContent === SHORT + SHORT);
+      check('translate: a much shorter script (0.17 of the source) is accepted', doc.querySelector('#p').textContent === SHORT);
       TranslatePage.disable();
     }
   }
