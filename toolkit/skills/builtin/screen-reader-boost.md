@@ -12,7 +12,7 @@ Makes a page announce correctly for screen-reader users by generating the descri
 ## What it does
 1. **auto-alt-text** — generates alt text for images that have none, so they're announced instead of skipped.
 2. **generate-labels** — names unlabeled buttons, links, and form fields.
-3. **wcag-fixes** — repairs common structural violations (landmarks, headings, tabindex, language).
+3. **wcag-fixes** — repairs common violations that need no judgment (language tags, duplicate IDs, tabindex, zoom lock). Heading re-tag and the other fixes that change page structure stay off unless `wcagRiskyFixes` is set.
 4. **keyboard-nav** — adds skip links and a clear tab order for non-pointer navigation.
 
 ## When to use
