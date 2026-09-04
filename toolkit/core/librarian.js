@@ -1090,9 +1090,10 @@ export function createLibrarian({
     },
 
     // Persist a user-validated skill to their Skills db (mine.skillDocs).
-    // Re-validates against the registry so a malformed skill can't be stored.
+    // Re-validates against the registry and the vocabularies so a malformed
+    // skill, or one no retrieval could ever find, can't be stored.
     async saveSkill(skill) {
-      const { valid, errors } = validateSkill(skill, { tools: DS().global.tools() });
+      const { valid, errors } = validateSkill(skill, { tools: DS().global.tools(), taxonomy: TAX() });
       if (!valid) return { saved: false, errors };
       await DS().patch('mine.skillDocs', (skills) => {
         const idx = skills.findIndex(s => s.name === skill.name);
@@ -1631,7 +1632,11 @@ Return ONLY valid JSON with:
               const names = new Set(skills.map(s => s.name));
               let name = slug;
               for (let n = 2; names.has(name); n++) name = `${slug}-${n}`;
-              await this.saveSkill({
+              // FLAG(review): proposal siteTypes are app-supplied and not checked
+              // against the taxonomy before this point, so a value outside it now
+              // makes saveSkill refuse (siteRelevance is validated). Surface that
+              // instead of dropping it; the profile action above is still saved.
+              const res = await this.saveSkill({
                 name,
                 description: `Runs "${prompt}" for you. Use it on ${cats.join(', ')} sites.`,
                 supportAreas: [],
@@ -1639,6 +1644,7 @@ Return ONLY valid JSON with:
                 recipe: { adapters: [], actions: [{ name: prop.change.action.name, prompt }] },
                 body: `# ${prop.change.action.name}\n\nSaved from a task the assistant completed for you. Applying this skill runs the same task on the current page.`,
               });
+              if (!res.saved) console.warn('[Librarian] accepted task not saved as a skill:', res.errors.join('; '));
             }
           } catch (e) {
             console.warn('[Librarian] could not save accepted task as a skill:', e.message);

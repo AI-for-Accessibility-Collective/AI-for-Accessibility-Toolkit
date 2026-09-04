@@ -15,7 +15,12 @@
 //
 // Pure and dependency-free (no YAML lib, no DOM): frontmatter is simple
 // `key: value` lines; the recipe is a ```json fenced block. Parsed/validated/
-// resolved here; authored as .md files in toolkit/skills/builtin/.
+// resolved here; authored as .md files in toolkit/skills/builtin/. The only
+// imports are two pure vocabularies: the support areas (core/ability.js) and
+// the site categories (core/taxonomy.js) that validateSkill checks against.
+
+import { SUPPORT_AREAS } from './ability.js';
+import { taxonomy as defaultTaxonomy } from './taxonomy.js';
 
 /**
  * @typedef {Object} SkillRecipeStep
@@ -132,17 +137,34 @@ export function serializeSkill(skill) {
 }
 
 /**
- * Validate a skill against the tools registry (AA_TOOLS): the name/description
- * exist, every recipe adapter id is a real tool, and every settings key is in
- * the settings vocabulary. Returns collected errors (empty = valid).
+ * Validate a skill against the tools registry (AA_TOOLS) and the two
+ * vocabularies: the name/description exist, every recipe adapter id is a real
+ * tool, every settings key is in the settings vocabulary, every supportArea is
+ * in SUPPORT_AREAS, and every siteRelevance value is a taxonomy category or
+ * 'all'. Returns collected errors (empty = valid).
+ *
+ * The vocabulary checks reject rather than warn: supportAreas and
+ * siteRelevance are what retrieval matches on (matchSkill), so a value outside
+ * the vocabulary is a skill that can never be found again (issue #34).
  * @param {Skill} skill
- * @param {{ tools: any }} deps  - tools = the AA_TOOLS registry (byId + settingsMeta)
+ * @param {{ tools?: any, taxonomy?: any }} deps
+ *   tools    = the AA_TOOLS registry (byId + settingsMeta)
+ *   taxonomy = the site taxonomy (categoryIds); defaults to the bundled one
  * @returns {{ valid: boolean, errors: string[] }}
  */
-export function validateSkill(skill, { tools } = {}) {
+export function validateSkill(skill, { tools, taxonomy = defaultTaxonomy } = {}) {
   const errors = [];
   if (!skill.name) errors.push('missing name');
   if (!skill.description) errors.push('missing description');
+  for (const a of (skill.supportAreas || [])) {
+    if (!SUPPORT_AREAS.includes(a)) errors.push(`supportArea "${a}" not one of ${SUPPORT_AREAS.join(', ')}`);
+  }
+  // 'all' is not a taxonomy category; it is the skill layer's own "any site"
+  // value (matchSkill scores it separately), so it is allowed here by name.
+  const categories = taxonomy.categoryIds();
+  for (const c of (skill.siteRelevance || [])) {
+    if (c !== 'all' && !categories.includes(c)) errors.push(`siteRelevance "${c}" not one of ${categories.join(', ')}, all`);
+  }
   const steps = skill.recipe?.adapters || [];
   const actions = skill.recipe?.actions || [];
   if (steps.length === 0 && actions.length === 0) errors.push('recipe has no adapters or actions');

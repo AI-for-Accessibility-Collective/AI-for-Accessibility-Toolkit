@@ -9,6 +9,9 @@ import { buildSkillPrompt, parseBuiltSkill } from '../core/skill-builder.js';
 import { createDatastore } from '../core/datastore.js';
 import { createLibrarian } from '../core/librarian.js';
 import { TAXONOMY } from '../core/taxonomy.js';
+import { SUPPORT_AREAS } from '../core/ability.js';
+import { SUPPORT_AREAS as BARREL_SUPPORT_AREAS } from '../index.js';
+import { skillRegistry } from '../registry/tools.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const BUILTIN_DIR = join(HERE, '..', 'skills', 'builtin');
@@ -87,6 +90,44 @@ const badRes = validateSkill(bad, { tools });
 check('rejects unknown adapter', !badRes.valid && badRes.errors.some(e => e.includes('not-a-real-adapter')));
 check('rejects unknown setting', badRes.errors.some(e => e.includes('nope')));
 
+// ---- validation catches vocabulary slips (issue #34) -----------------------
+// supportAreas and siteRelevance are what retrieval matches on, so a value
+// outside the vocabulary is a skill that can never be found again. It must
+// fail here, at authoring time, and the message must name the bad value and
+// the allowed set so the Engineer can re-prompt.
+const badArea = validateSkill({ ...reading, supportAreas: ['vision', 'neurodivergent'] }, { tools });
+check('rejects a supportArea outside SUPPORT_AREAS', !badArea.valid);
+check('supportArea error names the bad value and the allowed set',
+  badArea.errors.some(e => e.includes('"neurodivergent"') && SUPPORT_AREAS.every(a => e.includes(a))));
+const badSite = validateSkill({ ...reading, siteRelevance: ['news', 'banking'] }, { tools });
+check('rejects a siteRelevance outside the taxonomy', !badSite.valid);
+check('siteRelevance error names the bad value, the categories, and "all"',
+  badSite.errors.some(e => e.includes('"banking"') && TAXONOMY.categoryIds().every(c => e.includes(c)) && e.includes('all')));
+check('siteRelevance "all" is accepted', validateSkill({ ...reading, siteRelevance: ['all'] }, { tools }).valid);
+check('every taxonomy category is accepted as siteRelevance',
+  validateSkill({ ...reading, siteRelevance: TAXONOMY.categoryIds() }, { tools }).valid);
+check('every SUPPORT_AREAS value is accepted as a supportArea',
+  validateSkill({ ...reading, supportAreas: [...SUPPORT_AREAS] }, { tools }).valid);
+check('empty supportAreas and siteRelevance stay valid (action skills carry none)',
+  validateSkill({ ...reading, supportAreas: [], siteRelevance: [] }, { tools }).valid);
+check('a host-supplied taxonomy is honored',
+  validateSkill({ ...reading, siteRelevance: ['gallery'] }, { tools, taxonomy: { categoryIds: () => ['gallery'] } }).valid);
+check('SUPPORT_AREAS is exported from the toolkit barrel', BARREL_SUPPORT_AREAS === SUPPORT_AREAS);
+check('Engineer output with a vocabulary slip is invalid',
+  !parseBuiltSkill(serializeSkill({ ...reading, supportAreas: ['focus'] }), { tools }).valid);
+
+// ---- the registry uses the same vocabulary --------------------------------
+// One source of truth, in both directions: every entry's areas are in the
+// constant, and every value in the constant is helped by at least one entry.
+const registryAreas = new Set(skillRegistry.flatMap(e => e.supportAreas || []));
+check('every registry entry supportArea is in SUPPORT_AREAS',
+  [...registryAreas].every(a => SUPPORT_AREAS.includes(a)));
+check('every SUPPORT_AREAS value is helped by at least one registry entry',
+  SUPPORT_AREAS.every(a => registryAreas.has(a)));
+const registrySites = new Set(skillRegistry.flatMap(e => e.siteRelevance || []));
+check('every registry entry siteRelevance is a taxonomy category or "all"',
+  [...registrySites].every(c => c === 'all' || TAXONOMY.categoryIds().includes(c)));
+
 // ---- action skills (reusable tasks saved as skills) ------------------------
 const actionSkill = parseSkill('---\nname: turn-on-captions\ndescription: Turns captions on for videos.\nsiteRelevance: [video]\n---\n# Turn on captions\n\n## Recipe\n```json\n{"adapters":[],"actions":[{"name":"Turn on captions","prompt":"Turn on captions for this video"}]}\n```');
 check('action-only skill validates', validateSkill(actionSkill, { tools }).valid);
@@ -105,6 +146,8 @@ check('serialize->parse preserves recipe', resolveSkill(rt).settings.fontScale =
 const prompt = buildSkillPrompt('make news sites calmer and easier to read', { profile: { supportAreas: ['vision'] }, tools, taxonomy: TAXONOMY });
 check('prompt grounds the model in real adapter ids', prompt.includes('visual-assist') && prompt.includes('focus-mode'));
 check('prompt lists setting vocabulary', prompt.includes('fontScale'));
+check('prompt lists the support-area vocabulary', prompt.includes(`Support areas for supportAreas: ${SUPPORT_AREAS.join(', ')}`));
+check('prompt lists the site categories', prompt.includes(`siteRelevance: ${TAXONOMY.categoryIds().join(', ')}`));
 check('prompt asks for SKILL.md shape', prompt.includes('SKILL.md') && prompt.includes('"adapters"'));
 check('prompt has no revision block without feedback', !prompt.includes('The person tried it'));
 
