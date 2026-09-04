@@ -21,9 +21,14 @@ const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
 
 // Children whose text is not prose the reader sees: element.textContent
 // includes a <style> or <script> body, a <noscript> or <template>, and
-// anything hidden. Measuring the floor and the ratio against that would
-// reject a faithful rewrite of the visible prose and mark the element
-// failed for good, and the model would be sent text the reader never saw.
+// anything carrying the hidden attribute or aria-hidden="true". Measuring
+// the floor and the ratio against that would reject a faithful rewrite of
+// the visible prose and mark the element failed for good, and the model
+// would be sent text the reader never saw.
+// FLAG(review): only those markers. Text hidden by CSS alone (display:none
+// from a stylesheet or a class) is still counted, because reading it back
+// needs getComputedStyle on every node, which is a layout cost on a pass
+// that runs over every candidate on the page.
 const NOT_PROSE_SEL = 'style, script, noscript, template, [hidden], [aria-hidden="true"]';
 
 // The visible prose of an element: its text with the children above removed,
