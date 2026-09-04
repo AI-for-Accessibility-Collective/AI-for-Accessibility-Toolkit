@@ -596,12 +596,23 @@ export function createLibrarian({
       return category;
     },
 
+    // Record the person's own category for an origin. Returns
+    // { ok: false, reason: 'bad-category' } for a value outside the taxonomy
+    // and { ok: true } once stored, so a caller can tell a refusal from a
+    // save. A user override is returned by getSiteCategory as-is (source
+    // 'user' skips the taxonomy-version check), and everything keyed by
+    // category downstream only ever matches taxonomy ids: memory scopes,
+    // auto-replay profiles, and the siteRelevance of a task saved as a skill.
+    // Refusing here, the same way logObservation ignores such a value, means
+    // no store carries a category nothing can match.
     async setSiteCategoryOverride(origin, category) {
       origin = (origin || '').toLowerCase().replace(/^www\./, '');
+      if (!TAX().categoryIds().includes(category)) return { ok: false, reason: 'bad-category' };
       await DS().patch('mine.siteIndex', (cur) => {
         cur[origin] = { ...(cur[origin] || {}), category, source: 'user', classifiedAt: clock.now(), taxonomyVersion: TAX().version };
         return cur;
       });
+      return { ok: true };
     },
 
     // Deterministic scope-chain merge of machine-actionable settings.

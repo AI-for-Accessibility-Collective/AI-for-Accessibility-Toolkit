@@ -76,7 +76,7 @@ Every method below was read off a REAL `createToolkit(...)` instance at doc-gene
 | `librarian.removeScopedSetting(scope, key)` | async | Delete the durable user-explicit record for `setting.<key>` at `scope` — the true inverse of recordScopedSettings (which only ever upserts). |
 | `librarian.resetToProfile(opts)` | async | "Forget what I've changed, go back to my profile." undoLast is LIFO and per-session; resetUndo clears a journal without restoring anything. |
 | `librarian.getSiteCategory(origin, opts)` | async | Classify once, cache forever; user override wins and is sticky. |
-| `librarian.setSiteCategoryOverride(origin, category)` | async | (no doc comment) |
+| `librarian.setSiteCategoryOverride(origin, category)` | async | Record the person's own category for an origin. |
 | `librarian.getEffectivePreferences(url, contexts)` | async | Deterministic scope-chain merge of machine-actionable settings. |
 | `librarian.interpretNeedsPrompt(text)` | async | Prompt for the popup's "what support do you need?" flow. |
 
