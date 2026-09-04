@@ -43,6 +43,17 @@ const TOOLKIT_DIR = path.join(__dirname, '..', 'toolkit');
 const CONTROLLER_DIR = path.join(__dirname, '..', 'controller');
 const REGISTRY_DIR = path.join(TOOLKIT_DIR, 'registry');
 
+// The ES modules /chat.html imports by absolute path. chat.js is the page's DOM
+// wiring; the rest hold the logic it used to carry inline, split out so the Node
+// suites can import and test them.
+const CHAT_MODULES = [
+  '/chat.js',
+  '/chat-routing.js',
+  '/chat-turn.js',
+  '/chat-profile.js',
+  '/chat-history.js',
+];
+
 // Support-area vocabulary (mirrors the toolkit's ability dimensions). The UI
 // offers these; onboarding accepts any subset.
 const SUPPORT_AREAS = ['vision', 'reading', 'cognitive', 'motor', 'hearing', 'sensory', 'attention'];
@@ -506,7 +517,10 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(html);
     }
-    if (method === 'GET' && (pathname === '/chat.js' || pathname === '/chat-routing.js')) {
+    // An explicit allowlist, not a directory served wholesale: these are the
+    // only modules the chat page imports, and nothing else in here should be
+    // reachable over HTTP.
+    if (method === 'GET' && CHAT_MODULES.includes(pathname)) {
       const js = await readFile(path.join(__dirname, pathname.slice(1)), 'utf8');
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' });
       return res.end(js);

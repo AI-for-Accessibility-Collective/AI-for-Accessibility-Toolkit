@@ -25,6 +25,9 @@ import { createLlmLane } from '/controller/lib/llm-lane.js';
 import { parse } from '/controller/lib/grammar.js';
 import { bestVoice, forSpeech, earconThinkPulse, earconDone, earconError } from '/controller/lib/web/ui.js';
 import { detectOnboarding, visionKindOf, isResetToProfile } from '/chat-routing.js';
+import { routeTurn, classifyControllerResult, fallbackHelp, generalAnswerPrompt } from '/chat-turn.js';
+import { mergeOnboarding, onboardingReply, resetReply, NO_PROFILE_TO_RESET, profilePill } from '/chat-profile.js';
+import { createHistory, onFirstLine, onLastLine } from '/chat-history.js';
 
 const $ = (id) => document.getElementById(id);
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -46,11 +49,13 @@ async function loadProfile() {
 
 // The always-visible profile pill at the top (read-only; editing happens here in
 // chat or on the full onboarding page). Built with text nodes — the free text is
-// the person's own words and must never be injected as HTML.
+// the person's own words and must never be injected as HTML. What to show comes
+// from profilePill() in chat-profile.js; this function only places it.
 function renderProfile(uid, model) {
   const el = $('profile');
   el.textContent = '';
-  if (!uid || !model) {
+  const pill = profilePill(uid, model);
+  if (pill.empty) {
     el.append('No profile yet — tell me about yourself, e.g. ');
     const ex = document.createElement('em'); ex.textContent = '“I’m blind”'; el.append(ex);
     el.append(' or ');
@@ -58,11 +63,8 @@ function renderProfile(uid, model) {
     return;
   }
   const person = document.createElement('span'); person.className = 'who';
-  person.textContent = uid; el.append('You: ', person);
-  const bits = [];
-  if (model.supportAreas && model.supportAreas.length) bits.push(model.supportAreas.join(', '));
-  if (model.freeText) bits.push('“' + model.freeText + '”');
-  if (bits.length) el.append(' · ' + bits.join(' · '));
+  person.textContent = pill.uid; el.append('You: ', person);
+  if (pill.detail) el.append(pill.detail);
 }
 
 // ── onboarding (detection lives in chat-routing.js, unit-tested) ─────────────
@@ -74,24 +76,16 @@ function renderProfile(uid, model) {
 // low-vision (or vice-versa).
 async function applyOnboarding(o) {
   const uid = currentUid() || 'demo-user';
-  const prevAreas = operatorModel.supportAreas || [];
-  const prevText = (operatorModel.freeText || '').trim();
-  const supportAreas = [...new Set([...prevAreas, ...o.supportAreas])];
-  const freeText = (prevText && !prevText.toLowerCase().includes(o.freeText.toLowerCase()))
-    ? prevText.replace(/[.\s]+$/, '') + '. ' + o.freeText
-    : (prevText || o.freeText);
-  const visionKind = supportAreas.includes('vision') ? (visionKindOf(freeText) || undefined) : undefined;
+  const merged = mergeOnboarding(operatorModel, o, visionKindOf);
 
-  const payload = { uid, supportAreas, freeText, visionKind };
+  const payload = { uid, ...merged };
   const r = await fetch('/api/onboard', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
   const d = await r.json();
   if (!d.ok) throw new Error(d.error || 'onboarding failed');
   try { localStorage.setItem('onb-uid', d.uid); } catch {}
   await loadProfile();
   rebuildController(); // the operator model changed → re-derive presentation
-  const areas = d.supportAreas.length ? d.supportAreas.join(', ') : 'none';
-  const kind = d.visionKind ? ` (${d.visionKind === 'blind' ? 'screen-reader / no magnification' : 'low vision'})` : '';
-  return `Got it — updated your profile. Support areas: ${areas}${kind}. Tell me more any time, or edit it on the onboarding page.`;
+  return onboardingReply(d);
 }
 
 // Drop the durable user-explicit setting overrides so the profile is the source
@@ -100,17 +94,13 @@ async function applyOnboarding(o) {
 // Reset-profile button in Settings does.
 async function applyResetToProfile() {
   const uid = currentUid();
-  if (!uid) return 'There\u2019s no profile set yet, so there\u2019s nothing to go back to. Tell me about your needs (like \u201cI\u2019m blind\u201d) and I\u2019ll set one up.';
+  if (!uid) return NO_PROFILE_TO_RESET;
   const r = await fetch('/api/reset-to-profile', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ uid }) });
   const d = await r.json();
   if (!d.ok) throw new Error(d.error || 'reset failed');
   await loadProfile();
   rebuildController();
-  const n = (d.forgotten || []).length;
-  const keys = [...new Set((d.forgotten || []).map((f) => f.key))];
-  return n
-    ? `Back to your profile \u2014 I forgot ${n} change${n === 1 ? '' : 's'} you'd made (${keys.join(', ')}). Your profile itself is unchanged.`
-    : 'You\u2019re already on your profile \u2014 there were no changes to forget.';
+  return resetReply(d);
 }
 
 // ── the driven app (controller half) ─────────────────────────────────────────
@@ -299,46 +289,28 @@ async function stopTask() {
 // Sent messages are remembered (per browser) and recalled with the arrow keys —
 // Up walks back through older messages, Down walks forward, and Down past the
 // newest restores whatever draft you were typing.
+// The ring itself lives in chat-history.js (unit-tested); what stays here is
+// the textarea handling — caret placement and which keys recall.
 const HIST_KEY = 'aa-chat-history';
-const HIST_MAX = 100;
-let history = [];
-try { const h = JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); if (Array.isArray(h)) history = h.filter((x) => typeof x === 'string'); } catch { history = []; }
-let histIndex = history.length; // points one past the newest = "the current draft"
-let histDraft = '';             // the in-progress line, restored when you arrow past newest
+const history = createHistory({
+  max: 100,
+  load: () => JSON.parse(localStorage.getItem(HIST_KEY) || '[]'),
+  save: (entries) => localStorage.setItem(HIST_KEY, JSON.stringify(entries)),
+});
 
-function pushHistory(text) {
-  const t = String(text || '').trim();
-  if (t && history[history.length - 1] !== t) { // skip empty + consecutive dupes
-    history.push(t);
-    if (history.length > HIST_MAX) history = history.slice(-HIST_MAX);
-    try { localStorage.setItem(HIST_KEY, JSON.stringify(history)); } catch {}
-  }
-  histIndex = history.length;
-  histDraft = '';
-}
 function caretToEnd(ta) { const n = ta.value.length; try { ta.setSelectionRange(n, n); } catch {} }
+function recall(ta, value) {
+  if (value === null) return;
+  ta.value = value;
+  caretToEnd(ta);
+}
 // Only recall when the caret is on the first line (Up) / last line (Down), so a
 // multi-line draft still moves the cursor normally.
-function onFirstLine(ta) { return ta.selectionStart === ta.selectionEnd && ta.value.slice(0, ta.selectionStart).indexOf('\n') === -1; }
-function onLastLine(ta) { return ta.selectionStart === ta.selectionEnd && ta.value.slice(ta.selectionEnd).indexOf('\n') === -1; }
-function recallPrev(ta) {
-  if (!history.length || histIndex === 0) return;
-  if (histIndex === history.length) histDraft = ta.value; // remember the live draft
-  histIndex--;
-  ta.value = history[histIndex] || '';
-  caretToEnd(ta);
-}
-function recallNext(ta) {
-  if (histIndex >= history.length) return;
-  histIndex++;
-  ta.value = histIndex === history.length ? histDraft : (history[histIndex] || '');
-  caretToEnd(ta);
-}
 function onComposerKey(e) {
   const ta = e.target;
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTurn(ta.value); return; }
-  if (e.key === 'ArrowUp' && onFirstLine(ta) && history.length) { e.preventDefault(); recallPrev(ta); }
-  else if (e.key === 'ArrowDown' && onLastLine(ta) && histIndex < history.length) { e.preventDefault(); recallNext(ta); }
+  if (e.key === 'ArrowUp' && onFirstLine(ta) && history.size) { e.preventDefault(); recall(ta, history.prev(ta.value)); }
+  else if (e.key === 'ArrowDown' && onLastLine(ta) && !history.atDraft) { e.preventDefault(); recall(ta, history.next()); }
 }
 
 // ── the main turn ─────────────────────────────────────────────────────────────
@@ -348,42 +320,34 @@ async function handleTurn(text) {
   if (!u || busy) return;
   busy = true;
   addMessage('user', u);
-  pushHistory(u); // remember for Up/Down recall
+  history.push(u); // remember for Up/Down recall
   $('composer-input').value = '';
   try {
-    // Routing precedence:
-    //   1) a deterministic CONTROLLER command wins ("bigger text", "hide
-    //      distractions", "read this", "undo") — these are actions, never a
-    //      profile edit, even though a word like "distractions" also appears in
-    //      the onboarding vocabulary.
-    //   2) otherwise a self-description → onboarding ("I'm blind").
-    //   3) otherwise back to the controller (LLM lane / task / a general answer).
-    // "back to my profile" — forget the deliberate overrides and let the profile
-    // decide again. A PROFILE operation (like onboarding), so it's handled here
-    // rather than in the grammar, and it runs before the grammar so "reset my
-    // settings" isn't read as a settings command.
-    if (isResetToProfile(u)) {
+    // The precedence between a reset, a command and a self-description lives in
+    // routeTurn() (chat-turn.js, unit-tested). What stays here is what a turn
+    // DOES once it is classified.
+    const route = routeTurn(u, { isResetToProfile, parse, detectOnboarding });
+
+    if (route.kind === 'reset') {
       const reply = await applyResetToProfile();
       addMessage('assistant', reply); speak(reply);
       return;
     }
-    const grammarHit = parse(u);
-    if (!grammarHit) {
-      const onb = detectOnboarding(u);
-      if (onb) {
-        const reply = await applyOnboarding(onb);
-        addMessage('assistant', reply); speak(reply);
-        return;
-      }
+    if (route.kind === 'onboard') {
+      const reply = await applyOnboarding(route.onboarding);
+      addMessage('assistant', reply); speak(reply);
+      return;
     }
+
     const res = await controller.handle(u, { returnToController: true });
-    if (res.intent && res.intent.action === 'task' && res.ok) {
+    const outcome = classifyControllerResult(res);
+    if (outcome === 'task') {
       addMessage('assistant', res.say); speak(res.say);
       startWaiting(); // the real result comes back as a note
       return;
     }
-    if (res.intent && res.intent.type === 'unrecognized') {
-      // 3) nothing deterministic matched → a general spoken answer (best-effort).
+    if (outcome === 'unrecognized') {
+      // nothing deterministic matched → a general spoken answer (best-effort).
       const answer = await generalAnswer(u);
       addMessage('assistant', answer); speak(answer);
       return;
@@ -401,23 +365,16 @@ async function handleTurn(text) {
 
 // A general assistant answer for anything that isn't a setting, command, or
 // self-description. Best-effort via Gemini; a helpful canned reply if no key.
+// The prompt and the no-key reply both live in chat-turn.js (unit-tested).
+// "connected" is what decides whether the fallback can honestly offer to run
+// the request: with no remote channel, nothing but this page can act.
 async function generalAnswer(u) {
+  const help = () => fallbackHelp({ connected: !!remoteChannel });
   try {
-    const prompt = `You are the accessibility assistant inside a control surface. Answer the user's question briefly and plainly (2-3 sentences, no markdown). If it's about changing the page, remind them they can say things like "bigger text", "dark mode", "high contrast", "read this", or describe their needs like "I'm blind".\n\nUser: ${u.replace(/"/g, "'")}\nAnswer:`;
-    return (await assistComplete(prompt)).trim() || fallbackHelp();
+    return (await assistComplete(generalAnswerPrompt(u))).trim() || help();
   } catch {
-    return fallbackHelp();
+    return help();
   }
-}
-// Nothing deterministic matched and there was nowhere to pass it. Say WHY —
-// usually "no app is connected", which is the actual reason a request like
-// "play a podcast from spotify" goes nowhere.
-function fallbackHelp() {
-  const base = 'I can adapt this page — try “bigger text”, “dark mode”, “high contrast”, or “read this” — and I’ll set up your profile if you tell me about your needs (“I’m blind”).';
-  if (!remoteChannel) {
-    return 'Nothing is connected that could do that. I can only adapt this page and your profile right now — to run a request like that, connect an app first: Settings → Connect browser-harness. ' + base;
-  }
-  return base;
 }
 
 // ── voice input ───────────────────────────────────────────────────────────────
