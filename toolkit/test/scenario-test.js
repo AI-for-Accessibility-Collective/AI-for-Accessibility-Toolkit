@@ -266,6 +266,24 @@ async function scenarioB() {
   check('B: the auto-replay action was still saved',
     (await DS.get('mine.profiles')).some(p => (p.actions || []).some(a => a.prompt === 'Loop this section')));
 
+  // A caller-supplied category outside the taxonomy is not trusted: the
+  // observation is classified from the host instead, so the proposal, the
+  // auto-replay profile and the saved skill all carry a taxonomy id that
+  // retrieval can match (issue #34).
+  await L.logObservation({
+    type: 'agent-task', url: 'https://www.nytimes.com/section/x', category: 'blog',
+    text: 'done', data: { task: 'Open the print view', summary: 'done', success: true },
+  });
+  const offVocab = (await L.listProposals())[0];
+  check('B: a category outside the taxonomy is replaced by the host classification',
+    offVocab?.change.siteTypes.join() === 'news');
+  const offAcc = await L.respondToProposal(offVocab.id, 'accept');
+  const offSkill = (await DS.get('mine.skillDocs')).find(s => (s.recipe?.actions || []).some(a => a.prompt === 'Open the print view'));
+  check('B: the accepted task is saved as a skill with a taxonomy siteRelevance',
+    offAcc.ok === true && offSkill?.siteRelevance.join() === 'news');
+  check('B: the episodic log carries the classified category, not the supplied one',
+    (await DS.get('mine.episodicLog')).entries.every(e => e.category !== 'blog'));
+
   // A FAILED agent run never proposes.
   await agentTask('https://www.youtube.com/watch?v=fail', 'Skip the intro', false);
   check('B: a failed agent run does not propose', (await L.listProposals()).length === 0);

@@ -1432,7 +1432,14 @@ Return ONLY valid JSON with:
       // which only ever survived because that reassignment path is unreached
       // outside demo mode; esbuild's static check surfaced the latent bug.)
       let origin = obs.origin || originOf(obs.url || '');
-      let category = obs.category || null;
+      // A caller-supplied category is honored only when it is a taxonomy id.
+      // Anything else falls through to the site index and the host map, the
+      // same way a missing category does. Everything keyed by category
+      // downstream (memory scopes, the auto-replay profile match, and the
+      // siteRelevance of a task saved as a skill) only ever matches taxonomy
+      // ids, so a value outside the vocabulary would be logged and then
+      // never found again (issue #34).
+      let category = TAX().categoryIds().includes(obs.category) ? obs.category : null;
       if (origin) {
         const idx = await DS().get('mine.siteIndex');
         const entry = idx[origin];
@@ -1632,10 +1639,11 @@ Return ONLY valid JSON with:
               const names = new Set(skills.map(s => s.name));
               let name = slug;
               for (let n = 2; names.has(name); n++) name = `${slug}-${n}`;
-              // FLAG(review): proposal siteTypes are app-supplied and not checked
-              // against the taxonomy before this point, so a value outside it now
-              // makes saveSkill refuse (siteRelevance is validated). Surface that
-              // instead of dropping it; the profile action above is still saved.
+              // siteTypes come from the observation's category, which
+              // logObservation only accepts as a taxonomy id, so saveSkill's
+              // siteRelevance check passes here. Keep the refusal visible all
+              // the same: the profile action above is already saved, and a
+              // silent drop would leave the person without the skill.
               const res = await this.saveSkill({
                 name,
                 description: `Runs "${prompt}" for you. Use it on ${cats.join(', ')} sites.`,
