@@ -133,15 +133,17 @@ export function adaptersForTools(tools) {
   if (tools.autoSimplify) enabled.push('simplify-text');
   if (tools.autoSummarize) enabled.push('simplify-text'); // summarization
   if (tools.autoWcagFix) enabled.push('wcag-fixes');
-  if (tools.autoFixLabels) enabled.push('generate-labels');
   // The extension's content script runs the link-text and table-header
   // repairs under the same key as label generation, so a profile that turns
-  // on autoFixLabels reaches these two as well. They have no registry entry
-  // or key of their own.
-  // FLAG(review): recorded from the host's behavior. If link text and table
-  // headers should be switchable on their own, they need their own registry
-  // entries and setting keys instead of riding on autoFixLabels.
-  if (tools.autoFixLabels) enabled.push('fix-links', 'fix-tables');
+  // on autoFixLabels reaches all three. fix-links and fix-tables have no
+  // registry entry or key of their own.
+  // FLAG(review): recorded from one host of three. The CLI (applyProfileByName
+  // in cli/cli-tools.js) has no autoFixLabels line and runs these two only as
+  // explicit commands, and the personalized extension enables only
+  // GenerateLabels on this key. If link text and table headers should be
+  // switchable on their own, they need their own registry entries and setting
+  // keys instead of riding on autoFixLabels.
+  if (tools.autoFixLabels) enabled.push('generate-labels', 'fix-links', 'fix-tables');
   if (tools.showCaptions) enabled.push('show-captions'); // turn on existing captions (no AI)
   if (tools.autoCaptions) enabled.push('generate-captions'); // transcribe media that has none (AI)
   if (tools.fixContrast) enabled.push('fix-contrast');
@@ -204,8 +206,11 @@ export function adaptersForTools(tools) {
   // this file makes.
   const colorMode = [tools.colorFilter, tools.colorBlindMode].find((v) => v && v !== 'none');
   if (colorMode) enabled.push('color-blind');
-  // FLAG(review): the registry's agent-watch entry sets this key, but no host
-  // has a line for it yet, so a profile that sets agentWatch lists the
+  // FLAG(review): the personalized extension enables AgentWatch on this key
+  // (personalized-extension/extension/content/content.js line 400 in the
+  // extension repo at cf86b69). The CLI (applyProfileByName in
+  // cli/cli-tools.js) and the extension's main content script have no line
+  // for it, so under those two hosts a profile that sets agentWatch lists the
   // adapter here without anything switching it on.
   if (tools.agentWatch) enabled.push('agent-watch');
 
