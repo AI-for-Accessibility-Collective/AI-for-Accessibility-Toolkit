@@ -185,8 +185,7 @@ async function runOneMode(mode) {
     dataDir = mkdtempSync(path.join(tmpdir(), 'onboard-contract-'));
     process.env.DATA_DIR = dataDir;
     installLocalRecorder(state);
-    const { register } = await import('node:module');
-    register('./onboard-contract.hooks.mjs', import.meta.url);
+    await installHooks();
   } else {
     process.env.TOOLKIT_URL = 'http://toolkit.test';
     process.env.ADMIN_PASSWORD = 'test-only-not-a-real-secret';
@@ -230,6 +229,22 @@ async function runOneMode(mode) {
   if (outFile) writeFileSync(outFile, JSON.stringify(report));
   console.log(`\nOnboard contract (${mode}): ${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
+}
+
+// Two ways to register module hooks, by Node version. `registerHooks()`
+// (in-thread, synchronous) is the current API; Node 26 prints a deprecation
+// warning for the older `register()`. `registerHooks()` is missing from the
+// oldest versions the package's engines field allows (20.19 and 22.13, both
+// checked), so those get `register()`, which runs the same hooks on a
+// separate thread. The hooks file is written to work under either.
+async function installHooks() {
+  const mod = await import('node:module');
+  if (typeof mod.registerHooks === 'function') {
+    const hooks = await import('./onboard-contract.hooks.mjs');
+    mod.registerHooks({ resolve: hooks.resolve, load: hooks.load });
+  } else {
+    mod.register('./onboard-contract.hooks.mjs', import.meta.url);
+  }
 }
 
 // deleteNote takes an id the toolkit generated, which differs by mode and by

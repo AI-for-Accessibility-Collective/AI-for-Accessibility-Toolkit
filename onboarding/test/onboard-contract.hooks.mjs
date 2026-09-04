@@ -16,23 +16,32 @@
 // each librarian to globalThis.__onboardContractRecord, which the test sets
 // up on the main thread before importing server.js.
 //
-// Registered with `module.register()` from node:module, available since
-// Node 20.6 and inside the package's engines range.
+// Registered by the test with `module.registerHooks()` where Node has it
+// (in-thread, synchronous; Node 26 deprecates the older API) and with
+// `module.register()` on the oldest versions the engines field allows (20.19
+// and 22.13, which lack registerHooks). The two APIs differ in one way that
+// matters here: under registerHooks, nextResolve and nextLoad return their
+// result directly; under register, they return a promise. Both hooks below
+// therefore pass a promise through untouched and handle a plain value in
+// place, so the same file serves either registration.
 //
 // FLAG(review): a one-line export of localBits() from server.js would replace
 // this whole file; R1 scopes the change to the test harness, so it stays here.
 
 const MARKER = '?onboard-contract-recorder';
 
-export async function resolve(specifier, context, nextResolve) {
-  const r = await nextResolve(specifier, context);
-  if (r.url.endsWith('/server/src/toolkit-host.js') && (context.parentURL || '').endsWith('/onboarding/server.js')) {
-    return { ...r, url: r.url + MARKER };
-  }
-  return r;
+export function resolve(specifier, context, nextResolve) {
+  const tag = (r) => {
+    if (r.url.endsWith('/server/src/toolkit-host.js') && (context.parentURL || '').endsWith('/onboarding/server.js')) {
+      return { ...r, url: r.url + MARKER };
+    }
+    return r;
+  };
+  const r = nextResolve(specifier, context);
+  return typeof r?.then === 'function' ? r.then(tag) : tag(r);
 }
 
-export async function load(url, context, nextLoad) {
+export function load(url, context, nextLoad) {
   if (!url.endsWith(MARKER)) return nextLoad(url, context);
   const real = url.slice(0, -MARKER.length);
   const source = `
