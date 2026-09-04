@@ -56,8 +56,10 @@ core, where the same utterance can also update the person's profile.
   selectable and persisted. Spoken text is stripped of markdown first
   (`forSpeech`) so a task's `**bold**` and backticks aren't read aloud as
   punctuation. While a task runs, an animated waiting indicator + a Web-Audio
-  "thinking" earcon play, with a **Stop** control that calls the port's `stop()`,
-  then a done / error chime.
+  "thinking" earcon play, with a **Stop** control that calls the port's `stop()`
+  — also on **Esc**, since a driven task can run for minutes and the control is
+  only reachable if you can see it and point at it. Esc stays inert when nothing
+  is running (an open settings drawer takes it first). Then a done / error chime.
 
 ## Driving the chat from an embedder (a framed chat)
 
@@ -76,8 +78,9 @@ frame.contentWindow.postMessage({ kind: 'aa-chat-command', name: 'voice' }, '*')
 // ← { kind: 'aa-chat-command-result', name: 'voice', ok: true, detail: 'listening' }
 ```
 
-`name` is one of `voice` (toggle), `voice-start`, `voice-stop`, `focus`. One door
-for every shortcut, rather than a message per key. The chat replies with an ack
+`name` is one of `voice` (toggle), `voice-start`, `voice-stop`, `stop` (abort a
+running task — the same action as **Esc** and the Stop control), `focus`. One
+door for every shortcut, rather than a message per key. The chat replies with an ack
 so the embedder can tell whether it landed — and fall back to focusing the frame
 if it didn't (e.g. voice input switched off, or no `SpeechRecognition`).
 

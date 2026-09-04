@@ -394,7 +394,7 @@ function startWaiting() {
   for (let i = 0; i < 3; i++) { const d = document.createElement('span'); d.className = 'dot'; b.append(d); }
   // An icon Stop button (with tooltip) to interrupt the running task (ControlPort stop()).
   const stop = document.createElement('button'); stop.type = 'button'; stop.className = 'waiting-stop';
-  stop.textContent = 'Stop'; stop.title = 'Stop the running task'; stop.setAttribute('aria-label', 'Stop the running task');
+  stop.textContent = 'Stop'; stop.title = 'Stop the running task (Esc)'; stop.setAttribute('aria-label', 'Stop the running task (Escape)');
   stop.addEventListener('click', stopTask);
   waitingRow.append(b, stop); wrap.append(waitingRow); wrap.scrollTop = wrap.scrollHeight;
   // A repeating "thinking" earcon while the task runs — the audio counterpart of
@@ -570,6 +570,12 @@ const CHAT_COMMANDS = {
     return { ok: true, detail: 'stopped' };
   },
   focus() { try { $('composer-input').focus(); } catch {} return { ok: true, detail: 'focused' }; },
+  // Abort a running task. Same action as the Stop control and the Esc key.
+  stop() {
+    if (!waitingRow) return { ok: true, detail: 'nothing running' };
+    stopTask();
+    return { ok: true, detail: 'stopping' };
+  },
 };
 
 function runChatCommand(name) {
@@ -613,6 +619,19 @@ function initSettings() {
   const toggleDrawer = (open) => { drawer.hidden = !open; ham.setAttribute('aria-expanded', open ? 'true' : 'false'); };
   ham.addEventListener('click', () => toggleDrawer(drawer.hidden));
   $('drawer-close').addEventListener('click', () => { toggleDrawer(false); ham.focus(); });
+
+  // Esc aborts a running task. A driven task can run for minutes, and the Stop
+  // control is only reachable if you can see it and point at it — the shortcut
+  // is the whole point for anyone who can't. It stays inert when nothing is
+  // running, so Esc is still free for the page; an open settings drawer takes it
+  // first, since a modal that won't close on Esc is its own bug.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!drawer.hidden) { e.preventDefault(); toggleDrawer(false); ham.focus(); return; }
+    if (!waitingRow) return;               // nothing to stop — leave Esc alone
+    e.preventDefault();
+    runChatCommand('stop');
+  });
 
   // Speak replies
   const speakCb = $('speak-cb'); speakCb.checked = speakReplies;
