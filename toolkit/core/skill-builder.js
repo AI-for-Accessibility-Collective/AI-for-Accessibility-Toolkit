@@ -86,7 +86,7 @@ siteRelevance: [<comma-separated categories from the list above, or "all">]
 
 Rules:
 - Only reference adapter ids and setting keys listed above. Keep the recipe minimal — 1 to 4 adapters that directly serve the need.
-- Only use the support areas and site categories listed above; any other value is rejected.
+- Only use the support areas and site categories listed above; any other value is rejected. If the person's own support areas use other words, pick the closest listed values instead of copying theirs.
 - The "Recipe" JSON is the machine-runnable truth; make the prose match it.
 - Prefer the narrowest siteRelevance the need implies; use "all" only for genuinely global needs.`;
 }
