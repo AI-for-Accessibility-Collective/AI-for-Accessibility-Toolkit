@@ -35,7 +35,8 @@ jobs:
         # so CI cannot drift from it. tools/test/browser-validate.js and
         # onboarding/test/chat-e2e.mjs are intentionally not matched by those
         # globs. They need a real Chromium, so they run in the separate
-        # browser.yml instead of here, which is not a required check.
+        # .github/workflows/browser.yml instead of here. That workflow is not
+        # a required status check, so a red run there does not block a merge.
         run: npm test
 
       - name: Reference hosts run

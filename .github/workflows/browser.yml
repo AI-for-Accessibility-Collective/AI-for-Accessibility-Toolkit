@@ -21,7 +21,11 @@
 # ignored or bypassed; a visible optional one is the middle ground proposed
 # in issue #29. Add this job to the required list only once it has been green
 # for a while, and drop the paths filter in the same change, or pull requests
-# outside those paths will wait on a check that never reports.
+# outside those paths will wait on a check that never reports. Five other
+# places tell a reader this job does not block a merge and would go stale in
+# the same change: the comment on `npm test` in ci.yml, the Testing section of
+# CONTRIBUTING.md, the Tests section of onboarding/README.md, and the headers
+# of tools/test/browser-validate.js and onboarding/test/chat-e2e.mjs.
 #
 # The two suites run one after the other, never in parallel: two Chromium
 # instances on a shared runner are how browser tests time out.
