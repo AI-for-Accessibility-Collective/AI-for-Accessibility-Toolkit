@@ -178,6 +178,41 @@ rather than hand-editing.
 - Document which needs/profiles a feature helps.
 - No large binaries — link externally.
 
+## Package boundaries
+
+The six top-level directories are packages with one direction of dependency.
+`toolkit/` (the core) and `tools/` (the catalog) import from no sibling.
+`server/`, `controller/`, and `cli/` depend inward on those two. `onboarding/`
+is the one edge between neighbors: it reuses the server's auth, store, and
+toolkit host, and serves the controller's modules to its chat page.
+
+Four rules keep that shape, and `npm test` checks them
+(`scripts/import-boundaries-test.mjs`):
+
+1. **No relative import reaches past another package's public exports.**
+   `toolkit/package.json` and `tools/package.json` have `exports` maps; an
+   import into either has to land on a path the map exposes. A deep path the
+   map does not list works in this repository and fails for anyone who
+   installs the package. `server/`, `controller/`, and `cli/` have no exports
+   map yet; the test treats every file as reachable in a package that has a
+   manifest but no map, and only the root `.js` files in a directory with no
+   manifest.
+2. **A cross-package import is a dependency the importing package declares.**
+   There are no npm workspaces yet, so "declares" means the edge is in the
+   test's `ALLOWED` table (which package may import from which) and its
+   `KNOWN_EDGES` list (which file imports what, with a one-line reason). When
+   workspaces land, the declaration moves to `dependencies`.
+3. **The graph stays acyclic.** The test checks both the table and what the
+   code does.
+4. **A new edge gets called out in review.** Add it to `KNOWN_EDGES` with its
+   reason in the same change and say so in the PR description. The test fails
+   until the entry exists, and fails again if the import goes away and the
+   entry stays.
+
+The test reads relative specifiers only. An import through a URL path a server
+mounts (the way `onboarding/chat.js` loads `/controller/lib/...`) is an edge
+too; call it out the same way.
+
 ## Ethics
 
 - People with disabilities must be involved in design and evaluation.
