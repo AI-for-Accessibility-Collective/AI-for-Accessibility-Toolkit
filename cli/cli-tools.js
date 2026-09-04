@@ -67,9 +67,11 @@ import { simplifyText, summarizeContent } from '../tools/adapters/simplify-text.
 
 // Import non-AI WCAG fixes. The three named fixes drive the page sweeps in
 // runFullScan; the axe-driven dispatch goes through the adapter's own
-// axeHandlers map so the wcagRiskyFixes gate applies here as well.
+// axeHandlers map so the wcagRiskyFixes gate applies here as well, and
+// isRiskyFix says which rule ids that gate covers.
 import {
   axeHandlers as wcagAxeHandlers,
+  isRiskyFix,
   fixDuplicateId,
   fixPositiveTabindex,
   fixTargetBlank
@@ -612,8 +614,19 @@ const aiFixes = {
     if (!handler) return { error: `No handler for rule: ${ruleId}` };
     const el = document.querySelector(selector);
     if (!el) return { error: `Element not found: ${selector}` };
-    const applied = await handler(el, getActiveProfileSettings());
-    if (applied === false) return { skipped: 'risky', error: `Risky fix ${ruleId} is off (the active profile does not set wcagRiskyFixes)` };
+    // Only the wcag-fixes handlers read a settings object from their second
+    // parameter. The other adapters in the merged map use that slot for
+    // something else (fixLowContrast takes a color there), and several of
+    // them return false to mean "nothing to do" rather than "held back", so
+    // the settings argument and the false check are both scoped to the
+    // rules the gate actually covers.
+    const risky = isRiskyFix(ruleId);
+    const applied = risky
+      ? await handler(el, getActiveProfileSettings())
+      : await handler(el);
+    if (risky && applied === false) {
+      return { skipped: 'risky', error: `Risky fix ${ruleId} is off (the active profile does not set wcagRiskyFixes)` };
+    }
     return { success: true };
   }
 };
