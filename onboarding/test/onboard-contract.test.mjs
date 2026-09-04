@@ -191,22 +191,24 @@ async function runOneMode(mode) {
   process.env.ONBOARD_MODE = mode;
   delete process.env.GEMINI_API_KEY;
   let dataDir = null;
-  if (mode === 'local') {
-    dataDir = mkdtempSync(path.join(tmpdir(), 'onboard-contract-'));
-    process.env.DATA_DIR = dataDir;
-    installLocalRecorder(state);
-    await installHooks();
-  } else {
-    process.env.TOOLKIT_URL = 'http://toolkit.test';
-    process.env.ADMIN_PASSWORD = 'test-only-not-a-real-secret';
-    installRemoteStub(state);
-  }
-
   const report = { mode, scenarios: [] };
   const uids = {}; // scenario key -> the uid it produced
   try {
-    // Inside the try, so a server.js that fails to load (or a hook that does
-    // not match it) still leaves no temp store behind.
+    // Everything that can fail sits inside the try, so a server.js that does
+    // not load, or a hook that does not install, still leaves no temp store
+    // behind. The store goes under the parent's report directory when there
+    // is one: a child the parent has to kill never reaches the finally below,
+    // and the parent removes its own directory either way.
+    if (mode === 'local') {
+      dataDir = mkdtempSync(path.join(outFile ? path.dirname(outFile) : tmpdir(), 'onboard-contract-'));
+      process.env.DATA_DIR = dataDir;
+      installLocalRecorder(state);
+      await installHooks();
+    } else {
+      process.env.TOOLKIT_URL = 'http://toolkit.test';
+      process.env.ADMIN_PASSWORD = 'test-only-not-a-real-secret';
+      installRemoteStub(state);
+    }
     const { onboard, deriveDefaultNeeds } = await import('../server.js');
     for (const scen of SCENARIOS) {
       const input = { ...scen.input };
