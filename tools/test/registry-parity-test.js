@@ -1,4 +1,4 @@
-// Registry parity — the adapter barrel and the tools registry agree, as a test.
+// Registry parity: the adapter barrel and the tools registry agree, as a test.
 //
 // Adding an adapter touches three places: the adapter file, one export line in
 // the barrel (tools/adapters/index.js), and one entry in the registry
@@ -15,10 +15,18 @@
 // The catalog's own statement of that mapping is getEnabledAdapters() in
 // tools/profiles/settings.js, which turns setting keys into barrel module
 // names, and docs/FOLLOW-UPS.md already treats it as the reachability rule.
-// So this test follows the same path: registry entry -> its settings keys ->
+// So this test follows that statement: registry entry -> its settings keys ->
 // getEnabledAdapters -> module names -> the barrel. It does not re-derive the
 // mapping by id spelling, because `auto-alt-text` reaches `generate-alt` and
 // `color-filter` reaches `color-blind` only through that rule.
+//
+// What this proves, and what it does not. Each host keeps its own copy of the
+// key-to-adapter mapping (applyProfileByName in cli/cli-tools.js, and the
+// extension's content script) and neither calls getEnabledAdapters when it
+// applies a profile. So a green run here means the barrel, the registry, and
+// the catalog's declared mapping agree. It does not check that a host acts on
+// every key the registry names; the FLAG(review) notes in getEnabledAdapters
+// record where the hosts and the catalog still differ.
 //
 // Both directions are compared as sets, in the style of
 // adapter-conformance-test.js, and the barrel is read the same way it is

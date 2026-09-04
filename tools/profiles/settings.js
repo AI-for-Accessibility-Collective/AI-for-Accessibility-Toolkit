@@ -184,10 +184,15 @@ export function getEnabledAdapters(profileId) {
   if (tools.keyboardNav) enabled.push('keyboard-nav');
   if (tools.voiceCommands) enabled.push('voice-commands');
   // Two names for one setting: profiles (settings.json) say colorFilter, the
-  // registry and settingsMeta say colorBlindMode, and hosts accept either.
-  // Read both here so a registry entry and a profile both reach the adapter.
+  // registry and settingsMeta say colorBlindMode, and both hosts (the
+  // extension's content script and applyProfileByName in cli/cli-tools.js)
+  // accept either. Read both here so a registry entry and a profile both
+  // reach the adapter.
   const colorMode = tools.colorFilter || tools.colorBlindMode;
   if (colorMode && colorMode !== 'none') enabled.push('color-blind');
+  // FLAG(review): the registry's agent-watch entry sets this key, but no host
+  // has a line for it yet, so a profile that sets agentWatch lists the
+  // adapter here without anything switching it on.
   if (tools.agentWatch) enabled.push('agent-watch');
 
   return [...new Set(enabled)]; // Remove duplicates
