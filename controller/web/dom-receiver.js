@@ -99,7 +99,11 @@ export function createDomReceiver(root, { platform = 'web', scrollTarget } = {})
         if (!render) { rejected.push(key); continue; }
         previous[key] = key in active ? active[key] : undefined;
         render(root, value);
-        active[key] = value;
+        // null is "remove": the key leaves the active map the same way undoLast
+        // drops a key that had no prior value, so getContext reports only what
+        // is in effect and a relative change ("bigger text") starts from the
+        // baseline again rather than from Number(null).
+        if (value == null) delete active[key]; else active[key] = value;
         applied[key] = value;
       }
       if (!Object.keys(applied).length) return { error: 'no applicable settings', rejected };

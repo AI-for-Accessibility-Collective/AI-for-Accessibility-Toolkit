@@ -185,6 +185,13 @@ try {
     // The chat surface stores no manual change, so the server has nothing to
     // forget here; the reply must not claim otherwise.
     check('…and does not claim a stored change that never existed', !/forgot \d+ change/.test(reply));
+
+    // A cleared number has to be "not set", not zero: the next relative step
+    // starts from the baseline (100 + 10), not from the range minimum.
+    await say('bigger text');
+    check('a relative change after a reset starts from the baseline', await page.evaluate(
+      () => document.getElementById('demo-app').style.getPropertyValue('--aa-font-scale') === '1.1',
+    ));
   }
 } finally {
   await browser.close();

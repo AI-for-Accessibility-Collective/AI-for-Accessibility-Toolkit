@@ -138,9 +138,15 @@ export function onboardingReply(d, appliedText = '') {
 // has no such value (undefined).
 //
 // FLAG(review): a number or string clears to null. The DOM receiver treats
-// null as "remove" (the CSS variable goes away), which is exactly its not-set
-// state. A remote receiver that stores settings rather than rendering them may
-// want a numeric default instead, and the registry does not carry one.
+// null as "remove" (the CSS variable goes away and the key leaves its active
+// map), which is exactly its not-set state. The controller router keeps its
+// own numeric baseline for relative steps (fontScale 100, lineHeight 1.5,
+// letterSpacing 0, speechRate 1.0) and reads a null active value as that
+// baseline, so a "bigger text" after a reset starts from 100 again. A remote
+// receiver that stores settings rather than rendering them may still want a
+// numeric default instead, and the registry does not carry one. The enums in
+// the registry today (contrastMode, colorBlindMode) both list 'none' first; a
+// new enum whose first option is not the neutral one would clear wrongly.
 function notSetValue(m) {
   if (!m) return undefined;
   if (m.type === 'boolean') return false;

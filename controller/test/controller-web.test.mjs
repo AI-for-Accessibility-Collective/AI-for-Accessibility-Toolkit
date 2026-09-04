@@ -89,6 +89,32 @@ async function run() {
     check('core→web: honesty — unsupported key refused, not faked', r.ok === false && r.data.unsupported.includes('largeCursor'));
   }
 
+  // ── 3. A key cleared to null is not set, not zero ─────────────────────────
+  // A reset ("back to my profile" in /chat, issue #26) sends a number back to
+  // null, which the receiver renders as "remove". The key has to leave the
+  // active map as well: a null left behind reads as 0 to a relative step, so
+  // the next "bigger text" would land on the range minimum (50%) instead of
+  // baseline + 10.
+  {
+    const { root, styles } = makeStubApp();
+    const recv = createDomReceiver(root, {});
+    const c = createController({ control: recv });
+
+    await recv.applySettings({ fontScale: 150, lineHeight: 2.0 });
+    const res = await recv.applySettings({ fontScale: null, lineHeight: null });
+    check('web clear: null is reported as applied', 'fontScale' in res.applied && 'lineHeight' in res.applied);
+    check('web clear: the CSS variables are gone', !styles.has('--aa-font-scale') && !styles.has('--aa-line-height'));
+    const active = (await recv.getContext()).activeSettings;
+    check('web clear: a cleared key is no longer active', !('fontScale' in active) && !('lineHeight' in active));
+
+    await c.handle('bigger text');
+    check('web clear: "bigger text" after a clear starts from the baseline', styles.get('--aa-font-scale') === '1.1');
+
+    const undo = await recv.undoLast(); // the "bigger text"
+    await recv.undoLast();              // the clear itself
+    check('web clear: undo restores the value the clear removed', undo.remainingUndos === 2 && styles.get('--aa-font-scale') === '1.5' && styles.get('--aa-line-height') === '2');
+  }
+
   console.log(`\nController M2 (web): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }
