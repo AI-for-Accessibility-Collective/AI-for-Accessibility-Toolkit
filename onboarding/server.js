@@ -373,6 +373,12 @@ async function abilityModelFor(uid) {
 async function resetToProfileFor(uid, scope) {
   uid = String(uid || '').trim();
   if (!uid) throw new Error('uid required');
+  // Same gate as every other profile route: the id is the credential, so a
+  // uid that was never onboarded is not-found, and getInstance must never run
+  // for it (its migrations would create the partition). One path segment
+  // only, for the same reason onboard() insists on it.
+  if (uid.includes('/') || uid.includes('\\') || uid.includes('..')) throw new Error('invalid uid');
+  if (!(await listProfileIds()).includes(uid)) throw new Error('not-found');
   if (MODE === 'remote') {
     const t = await remoteAdmin('POST', '/admin/tokens', { uid, label: 'onboarding-reset' });
     if (t.status !== 200 || !t.body?.token) throw new Error('could not mint token (check TOOLKIT_URL / ADMIN_PASSWORD)');
@@ -422,8 +428,14 @@ async function deleteProfile(uid) {
     const r = await remoteAdmin('DELETE', '/admin/users/' + encodeURIComponent(uid));
     return r.status === 200;
   }
-  const { store } = await localBits();
-  return await store.deleteUser(uid);
+  const { host, store } = await localBits();
+  // Same order as the service's own delete: drop the cached instance so a
+  // stale in-memory one cannot write the partition back, wipe, then drop
+  // again in case a read during the wipe re-cached it.
+  host.evict?.(uid);
+  const wiped = await store.deleteUser(uid);
+  host.evict?.(uid);
+  return wiped;
 }
 
 // ── HTTP plumbing ───────────────────────────────────────────────────────────
@@ -455,7 +467,15 @@ async function serveStatic(res, baseDir, rel) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
-    req.on('data', (c) => { data += c; if (data.length > 1e6) reject(new Error('body too large')); });
+    req.on('data', (c) => {
+      data += c;
+      if (data.length > 1e6) {
+        // Settle first, then tear the request down so the rest of an
+        // oversized body is neither buffered nor parsed on 'end'.
+        reject(new Error('body too large'));
+        req.destroy();
+      }
+    });
     req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch { reject(new Error('invalid-json')); } });
     req.on('error', reject);
   });
@@ -554,7 +574,7 @@ const server = http.createServer(async (req, res) => {
         const result = await resetToProfileFor(body?.uid, body?.scope);
         return sendJSON(res, 200, { ok: true, ...result });
       } catch (e) {
-        return sendJSON(res, 400, { ok: false, error: e.message });
+        return sendJSON(res, e.message === 'not-found' ? 404 : 400, { ok: false, error: e.message });
       }
     }
 

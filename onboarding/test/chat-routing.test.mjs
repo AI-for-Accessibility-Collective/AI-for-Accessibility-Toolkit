@@ -73,6 +73,9 @@ for (const t of [
 for (const t of [
   'what are my settings', "what's set", 'show my settings', 'undo', 'undo that',
   'bigger text', "I'm blind", 'tell me my preferences', 'list my settings',
+  // Navigation phrases that only share a noun with a reset.
+  'go to settings', 'go to my profile page', 'return to preferences',
+  'take me back to the settings page', 'navigate back to settings',
 ]) check(`reset NOT triggered: "${t}"`, isResetToProfile(t) === false);
 
 console.log(`\nChat routing: ${pass} passed, ${fail} failed`);

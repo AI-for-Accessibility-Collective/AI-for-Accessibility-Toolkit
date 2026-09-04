@@ -52,11 +52,14 @@ export function visionKindOf(text) {
 // source again. Kept here (not in the grammar) because the chat owns profile
 // operations, and it must not be confused with `undo` (LIFO, one step) or with
 // the Reset-profile button (which forgets WHO you are, not just what you changed).
-const RESET_TO_PROFILE = /\b(reset|restore|revert|go|back|return)\b[^.]*\b(to |back to )?(my |the )?(profile|preferences|settings|defaults)\b|\bstart over\b|\bstart again\b|\bforget (what i('ve| have)? )?changed\b/i;
+// "go to settings" and "take me back to the settings page" are navigation,
+// not a reset: a bare go/return needs "back to" and a settings noun that is
+// not a page, tab, or screen; reset/restore/revert stand on their own.
+const RESET_TO_PROFILE = /\b(reset|restore|revert)\b[^.]*\b(to |back to )?(my |the )?(profile|preferences|settings|defaults)\b|\bback to (my |the )?(profile|preferences|settings|defaults)\b(?!\s*(page|tab|screen|menu|section|view))|\bstart over\b|\bstart again\b|\bforget (what i('ve| have)? )?changed\b/i;
 // …but "what are my settings" is a QUESTION the grammar answers, and "undo" is
 // its own thing — never treat those as a reset. Matched as question FORMS, not
 // bare keywords: a plain "what" must not veto "forget what I changed".
-const NOT_RESET = /\bundo\b|\bwhat('?s| is| are)\b|\b(show|tell|list|check) (me )?(my |the )?(settings?|preferences?)\b/i;
+const NOT_RESET = /\bundo\b|\bwhat('?s| is| are)\b|\b(show|tell|list|check) (me )?(my |the )?(settings?|preferences?)\b|\b(go|navigate|take me|open|switch) to (the |my )?(profile|preferences|settings)\b(?! defaults)|\b(navigate|open|switch)\b[^.]*\b(profile|preferences|settings)\b/i;
 
 /**
  * Does this message ask to go back to the profile?
