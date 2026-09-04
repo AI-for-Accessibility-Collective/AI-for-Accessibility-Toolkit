@@ -20,25 +20,27 @@
 //
 // Run from the repository root, after `npm ci`: node scripts/pack-fixture-test.mjs
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const tmp = mkdtempSync(path.join(tmpdir(), 'ai4a11y-pack-'));
-
-function run(cmd, args, cwd) {
-  return execFileSync(cmd, args, { cwd, encoding: 'utf8' });
-}
 
 // The repository's own tsc (root devDependency, pinned), not a download: the
 // version that emitted toolkit/types/ is the version that checks against it.
+// Checked before the scratch directory exists, so exiting here leaks nothing.
 const tsc = path.join(repoRoot, 'node_modules', 'typescript', 'bin', 'tsc');
 if (!existsSync(tsc)) {
   console.error('pack-fixture-test: typescript is not installed; run `npm ci` at the repository root first');
   process.exit(1);
+}
+
+const tmp = mkdtempSync(path.join(tmpdir(), 'ai4a11y-pack-'));
+
+function run(cmd, args, cwd) {
+  return execFileSync(cmd, args, { cwd, encoding: 'utf8' });
 }
 
 // Typecheck files inside the scratch project. Returns the tsc exit code and
@@ -53,11 +55,9 @@ function typecheck(consumer, files) {
     '--lib', 'es2022', '--pretty', 'false',
     ...files,
   ];
-  try {
-    return { code: 0, out: execFileSync(process.execPath, args, { cwd: consumer, encoding: 'utf8' }) };
-  } catch (e) {
-    return { code: e.status ?? 1, out: String(e.stdout || '') + String(e.stderr || '') };
-  }
+  const r = spawnSync(process.execPath, args, { cwd: consumer, encoding: 'utf8' });
+  if (r.error) throw r.error;
+  return { code: r.status ?? 1, out: r.stdout + r.stderr };
 }
 
 try {
@@ -182,17 +182,14 @@ console.log('pack fixture: all consumer-surface checks passed');
   //    for it too. tsc resolves '@ai4a11y/toolkit' through the tarball's
   //    exports map `types` conditions; if those were missing, the RIGHT file
   //    would fail on an unresolved module, so it also guards the manifest.
+  const kvFixture = `/** @type {import('@ai4a11y/toolkit').KVStore} */
+const kv = { get: async () => undefined, set: async () => {}, getAll: async () => ({}) };`;
   writeFileSync(path.join(consumer, 'types-right.js'), `// @ts-check
 import { createToolkit } from '@ai4a11y/toolkit';
 import { parseSkill } from '@ai4a11y/toolkit/core/skill';
 import { renderXRSettings } from '@ai4a11y/toolkit/surfaces/xr';
 
-/** @type {import('@ai4a11y/toolkit').KVStore} */
-const kv = {
-  get: async () => undefined,
-  set: async () => {},
-  getAll: async () => ({}),
-};
+${kvFixture}
 const { librarian, datastore } = createToolkit({ kv, clock: { now: () => 0 } });
 await datastore.runMigrations();
 const model = await librarian.getAbilityModel();
@@ -218,23 +215,33 @@ export const summary = { angular: xr.text.angularSizeDeg, needs: model.needs.len
 import { createToolkit } from '@ai4a11y/toolkit';
 import { renderXRSettings } from '@ai4a11y/toolkit/surfaces/xr';
 
-/** @type {import('@ai4a11y/toolkit').KVStore} */
-const kv = { get: async () => undefined, set: async () => {}, getAll: async () => ({}) };
+${kvFixture}
 ${wrongCalls.join('\n')}
 `);
 
-  const right = typecheck(consumer, ['types-right.js']);
-  if (right.code !== 0) {
+  // One tsc run over both files: with --pretty false every diagnostic is one
+  // `file(line,col): error TSnnnn: ...` line, so the file prefix says which
+  // consumer it belongs to. Anything with another prefix (or none) comes from
+  // the shipped declarations or from tsc itself, and is a failure on its own.
+  const both = typecheck(consumer, ['types-right.js', 'types-wrong.js']);
+  const errorLines = both.out.split('\n').filter((l) => /error TS\d+/.test(l));
+  const rightErrors = errorLines.filter((l) => l.startsWith('types-right.js('));
+  const wrongErrors = errorLines.filter((l) => l.startsWith('types-wrong.js('));
+  const otherErrors = errorLines.filter((l) => !rightErrors.includes(l) && !wrongErrors.includes(l));
+  if (rightErrors.length !== 0) {
     console.error('PACK FIXTURE FAILURE: a correct call against the packed toolkit did not typecheck:');
-    console.error(right.out);
+    console.error(rightErrors.join('\n'));
     process.exit(1);
   }
-  const wrong = typecheck(consumer, ['types-wrong.js']);
-  const errorLines = wrong.out.split('\n').filter((l) => /error TS\d+/.test(l));
-  if (wrong.code === 0 || errorLines.length !== wrongCalls.length) {
+  if (both.code === 0 || wrongErrors.length !== wrongCalls.length) {
     console.error('PACK FIXTURE FAILURE: expected exactly ' + wrongCalls.length
-      + ' type errors from wrong calls against the packed toolkit, got ' + errorLines.length + ':');
-    console.error(wrong.out);
+      + ' type errors from wrong calls against the packed toolkit, got ' + wrongErrors.length + ':');
+    console.error(both.out);
+    process.exit(1);
+  }
+  if (otherErrors.length !== 0) {
+    console.error('PACK FIXTURE FAILURE: type errors outside the two consumer files:');
+    console.error(otherErrors.join('\n'));
     process.exit(1);
   }
   console.log('pack fixture: shipped declarations reject ' + wrongCalls.length + ' wrong calls and accept a right one');
