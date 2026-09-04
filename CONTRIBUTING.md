@@ -89,6 +89,10 @@ export const axeHandlers = { 'aria-required-attr': fixCarouselControls };
 Then in `tools/adapters/index.js` add the export and spread its handlers, and
 register the tool in `toolkit/registry/tools.js` (id, `supportAreas`,
 `settings`, one-line `description`) plus any new setting keys in `settingsMeta`.
+Then add one line to `getEnabledAdapters` in `tools/profiles/settings.js` that
+maps the new setting key to the adapter's module name;
+`node tools/test/registry-parity-test.js` fails until the barrel, the registry,
+and that mapping agree.
 Read `tools/adapters/fix-tables.js` (heuristic + AI fallback) or
 `tools/adapters/fix-landmarks.js` (deterministic) for a full example.
 
