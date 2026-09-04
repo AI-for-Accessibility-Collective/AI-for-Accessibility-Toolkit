@@ -564,7 +564,7 @@ export const skillRegistry = [
   {
     id: 'wcag-fixes',
     name: 'WCAG Auto-Fix',
-    description: 'Automatic fixes for common WCAG violations: lang attributes, duplicate IDs, heading order, tabindex, ARIA validation, touch targets, and more.',
+    description: 'Automatic fixes for common WCAG violations: lang attributes, duplicate IDs, tabindex, deprecated ARIA roles, zoom lock, obsolete elements. The fixes that change page structure (heading re-tag, ARIA strip, nested control unwrap, touch target size) also need wcagRiskyFixes.',
     supportAreas: ['vision', 'motor', 'cognitive'],
     siteRelevance: ['all'],
     requiresAI: false,
@@ -645,7 +645,7 @@ export const settingsMeta = {
   speechRate:      { type: 'number', range: [0.5, 2.0], description: 'Text-to-speech rate' },
   fixContrast:     { type: 'boolean', description: 'Fix low-contrast text' },
   autoWcagFix:     { type: 'boolean', description: 'Auto-fix accessibility issues' },
-  wcagRiskyFixes:  { type: 'boolean', description: 'Enable risky WCAG fixes (heading re-tag, ARIA strip, target size) — default off' },
+  wcagRiskyFixes:  { type: 'boolean', description: 'Also run the risky WCAG fixes that change page structure (heading re-tag, ARIA strip, nested control unwrap, target size). Off by default' },
   autoDescribe:    { type: 'boolean', description: 'AI image descriptions' },
   autoFixLabels:   { type: 'boolean', description: 'AI-generated form labels' },
   showCaptions:    { type: 'boolean', description: 'Turn on captions the media already has (no AI)' },

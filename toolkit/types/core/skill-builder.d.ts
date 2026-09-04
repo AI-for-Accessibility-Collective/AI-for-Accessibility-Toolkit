@@ -18,11 +18,12 @@ export function buildSkillPrompt(need: string, opts: SkillBuildOptions): string;
  * fences the model wraps the whole doc in.
  *
  * @param {string} llmOutput
- * @param {{ tools?: import('./skill.js').ToolsRegistry|null }} [deps]
+ * @param {{ tools?: import('./skill.js').ToolsRegistry|null, taxonomy?: import('./skill.js').SkillTaxonomy|null }} [deps]  - taxonomy defaults to the bundled one
  * @returns {{ skill: Skill, valid: boolean, errors: string[] }}
  */
-export function parseBuiltSkill(llmOutput: string, { tools }?: {
+export function parseBuiltSkill(llmOutput: string, { tools, taxonomy }?: {
     tools?: import("./skill.js").ToolsRegistry | null;
+    taxonomy?: import("./skill.js").SkillTaxonomy | null;
 }): {
     skill: Skill;
     valid: boolean;

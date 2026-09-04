@@ -58,6 +58,18 @@
       "types": "./types/platforms/chrome/*.d.ts",
       "default": "./platforms/chrome/*.js"
     },
+    "./platforms/node/kv.js": {
+      "types": "./types/platforms/node/kv.d.ts",
+      "default": "./platforms/node/kv.js"
+    },
+    "./platforms/node/ports.js": {
+      "types": "./types/platforms/node/ports.d.ts",
+      "default": "./platforms/node/ports.js"
+    },
+    "./platforms/node/shared-store.js": {
+      "types": "./types/platforms/node/shared-store.d.ts",
+      "default": "./platforms/node/shared-store.js"
+    },
     "./package.json": "./package.json",
     "./surfaces/web": {
       "types": "./types/surfaces/web.d.ts",

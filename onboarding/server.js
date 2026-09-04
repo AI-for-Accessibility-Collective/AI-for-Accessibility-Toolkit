@@ -52,6 +52,7 @@ const CHAT_MODULES = [
   '/chat-turn.js',
   '/chat-profile.js',
   '/chat-history.js',
+  '/chat-connect.js',
 ];
 
 // The toolkit files the chat page reaches through /toolkit/surfaces/web.js:

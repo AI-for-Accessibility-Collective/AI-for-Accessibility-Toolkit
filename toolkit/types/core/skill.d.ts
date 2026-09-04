@@ -14,15 +14,47 @@ export function parseSkill(markdown: string): Skill;
  */
 export function serializeSkill(skill: Skill): string;
 /**
- * Validate a skill against the tools registry (AA_TOOLS): the name/description
- * exist, every recipe adapter id is a real tool, and every settings key is in
- * the settings vocabulary. Returns collected errors (empty = valid).
+ * Read a vocabulary field (supportAreas, siteRelevance) as a list. parseSkill
+ * always produces one, but a hand-built skill object (a saveSkill caller, a
+ * test) may carry a single string, or nothing at all. One reader, used by BOTH
+ * validateSkill and matchSkill, so what validation calls valid is exactly what
+ * retrieval can score: a lone 'vision' is one value, never six characters to
+ * iterate, and a non-iterable value never throws. The Librarian also runs a
+ * skill's two fields through it before storing, so what lands in the Skills db
+ * is always a list.
+ * @param {any} v
+ * @returns {any[]}
+ */
+export function vocabList(v: any): any[];
+/**
+ * Validate a skill against the tools registry (AA_TOOLS) and the two
+ * vocabularies: the name/description exist, every recipe adapter id is a real
+ * tool, every settings key is in the settings vocabulary, every supportArea is
+ * in SUPPORT_AREAS, and every siteRelevance value is a taxonomy category or
+ * 'all'. Returns collected errors (empty = valid).
+ *
+ * The vocabulary checks reject rather than warn: supportAreas and
+ * siteRelevance are what retrieval matches on (matchSkill), so a value outside
+ * the vocabulary is a skill that can never be found again (issue #34).
  * @param {Skill} skill
- * @param {{ tools?: ToolsRegistry|null }} [deps]  - tools = the AA_TOOLS registry (byId + settingsMeta)
+ * @param {{ tools?: ToolsRegistry|null, taxonomy?: SkillTaxonomy|null }} [deps]
+ *   tools    = the AA_TOOLS registry (byId + settingsMeta)
+ *   taxonomy = the site taxonomy; defaults to the bundled one when absent or
+ *              null. Normally the bundled object or a host's own with the same
+ *              shape, so `categoryIds()` is used when present. A plain
+ *              `{ categories: [{ id }] }` is also read, so a caller that has
+ *              only the data can validate; that is a tolerance here, not a
+ *              host port. The Librarian's `taxonomy` dependency still needs
+ *              the full object (`categoryIds`, `categoryForHost`, `contexts`,
+ *              `version`).
+ * Both vocabulary fields are read through vocabList, so a hand-built skill
+ * that carries a single string is checked as a one-item list and scored the
+ * same way by matchSkill.
  * @returns {{ valid: boolean, errors: string[] }}
  */
-export function validateSkill(skill: Skill, { tools }?: {
+export function validateSkill(skill: Skill, { tools, taxonomy }?: {
     tools?: ToolsRegistry | null;
+    taxonomy?: SkillTaxonomy | null;
 }): {
     valid: boolean;
     errors: string[];
@@ -145,5 +177,17 @@ export type ToolsRegistry = {
     byArea?: ((area: string) => ToolEntry[]) | undefined;
     settingsFor?: ((ids: string[]) => Record<string, any>) | undefined;
     forPrompt?: (() => ToolPromptEntry[]) | undefined;
+};
+/**
+ * What validateSkill reads from a taxonomy: `categoryIds()` when present,
+ * else the `categories` data. The Librarian's own `taxonomy` dependency is
+ * the full ./taxonomy.js Taxonomy; this is the tolerance validateSkill
+ * extends to a caller that has only the data.
+ */
+export type SkillTaxonomy = {
+    categoryIds?: (() => string[]) | undefined;
+    categories?: ({
+        id?: string;
+    } | null | undefined)[] | undefined;
 };
 //# sourceMappingURL=skill.d.ts.map

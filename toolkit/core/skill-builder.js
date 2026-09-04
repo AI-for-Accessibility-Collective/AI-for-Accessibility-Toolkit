@@ -7,6 +7,8 @@
 // NOT generate executable code — it authors instructions that name adapters.
 
 import { parseSkill, serializeSkill, validateSkill } from './skill.js';
+import { SUPPORT_AREAS } from './ability.js';
+import { taxonomy as defaultTaxonomy } from './taxonomy.js';
 
 /**
  * @typedef {import('./skill.js').Skill} Skill
@@ -52,7 +54,9 @@ export function buildSkillPrompt(need, { profile = {}, tools, taxonomy, previous
   const adapters = tools.forPrompt().map(/** @param {import('./skill.js').ToolPromptEntry} t */ t =>
     `- ${t.id} — ${t.name}: ${t.description} (helps: ${t.supportAreas.join(', ')})`).join('\n');
   const settingsVocab = tools.settingsVocabularyLines().join('\n');
-  const categories = taxonomy ? taxonomy.categoryIds().join(', ') : 'news, social, video, shopping, education, productivity, reference, other';
+  // Fall back to the bundled taxonomy, the same list validateSkill checks
+  // against by default, so the prompt never offers a category that is rejected.
+  const categories = (taxonomy || defaultTaxonomy).categoryIds().join(', ');
   const profileBlock = (profile.supportAreas?.length || profile.freeText)
     ? `\nAbout this person:\n- Support areas: ${(profile.supportAreas || []).join(', ') || 'unspecified'}`
       + (profile.freeText ? `\n- In their words: "${profile.freeText}"` : '')
@@ -71,6 +75,7 @@ ${adapters}
 Setting keys and their units/ranges (use only these; values must be in range):
 ${settingsVocab}
 
+Support areas for supportAreas: ${SUPPORT_AREAS.join(', ')}.
 Site categories for siteRelevance: ${categories} (or "all").
 
 Output a COMPLETE SKILL.md, nothing else, in exactly this shape:
@@ -78,8 +83,8 @@ Output a COMPLETE SKILL.md, nothing else, in exactly this shape:
 ---
 name: <short-kebab-case-id>
 description: <one sentence: what it does and WHEN to use it — this is what an agent matches on>
-supportAreas: [<comma-separated from the adapters' "helps" areas>]
-siteRelevance: [<comma-separated categories, or "all">]
+supportAreas: [<comma-separated support areas from the list above, matching the adapters' "helps" areas>]
+siteRelevance: [<comma-separated categories from the list above, or "all">]
 ---
 
 # <Title>
@@ -103,6 +108,7 @@ siteRelevance: [<comma-separated categories, or "all">]
 
 Rules:
 - Only reference adapter ids and setting keys listed above. Keep the recipe minimal — 1 to 4 adapters that directly serve the need.
+- Only use the support areas and site categories listed above; any other value is rejected. If the person's own support areas use other words, pick the closest listed values instead of copying theirs.
 - The "Recipe" JSON is the machine-runnable truth; make the prose match it.
 - Prefer the narrowest siteRelevance the need implies; use "all" only for genuinely global needs.`;
 }
@@ -112,17 +118,17 @@ Rules:
  * fences the model wraps the whole doc in.
  *
  * @param {string} llmOutput
- * @param {{ tools?: import('./skill.js').ToolsRegistry|null }} [deps]
+ * @param {{ tools?: import('./skill.js').ToolsRegistry|null, taxonomy?: import('./skill.js').SkillTaxonomy|null }} [deps]  - taxonomy defaults to the bundled one
  * @returns {{ skill: Skill, valid: boolean, errors: string[] }}
  */
-export function parseBuiltSkill(llmOutput, { tools } = {}) {
+export function parseBuiltSkill(llmOutput, { tools, taxonomy } = {}) {
   let text = String(llmOutput || '').trim();
   // Strip an outer ```markdown / ``` wrapper if the model added one, without
   // touching the inner ```json recipe fence.
   const outer = text.match(/^```(?:markdown|md)?\s*\n([\s\S]*)\n```$/);
   if (outer) text = outer[1].trim();
   const skill = parseSkill(text);
-  const { valid, errors } = validateSkill(skill, { tools });
+  const { valid, errors } = validateSkill(skill, { tools, taxonomy });
   return { skill, valid, errors };
 }
 
@@ -154,5 +160,5 @@ export async function buildSkill(need, { llm, tools, taxonomy, profile, previous
   } catch (/** @type {any} */ e) {
     return { skill: null, valid: false, errors: [`LLM call failed: ${e.message}`] };
   }
-  return parseBuiltSkill(out, { tools });
+  return parseBuiltSkill(out, { tools, taxonomy });
 }

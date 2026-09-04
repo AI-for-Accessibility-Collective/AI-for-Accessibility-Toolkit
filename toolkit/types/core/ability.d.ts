@@ -52,6 +52,7 @@ export function normalizeNeed(n: any): Need | null;
  * @returns {AbilityModel}
  */
 export function toAbilityModel(profile: ProfileRecord | null | undefined): AbilityModel;
+export const SUPPORT_AREAS: readonly string[];
 export default toAbilityModel;
 export type NeedStrength = "floor" | "preference" | "hint";
 export type NeedUnit = import("./units.js").Unit;

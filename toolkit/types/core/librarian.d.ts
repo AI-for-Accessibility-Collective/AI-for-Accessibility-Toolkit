@@ -49,7 +49,13 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
         };
     }>;
     getSiteCategory(origin: any, opts?: {}): Promise<any>;
-    setSiteCategoryOverride(origin: any, category: any): Promise<void>;
+    setSiteCategoryOverride(origin: any, category: any): Promise<{
+        ok: boolean;
+        reason: string;
+    } | {
+        ok: boolean;
+        reason?: undefined;
+    }>;
     getEffectivePreferences(url: any, contexts?: any[]): Promise<{
         settings: Record<string, any>;
         applied: {

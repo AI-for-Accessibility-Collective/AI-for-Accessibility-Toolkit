@@ -55,7 +55,7 @@ export type Toolkit = {
 import { createDatastore } from './core/datastore.js';
 import { createLibrarian } from './core/librarian.js';
 export { UNIT, SETTING_UNITS, unitOf, coerceSetting, coerceSettings, clampSetting, clampSettings } from "./core/units.js";
-export { toAbilityModel, normalizeNeed } from "./core/ability.js";
+export { toAbilityModel, normalizeNeed, SUPPORT_AREAS } from "./core/ability.js";
 export { STRENGTH_RANK, rankOf } from "./core/strength.js";
 export { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes, buildProfileBlob, validateProfileBlob, BLOB_KIND, BLOB_VERSION, createSharedTransport, EXPORT_PREFIX, INBOX_KEY, ENVELOPE_VERSION } from "./sync/index.js";
 //# sourceMappingURL=index.d.ts.map
