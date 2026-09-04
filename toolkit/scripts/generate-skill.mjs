@@ -117,7 +117,7 @@ ${scriptLines}
 
 **Deploying**: \`server/Dockerfile\` builds from the repo root (it copies \`toolkit/\` + \`server/\`); \`cloudbuild.yaml\` + \`server/DEPLOYMENT.md\` document the Cloud Run deployment (small instance, Secret Manager for the two secrets, GCS bucket, IAM). \`server/API.md\` is generated from the route table (\`npm run docs\` in \`server/\`) and the live service serves the same data at \`GET /v1/meta\`. Liveness: use \`/v1/healthz\` (bare \`/healthz\` is intercepted at the run.app edge).
 
-**Extending the wire surface**: add a route entry in \`server/src/routes.js\` (plain \`{route, target, kind}\`, or a custom \`invoke\` for arg-shape dispatch — see \`setPause\`), then regenerate docs and update the oracle list in \`server/test/server-test.mjs\`. The extension-side facade lives in \`personalized-extension/extension/remote-librarian.js\`.`;
+**Extending the wire surface**: add a route entry in \`server/src/routes.js\` (plain \`{route, target, kind}\`, or a custom \`invoke\` for arg-shape dispatch — see \`setPause\`), then regenerate docs and update the oracle list in \`server/test/server-test.mjs\`. A remote-mode host wraps these routes in a Librarian-shaped facade.`;
 }
 
 const ADD_SKILL_SECTION = `This skill ships **inside the toolkit repo** at \`.claude/skills/ai4a11y-toolkit/SKILL.md\`, so anyone opening this repo in Claude Code gets it automatically. To use it from **your own project**:
@@ -193,20 +193,11 @@ TOOLKIT_SERVER_TOKEN=aat_...                   # UID-bound access token, minted 
    \`Authorization: Bearer $TOOLKIT_SERVER_TOKEN\` returns the token's
    \`{uid, label}\`.
 
-The browser extension does **not** use \`.env\`. Its config lives in
-\`chrome.storage.sync\` (\`toolkitServerUrl\` / \`toolkitServerToken\`), written by
-the extension's Options page. For a demo build that should already be pointed
-at an instance, put the same two values in an untracked
-\`personalized-extension/extension-config.local.json\`:
-
-\`\`\`json
-{ "toolkitServerUrl": "https://<your-instance>", "toolkitServerToken": "aat_..." }
-\`\`\`
-
-\`npm run build\` bakes it into the (gitignored) \`extension/lib/remote-config.js\`,
-and the service worker seeds those storage keys once per browser profile. The
-Options page still owns every write after that — including "Use local (clear)",
-which stays cleared. No local config file = no generated file = local mode.
+The browser extensions do **not** use \`.env\` and do not live in this
+repository. Their config lives in \`chrome.storage.sync\` (\`toolkitServerUrl\` /
+\`toolkitServerToken\`), written by each extension's Options page. Do not write a
+token into any file in this repository; the extension repository documents its
+own demo-build configuration.
 
 ## Running or deploying your own toolkit service
 
@@ -222,7 +213,10 @@ Regenerate with: \`npm run docs\` (from \`toolkit/\`). Full reference (surfaces,
 `;
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+// Compare filesystem paths, not URL strings: import.meta.url is
+// percent-encoded (spaces, ~) so a raw `file://` + argv comparison fails on
+// paths like an iCloud checkout. fileURLToPath decodes both to the same form.
+const isMain = fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
   const model = await buildModel();
   const md = renderSkillMd(model);

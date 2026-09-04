@@ -1,0 +1,12 @@
+{
+  "name": "toolkit-onboarding",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Tiny web service to onboard accessibility needs into toolkit ability profiles, and list/delete profiles (admin).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=24.0.0" }
+}

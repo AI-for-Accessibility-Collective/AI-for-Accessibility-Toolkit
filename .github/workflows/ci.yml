@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "release-candidate/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "release-candidate/**"]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -29,76 +29,38 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build extension
-        run: npm run build
+      - name: Test suites (same command developers run)
+        # npm test covers toolkit/test, tools/test, controller/test, and
+        # onboarding/test — the one list CONTRIBUTING points contributors at,
+        # so CI cannot drift from it. browser-validate.js is intentionally NOT
+        # a *-test.js file — it needs a real Chromium and runs locally only.
+        run: npm test
 
-      - name: Build personalized extension
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: "1"
+      - name: Reference hosts run
         run: |
-          cd personalized-extension
-          npm ci
-          npm run build
-
-      - name: Check committed build artifacts are fresh
-        # Every generated-but-committed file: the top-level bundles and the
-        # personalized-extension lib/* built from toolkit/. All are staged in
-        # git, so `git diff --exit-code` has a baseline to compare against.
-        run: |
-          git diff --exit-code -- \
-            extension/content.bundle.js \
-            extension/popup.bundle.js \
-            cli/cli-tools.bundle.js \
-            personalized-extension/extension/lib/taxonomy.js \
-            personalized-extension/extension/lib/datastore.js \
-            personalized-extension/extension/lib/librarian.js \
-            personalized-extension/extension/lib/tools-registry.js \
-            personalized-extension/extension/lib/skills-db.js \
-          || (echo "Committed build artifacts are stale — run the builds and commit the result" && exit 1)
-
-      - name: Toolkit core tests
-        run: |
-          node toolkit/test/ability-model-test.js
-          node toolkit/test/broker-test.js
-          node toolkit/test/skill-test.js
-          node toolkit/test/skill-edge-test.js
-          node toolkit/test/skill-apply-test.js
-          node toolkit/test/scenario-test.js
-          node toolkit/test/codesign-scenarios-test.js
           node toolkit/hosts/xr-demo/demo.js
           node toolkit/hosts/skill-demo/demo.js
 
-      - name: Tools & profile tests
-        # Every tools/test/*-test.js (auditors/adapters + each standalone
-        # adapter test + profiles). browser-validate.js is intentionally NOT a
-        # *-test.js file — it needs a real Chromium and runs locally only.
-        run: |
-          for t in tools/test/*-test.js; do echo "== $t"; node "$t" || exit 1; done
-
-      - name: Librarian regression tests
-        run: |
-          cd personalized-extension
-          node test/librarian-test.js
-          node test/run-tests.js
-          # Puppeteer smoke tests (skills-page, demo-beats) run locally — CI
-          # skips the Chromium download, so they can't launch a browser here.
-
-  python:
+  server:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: 22.x
+      - name: Install dependencies
+        run: npm ci
+      - name: Toolkit service tests
+        run: |
+          node server/test/server-test.mjs
+          node server/test/delete-cascade.test.mjs
+          node server/test/gcs-pagination.test.mjs
 
-      - name: Install CLI
-        run: pip install -e .
-
-      - name: Test CLI import
-        run: python -c "from cli import cli; print('CLI imports OK')"
-
-      - name: List tools
-        run: ai4a11y list tools --json
+      - name: Toolkit package self-check
+        # Validates the package exactly as npm would publish it, catching
+        # manifest drift (files list vs exports map) that in-repo tests cannot
+        # see because they resolve against the working tree.
+        run: |
+          cd toolkit
+          npm pack --dry-run
+          npx --yes publint

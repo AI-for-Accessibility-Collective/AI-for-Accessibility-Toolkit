@@ -1,0 +1,24 @@
+# Runs the pack fixture: packs @ai4a11y/toolkit and @ai4a11y/tools, installs
+# the tarballs into a scratch project, and imports the real consumer surface
+# through public exports only. In-repo tests resolve against the working tree,
+# so this is the only check that catches a file missing from a `files` list or
+# a subpath missing from an `exports` map.
+#
+# A separate workflow file on purpose: ci.yml is edited by open PRs and this
+# check is independent of the test suites.
+name: pack
+
+on:
+  push:
+    branches: [main, rearch-experiment, "release-candidate/**"]
+  pull_request:
+
+jobs:
+  pack-fixture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/pack-fixture-test.mjs

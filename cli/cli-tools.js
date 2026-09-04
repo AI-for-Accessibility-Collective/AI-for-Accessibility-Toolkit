@@ -50,6 +50,8 @@ import { SpaFocus } from '../tools/adapters/spa-focus.js';
 import { SkipLinks } from '../tools/adapters/skip-links.js';
 import { MathA11y } from '../tools/adapters/math-a11y.js';
 import { AutoTranscriber } from '../tools/adapters/auto-transcriber.js';
+import { ShowCaptions } from '../tools/adapters/show-captions.js';
+import { FixLandmarks } from '../tools/adapters/fix-landmarks.js';
 
 // Import AI-powered adapters
 import {
@@ -221,6 +223,8 @@ const tools = {
   spaFocus: SpaFocus,
   skipLinks: SkipLinks,
   mathAccessible: MathA11y,
+  showCaptions: ShowCaptions,
+  fixLandmarks: FixLandmarks,
 };
 
 // Normalize tool name (handles case variations)
@@ -241,6 +245,10 @@ function normalizeTool(name) {
     'colorfilter': 'colorBlindMode',
     'autotranscriber': 'autoTranscriber',
     'autocaptions': 'autoTranscriber',
+    'showcaptions': 'showCaptions',
+    'captions': 'showCaptions',
+    'fixlandmarks': 'fixLandmarks',
+    'landmarks': 'fixLandmarks',
     'dismissoverlays': 'dismissOverlays',
     'dismisspopups': 'dismissOverlays',
     'bigtargets': 'bigTargets',
@@ -420,6 +428,8 @@ function applyProfileByName(profileId) {
     ColorBlindMode.enable(profileTools.colorFilter);
   }
   if (profileTools.autoCaptions) AutoTranscriber.enable();
+  if (profileTools.showCaptions) ShowCaptions.enable();
+  if (profileTools.fixLandmarks) FixLandmarks.enable();
 
   return {
     success: true,
@@ -455,6 +465,8 @@ function getToolDescription(name) {
     keyboardNav: 'Enhanced keyboard navigation',
     colorBlindMode: 'Color vision deficiency filters',
     autoTranscriber: 'Auto-generate captions for media',
+    showCaptions: 'Switch on the captions media already carries (no AI)',
+    fixLandmarks: 'Add missing main, banner, and contentinfo landmarks',
     dismissOverlays: 'Hide cookie banners, newsletter popups, and blocking modals',
     bigTargets: 'Enlarge and space out small clickable controls (WCAG 2.5.8)',
     highlightLinks: 'Underline and strengthen links and reveal where each one leads',
@@ -794,16 +806,59 @@ function getActiveProfileSettings() {
   return profile?.tools || {};
 }
 
-// Helper to get CSS selector for element
+// Helper to get CSS selector for element.
+//
+// Every selector this returns is handed back to document.querySelector by the
+// commands that apply a fix, so it has to address one element and no other. A
+// short form is used when it already does; otherwise the element gets a
+// structural path built from :nth-of-type steps. Returning a bare tag name for
+// a classless element made all of them share a selector, so a run over ten
+// images rewrote the first image ten times, each pass overwriting the last.
 function getSelector(el) {
   if (!el || !el.tagName) return 'unknown';
-  const tag = el.tagName.toLowerCase();
-  if (el.id) return `#${el.id}`;
-  if (el.className && typeof el.className === 'string') {
-    const classes = el.className.trim().split(/\s+/).filter(c => c).slice(0, 2).join('.');
-    if (classes) return `${tag}.${classes}`;
+  const doc = el.ownerDocument || document;
+  const esc = (s) => (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(s) : s);
+  const addressesOnlyThis = (sel) => {
+    try {
+      const found = doc.querySelectorAll(sel);
+      return found.length === 1 && found[0] === el;
+    } catch {
+      return false;  // an id or class that is not a valid selector
+    }
+  };
+
+  if (el.id) {
+    const byId = `#${esc(el.id)}`;
+    if (addressesOnlyThis(byId)) return byId;
   }
-  return tag;
+
+  const tag = el.tagName.toLowerCase();
+  if (el.className && typeof el.className === 'string') {
+    const classes = el.className.trim().split(/\s+/).filter(c => c).slice(0, 2).map(esc).join('.');
+    if (classes && addressesOnlyThis(`${tag}.${classes}`)) return `${tag}.${classes}`;
+  }
+
+  // Walk up, adding one step per level, until the path is unambiguous. Stops at
+  // an ancestor with a usable id so the result stays as short as it can be.
+  const step = (node) => {
+    const name = node.tagName.toLowerCase();
+    const parent = node.parentElement;
+    if (!parent) return name;
+    const twins = Array.from(parent.children).filter(c => c.tagName === node.tagName);
+    return twins.length === 1 ? name : `${name}:nth-of-type(${twins.indexOf(node) + 1})`;
+  };
+
+  const parts = [];
+  for (let node = el; node && node.tagName; node = node.parentElement) {
+    if (node !== el && node.id) {
+      const rooted = `#${esc(node.id)} > ${parts.join(' > ')}`;
+      if (addressesOnlyThis(rooted)) return rooted;
+    }
+    parts.unshift(step(node));
+    const path = parts.join(' > ');
+    if (addressesOnlyThis(path)) return path;
+  }
+  return parts.join(' > ');
 }
 
 // Expose on window for Playwright access

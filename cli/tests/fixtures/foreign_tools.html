@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Foreign ai4a11y object</title></head>
+<body>
+  <h1>A page that already has something called ai4a11y</h1>
+  <p>The CLI decides the tools are present by testing
+     <code>typeof window.ai4a11y !== 'undefined'</code>, so a page that defines
+     that name gets the "already injected" path and the real bundle never
+     arrives. That is how a tab ends up holding an object older than, or simply
+     other than, the one the CLI expects. Each hash below is one way such an
+     object fails to withdraw a profile.</p>
+  <script>
+    // #stale:      no setSessionState, the shape an older bundle had.
+    // #throws:     listTools raises, the shape a half-loaded one has.
+    // #stubborn:   disableTool reports failure and the tool stays on.
+    const mode = location.hash.slice(1) || 'stale';
+    const tools = [
+      { name: 'defineWords', enabled: true, description: 'stand-in' },
+      { name: 'readerMode', enabled: true, description: 'stand-in' },
+    ];
+    const api = {
+      listTools() {
+        if (mode === 'throws') throw new Error('listTools is not available here');
+        return tools.map((t) => ({ ...t }));
+      },
+      disableTool(name) {
+        if (mode === 'stubborn') return { success: false, error: 'refused' };
+        const tool = tools.find((t) => t.name === name);
+        if (tool) tool.enabled = false;
+        return { success: true };
+      },
+      applyProfile() { return { success: false, error: 'stand-in' }; },
+    };
+    if (mode !== 'stale') {
+      api.setSessionState = function (state) { api.sessionState = state; };
+    }
+    window.ai4a11y = api;
+  </script>
+</body>
+</html>

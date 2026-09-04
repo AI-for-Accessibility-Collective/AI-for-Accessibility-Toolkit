@@ -16,7 +16,9 @@
     "./core/memory-class": "./core/memory-class.js",
     "./core/skill": "./core/skill.js",
     "./core/skill-builder": "./core/skill-builder.js",
-    "./adapters/chrome/web-surface": "./adapters/chrome/web-surface.js",
+    "./platforms/chrome/web-surface": "./platforms/chrome/web-surface.js",
+    "./platforms/chrome/*.js": "./platforms/chrome/*.js",
+    "./package.json": "./package.json",
     "./surfaces/web": "./surfaces/web.js",
     "./surfaces/xr": "./surfaces/xr.js",
     "./sync": "./sync/index.js",
@@ -29,15 +31,17 @@
     "ports/",
     "sync/",
     "surfaces/",
-    "adapters/",
+    "platforms/",
+    "registry/",
     "protocol/",
+    "skills/",
     "README.md"
   ],
   "scripts": {
-    "test": "node test/ability-model-test.js && node test/skill-test.js && node test/skill-edge-test.js && node test/skill-apply-test.js && node test/codesign-scenarios-test.js && node test/scenario-test.js && node test/grants-audience-test.js && node test/notes-test.mjs && node test/phase1.test.mjs && node test/phase3.test.mjs && node test/phase3-crossapp.test.mjs && node test/package-boundary-test.js && node test/protocol-conformance-test.js && node test/cross-surface-translation-test.js && node test/api-docs-test.js",
+    "test": "node test/ability-model-test.js && node test/skill-test.js && node test/skill-edge-test.js && node test/skill-apply-test.js && node test/codesign-scenarios-test.js && node test/scenario-test.js && node test/grants-audience-test.js && node test/notes-test.mjs && node test/phase1.test.mjs && node test/phase3.test.mjs && node test/phase3-crossapp.test.mjs && node test/package-boundary-test.js && node test/protocol-conformance-test.js && node test/cross-surface-translation-test.js && node test/api-docs-test.js && node test/sr-baseline.test.mjs",
     "docs": "node scripts/generate-api-docs.mjs && node scripts/generate-skill.mjs",
     "demo:xr": "node hosts/xr-demo/demo.js",
     "demo:skill": "node hosts/skill-demo/demo.js",
-    "demo:node": "node adapters/node/host.js"
+    "demo:node": "node platforms/node/host.js"
   }
 }

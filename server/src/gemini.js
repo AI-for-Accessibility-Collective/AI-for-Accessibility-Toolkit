@@ -3,7 +3,7 @@
 // caller must satisfy (see toolkit/core/librarian.js: `let _gemini = null;
 // // async (prompt) => string`, invoked as `await _gemini(prompt)` in
 // getSiteCategory/extract/reflect/buildSkill) and the exact request/response
-// shape the extension's own caller uses (personalized-extension/extension/
+// shape a host's own caller uses (
 // background.js: GEMINI_MODEL, getApiUrl, callGemini, wired at
 // `globalThis.Librarian.setGeminiCaller(async (prompt) => {...})`), so
 // extraction/reflection/skill-building behave identically whether the key
@@ -18,8 +18,10 @@
 const GEMINI_MODEL = 'gemini-3.5-flash';
 const REQUEST_TIMEOUT_MS = 30_000;
 
-function apiUrl(apiKey, model) {
-  return `https://generativelanguage.googleapis.com/v1beta/models/${model || GEMINI_MODEL}:generateContent?key=${apiKey}`;
+// The key goes in the x-goog-api-key header, never the query string, so it
+// stays out of access logs and error traces on the deployer's host.
+function apiUrl(model) {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model || GEMINI_MODEL}:generateContent`;
 }
 
 /** Build the caller function `toolkit-host.js` hands to `setGeminiCaller`.
@@ -38,9 +40,9 @@ export function createGeminiCaller({ apiKey } = {}) {
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     let resp;
     try {
-      resp = await fetch(apiUrl(apiKey), {
+      resp = await fetch(apiUrl(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { temperature: 0.7 },

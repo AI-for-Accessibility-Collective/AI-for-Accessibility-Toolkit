@@ -8,7 +8,7 @@ license = {text = "Apache-2.0"}
 dependencies = [
     "playwright>=1.40.0",
     "pillow>=10.0.0",
-    "anthropic>=0.18.0",
+    "typer>=0.12.0",
 ]
 
 [project.scripts]
@@ -26,3 +26,35 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["cli*", "tools*"]
+
+# The CLI runs JavaScript in the page for almost everything it does, so these
+# files are not extras. Without them an installed ai4a11y cannot inject its
+# tools, cannot run an audit or a fix, and reads a page with no Readability.
+[tool.setuptools.package-data]
+cli = [
+    "js/*.js",
+    "lib/*.js",
+    "cli-tools.bundle.js",
+    "axe-core.min.js",
+]
+# tools/ has no __init__.py, so it is found as a namespace package and ships
+# nothing unless its files are named here. The CLI reads the catalog from it
+# (`list tools`, `list profiles`, `new adapter`), so an installed ai4a11y
+# without it lists nothing and says so with exit 0.
+tools = [
+    "*.js",
+    "*.json",
+    "README.md",
+    "adapters/*.js",
+    "auditors/*.js",
+    "insights/*.js",
+    "profiles/*",
+    "utils/*.js",
+    "validators/*.js",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["cli/tests"]
+markers = [
+    "browser: spawns a headless Chromium; deselect with -m 'not browser'",
+]

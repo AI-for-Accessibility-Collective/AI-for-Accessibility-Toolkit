@@ -1,0 +1,137 @@
+# ai4a11y CLI (experimental)
+
+A terminal front end for the toolkit's catalog. It launches a persistent Chromium, connects to it over the Chrome DevTools Protocol, and injects the catalog bundle (`cli-tools.bundle.js`, built from [`../tools/`](../tools/)) into the page, so the same adapters, auditors, and profiles the extensions use can be exercised on any live page from a shell or a coding agent.
+
+This is a research probe, pre-alpha, restored from the pre-split repository and rewired to this tree. Expect rough edges.
+
+`cli.py` is the command line (a [Typer](https://typer.tiangolo.com/) app: parsing, help, shell completion via `ai4a11y --install-completion`). The engine it calls is the `ai4a11y/` package next to it, six modules that import in one direction only: `config.py`, then `ai.py`, `page.py`, `browser.py`, `agent.py`, and `commands.py`. Every command and group answers `--help`.
+
+## Setup
+
+```bash
+pip install -e .        # from the repository root; installs the ai4a11y command
+python -m playwright install chromium
+npm install && npm run build:cli
+```
+
+The bundle is committed, so `npm run build:cli` is only needed after changing files under `tools/`.
+
+Install editable (`-e`), from a checkout. The CLI reads the catalog from the repository tree at runtime (`tools/` for listings, the bundle for injection), so it is not currently installable as a standalone package.
+
+## Commands
+
+Catalog, no browser needed:
+
+```bash
+ai4a11y list tools        # auditors and adapters, with descriptions, from tools/
+ai4a11y list profiles     # ability profiles from tools/profiles/settings.json
+ai4a11y create <name> --type adapter   # scaffold a new adapter
+```
+
+Session, instant and local. Nothing leaves the browser:
+
+```bash
+ai4a11y session start | stop | status | tabs | focus | cleanup-tabs
+ai4a11y session back | scroll | tab | activate | focused | key | arrow
+ai4a11y session heading | skip | dismiss | enable | disable | tools | profiles
+ai4a11y session list [headings|links|buttons|forms|landmarks|images|tables]
+ai4a11y session find "<text>" | read [selector] | tables
+ai4a11y session audit [--json]           # axe-core WCAG audit
+ai4a11y session find-alt | find-labels | find-contrast | find-captions | find-all
+```
+
+Session, AI-backed. These reach the locally installed [Claude Code](https://claude.com/claude-code) CLI:
+
+```bash
+ai4a11y session describe | ask "<question>" | summary | diff
+ai4a11y session tap "<target>" | type "<field>" "<text>" | hover | drag | nudge | pickdate
+ai4a11y session do "<task>"              # autonomous multi-step mode
+ai4a11y session fix-alt | fix-labels | simplify | fix-all | scan
+ai4a11y session go <url> | profile <name>    # see below
+```
+
+What that means in practice, because the page content involved is the user's:
+
+- **What is sent.** A screenshot, page text, or an element's surrounding markup,
+  depending on the command. `describe`, `ask`, `fix-alt` and the pointer commands
+  send images of the page.
+- **How many calls.** One per item, not one per command. `fix-alt` makes up to one
+  call per image it is fixing, and `do` and `scan` make as many as their work
+  takes. A run over ten images is ten subprocesses.
+- **What it costs.** Nothing beyond a Claude subscription by default. Exporting
+  `ANTHROPIC_API_KEY` switches the underlying CLI to per-token API billing, which
+  is a real charge per call.
+- **`go` and `profile` are the two that surprise people.** Neither calls a model
+  itself. Both hand the page a set of callbacks that AI-backed adapters use, so a
+  profile whose tools include `autoSimplify` or `autoSummarize` (`cognitive`,
+  `olderAdult`, `adhd`) sends page text on every navigation.
+- **Those adapters keep working after the command that set them up has finished.**
+  Once `go` or `profile` has put an AI-backed profile on a tab, that tab keeps it,
+  so a later command on the same tab can send page text or a screenshot to a model
+  through the adapters, including a command listed above as instant and local.
+- **`ai4a11y session profile none` is how you stop them.** It clears the saved
+  profile so that nothing reapplies it on the next navigation, and it reaches into
+  the page you have open and turns the profile's tools back off there. It says how
+  many it turned off. Where it cannot finish, because no session is running, the tools are
+  not loaded, the tab holds an object this CLI cannot drive, or a tool will not turn
+  off, it says so, names what is still running, and **exits non-zero**, instead of
+  reporting a stop it did not perform; loading a page then clears the tab. Only a
+  run that exits 0 is a run that cleared the page. Until this was fixed the command
+  wrote the saved state and stopped there, so the tab in front of you kept the
+  profile and its adapters until you navigated.
+
+When the Claude Code CLI is not installed, or a call fails, these commands write
+nothing to the page. They say `needs-ai` on the line where the fix would have
+been.
+
+## Exit status
+
+| Code | Meaning |
+|---|---|
+| 0 | The command did the whole job. Every item it attempted was fixed. |
+| 1 | The command could not do the job at all: the tools would not load into the page, or a profile could not be taken back out of one. Nothing but the payload reaches stdout; the reason is on stderr. |
+| 2 | The command line was wrong (Typer's usage error). |
+| 3 | An AI-backed command could not reach a model for at least one item. |
+| 4 | The recorded session is not the browser it started. Nothing was touched. |
+| 5 | A session command ran with no session started. |
+
+Exit 3 covers any degree of degradation, from one unanswered call to all of
+them. A run that captions eighteen images and gives up on two reports failure,
+because a caller reading the exit status is asking whether the page is now
+fixed, and it is not. The fixes that did land are kept, and the payload says how
+far the run got:
+
+```console
+$ ai4a11y session fix-alt --json      # one image captioned, one call unanswered
+{
+  "fixed": [
+    { "selector": "img:nth-of-type(1)", "alt": "..." }
+  ],
+  "attempted": 2,
+  "skippedNeedsAi": 1
+}
+$ echo $?
+3
+```
+
+To act only on a run that reached no model at all, read `fixed` from the
+payload rather than the exit status.
+
+`--json` prints that payload and nothing else. `scan --json` carries the same
+`skippedNeedsAi` count alongside its own fields.
+
+## Tests
+
+```bash
+pip install -e '.[dev]'             # adds pytest
+python -m pytest                    # full harness; spawns its own headless Chromium
+python -m pytest -m 'not browser'   # catalog and degradation tests only, no browser
+```
+
+The harness lives in [`tests/`](tests/) and runs the real command surface as subprocesses against a fixture page with planted defects. It is isolated: its browser runs on a free port with its own state directories, and no test calls an AI model. CI runs it, then rebuilds the bundle and fails on drift against the committed copy.
+
+## Vendored files
+
+- `axe-core.min.js`: axe-core v4.12.1 from the `axe-core` npm package, injected for `session audit`. Kept at the same version the extension repository ships so the two agree on what counts as a violation.
+- `lib/readability.js`: Mozilla Readability (Apache-2.0, header preserved), used by `session read` and reader mode.
+- `cli-tools.bundle.js`: generated by `npm run build:cli` from `cli-tools.js`; do not hand-edit.

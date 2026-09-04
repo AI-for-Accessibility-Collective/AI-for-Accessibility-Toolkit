@@ -4,7 +4,7 @@ Technical reference for the AI for Accessibility Toolkit.
 
 ## AI Provider Interface
 
-The toolkit uses a provider abstraction (`tools/utils/ai.js`) that works across extension and CLI contexts.
+The catalog adapters reach the model through a provider abstraction (`tools/utils/ai.js`), decoupled from any concrete model or SDK. The host supplies the provider.
 
 ### Setting the Provider
 
@@ -183,7 +183,7 @@ The main content script automatically routes violations to registered handlers.
 
 ## Profiles
 
-Profiles configure tool combinations for specific needs. Profile **data** lives in `tools/profiles/settings.json` (single source of truth, read by the extension, popup, and CLI alike); merge/apply **logic** lives in `tools/profiles/settings.js`.
+Profiles configure tool combinations for specific needs. Profile **data** lives in `tools/profiles/settings.json` (single source of truth, read by every host); merge/apply **logic** lives in `tools/profiles/settings.js`.
 
 ### Loading Profiles
 
@@ -289,84 +289,7 @@ await buildSkill(need, { llm, tools, taxonomy, profile, previous: skill, feedbac
 | `saveSkill(skill)` | `{ saved, errors }` | Persist a user-validated skill (records its supportAreas + siteRelevance in memory) |
 | `deleteSkill(name)` | `boolean` | Remove one of the user's skills |
 
-In the extension these are reachable as `librarian{ListSkills,FindSkill,RetrieveSkill,ResolveSkill,BuildSkill,SaveSkill,DeleteSkill}` messages; a resolved plan's `actions` run through the background's `runSkillActions` message (the browser agent). Run `node toolkit/hosts/skill-demo/demo.js` to see the whole flow.
-
-## CLI Commands
-
-### Session Management
-
-```bash
-ai4a11y session start              # Launch browser
-ai4a11y session stop               # Close browser
-ai4a11y session go <url>           # Navigate
-```
-
-### Auditing
-
-```bash
-ai4a11y session audit              # Run accessibility audit
-ai4a11y session audit --json       # JSON output
-ai4a11y session describe           # AI describes the page
-ai4a11y session describe --json    # JSON output
-```
-
-### Tools
-
-```bash
-ai4a11y session enable <tool> [options]
-ai4a11y session disable <tool>
-ai4a11y session tools              # List tool states
-ai4a11y session profile <name>     # Apply profile
-```
-
-### Scaffolding
-
-```bash
-ai4a11y list tools                 # List all tools
-ai4a11y list profiles              # List all profiles
-ai4a11y create <name> --type <auditor|adapter>
-```
-
-### Everything else
-
-The commands above are the common ones. A session also drives the page —
-reading it (`ask`, `read`, `find`, `tables`, `heading`, `focused`), acting on
-it (`tap`, `type`, `hover`, `drag`, `key`, `dismiss`, `media`, `do`), moving
-around (`go`, `back`, `scroll`, `tab`, `arrow`, `skip`), and finding or
-fixing specific issues (`find-alt`, `find-labels`, `find-contrast`,
-`find-captions`, `find-all`, `fix-alt`, `fix-labels`, `fix-all`, `scan`).
-
-Run `ai4a11y session` with an unknown subcommand to print the current list —
-it's generated from the dispatcher, so it can't go stale.
-
-## Message Protocol (Extension)
-
-Content script ↔ Background communication:
-
-```javascript
-// Content script → Background
-chrome.runtime.sendMessage({ type: 'describeImage', imageData: dataUrl }, response => {
-  console.log(response.result);  // Alt text string
-});
-
-// Message types
-'describeImage'      // { imageData } → { result: string }
-'describeElement'    // { imageData, elementType, context } → { result: string }
-'describeVideoFrames'// { frames, metadata } → { result: string }
-'simplifyText'       // { text } → { result: string }
-'summarizeText'      // { text } → { result: string }
-'translateText'      // { text, targetLang } → { result: string }
-'defineWord'         // { word, context } → { result: string }
-'extractChartData'   // { imageData, context } → { result: { caption, headers, rows } }
-'transcribeAudio'    // { audioUrl } → { result: { type, text } }
-'transcribeVideo'    // { audioUrl } → { result: { type, text } }
-'inferLabel'         // { elementType, html, context } → { result: string }
-'improveLinkText'    // { linkText, href, context } → { result: string }
-'inferColumnHeader'  // { sampleData } → { result: string }
-'fixContrast'        // { foreground, background } → { result: string }
-'getYouTubeTranscript' // { videoId } → { result: string }
-'getSettings'        // {} → { result: settings }
-```
+When embedding, these are called directly on the Librarian; over HTTP they map to `/v1/librarian/{method}` routes. A resolved plan's `actions` run through the host's actuation port. Run `node toolkit/hosts/skill-demo/demo.js` to see the whole flow.
 
 ## DOM Utilities
 
@@ -453,8 +376,8 @@ export const axeHandlers = {
    }
    ```
 
-2. Add handler in `extension/background.js`
+2. Implement it in the host's provider (bridging to whatever LLM the host uses)
 
-3. Register in content script's `setAIProvider()`
+3. Register it via `setAIProvider()` where the host wires up the toolkit
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for full guidelines.

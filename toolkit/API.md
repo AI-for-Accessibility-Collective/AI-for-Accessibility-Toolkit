@@ -24,13 +24,13 @@
 
 ## Quick Start
 
-`createToolkit` wired to the plain-Node reference adapters (`toolkit/adapters/node/`) — the template a new JS-runtime host (iOS/React Native bridge, XR runtime, a server) copies.
+`createToolkit` wired to the plain-Node reference adapters (`toolkit/platforms/node/`) — the template a new JS-runtime host (iOS/React Native bridge, XR runtime, a server) copies.
 
 <!-- QUICKSTART:START -->
 ```javascript
 import { createToolkit } from './index.js';
-import { memoryKV } from './adapters/node/kv.js';
-import { nodeClock, nodeScheduler, consoleConsent } from './adapters/node/ports.js';
+import { memoryKV } from './platforms/node/kv.js';
+import { nodeClock, nodeScheduler, consoleConsent } from './platforms/node/ports.js';
 
 const { datastore, librarian } = createToolkit({
   kv: memoryKV(),
@@ -68,11 +68,13 @@ Every method below was read off a REAL `createToolkit(...)` instance at doc-gene
 | `librarian.getProfile()` | async | (no doc comment) |
 | `librarian.getAbilityModel()` | async | The modality-agnostic AbilityModel view (../core/ability). |
 | `librarian.setProfileField(path, value)` | async | User-initiated edit — bypasses the proposal gate by design (the gate exists for *inferred* changes; explicit user intent needs no consent). |
+| `librarian.setProfileFields(fields)` | async | Set SEVERAL profile paths in ONE write. |
 | `librarian.recordExplicitSetting(key, value, origin)` | async | Fast lane for manual setting flips (popup toggle, onboarding choice). |
 | `librarian.recordScopedSettings(scope, settings, opts)` | async | Generalized explicit-setting writer: upserts one durable user-explicit record PER setting key at the given scope (general \| category:<id> \| origin:<host> \| context:<id>). |
 | `librarian.hasScopedSetting(scope, key)` | async | Whether a durable user-explicit record for `setting.<key>` exists at `scope`. |
 | `librarian.getScopedSetting(scope, key)` | async | The current value of the user-explicit `setting.<key>` record at `scope`, or undefined if none. |
 | `librarian.removeScopedSetting(scope, key)` | async | Delete the durable user-explicit record for `setting.<key>` at `scope` — the true inverse of recordScopedSettings (which only ever upserts). |
+| `librarian.resetToProfile(opts)` | async | "Forget what I've changed, go back to my profile." undoLast is LIFO and per-session; resetUndo clears a journal without restoring anything. |
 | `librarian.getSiteCategory(origin, opts)` | async | Classify once, cache forever; user override wins and is sticky. |
 | `librarian.setSiteCategoryOverride(origin, category)` | async | (no doc comment) |
 | `librarian.getEffectivePreferences(url, contexts)` | async | Deterministic scope-chain merge of machine-actionable settings. |
@@ -235,7 +237,7 @@ The host-agnostic surface a modality-neutral control layer actuates through.
 | `applySettings` | `(changes: Object<string,*>, scope?: string\|null) => Promise<ApplyResult>` | Validate + clamp `changes` against the settings registry, persist them at the resolved scope, live-apply to the current surface, and journal enough to undo. |
 | `undoLast` | `() => Promise<UndoResult>` | Revert the most recent applySettings call (LIFO); pops the journal only once the revert actually lands, so a failed undo keeps the step retryable. |
 | `resetUndo` | `() => Promise<{ok:true}>` | Clear the undo journal (a fresh control-session starting). |
-| `readPage` | `(mode?: 'outline'\|'text', chunk?: number) => Promise<ReadPageResult>` | Extract page text for TTS/Q&A. |
+| `readPage` | `(mode?: 'outline'\|'text', chunk?: number) => Promise<ReadPageResult>` | Extract page text. |
 | `pageAction` | `(action: string, target?: string, text?: string) => Promise<PageActionResult>` | Perform one page interaction (scroll/click/type/focus-nav/navigate/etc). |
 
 **Provided default/no-op implementations:** `noopDemo` (ports/index.js), `noopSensors` (ports/index.js), `noopConsent` (ports/index.js), `noopScheduler` (ports/index.js), `systemClock` (ports/index.js), `noopActuation` (ports/actuation.js).

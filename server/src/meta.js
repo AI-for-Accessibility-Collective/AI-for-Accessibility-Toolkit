@@ -7,7 +7,7 @@
 // file.
 
 import { createToolkit } from '../../toolkit/index.js';
-import { memoryKV } from '../../toolkit/adapters/node/kv.js';
+import { memoryKV } from '../../toolkit/platforms/node/kv.js';
 import { LIBRARIAN_ROUTES } from './routes.js';
 
 // The non-librarian HTTP surface, transcribed from CONTRACT.md's Endpoints

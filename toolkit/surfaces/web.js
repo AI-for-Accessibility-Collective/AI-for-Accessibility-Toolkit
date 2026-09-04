@@ -5,7 +5,7 @@
 // `{ schemaVersion, supportAreas, freeText, language, readingLevel,
 // confidence, needs[] }`. The needs→web-settings mapping itself lives in ONE
 // place — `WEB_DERIVATION` / `deriveWebSettings` in
-// toolkit/adapters/chrome/web-surface.js — this module just exposes that
+// toolkit/platforms/chrome/web-surface.js — this module just exposes that
 // derivation under the SurfaceAdapter shape the other surfaces (XR, …) use,
 // so there is a single source of truth for "what does this need render as
 // on the web".
@@ -15,7 +15,7 @@
 // An empty `needs[]` (every current user, until structured needs are
 // written) renders the empty object.
 
-import { deriveWebSettings } from '../adapters/chrome/web-surface.js';
+import { deriveWebSettings } from '../platforms/chrome/web-surface.js';
 
 /**
  * @param {ReturnType<import('../core/ability.js').toAbilityModel>} model - the needs AbilityModel (librarian.getAbilityModel() shape)

@@ -1,0 +1,66 @@
+name: CLI
+
+# Runs only when the CLI or the catalog it bundles can have changed.
+on:
+  push:
+    branches: [main, rearch-experiment, "release-candidate/**"]
+    paths: ['cli/**', 'tools/**', 'pyproject.toml', 'package.json', 'package-lock.json', '.github/workflows/cli.yml']
+  pull_request:
+    paths: ['cli/**', 'tools/**', 'pyproject.toml', 'package.json', 'package-lock.json', '.github/workflows/cli.yml']
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install the CLI and test dependencies
+        run: |
+          pip install -e . pytest
+          python -m playwright install --with-deps chromium
+
+      - name: Run the harness
+        run: python -m pytest cli/tests -q
+
+      - name: Committed bundle is fresh
+        run: |
+          npm ci
+          npm run build:cli
+          git diff --exit-code cli/cli-tools.bundle.js
+
+      # The CLI runs JavaScript in the page for almost everything it does, so a
+      # wheel without these files installs a CLI that cannot audit or fix.
+      - name: JavaScript assets ship in the wheel
+        run: |
+          pip install build
+          python -m build --wheel --outdir dist-check .
+          python - <<'PY'
+          import glob, pathlib, sys, zipfile
+          wheel = glob.glob('dist-check/*.whl')[0]
+          shipped = set(zipfile.ZipFile(wheel).namelist())
+          wanted = {p.as_posix() for p in pathlib.Path('cli/js').glob('*.js')}
+          wanted |= {'cli/lib/readability.js', 'cli/cli-tools.bundle.js', 'cli/axe-core.min.js'}
+          # The catalog the CLI lists and scaffolds from; tools/ is a namespace
+          # package, so it only ships through package-data.
+          wanted |= {p.as_posix() for p in pathlib.Path('tools/adapters').glob('*.js')}
+          wanted |= {'tools/profiles/settings.json', 'tools/auditors/wcag-issues.js'}
+          missing = sorted(wanted - shipped)
+          if missing:
+              print('Missing from the wheel. Without these an installed ai4a11y')
+              print('cannot inject its tools, so every audit and fix command fails.')
+              print('Check [tool.setuptools.package-data] in pyproject.toml.')
+              for name in missing:
+                  print('  ' + name)
+              sys.exit(1)
+          print(f'{len(shipped)} files ship in the wheel')
+          PY

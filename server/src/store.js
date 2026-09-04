@@ -5,7 +5,7 @@
 // (`TOOLKIT_BUCKET` set -> gcs, else `DATA_DIR` -> file):
 //
 //   - fileStore(dir):   one JSON file per document, under `dir`. Mirrors
-//     toolkit/adapters/node/kv.js's fileKV read-whole/write-whole pattern —
+//     toolkit/platforms/node/kv.js's fileKV read-whole/write-whole pattern —
 //     same prototype-scope tradeoff (no file locking, no atomic rename), just
 //     applied to a `<dir>/<key>` document instead of one file per KV area.
 //   - gcsStore(bucket): the same interface over the GCS JSON REST v1 API,
@@ -29,6 +29,15 @@ function assertSafeKey(key) {
   }
 }
 
+// A uid names one user's profile partition (`users/<uid>/...`). Unlike document
+// keys this one CAN reach admin-listing/deletion, so keep it a single safe path
+// segment — no separators, no '..'.
+export function assertSafeUid(uid) {
+  if (typeof uid !== 'string' || !uid || uid.includes('/') || uid.includes('..') || uid.includes('\\')) {
+    throw new Error(`store: unsafe uid ${JSON.stringify(uid)}`);
+  }
+}
+
 /** A store backed by one JSON file per document on disk, under `dir`. */
 export function fileStore(dir) {
   return {
@@ -48,6 +57,28 @@ export function fileStore(dir) {
       const file = path.join(dir, key);
       await fs.mkdir(path.dirname(file), { recursive: true });
       await fs.writeFile(file, JSON.stringify(value), 'utf8');
+    },
+    // Every uid that has a `users/<uid>/` directory (i.e. a stored profile).
+    async listUsers() {
+      try {
+        const entries = await fs.readdir(path.join(dir, 'users'), { withFileTypes: true });
+        return entries.filter((e) => e.isDirectory()).map((e) => e.name).sort();
+      } catch (e) {
+        if (e.code === 'ENOENT') return [];
+        throw e;
+      }
+    },
+    // Remove a user's entire profile partition. Returns false if it didn't exist.
+    async deleteUser(uid) {
+      assertSafeUid(uid);
+      const udir = path.join(dir, 'users', uid);
+      try {
+        await fs.access(udir);
+      } catch {
+        return false;
+      }
+      await fs.rm(udir, { recursive: true, force: true });
+      return true;
     },
   };
 }
@@ -76,6 +107,26 @@ export function gcsStore(bucket) {
     return cachedToken.token;
   }
 
+  // Follow nextPageToken to exhaustion. GCS caps every listing page (1,000
+  // items by default), so a single-page read here means a wrong user list or,
+  // worse, a partial delete that reports success.
+  async function listAll(params) {
+    const token = await accessToken();
+    const items = [];
+    const prefixes = [];
+    let pageToken;
+    do {
+      const url = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o?${params}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+      const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!resp.ok) throw new Error(`gcsStore: list failed (${resp.status}): ${await resp.text()}`);
+      const data = await resp.json();
+      if (data.items) items.push(...data.items);
+      if (data.prefixes) prefixes.push(...data.prefixes);
+      pageToken = data.nextPageToken;
+    } while (pageToken);
+    return { items, prefixes };
+  }
+
   return {
     kind: 'gcs',
     async readJSON(key) {
@@ -97,6 +148,28 @@ export function gcsStore(bucket) {
         body: JSON.stringify(value),
       });
       if (!resp.ok) throw new Error(`gcsStore: write ${key} failed (${resp.status}): ${await resp.text()}`);
+    },
+    async listUsers() {
+      // delimiter='/' collapses each users/<uid>/... into one prefix entry.
+      const { prefixes } = await listAll('prefix=users/&delimiter=/');
+      return prefixes
+        .map((p) => p.replace(/^users\//, '').replace(/\/$/, ''))
+        .filter(Boolean)
+        .sort();
+    },
+    async deleteUser(uid) {
+      assertSafeUid(uid);
+      const token = await accessToken();
+      const { items } = await listAll(`prefix=${encodeURIComponent(`users/${uid}/`)}`);
+      if (!items.length) return false;
+      for (const it of items) {
+        const delUrl = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o/${encodeURIComponent(it.name)}`;
+        const delResp = await fetch(delUrl, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        if (!delResp.ok && delResp.status !== 404) {
+          throw new Error(`gcsStore: deleteUser ${it.name} failed (${delResp.status}): ${await delResp.text()}`);
+        }
+      }
+      return true;
     },
   };
 }

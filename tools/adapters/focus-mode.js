@@ -141,4 +141,4 @@ export const FocusMode = {
   }
 };
 
-window.__ai4a11yFocusMode = FocusMode;
+if (typeof window !== 'undefined') window.__ai4a11yFocusMode = FocusMode;

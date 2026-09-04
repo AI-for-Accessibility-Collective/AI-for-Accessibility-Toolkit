@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'none'">
+  <title>Scripts blocked by policy</title>
+</head>
+<body>
+  <h1>A page the tools bundle cannot be injected into</h1>
+  <p>Its content policy refuses every script, so page.add_script_tag lands a
+     tag the page will not run and the wait for window.ai4a11y times out. This
+     is the injection failure a real site with a strict policy produces, and it
+     is the one path where a command has to report that it did nothing.</p>
+  <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+  <button></button>
+</body>
+</html>

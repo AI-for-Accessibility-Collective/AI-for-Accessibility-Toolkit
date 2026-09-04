@@ -1,6 +1,5 @@
-// The `/v1/librarian/{method}` routes, alias-mapped exactly the way
-// personalized-extension/extension/background.js's `librarian*` message
-// switch (lines ~1798-1929) maps message types onto Librarian methods.
+// The `/v1/librarian/{method}` routes, alias-mapped exactly the way a host's
+// `librarian*` message switch maps message types onto Librarian methods.
 //
 // `route` is the wire {method} path segment: drop the message type's
 // `librarian` prefix and lower-case the first letter — the same rule
@@ -25,6 +24,12 @@ export const LIBRARIAN_ROUTES = [
   { route: 'getAbilityModel', target: 'getAbilityModel', kind: 'librarian' },
   { route: 'listProcedural', target: 'listProcedural', kind: 'librarian' },
   { route: 'setProfileField', target: 'setProfileField', kind: 'librarian' },
+  // Several profile paths in ONE write. Every field lives in the same
+  // `mine.profile` record, so a remote caller sending four setProfileField
+  // requests writes that record four times and a failure between any two
+  // leaves a half-updated profile. Fields that belong to one form go over
+  // the wire together.
+  { route: 'setProfileFields', target: 'setProfileFields', kind: 'librarian' },
   { route: 'recordScopedSettings', target: 'recordScopedSettings', kind: 'librarian' },
   { route: 'getSiteCategory', target: 'getSiteCategory', kind: 'librarian' },
   // alias: librarianSetSiteCategory -> L.setSiteCategoryOverride(origin, category)
@@ -101,6 +106,10 @@ export const LIBRARIAN_ROUTES = [
   { route: 'getScopedSetting', target: 'getScopedSetting', kind: 'librarian' },
   { route: 'removeScopedSetting', target: 'removeScopedSetting', kind: 'librarian' },
   { route: 'recordExplicitSetting', target: 'recordExplicitSetting', kind: 'librarian' },
+  // "Back to my profile" — the bulk inverse of recordScopedSettings. Without a
+  // wire route a remote host's reset reaches nothing and reports success anyway,
+  // telling the person their settings went back to normal when they did not.
+  { route: 'resetToProfile', target: 'resetToProfile', kind: 'librarian' },
 
   // ---- natural-language notes --------------------------------------------
   // Prose the person wrote about their own needs (toolkit/core/librarian.js,

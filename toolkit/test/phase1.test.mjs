@@ -8,7 +8,7 @@
 import { createToolkit } from '../index.js';
 import { coerceSetting, coerceSettings, clampSetting, unitOf } from '../core/units.js';
 import { createSurfaceAdapter } from '../core/surface.js';
-import { createWebSurface, deriveWebSettings, resolveWebPreferences } from '../adapters/chrome/web-surface.js';
+import { createWebSurface, deriveWebSettings, resolveWebPreferences } from '../platforms/chrome/web-surface.js';
 import { toAbilityModel } from '../core/ability.js';
 import { memoryClassOf, MEMORY_CLASSES } from '../core/memory-class.js';
 

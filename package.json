@@ -1,19 +1,16 @@
 {
   "name": "ai-for-accessibility-toolkit",
   "version": "1.0.0",
-  "description": "AI-powered Chrome extension that adapts any webpage to each user's abilities",
+  "description": "Platform-agnostic adaptive-accessibility toolkit: the Librarian/Datastore core, ability model, surfaces, and a developer catalog of adapters and skills",
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24.0.0"
   },
   "scripts": {
-    "build": "node extension/src/build.js",
-    "build:prod": "NODE_ENV=production node extension/src/build.js",
-    "watch": "node extension/src/build.js --watch",
-    "test": "for f in tools/test/*-test.js; do node \"$f\" || exit 1; done",
-    "validate:browser": "node tools/test/browser-validate.js"
+    "test": "for f in tools/test/*-test.js toolkit/test/*-test.js toolkit/test/*-test.mjs toolkit/test/*.test.mjs controller/test/*.test.mjs onboarding/test/*.test.mjs; do node \"$f\" || exit 1; done",
+    "validate:browser": "node tools/test/browser-validate.js",
+    "build:cli": "esbuild cli/cli-tools.js --bundle --format=iife --outfile=cli/cli-tools.bundle.js"
   },
   "devDependencies": {
-    "chokidar": "^3.6.0",
     "esbuild": "^0.28.0",
     "jsdom": "^29.1.1",
     "playwright": "^1.49.0"

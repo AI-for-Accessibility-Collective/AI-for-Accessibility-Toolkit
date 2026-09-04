@@ -4,13 +4,14 @@
 // them, read the page aloud, and perform simple page interactions.
 //
 // Lifted out of the Chrome extension's
-// personalized-extension/extension/voice-routes.js, where all of this used to
+// a host's voice-routes, where all of this used to
 // be welded directly to chrome.tabs / chrome.scripting / chrome.storage. That
 // file now calls a concrete ActuationPort
-// (personalized-extension/extension/chrome-actuation.js) instead of touching
+// (a host's chrome-actuation implementation) instead of touching
 // chrome.* itself, so the SAME voice tool-call contract (voiceGetContext /
 // voiceApplySettings / voiceUndoLast / voiceResetUndo / voiceReadPage /
-// voicePageAction — see extension/offscreen/src/live/tools.js) can be
+// voicePageAction — implemented in the extension repository at
+// personalized-extension/extension/offscreen/src/live/tools.js) can be
 // re-implemented for a non-Chrome host by writing one more object with this
 // same shape — no changes needed above the port.
 //
@@ -24,7 +25,7 @@
 //   import { noopActuation } from '<path-to>/toolkit/ports/actuation.js';
 //
 // The Chrome host implements this shape in
-// personalized-extension/extension/chrome-actuation.js — but as a classic
+// a host's chrome-actuation implementation — but as a classic
 // (importScripts) script, not an ES module, because it runs in the
 // extension's service worker alongside voice-routes.js (no ES module loader
 // there). It therefore can't literally `import` this file; it satisfies the
@@ -106,8 +107,17 @@
  * @property {() => Promise<{ok:true}>} resetUndo
  *   Clear the undo journal (a fresh control-session starting).
  * @property {(mode?: 'outline'|'text', chunk?: number) => Promise<ReadPageResult>} readPage
- *   Extract page text for TTS/Q&A. 'outline' (default) = headings + opening
- *   text; 'text' = the full text in fixed-size chunks (pass chunk to continue).
+ *   Extract page text. 'outline' (default) = headings + opening text; 'text' =
+ *   the full text in fixed-size chunks (pass chunk to continue).
+ *   NOTE (issue #7): despite the name, this RETURNS text for the caller to
+ *   deliver — it must NOT itself speak. Delivery is the caller's choice of
+ *   channel: an ARIA live region on web (so it arrives in the person's OWN
+ *   screen-reader voice, at their rate), UIAccessibility on iOS, spatial audio
+ *   on XR, real TTS only where there is no AT. Reaching for speechSynthesis is
+ *   the failure mode for exactly the users this serves. The neutral, go-forward
+ *   ControlPort (controller/control-port.js) names this `getContent`
+ *   precisely to drop the "read aloud" implication; this web-shaped port is
+ *   superseded by it.
  * @property {(action: string, target?: string, text?: string) => Promise<PageActionResult>} pageAction
  *   Perform one page interaction (scroll/click/type/focus-nav/navigate/etc).
  */

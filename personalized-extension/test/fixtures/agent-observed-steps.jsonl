@@ -1,3 +1,0 @@
-{"step": 0, "goal": "find girls flat sandals under $20", "actions": [{"type": "click", "target": "searchbox \"Search\""}, {"type": "type", "target": "searchbox \"Search\"", "text": "girls flat sandals"}, {"type": "key", "key": "Enter"}], "url": "https://www.example-store.com/search?q=girls+flat+sandals"}
-{"step": 1, "goal": "find girls flat sandals under $20", "actions": [{"type": "wait", "for": "network-idle"}, {"type": "snapshot"}], "url": "https://www.example-store.com/search?q=girls+flat+sandals"}
-{"step": 2, "goal": "find girls flat sandals under $20", "actions": [{"type": "scroll", "target": "results list", "amount": "into-view"}], "url": "https://www.example-store.com/search?q=girls+flat+sandals"}

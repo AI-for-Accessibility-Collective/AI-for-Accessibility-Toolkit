@@ -9,8 +9,7 @@
         "autoFixLabels": true,
         "autoDescribe": true,
         "autoVideoDescribe": true,
-        "keyboardNav": true,
-        "pageOutline": true,
+        "fixLandmarks": true,
         "announceUpdates": true,
         "describeOnDemand": true,
         "languageTag": true,
@@ -53,6 +52,8 @@
       "name": "Deaf/HoH",
       "description": "Auto captions for media, visual focus for non-audio navigation",
       "tools": {
+        "showCaptions": true,
+        "liveCaptions": true,
         "autoCaptions": true,
         "enhanceFocus": true,
         "autoDescribe": false,
