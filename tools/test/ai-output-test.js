@@ -76,6 +76,18 @@ check('passage refusal: "I cannot provide a translation ..." is a refusal', open
 check('passage refusal: "I cannot restate this passage." is a refusal', opensWithFirstPersonRefusal('I cannot restate this passage.'));
 check('passage refusal: "I can\'t assist with translating this." is a refusal', opensWithFirstPersonRefusal("I can't assist with translating this."));
 check('passage refusal: a curly apostrophe still reads as a refusal', opensWithFirstPersonRefusal('I can\u2019t help with that request.'));
+// Negations and verbs the first pattern did not cover.
+check('passage refusal: "I won\'t translate this passage" is a refusal', opensWithFirstPersonRefusal("I won't translate this passage."));
+check('passage refusal: "I could not simplify this text" is a refusal', opensWithFirstPersonRefusal('I could not simplify this text.'));
+check('passage refusal: "I am not permitted to translate this content" is a refusal', opensWithFirstPersonRefusal('I am not permitted to translate this content.'));
+check('passage refusal: "I cannot summarise this text" is a refusal', opensWithFirstPersonRefusal('I cannot summarise this text.'));
+check('passage refusal: "I can\'t make out the content" is a refusal', opensWithFirstPersonRefusal("I can't make out the content."));
+check('passage refusal: "I cannot render this" is a refusal', opensWithFirstPersonRefusal('I cannot render this.'));
+check('passage refusal: "I will not interpret this passage" is a refusal', opensWithFirstPersonRefusal('I will not interpret this passage for you.'));
+check('passage refusal: "I do not have the ability to translate this" is a refusal', opensWithFirstPersonRefusal('I do not have the ability to translate this text.'));
+check('passage refusal: "I\'m not allowed to summarize this content" is a refusal', opensWithFirstPersonRefusal("I'm not allowed to summarize this content."));
+check('passage refusal: "I couldn\'t care less" is content', !opensWithFirstPersonRefusal("I couldn't care less what the committee decides."));
+check('passage refusal: "I won\'t be there" is content', !opensWithFirstPersonRefusal("I won't be there on Friday, so send the notes."));
 
 // ── rejectShortText (aria-label, <th>) ───────────────────────────────────────
 check('short: the default cap is 60 characters', MAX_SHORT_TEXT_CHARS === 60);

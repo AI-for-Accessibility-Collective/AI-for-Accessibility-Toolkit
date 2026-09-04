@@ -58,27 +58,37 @@ export function containsUncertainty(text) {
 // are content and must be kept, and so are ordinary first-person openings
 // such as "I can't help but think", "I can't see why", "I'm sorry for your
 // loss", "I am not able to attend" and "I don't know why, but". What is
-// rejected is an apology or a hedge, then "I", then a refusal verb pointed
-// at the task ("I cannot translate this text", "I'm sorry, but I can't help
-// with that", "I am unable to simplify this passage"), or "I'm sorry" or
-// "I can't" standing alone as the whole answer.
+// rejected is an apology or a hedge, then "I", then a negation (cannot,
+// can't, could not, won't, will not, am unable to, am not able, permitted
+// or allowed to, do not have the ability or permission to), then a refusal
+// verb pointed at the task ("I cannot translate this text", "I'm sorry, but
+// I can't help with that", "I am not permitted to simplify this passage"),
+// or "I'm sorry" or "I can't" standing alone as the whole answer.
 // FLAG(review): English only. A model that declines in the target language
 // of a translation passes this check. The verb and object lists are a
 // judgment call: "I cannot do this alone" is still rejected, and a refusal
-// built on a verb that is not listed ("I cannot render this") goes through.
-const REFUSAL_VERBS = 'translate|simplify|summarize|rewrite|rephrase|restate|help|assist|provide|process|read|access'
-  + '|determine|identify|see|view|do|fulfill|complete|comply|generate|produce|answer|respond|perform|proceed|continue|work';
+// built on a verb that is not listed goes through.
+const REFUSAL_VERBS = 'translate|simplify|summari[sz]e|rewrite|rephrase|restate|interpret|render|make\\s+out'
+  + '|help|assist|provide|process|read|access|determine|identify|see|view|do|fulfill|complete|comply'
+  + '|generate|produce|answer|respond|perform|proceed|continue|work';
 // What the verb must point at for the sentence to be about the task rather
 // than an ordinary first-person opening ("I can't help but", "I can't see why").
 const TASK_OBJECT = 'this|that|these|those|the|it|your|you|a|an|any|with|what|text|content|passage|as';
 const APOLOGY = String.raw`unfortunately|sorry|i(?:['’]m| am) sorry|i apologi[sz]e|as an ai(?: language model| assistant| model)?`;
+// "I" plus a negated modal: can't, cannot, could not, won't, will not.
+const CANNOT = String.raw`i\s+(?:can(?:['’]t|not)|could(?:n['’]t|\s+not)|won['’]t|will\s+not)`;
+// "I" plus a negated ability or permission: I am unable to, I'm not able to,
+// I am not permitted to, I'm not allowed to, I do not have the ability to,
+// I don't have permission to.
+const UNABLE = String.raw`i(?:['’]m|\s+am)\s+(?:unable|not\s+(?:able|permitted|allowed))\s+to`
+  + String.raw`|i\s+do(?:n['’]t|\s+not)\s+have\s+(?:the\s+)?(?:ability|permission)\s+to`;
 const FIRST_PERSON_REFUSAL_RE = new RegExp(
   String.raw`^(?:(?:${APOLOGY})\b[,\s]*(?:but\s+)?)*`
   + String.raw`(?:i(?:['’]m| am) sorry[,.!]?\s*$`
-  + String.raw`|i can(?:['’]t|not)(?:\s+(?:${REFUSAL_VERBS}))?[,.!]?\s*$`
-  + String.raw`|i(?:['’]m| am)(?: not able| unable)\s+to\s+(?:${REFUSAL_VERBS})\b`
+  + String.raw`|(?:${CANNOT})(?:\s+(?:${REFUSAL_VERBS}))?[,.!]?\s*$`
+  + String.raw`|(?:${UNABLE})\s+(?:${REFUSAL_VERBS})\b`
   + String.raw`|i do(?:n['’]t| not) know\s+(?:what|which|the|this|that|enough)\b`
-  + String.raw`|i can(?:['’]t|not)\s+(?:${REFUSAL_VERBS})\s+(?:${TASK_OBJECT})\b)`,
+  + String.raw`|(?:${CANNOT})\s+(?:${REFUSAL_VERBS})\s+(?:${TASK_OBJECT})\b)`,
   'i',
 );
 
