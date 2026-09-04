@@ -54,6 +54,11 @@ const LISTED = '<a note listNotes returned>';
 const CHILD_TIMEOUT_MS = 60_000;
 
 // ── the contract, as a table ─────────────────────────────────────────────────
+// Rows run in this order, in one process per mode, against one store. A row
+// with `uidFrom` starts from whatever the earlier rows left on that uid, the
+// self-description note included, so the rows that need a note in place say
+// which earlier row put it there. Reordering them changes what they test.
+//
 // `input`   what the form (or any caller) sends to onboard().
 // `uidFrom` run against the uid an earlier scenario produced.
 // `failAt`  make the Nth Librarian call fail (the envelope says ok:false in
@@ -86,6 +91,8 @@ const SCENARIOS = [
     calls: ['addNote', 'setProfileFields'], uid: 'same-as:fresh-text', ok: true,
   },
   {
+    // Needs the note that fresh-text wrote (and existing-uid-rewrites-text
+    // rewrote) still on this uid: it is what deleteNote removes.
     key: 'existing-uid-clears-text',
     uidFrom: 'fresh-text',
     input: { supportAreas: ['reading'], freeText: '' },
@@ -137,6 +144,9 @@ const SCENARIOS = [
     calls: ['addNote', 'setProfileFields'], uid: 'same-as:fresh-text', ok: true,
   },
   {
+    // Needs the note existing-uid-restores-text put back after
+    // existing-uid-clears-text deleted it: without one there is no deleteNote
+    // for the second call to be.
     key: 'clearing-delete-fails',
     uidFrom: 'fresh-text',
     failAt: 2,
