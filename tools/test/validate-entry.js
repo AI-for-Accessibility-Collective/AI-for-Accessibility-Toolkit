@@ -66,7 +66,7 @@ import {
   getAxeHandler,
   axeHandlers
 } from '../adapters/index.js';
-import { simplifyText, summarizeContent } from '../adapters/simplify-text.js';
+import { simplifyText, summarizeContent, proseText } from '../adapters/simplify-text.js';
 
 // Import non-AI WCAG fixes
 import {
@@ -708,7 +708,7 @@ async function runFullScan() {
     results.textProcessing = results.textProcessing || {};
     results.textProcessing.simplify = complexText.map(el => ({
       selector: getSelector(el),
-      textLength: el.textContent?.length || 0
+      textLength: proseText(el).length
     }));
   }
   if (settings.autoSummarize) {
@@ -716,7 +716,7 @@ async function runFullScan() {
     results.textProcessing = results.textProcessing || {};
     results.textProcessing.summarize = longContent.map(el => ({
       selector: getSelector(el),
-      textLength: el.textContent?.length || 0
+      textLength: proseText(el).length
     }));
   }
 
@@ -758,7 +758,8 @@ function findComplexText() {
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.dataset.ai4a11ySimplified) return false;
       if (el.querySelector('p, div, article, section')) return false;
-      const text = el.textContent?.trim() || '';
+      // The same visible prose the adapter measures (see cli/cli-tools.js).
+      const text = proseText(el);
       // Complex = long sentences or many syllables
       return text.length > 200 && text.split(/[.!?]/).some(s => s.trim().split(/\s+/).length > 15);
     })
@@ -771,7 +772,7 @@ function findLongContent() {
       if (el.dataset.ai4a11ySummarized) return false;
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.closest('[data-ai4a11y-summarized]')) return false;
-      const text = el.textContent?.trim() || '';
+      const text = proseText(el);
       return text.length > 500;
     })
     .slice(0, 5); // Limit to avoid overwhelming AI

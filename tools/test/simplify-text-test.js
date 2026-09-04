@@ -9,7 +9,7 @@
 // Run: node tools/test/simplify-text-test.js
 import { JSDOM } from 'jsdom';
 import { setAIProvider } from '../utils/ai.js';
-import { simplifyText, summarizeContent } from '../adapters/simplify-text.js';
+import { simplifyText, summarizeContent, proseText } from '../adapters/simplify-text.js';
 
 // console.log is stubbed while the adapter runs (below), so failures are
 // printed through the real one or they would be swallowed.
@@ -102,6 +102,39 @@ async function run() {
     check('simplify: newlines are allowed in a passage', result !== null && el.dataset.ai4a11ySimplified === 'done');
   }
 
+  // The floor is measured against the visible prose, not textContent. A
+  // <style>, <script>, <noscript>, <template>, hidden or aria-hidden child
+  // is not prose, so a faithful rewrite of what the reader sees must not be
+  // rejected as a fragment because of it.
+  {
+    const HIDDEN = '<style>.x{color:red} /* ' + 'a'.repeat(400) + ' */</style><script>var y = "' + 'b'.repeat(400) + '";</script>'
+      + '<noscript>' + 'c'.repeat(200) + '</noscript><template>' + 'd'.repeat(200) + '</template>'
+      + '<span hidden>' + 'e'.repeat(200) + '</span><span aria-hidden="true">' + 'f'.repeat(200) + '</span>';
+    const doc = mount(`<p id="t">${HIDDEN}${DENSE}</p>`);
+    const el = doc.querySelector('#t');
+    check('prose: hidden and non-prose children are left out', proseText(el) === DENSE);
+    const sent = [];
+    setAIProvider({ simplifyText: async (text) => { sent.push(text); return PLAIN; } });
+    const result = await simplifyText(el);
+    check('simplify: the model is sent the visible prose only', sent.length === 1 && sent[0] === DENSE);
+    check('simplify: a faithful rewrite of the visible prose is applied despite hidden text', result === PLAIN && el.dataset.ai4a11ySimplified === 'done');
+    check('simplify: the original record is the visible prose', el.dataset.ai4a11yOriginal === DENSE);
+  }
+  {
+    // 80 characters of prose padded past the floor by a <script>: not a candidate.
+    const SHORT = 'These rules apply to everyone who signed the agreement, and to nobody else at all.';
+    const doc = mount(`<p id="t">${SHORT}<script>var z = "${'q'.repeat(300)}";</script></p>`);
+    setAIProvider({ simplifyText: async () => PLAIN });
+    const el = doc.querySelector('#t');
+    const result = await simplifyText(el);
+    check('simplify: hidden text does not lift a short passage over the 100-character floor', result === null && el.dataset.ai4a11ySimplified === 'skipped');
+  }
+  {
+    const doc = mount(`<p id="t">${DENSE}</p>`);
+    check('prose: a plain element gives its trimmed text', proseText(doc.querySelector('#t')) === DENSE);
+    check('prose: a non-element is handled without throwing', proseText(null) === '');
+  }
+
   // ── summarizeContent ────────────────────────────────────────────────────────
   const SUMMARY = 'The rules apply to everyone who signed.';
   {
@@ -145,6 +178,20 @@ async function run() {
   {
     const { el, result } = await summarizeWith('a'.repeat(20));
     check('summarize: a 20-character answer is applied (the floor)', result !== null && !!el.querySelector('.ai4a11y-summary-box'));
+  }
+  {
+    const doc = mount(`<article id="t"><script>var s = "${'x'.repeat(600)}";</script><p>Short visible text.</p></article>`);
+    setAIProvider({ summarizeText: async () => SUMMARY });
+    const el = doc.querySelector('#t');
+    const result = await summarizeContent(el);
+    check('summarize: hidden text does not lift a short passage over the 500-character floor', result === null && el.dataset.ai4a11ySummarize === 'skipped');
+  }
+  {
+    const sent = [];
+    const doc = mount(`<article id="t"><style>${'y'.repeat(600)}</style><p>${LONG}</p></article>`);
+    setAIProvider({ summarizeText: async (text) => { sent.push(text); return SUMMARY; } });
+    await summarizeContent(doc.querySelector('#t'));
+    check('summarize: the model is sent the visible prose only', sent.length === 1 && sent[0] === LONG);
   }
 }
 

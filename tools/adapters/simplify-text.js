@@ -19,6 +19,24 @@ const MIN_SUMMARY_CHARS = 20;
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
 
+// Children whose text is not prose the reader sees: element.textContent
+// includes a <style> or <script> body, a <noscript> or <template>, and
+// anything hidden. Measuring the floor and the ratio against that would
+// reject a faithful rewrite of the visible prose and mark the element
+// failed for good, and the model would be sent text the reader never saw.
+const NOT_PROSE_SEL = 'style, script, noscript, template, [hidden], [aria-hidden="true"]';
+
+// The visible prose of an element: its text with the children above removed,
+// trimmed. Computed on a clone so the page is untouched. This is what is
+// sent to the model, what the length checks measure, and what the CLI's
+// candidate selection counts.
+export function proseText(element) {
+  if (!element || typeof element.cloneNode !== 'function') return '';
+  const clone = element.cloneNode(true);
+  clone.querySelectorAll(NOT_PROSE_SEL).forEach((n) => n.remove());
+  return clone.textContent?.trim() || '';
+}
+
 // Simplify complex text for easier reading
 export async function simplifyText(element) {
   if (element.dataset.ai4a11ySimplified) return null;
@@ -30,7 +48,7 @@ export async function simplifyText(element) {
     return null;
   }
 
-  const originalText = element.textContent?.trim();
+  const originalText = proseText(element);
   // Min 100 chars, max 10000 chars to prevent API overload
   if (!originalText || originalText.length < 100 || originalText.length > 10000) {
     element.dataset.ai4a11ySimplified = 'skipped';
@@ -118,7 +136,7 @@ export async function summarizeContent(element) {
     return null;
   }
 
-  const text = element.textContent?.trim();
+  const text = proseText(element);
   if (!text || text.length < 500) {
     element.dataset.ai4a11ySummarize = 'skipped';
     return null;

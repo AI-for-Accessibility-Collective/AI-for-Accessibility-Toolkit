@@ -96,8 +96,10 @@ export async function describeVideo(frames, metadata = {}) {
 /**
  * Rewrite a passage in plain language for an adult reader. Required.
  *
- * Input: `text`, the trimmed text content of one element, between 100 and
- * 10,000 characters. `options` is reserved; no adapter passes any at present.
+ * Input: `text`, the visible prose of one element (its text content with
+ * style, script, noscript, template, hidden and aria-hidden children left
+ * out), trimmed, between 100 and 10,000 characters. `options` is reserved;
+ * no adapter passes any at present.
  *
  * The standard is adult plain language. The reader is an adult. Keep every
  * idea and every nuance of the original; simplify the sentence structure and
@@ -143,9 +145,9 @@ export async function generateLabels(context) {
 /**
  * Summarize a long passage. Required.
  *
- * Input: `text`, either the first 3,000 characters of an element's text
- * (simplify-text.js) or the whole text of an element longer than 60
- * characters (describe-on-demand.js).
+ * Input: `text`, either the first 3,000 characters of an element's visible
+ * prose (simplify-text.js, same definition as simplifyText) or the whole
+ * text of an element longer than 60 characters (describe-on-demand.js).
  *
  * A good result is two or three sentences, main point first, in the language
  * of the input, that a reader can use to decide whether to read the whole
