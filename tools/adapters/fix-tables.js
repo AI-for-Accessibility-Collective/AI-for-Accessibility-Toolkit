@@ -1,7 +1,7 @@
 // Fix data tables without header rows so screen readers can announce columns
 import { inferColumnHeader } from '../utils/ai.js';
 import { markProcessed } from '../utils/dom.js';
-import { rejectShortText } from '../utils/ai-output.js';
+import { rejectShortText, cleanShortText } from '../utils/ai-output.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -90,8 +90,9 @@ export async function fixTableHeaders(table) {
       if (rejected) {
         console.warn(`[AI4A11y] fixTableHeaders: rejected model output for column ${col + 1} (${rejected})`);
       }
-      // The gate judges the trimmed value, so that is what gets written.
-      const header = (rejected || answer == null) ? null : answer.trim();
+      // The gate judges the cleaned value (trimmed, quotes, markdown and a
+      // label prefix removed), so that is what gets written.
+      const header = (rejected || answer == null) ? null : cleanShortText(answer);
       headers.push(header || `Column ${col + 1}`);
     }
 

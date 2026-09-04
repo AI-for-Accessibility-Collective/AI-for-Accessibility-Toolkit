@@ -189,6 +189,14 @@ async function run() {
     fakeAI({ improveLinkText: () => 'Open the Q3 report\n' });
     await improveAmbiguousLink(docNl.querySelector('a'));
     check('links: a trailing newline from the provider is trimmed, not rejected', docNl.querySelector('a').getAttribute('aria-label') === 'Open the Q3 report');
+    // The contract forbids quotes, markdown and a label prefix, but a model
+    // adds them anyway; the cleaned value is what reaches aria-label.
+    for (const [what, answer] of [['quotes', '"Open the Q3 report"'], ['bold markdown', '**Open the Q3 report**'], ['a label prefix', 'Link text: Open the Q3 report']]) {
+      const d = mount(`<p><a href="https://example.com/q3">click here</a></p>`);
+      fakeAI({ improveLinkText: () => answer });
+      const r = await improveAmbiguousLink(d.querySelector('a'));
+      check(`links: ${what} from the provider are stripped before aria-label is set`, r === 'Open the Q3 report' && d.querySelector('a').getAttribute('aria-label') === 'Open the Q3 report');
+    }
   }
 
   // ── TABLES ───────────────────────────────────────────────────────────────────
@@ -312,6 +320,25 @@ async function run() {
     check('tables: an over-long answer (61 chars) falls back to "Column N"', ths[5] === 'Column 6');
     check('tables: a hedge falls back to "Column N"', ths[6] === 'Column 7');
     check('tables: no refusal text reaches any header cell', !ths.some(t => /cannot|unclear/i.test(t)));
+  }
+
+  // Quotes, markdown and a label prefix are stripped before the <th> is written.
+  {
+    const wrapped = ['"City"', '**Amount**', 'Header: Region'];
+    const doc = mount(`
+      <table>
+        <tr><td>NYC</td><td>100</td><td>a</td></tr>
+        <tr><td>LA</td><td>200</td><td>a</td></tr>
+        <tr><td>NYC</td><td>300</td><td>a</td></tr>
+        <tr><td>SF</td><td>400</td><td>a</td></tr>
+      </table>`);
+    let col = 0;
+    fakeAI({ inferColumnHeader: () => wrapped[col++] });
+    await fixTableHeaders(doc.querySelector('table'));
+    const ths = Array.from(doc.querySelectorAll('thead th')).map(t => t.textContent);
+    check('tables: quotes are stripped from a header', ths[0] === 'City');
+    check('tables: bold markdown is stripped from a header', ths[1] === 'Amount');
+    check('tables: a label prefix is stripped from a header', ths[2] === 'Region');
   }
 
   // ── AUDITOR ──────────────────────────────────────────────────────────────────

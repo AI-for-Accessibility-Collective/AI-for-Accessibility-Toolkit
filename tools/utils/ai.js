@@ -311,6 +311,9 @@ export async function describeElement(imageData, elementType = 'canvas', context
  * string, 1 to 60 characters after trimming, no line break, not opening with
  * a refusal, not containing an uncertainty term. It must also differ from the
  * visible text, or nothing is set. A rejected answer leaves the link alone.
+ * As a backstop, one layer of quotes, ** or backticks, and a one- or
+ * two-word label ("Link text: ...") are stripped before the check and the
+ * cleaned value is what gets written; the rule above still stands.
  */
 export async function improveLinkText(linkText, href, context) {
   if (!provider?.improveLinkText) {

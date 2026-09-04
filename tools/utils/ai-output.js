@@ -109,11 +109,40 @@ export function opensWithFirstPersonRefusal(text) {
   return FIRST_PERSON_REFUSAL_RE.test(text.trim());
 }
 
+// One layer of the wrapping a model adds to a short value despite the
+// contract in ai.js: matching straight or curly quotes, ** or backticks, and
+// a one- or two-word label ("Header: City", "Link text: Open the report").
+// Only these shapes, and only once: '""City""' becomes '"City"', an unmatched
+// quote is kept, and so is a colon with no space after it.
+const WRAPPED_RE = /^(?:"(.*)"|'(.*)'|\u201c(.*)\u201d|\u2018(.*)\u2019|\*\*(.*)\*\*|`(.*)`)$/s;
+const LABEL_PREFIX_RE = /^[A-Za-z][A-Za-z-]*(?:\s+[A-Za-z][A-Za-z-]*)?:\s+(?=\S)/;
+
+// The value as it should reach an attribute or a header cell: trimmed, with
+// the wrapping above removed. Anything that is not a string comes back as
+// it is, so rejectShortText() can report it.
+export function cleanShortText(text) {
+  if (typeof text !== 'string') return text;
+  let t = text.trim();
+  const unwrap = () => {
+    const m = WRAPPED_RE.exec(t);
+    if (m) t = m.slice(1).find((g) => g !== undefined).trim();
+  };
+  unwrap();
+  const unlabeled = t.replace(LABEL_PREFIX_RE, '');
+  if (unlabeled !== t) {
+    // "Header: "City"" wraps the value after the label; unwrap that too.
+    t = unlabeled;
+    unwrap();
+  }
+  return t;
+}
+
 // Gate for a short, single-line value that lands in an attribute or a header
-// cell (fix-links aria-label, fix-tables <th>).
+// cell (fix-links aria-label, fix-tables <th>). The value is judged after
+// cleanShortText(), so an adapter should write the cleaned value.
 export function rejectShortText(text, maxChars = MAX_SHORT_TEXT_CHARS) {
   if (typeof text !== 'string') return 'not a string';
-  const t = text.trim();
+  const t = cleanShortText(text);
   if (!t) return 'empty';
   if (t.length > maxChars) return `longer than ${maxChars} characters`;
   if (/[\r\n]/.test(t)) return 'contains a line break';

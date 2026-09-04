@@ -15,7 +15,7 @@ global.document = dom.window.document;
 const {
   REFUSAL_PREFIXES, UNCERTAINTY_TERMS, REFUSAL_RE,
   startsWithRefusal, containsUncertainty, opensWithFirstPersonRefusal,
-  rejectShortText, rejectRewrite, MAX_SHORT_TEXT_CHARS,
+  rejectShortText, rejectRewrite, cleanShortText, MAX_SHORT_TEXT_CHARS,
 } = await import('../utils/ai-output.js');
 const { isConfidentDescription } = await import('../adapters/generate-alt.js');
 const { isValidLabel } = await import('../adapters/generate-labels.js');
@@ -128,6 +128,29 @@ check('short: "Unknown Pleasures album" passes', rejectShortText('Unknown Pleasu
 check('short: "Not available in your region" passes', rejectShortText('Not available in your region') === null);
 check('short: a hedge is rejected as uncertain', rejectShortText('Unclear destination') === 'reads as uncertain');
 check('short: type is checked before length', rejectShortText(['a']) === 'not a string');
+
+// ── cleanShortText (the wrapping a model adds despite the contract) ──────────
+check('clean: straight double quotes are stripped', cleanShortText('"City"') === 'City');
+check('clean: straight single quotes are stripped', cleanShortText("'City'") === 'City');
+check('clean: curly double quotes are stripped', cleanShortText('\u201cCity\u201d') === 'City');
+check('clean: bold markdown is stripped', cleanShortText('**City**') === 'City');
+check('clean: backticks are stripped', cleanShortText('`City`') === 'City');
+check('clean: a one-word label prefix is stripped', cleanShortText('Header: City') === 'City');
+check('clean: a two-word label prefix is stripped', cleanShortText('Column header: City') === 'City');
+check('clean: a label prefix inside quotes is stripped', cleanShortText('"Header: City"') === 'City');
+check('clean: quotes inside a label prefix are stripped', cleanShortText('Header: "City"') === 'City');
+check('clean: only one layer of wrapping is stripped', cleanShortText('""City""') === '"City"');
+check('clean: an unmatched opening quote is kept', cleanShortText('"City') === '"City');
+check('clean: an apostrophe inside the value is kept', cleanShortText("Bob's report") === "Bob's report");
+check('clean: a three-word prefix is not treated as a label', cleanShortText('Open the report: Q3') === 'Open the report: Q3');
+check('clean: a colon with no space after it is not a label', cleanShortText('https://example.com') === 'https://example.com');
+check('clean: a value that is only a label prefix is kept as it is', cleanShortText('Header:') === 'Header:');
+check('clean: surrounding whitespace is trimmed', cleanShortText('  City \n') === 'City');
+check('clean: a non-string comes back unchanged', cleanShortText(42) === 42);
+check('short: a quoted value is judged after cleaning', rejectShortText('"' + 'a'.repeat(60) + '"') === null);
+check('short: a quoted refusal is still a refusal', rejectShortText('"I cannot tell"') === 'reads as a refusal');
+check('short: a label prefix on a hedge is still a hedge', rejectShortText('Header: unclear') === 'reads as uncertain');
+check('short: quotes around nothing are empty', rejectShortText('""') === 'empty');
 
 // ── rejectRewrite (simplify, translate, summarize) ───────────────────────────
 const INPUT = 'The aforementioned regulations shall be deemed applicable to all parties who have executed the agreement. '.repeat(3); // 318 chars
