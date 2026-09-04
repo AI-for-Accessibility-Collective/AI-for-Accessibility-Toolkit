@@ -32,7 +32,7 @@ function assertSafeKey(key) {
 // A uid names one user's profile partition (`users/<uid>/...`). Unlike document
 // keys this one CAN reach admin-listing/deletion, so keep it a single safe path
 // segment — no separators, no '..'.
-function assertSafeUid(uid) {
+export function assertSafeUid(uid) {
   if (typeof uid !== 'string' || !uid || uid.includes('/') || uid.includes('..') || uid.includes('\\')) {
     throw new Error(`store: unsafe uid ${JSON.stringify(uid)}`);
   }

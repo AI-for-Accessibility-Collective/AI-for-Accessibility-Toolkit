@@ -12,7 +12,7 @@
 //   DATA_DIR        default ./data (only used when TOOLKIT_BUCKET is unset)
 
 import http from 'node:http';
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -65,7 +65,17 @@ function boot() {
 // filesystem paths, not URL strings: import.meta.url is percent-encoded, so a
 // raw `file://` + argv comparison fails on paths with spaces or `~` (e.g. an
 // iCloud checkout) and the server would silently never start.
-if (fileURLToPath(import.meta.url) === process.argv[1]) {
+// Both sides resolved through the filesystem: Node realpaths the main
+// module's URL but not argv[1], so a symlinked or extension-less entry
+// (`node server/index`) would otherwise never boot.
+function isMainModule() {
+  try {
+    return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1]);
+  } catch {
+    return false;
+  }
+}
+if (isMainModule()) {
   boot();
 }
 

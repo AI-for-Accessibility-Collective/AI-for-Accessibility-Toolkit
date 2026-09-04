@@ -21,6 +21,17 @@ async function saveTokens(store, tokens) {
   await store.writeJSON(TOKENS_DOC, { tokens });
 }
 
+// Every mutation is a load, change, save of one shared document. The per-uid
+// lock in app.js does not cover it (a token issue for one uid can interleave
+// with a revocation for another), so the mutations queue behind each other
+// here. One process only; two service instances on one bucket still race.
+let tokenQueue = Promise.resolve();
+function withTokenLock(fn) {
+  const run = tokenQueue.then(fn, fn);
+  tokenQueue = run.catch(() => {});
+  return run;
+}
+
 /** Mint a new token for `uid`, persist its hash, and return the raw token —
  *  the ONLY time it is ever available (the store keeps only the hash). */
 export async function issueToken(store, { uid, label } = {}) {
@@ -36,9 +47,11 @@ export async function issueToken(store, { uid, label } = {}) {
     createdAt: Date.now(),
     revoked: false,
   };
-  const tokens = await loadTokens(store);
-  tokens.push(record);
-  await saveTokens(store, tokens);
+  await withTokenLock(async () => {
+    const tokens = await loadTokens(store);
+    tokens.push(record);
+    await saveTokens(store, tokens);
+  });
   return { token: raw, uid: record.uid };
 }
 
@@ -52,30 +65,34 @@ export async function listTokens(store) {
 /** Revoke by id (idempotent-ish: returns false if the id doesn't exist).
  *  Revocation flips a flag rather than deleting — verifyToken checks it and
  *  a revoked token's audit trail (id/uid/label/createdAt) survives. */
-export async function revokeToken(store, id) {
-  const tokens = await loadTokens(store);
-  const rec = tokens.find((t) => t.id === id);
-  if (!rec) return false;
-  rec.revoked = true;
-  await saveTokens(store, tokens);
-  return true;
+export function revokeToken(store, id) {
+  return withTokenLock(async () => {
+    const tokens = await loadTokens(store);
+    const rec = tokens.find((t) => t.id === id);
+    if (!rec) return false;
+    rec.revoked = true;
+    await saveTokens(store, tokens);
+    return true;
+  });
 }
 
 /** Revoke every token belonging to `uid` (part of user deletion: a wiped
  *  profile's credentials must die with it, or the next authenticated write
  *  recreates the partition). Same flip-the-flag semantics as revokeToken, so
  *  the audit trail survives. Returns how many tokens were newly revoked. */
-export async function revokeTokensFor(store, uid) {
-  const tokens = await loadTokens(store);
-  let n = 0;
-  for (const rec of tokens) {
-    if (rec.uid === uid && !rec.revoked) {
-      rec.revoked = true;
-      n++;
+export function revokeTokensFor(store, uid) {
+  return withTokenLock(async () => {
+    const tokens = await loadTokens(store);
+    let n = 0;
+    for (const rec of tokens) {
+      if (rec.uid === uid && !rec.revoked) {
+        rec.revoked = true;
+        n++;
+      }
     }
-  }
-  if (n) await saveTokens(store, tokens);
-  return n;
+    if (n) await saveTokens(store, tokens);
+    return n;
+  });
 }
 
 /** Resolve a presented bearer token to its record, or null if missing,
