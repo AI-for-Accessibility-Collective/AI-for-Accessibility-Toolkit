@@ -10,9 +10,10 @@
 // It is also part of `npm test`.
 //
 // How it works. The test walks the six package directories, skips tests,
-// bundles and node_modules, and parses three import forms from every .js,
-// .mjs and .cjs file: `import ... from '...'`, `export ... from '...'` and
-// `import('...')` with a string specifier. Only relative specifiers that
+// bundles and node_modules, and parses four import forms from every .js,
+// .mjs and .cjs file: `import ... from '...'`, `export ... from '...'`,
+// `import('...')` with a string specifier, and the bare side-effect
+// `import '...'`. Only relative specifiers that
 // resolve outside the importing file's package root count as edges. Each edge
 // then has to pass:
 //
@@ -165,9 +166,11 @@ const KNOWN_BREAKS = [];
 //   - a package.json without one (server, onboarding): Node treats every file
 //     as reachable, so this test does too;
 //   - no package.json (controller, cli): the .js files at the directory root.
-// Nothing imports controller or cli today, so the third rule only matters for
-// a future edge, and the second makes rule 1 vacuous for the server until it
-// gains an exports map.
+// No relative import reaches controller or cli today, so the third rule only
+// matters for a future edge; note that onboarding/chat.js already reaches
+// controller/web/*.js and controller/transport/*.js by URL path, which this
+// rule would not admit, so the choice is open. The second rule means rule 1
+// checks nothing for the server until it gains an exports map.
 function publicSurfaceOf(pkg) {
   const manifest = path.join(ROOT, pkg, 'package.json');
   if (!existsSync(manifest)) {
@@ -265,7 +268,7 @@ function stripComments(src) {
   return src.replace(/^\s*\/\*[\s\S]*?\*\//gm, '').replace(/^\s*\/\/.*$/gm, '');
 }
 
-// Specifiers from the three import forms. `from` is matched on its own so
+// Specifiers from the four import forms. `from` is matched on its own so
 // multi-line `import { a, b } from '...'` blocks are found too. The specifier
 // itself may not span a line: a stray `from "` in prose would otherwise
 // match up to the next quote in the file and could eat a real import.
