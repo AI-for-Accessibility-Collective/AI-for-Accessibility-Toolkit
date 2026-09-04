@@ -109,6 +109,7 @@ function run() {
     check('labelledby helper: no attribute gives empty text', getLabelledByText(doc.getElementById('in-bare')) === '');
     check('labelledby helper: a missing id gives empty text', getLabelledByText(doc.getElementById('in-lbl-missing')) === '');
     check('labelledby helper: an id list joins the resolved text', getLabelledByText(doc.getElementById('in-lbl-list')) === 'Search the catalog');
+    check('labelledby helper: a single id padded with spaces resolves (getElementById on the raw attribute did not)', (() => { const el = doc.createElement('input'); el.setAttribute('aria-labelledby', '  lbl-ok '); return getLabelledByText(el) === 'Search the catalog'; })());
     check('accessible name: text beats labelledby', getAccessibleName(doc.getElementById('b-text')) === 'Go');
     check('accessible name: an id list resolves', getAccessibleName(doc.getElementById('b-lbl-list')) === 'Search the catalog');
     check('accessible name: a dangling labelledby is not a name', hasAccessibleName(doc.getElementById('a-lbl-missing')) === false);

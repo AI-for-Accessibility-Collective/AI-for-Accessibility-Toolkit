@@ -25,12 +25,17 @@ export function getAccessibleName(el) {
 }
 
 // Text an element gets from aria-labelledby, or '' when it gets none. The
-// attribute is a space-separated id list and the name is the referenced
-// elements' text joined in order (WAI-ARIA 1.2, accessible name computation),
-// so an id that points nowhere or at an empty element adds nothing, and one
-// id that resolves to text is enough. Every auditor that asks "is this thing
-// labelled?" goes through here, so SVGs, links, buttons and form controls all
-// apply the same rule.
+// attribute is a whitespace-separated id list and the name is the referenced
+// elements' text joined in order (Accessible Name and Description Computation
+// 1.2, step 2B), so an id that points nowhere or at an empty element adds
+// nothing, and one id that resolves to text is enough. A referenced element
+// counts even when it is hidden, which is why there is no isVisible check
+// here. Every auditor that asks "is this thing labelled?" goes through here,
+// so SVGs, links, buttons and form controls all apply the same rule.
+// FLAG(review): before this helper, hasAccessibleName, getAccessibleName and
+// the SVG auditor passed the raw attribute to getElementById, so an id list
+// or a single id with padding ("  a ") never resolved. Both now do, which is
+// the ARIA rule, and it means fewer elements are reported.
 export function getLabelledByText(el) {
   const ids = (el.getAttribute('aria-labelledby') || '').trim().split(/\s+/).filter(Boolean);
   return ids
