@@ -151,6 +151,12 @@ export function adaptersForTools(tools) {
   if (tools.enhanceFocus) enabled.push('visual-assist');
   if (tools.readingGuide) enabled.push('visual-assist');
   if (tools.fontScale && tools.fontScale !== 100) enabled.push('visual-assist');
+  // Spacing reaches VisualAssist too. The extension's content script enables
+  // it when lineHeight is not 1.5 or letterSpacing is not 0 (the settings.json
+  // defaults), and the CLI passes either value through whenever a profile
+  // sets it.
+  if (tools.lineHeight && tools.lineHeight !== 1.5) enabled.push('visual-assist');
+  if (tools.letterSpacing) enabled.push('visual-assist');
   if (tools.motionReducer) enabled.push('motion-reducer');
   if (tools.dismissOverlays) enabled.push('dismiss-overlays');
   if (tools.bigTargets) enabled.push('big-targets');
