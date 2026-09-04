@@ -127,15 +127,28 @@ function getEmbeddedValue(el) {
 }
 
 // Elements whose role does not take a name from its content: a select's
-// options, a textarea's draft, an iframe's fallback text are not names.
+// options, a textarea's draft, an iframe's fallback text are not names. The
+// walk below applies this to descendants too and reads a descendant form
+// control through getEmbeddedValue (2E) instead, so a container wrapping a
+// select is named by the chosen option rather than by every option in the
+// list.
 const NO_NAME_FROM_CONTENT = new Set(['input', 'select', 'textarea', 'iframe']);
+
+// Elements that hold no rendered text: their content is code or markup, not
+// something a screen reader announces, and 2A leaves out nodes that are not
+// rendered. An inline SVG exported from a drawing tool carries its fill
+// rules in a <style> block, so without this an icon-only button is named by
+// its own CSS and never gets reported as nameless.
+const NOT_RENDERED = new Set(['style', 'script', 'template', 'noscript']);
 
 // Name from content (step 2F), which is what textContent stood in for
 // before: text nodes count, an aria-hidden="true" descendant does not (2A),
 // a descendant with its own aria-label contributes that (2C), and an <img>
-// or <area> contributes its alt (2D). A descendant hidden with CSS alone is
-// still read, as textContent read it; 2A would drop it too, and the check
-// is not made here because it needs layout. The element itself is read even
+// or <area> contributes its alt (2D), a descendant form control contributes
+// its value or its chosen option (2E), and a <style> or <script> block
+// contributes nothing (2A). A descendant hidden with CSS alone is still
+// read, as textContent read it; 2A would drop it too, and the check is not
+// made here because it needs layout. The element itself is read even
 // when it is aria-hidden, because a hidden element that aria-labelledby
 // points at still names its referrer.
 export function getNameFromContent(el) {
@@ -146,9 +159,11 @@ export function getNameFromContent(el) {
       if (child.nodeType === 3) { parts.push(child.nodeValue); continue; }
       if (child.nodeType !== 1) continue;
       if (child.getAttribute('aria-hidden') === 'true') continue;
+      if (NOT_RENDERED.has(child.localName)) continue;
       const label = child.getAttribute('aria-label');
       if (label && label.trim()) { parts.push(label); continue; }
       if (child.localName === 'img' || child.localName === 'area') { parts.push(child.getAttribute('alt') || ''); continue; }
+      if (NO_NAME_FROM_CONTENT.has(child.localName)) { parts.push(getEmbeddedValue(child)); continue; }
       walk(child);
     }
   };

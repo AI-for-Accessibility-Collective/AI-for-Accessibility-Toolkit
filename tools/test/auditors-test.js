@@ -53,6 +53,7 @@ function run() {
       <input id="lbl-pw" type="password" value="hunter2">
       <span id="lbl-hidden" style="display:none">Hidden label</span>
       <span id="lbl-title" title="Postal code"></span>
+      <span id="lbl-select"><select id="sel-in-lbl"><option>Alpha</option><option selected>Beta</option></select></span>
       <a id="a-here" href="/x">Click here</a>
       <a id="a-more-arrow" href="/y">Read more →</a>
       <a id="a-more-aria" href="/p" aria-label="Read more about pricing">Read more</a>
@@ -72,6 +73,7 @@ function run() {
       <button id="b-img"><img src="s.png" alt="Search"></button>
       <button id="b-hidden"><span aria-hidden="true">&times;</span></button>
       <button id="b-hidden-ok" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <button id="b-svg-style"><svg><style>.st0{fill:#000}</style><path class="st0"></path></svg></button>
       <button id="b-ref-a" aria-labelledby="b-ref-b">A</button>
       <button id="b-ref-b" aria-labelledby="b-ref-a">B</button>
       <input id="in-bare">
@@ -88,6 +90,7 @@ function run() {
       <input id="in-lbl-title" aria-labelledby="lbl-title">
       <input id="in-lbl-self" aria-labelledby="in-lbl-self">
       <input id="in-lbl-pw" aria-labelledby="lbl-pw">
+      <input id="in-lbl-select" aria-labelledby="lbl-select">
       <label for="in-for">Name</label><input id="in-for">
       <label>Age <input id="in-wrapped"></label>
       <input id="in-title" title="Postal code">
@@ -128,9 +131,10 @@ function run() {
     check('empty buttons: an id list where one id resolves is a name', !reports(buttons, doc, 'b-lbl-list'));
     check('empty buttons: a child <img alt> is a name', !reports(buttons, doc, 'b-img'));
     check('empty buttons: an aria-hidden glyph is not a name', reports(buttons, doc, 'b-hidden'));
+    check('empty buttons: a <style> block inside an inline SVG is not a name', reports(buttons, doc, 'b-svg-style'));
     check('empty buttons: an aria-hidden glyph plus aria-label is named', !reports(buttons, doc, 'b-hidden-ok'));
     check('empty buttons: two buttons that name each other resolve to their content, no loop', !reports(buttons, doc, 'b-ref-a') && !reports(buttons, doc, 'b-ref-b'));
-    check('empty buttons: exactly two reported on this page', buttons.length === 2);
+    check('empty buttons: exactly three reported on this page', buttons.length === 3);
 
     const inputs = findUnlabeledInputs();
     check('inputs: a bare input is reported', reports(inputs, doc, 'in-bare'));
@@ -146,6 +150,8 @@ function run() {
     check('inputs: the value-only input used as a label target is itself reported', reports(inputs, doc, 'lbl-val'));
     check('inputs: a labelledby pointing at a password field is reported (its value is not a name)', reports(inputs, doc, 'in-lbl-pw'));
     check('inputs: the password field used as a label target is itself reported', reports(inputs, doc, 'lbl-pw'));
+    check('inputs: a labelledby pointing at a container that wraps a select counts', !reports(inputs, doc, 'in-lbl-select'));
+    check('inputs: the select inside that container is itself reported', reports(inputs, doc, 'sel-in-lbl'));
     check('inputs: a labelledby pointing at a display:none element counts (2B uses hidden targets)', !reports(inputs, doc, 'in-lbl-hidden'));
     check('inputs: a labelledby pointing at an element with only a title counts', !reports(inputs, doc, 'in-lbl-title'));
     check('inputs: an input that names itself is reported, and does not loop', reports(inputs, doc, 'in-lbl-self'));
@@ -162,7 +168,7 @@ function run() {
     check('inputs: a select with options is still reported (option text is not a label)', reports(inputs, doc, 'sel-opts'));
     check('inputs: a bare textarea is reported', reports(inputs, doc, 'ta-bare'));
     check('inputs: a textarea with content is still reported (the draft is not a label)', reports(inputs, doc, 'ta-draft'));
-    check('inputs: exactly thirteen reported on this page', inputs.length === 13);
+    check('inputs: exactly fourteen reported on this page', inputs.length === 14);
 
     // The adapter gate agrees with the auditor on form controls, so what is
     // reported can be repaired.
@@ -195,6 +201,8 @@ function run() {
     check('accessible name: text beats title', getAccessibleName(doc.getElementById('a-title-text')) === 'Home');
     check('accessible name: a child <img alt> is the name', getAccessibleName(doc.getElementById('a-img')) === 'Acme home');
     check('accessible name: aria-hidden content is left out', getAccessibleName(doc.getElementById('b-hidden')) === '');
+    check('accessible name: a <style> block is not content (2A leaves out what is not rendered)', getAccessibleName(doc.getElementById('b-svg-style')) === '');
+    check('accessible name: a wrapped select gives its chosen option, not every option (2E)', getAccessibleName(doc.getElementById('lbl-select')) === 'Beta');
     check('accessible name: an id list resolves', getAccessibleName(doc.getElementById('b-lbl-list')) === 'Search the catalog');
     check('accessible name: a dangling labelledby is not a name', hasAccessibleName(doc.getElementById('a-lbl-missing')) === false);
   }
