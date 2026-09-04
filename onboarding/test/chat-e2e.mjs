@@ -10,9 +10,11 @@
 // It exists to PIN today's behavior so the logic can be lifted out of chat.js
 // into importable modules without silently changing what the page does.
 //
-// Local only (needs a Chromium download); not in CI, and named *-e2e.mjs rather
-// than *.test.mjs so `npm test` does not pick it up — the same split
-// tools/test/browser-validate.js uses. Run:
+// Needs a Chromium download (`npx playwright install chromium`), so it is named
+// *-e2e.mjs rather than *.test.mjs and `npm test` does not pick it up, the
+// same split tools/test/browser-validate.js uses. CI runs it in the separate
+// `browser` workflow (.github/workflows/browser.yml), which is not a required
+// check and triggers on the paths listed there. Run:
 //   npm run test:e2e
 //
 // The assist lane is deliberately left unconfigured (no GEMINI_API_KEY), so the
@@ -30,6 +32,10 @@ delete process.env.GEMINI_API_KEY; // keep the general-answer lane offline
 
 const { chromium } = await import('playwright');
 const { server } = await import('../server.js');
+// The stand-in for a remote app such as browser-harness: the reference
+// in-memory receiver, served over the wire the page really speaks.
+const { createMockReceiver } = await import('../../controller/mock-receiver.js');
+const { serveControl } = await import('../../controller/transport/remote.js');
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -58,6 +64,45 @@ async function say(text) {
 }
 const profileText = () => page.locator('#profile').innerText();
 const lastReply = () => page.locator('#transcript .msg').last().innerText();
+// The connect controls live in the settings drawer, closed until the hamburger
+// opens it (and closed again by a reload).
+async function openSettings() {
+  if (await page.locator('#drawer').isHidden()) await page.click('#hamburger');
+}
+async function closeSettings() {
+  if (await page.locator('#drawer').isVisible()) await page.click('#drawer-close');
+}
+// Wait for something on the Node side (the mock remote receiver) to become
+// true; resolves false on timeout so the check that follows reports it.
+async function until(cond, timeoutMs = 10000) {
+  const end = Date.now() + timeoutMs;
+  while (Date.now() < end) {
+    if (cond()) return true;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  return !!cond();
+}
+
+// The stand-in for browser-harness. Playwright answers the page's WebSocket to
+// this address, and a mock receiver served over it records what the page
+// applied. One receiver per connection, so a reconnect gets a fresh one that
+// knows nothing, the way a restarted harness would. Registered before the
+// first navigation because the mock is installed with the page, not on the
+// fly; it does nothing until the page connects.
+const receivers = [];
+const routes = [];
+await page.routeWebSocket(/^ws:\/\/127\.0\.0\.1:9333\/?$/, (ws) => {
+  const recv = createMockReceiver();
+  const channel = {
+    post: (m) => ws.send(JSON.stringify(m)),
+    subscribe: (h) => { ws.onMessage((d) => { try { h(JSON.parse(String(d))); } catch {} }); return () => {}; },
+  };
+  serveControl(channel, recv);
+  receivers.push(recv);
+  routes.push(ws);
+});
+const latest = () => receivers[receivers.length - 1];
+const remoteHas = (key) => until(() => !!latest() && latest().settings[key] === true);
 
 try {
   // ── the front door ─────────────────────────────────────────────────────────
@@ -150,27 +195,100 @@ try {
     check('…and still offers what it CAN do', /bigger text/i.test(reply));
   }
 
-  // ── back to the profile: overrides are forgotten ───────────────────────────
-  // The reply says "I forgot N changes you'd made", so the page has to agree
-  // with it. Reset re-renders the profile, which restores every key the profile
-  // governs; a key the profile never mentions is a separate question, checked
-  // below.
+  // ── back to the profile: the page matches it again ─────────────────────────
+  // The reply says the changes are forgotten, so the page has to agree with it.
+  // Re-rendering the profile restores every key the profile governs; a key the
+  // profile never mentions (dark mode or a text size set by hand) has to be
+  // cleared as well, or it survives a reset the reply says forgot it (issue
+  // #26). Both are set here rather than relied on from earlier turns: the
+  // reload above gave the page a fresh receiver.
   {
-    await say('dark mode');                       // a manual change the profile never asked for
+    await say('bigger text');                     // a manual number the profile never asked for
+    check('a manual text size applies', await page.evaluate(
+      () => !!document.getElementById('demo-app').style.getPropertyValue('--aa-font-scale'),
+    ));
+    await say('dark mode');                       // a manual boolean the profile never asked for
     const darkBefore = await page.evaluate(() => document.getElementById('demo-app').classList.contains('aa-dark'));
     check('a manual change applies', darkBefore === true);
 
     await page.evaluate(() => document.getElementById('demo-app').classList.remove('aa-dyslexia'));
 
     await say('back to my profile');
-    check('a reset phrase is answered', (await lastReply()).trim().length > 0);
+    const reply = await lastReply();
+    check('a reset phrase is answered', reply.trim().length > 0);
     check('the profile itself is not deleted by a reset', /^You:/.test((await profileText()).trim()));
     check('a reset re-renders what the profile governs', await page.evaluate(
       () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
     ));
 
     const darkAfter = await page.evaluate(() => document.getElementById('demo-app').classList.contains('aa-dark'));
-    check('KNOWN: a setting the profile never mentions survives a reset', darkAfter === true);
+    check('a setting the profile never mentions is cleared by a reset', darkAfter === false);
+    check('…and so is the manual text size', await page.evaluate(
+      () => document.getElementById('demo-app').style.getPropertyValue('--aa-font-scale') === '',
+    ));
+    check('the reply names what it cleared on this page', /cleared fontScale, darkMode on this page/.test(reply));
+    // The chat surface stores no manual change, so the server has nothing to
+    // forget here; the reply must not claim otherwise.
+    check('…and does not claim a stored change that never existed', !/forgot \d+ change/.test(reply));
+
+    // A cleared number has to be "not set", not zero: the next relative step
+    // starts from the baseline (100 + 10), not from the range minimum.
+    await say('bigger text');
+    check('a relative change after a reset starts from the baseline', await page.evaluate(
+      () => document.getElementById('demo-app').style.getPropertyValue('--aa-font-scale') === '1.1',
+    ));
+  }
+
+  // ── the profile follows the person onto a receiver connected after boot ───
+  // A connected app is where a profile matters most: someone with a reading
+  // profile who connects browser-harness should get the dyslexia font there
+  // without asking. The stand-in harness registered above answers.
+  {
+    await openSettings();
+    await page.click('#use-local-harness');
+    check('the remote app gets the profile once its socket opens', await remoteHas('dyslexiaFont'));
+    check('…and the page shows the connection', /connected/.test(
+      await page.evaluate(() => document.getElementById('conn-status').className),
+    ));
+  }
+
+  // ── a disclosure made while a remote app is driven reaches that app ───────
+  // …and the preview, which was not being driven, catches up when the person
+  // comes back to it. The sensory area derives motionReducer, which neither
+  // side had before.
+  {
+    await say('I get sensory overload');
+    check('a disclosure while connected adapts the remote app', await remoteHas('motionReducer'));
+    check('…and not the preview, which was not being driven', !(await page.evaluate(
+      () => document.getElementById('demo-app').classList.contains('aa-reduce-motion'),
+    )));
+
+    await routes[routes.length - 1].close(); // the harness goes away
+    await closeSettings(); // the drawer sits over the status bar
+    await page.locator('#conn-status button', { hasText: 'Use demo preview' }).click();
+    await page.waitForFunction(
+      () => document.getElementById('demo-app').classList.contains('aa-reduce-motion'),
+      null,
+      { timeout: 10000 },
+    ).catch(() => {});
+    check('going back to the preview applies the profile to it', await page.evaluate(
+      () => document.getElementById('demo-app').classList.contains('aa-reduce-motion'),
+    ));
+  }
+
+  // ── a saved connection re-applies after a reload ──────────────────────────
+  // boot() reconnects to the receiver it was driving. That socket opens after
+  // boot has already rendered the profile onto the preview, so the remote app
+  // needs its own application when the reconnect lands.
+  {
+    await openSettings();
+    await page.click('#use-local-harness');
+    check('reconnecting gets a fresh receiver', await until(() => receivers.length === 2));
+    check('…and the fresh receiver gets the profile as well', await remoteHas('dyslexiaFont'));
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    check('the reload reconnects to the saved receiver', await until(() => receivers.length === 3));
+    check('the reconnected app gets the profile, unasked', await remoteHas('dyslexiaFont'));
   }
 } finally {
   await browser.close();

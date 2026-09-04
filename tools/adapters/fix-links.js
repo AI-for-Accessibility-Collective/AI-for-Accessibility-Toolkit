@@ -1,6 +1,6 @@
 // Improve ambiguous link text ("click here", "read more") for screen reader users
 import { improveLinkText } from '../utils/ai.js';
-import { markProcessed } from '../utils/dom.js';
+import { markProcessed, getAccessibleName } from '../utils/dom.js';
 import { rejectShortText, cleanShortText } from '../utils/ai-output.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
@@ -13,12 +13,20 @@ const MAX_LINKS_PER_PAGE = 10;
  * Give an ambiguous link a descriptive accessible name.
  * Non-destructive: the visible text stays; we set aria-label so screen
  * readers announce the destination instead of "click here".
+ *
+ * The text sent to the model is the link's accessible name, which is what
+ * findAmbiguousLinks matches on and what a screen reader announces. Reading
+ * link.textContent here instead would ask the model to improve a string that
+ * is not the defect: a link with descriptive text and an aria-label of "here"
+ * is reported for the label, and a link whose only content is
+ * <img alt="click here"> has no text at all. The surrounding paragraph still
+ * reaches the model as context, so the visible wording is not lost.
  */
 export async function improveAmbiguousLink(link) {
   if (link.dataset.ai4a11yProcessed) return null;
   markProcessed(link, 'pending');
 
-  const text = link.textContent?.trim() || '';
+  const text = getAccessibleName(link);
   const context = link.closest('p, li, td, article, section')?.textContent?.trim().substring(0, 200) || '';
 
   try {

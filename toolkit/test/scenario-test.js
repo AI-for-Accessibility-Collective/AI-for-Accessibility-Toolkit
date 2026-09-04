@@ -266,6 +266,42 @@ async function scenarioB() {
   check('B: the auto-replay action was still saved',
     (await DS.get('mine.profiles')).some(p => (p.actions || []).some(a => a.prompt === 'Loop this section')));
 
+  // The other way a category reaches the site index is a user override, which
+  // getSiteCategory returns as-is. It is refused outside the taxonomy for the
+  // same reason, so the observation below cannot pick up 'blog' from there.
+  const badOverride = await L.setSiteCategoryOverride('www.nytimes.com', 'blog');
+  check('B: a site-category override outside the taxonomy is refused',
+    badOverride?.ok === false && badOverride.reason === 'bad-category');
+  check('B: the refused override is not stored',
+    ((await DS.get('mine.siteIndex'))['nytimes.com'] || {}).category !== 'blog');
+  check('B: a taxonomy override is accepted',
+    (await L.setSiteCategoryOverride('www.nytimes.com', 'news'))?.ok === true);
+  // getSiteCategory returns null for an empty origin, so an entry stored under
+  // '' could never be read back. Refused rather than reported as saved.
+  const noOrigin = await L.setSiteCategoryOverride('', 'news');
+  check('B: an override with no origin is refused',
+    noOrigin?.ok === false && noOrigin.reason === 'bad-origin');
+  check('B: the refused override wrote no empty-origin entry',
+    !('' in (await DS.get('mine.siteIndex'))));
+
+  // A caller-supplied category outside the taxonomy is not trusted: the
+  // observation is classified from the host instead, so the proposal, the
+  // auto-replay profile and the saved skill all carry a taxonomy id that
+  // retrieval can match (issue #34).
+  await L.logObservation({
+    type: 'agent-task', url: 'https://www.nytimes.com/section/x', category: 'blog',
+    text: 'done', data: { task: 'Open the print view', summary: 'done', success: true },
+  });
+  const offVocab = (await L.listProposals())[0];
+  check('B: a category outside the taxonomy is replaced by the host classification',
+    offVocab?.change.siteTypes.join() === 'news');
+  const offAcc = await L.respondToProposal(offVocab.id, 'accept');
+  const offSkill = (await DS.get('mine.skillDocs')).find(s => (s.recipe?.actions || []).some(a => a.prompt === 'Open the print view'));
+  check('B: the accepted task is saved as a skill with a taxonomy siteRelevance',
+    offAcc.ok === true && offSkill?.siteRelevance.join() === 'news');
+  check('B: the episodic log carries the classified category, not the supplied one',
+    (await DS.get('mine.episodicLog')).entries.every(e => e.category !== 'blog'));
+
   // A FAILED agent run never proposes.
   await agentTask('https://www.youtube.com/watch?v=fail', 'Skip the intro', false);
   check('B: a failed agent run does not propose', (await L.listProposals()).length === 0);

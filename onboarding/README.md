@@ -45,22 +45,38 @@ ONBOARD_MODE=remote TOOLKIT_URL=http://127.0.0.1:8080 ADMIN_PASSWORD=<server-adm
 ## Tests
 
 `npm test` (from the repo root) runs every `onboarding/test/*.test.mjs`. They
-cover three layers: the profile logic against a real toolkit over a temp file
-store, the HTTP routes against the real server on an ephemeral port, and the
+cover four layers: the profile logic against a real toolkit over a temp file
+store, the HTTP routes against the real server on an ephemeral port, the
 chat surface's own logic (routing precedence, the additive onboarding merge,
-the composer history).
+the composer history, when a remote receiver counts as connected), and the
+two write modes: how the remote path handles
+a failed write (`remote-write-failure.test.mjs`, against a stubbed toolkit
+service), and the contract both paths must satisfy
+(`onboard-contract.test.mjs`).
+
+`onboard-contract.test.mjs` runs one scenario table against local mode and
+remote mode and then compares the two: the same Librarian calls in the same
+order with the same arguments, the same profile fields, the same uid handling,
+the same result, and a stop at the first failed write. Both modes write to a
+real toolkit over a temp file store; in remote mode that toolkit sits behind
+the real service (`server/src/app.js`), booted in the test process on an
+ephemeral port, so nothing about the service is stubbed. The test spawns
+itself once per mode, because `server.js` reads `ONBOARD_MODE` at module
+load; `onboard-contract.hooks.mjs` is its helper for recording the local
+branch.
 
 The real-browser test is separate, because it needs a local Chromium:
 
 ```bash
 npx playwright install chromium   # one-time browser download; npm install does not do it
-npm run test:e2e                  # drives /chat in headless Chromium; not run in CI
+npm run test:e2e                  # drives /chat in headless Chromium
 ```
 
 It is named `chat-e2e.mjs` rather than `*.test.mjs` so `npm test` skips it, the
-same split `tools/test/browser-validate.js` uses. It is the only test that
-executes `chat.js` itself: the page loads it as an ES module over HTTP, which
-jsdom cannot run.
+same split `tools/test/browser-validate.js` uses. CI runs it in a separate,
+non-blocking job (`.github/workflows/browser.yml`) when the files it depends on
+change. It is the only test that executes `chat.js` itself: the page loads it
+as an ES module over HTTP, which jsdom cannot run.
 
 ## The page
 
@@ -71,6 +87,10 @@ jsdom cannot run.
   setting still reaches the profile. Onboarding then renders the profile onto
   the page through the toolkit's web surface, and does so again on load, so a
   returning person's page matches their profile before they ask for anything.
+  The profile follows the person onto whatever the page drives: a remote
+  receiver such as browser-harness gets it the moment its connection opens
+  (connecting from Settings, or the reconnect after a reload), and the demo
+  preview gets it again when the person comes back to it.
 - **Add a profile** — a free-text "what do you need?" field + support-area
   checkboxes. Submitting creates/updates an ability profile (a `uid`),
   recording `supportAreas`, `freeText`, and a natural-language note.

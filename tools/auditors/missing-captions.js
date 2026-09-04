@@ -1,5 +1,12 @@
 import { isVisible, wasProcessed } from '../utils/dom.js';
 
+// The word we look for near an <audio> element as a sign that a transcript is
+// offered. WCAG 1.2.1 (Audio-only, Prerecorded) asks for a text alternative,
+// but HTML has no markup that says "this is the transcript", so this is a
+// substring match on the parent element's text. Heuristic, English-only,
+// best-effort: "no transcript available" also passes.
+const TRANSCRIPT_HINT = 'transcript';
+
 // Find videos without captions
 export function findVideosWithoutCaptions() {
   return Array.from(document.querySelectorAll('video'))
@@ -36,7 +43,7 @@ export function findAudioWithoutTranscripts() {
       if (!parent) return true;
 
       const text = parent.textContent?.toLowerCase() || '';
-      if (text.includes('transcript')) return false;
+      if (text.includes(TRANSCRIPT_HINT)) return false;
 
       // Check for track element
       if (audio.querySelector('track')) return false;

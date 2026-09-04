@@ -146,6 +146,21 @@ async function run() {
     check('links: only the capped links are labeled', doc.querySelectorAll('a[aria-label]').length === 10);
   }
 
+  // The adapter repairs the name the auditor matched, not the visible text:
+  // one link is ambiguous only through its aria-label, the other only through
+  // the alt of the image it wraps.
+  {
+    const doc = mount(`
+      <p><a id="aria" href="https://example.com/pricing" aria-label="here">See our full pricing table</a></p>
+      <p><a id="img" href="https://example.com/docs"><img src="d.png" alt="click here"></a></p>`);
+    const calls = fakeAI();
+    await improveAmbiguousLinks(doc.querySelectorAll('a'));
+    const sent = calls.improveLinkText.map(c => c.text);
+    check('links: an ambiguous aria-label is what the AI is asked to improve', sent.includes('here'));
+    check('links: a link named by an image alt sends that alt, not an empty string', sent.includes('click here'));
+    check('links: both links get a new aria-label', doc.getElementById('aria').getAttribute('aria-label') === 'Go to pricing' && doc.getElementById('img').getAttribute('aria-label') === 'Go to docs');
+  }
+
   // AI returns null (no suggestion) → link left as-is, marked failed, no crash.
   {
     const doc = mount(`<p><a href="https://example.com/x">click here</a></p>`);

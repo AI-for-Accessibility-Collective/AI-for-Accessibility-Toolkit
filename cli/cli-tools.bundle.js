@@ -5365,6 +5365,103 @@ ${scope} table {
   };
   if (typeof window !== "undefined") window.__ai4a11ySkipLinks = SkipLinks;
 
+  // tools/utils/dom.js
+  function isVisible(el) {
+    if (!el) return false;
+    const style = getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    if (parseFloat(style.opacity) === 0) return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }
+  function getAccessibleName(el) {
+    return getLabelledByText(el) || (el.getAttribute("aria-label") || "").trim() || getNativeName(el) || getNameFromContent(el) || (el.getAttribute("title") || "").trim() || getDefaultName(el);
+  }
+  function hasAccessibleName(el) {
+    return !!getAccessibleName(el);
+  }
+  function getLabelledByText(el) {
+    const attr = el.getAttribute("aria-labelledby");
+    if (!attr) return "";
+    return attr.split(/\s+/).map((id) => {
+      const target = document.getElementById(id);
+      return target ? nameOfReferenced(target) : "";
+    }).filter(Boolean).join(" ");
+  }
+  function nameOfReferenced(el) {
+    return (el.getAttribute("aria-label") || "").trim() || getNativeName(el) || getEmbeddedValue(el) || getNameFromContent(el) || (el.getAttribute("title") || "").trim() || getDefaultName(el);
+  }
+  function getNativeName(el) {
+    const tag = el.localName;
+    if (tag === "img" || tag === "area") return (el.getAttribute("alt") || "").trim();
+    if (tag === "input") {
+      const type = (el.getAttribute("type") || "text").toLowerCase();
+      if (type === "image") return (el.getAttribute("alt") || "").trim();
+      if (type === "submit" || type === "reset" || type === "button") return (el.value || "").trim();
+    }
+    return "";
+  }
+  function getDefaultName(el) {
+    if (el.localName !== "input") return "";
+    const type = (el.getAttribute("type") || "text").toLowerCase();
+    if (type === "submit") return "Submit";
+    if (type === "reset") return "Reset";
+    return "";
+  }
+  var NO_EMBEDDED_VALUE_TYPES = ["submit", "reset", "button", "image", "hidden", "checkbox", "radio", "password"];
+  function getEmbeddedValue(el) {
+    const tag = el.localName;
+    if (tag === "textarea") return (el.value || "").trim();
+    if (tag === "select") return Array.from(el.selectedOptions || []).map((o) => o.textContent.trim()).join(" ").trim();
+    if (tag === "input") {
+      const type = (el.getAttribute("type") || "text").toLowerCase();
+      if (!NO_EMBEDDED_VALUE_TYPES.includes(type)) return (el.value || "").trim();
+    }
+    return "";
+  }
+  var NO_NAME_FROM_CONTENT = /* @__PURE__ */ new Set(["input", "select", "textarea", "iframe"]);
+  var NOT_RENDERED = /* @__PURE__ */ new Set(["style", "script", "template", "noscript"]);
+  function getNameFromContent(el) {
+    if (NO_NAME_FROM_CONTENT.has(el.localName)) return "";
+    const parts = [];
+    const walk = (node) => {
+      for (const child of node.childNodes) {
+        if (child.nodeType === 3) {
+          parts.push(child.nodeValue);
+          continue;
+        }
+        if (child.nodeType !== 1) continue;
+        if (child.getAttribute("aria-hidden") === "true") continue;
+        if (NOT_RENDERED.has(child.localName)) continue;
+        const label = child.getAttribute("aria-label");
+        if (label && label.trim()) {
+          parts.push(label);
+          continue;
+        }
+        if (child.localName === "img" || child.localName === "area") {
+          parts.push(child.getAttribute("alt") || "");
+          continue;
+        }
+        if (NO_NAME_FROM_CONTENT.has(child.localName)) {
+          parts.push(getEmbeddedValue(child));
+          continue;
+        }
+        walk(child);
+      }
+    };
+    walk(el);
+    return parts.join(" ").replace(/\s+/g, " ").trim();
+  }
+  function looksLikeNavClass(el) {
+    return Array.from(el.classList || []).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
+  }
+  function markProcessed(el, status = "done") {
+    el.dataset.ai4a11yProcessed = status;
+  }
+  function wasProcessed(el) {
+    return !!el.dataset.ai4a11yProcessed;
+  }
+
   // tools/adapters/math-a11y.js
   var logFix6 = globalThis.ai4a11yLogFix || (() => {
   });
@@ -5375,11 +5472,10 @@ ${scope} table {
   var MAX_DEPTH = 20;
   var LEAF_TAGS = /* @__PURE__ */ new Set(["mi", "mn", "mo", "mtext", "ms"]);
   var SKIP_TAGS3 = /* @__PURE__ */ new Set(["annotation", "annotation-xml", "mphantom"]);
-  function hasAccessibleName(el) {
+  function hasAccessibleName2(el) {
     const label = el.getAttribute("aria-label");
     if (label && label.trim()) return true;
-    const labelledby = el.getAttribute("aria-labelledby");
-    return !!(labelledby && labelledby.trim());
+    return !!getLabelledByText(el);
   }
   function serializeMath(el, depth = 0) {
     if (depth > MAX_DEPTH) return "";
@@ -5487,7 +5583,7 @@ ${scope} table {
       for (const math of document.querySelectorAll("math")) {
         if (this.records.length >= this.cap) break;
         if (math.getAttribute("aria-hidden") === "true") continue;
-        if (hasAccessibleName(math)) continue;
+        if (hasAccessibleName2(math)) continue;
         const attrs = [];
         this.setTracked(math, "aria-label", deriveLabel(math), attrs);
         if (!math.hasAttribute("role")) this.setTracked(math, "role", "math", attrs);
@@ -5854,36 +5950,6 @@ ${scope} table {
     }
   };
   if (typeof window !== "undefined") window.__ai4a11yShowCaptions = ShowCaptions;
-
-  // tools/utils/dom.js
-  function isVisible(el) {
-    if (!el) return false;
-    const style = getComputedStyle(el);
-    if (style.display === "none" || style.visibility === "hidden") return false;
-    if (parseFloat(style.opacity) === 0) return false;
-    const rect = el.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 0;
-  }
-  function hasAccessibleName2(el) {
-    if (el.getAttribute("aria-label")) return true;
-    if (el.getAttribute("title")) return true;
-    if (el.textContent?.trim()) return true;
-    const labelledBy = el.getAttribute("aria-labelledby");
-    if (labelledBy) {
-      const target = document.getElementById(labelledBy);
-      if (target?.textContent?.trim()) return true;
-    }
-    return false;
-  }
-  function looksLikeNavClass(el) {
-    return Array.from(el.classList || []).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
-  }
-  function markProcessed(el, status = "done") {
-    el.dataset.ai4a11yProcessed = status;
-  }
-  function wasProcessed(el) {
-    return !!el.dataset.ai4a11yProcessed;
-  }
 
   // tools/adapters/fix-landmarks.js
   var logFix8 = globalThis.ai4a11yLogFix || (() => {
@@ -6265,7 +6331,7 @@ ${scope} table {
   async function generateLinkLabel(link) {
     if (link.dataset.ai4a11yProcessed) return null;
     if (!isVisible(link)) return null;
-    if (hasAccessibleName2(link)) return null;
+    if (hasAccessibleName(link)) return null;
     markProcessed(link, "pending");
     const href = link.href || "";
     const existingText = link.textContent?.trim() || "";
@@ -6297,7 +6363,7 @@ ${scope} table {
   async function generateButtonLabel(button) {
     if (button.dataset.ai4a11yProcessed) return null;
     if (!isVisible(button)) return null;
-    if (hasAccessibleName2(button)) return null;
+    if (hasAccessibleName(button)) return null;
     markProcessed(button, "pending");
     const inferred = inferButtonLabel(button);
     if (inferred) {
@@ -6334,7 +6400,7 @@ ${scope} table {
   async function generateIframeTitle(iframe) {
     if (iframe.dataset.ai4a11yProcessed) return null;
     if (!isVisible(iframe)) return null;
-    if (hasAccessibleName2(iframe)) return null;
+    if (hasAccessibleName(iframe)) return null;
     markProcessed(iframe, "pending");
     const src = iframe.src || "";
     for (const [pattern, title] of Object.entries(IFRAME_PATTERNS)) {
@@ -6364,7 +6430,7 @@ ${scope} table {
   async function generateFormLabel(input) {
     if (input.dataset.ai4a11yProcessed) return null;
     if (!isVisible(input)) return null;
-    if (hasAccessibleName2(input)) return null;
+    if (hasAccessibleName(input)) return null;
     markProcessed(input, "pending");
     if (input.placeholder && !isJunkName(input.placeholder)) {
       const label = input.placeholder.trim();
@@ -7020,21 +7086,22 @@ ${chunk}
       console.log("[AI4A11y] Made nested link non-interactive");
     }
   }
+  var TARGET_SIZE_PX = 44;
   function fixTargetSize(element) {
     const rect = element.getBoundingClientRect();
-    if (rect.width >= 44 && rect.height >= 44) return;
-    const needWidth = Math.max(0, (44 - rect.width) / 2);
-    const needHeight = Math.max(0, (44 - rect.height) / 2);
+    if (rect.width >= TARGET_SIZE_PX && rect.height >= TARGET_SIZE_PX) return;
+    const needWidth = Math.max(0, (TARGET_SIZE_PX - rect.width) / 2);
+    const needHeight = Math.max(0, (TARGET_SIZE_PX - rect.height) / 2);
     const display = getComputedStyle(element).display;
     element.style.boxSizing = "border-box";
     element.style.padding = `${needHeight}px ${needWidth}px`;
-    element.style.minWidth = "44px";
-    element.style.minHeight = "44px";
+    element.style.minWidth = `${TARGET_SIZE_PX}px`;
+    element.style.minHeight = `${TARGET_SIZE_PX}px`;
     if (display === "inline") {
       element.style.display = "inline-block";
     }
     incrementStat7("wcag");
-    logFix14("target-size", element, `${Math.round(rect.width)}x${Math.round(rect.height)}`, "44x44");
+    logFix14("target-size", element, `${Math.round(rect.width)}x${Math.round(rect.height)}`, `${TARGET_SIZE_PX}x${TARGET_SIZE_PX}`);
     console.log("[AI4A11y] Increased touch target size");
   }
   function fixViewportMeta(element) {
@@ -7066,7 +7133,40 @@ ${chunk}
   function randomSuffix() {
     return Math.random().toString(36).substring(2, 7);
   }
-  var axeHandlers6 = {
+  var fixTiers = {
+    "html-has-lang": "safe",
+    "html-lang-valid": "safe",
+    "valid-lang": "safe",
+    "duplicate-id": "safe",
+    "duplicate-id-aria": "safe",
+    "duplicate-id-active": "safe",
+    "heading-order": "risky",
+    "tabindex": "safe",
+    "aria-valid-attr": "risky",
+    "aria-roles": "risky",
+    "aria-allowed-role": "risky",
+    "aria-deprecated-role": "safe",
+    "aria-required-attr": "safe",
+    "nested-interactive": "risky",
+    "target-size": "risky",
+    "meta-viewport": "safe",
+    "meta-viewport-large": "safe",
+    "meta-refresh": "safe",
+    "blink": "safe",
+    "marquee": "safe"
+  };
+  function isRiskyFix(ruleId) {
+    return fixTiers[ruleId] === "risky";
+  }
+  function gate(ruleId, fix) {
+    if (!isRiskyFix(ruleId)) return fix;
+    return function gatedFix(element, settings2) {
+      if (settings2?.wcagRiskyFixes === true) return fix(element);
+      console.info(`[AI4A11y] Skipped risky fix ${ruleId} (wcagRiskyFixes is off)`);
+      return false;
+    };
+  }
+  var rawHandlers = {
     "html-has-lang": fixMissingLang,
     "html-lang-valid": fixInvalidLang,
     "valid-lang": fixInvalidLang,
@@ -7088,6 +7188,9 @@ ${chunk}
     "blink": replaceObsoleteElement,
     "marquee": replaceObsoleteElement
   };
+  var axeHandlers6 = Object.fromEntries(
+    Object.entries(rawHandlers).map(([ruleId, fix]) => [ruleId, gate(ruleId, fix)])
+  );
 
   // tools/adapters/fix-links.js
   var logFix15 = globalThis.ai4a11yLogFix || (() => {
@@ -7098,7 +7201,7 @@ ${chunk}
   async function improveAmbiguousLink(link) {
     if (link.dataset.ai4a11yProcessed) return null;
     markProcessed(link, "pending");
-    const text = link.textContent?.trim() || "";
+    const text = getAccessibleName(link);
     const context = link.closest("p, li, td, article, section")?.textContent?.trim().substring(0, 200) || "";
     try {
       const answer = await improveLinkText(text, link.href, context);
@@ -7248,6 +7351,8 @@ ${chunk}
   }
 
   // tools/auditors/missing-alt.js
+  var CONTENT_IMAGE_MIN_PX = 100;
+  var CANVAS_MIN_PX = 50;
   function findImagesWithoutAlt() {
     return Array.from(document.querySelectorAll("img")).filter((img) => {
       if (wasProcessed(img)) return false;
@@ -7262,18 +7367,19 @@ ${chunk}
       if (!isVisible(img)) return false;
       if (isLikelyDecorative(img)) return false;
       const { width, height } = getImageSize(img);
-      return width > 100 && height > 100;
+      return width > CONTENT_IMAGE_MIN_PX && height > CONTENT_IMAGE_MIN_PX;
     });
   }
   function findCanvasElements() {
     return Array.from(document.querySelectorAll("canvas")).filter((canvas) => {
       if (wasProcessed(canvas)) return false;
       const rect = canvas.getBoundingClientRect();
-      return rect.width > 50 && rect.height > 50;
+      return rect.width > CANVAS_MIN_PX && rect.height > CANVAS_MIN_PX;
     });
   }
 
   // tools/auditors/missing-captions.js
+  var TRANSCRIPT_HINT = "transcript";
   function findVideosWithoutCaptions() {
     return Array.from(document.querySelectorAll("video")).filter((video) => {
       if (wasProcessed(video)) return false;
@@ -7297,37 +7403,37 @@ ${chunk}
       const parent = audio.parentElement;
       if (!parent) return true;
       const text = parent.textContent?.toLowerCase() || "";
-      if (text.includes("transcript")) return false;
+      if (text.includes(TRANSCRIPT_HINT)) return false;
       if (audio.querySelector("track")) return false;
       return true;
     });
   }
 
   // tools/auditors/missing-labels.js
+  var AMBIGUOUS_LINK_TEXTS = [
+    "click here",
+    "here",
+    "read more",
+    "more",
+    "learn more",
+    "continue",
+    "link",
+    "this",
+    "this link"
+  ];
   function findEmptyLinks() {
     return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
       if (wasProcessed(link)) return false;
       if (!isVisible(link)) return false;
-      return !hasAccessibleName2(link);
+      return !hasAccessibleName(link);
     });
   }
   function findAmbiguousLinks() {
-    const ambiguousTexts = [
-      "click here",
-      "here",
-      "read more",
-      "more",
-      "learn more",
-      "continue",
-      "link",
-      "this",
-      "this link"
-    ];
     return Array.from(document.querySelectorAll("a[href]")).filter((link) => {
       if (wasProcessed(link)) return false;
       if (!isVisible(link)) return false;
-      const text = link.textContent?.trim().toLowerCase();
-      return text && ambiguousTexts.includes(text);
+      const text = getAccessibleName(link).toLowerCase();
+      return text && AMBIGUOUS_LINK_TEXTS.includes(text);
     });
   }
   function findEmptyButtons() {
@@ -7338,7 +7444,7 @@ ${chunk}
     return buttons.filter((btn) => {
       if (wasProcessed(btn)) return false;
       if (!isVisible(btn)) return false;
-      return !hasAccessibleName2(btn);
+      return !hasAccessibleName(btn);
     });
   }
   function findUnlabeledInputs() {
@@ -7347,14 +7453,12 @@ ${chunk}
       if (wasProcessed(input)) return false;
       if (!isVisible(input)) return false;
       if (input.type === "hidden") return false;
-      if (input.getAttribute("aria-label")) return false;
-      if (input.getAttribute("aria-labelledby")) return false;
+      if (getAccessibleName(input)) return false;
       if (input.id) {
         const label = document.querySelector(`label[for="${CSS.escape(input.id)}"]`);
         if (label) return false;
       }
       if (input.closest("label")) return false;
-      if (input.title) return false;
       return true;
     });
   }
@@ -7407,12 +7511,13 @@ ${chunk}
     if (document.querySelector('[role="contentinfo"]')) return true;
     return Array.from(document.querySelectorAll("footer")).some((f) => !f.closest(SECTIONING));
   }
+  var NAV_LIKE_MIN_LINKS = 3;
   function findUnmarkedNavigation() {
     return Array.from(document.querySelectorAll('div[class*="nav" i]:not([role])')).filter((el) => {
       if (!looksLikeNavClass(el)) return false;
       if (!isVisible(el)) return false;
       if (el.closest('nav, [role="navigation"]')) return false;
-      return el.querySelectorAll("a").length >= 3;
+      return el.querySelectorAll("a").length >= NAV_LIKE_MIN_LINKS;
     });
   }
   function auditLandmarks() {
@@ -7991,9 +8096,8 @@ ${chunk}
     if (profileTools.mathAccessible) MathA11y.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.voiceCommands) VoiceCommands.enable();
-    if (profileTools.colorFilter && profileTools.colorFilter !== "none") {
-      ColorBlindMode.enable(profileTools.colorFilter);
-    }
+    const colorMode = [profileTools.colorFilter, profileTools.colorBlindMode].find((v) => v && v !== "none");
+    if (colorMode) ColorBlindMode.enable(colorMode);
     if (profileTools.autoCaptions) AutoTranscriber.enable();
     if (profileTools.showCaptions) ShowCaptions.enable();
     if (profileTools.fixLandmarks) FixLandmarks.enable();
@@ -8168,32 +8272,15 @@ ${chunk}
       if (!handler) return { error: `No handler for rule: ${ruleId}` };
       const el = document.querySelector(selector);
       if (!el) return { error: `Element not found: ${selector}` };
-      await handler(el);
+      const risky = isRiskyFix(ruleId);
+      const applied = risky ? await handler(el, getActiveProfileSettings()) : await handler(el);
+      if (risky && applied === false) {
+        return { skipped: "risky", error: `Risky fix ${ruleId} is off (the active profile does not set wcagRiskyFixes)` };
+      }
       return { success: true };
     }
   };
-  var nonAiFixes = {
-    "html-has-lang": fixMissingLang,
-    "html-lang-valid": fixInvalidLang,
-    "valid-lang": fixInvalidLang,
-    "duplicate-id": fixDuplicateId,
-    "duplicate-id-aria": fixDuplicateId,
-    "duplicate-id-active": fixDuplicateId,
-    "heading-order": fixHeadingOrder,
-    "tabindex": fixPositiveTabindex,
-    "aria-valid-attr": fixInvalidAriaAttr,
-    "aria-roles": fixInvalidAriaRole,
-    "aria-allowed-role": fixInvalidAriaRole,
-    "aria-deprecated-role": fixDeprecatedRole,
-    "aria-required-attr": fixMissingAriaAttrs,
-    "nested-interactive": fixNestedInteractive,
-    "target-size": fixTargetSize,
-    "meta-viewport": fixViewportMeta,
-    "meta-viewport-large": fixViewportMeta,
-    "meta-refresh": removeMetaRefresh,
-    "blink": replaceObsoleteElement,
-    "marquee": replaceObsoleteElement
-  };
+  var nonAiFixes = axeHandlers6;
   var aiRequiredRules = /* @__PURE__ */ new Set([
     "image-alt",
     "input-image-alt",
@@ -8211,8 +8298,9 @@ ${chunk}
     const results = {
       violations: [],
       fixed: { nonAi: 0, ai: 0 },
-      skipped: { needsAi: [], noHandler: [] }
+      skipped: { needsAi: [], noHandler: [], risky: [] }
     };
+    const settings2 = getActiveProfileSettings();
     const violations = await runAxeAnalysis();
     results.violations = violations.map((v) => ({ id: v.id, count: v.nodes?.length || 0 }));
     for (const violation of violations) {
@@ -8225,8 +8313,11 @@ ${chunk}
         if (!el || el.dataset.ai4a11yProcessed) continue;
         if (nonAiFixes[ruleId]) {
           try {
-            nonAiFixes[ruleId](el);
-            results.fixed.nonAi++;
+            if (nonAiFixes[ruleId](el, settings2) === false) {
+              results.skipped.risky.push(ruleId);
+            } else {
+              results.fixed.nonAi++;
+            }
           } catch (e) {
             console.warn(`[AI4A11y] Failed to fix ${ruleId}:`, e);
           }
@@ -8242,7 +8333,6 @@ ${chunk}
     fixTargetBlankLinks();
     fixPositiveTabindexElements();
     fixDuplicateIds();
-    const settings2 = getActiveProfileSettings();
     if (settings2.autoSimplify) {
       const complexText = findComplexText();
       results.textProcessing = results.textProcessing || {};
@@ -8285,14 +8375,16 @@ ${chunk}
       seen.add(el.id);
     });
   }
+  var COMPLEX_TEXT_MIN_CHARS = 200;
+  var COMPLEX_SENTENCE_MIN_WORDS = 15;
   function findComplexText() {
     return Array.from(document.querySelectorAll("p, li, td, div")).filter((el) => {
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.dataset.ai4a11ySimplified) return false;
       if (el.querySelector("p, div, article, section")) return false;
-      if ((el.textContent?.length || 0) <= 200) return false;
+      if ((el.textContent?.length || 0) <= COMPLEX_TEXT_MIN_CHARS) return false;
       const text = proseText(el);
-      return text.length > 200 && text.split(/[.!?]/).some((s) => s.trim().split(/\s+/).length > 15);
+      return text.length > COMPLEX_TEXT_MIN_CHARS && text.split(/[.!?]/).some((s) => s.trim().split(/\s+/).length > COMPLEX_SENTENCE_MIN_WORDS);
     }).slice(0, 10);
   }
   function findLongContent() {
