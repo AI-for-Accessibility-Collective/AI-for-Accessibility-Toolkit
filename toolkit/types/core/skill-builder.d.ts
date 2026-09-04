@@ -35,11 +35,13 @@ export function parseBuiltSkill(llmOutput: string, { tools }?: {
  *
  * @overload
  * @param {string} need
- * @param {SkillBuildOptions & { llm: (prompt: string) => Promise<string> }} deps
+ * @param {SkillBuildOptions & { llm?: ((prompt: string) => Promise<string>)|null }} deps
+ *   `llm` may be missing or null (the Librarian passes its caller slot as is);
+ *   the result then says 'no LLM available' instead of calling anything.
  * @returns {Promise<{ skill: Skill|null, valid: boolean, errors: string[] }>}
  */
 export function buildSkill(need: string, deps: SkillBuildOptions & {
-    llm: (prompt: string) => Promise<string>;
+    llm?: ((prompt: string) => Promise<string>) | null;
 }): Promise<{
     skill: Skill | null;
     valid: boolean;

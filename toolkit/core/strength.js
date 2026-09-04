@@ -7,11 +7,12 @@
 export const STRENGTH_RANK = Object.freeze({ hint: 0, preference: 1, floor: 2 });
 
 /**
- * Numeric rank of a strength label. An unknown label ranks as 'preference'.
- * @param {string} strength
+ * Numeric rank of a strength label. A missing or unknown label ranks as
+ * 'preference'.
+ * @param {string|undefined} strength
  * @returns {number}
  */
 export function rankOf(strength) {
-  const r = STRENGTH_RANK[strength];
+  const r = STRENGTH_RANK[/** @type {string} */ (strength)];
   return r === undefined ? STRENGTH_RANK.preference : r;
 }

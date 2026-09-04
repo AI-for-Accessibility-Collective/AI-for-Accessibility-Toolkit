@@ -29,11 +29,11 @@ export function normalizeGrant(raw: any): Grant;
  *  background.js's grant routes are now thin pass-throughs to the Librarian
  *  rather than re-implementing the check.
  *  @param {string} audience  The grant holder's audience tier.
- *  @param {string} sharing   The profile's current sharing level. Pass the
- *    stored value as is: an unknown label (or '' for a missing one) reads as
+ *  @param {string|undefined} sharing   The profile's current sharing level.
+ *    Pass the stored value as is: a missing or unknown label reads as
  *    'personal' below.
  *  @returns {boolean} */
-export function audienceAllowed(audience: string, sharing: string): boolean;
+export function audienceAllowed(audience: string, sharing: string | undefined): boolean;
 /**
  * @typedef {Object} ShareAuditEntry
  * @property {number} ts

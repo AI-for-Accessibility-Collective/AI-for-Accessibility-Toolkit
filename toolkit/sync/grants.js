@@ -110,12 +110,12 @@ const AUDIENCE_ORDER = { personal: 0, friends: 1, anyone: 2 };
  *  background.js's grant routes are now thin pass-throughs to the Librarian
  *  rather than re-implementing the check.
  *  @param {string} audience  The grant holder's audience tier.
- *  @param {string} sharing   The profile's current sharing level. Pass the
- *    stored value as is: an unknown label (or '' for a missing one) reads as
+ *  @param {string|undefined} sharing   The profile's current sharing level.
+ *    Pass the stored value as is: a missing or unknown label reads as
  *    'personal' below.
  *  @returns {boolean} */
 export function audienceAllowed(audience, sharing) {
-  const ceiling = AUDIENCE_ORDER[sharing] ?? 0;
+  const ceiling = AUDIENCE_ORDER[/** @type {string} */ (sharing)] ?? 0;
   const need = AUDIENCE_ORDER[audience] ?? Infinity;
   return need <= ceiling;
 }

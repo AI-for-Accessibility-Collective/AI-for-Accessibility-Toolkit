@@ -130,14 +130,16 @@ export function parseBuiltSkill(llmOutput, { tools } = {}) {
  *
  * @overload
  * @param {string} need
- * @param {SkillBuildOptions & { llm: (prompt: string) => Promise<string> }} deps
+ * @param {SkillBuildOptions & { llm?: ((prompt: string) => Promise<string>)|null }} deps
+ *   `llm` may be missing or null (the Librarian passes its caller slot as is);
+ *   the result then says 'no LLM available' instead of calling anything.
  * @returns {Promise<{ skill: Skill|null, valid: boolean, errors: string[] }>}
  */
 /**
  * Implementation signature; see buildSkillPrompt for why it is looser than
  * the overload callers see.
  * @param {string} need
- * @param {Partial<SkillBuildOptions> & { llm?: (prompt: string) => Promise<string>, tools?: any }} [deps]
+ * @param {Partial<SkillBuildOptions> & { llm?: ((prompt: string) => Promise<string>)|null, tools?: any }} [deps]
  * @returns {Promise<{ skill: Skill|null, valid: boolean, errors: string[] }>}
  */
 export async function buildSkill(need, { llm, tools, taxonomy, profile, previous = null, feedback = '' } = {}) {
