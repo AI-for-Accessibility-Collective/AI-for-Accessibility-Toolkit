@@ -47,6 +47,11 @@ const TOPIC = 'self-description';
 const NOTE_OPTS = { source: 'user-explicit', topic: TOPIC };
 const UID_SHAPE = /^u-[A-Za-z0-9_-]{22}$/;
 const LISTED = '<a note listNotes returned>';
+// A child that never exits (a write that hangs, a hook that wedges the loader)
+// must not hang `npm test` with it. The whole run takes well under a second
+// here; the limit is generous so a slow CI runner does not trip it.
+// FLAG(review): the limit is a guess at "far longer than any honest run".
+const CHILD_TIMEOUT_MS = 60_000;
 
 // ── the contract, as a table ─────────────────────────────────────────────────
 // `input`   what the form (or any caller) sends to onboard().
@@ -192,11 +197,12 @@ async function runOneMode(mode) {
     installRemoteStub(state);
   }
 
-  const { onboard, deriveDefaultNeeds } = await import('../server.js');
-
   const report = { mode, scenarios: [] };
   const uids = {}; // scenario key -> the uid it produced
   try {
+    // Inside the try, so a server.js that fails to load (or a hook that does
+    // not match it) still leaves no temp store behind.
+    const { onboard, deriveDefaultNeeds } = await import('../server.js');
     for (const scen of SCENARIOS) {
       const input = { ...scen.input };
       if (scen.uidFrom) input.uid = uids[scen.uidFrom];
@@ -421,8 +427,12 @@ function runChild(mode, outFile) {
       stdio: ['ignore', 'inherit', 'inherit'],
       env: { ...process.env },
     });
-    child.on('error', (e) => { console.log(`FAIL: could not start the ${mode} child: ${e.message}`); resolve(null); });
-    child.on('exit', (code, signal) => resolve(code ?? `signal ${signal}`));
+    const timer = setTimeout(() => {
+      console.log(`FAIL: the ${mode} child did not exit within ${CHILD_TIMEOUT_MS / 1000}s; killed`);
+      child.kill('SIGKILL');
+    }, CHILD_TIMEOUT_MS);
+    child.on('error', (e) => { clearTimeout(timer); console.log(`FAIL: could not start the ${mode} child: ${e.message}`); resolve(null); });
+    child.on('exit', (code, signal) => { clearTimeout(timer); resolve(code ?? `signal ${signal}`); });
   });
 }
 
