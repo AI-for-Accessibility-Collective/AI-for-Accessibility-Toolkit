@@ -10,7 +10,6 @@ import { createDatastore } from '../core/datastore.js';
 import { createLibrarian } from '../core/librarian.js';
 import { TAXONOMY } from '../core/taxonomy.js';
 import { SUPPORT_AREAS } from '../core/ability.js';
-import { SUPPORT_AREAS as BARREL_SUPPORT_AREAS } from '../index.js';
 import { skillRegistry } from '../registry/tools.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -112,8 +111,26 @@ check('empty supportAreas and siteRelevance stay valid (action skills carry none
   validateSkill({ ...reading, supportAreas: [], siteRelevance: [] }, { tools }).valid);
 check('a host-supplied taxonomy is honored',
   validateSkill({ ...reading, siteRelevance: ['gallery'] }, { tools, taxonomy: { categoryIds: () => ['gallery'] } }).valid);
-check('SUPPORT_AREAS is exported from the toolkit barrel', BARREL_SUPPORT_AREAS === SUPPORT_AREAS);
-check('Engineer output with a vocabulary slip is invalid',
+check('a data-only host taxonomy ({ categories: [{ id }] }) is honored',
+  validateSkill({ ...reading, siteRelevance: ['gallery'] }, { tools, taxonomy: { categories: [{ id: 'gallery' }] } }).valid);
+check('an explicit null taxonomy falls back to the bundled one instead of throwing',
+  validateSkill({ ...reading, siteRelevance: ['news'] }, { tools, taxonomy: null }).valid);
+// A hand-built skill (saveSkill callers) may pass a single string where a
+// list is expected. It is one value, not a string to iterate per character,
+// and a non-iterable value must not throw.
+const oneString = validateSkill({ ...reading, supportAreas: 'vision' }, { tools });
+check('a single-string supportAreas is treated as a one-item list', oneString.valid);
+check('a non-iterable supportAreas does not throw',
+  validateSkill({ ...reading, supportAreas: {} }, { tools }).valid === false);
+// parseSkill normalizes the two list fields, so the validator rejects only
+// true vocabulary misses: a bare comma list and a capitalized id are slips.
+const slipped = parseSkill('---\nname: slip\ndescription: A formatting slip.\nsupportAreas: Vision, reading\nsiteRelevance: [News, ALL]\n---\n# Slip\n```json\n{"adapters":[],"actions":[{"name":"x","prompt":"do x"}]}\n```');
+check('parseSkill splits a bare comma list and lowercases ids',
+  JSON.stringify(slipped.supportAreas) === '["vision","reading"]' && JSON.stringify(slipped.siteRelevance) === '["news","all"]');
+check('a normalized formatting slip validates', validateSkill(slipped, { tools }).valid);
+// The Engineer path (serialize, parse, validate) keeps rejecting a value that
+// normalization cannot repair.
+check('Engineer output with a vocabulary slip is still invalid after normalization',
   !parseBuiltSkill(serializeSkill({ ...reading, supportAreas: ['focus'] }), { tools }).valid);
 
 // ---- the registry uses the same vocabulary --------------------------------

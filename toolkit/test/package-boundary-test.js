@@ -18,10 +18,16 @@ import {
   validateProfileBlob,
   buildProfileBlob,
   createSharedTransport,
+  SUPPORT_AREAS,
 } from '../index.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; console.log('PASS:', name); } else { fail++; console.log('FAIL:', name); } }
+
+// The support-area vocabulary is part of the public surface: a host that
+// builds an onboarding form or validates its own registry reads it from here.
+check('SUPPORT_AREAS is exported from the barrel as a frozen, non-empty list',
+  Array.isArray(SUPPORT_AREAS) && Object.isFrozen(SUPPORT_AREAS) && SUPPORT_AREAS.length > 0);
 
 // A minimal in-memory KVStore — no chrome.*, no filesystem — the smallest
 // possible port a "test host" can supply, per toolkit/ports/index.js's

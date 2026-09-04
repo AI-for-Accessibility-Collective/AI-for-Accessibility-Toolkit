@@ -266,6 +266,17 @@ async function scenarioB() {
   check('B: the auto-replay action was still saved',
     (await DS.get('mine.profiles')).some(p => (p.actions || []).some(a => a.prompt === 'Loop this section')));
 
+  // The other way a category reaches the site index is a user override, which
+  // getSiteCategory returns as-is. It is refused outside the taxonomy for the
+  // same reason, so the observation below cannot pick up 'blog' from there.
+  const badOverride = await L.setSiteCategoryOverride('www.nytimes.com', 'blog');
+  check('B: a site-category override outside the taxonomy is refused',
+    badOverride?.ok === false && badOverride.reason === 'bad-category');
+  check('B: the refused override is not stored',
+    ((await DS.get('mine.siteIndex'))['nytimes.com'] || {}).category !== 'blog');
+  check('B: a taxonomy override is accepted',
+    (await L.setSiteCategoryOverride('www.nytimes.com', 'news')).ok === true);
+
   // A caller-supplied category outside the taxonomy is not trusted: the
   // observation is classified from the host instead, so the proposal, the
   // auto-replay profile and the saved skill all carry a taxonomy id that
