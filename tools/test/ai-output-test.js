@@ -155,6 +155,13 @@ check('clean: an apostrophe inside the value is kept', cleanShortText("Bob's rep
 check('clean: a three-word prefix is not treated as a label', cleanShortText('Open the report: Q3') === 'Open the report: Q3');
 check('clean: a colon with no space after it is not a label', cleanShortText('https://example.com') === 'https://example.com');
 check('clean: a value that is only a label prefix is kept as it is', cleanShortText('Header:') === 'Header:');
+// A value that merely begins and ends with a delimiter is not a wrapped
+// value. Stripping the outer pair would leave the inner ones dangling, and
+// fix-links and fix-tables write the cleaned value.
+check('clean: two quoted phrases are left alone', cleanShortText('"Annual report" and "Q3 summary"') === '"Annual report" and "Q3 summary"');
+check('clean: two bold phrases are left alone', cleanShortText('**Sales** and **Costs**') === '**Sales** and **Costs**');
+check('clean: two backticked phrases are left alone', cleanShortText('`from` and `to`') === '`from` and `to`');
+check('clean: one quoted phrase inside a longer value is left alone', cleanShortText('Read "Terms" and "Privacy"') === 'Read "Terms" and "Privacy"');
 check('clean: surrounding whitespace is trimmed', cleanShortText('  City \n') === 'City');
 check('clean: a non-string comes back unchanged', cleanShortText(42) === 42);
 check('short: a quoted value is judged after cleaning', rejectShortText('"' + 'a'.repeat(60) + '"') === null);

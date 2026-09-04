@@ -140,25 +140,37 @@ export function opensWithPassiveRefusal(text) {
 // a one- or two-word label ("Header: City", "Link text: Open the report").
 // Only these shapes, and only once: '""City""' becomes '"City"', an unmatched
 // quote is kept, and so is a colon with no space after it.
-const WRAPPED_RE = /^(?:"(.*)"|'(.*)'|\u201c(.*)\u201d|\u2018(.*)\u2019|\*\*(.*)\*\*|`(.*)`)$/s;
+const WRAP_PAIRS = [['"', '"'], ["'", "'"], ['\u201c', '\u201d'], ['\u2018', '\u2019'], ['**', '**'], ['`', '`']];
 const LABEL_PREFIX_RE = /^[A-Za-z][A-Za-z-]*(?:\s+[A-Za-z][A-Za-z-]*)?:\s+(?=\S)/;
+
+// The value with one layer of the wrapping above removed, or unchanged when
+// it carries none. A value that merely begins and ends with a delimiter is
+// not a wrapped value: 'Read "Terms" and "Privacy"' opens and closes with a
+// double quote, and stripping those would leave the inner quotes dangling.
+// So the layer comes off only when what is inside carries no opener of its
+// own, or is itself wrapped the same way ('""City""' is the second case).
+function unwrapOnce(value) {
+  for (const [open, close] of WRAP_PAIRS) {
+    if (value.length < open.length + close.length) continue;
+    if (!value.startsWith(open) || !value.endsWith(close)) continue;
+    const inner = value.slice(open.length, value.length - close.length);
+    const nested = inner.startsWith(open) && inner.endsWith(close);
+    if (inner.includes(open) && !nested) continue;
+    return inner.trim();
+  }
+  return value;
+}
 
 // The value as it should reach an attribute or a header cell: trimmed, with
 // the wrapping above removed. Anything that is not a string comes back as
 // it is, so rejectShortText() can report it.
 export function cleanShortText(text) {
   if (typeof text !== 'string') return text;
-  let t = text.trim();
-  const unwrap = () => {
-    const m = WRAPPED_RE.exec(t);
-    if (m) t = m.slice(1).find((g) => g !== undefined).trim();
-  };
-  unwrap();
+  let t = unwrapOnce(text.trim());
   const unlabeled = t.replace(LABEL_PREFIX_RE, '');
   if (unlabeled !== t) {
     // "Header: "City"" wraps the value after the label; unwrap that too.
-    t = unlabeled;
-    unwrap();
+    t = unwrapOnce(unlabeled);
   }
   return t;
 }
