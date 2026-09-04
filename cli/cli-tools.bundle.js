@@ -7862,10 +7862,8 @@ ${chunk}
     if (profileTools.mathAccessible) MathA11y.enable();
     if (profileTools.keyboardNav) KeyboardNavigator.enable();
     if (profileTools.voiceCommands) VoiceCommands.enable();
-    const colorMode = profileTools.colorFilter || profileTools.colorBlindMode;
-    if (colorMode && colorMode !== "none") {
-      ColorBlindMode.enable(colorMode);
-    }
+    const colorMode = [profileTools.colorFilter, profileTools.colorBlindMode].find((v) => v && v !== "none");
+    if (colorMode) ColorBlindMode.enable(colorMode);
     if (profileTools.autoCaptions) AutoTranscriber.enable();
     if (profileTools.showCaptions) ShowCaptions.enable();
     if (profileTools.fixLandmarks) FixLandmarks.enable();
