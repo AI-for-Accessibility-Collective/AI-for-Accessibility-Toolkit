@@ -162,13 +162,16 @@ node server/test/server-test.mjs         # hosted service
 
 `toolkit/API.md` and the `ai4a11y-toolkit` skill are **generated** — if you
 change the core API, regenerate them (see the note at the top of each file)
-rather than hand-editing.
+rather than hand-editing. So is `toolkit/types/`, the core's type
+declarations: `npm run build:types` regenerates it from the JSDoc, and CI
+fails when it is stale.
 
 ## PR guidelines
 
 - One feature per PR.
 - Tests must pass (`npm test` + the demos above).
-- Regenerate `toolkit/API.md` / the skill if you changed the core surface.
+- Regenerate `toolkit/API.md` / the skill if you changed the core surface,
+  and `toolkit/types/` (`npm run build:types`) if you changed a signature.
 - Describe who benefits (which disability/need).
 
 ## Code style
