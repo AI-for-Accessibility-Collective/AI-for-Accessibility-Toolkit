@@ -261,7 +261,7 @@ try {
     await openSettings();
     await page.click('#use-local-harness');
     check('reconnecting gets a fresh receiver', await until(() => receivers.length === 2));
-    await remoteHas('dyslexiaFont');
+    check('…and the fresh receiver gets the profile as well', await remoteHas('dyslexiaFont'));
 
     await page.reload({ waitUntil: 'domcontentloaded' });
     check('the reload reconnects to the saved receiver', await until(() => receivers.length === 3));
