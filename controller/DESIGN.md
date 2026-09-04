@@ -141,15 +141,26 @@ Two flows, deliberately:
 ## Entry point
 
 ```js
-createController({
-  librarian | service,                // profile + adaptation memory (cross-platform already)
+const controller = createController({
   control: localPort                  // an in-process ControlPort  …OR…
          | remoteControl({ channel }),// a proxy to a mobile/XR/desktop receiver
-  llm,                               // optional NL lane; omit → deterministic-only
-  operator: { uid },                 // whose AbilityModel renders the Controller UI
-  mount: { mode: 'page' },           // 'page' | 'element' | 'companion' (web now; native later)
+                                      // (default: an honest noop port)
+  llm,                                // optional NL lane; omit → deterministic-only
+  operator: {                         // who is operating — drives how the
+    abilityModel,                     //   Controller presents ITSELF (presentation.js);
+    librarian,                        //   pass the model directly, or a librarian
+  },                                  //   to fetch it; omit for the default presentation
+  rawToTask: false,                   // true: send ALL input through as a `task`
+                                      //   (driving a task-capable remote app)
 });
+
+// Mounting is a separate call (web hosts; native later):
+mountController(controller, { mode: 'element' }); // 'page' | 'element' | 'companion'
 ```
+
+The Controller reaches profile + adaptation memory through `operator.librarian`
+(the toolkit's Librarian, local or a remote facade); there is no separate
+`service` option.
 
 ## Staging
 

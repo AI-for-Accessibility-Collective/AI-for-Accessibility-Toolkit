@@ -97,7 +97,7 @@ Either way, **the user validates before anything is saved** — suggestions, nev
 - **Cold start** — the user selects from base ability profiles (see [Profiles](#profiles)) and/or gives a free-text self-description. The Librarian turns this into the initial Personal Ability Profile.
 - **Drives adaptation** — the profile is what the toolkit consults to adapt each page; the user experiences the result directly in the adapted webpage (the adaptive evaluation interface).
 - **Continual update** — the profile is living: the user builds new skills, edits old ones, gives feedback, and corrects adaptations; the Librarian folds all of it back into the profile and memory.
-- **Privacy layer** — the Ability Profile/Memory db sits behind access control: **personal, friends, or anyone**. Other apps read through the Librarian, never the raw store. *Built:* the host's "Who can see your profile" control sets the profile's sharing level, every broker grant carries an **audience** (personal / friends / anyone), and `exportUnderstanding` refuses any grant whose audience sits above the current level — lowering the level immediately cuts off out-of-level grants.
+- **Privacy layer** — the Ability Profile/Memory db sits behind access control: **personal, friends, or anyone**. Other apps read through the Librarian, never the raw store. *Built:* the host's "Who can see your profile" control sets the profile's sharing level, every cross-app grant (`toolkit/sync/grants.js`) carries an **audience** (personal / friends / anyone), and `exportUnderstanding` refuses any grant whose audience sits above the current level — lowering the level immediately cuts off out-of-level grants.
 
 ## The Controller (optional control surface)
 
@@ -249,15 +249,15 @@ Users select one or more base profiles that auto-enable the right tools (cold-st
 | Profile | What it enables |
 |---------|-----------------|
 | `blind` | Auto alt text, form labels, WCAG fixes, landmark repair, announce updates, describe on demand, language tags, explore charts, SPA focus, skip links, accessible math (structure/labels/descriptions — deliberately no magnification, no on-page heading navigator or keyboard-nav overlay, which duplicate/collide with a screen reader) |
-| `lowVision` | Large text (150%), enhanced focus, high contrast, highlight links, unpin sticky bars, magnifier, reflow to column, focus locator, explore charts |
-| `colorBlind` | Color filters, enhanced contrast |
-| `deaf` | Auto captions, visual emphasis, sound visualizer |
-| `motor` | Large cursor, keyboard nav, hands-free (spatial voice) navigation, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator, confirm actions, skip links |
+| `lowVision` | Large text (150%), wide spacing, large cursor, enhanced focus, contrast fixes, highlight links, unpin sticky bars, magnifier, reflow to column, focus locator, persistent hover, explore charts, WCAG auto-fixes |
+| `colorBlind` | Contrast fixes, image descriptions, enhanced focus (the filter type is picked in Visual Assist, not preset) |
+| `deaf` | Captions in three tiers (show existing captions, browser live captions, AI-generated captions), enhanced focus, sound visualizer |
+| `motor` | Large cursor, keyboard nav, hands-free (spatial voice) navigation, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator, persistent hover, confirm actions, skip links, auto labels + WCAG fixes |
 | `dyslexia` | Wider spacing, larger text, focus mode, highlight links, bionic reading, reading ruler |
-| `adhd` | Focus mode, reduced motion, reader mode, dismiss popups, bionic reading, reading ruler |
-| `cognitive` | Simplified text, summaries, dismiss popups, highlight links, define words, stop auto-advance, confirm actions, save reading spot, expand abbreviations |
-| `olderAdult` | Large text, enhanced focus, simplified text, bigger click targets, highlight links, stop auto-advance, save reading spot |
-| `anxiety` | Calm UI, reduced motion, dismiss popups, mute sounds |
+| `adhd` | Focus mode + hide distractions, reduced motion, summaries for long content, progress indicator, dismiss popups, bionic reading, reading ruler |
+| `cognitive` | Simplified text, summaries, larger text (120%) and line height, focus mode, dismiss popups, highlight links, define words, stop auto-advance, confirm actions, save reading spot, expand abbreviations |
+| `olderAdult` | Large text (130%), spacing, large cursor, enhanced focus, simplified text, auto captions, focus mode, bigger click targets, highlight links, stop auto-advance, save reading spot |
+| `anxiety` | Focus mode + hide distractions, progress indicator, wider line height, reduced motion, dismiss popups, mute sounds |
 | `sensory` | Reduced motion, focus mode, dismiss popups, mute sounds, reduce brightness |
 | `photosensitive` (shown as **Light Sensitive**) | Dark mode, reduced motion, reduce brightness, flash guard |
 
@@ -268,7 +268,7 @@ Profiles are defined in `tools/profiles/settings.json`. A host can also let user
 ```
 AI-for-Accessibility-Toolkit/
 ├── toolkit/                     # Platform-agnostic core (the library)
-│   ├── core/                   # librarian, datastore, ability-model, broker, skill engine
+│   ├── core/                   # librarian, datastore, ability model, skill engine
 │   ├── ports/                  # host interfaces: KVStore, Clock, Scheduler, Consent, actuation
 │   ├── surfaces/               # AbilityModel → per-platform settings (web.js, xr.js)
 │   ├── platforms/node/          # reference host port impls (the template a new host copies)
@@ -316,11 +316,12 @@ Teams across the collective contribute specialized capabilities. See [projects.m
 | **NAI** | Google | Multimodal AI agents that adapt UIs in real-time | Demo |
 | **Accessible Interactive Simulations** | Stanford | Sonification of STEM content for BLV learners | Prototype |
 | **Universal Memory Assistant** | MIT Media Lab | Wearable memory assistant for older adults | TBD |
-| **AI-Augmented Storytelling** | UW | Creative expression tools for BLV children | TBD |
+| **AI-Augmented Storytelling** | UW | Creative expression tools for BLV children | In development |
 | **Non-Standard Speech** | UCL GDI Hub | Whisper fine-tunes for atypical speech (13 models) | Published |
+| **ArtInsight** | UW | Accessible artwork descriptions for BLV parents | Published |
 | **Founders Think** | UCL GDI Hub | AI tool for disability-innovation founders | TBD |
 | **Videoconferencing Agent** | RNID | Real-time accessibility nudges in video calls | Zoom app |
-| **AI-Powered Tutoring Agent** | NTID | English grammar tutor for DHH students | TBD |
+| **AI-Powered Tutoring Agent** | NTID | English grammar tutor for DHH students | In development |
 | **AI for Cognitive Accessibility** | The Arc | Text simplification for IDD users | TBD |
 
 ### How projects plug in

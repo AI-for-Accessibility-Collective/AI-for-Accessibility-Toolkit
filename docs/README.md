@@ -8,12 +8,14 @@ necessarily current.
 
 ## Start here
 
-- [architecture.md](architecture.md) — System architecture: the Librarian and Engineer agents, the ability model, ports, surfaces, the datastore, and the consent/broker layer.
+- [architecture.md](architecture.md) — System architecture: the Librarian and Engineer agents, the ability model, ports, surfaces, the datastore, and the consent and cross-app grant layer.
 - [../.claude/skills/ai4a11y-toolkit/SKILL.md](../.claude/skills/ai4a11y-toolkit/SKILL.md) — Embedding walkthrough: wire the ports, call the API, implement a host, or use the HTTP service.
 - [xr-getting-started.md](xr-getting-started.md) — Short path for a non-web host: demo, the needs model, embed-vs-HTTP integration, consent-gated write-back.
 
 ## Reference
 
+- [TLDR.md](TLDR.md) — One-page summary of what the toolkit does and the developer/user flows (a dated snapshot, kept current on links).
+- [FOLLOW-UPS.md](FOLLOW-UPS.md) — Tracked follow-up items from reviews, with the commits that closed them.
 - [../toolkit/API.md](../toolkit/API.md) — The **core** API (Librarian/Datastore methods, ports, surfaces, protocol). Generated — regenerate with `npm run docs` in `toolkit/`, don't hand-edit.
 - [API.md](API.md) — The **catalog** API: auditors, adapters, profiles, and the AI-provider abstraction in `tools/`.
 - Hosted service ([../server/](../server/)): [../server/API.md](../server/API.md) (HTTP routes, also served at `GET /v1/meta`) · [CONTRACT.md](../server/CONTRACT.md) (wire contract) · [DEPLOYMENT.md](../server/DEPLOYMENT.md) (runbook; placeholders only — real instance details are deliberately not in the repo).

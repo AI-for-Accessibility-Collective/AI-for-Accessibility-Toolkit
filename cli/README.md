@@ -34,8 +34,10 @@ Session, instant and local. Nothing leaves the browser:
 ai4a11y session start | stop | status | tabs | focus | cleanup-tabs
 ai4a11y session back | scroll | tab | activate | focused | key | arrow
 ai4a11y session heading | skip | dismiss | enable | disable | tools | profiles
-ai4a11y session list [headings|links|buttons|forms|landmarks|images|tables]
+ai4a11y session list [focusables|headings|links|buttons|forms|landmarks|images|tables]
+                                         # default: focusables
 ai4a11y session find "<text>" | read [selector] | tables
+ai4a11y session media | screenshot | report
 ai4a11y session audit [--json]           # axe-core WCAG audit
 ai4a11y session find-alt | find-labels | find-contrast | find-captions | find-all
 ```
@@ -64,7 +66,10 @@ What that means in practice, because the page content involved is the user's:
 - **`go` and `profile` are the two that surprise people.** Neither calls a model
   itself. Both hand the page a set of callbacks that AI-backed adapters use, so a
   profile whose tools include `autoSimplify` or `autoSummarize` (`cognitive`,
-  `olderAdult`, `adhd`) sends page text on every navigation.
+  `olderAdult`, `adhd`) sends page text on every navigation. The same caveat
+  applies to profiles carrying other AI-backed adapters: `autoDescribe`
+  (`blind`, `colorBlind`) sends images, and `autoCaptions` (`deaf`,
+  `olderAdult`) sends media, on the pages that trigger them.
 - **Those adapters keep working after the command that set them up has finished.**
   Once `go` or `profile` has put an AI-backed profile on a tab, that tab keeps it,
   so a later command on the same tab can send page text or a screenshot to a model

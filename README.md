@@ -214,7 +214,7 @@ server/      Hosted HTTP service exposing the core to any language/runtime
 cli/         Experimental Python CLI: try the catalog on a live page from a terminal
 onboarding/  Example web service: /chat (conversational front door), /onboarding
              (step-by-step form), /controller (Controller demo) — one port
-examples/    Runnable, dependency-free examples
+examples/    Runnable, dependency-free example (cross-surface.mjs)
 docs/        Architecture, API, and design docs
 scripts/     Repository checks (the packed-package fixture)
 ```
@@ -225,6 +225,8 @@ The open work and the known gaps live in [ROADMAP.md](ROADMAP.md).
 
 Add an adapter or auditor to the catalog, a profile, a `SKILL.md` recipe, a surface renderer, or a platform port. See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/API.md](docs/API.md).
 
+**Get involved — and fork freely.** This project holds a defined core (the toolkit, the catalog, the protocol) and *invites* many versions built on top of it: your own host, your own adapter set, your own experiment on a fork. Spin-offs are not competition here — they are the point. If your version learns something (an adapter that works better, a need the model can't express, a fix), please bring the learning back as an issue or PR so the core can carry it for everyone. The easiest first contributions are an adapter for a need you know well, an issue describing where the toolkit fell short for a real user, or a write-up of what your fork changed and why.
+
 A note for developers building with this toolkit: it does not remove your responsibility to build accessibly. Adapters repair barriers in pages after the fact; considering accessibility early is still the cheaper and better path. The [W3C WAI guidance on planning accessibility](https://www.w3.org/WAI/planning-and-managing/) is a good starting point.
 
 ## Principles
@@ -234,6 +236,8 @@ A note for developers building with this toolkit: it does not remove your respon
 - **Privacy by default** — single-writer stores, no-memory zones, permission-gated sharing.
 - **Platform-agnostic** — the core stays free of any surface; hosts and surfaces bring the platform.
 - **Build on existing tools** — axe-core, DarkReader, Readability, and your choice of LLM.
+
+This work also stands on a long line of prior art in portable accessibility preferences — GPII / Cloud4All's needs-and-preferences infrastructure, ISO/IEC 24751's access-for-all framework, and shipped platform signals like `prefers-reduced-motion`. The toolkit's focus is the *inferred* side of that tradition: profiles built up with confidence, provenance, and a consent gate, rather than declared once up front.
 
 ## Security & License
 

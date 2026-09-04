@@ -4,8 +4,6 @@
 
 Contributions from teams across the AI for Accessibility collective.
 
-> Canonical list of collective projects. README and architecture.md summarize this file.
-
 ---
 
 ## Google — Natively Adaptive Interfaces (NAI)
@@ -299,8 +297,8 @@ Uses AI to make content more cognitively accessible for people with intellectual
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Chrome Extension                             │
-│  (auditors, adapters, profiles)                                 │
+│              Toolkit + tools catalog (this repo)                 │
+│  (auditors, adapters, profiles — hosts render them)              │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │   Stanford ──────► Sonification adapters for STEM content       │

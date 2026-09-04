@@ -179,7 +179,7 @@ export const axeHandlers = {
 };
 ```
 
-The main content script automatically routes violations to registered handlers.
+A host routes violations to registered handlers via `getAxeHandler(ruleId)` (`tools/adapters/index.js`); the browser extensions (separate repository) are one such host.
 
 ## Profiles
 

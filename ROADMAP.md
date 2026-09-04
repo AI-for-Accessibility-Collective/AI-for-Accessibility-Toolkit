@@ -1,15 +1,15 @@
 # Roadmap
 
-Last updated: 2026-08-30. This lists what is genuinely open, not what is done. Statuses describe what is in the codebase, not a claim about any team's plans. This is a research probe, pre-alpha; nothing here is a release commitment.
+Last updated: 2026-09-04. This lists what is genuinely open, not what is done. Statuses describe what is in the codebase, not a claim about any team's plans. This is a research probe, pre-alpha; nothing here is a release commitment.
 
 ## Governance
 
 - **Maintainer and code owners: to be designated before the hackathon.** Until then, nothing on this list has an owner unless it names one.
 
-## In review (draft pull requests exist)
+## Recently landed (kept here one cycle for traceability)
 
-- Make the core and the catalog consumable as packages, with a packed-tarball check in CI.
-- Return the CLI to this repository, rewired to the split tree, with a test harness.
+- The core and the catalog are consumable as packages; a packed-tarball check runs in CI (`.github/workflows/pack.yml`, plus a package self-check in `ci.yml`).
+- The CLI is back in this repository under `cli/`, rewired to the split tree, with a pytest harness and a bundle-drift check in CI (`.github/workflows/cli.yml`).
 
 ## Open, carried from the pre-split roadmap
 
@@ -24,7 +24,7 @@ Last updated: 2026-08-30. This lists what is genuinely open, not what is done. S
 
 ## Future (no work exists)
 
-- A structured "why nothing happened" signal from adapters, so a host can tell a missing API key from a model refusal (see the README's "When no AI provider is configured").
+- A structured "why nothing happened" signal from adapters, so a host can tell a missing API key from a model refusal (see the README's "When no AI provider is configured"). The CLI already emits one at its own layer (`reason: "needs-ai"`, exit code 3); the open gap is in the adapter catalog itself, where the optional AI methods return a bare `null`.
 - Native mobile app (iOS).
 - XR agent: real-time adaptations in the physical world.
 - Public release, and the distribution decisions that precede it (extension store listings, package registry publishing). Maintainer decisions, owner to be designated.

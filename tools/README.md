@@ -13,6 +13,7 @@ tools/
 │   ├── missing-labels.js
 │   ├── missing-landmarks.js
 │   ├── poor-contrast.js
+│   ├── contract-mismatch.js  # page-vs-agent-claim mismatch detection
 │   └── wcag-issues.js    # axe-core wrapper
 ├── adapters/       # Fix issues or apply visual presets
 │   ├── index.js
@@ -28,16 +29,22 @@ tools/
 │   ├── reader-mode.js
 │   └── ...
 ├── profiles/       # User presets (blind, lowVision, etc.)
-│   └── settings.json
+│   ├── settings.json   # profile DATA (single source of truth)
+│   └── settings.js     # merge/apply LOGIC
 ├── insights/       # Model-facing knowledge modules distilled from applications
 │   └── artinsight/ # e.g. ArtInsight — accessible artwork descriptions
+├── validators/     # Agent-output validation (aria-parse, policy, shortlist, ...)
 ├── utils/          # Shared utilities
 │   ├── ai.js       # AI provider abstraction
 │   ├── dom.js      # DOM manipulation helpers
 │   ├── color.js    # Color parsing and contrast
-│   └── image.js    # Image capture utilities
+│   ├── image.js    # Image capture utilities
+│   ├── observe.js  # DOM observation helpers
+│   └── system-prefs.js # OS/browser preference signals
 ├── constants.js    # Shared constants
-└── index.js        # Re-exports all modules
+└── index.js        # Barrel: auditors, adapters, profiles, constants, and the
+                    # core utils (dom/color/image); validators and insights are
+                    # imported from their own paths
 ```
 
 ## AI Provider Abstraction

@@ -1,12 +1,18 @@
 # Contributing
 
-This is a **toolkit**, not an app. Contributions extend one of three layers:
+This is a **toolkit**, not an app. Contributions usually extend one of three
+core layers:
 
 - the **core** (`toolkit/`) — the Librarian/datastore, ability model, skill
   engine, ports, surfaces, and reference platform bindings;
 - the **catalog** (`tools/`) — reusable adapters, auditors, and profiles any
   host can draw from;
 - the **service** (`server/`) — the hosted HTTP surface over the core.
+
+Three more parts live alongside them and take contributions the same way: the
+**Controller** (`controller/`, the optional text/voice control surface), the
+**CLI** (`cli/`), and the **onboarding example** (`onboarding/`). `npm test`
+covers all of them.
 
 Most contributions add an **adapter, auditor, profile, or skill** to the
 catalog, a **surface** renderer, or a **platform port**.
@@ -94,12 +100,20 @@ Read `tools/adapters/fix-tables.js` (heuristic + AI fallback) or
 
 ## Adding a profile
 
+A profile is one entry **inside the top-level `profiles` object** of
+`tools/profiles/settings.json` (the file's top level is `$comment` /
+`profiles` / `defaults` — a profile added anywhere else is never loaded):
+
 ```json
 // tools/profiles/settings.json
-"myProfile": {
-  "name": "My Profile",
-  "description": "What it does",
-  "tools": { "fontScale": 130, "darkMode": true, "autoSimplify": true }
+{
+  "profiles": {
+    "myProfile": {
+      "name": "My Profile",
+      "description": "What it does",
+      "tools": { "fontScale": 130, "darkMode": true, "autoSimplify": true }
+    }
+  }
 }
 ```
 
@@ -184,6 +198,14 @@ rather than hand-editing.
 - Compensate participants.
 - Handle profiles and personalization data carefully.
 - Don't simulate ability profiles without community input.
+
+## External contributions and moderation
+
+A formal contribution policy — who reviews and accepts external
+contributions, how moderation works, and how improvements made in forks are
+periodically pulled back into the core — is being written and will land in
+this file. Until it does: open PRs against `main` and expect review before
+merge.
 
 ## Questions?
 

@@ -26,18 +26,31 @@ toolkit/
 │   ├── skill.js           SKILL.md parse / validate / resolve / match
 │   └── skill-builder.js   The Engineer: builds a SKILL.md from a plain need
 ├── skills/builtin/        Starter SKILL.md playbooks
-├── surfaces/              AbilityModel → per-device rendering (web.js, xr.js) — both
-│                          read the SAME live needs[] librarian.getAbilityModel() returns
+├── registry/              tools.js — the canonical tools catalog manifest +
+│                          settings vocabulary (settingsMeta) every host reads
+├── surfaces/              AbilityModel → per-device rendering (web.js, xr.js,
+│                          mobile.js) — all read the SAME live needs[]
+│                          librarian.getAbilityModel() returns
 ├── sync/                  Cross-app sharing: grants.js (scopes, audience ceiling,
 │                          share-audit trail), blob.js, transport.js
+├── protocol/              JSON schemas + fixtures for the wire shapes
+│                          (profile-blob, insight-outbox, transport-envelope)
 ├── ports/                 Port contracts a host must provide (JSDoc) + index
-├── platforms/chrome/       Chrome host adapter (reference): port impls a
-│                          browser host bundles into its own lib scripts
+├── platforms/
+│   ├── chrome/            Chrome host adapter (reference): port impls a
+│   │                      browser host bundles into its own lib scripts
+│   └── node/              Node host adapter (kv, clock/scheduler/consent ports)
+│                          — what server/ and the demos run on
 ├── hosts/                 Runnable consumers, no browser needed
 │   ├── xr-demo/           node hosts/xr-demo/demo.js
 │   └── skill-demo/        node hosts/skill-demo/demo.js
+├── scripts/               Doc generators — API.md and the repo's Claude skill
+│                          are GENERATED here (npm run docs); never hand-edit
 └── test/                  Node tests against in-memory ports
 ```
+
+The full API reference, [`API.md`](API.md), is generated from the introspected
+model (`npm run docs`) and pinned by a drift test in CI.
 
 ## Two layers, and which is which
 
@@ -56,7 +69,8 @@ modality-neutral `{ dimension, value, strength, unit?, confidence?, source? }`.
 A **surface** renders that SAME model into one device's settings:
 `surfaces/web.js` produces web settings (font scale, dark mode),
 `surfaces/xr.js` produces XR parameters (angular text size, world-locked
-captions) — one needs vocabulary, two renderings.
+captions), and `surfaces/mobile.js` produces mobile OS settings (text scale,
+captions, large targets) — one needs vocabulary, three renderings.
 
 ## Memory scoping and the privacy floor
 

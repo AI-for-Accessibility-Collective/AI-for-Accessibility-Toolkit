@@ -25,8 +25,9 @@ modules.
 - `src/gemini.js` — the server-side Gemini REST caller
   (`librarian.setGeminiCaller`'s contract: `async (prompt) => string`).
 - `src/auth.js` — bearer-token issue/verify (`aat_` + sha256-hashed storage).
-- `src/routes.js` — the 36 `/v1/librarian/{method}` routes, alias-mapped from a host's
-  `librarian*` message switch. Single source of truth for both dispatch
+- `src/routes.js` — the 48 `/v1/librarian/{method}` routes (36 alias-mapped
+  from a host's `librarian*` message switch, plus the direct-surface, profile
+  and note routes — see `CONTRACT.md`). Single source of truth for both dispatch
   (`app.js`) and docs (`meta.js`).
 - `src/meta.js` — builds `/v1/meta` and `API.md` from the live route table +
   a real (throwaway, in-memory) Librarian instance.
@@ -57,9 +58,6 @@ DATA_DIR=./data ADMIN_PASSWORD=dev PORT=8080 npm start
 `users/<uid>/local.json`, `users/<uid>/sync.json` (the KVStore's two areas,
 per CONTRACT.md), `admin/tokens.json`. Under `fileStore`, these are literal
 files under `DATA_DIR`; under `gcsStore`, object names in `TOOLKIT_BUCKET`.
-`admin/tokens.json` is the one document every instance writes, so its writes
-are conditional (content hash under a lock file, or the GCS object generation)
-and retried on conflict; see CONTRACT.md, Tokens.
 
 ## Docker
 

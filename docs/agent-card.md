@@ -22,14 +22,21 @@ Copy and fill in when proposing a new capability.
 
 ## Who it helps
 
-- [ ] BLV (blind / low vision)
+(aligned with the 12 ability profiles in `tools/profiles/settings.json`)
+
+- [ ] Blind (screen-reader users)
+- [ ] Low vision
+- [ ] Color blind
 - [ ] DHH (deaf / hard of hearing)
 - [ ] Motor (limited mobility / tremor)
-- [ ] Cognitive (dyslexia / IDD / autism)
-- [ ] Speech (atypical speech)
-- [ ] Aging
-- [ ] Light Sensitive
+- [ ] Dyslexia
+- [ ] ADHD
+- [ ] Cognitive (IDD, comprehension support)
+- [ ] Older adults
 - [ ] Anxiety
+- [ ] Sensory (overload prevention)
+- [ ] Light sensitive (photosensitive)
+- [ ] Speech (atypical speech — no preset profile yet)
 - [ ] Other: ___
 
 ## How it works
@@ -94,7 +101,7 @@ Copy and fill in when proposing a new capability.
 # Contribution: Accessible Interactive Simulations
 
 **Code:** TBD
-**Team:** Stanford (Sean Follmer, Hari Subramonyam, Lakshmi Balasubramanian, David Lin)
+**Team:** Stanford (Sean Follmer, Hari Subramonyam, Lakshmi Balasubramanian, David Chuan-En Lin)
 **Contact:** dcelin@stanford.edu
 **Status:** Prototype
 

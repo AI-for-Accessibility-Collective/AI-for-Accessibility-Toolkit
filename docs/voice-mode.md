@@ -143,3 +143,5 @@ The Controller ships its own suite in [`controller/test/`](../controller/test/)
   the receiver→Controller note.
 - `controller-ui.test.mjs` — the web UI: two live regions, the Speak-results
   toggle, waiting dots, notifications, `returnToController`.
+- `controller-grammar-off.test.mjs` — behavior with the settings grammar
+  bypassed (the `rawToTask` path).
