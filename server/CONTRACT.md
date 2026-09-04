@@ -24,7 +24,7 @@
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/healthz` | liveness: `{ok:true, version}` (no auth) |
-| GET | `/v1/healthz` | the same payload; the path deployed probes must use (see Liveness below) |
+| GET | `/v1/healthz` | the same payload; deployed probes must use this path, because bare `/healthz` is intercepted at the run.app edge |
 | GET | `/v1/meta` | generated service+API description (no auth) |
 | POST | `/v1/librarian/{method}` | invoke a Librarian method for the token's uid |
 | GET | `/v1/whoami` | `{uid, label}` for the presented token |
@@ -32,7 +32,7 @@
 | GET | `/admin/tokens` | list `{id, uid, label, createdAt, revoked}` (no token values; `id` is what DELETE takes) |
 | DELETE | `/admin/tokens/{id}` | revoke |
 | GET | `/admin/users` | list `{users: uid[]}`, every uid holding stored state |
-| DELETE | `/admin/users/{uid}` | delete that uid's partition and revoke its tokens; returns `{deleted, revokedTokens}` |
+| DELETE | `/admin/users/{uid}` | delete that uid's partition and revoke its tokens; returns `{ok, uid, revokedTokens}` (a count), or 404 when the uid had neither data nor live tokens |
 | GET | `/admin` | config interface (token management) — browser login popup |
 
 ## `/v1/librarian/{method}`
