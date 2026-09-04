@@ -12,66 +12,84 @@
 // How an entry "names" an adapter is not a field. A registry entry carries
 // `settings` keys (`{ darkMode: true }`), a skill resolves to those keys
 // (toolkit/core/skill.js resolveSkill), and a host maps a key to an adapter.
-// The catalog's own statement of that mapping is getEnabledAdapters() in
+// The catalog's own statement of that mapping is adaptersForTools() in
 // tools/profiles/settings.js, which turns setting keys into barrel module
 // names, and docs/FOLLOW-UPS.md already treats it as the reachability rule.
 // So this test follows that statement: registry entry -> its settings keys ->
-// getEnabledAdapters -> module names -> the barrel. It does not re-derive the
+// adaptersForTools -> module names -> the barrel. It does not re-derive the
 // mapping by id spelling, because `auto-alt-text` reaches `generate-alt` and
 // `color-filter` reaches `color-blind` only through that rule.
 //
+// Each key is also probed on its own. An entry with several keys must not
+// pass on the strength of one while another names an adapter the rule does
+// not know; that is the shape a contributor copies from `focus-mode` or
+// `visual-assist`, and it is the one case a whole-entry check lets through.
+//
 // What this proves, and what it does not. Each host keeps its own copy of the
 // key-to-adapter mapping (applyProfileByName in cli/cli-tools.js, and the
-// extension's content script) and neither calls getEnabledAdapters when it
+// extension's content script) and neither calls adaptersForTools when it
 // applies a profile. So a green run here means the barrel, the registry, and
 // the catalog's declared mapping agree. It does not check that a host acts on
-// every key the registry names; the FLAG(review) notes in getEnabledAdapters
+// every key the registry names; the FLAG(review) notes in adaptersForTools
 // record where the hosts and the catalog still differ.
 //
 // Both directions are compared as sets, in the style of
-// adapter-conformance-test.js, and the barrel is read the same way it is
-// there. A module or entry that appears on one side only fails here by name.
+// adapter-conformance-test.js, and the barrel is read through the same helper.
+// A module or entry that appears on one side only fails here by name.
 //
 // Run: node tools/test/registry-parity-test.js
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import { skillRegistry } from '../../toolkit/registry/tools.js';
-import { profiles, getEnabledAdapters } from '../profiles/settings.js';
-
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ADAPTERS = path.join(HERE, '..', 'adapters');
+import { adaptersForTools } from '../profiles/settings.js';
+import { readBarrelModules } from './barrel-modules.js';
 
 let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('FAIL:', name); } }
 
+// Same shape as sameSet in adapter-conformance-test.js: a set difference
+// reported as two readable failures that name the module to look at.
+function sameSet(label, discovered, expected) {
+  const extra = discovered.filter((m) => !expected.includes(m));
+  const missing = expected.filter((m) => !discovered.includes(m));
+  check(`${label}: nothing new and unacknowledged${extra.length ? ` (found ${extra.join(', ')})` : ''}`, extra.length === 0);
+  check(`${label}: nothing listed that is no longer there${missing.length ? ` (stale or now reached, remove: ${missing.join(', ')})` : ''}`, missing.length === 0);
+}
+
 // ── what the barrel exports ────────────────────────────────────────────────
-// Same rule as adapter-conformance-test.js: only `export ... from './x.js'`
-// lines count. The barrel also plain-imports modules for their axe handlers,
-// and those are not exports.
-const barrelSrc = readFileSync(path.join(ADAPTERS, 'index.js'), 'utf8');
-const MODULES = [...new Set(
-  [...barrelSrc.matchAll(/^export\s[^;]*?from\s+'\.\/([^']+)\.js'/gm)].map((m) => m[1]),
-)];
+const MODULES = readBarrelModules();
 check(`the barrel exports from at least one module (found ${MODULES.length})`, MODULES.length > 0);
 
 // ── what the registry lists ────────────────────────────────────────────────
 const IDS = skillRegistry.map((e) => e.id);
-check(`the registry has at least one entry (found ${IDS.length})`, IDS.length > 0);
 check('every registry id is unique', new Set(IDS).size === IDS.length);
 
-// ── the rule: settings keys -> module names ────────────────────────────────
-// getEnabledAdapters() reads a profile by id from the profiles table, so the
-// entry's settings are lent to it as a throwaway profile and removed again.
-// This reuses the real rule rather than copying it here, where it would drift.
-function modulesReachedBy(entry) {
-  const key = '__registry-parity-probe__';
-  profiles[key] = { tools: entry.settings || {} };
-  try { return getEnabledAdapters(key); } finally { delete profiles[key]; }
-}
+// ── registry -> barrel ─────────────────────────────────────────────────────
+// Keys that only shape a parent key's adapter and reach nothing on their own.
+// The extension hands these two to FocusMode.enable() under focusMode, and
+// the CLI ignores them, so neither host switches anything on for them alone.
+const SUB_SETTINGS = ['hideDistractions', 'showProgress'];
 
+const reached = new Set();
+const entriesReachingNothing = [];
+const keysReachingNothing = [];
+const notExported = new Set();
+for (const entry of skillRegistry) {
+  const settings = entry.settings || {};
+  const mods = adaptersForTools(settings);
+  if (!mods.some((m) => MODULES.includes(m))) entriesReachingNothing.push(entry.id);
+  for (const m of mods) (MODULES.includes(m) ? reached : notExported).add(m);
+  for (const [key, value] of Object.entries(settings)) {
+    if (SUB_SETTINGS.includes(key)) continue;
+    if (adaptersForTools({ [key]: value }).length === 0) keysReachingNothing.push(`${entry.id}.${key}`);
+  }
+}
+check(`every registry entry reaches a barrel module${entriesReachingNothing.length ? ` (reaches none: ${entriesReachingNothing.join(', ')})` : ''}`, entriesReachingNothing.length === 0);
+check(`every registry settings key reaches a module on its own${keysReachingNothing.length ? ` (unmapped: ${keysReachingNothing.join(', ')})` : ''}`, keysReachingNothing.length === 0);
+check(`the rule names only modules the barrel exports${notExported.size ? ` (not exported: ${[...notExported].join(', ')})` : ''}`, notExported.size === 0);
+
+// ── barrel -> registry ─────────────────────────────────────────────────────
 // Barrel modules that no registry entry reaches, for a reason written down.
+// The list may only shrink: a name here that leaves the barrel or that a
+// registry entry now reaches fails below.
 // FLAG(review): prefer this list empty. Each name here is a real adapter a
 // person cannot switch on through a profile or a skill today.
 const KNOWN_UNREACHABLE = [
@@ -83,27 +101,8 @@ const KNOWN_UNREACHABLE = [
   'auto-transcriber',
 ];
 
-const reached = new Set();
-for (const entry of skillRegistry) {
-  const mods = modulesReachedBy(entry);
-  const inBarrel = mods.filter((m) => MODULES.includes(m));
-  const notInBarrel = mods.filter((m) => !MODULES.includes(m));
-  check(`registry entry ${entry.id} reaches at least one barrel module (settings: ${Object.keys(entry.settings || {}).join(', ') || 'none'})`, inBarrel.length > 0);
-  check(`registry entry ${entry.id}: the rule names only modules the barrel exports${notInBarrel.length ? ` (not exported: ${notInBarrel.join(', ')})` : ''}`, notInBarrel.length === 0);
-  for (const m of inBarrel) reached.add(m);
-}
-
-// ── the other direction: every barrel module is reachable ──────────────────
-const unreachable = MODULES.filter((m) => !reached.has(m));
-const unexplained = unreachable.filter((m) => !KNOWN_UNREACHABLE.includes(m));
-check(`every barrel module is reached by a registry entry or listed as known${unexplained.length ? ` (unreachable: ${unexplained.join(', ')})` : ''}`, unexplained.length === 0);
-
-// The known list is a ratchet: it may shrink, and it must not name modules
-// that are no longer in the barrel or that a registry entry now reaches.
-const staleKnown = KNOWN_UNREACHABLE.filter((m) => !MODULES.includes(m));
-check(`the known-unreachable list names only barrel modules${staleKnown.length ? ` (stale: ${staleKnown.join(', ')})` : ''}`, staleKnown.length === 0);
-const nowReached = KNOWN_UNREACHABLE.filter((m) => reached.has(m));
-check(`the known-unreachable list names only modules still unreached${nowReached.length ? ` (now reached, remove: ${nowReached.join(', ')})` : ''}`, nowReached.length === 0);
+const unreachable = MODULES.filter((m) => !reached.has(m)).sort();
+sameSet('unreached barrel modules', unreachable, KNOWN_UNREACHABLE.slice().sort());
 
 console.log(`\nRegistry parity: ${pass} passed, ${fail} failed (${MODULES.length} barrel modules, ${IDS.length} registry entries, ${reached.size} modules reached, ${unreachable.length} unreached)`);
 if (fail) process.exit(1);
