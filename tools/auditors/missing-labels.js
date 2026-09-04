@@ -1,4 +1,23 @@
-import { isVisible, wasProcessed, hasAccessibleName } from '../utils/dom.js';
+import { isVisible, wasProcessed, hasAccessibleName, getAccessibleName } from '../utils/dom.js';
+
+// Link text that says nothing about where the link goes. WCAG 2.4.4 (Link
+// Purpose, In Context) is the rule this serves, but the check does not read
+// the context: it is an exact match of the link's accessible name against
+// this English word list after trimming and lower-casing, so a "Read more"
+// link that already carries a descriptive aria-label passes. "Read more →",
+// "click here to learn more" and every non-English page pass too. Heuristic,
+// English-only, best-effort.
+const AMBIGUOUS_LINK_TEXTS = [
+  'click here',
+  'here',
+  'read more',
+  'more',
+  'learn more',
+  'continue',
+  'link',
+  'this',
+  'this link'
+];
 
 // Find links without accessible names
 export function findEmptyLinks() {
@@ -13,25 +32,13 @@ export function findEmptyLinks() {
 
 // Find links with ambiguous text
 export function findAmbiguousLinks() {
-  const ambiguousTexts = [
-    'click here',
-    'here',
-    'read more',
-    'more',
-    'learn more',
-    'continue',
-    'link',
-    'this',
-    'this link'
-  ];
-
   return Array.from(document.querySelectorAll('a[href]'))
     .filter(link => {
       if (wasProcessed(link)) return false;
       if (!isVisible(link)) return false;
 
-      const text = link.textContent?.trim().toLowerCase();
-      return text && ambiguousTexts.includes(text);
+      const text = getAccessibleName(link).toLowerCase();
+      return text && AMBIGUOUS_LINK_TEXTS.includes(text);
     });
 }
 
@@ -61,9 +68,11 @@ export function findUnlabeledInputs() {
     // Skip hidden inputs
     if (input.type === 'hidden') return false;
 
-    // Has aria-label or aria-labelledby
-    if (input.getAttribute('aria-label')) return false;
-    if (input.getAttribute('aria-labelledby')) return false;
+    // Has a name of its own: an aria-labelledby that resolves (one that
+    // points at a missing or empty element is not a label), an aria-label,
+    // the value of a submit, reset or button input, the alt of an image
+    // input, or a title
+    if (getAccessibleName(input)) return false;
 
     // Has associated label via for attribute
     if (input.id) {
@@ -73,9 +82,6 @@ export function findUnlabeledInputs() {
 
     // Is inside a label
     if (input.closest('label')) return false;
-
-    // Has title attribute
-    if (input.title) return false;
 
     return true;
   });
@@ -87,6 +93,8 @@ export function findUntitledIframes() {
     .filter(iframe => {
       if (wasProcessed(iframe)) return false;
 
-      return !iframe.title && !iframe.getAttribute('aria-label');
+      // title, aria-label, or an aria-labelledby that resolves; an iframe's
+      // fallback content is not a name
+      return !hasAccessibleName(iframe);
     });
 }

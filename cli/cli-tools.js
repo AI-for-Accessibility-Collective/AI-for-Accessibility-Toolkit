@@ -757,7 +757,19 @@ function fixDuplicateIds() {
   });
 }
 
-// Text processing for cognitive profiles
+// Text processing for cognitive profiles.
+//
+// What "complex" means here: the block is longer than COMPLEX_TEXT_MIN_CHARS
+// and at least one sentence has more than COMPLEX_SENTENCE_MIN_WORDS words.
+// No syllable count, no readability formula, and no WCAG criterion behind
+// either number (3.1.5 Reading Level is about lower secondary education
+// level, which this does not measure). Heuristic, English-leaning (sentences
+// split on . ! ?), best-effort. The simplify-text adapter uses a different
+// definition (100 to 10,000 characters), the browser validation harness in
+// tools/test/validate-entry.js carries a copy of this function, and the
+// extension has a third cutoff; one shared definition is issue #35.
+const COMPLEX_TEXT_MIN_CHARS = 200;
+const COMPLEX_SENTENCE_MIN_WORDS = 15;
 function findComplexText() {
   return Array.from(document.querySelectorAll('p, li, td, div'))
     .filter(el => {
@@ -765,8 +777,9 @@ function findComplexText() {
       if (el.dataset.ai4a11ySimplified) return false;
       if (el.querySelector('p, div, article, section')) return false;
       const text = el.textContent?.trim() || '';
-      // Complex = long sentences or many syllables
-      return text.length > 200 && text.split(/[.!?]/).some(s => s.trim().split(/\s+/).length > 15);
+      // Complex = a long block with at least one long sentence (see the constants above)
+      return text.length > COMPLEX_TEXT_MIN_CHARS &&
+        text.split(/[.!?]/).some(s => s.trim().split(/\s+/).length > COMPLEX_SENTENCE_MIN_WORDS);
     })
     .slice(0, 10); // Limit to avoid overwhelming AI
 }

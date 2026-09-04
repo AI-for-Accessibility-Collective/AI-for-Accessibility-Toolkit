@@ -164,7 +164,13 @@ export async function generateIframeTitle(iframe) {
   }
 }
 
-// Generate label for form input
+// Generate label for form input.
+// FLAG(review): an input reported because its aria-labelledby points at a
+// missing or empty element keeps that attribute. The aria-label added below
+// is still read, because the Accessible Name and Description Computation 1.2
+// (step 2B) returns labelledby text only when it is not empty and otherwise
+// falls through to aria-label. The dangling attribute is left in place on
+// purpose, so a page that later fills in its target gets its own label back.
 export async function generateFormLabel(input) {
   if (input.dataset.ai4a11yProcessed) return null;
   if (!isVisible(input)) return null;
