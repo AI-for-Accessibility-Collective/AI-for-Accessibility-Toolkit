@@ -95,7 +95,10 @@ maps the new setting key to the adapter's module name;
 and that mapping agree, and it checks every key of an entry on its own. Each
 host keeps its own copy of the mapping (for the CLI, `applyProfileByName` in
 `cli/cli-tools.js`), so an adapter a profile switches on needs a line there as
-well.
+well. That test carries two lists for the cases the rule cannot express: add a
+key that only shapes another key's adapter to `SUB_SETTINGS` under its entry
+id, and a barrel module that is deliberately left without a registry entry to
+`KNOWN_UNREACHABLE`, with the reason in a comment either way.
 Read `tools/adapters/fix-tables.js` (heuristic + AI fallback) or
 `tools/adapters/fix-landmarks.js` (deterministic) for a full example.
 
