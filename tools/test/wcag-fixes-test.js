@@ -37,6 +37,7 @@ const PAGE = `
   <button id="aria" aria-bogus="1" aria-label="ok">a</button>
   <div id="role" role="not-a-role">r</div>
   <a id="tiny" href="/x">x</a>
+  <a id="outer" href="/y"><button id="nested">n</button></a>
   <div id="tab" tabindex="3">t</div>
   <div id="dup">one</div><div id="dup">two</div>
   <div id="dep" role="directory">d</div>
@@ -54,6 +55,7 @@ function runAll(settings) {
   results.ariaAttr = call('aria-valid-attr', doc.getElementById('aria'));
   results.ariaRole = call('aria-roles', doc.getElementById('role'));
   results.target = call('target-size', doc.getElementById('tiny'));
+  results.nested = call('nested-interactive', doc.getElementById('nested'));
   call('tabindex', doc.getElementById('tab'));
   call('duplicate-id', doc.querySelectorAll('#dup')[1]);
   call('aria-deprecated-role', doc.getElementById('dep'));
@@ -69,7 +71,7 @@ function riskyUntouched(label, { doc, results }) {
   check(`${label}: invalid role is kept`, doc.getElementById('role').getAttribute('role') === 'not-a-role');
   check(`${label}: target size is untouched`, doc.getElementById('tiny').style.minWidth === '' && doc.getElementById('tiny').style.padding === '');
   check(`${label}: a skipped handler reports false`,
-    results.heading === false && results.ariaAttr === false && results.ariaRole === false && results.target === false);
+    results.heading === false && results.ariaAttr === false && results.ariaRole === false && results.target === false && results.nested === false);
 }
 
 function safeApplied(label, { doc }) {
@@ -111,6 +113,11 @@ async function run() {
     check('opted in: valid ARIA attribute on the same element is kept', doc.getElementById('aria').getAttribute('aria-label') === 'ok');
     check('opted in: invalid role is removed', !doc.getElementById('role').hasAttribute('role'));
     check(`opted in: target is padded to ${TARGET_SIZE_PX}px`, doc.getElementById('tiny').style.minWidth === `${TARGET_SIZE_PX}px`);
+    // Checked by return value only. The handler itself leaves the DOM alone
+    // today: element.closest('a, button') matches the element it was given,
+    // so its early return always fires. That is a separate defect from the
+    // gate (see the PR's open flags), and this test must not pass or fail on it.
+    check('opted in: nested-interactive handler is dispatched', page.results.nested !== false);
     safeApplied('opted in', page);
   }
 
