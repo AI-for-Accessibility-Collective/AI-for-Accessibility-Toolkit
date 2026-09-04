@@ -2530,9 +2530,11 @@ ${scope(":focus")} {
     const lower = text.toLowerCase();
     return UNCERTAINTY_TERMS.some((term) => lower.includes(term.toLowerCase()));
   }
-  var REFUSAL_VERBS = "translate|simplify|summarize|rewrite|rephrase|help|assist|provide|process|read|access|determine|see|view|do|fulfill|complete|comply|generate|produce|answer|respond|perform|proceed|continue|work";
+  var REFUSAL_VERBS = "translate|simplify|summarize|rewrite|rephrase|restate|help|assist|provide|process|read|access|determine|identify|see|view|do|fulfill|complete|comply|generate|produce|answer|respond|perform|proceed|continue|work";
+  var TASK_OBJECT = "this|that|these|those|the|it|your|you|a|an|any|with|what|text|content|passage|as";
+  var APOLOGY = String.raw`unfortunately|sorry|i(?:['’]m| am) sorry|i apologi[sz]e|as an ai(?: language model| assistant| model)?`;
   var FIRST_PERSON_REFUSAL_RE = new RegExp(
-    String.raw`^(?:(?:unfortunately|sorry|i(?:'m| am) sorry)\b[,\s]*(?:but\s+)?)*` + String.raw`(?:i(?:'m| am) sorry\b|i(?:'m| am)(?: not able| unable)\b|i do(?:n't| not) know\b` + String.raw`|i can(?:'t|not)\s+(?:${REFUSAL_VERBS})\b)`,
+    String.raw`^(?:(?:${APOLOGY})\b[,\s]*(?:but\s+)?)*` + String.raw`(?:i(?:['’]m| am) sorry[,.!]?\s*$` + String.raw`|i can(?:['’]t|not)(?:\s+(?:${REFUSAL_VERBS}))?[,.!]?\s*$` + String.raw`|i(?:['’]m| am)(?: not able| unable)\s+to\s+(?:${REFUSAL_VERBS})\b` + String.raw`|i do(?:n['’]t| not) know\s+(?:what|which|the|this|that|enough)\b` + String.raw`|i can(?:['’]t|not)\s+(?:${REFUSAL_VERBS})\s+(?:${TASK_OBJECT})\b)`,
     "i"
   );
   function opensWithFirstPersonRefusal(text) {
@@ -2567,8 +2569,8 @@ ${scope(":focus")} {
   var SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="true"]';
   var MAX_BLOCKS = 80;
   var BATCH = 4;
-  var MIN_TRANSLATED_RATIO = 0.25;
-  var MAX_TRANSLATED_RATIO = 4;
+  var MIN_TRANSLATED_RATIO = 0.1;
+  var MAX_TRANSLATED_RATIO = 8;
   var TranslatePage = {
     enabled: false,
     translated: null,
@@ -7045,8 +7047,9 @@ ${chunk}
     const text = link.textContent?.trim() || "";
     const context = link.closest("p, li, td, article, section")?.textContent?.trim().substring(0, 200) || "";
     try {
-      const improved = await improveLinkText(text, link.href, context);
-      const rejected = improved == null ? null : rejectShortText(improved);
+      const answer = await improveLinkText(text, link.href, context);
+      const rejected = answer == null ? null : rejectShortText(answer);
+      const improved = rejected || answer == null ? null : answer.trim();
       if (rejected) {
         console.warn(`[AI4A11y] improveAmbiguousLink: rejected model output (${rejected})`);
       } else if (improved && improved.toLowerCase() !== text.toLowerCase()) {
@@ -7124,7 +7127,7 @@ ${chunk}
         if (rejected) {
           console.warn(`[AI4A11y] fixTableHeaders: rejected model output for column ${col + 1} (${rejected})`);
         }
-        const header = rejected ? null : answer;
+        const header = rejected || answer == null ? null : answer.trim();
         headers.push(header || `Column ${col + 1}`);
       }
       const thead = document.createElement("thead");
