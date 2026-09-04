@@ -125,7 +125,9 @@ export function createRouter({ control, llm = null, rawToTask = false }) {
       const ctx = await control.getContext();
       const active = (ctx && ctx.activeSettings) || {};
       for (const [k, by] of Object.entries(intent.deltas)) {
-        const current = k in active ? Number(active[k]) : (k in BASELINE ? BASELINE[k] : 0);
+        // A receiver may report a cleared key as null rather than dropping it;
+        // that is "not set", not zero, so the step starts from the baseline.
+        const current = (k in active && active[k] != null) ? Number(active[k]) : (k in BASELINE ? BASELINE[k] : 0);
         changes[k] = current + by;
       }
     }
