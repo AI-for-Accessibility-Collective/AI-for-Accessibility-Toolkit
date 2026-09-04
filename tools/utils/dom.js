@@ -14,29 +14,29 @@ export function hasAccessibleName(el) {
   if (el.getAttribute('aria-label')) return true;
   if (el.getAttribute('title')) return true;
   if (el.textContent?.trim()) return true;
-
-  // Verify aria-labelledby target actually exists and has content
-  const labelledBy = el.getAttribute('aria-labelledby');
-  if (labelledBy) {
-    const target = document.getElementById(labelledBy);
-    if (target?.textContent?.trim()) return true;
-  }
-
-  return false;
+  return !!getLabelledByText(el);
 }
 
 // Get accessible name of element
 export function getAccessibleName(el) {
   if (el.getAttribute('aria-label')) return el.getAttribute('aria-label');
   if (el.getAttribute('title')) return el.getAttribute('title');
+  return getLabelledByText(el) || el.textContent?.trim() || '';
+}
 
-  const labelledBy = el.getAttribute('aria-labelledby');
-  if (labelledBy) {
-    const target = document.getElementById(labelledBy);
-    if (target?.textContent?.trim()) return target.textContent.trim();
-  }
-
-  return el.textContent?.trim() || '';
+// Text an element gets from aria-labelledby, or '' when it gets none. The
+// attribute is a space-separated id list and the name is the referenced
+// elements' text joined in order (WAI-ARIA 1.2, accessible name computation),
+// so an id that points nowhere or at an empty element adds nothing, and one
+// id that resolves to text is enough. Every auditor that asks "is this thing
+// labelled?" goes through here, so SVGs, links, buttons and form controls all
+// apply the same rule.
+export function getLabelledByText(el) {
+  const ids = (el.getAttribute('aria-labelledby') || '').trim().split(/\s+/).filter(Boolean);
+  return ids
+    .map(id => document.getElementById(id)?.textContent?.trim() || '')
+    .filter(Boolean)
+    .join(' ');
 }
 
 // Does an element's class list actually name it as navigation? Guards against

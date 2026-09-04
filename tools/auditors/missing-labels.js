@@ -1,4 +1,4 @@
-import { isVisible, wasProcessed, hasAccessibleName } from '../utils/dom.js';
+import { isVisible, wasProcessed, hasAccessibleName, getLabelledByText } from '../utils/dom.js';
 
 // Link text that says nothing about where the link goes. WCAG 2.4.4 (Link
 // Purpose, In Context) is the rule this serves, but the check does not read
@@ -66,9 +66,10 @@ export function findUnlabeledInputs() {
     // Skip hidden inputs
     if (input.type === 'hidden') return false;
 
-    // Has aria-label or aria-labelledby
+    // Has aria-label, or an aria-labelledby that resolves to text (one that
+    // points at a missing or empty element is not a label)
     if (input.getAttribute('aria-label')) return false;
-    if (input.getAttribute('aria-labelledby')) return false;
+    if (getLabelledByText(input)) return false;
 
     // Has associated label via for attribute
     if (input.id) {

@@ -1,4 +1,4 @@
-import { isVisible, wasProcessed } from '../utils/dom.js';
+import { isVisible, wasProcessed, getLabelledByText } from '../utils/dom.js';
 import { isLikelyDecorative, getImageSize } from '../utils/image.js';
 
 // Pixel cutoffs. None of these come from WCAG: 1.1.1 (Non-text Content) says
@@ -130,12 +130,9 @@ export function findSvgWithoutAlt() {
       if (svg.getAttribute('aria-label')) return false;
       if (svg.querySelector('title')) return false;
 
-      // Verify aria-labelledby target actually exists and has content
-      const labelledBy = svg.getAttribute('aria-labelledby');
-      if (labelledBy) {
-        const target = document.getElementById(labelledBy);
-        if (target?.textContent?.trim()) return false;
-      }
+      // An aria-labelledby only counts when it resolves to text (same rule
+      // as links, buttons and form controls)
+      if (getLabelledByText(svg)) return false;
 
       // Skip tiny icons
       const rect = svg.getBoundingClientRect();
