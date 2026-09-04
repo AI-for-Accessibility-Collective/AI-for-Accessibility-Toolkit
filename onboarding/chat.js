@@ -27,6 +27,7 @@ import { detectOnboarding, visionKindOf, isResetToProfile } from '/chat-routing.
 import { routeTurn, classifyControllerResult, fallbackHelp, generalAnswerPrompt } from '/chat-turn.js';
 import { mergeOnboarding, onboardingReply, resetReply, NO_PROFILE_TO_RESET, profilePill } from '/chat-profile.js';
 import { createHistory, onFirstLine, onLastLine } from '/chat-history.js';
+import { renderWebSettings } from '/toolkit/surfaces/web.js';
 
 const $ = (id) => document.getElementById(id);
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -84,7 +85,25 @@ async function applyOnboarding(o) {
   try { localStorage.setItem('onb-uid', d.uid); } catch {}
   await loadProfile();
   rebuildController(); // the operator model changed → re-derive presentation
+  await applyProfileSettings(); // …and the page itself follows the profile
   return onboardingReply(d);
+}
+
+// Render the profile onto the page. Telling the surface about yourself has to
+// DO something, or the profile is a form that changed nothing: before this,
+// page adaptations only ever came from explicit commands, so "I'm blind"
+// stored a profile and left the page exactly as it was.
+//
+// The needs→settings mapping is the toolkit's own web surface, not a second
+// copy: one source of truth for what a need renders as on the web. It emits
+// only the keys the profile actually asked for, so it merges over settings the
+// person set by hand instead of stomping them, and a receiver drops any key it
+// does not support.
+async function applyProfileSettings() {
+  let settings;
+  try { settings = renderWebSettings(operatorModel || {}); } catch { return; }
+  if (!settings || !Object.keys(settings).length) return;
+  try { await currentControl.applySettings(settings); } catch { /* a receiver that refuses must not break the turn */ }
 }
 
 // Drop the durable user-explicit setting overrides so the profile is the source
@@ -480,6 +499,7 @@ new MutationObserver(syncSurface).observe($('demo-app'), { attributes: true, att
 async function boot() {
   await loadProfile();
   rebuildController();
+  await applyProfileSettings(); // a returning person's page matches their profile
   wireNotes();
   initSettings();
   initVoiceInput();

@@ -541,6 +541,14 @@ const server = http.createServer(async (req, res) => {
     if (method === 'GET' && pathname.startsWith('/controller/toolkit/registry/')) {
       return serveStatic(res, REGISTRY_DIR, pathname.slice('/controller/toolkit/registry/'.length));
     }
+    // The chat page derives the settings a profile implies with the toolkit's
+    // own surface (toolkit/surfaces/web.js), so there is one mapping rather
+    // than a second copy here. It imports its dependencies by relative path,
+    // so the subtree is served under one prefix and they resolve themselves —
+    // the same shape /controller/lib uses for the controller core.
+    if (method === 'GET' && pathname.startsWith('/toolkit/')) {
+      return serveStatic(res, TOOLKIT_DIR, pathname.slice('/toolkit/'.length));
+    }
 
     if (method === 'GET' && pathname === '/api/config') {
       return sendJSON(res, 200, {

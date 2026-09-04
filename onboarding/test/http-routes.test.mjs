@@ -88,6 +88,14 @@ try {
     const reg = await get('/controller/toolkit/registry/tools.js');
     check('the settings vocabulary is reachable at /controller/toolkit/registry', reg.status === 200);
     check('a missing lib file is a 404', (await get('/controller/lib/nope.js')).status === 404);
+
+    // The chat page derives the settings a profile implies with the toolkit's
+    // own web surface, so that subtree is served and its relative imports have
+    // to resolve under the same prefix.
+    const surface = await get('/toolkit/surfaces/web.js');
+    check('the toolkit web surface is served', surface.status === 200 && /javascript/.test(surface.headers.get('content-type')));
+    check('…and what it imports resolves under the same prefix', (await get('/toolkit/platforms/chrome/web-surface.js')).status === 200);
+    check('a missing toolkit file is a 404', (await get('/toolkit/nope.js')).status === 404);
   }
 
   // ── the static guard ───────────────────────────────────────────────────────
@@ -109,6 +117,12 @@ try {
     //    them, so it looks for a literal filename that does not exist.
     const dots = await rawGet('/controller/lib/%2e%2e%2f%2e%2e%2fpackage.json');
     check('a fully-encoded traversal finds nothing', dots.status === 404 && !/"name"/.test(dots.body));
+
+    // The same guard has to hold on the toolkit prefix, which is newer.
+    const tk = await rawGet('/toolkit/..%2f..%2fpackage.json');
+    check('the toolkit prefix rejects an encoded traversal', tk.status === 400 && /bad-path/.test(tk.body));
+    const tkPlain = await rawGet('/toolkit/../../package.json');
+    check('…and a plain one serves nothing from outside it', tkPlain.status === 404 || !/"name"/.test(tkPlain.body));
   }
 
   // ── config ─────────────────────────────────────────────────────────────────

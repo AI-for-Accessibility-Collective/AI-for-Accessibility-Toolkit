@@ -63,6 +63,13 @@ jsdom cannot run.
 
 ## The page
 
+- **Chat** (`/chat`, the front door) — one input doing both halves. A
+  self-description ("I'm blind", "I have dyslexia") updates the profile; a
+  command ("bigger text", "read this") drives the app. A disclosure wins when
+  the same words would parse as both, so a condition that shares a word with a
+  setting still reaches the profile. Onboarding then renders the profile onto
+  the page through the toolkit's web surface, and does so again on load, so a
+  returning person's page matches their profile before they ask for anything.
 - **Add a profile** — a free-text "what do you need?" field + support-area
   checkboxes. Submitting creates/updates an ability profile (a `uid`),
   recording `supportAreas`, `freeText`, and a natural-language note.

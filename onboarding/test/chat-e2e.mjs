@@ -110,20 +110,28 @@ try {
     check('…without dropping what was already known', /vision/i.test(pill));
   }
 
-  // ── KNOWN GAP: a disclosure does not adapt the page ───────────────────────
-  // /chat has no profile-to-page path: boot() loads the profile and rebuilds the
-  // controller's own presentation, but page adaptations only ever come from
-  // explicit commands. This is true of EVERY disclosure — "I'm blind" adapts
-  // nothing either — and is pinned here so the gap is visible rather than
-  // assumed. Raised in the PR description; fixing it means deriving settings
-  // from the ability model, which is a feature, not a routing change.
+  // ── a disclosure adapts the page, not just the profile ────────────────────
+  // Telling the surface about yourself has to DO something. The reading area
+  // derives dyslexiaFont, so the disclosure above should have rendered.
   {
-    const adapted = await page.evaluate(() => {
-      const el = document.getElementById('demo-app');
-      return { dyslexia: el.classList.contains('aa-dyslexia'), any: el.className.includes('aa-') };
-    });
-    check('KNOWN: a disclosure does not apply its derived settings', adapted.dyslexia === false);
-    check('KNOWN: …and this is not specific to dyslexia', adapted.any === false);
+    check('a disclosure applies its derived settings', await page.evaluate(
+      () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
+    ));
+  }
+
+  // ── the profile follows the person across a reload ────────────────────────
+  // The point of storing a profile rather than toggling a setting: a returning
+  // person's page matches their profile before they ask for anything.
+  {
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(
+      () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
+      null,
+      { timeout: 10000 },
+    ).catch(() => {});
+    check('the adaptation is back after a reload, unasked', await page.evaluate(
+      () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
+    ));
   }
 
   // ── an unrecognized request explains itself rather than failing silently ───
