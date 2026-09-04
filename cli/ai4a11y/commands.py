@@ -2834,6 +2834,7 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         violations = result.get('violations', [])
         fixed_non_ai = result.get('fixed', {}).get('nonAi', 0)
         needs_ai = result.get('skipped', {}).get('needsAi', [])
+        skipped_risky = result.get('skipped', {}).get('risky', [])
 
         say(f"      Found {len(violations)} violation types", flush=True)
         for v in violations[:10]:
@@ -2844,6 +2845,14 @@ def session_scan(fix_ai=True, max_ai_fixes=10, json_output=False):
         # Step 2: Report non-AI fixes
         say(f"\n[2/4] Applied {fixed_non_ai} non-AI fixes", flush=True)
         say("      (duplicate IDs, tabindex, ARIA, lang, target=_blank, etc.)", flush=True)
+        if skipped_risky:
+            # Risky fixes (heading re-tag, ARIA strip, nested control unwrap,
+            # target size) change page structure, so the page only runs them
+            # when the active profile sets wcagRiskyFixes. Say which were held
+            # back so the count above is not read as "everything was fixed".
+            rules = ", ".join(sorted(set(skipped_risky)))
+            say(f"      Held back {len(skipped_risky)} risky fixes, off unless the "
+                f"profile sets wcagRiskyFixes: {rules}", flush=True)
 
         # Step 3: AI fixes
         ai_fixed = 0
