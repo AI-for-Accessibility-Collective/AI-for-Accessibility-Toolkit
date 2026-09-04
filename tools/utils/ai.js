@@ -21,11 +21,14 @@
 //   anything that reads as a refusal (tools/utils/ai-output.js), but a
 //   refusal that slips past the gate reaches a screen reader as if it were
 //   the answer.
-// - A thrown error is handled the same way as null by every adapter: the
-//   element is left alone (or, for a panel the person opened, the panel
-//   shows the same fixed sentence a null answer gets) and the error is
-//   logged to the console. The error's text never reaches the page: a host's
-//   message can carry internal detail, and a panel is read aloud.
+// - A thrown error puts the adapter where a null answer puts it: it leaves
+//   the element alone, or falls back to what it does without a model.
+//   fix-contrast.js computes a color itself; a panel the person opened shows
+//   a fixed sentence, which for describe-on-demand.js names the provider
+//   error so the person knows what to fix. Every adapter that calls one of
+//   these functions logs the error to the console. The error's own text
+//   never reaches the page: a host's message can carry internal detail (an
+//   endpoint, a key fragment, a stack), and a panel is read aloud.
 // - Answer in the language of the input unless the function says otherwise.
 // - Keep the reader in mind: these answers are read aloud by a screen
 //   reader, shown as a tooltip, or put in place of the text a person came to
