@@ -164,6 +164,17 @@ export function adaptersForTools(tools) {
   // sets it.
   if (tools.lineHeight && tools.lineHeight !== 1.5) enabled.push('visual-assist');
   if (tools.letterSpacing) enabled.push('visual-assist');
+  // High contrast is VisualAssist's too: tools/adapters/visual-assist.js reads
+  // contrastMode and paints the light and yellow-black themes from it. 'none'
+  // is the off value, and it is truthy, so it needs the same guard the color
+  // filter gets below. controller/grammar.js can produce this key from chat
+  // ("high contrast"), so it is a key a person reaches today.
+  // FLAG(review): the CLI's applyProfileByName builds visualOpts without
+  // contrastMode, so a profile carrying it would list visual-assist here and
+  // still get no contrast change under the CLI. No shipped profile sets the
+  // key, so nothing changes today. This is the same host divergence the other
+  // FLAG notes in this function record.
+  if (tools.contrastMode && tools.contrastMode !== 'none') enabled.push('visual-assist');
   if (tools.motionReducer) enabled.push('motion-reducer');
   if (tools.dismissOverlays) enabled.push('dismiss-overlays');
   if (tools.bigTargets) enabled.push('big-targets');
