@@ -6,11 +6,12 @@ The wire contract is fixed and hand-maintained in [`CONTRACT.md`](./CONTRACT.md)
 see "Docs" below.
 
 This directory owns everything under `server/` except `CONTRACT.md`. It
-imports the toolkit only through `../toolkit/index.js` (the barrel) and
-`../toolkit/platforms/node/*` — never a `toolkit/core/*` or `toolkit/sync/*`
-file directly — as a live demonstration that the toolkit is decoupled from
-any one host. Zero npm dependencies: plain `node:http`, `node:crypto`, ES
-modules.
+imports the toolkit only through `../toolkit/index.js` (the barrel),
+`../toolkit/platforms/node/*`, and `../toolkit/registry/tools.js` — never a
+`toolkit/core/*` or `toolkit/sync/*` file directly — as a live demonstration
+that the toolkit is decoupled from any one host. The exact edge list is held
+by `scripts/import-boundaries-test.mjs` (`KNOWN_EDGES`). Zero npm
+dependencies: plain `node:http`, `node:crypto`, ES modules.
 
 ## Layout
 
