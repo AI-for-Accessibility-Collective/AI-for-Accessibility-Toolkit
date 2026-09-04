@@ -6,7 +6,7 @@
 // platforms/chrome/*.entry.js); this is the path a fresh consumer (iOS, XR, a
 // Node service, a test) takes.
 //
-//   import { createToolkit } from '@a11y-toolkit/core';
+//   import { createToolkit } from '@ai4a11y/toolkit';
 //   const { datastore, librarian } = createToolkit({ kv, clock, scheduler, consent, toolsRegistry });
 //   librarian.setGeminiCaller(myLlm);   // optional slow lane
 

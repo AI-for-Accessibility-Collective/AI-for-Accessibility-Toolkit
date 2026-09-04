@@ -16,13 +16,16 @@ import { LIBRARIAN_ROUTES } from './routes.js';
 // meta.js and app.js can both read it and never drift from each other.
 export const HTTP_ENDPOINTS = [
   { method: 'GET', path: '/healthz', auth: 'none', purpose: 'liveness: {ok:true, version}' },
+  { method: 'GET', path: '/v1/healthz', auth: 'none', purpose: 'the same payload; the path deployed probes must use (the bare /healthz is intercepted at the run.app edge)' },
   { method: 'GET', path: '/v1/meta', auth: 'none', purpose: 'generated service+API description' },
   { method: 'POST', path: '/v1/librarian/{method}', auth: 'bearer', purpose: "invoke a Librarian method for the token's uid" },
   { method: 'GET', path: '/v1/whoami', auth: 'bearer', purpose: '{uid, label} for the presented token' },
   { method: 'POST', path: '/admin/tokens', auth: 'admin', purpose: 'create token {uid, label?} -> {token, uid} (token shown once)' },
   { method: 'GET', path: '/admin/tokens', auth: 'admin', purpose: 'list {id, uid, label, createdAt, revoked} (no token values)' },
   { method: 'DELETE', path: '/admin/tokens/{id}', auth: 'admin', purpose: 'revoke' },
-  { method: 'GET', path: '/admin', auth: 'none (page shell — data calls need the admin token typed into the page)', purpose: 'minimal HTML config interface' },
+  { method: 'GET', path: '/admin/users', auth: 'admin', purpose: 'list {users: uid[]}, every uid holding stored state' },
+  { method: 'DELETE', path: '/admin/users/{uid}', auth: 'admin', purpose: "delete that uid's partition and revoke its tokens -> {deleted, revokedTokens}" },
+  { method: 'GET', path: '/admin', auth: 'admin (HTTP Basic. An unauthenticated GET answers 401 + WWW-Authenticate, so the browser prompts, then attaches the cached credential to the page\'s own fetches)', purpose: 'minimal HTML config interface' },
 ];
 
 /** Build the librarian method table by constructing one throwaway toolkit

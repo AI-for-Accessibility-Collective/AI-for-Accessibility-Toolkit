@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-09-03T21:09:02.850Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-09-04T02:05:20.344Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -9,13 +9,16 @@ Version: `0.1.0`
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/healthz` | none | liveness: {ok:true, version} |
+| GET | `/v1/healthz` | none | the same payload; the path deployed probes must use (the bare /healthz is intercepted at the run.app edge) |
 | GET | `/v1/meta` | none | generated service+API description |
 | POST | `/v1/librarian/{method}` | bearer | invoke a Librarian method for the token's uid |
 | GET | `/v1/whoami` | bearer | {uid, label} for the presented token |
 | POST | `/admin/tokens` | admin | create token {uid, label?} -> {token, uid} (token shown once) |
 | GET | `/admin/tokens` | admin | list {id, uid, label, createdAt, revoked} (no token values) |
 | DELETE | `/admin/tokens/{id}` | admin | revoke |
-| GET | `/admin` | none (page shell — data calls need the admin token typed into the page) | minimal HTML config interface |
+| GET | `/admin/users` | admin | list {users: uid[]}, every uid holding stored state |
+| DELETE | `/admin/users/{uid}` | admin | delete that uid's partition and revoke its tokens -> {deleted, revokedTokens} |
+| GET | `/admin` | admin (HTTP Basic. An unauthenticated GET answers 401 + WWW-Authenticate, so the browser prompts, then attaches the cached credential to the page's own fetches) | minimal HTML config interface |
 
 ## `/v1/librarian/{method}`
 

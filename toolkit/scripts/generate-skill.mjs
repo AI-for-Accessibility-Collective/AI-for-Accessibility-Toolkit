@@ -15,7 +15,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildModel } from './introspect.mjs';
-import { QUICK_START_CODE } from './generate-api-docs.mjs';
+import { QUICK_START_CODE, PACKAGE_NAME } from './generate-api-docs.mjs';
 import { renderMethodGroups, renderPorts } from './render-lib.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -145,7 +145,7 @@ This file is **generated** by \`toolkit/scripts/generate-skill.mjs\` from the sa
 
 ## Quick Start
 
-Paths below are relative to the \`toolkit/\` package root (run from there, or adjust the specifiers when importing as a published \`@a11y-toolkit/core\` dependency).
+Paths below are relative to the \`toolkit/\` package root (run from there, or adjust the specifiers when importing as a published \`${PACKAGE_NAME}\` dependency).
 
 \`\`\`javascript
 ${QUICK_START_CODE}\`\`\`
