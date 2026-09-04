@@ -26,12 +26,13 @@
 // `visual-assist`, and it is the one case a whole-entry check lets through.
 //
 // What this proves, and what it does not. Each host keeps its own copy of the
-// key-to-adapter mapping (applyProfileByName in cli/cli-tools.js, and the
-// extension's content script) and neither calls adaptersForTools when it
-// applies a profile. So a green run here means the barrel, the registry, and
-// the catalog's declared mapping agree. It does not check that a host acts on
-// every key the registry names; the FLAG(review) notes in adaptersForTools
-// record where the hosts and the catalog still differ.
+// key-to-adapter mapping (applyProfileByName in cli/cli-tools.js, the
+// extension's content script, and the personalized extension's) and none of
+// them calls adaptersForTools when it applies a profile. So a green run here
+// means the barrel, the registry, and the catalog's declared mapping agree. It
+// does not check that a host acts on every key the registry names; the
+// FLAG(review) notes in adaptersForTools record where the hosts and the
+// catalog still differ.
 //
 // Both directions are compared as sets, in the style of
 // adapter-conformance-test.js, and the barrel is read through the same helper.
@@ -96,9 +97,12 @@ check(`the rule names only modules the barrel exports${notExported.size ? ` (not
 // FLAG(review): prefer this list empty. Each name here is a real adapter a
 // person cannot switch on through a profile or a skill today.
 const KNOWN_UNREACHABLE = [
-  // Both hosts (the extension's content script and cli/cli-tools.js) enable
-  // AutoTranscriber on `autoCaptions`, but the catalog rule maps that key to
-  // `generate-captions`, so under the rule nothing reaches this module.
+  // The two hosts that use this module (cli/cli-tools.js and the extension's
+  // content script) enable AutoTranscriber on `autoCaptions`, but the catalog
+  // rule maps that key to `generate-captions`, so under the rule nothing
+  // reaches this module. The personalized extension is not a third witness
+  // here: it does not use AutoTranscriber at all, and enables its own merged
+  // Captions skill on the same key.
   // docs/FOLLOW-UPS.md leaves the decision open: wire it to `autoCaptions`
   // or drop it from the catalog. Listed here so the test does not decide.
   'auto-transcriber',
