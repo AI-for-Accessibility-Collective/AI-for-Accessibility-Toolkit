@@ -424,8 +424,11 @@ function applyProfileByName(profileId) {
   if (profileTools.mathAccessible) MathA11y.enable();
   if (profileTools.keyboardNav) KeyboardNavigator.enable();
   if (profileTools.voiceCommands) VoiceCommands.enable();
-  if (profileTools.colorFilter && profileTools.colorFilter !== 'none') {
-    ColorBlindMode.enable(profileTools.colorFilter);
+  // Profiles say colorFilter, the registry says colorBlindMode; read both,
+  // the same way the extension's content script and getEnabledAdapters do.
+  const colorMode = profileTools.colorFilter || profileTools.colorBlindMode;
+  if (colorMode && colorMode !== 'none') {
+    ColorBlindMode.enable(colorMode);
   }
   if (profileTools.autoCaptions) AutoTranscriber.enable();
   if (profileTools.showCaptions) ShowCaptions.enable();
