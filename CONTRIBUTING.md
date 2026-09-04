@@ -92,7 +92,9 @@ register the tool in `toolkit/registry/tools.js` (id, `supportAreas`,
 Then add one line to `getEnabledAdapters` in `tools/profiles/settings.js` that
 maps the new setting key to the adapter's module name;
 `node tools/test/registry-parity-test.js` fails until the barrel, the registry,
-and that mapping agree.
+and that mapping agree. Each host keeps its own copy of the mapping (for the
+CLI, `applyProfileByName` in `cli/cli-tools.js`), so an adapter a profile
+switches on needs a line there as well.
 Read `tools/adapters/fix-tables.js` (heuristic + AI fallback) or
 `tools/adapters/fix-landmarks.js` (deterministic) for a full example.
 
