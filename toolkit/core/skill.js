@@ -13,9 +13,15 @@
 //     to the same settings object the adapter apply-path already consumes, so
 //     applying a skill needs no LLM at apply-time.
 //
-// Pure and dependency-free (no YAML lib, no DOM): frontmatter is simple
-// `key: value` lines; the recipe is a ```json fenced block. Parsed/validated/
-// resolved here; authored as .md files in toolkit/skills/builtin/.
+// Pure, with no platform or library dependency (no YAML lib, no DOM):
+// frontmatter is simple `key: value` lines; the recipe is a ```json fenced
+// block. Parsed/validated/resolved here; authored as .md files in
+// toolkit/skills/builtin/. The only imports are two pure vocabularies: the
+// support areas (core/ability.js) and the site categories (core/taxonomy.js)
+// that validateSkill checks against.
+
+import { SUPPORT_AREAS } from './ability.js';
+import { taxonomy as defaultTaxonomy } from './taxonomy.js';
 
 /**
  * @typedef {Object} SkillRecipeStep
@@ -96,12 +102,17 @@ export function parseSkill(markdown) {
   const fm = src.match(FRONTMATTER_RE);
   const front = fm ? parseFrontmatter(fm[1]) : {};
   const body = fm ? fm[2].trim() : src.trim();
-  const asArray = (v) => Array.isArray(v) ? v : (v ? [v] : []);
+  // The two vocabulary lists are normalized here, not in validateSkill: a
+  // bare `vision, reading` (no brackets) or a capitalized `[Vision]` is a
+  // formatting slip, not a vocabulary miss, and both vocabularies are
+  // lowercase ids that matchSkill compares exactly. Split, trim, lowercase.
+  const asList = (v) => (Array.isArray(v) ? v : String(v ?? '').split(','))
+    .map(s => String(s).trim().toLowerCase()).filter(Boolean);
   return {
     name: front.name || '',
     description: front.description || '',
-    supportAreas: asArray(front.supportAreas),
-    siteRelevance: asArray(front.siteRelevance),
+    supportAreas: asList(front.supportAreas),
+    siteRelevance: asList(front.siteRelevance),
     recipe: extractRecipe(body),
     body,
   };
@@ -114,7 +125,7 @@ export function parseSkill(markdown) {
  * @returns {string}
  */
 export function serializeSkill(skill) {
-  const list = (a) => `[${(a || []).join(', ')}]`;
+  const list = (a) => `[${vocabList(a).join(', ')}]`;
   const front = [
     '---',
     `name: ${skill.name}`,
@@ -132,17 +143,64 @@ export function serializeSkill(skill) {
 }
 
 /**
- * Validate a skill against the tools registry (AA_TOOLS): the name/description
- * exist, every recipe adapter id is a real tool, and every settings key is in
- * the settings vocabulary. Returns collected errors (empty = valid).
+ * Read a vocabulary field (supportAreas, siteRelevance) as a list. parseSkill
+ * always produces one, but a hand-built skill object (a saveSkill caller, a
+ * test) may carry a single string, or nothing at all. One reader, used by BOTH
+ * validateSkill and matchSkill, so what validation calls valid is exactly what
+ * retrieval can score: a lone 'vision' is one value, never six characters to
+ * iterate, and a non-iterable value never throws. The Librarian also runs a
+ * skill's two fields through it before storing, so what lands in the Skills db
+ * is always a list.
+ * @param {any} v
+ * @returns {any[]}
+ */
+export function vocabList(v) {
+  if (Array.isArray(v)) return v;
+  return (v == null || v === '') ? [] : [v];
+}
+
+/**
+ * Validate a skill against the tools registry (AA_TOOLS) and the two
+ * vocabularies: the name/description exist, every recipe adapter id is a real
+ * tool, every settings key is in the settings vocabulary, every supportArea is
+ * in SUPPORT_AREAS, and every siteRelevance value is a taxonomy category or
+ * 'all'. Returns collected errors (empty = valid).
+ *
+ * The vocabulary checks reject rather than warn: supportAreas and
+ * siteRelevance are what retrieval matches on (matchSkill), so a value outside
+ * the vocabulary is a skill that can never be found again (issue #34).
  * @param {Skill} skill
- * @param {{ tools: any }} deps  - tools = the AA_TOOLS registry (byId + settingsMeta)
+ * @param {{ tools?: any, taxonomy?: any }} deps
+ *   tools    = the AA_TOOLS registry (byId + settingsMeta)
+ *   taxonomy = the site taxonomy; defaults to the bundled one when absent or
+ *              null. Normally the bundled object or a host's own with the same
+ *              shape, so `categoryIds()` is used when present. A plain
+ *              `{ categories: [{ id }] }` is also read, so a caller that has
+ *              only the data can validate; that is a tolerance here, not a
+ *              host port. The Librarian's `taxonomy` dependency still needs
+ *              the full object (`categoryIds`, `categoryForHost`, `contexts`,
+ *              `version`).
+ * Both vocabulary fields are read through vocabList, so a hand-built skill
+ * that carries a single string is checked as a one-item list and scored the
+ * same way by matchSkill.
  * @returns {{ valid: boolean, errors: string[] }}
  */
-export function validateSkill(skill, { tools } = {}) {
+export function validateSkill(skill, { tools, taxonomy } = {}) {
   const errors = [];
   if (!skill.name) errors.push('missing name');
   if (!skill.description) errors.push('missing description');
+  for (const a of vocabList(skill.supportAreas)) {
+    if (!SUPPORT_AREAS.includes(a)) errors.push(`supportArea "${a}" not one of ${SUPPORT_AREAS.join(', ')}`);
+  }
+  // 'all' is not a taxonomy category; it is the skill layer's own "any site"
+  // value (matchSkill scores it separately), so it is allowed here by name.
+  const tax = taxonomy || defaultTaxonomy;
+  const categories = typeof tax.categoryIds === 'function'
+    ? tax.categoryIds()
+    : (Array.isArray(tax.categories) ? tax.categories : []).map(c => c?.id);
+  for (const c of vocabList(skill.siteRelevance)) {
+    if (c !== 'all' && !categories.includes(c)) errors.push(`siteRelevance "${c}" not one of ${categories.join(', ')}, all`);
+  }
   const steps = skill.recipe?.adapters || [];
   const actions = skill.recipe?.actions || [];
   if (steps.length === 0 && actions.length === 0) errors.push('recipe has no adapters or actions');
@@ -205,9 +263,9 @@ export function resolveSkill(skill) {
  */
 export function matchSkill(skill, { supportAreas = [], category = null } = {}) {
   let score = 0;
-  const areas = new Set(supportAreas);
-  for (const a of (skill.supportAreas || [])) if (areas.has(a)) score += 2;
-  const rel = skill.siteRelevance || [];
+  const areas = new Set(vocabList(supportAreas));
+  for (const a of vocabList(skill.supportAreas)) if (areas.has(a)) score += 2;
+  const rel = vocabList(skill.siteRelevance);
   if (category && rel.includes(category)) score += 3;
   if (rel.includes('all')) score += 1;
   return score;
@@ -250,8 +308,8 @@ export function matchSkillToNeed(skill, need) {
   if (!needToks.length) return 0;
   const fields = [
     { toks: needTokens(skill.name), weight: 3 },
-    { toks: needTokens((skill.supportAreas || []).join(' ')), weight: 2 },
-    { toks: needTokens((skill.siteRelevance || []).join(' ')), weight: 2 },
+    { toks: needTokens(vocabList(skill.supportAreas).join(' ')), weight: 2 },
+    { toks: needTokens(vocabList(skill.siteRelevance).join(' ')), weight: 2 },
     { toks: needTokens(skill.description), weight: 2 },
   ];
   let score = 0;

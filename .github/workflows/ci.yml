@@ -30,13 +30,14 @@ jobs:
         run: npm ci
 
       - name: Test suites (same command developers run)
-        # npm test covers toolkit/test, tools/test, controller/test, and
-        # onboarding/test — the one list CONTRIBUTING points contributors at,
-        # so CI cannot drift from it. tools/test/browser-validate.js and
-        # onboarding/test/chat-e2e.mjs are intentionally not matched by those
-        # globs. They need a real Chromium, so they run in the separate
-        # .github/workflows/browser.yml instead of here. That workflow is not
-        # a required status check, so a red run there does not block a merge.
+        # npm test covers toolkit/test, tools/test, controller/test,
+        # onboarding/test, and scripts/import-boundaries-test.mjs, the one
+        # list CONTRIBUTING points contributors at, so CI cannot drift from
+        # it. tools/test/browser-validate.js and onboarding/test/chat-e2e.mjs
+        # are intentionally not matched by those globs. They need a real
+        # Chromium, so they run in the separate .github/workflows/browser.yml
+        # instead of here. That workflow is not a required status check, so a
+        # red run there does not block a merge.
         run: npm test
 
       - name: Reference hosts run

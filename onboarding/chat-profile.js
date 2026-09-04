@@ -132,17 +132,119 @@ export function onboardingReply(d, appliedText = '') {
   return `Got it — updated your profile. Support areas: ${areas}${kind}.${changed} Tell me more any time, or edit it on the onboarding page.`;
 }
 
+// The value that means "not set" for a registry key, by its type: the state a
+// receiver is in before anything was applied. The registry carries no default
+// per key, so this is derived from the type, and a key outside the registry
+// has no such value (undefined).
+//
+// FLAG(review): a number or string clears to null. The DOM receiver renders
+// each of these values as "not in effect" (the CSS variable, class or data
+// attribute goes away) and drops the key from its active map, which is exactly
+// its not-set state. The controller router keeps its
+// own numeric baseline for relative steps (fontScale 100, lineHeight 1.5,
+// letterSpacing 0, speechRate 1.0) and reads a null active value as that
+// baseline, so a "bigger text" after a reset starts from 100 again. A remote
+// receiver that stores settings rather than rendering them may still want a
+// numeric default instead, and the registry does not carry one. The enums in
+// the registry today (contrastMode, colorBlindMode) both list 'none' first; a
+// new enum whose first option is not the neutral one would clear wrongly.
+function notSetValue(m) {
+  if (!m) return undefined;
+  if (m.type === 'boolean') return false;
+  if (m.type === 'enum') return Array.isArray(m.options) && m.options.length ? m.options[0] : null;
+  return null;
+}
+
+/**
+ * Which settings to send so the page matches the profile again after a reset.
+ *
+ * Re-rendering the profile only restores the keys the profile governs, so a
+ * key the profile never mentions (dark mode, turned on by hand) survived a
+ * reset the reply said had forgotten it (issue #26). The keys to clear are the
+ * ones the server just forgot, plus the ones the receiver reports as active
+ * (the chat surface stores no manual change, so in a chat-only session the
+ * receiver is the only record of one), minus the ones the profile is about to
+ * render anyway. Each goes back to its "not set" value.
+ *
+ * Pure: the receiver's active settings and the registry are passed in.
+ *
+ * @param {object} input
+ * @param {Array<{key: string}>} [input.forgotten]  what /api/reset-to-profile reported
+ * @param {object} [input.active]    the receiver's activeSettings (getContext)
+ * @param {object} [input.profile]   what the profile renders to (renderWebSettings), applied after this
+ * @param {object} meta  settingsMeta, for each key's type
+ * @returns {{clear: object, showing: string[], unclearable: string[]}}
+ *   clear: {key: notSetValue} to apply, with the profile spread over it.
+ *   showing: the active keys that were visibly set and not the profile's, the
+ *   ones the person will notice change (or fail to).
+ *   unclearable: the showing keys with no known not-set value. The chat caller
+ *   derives what it could not clear from what the receiver reported instead, so
+ *   nothing reads this today; it is here for a caller that wants to say why a
+ *   key stayed.
+ */
+export function resetChanges({ forgotten, active, profile } = {}, meta) {
+  const profileKeys = new Set(Object.keys(profile || {}));
+  const forgottenKeys = (forgotten || []).map((f) => f && f.key).filter(Boolean);
+  const activeKeys = Object.keys(active || {});
+  const clear = {}, showing = [], unclearable = [];
+  for (const key of new Set([...activeKeys, ...forgottenKeys])) {
+    if (profileKeys.has(key)) continue; // the profile's own render restores it
+    // Own keys only: a receiver is free to report anything, and `meta.toString`
+    // would otherwise resolve to Object.prototype's and read as a registry entry.
+    const off = notSetValue(meta && Object.prototype.hasOwnProperty.call(meta, key) ? meta[key] : null);
+    const value = active ? active[key] : undefined;
+    const isShowing = key in (active || {}) && value != null && value !== off;
+    if (isShowing) showing.push(key);
+    if (off === undefined) { if (isShowing) unclearable.push(key); continue; }
+    // A key already at its not-set value is not showing anything, so there is
+    // nothing to send; a forgotten key the page never showed is cleared anyway,
+    // in case the receiver holds it without reporting it.
+    if (key in (active || {}) && !isShowing) continue;
+    clear[key] = off;
+  }
+  return { clear, showing, unclearable };
+}
+
 /**
  * What to say after dropping the durable setting overrides. Note this does NOT
  * forget who the person is: support areas, free text and needs all survive.
  * That is what the Reset-profile button in Settings does instead.
+ *
+ * The second argument is what happened on the page: `cleared` is the keys the
+ * receiver took back to their not-set value, `kept` the ones it could not.
+ * Each sentence claims only what happened where: "forgot" is the store,
+ * "cleared" is the page, and a kept key is named so it is not assumed gone.
  */
-export function resetReply(d) {
+export function resetReply(d, page = {}) {
   const forgotten = (d && d.forgotten) || [];
   const n = forgotten.length;
-  if (!n) return 'You’re already on your profile — there were no changes to forget.';
-  const keys = [...new Set(forgotten.map((f) => f.key))];
-  return `Back to your profile — I forgot ${n} change${n === 1 ? '' : 's'} you'd made (${keys.join(', ')}). Your profile itself is unchanged.`;
+  const cleared = page.cleared || [], kept = page.kept || [];
+  if (!n && !cleared.length && !kept.length) return 'You’re already on your profile. There were no changes to forget.';
+
+  const did = [];
+  const keys = n ? [...new Set(forgotten.map((f) => f.key))] : [];
+  if (n) did.push(`forgot ${n} change${n === 1 ? '' : 's'} you'd made (${keys.join(', ')})`);
+  if (cleared.length) {
+    // A key the store forgot is usually the same key the page was showing.
+    // Naming it in both clauses reads as two separate changes, so the page
+    // clause names only what the store clause did not. "them" stands in only
+    // when every key the store clause named was cleared on the page too;
+    // otherwise the page clause names its own keys, repetition and all, rather
+    // than claim a key the page never cleared.
+    const alsoOnPage = cleared.filter((k) => !keys.includes(k));
+    const allOfThem = keys.length > 0 && keys.every((k) => cleared.includes(k));
+    did.push(alsoOnPage.length ? `cleared ${alsoOnPage.join(', ')} on this page`
+      : allOfThem ? 'cleared them on this page'
+      : `cleared ${cleared.join(', ')} on this page`);
+  }
+
+  const lead = did.length
+    ? `Back to your profile. I ${did.join(' and ')}.`
+    : 'There were no stored changes to forget, but';
+  const stayed = kept.length
+    ? ` I couldn’t clear ${kept.join(', ')} on this page, so ${kept.length === 1 ? 'it stays as you left it' : 'they stay as you left them'}.`
+    : '';
+  return `${lead}${stayed} Your profile itself is unchanged.`;
 }
 
 /** Said when a reset is asked for before any profile exists. */

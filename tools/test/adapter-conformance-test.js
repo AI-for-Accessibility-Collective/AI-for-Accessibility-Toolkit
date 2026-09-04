@@ -28,11 +28,9 @@
 // family fails here and has to be acknowledged in the list.
 //
 // Run: node tools/test/adapter-conformance-test.js
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import { JSDOM } from 'jsdom';
+
+import { readBarrelModules } from './barrel-modules.js';
 
 // Several adapters attach themselves to window at module scope, so the DOM
 // globals must exist before the catalog is imported.
@@ -41,9 +39,6 @@ global.window = dom.window;
 global.document = dom.window.document;
 global.getComputedStyle = (el) => dom.window.getComputedStyle(el);
 global.CSS = dom.window.CSS || { escape: (s) => s };
-
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ADAPTERS = path.join(HERE, '..', 'adapters');
 
 const adapters = await import('../adapters/index.js');
 
@@ -60,13 +55,9 @@ function sameSet(label, discovered, expected) {
 }
 
 // ── what the catalog actually contains ─────────────────────────────────────
-// The barrel is the public catalog, so it decides what is in scope. Read the
-// `export ... from './x.js'` lines only: the file also plain-imports several
-// modules for their axe handlers, and those are not exports.
-const barrelSrc = readFileSync(path.join(ADAPTERS, 'index.js'), 'utf8');
-const MODULES = [...new Set(
-  [...barrelSrc.matchAll(/^export\s[^;]*?from\s+'\.\/([^']+)\.js'/gm)].map((m) => m[1]),
-)];
+// The barrel is the public catalog, so it decides what is in scope. See
+// barrel-modules.js for what counts as an export (shared with the parity test).
+const MODULES = readBarrelModules();
 check(`the barrel exports from at least one module (found ${MODULES.length})`, MODULES.length > 0);
 
 const isToolObject = (v) => v && typeof v === 'object' && typeof v.enable === 'function';
