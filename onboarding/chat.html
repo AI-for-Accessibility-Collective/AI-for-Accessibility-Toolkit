@@ -75,6 +75,21 @@
   #send { background: var(--accent); color: var(--accent-ink); }
   .hint { text-align: center; color: var(--muted); font-size: .75rem; margin: .4rem 0 0; }
 
+  /* The framed page under test. Takes the upper half so the chat stays usable
+     beneath it; both are in one accessibility tree. */
+  #framed-panel { display: flex; flex-direction: column; min-height: 0; flex: 1 1 55%;
+    border-bottom: 1px solid var(--line); }
+  #framed-panel[hidden] { display: none; }
+  .framed-bar { display: flex; align-items: center; gap: .5rem; padding: .35rem .75rem;
+    font-size: .78rem; color: var(--muted); background: var(--pill); }
+  .framed-url { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-family: ui-monospace, Menlo, monospace; }
+  .framed-bar .btn { border: 1px solid var(--line); background: transparent; color: inherit;
+    border-radius: .4rem; padding: .1rem .5rem; font-size: .75rem; cursor: pointer; }
+  #framed { flex: 1; width: 100%; border: 0; background: #fff; min-height: 12rem; }
+  /* With the page framed, the transcript shares the remaining height. */
+  #framed-panel:not([hidden]) ~ #transcript { flex: 1 1 45%; }
+
   /* Connection status (reconnecting / connected / failed) for a remote receiver. */
   .conn { margin: 0 1rem; padding: .4rem .7rem; border-radius: .6rem; font-size: .8rem;
     display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
@@ -149,6 +164,17 @@
       <div id="profile" role="status" aria-live="polite">No profile yet.</div>
     </header>
 
+    <!-- The page under test, served adapted from the iframe host. Hidden until
+         used; in this mode the chat and the page share one accessibility tree,
+         which is what lets a screen reader move between them. -->
+    <section id="framed-panel" hidden>
+      <div class="framed-bar">
+        <span id="framed-url" class="framed-url"></span>
+        <button type="button" id="framed-close" class="btn" aria-label="Close the framed page">Close</button>
+      </div>
+      <iframe id="framed" title="Page under test"></iframe>
+    </section>
+
     <div id="transcript" role="log" aria-live="polite" aria-label="Conversation"></div>
 
     <div id="conn-status" class="conn" role="status" aria-live="polite" hidden></div>
@@ -185,6 +211,20 @@
           <button type="button" id="connect-remote" class="btn">Connect</button>
         </div>
         <p id="drive-note">Driving the demo preview + this window.</p>
+      </div>
+
+      <div class="field">
+        <label class="row" for="frame-url" style="font-size:.9rem;font-weight:600;">Or open a page in this window</label>
+        <span class="desc">For a screen reader on a hosted VM (Assistiv Labs): the page renders <em>here</em>, in one
+          accessibility tree with the chat, so NVDA/JAWS can move between them. Needs the iframe host running.
+          No agent tasks and no browser-level settings in this mode.</span>
+        <input type="text" id="frame-url" placeholder="https://example.com">
+        <label for="proxy-base" style="font-size:.8rem;color:var(--muted);">Iframe host</label>
+        <input type="text" id="proxy-base" value="http://127.0.0.1:8124/">
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+          <button type="button" id="open-framed" class="btn">Open in this window</button>
+          <button type="button" id="close-framed" class="btn" hidden>Close</button>
+        </div>
       </div>
 
       <hr>

@@ -173,6 +173,14 @@ const kindOf = (text, deps = REAL) => routeTurn(text, deps).kind;
   const on = fallbackHelp({ connected: true });
   check('with an app connected, it does not claim nothing is connected', !/nothing is connected/i.test(on));
   check('…and still lists what it can do', /bigger text/.test(on));
+
+  // Framed (screen-reader-on-a-VM) mode has no agent BY DESIGN, whatever else
+  // is connected — the reason must name the mode, not blame the connection.
+  const framed = fallbackHelp({ connected: false, framed: true });
+  check('framed: says there is no agent in this mode', /no agent/i.test(framed));
+  check('framed: does not tell them to connect something', !/connect an app/i.test(framed));
+  check('framed: still lists what it can do', /bigger text/.test(framed));
+  check('framed wins over connected', /no agent/i.test(fallbackHelp({ connected: true, framed: true })));
 }
 
 // ── the general-answer prompt ────────────────────────────────────────────────

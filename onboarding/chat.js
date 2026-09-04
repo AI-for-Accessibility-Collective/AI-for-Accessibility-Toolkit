@@ -20,6 +20,7 @@
 
 import { createController } from '/controller/lib/createController.js';
 import { createDomReceiver } from '/controller/lib/web/dom-receiver.js';
+import { createIframeReceiver } from '/controller/lib/web/iframe-receiver.js';
 import { websocketChannel, remoteControl } from '/controller/lib/transport/remote.js';
 import { createLlmLane } from '/controller/lib/llm-lane.js';
 import { bestVoice, forSpeech, earconThinkPulse, earconDone, earconError } from '/controller/lib/web/ui.js';
@@ -213,8 +214,74 @@ function setConnStatus(state, url) {
   }
 }
 
+// ── iframe mode (screen reader on a hosted VM) ───────────────────────────────
+// The page under test renders HERE rather than behind CDP, so the chat and the
+// page share one accessibility tree and NVDA/JAWS can move between them.
+const FRAME_KEY = 'aa-chat-frame';
+let framedReceiver = null;
+
+// In this mode the tester reads the chat and the page in one document tree, so a
+// visual setting that reaches only the frame leaves the chat unadapted beside
+// it. Mirror every apply/undo onto the local receiver too — which drives the
+// demo preview and, through the surface mirror, the chat window itself.
+function alsoAdaptTheChat(port) {
+  return {
+    ...port,
+    async applySettings(changes, scope) {
+      const r = await port.applySettings(changes, scope);
+      try { await localReceiver.applySettings(changes, scope); } catch {}
+      return r;
+    },
+    async undoLast() {
+      const r = await port.undoLast();
+      try { await localReceiver.undoLast(); } catch {}
+      return r;
+    },
+  };
+}
+
+function closeFramed() {
+  if (framedReceiver) { try { framedReceiver.destroy(); } catch {} framedReceiver = null; }
+  $('framed').removeAttribute('src');
+  $('framed-panel').hidden = true;
+  $('close-framed').hidden = true;
+  try { localStorage.removeItem(FRAME_KEY); } catch {}
+}
+
+// Mutually exclusive with the remote receiver: one of them drives at a time.
+function useFramed(url, proxyBase) {
+  url = (url || '').trim();
+  if (!url) return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  proxyBase = (proxyBase || $('proxy-base').value || 'http://127.0.0.1:8124/').trim();
+  if (remoteChannel) { remoteChannel.close(); remoteChannel = null; try { localStorage.removeItem(WS_KEY); } catch {} }
+  setConnStatus('hidden');
+  if (framedReceiver) { try { framedReceiver.destroy(); } catch {} }
+
+  const frame = $('framed');
+  framedReceiver = createIframeReceiver(frame, { proxyBase });
+  framedReceiver.load(url);
+  $('framed-url').textContent = url;
+  $('framed-panel').hidden = false;
+  $('close-framed').hidden = false;
+  try { localStorage.setItem(FRAME_KEY, JSON.stringify({ url, proxyBase })); } catch {}
+
+  currentControl = alsoAdaptTheChat(framedReceiver);
+  $('drive-note').textContent = 'Driving the page in this window (' + url + ') + this window. No agent tasks in this mode.';
+  rebuildController();
+  if (unNote) { unNote(); unNote = null; }
+  wireNotes();
+
+  // The profile follows the person onto the frame, the same way useRemote sends
+  // it on the socket's open. Guarded by identity: a frame closed or replaced
+  // before it reports ready must not receive a stale apply.
+  const myFrame = framedReceiver;
+  myFrame.ready.then(() => { if (framedReceiver === myFrame) applyProfileSettings(); });
+}
+
 function useLocal() {
   if (remoteChannel) { remoteChannel.close(); remoteChannel = null; }
+  closeFramed();
   currentControl = localReceiver;
   try { localStorage.removeItem(WS_KEY); } catch {}
   setConnStatus('hidden');
@@ -226,6 +293,7 @@ function useLocal() {
 }
 function useRemote(url) {
   if (!url) return;
+  closeFramed(); // one driver at a time
   if (remoteChannel) remoteChannel.close();
   remoteChannel = websocketChannel(url);
   currentControl = remoteControl({ channel: remoteChannel });
@@ -431,7 +499,7 @@ async function handleTurn(text) {
 // "connected" is what decides whether the fallback can honestly offer to run
 // the request: with no remote channel, nothing but this page can act.
 async function generalAnswer(u) {
-  const help = () => fallbackHelp({ connected: !!remoteChannel });
+  const help = () => fallbackHelp({ connected: !!remoteChannel, framed: !!framedReceiver });
   try {
     return (await assistComplete(generalAnswerPrompt(u))).trim() || help();
   } catch {
@@ -510,6 +578,11 @@ function initSettings() {
   $('connect-remote').addEventListener('click', () => useRemote($('ws-url').value.trim()));
   $('use-local-harness').addEventListener('click', () => { $('ws-url').value = 'ws://127.0.0.1:9333'; useRemote('ws://127.0.0.1:9333'); });
 
+  // …or drive a page framed in this window (screen-reader-on-a-VM mode).
+  $('open-framed').addEventListener('click', () => { useFramed($('frame-url').value, $('proxy-base').value); toggleDrawer(false); });
+  $('close-framed').addEventListener('click', () => useLocal());
+  $('framed-close').addEventListener('click', () => useLocal());
+
   // Reset profile: forget the current user and clear every applied setting — a
   // reload gives a fresh receiver (no adaptations), an empty transcript, and no
   // profile, i.e. starting from scratch as no specific person.
@@ -548,11 +621,21 @@ async function boot() {
   initSettings();
   initVoiceInput();
 
-  // Reconnect to the receiver we were driving before a refresh, if any. The
-  // profile above went to the preview; the receiver gets it when its socket
-  // opens (useRemote), since it is not connected yet.
-  let savedWs = ''; try { savedWs = localStorage.getItem(WS_KEY) || ''; } catch {}
-  if (savedWs) useRemote(savedWs);
+// Restore whatever we were driving before a refresh. A screen-reader tester
+  // reloads often, and re-typing the URL each time is the kind of friction this
+  // mode exists to remove. The two are mutually exclusive; the frame wins. The
+  // profile above went to the preview; a remote receiver gets it when its
+  // socket opens (useRemote), and a frame when it reports ready (useFramed).
+  let savedFrame = null;
+  try { savedFrame = JSON.parse(localStorage.getItem(FRAME_KEY) || 'null'); } catch {}
+  if (savedFrame && savedFrame.url) {
+    $('frame-url').value = savedFrame.url;
+    if (savedFrame.proxyBase) $('proxy-base').value = savedFrame.proxyBase;
+    useFramed(savedFrame.url, savedFrame.proxyBase);
+  } else {
+    let savedWs = ''; try { savedWs = localStorage.getItem(WS_KEY) || ''; } catch {}
+    if (savedWs) useRemote(savedWs);
+  }
 
   $('composer-form').addEventListener('submit', (e) => { e.preventDefault(); handleTurn($('composer-input').value); });
   $('composer-input').addEventListener('keydown', onComposerKey); // Enter to send, Up/Down to recall history
