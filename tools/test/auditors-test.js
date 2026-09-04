@@ -108,7 +108,9 @@ function run() {
     check('ambiguous links: "Click here" is reported (exact match, case-folded)', reports(ambiguous, doc, 'a-here'));
     check('ambiguous links: "Read more →" is not reported (known limit of the exact-match list)', !reports(ambiguous, doc, 'a-more-arrow'));
     check('ambiguous links: a descriptive link is not reported', !reports(ambiguous, doc, 'a-contact'));
+    check('ambiguous links: "Read more" with a descriptive aria-label is not reported (the name is what is matched)', !reports(ambiguous, doc, 'a-more-aria'));
     check('ambiguous links: a hidden link is skipped', !reports(ambiguous, doc, 'a-hidden'));
+    check('ambiguous links: exactly one reported on this page', ambiguous.length === 1);
 
     const empty = findEmptyLinks();
     check('empty links: a link with no name is reported', reports(empty, doc, 'a-empty'));
@@ -147,11 +149,16 @@ function run() {
     check('inputs: a wrapping <label> counts', !reports(inputs, doc, 'in-wrapped'));
     check('inputs: title counts', !reports(inputs, doc, 'in-title'));
     check('inputs: hidden inputs are skipped', !reports(inputs, doc, 'in-hidden'));
+    check('inputs: a submit input with a value is named by it', !reports(inputs, doc, 'in-submit'));
+    check('inputs: a submit input with no value is not reported (HTML-AAM names it "Submit")', !reports(inputs, doc, 'in-submit-bare'));
+    check('inputs: a reset input with no value is not reported (HTML-AAM names it "Reset")', !reports(inputs, doc, 'in-reset-bare'));
     check('inputs: a button input with no value is reported (it has no default name)', reports(inputs, doc, 'in-button-bare'));
+    check('inputs: an image input with alt is named by it', !reports(inputs, doc, 'in-image'));
     check('inputs: a bare select is reported', reports(inputs, doc, 'sel-bare'));
     check('inputs: a select with options is still reported (option text is not a label)', reports(inputs, doc, 'sel-opts'));
     check('inputs: a bare textarea is reported', reports(inputs, doc, 'ta-bare'));
     check('inputs: a textarea with content is still reported (the draft is not a label)', reports(inputs, doc, 'ta-draft'));
+    check('inputs: exactly eleven reported on this page', inputs.length === 11);
 
     // The adapter gate agrees with the auditor on form controls, so what is
     // reported can be repaired.
@@ -162,7 +169,9 @@ function run() {
     const iframes = findUntitledIframes();
     check('iframes: no title is reported', reports(iframes, doc, 'if-bare'));
     check('iframes: title counts', !reports(iframes, doc, 'if-title'));
+    check('iframes: a labelledby that resolves counts', !reports(iframes, doc, 'if-lbl'));
     check('iframes: fallback content is not a name', reports(iframes, doc, 'if-fallback'));
+    check('iframes: exactly two reported on this page', iframes.length === 2);
 
     // The shared helper behind all of the above.
     check('labelledby helper: no attribute gives empty text', getLabelledByText(doc.getElementById('in-bare')) === '');
