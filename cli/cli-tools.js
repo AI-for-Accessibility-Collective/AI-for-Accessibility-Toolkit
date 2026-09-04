@@ -765,6 +765,10 @@ function findComplexText() {
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.dataset.ai4a11ySimplified) return false;
       if (el.querySelector('p, div, article, section')) return false;
+      // Cheap first pass: proseText() only removes nodes, so it can never be
+      // longer than textContent. Elements that cannot clear the bar even at
+      // full length are dropped before the clone proseText() has to make.
+      if ((el.textContent?.length || 0) <= 200) return false;
       // The same visible prose the adapter measures, so a candidate is not
       // picked on the strength of a <script> or hidden text it contains.
       const text = proseText(el);
@@ -780,6 +784,9 @@ function findLongContent() {
       if (el.dataset.ai4a11ySummarized) return false;
       if (el.dataset.ai4a11yProcessed) return false;
       if (el.closest('[data-ai4a11y-summarized]')) return false;
+      // Cheap first pass, as in findComplexText(): skip the clone for an
+      // element that is too short even before the non-prose nodes come out.
+      if ((el.textContent?.length || 0) <= 500) return false;
       const text = proseText(el);
       return text.length > 500;
     })
