@@ -7,9 +7,12 @@ import { isLikelyDecorative, getImageSize } from '../utils/image.js';
 // would want described, and a large icon or a small chart lands on the wrong
 // side. Every comparison is strict, so an image exactly this size falls on
 // the "not content" side and an SVG exactly SVG_ICON_MAX_PX is not an icon.
-// findEmptyAltImages also defers to isLikelyDecorative in utils/image.js,
-// which has its own 20px floor; that floor sits inside the 100px cutoff, so
-// it changes nothing here. Heuristic, best-effort.
+// findEmptyAltImages also defers to isLikelyDecorative in utils/image.js.
+// Its 20px floor and its 1x1 tracking-pixel rule sit inside the 100px cutoff
+// and so change nothing here, but its third rule does: it treats
+// role="presentation" and role="none" as decorative at any size, so an
+// <img alt="" role="presentation"> larger than the cutoff is still skipped.
+// Heuristic, best-effort.
 const CONTENT_IMAGE_MIN_PX = 100; // an <img alt=""> or a background image strictly wider AND taller than this may be content
 const CANVAS_MIN_PX = 50;         // a <canvas> strictly wider AND taller than this may be a chart or drawing worth describing
 const SVG_ICON_MAX_PX = 50;       // an <svg> strictly narrower OR shorter than this is skipped as an icon
