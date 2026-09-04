@@ -31,6 +31,30 @@ const RENDERERS = {
   focusMode:      (r, v) => toggleClass(r, 'aa-focus-mode', v),
 };
 
+// The value each renderer treats as "not in effect" — the state where it removes
+// the CSS variable, class or data attribute rather than setting one. A key
+// applied at this value leaves the active map, so getContext() reports only
+// non-default settings ("what's currently in effect", PROTOCOL.md) rather than
+// a list of things that are off. A reset sends every key it clears at exactly
+// this value, so without this "back to my profile" would leave `darkMode false`
+// and `contrastMode none` behind and "what's set" would read them back as
+// current settings. A key missing here simply keeps the value it was given.
+const NEUTRAL = {
+  fontScale: null,
+  lineHeight: null,
+  letterSpacing: null,
+  darkMode: false,
+  contrastMode: 'none',
+  dyslexiaFont: false,
+  bigTargets: false,
+  motionReducer: false,
+  hideDistractions: false,
+  readingGuide: false,
+  focusMode: false,
+};
+const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const isNotSet = (key, value) => value == null || (has(NEUTRAL, key) && value === NEUTRAL[key]);
+
 function cssVar(root, name, value) {
   const prev = root.style.getPropertyValue(name) || null;
   if (value == null || value === '') root.style.removeProperty(name);
@@ -95,15 +119,15 @@ export function createDomReceiver(root, { platform = 'web', scrollTarget } = {})
       const previous = {};
       const rejected = [];
       for (const [key, value] of Object.entries(changes || {})) {
-        const render = RENDERERS[key];
+        const render = has(RENDERERS, key) ? RENDERERS[key] : null;
         if (!render) { rejected.push(key); continue; }
         previous[key] = key in active ? active[key] : undefined;
         render(root, value);
-        // null is "remove": the key leaves the active map the same way undoLast
-        // drops a key that had no prior value, so getContext reports only what
-        // is in effect and a relative change ("bigger text") starts from the
-        // baseline again rather than from Number(null).
-        if (value == null) delete active[key]; else active[key] = value;
+        // A key rendered at its not-set value leaves the active map, the same
+        // way undoLast drops a key that had no prior value, so getContext
+        // reports only what is in effect and a relative change ("bigger text")
+        // starts from the baseline again rather than from Number(null).
+        if (isNotSet(key, value)) delete active[key]; else active[key] = value;
         applied[key] = value;
       }
       if (!Object.keys(applied).length) return { error: 'no applicable settings', rejected };

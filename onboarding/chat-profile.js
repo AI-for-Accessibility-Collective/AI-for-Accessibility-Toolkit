@@ -137,9 +137,10 @@ export function onboardingReply(d, appliedText = '') {
 // per key, so this is derived from the type, and a key outside the registry
 // has no such value (undefined).
 //
-// FLAG(review): a number or string clears to null. The DOM receiver treats
-// null as "remove" (the CSS variable goes away and the key leaves its active
-// map), which is exactly its not-set state. The controller router keeps its
+// FLAG(review): a number or string clears to null. The DOM receiver renders
+// each of these values as "not in effect" (the CSS variable, class or data
+// attribute goes away) and drops the key from its active map, which is exactly
+// its not-set state. The controller router keeps its
 // own numeric baseline for relative steps (fontScale 100, lineHeight 1.5,
 // letterSpacing 0, speechRate 1.0) and reads a null active value as that
 // baseline, so a "bigger text" after a reset starts from 100 again. A remote

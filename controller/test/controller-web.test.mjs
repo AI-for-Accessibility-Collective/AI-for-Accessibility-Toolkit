@@ -115,6 +115,25 @@ async function run() {
     check('web clear: undo restores the value the clear removed', undo.remainingUndos === 2 && styles.get('--aa-font-scale') === '1.5' && styles.get('--aa-line-height') === '2');
   }
 
+  // ── 3c. A key cleared to its off value is not "in effect" either ───────────
+  // A reset sends a boolean back to false and an enum back to 'none', which the
+  // renderers drop rather than set. Those keys have to leave the active map the
+  // way a null does, or getContext reports settings that are off as current and
+  // "what's set" answers with a list of things nobody turned on.
+  {
+    const { root, classes, dataset } = makeStubApp();
+    const recv = createDomReceiver(root, {});
+    const c = createController({ control: recv });
+
+    await recv.applySettings({ darkMode: true, contrastMode: 'yellow-black' });
+    await recv.applySettings({ darkMode: false, contrastMode: 'none', dyslexiaFont: true });
+    check('web clear: an off boolean and a none enum are rendered off', !classes.has('aa-dark') && dataset.aaContrast === undefined);
+    const active = (await recv.getContext()).activeSettings;
+    check('web clear: neither is reported as active', !('darkMode' in active) && !('contrastMode' in active));
+    check('web clear: a key that IS in effect still is', active.dyslexiaFont === true);
+    check('web clear: "what is set" names only what is in effect', (await c.handle('what is set')).say === 'Currently set: dyslexiaFont true.');
+  }
+
   console.log(`\nController M2 (web): ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 }
