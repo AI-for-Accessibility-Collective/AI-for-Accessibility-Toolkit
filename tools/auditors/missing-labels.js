@@ -1,5 +1,22 @@
 import { isVisible, wasProcessed, hasAccessibleName } from '../utils/dom.js';
 
+// Link text that says nothing about where the link goes. WCAG 2.4.4 (Link
+// Purpose, In Context) is the rule this serves, but the check does not read
+// the context: it is an exact match against this English word list after
+// trimming and lower-casing. "Read more →", "click here to learn more" and
+// every non-English page pass. Heuristic, English-only, best-effort.
+const AMBIGUOUS_LINK_TEXTS = [
+  'click here',
+  'here',
+  'read more',
+  'more',
+  'learn more',
+  'continue',
+  'link',
+  'this',
+  'this link'
+];
+
 // Find links without accessible names
 export function findEmptyLinks() {
   return Array.from(document.querySelectorAll('a[href]'))
@@ -13,25 +30,13 @@ export function findEmptyLinks() {
 
 // Find links with ambiguous text
 export function findAmbiguousLinks() {
-  const ambiguousTexts = [
-    'click here',
-    'here',
-    'read more',
-    'more',
-    'learn more',
-    'continue',
-    'link',
-    'this',
-    'this link'
-  ];
-
   return Array.from(document.querySelectorAll('a[href]'))
     .filter(link => {
       if (wasProcessed(link)) return false;
       if (!isVisible(link)) return false;
 
       const text = link.textContent?.trim().toLowerCase();
-      return text && ambiguousTexts.includes(text);
+      return text && AMBIGUOUS_LINK_TEXTS.includes(text);
     });
 }
 
