@@ -23,7 +23,13 @@ import { coerceSetting } from '../../core/units.js';
  * range-check so an out-of-range cross-app value is reported, not silently
  * clamped away.
  * @param {Record<string, {type:string, range?:[number,number]}>} settingsMeta
+ * @returns {ReturnType<typeof createSurfaceAdapter>}
  */
+// FLAG(review): the @returns above is for the declaration emitter. This file
+// is opted out of the check, and @ts-nocheck also silences the error tsc
+// raises when an inferred type cannot be named from another module, so
+// without it types/platforms/chrome/web-surface.d.ts wrote a bare
+// SurfaceApplyResult that no consumer could resolve.
 export function createWebSurface(settingsMeta = {}) {
   const supports = {};
   for (const [key, meta] of Object.entries(settingsMeta)) {

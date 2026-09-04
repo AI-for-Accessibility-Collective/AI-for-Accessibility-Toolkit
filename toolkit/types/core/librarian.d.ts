@@ -197,11 +197,11 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
     listSkills(): Promise<any[]>;
     retrieveSkill(url: any, contexts?: any[]): Promise<any>;
     findSkillForNeed(need: any): Promise<any>;
-    resolveSkill(skill: any): {
-        settings: Record<string, any>;
-        adapterIds: string[];
-        actions: SkillRecipeAction[];
-    };
+    /**
+     * @param {import('./skill.js').Skill} skill
+     * @returns {ReturnType<typeof resolveSkill>}
+     */
+    resolveSkill(skill: import("./skill.js").Skill): ReturnType<typeof resolveSkill>;
     buildSkill(need: any, opts?: {}): Promise<{
         skill: import("./skill-builder.js").Skill | null;
         valid: boolean;
@@ -357,4 +357,5 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
     }>;
 };
 export default createLibrarian;
+import { resolveSkill } from './skill.js';
 //# sourceMappingURL=librarian.d.ts.map

@@ -29,6 +29,15 @@ jobs:
         # error count; everything else in toolkit/ is checked under strict.
         run: npm run build:types
 
+      - name: Emitted declarations resolve on their own
+        # A file opted out with @ts-nocheck can still emit a declaration that
+        # names a type it never imported (tsc's "cannot be named" error is
+        # silenced with the rest). Consumers check with skipLibCheck off by
+        # default, so check the emitted files that way here.
+        run: |
+          find toolkit/types -name '*.d.ts' -print0 | xargs -0 node_modules/.bin/tsc --noEmit --strict \
+            --module nodenext --moduleResolution nodenext --target es2022 --lib es2022 --pretty false
+
       - name: Committed declarations are fresh
         # `git status` rather than `git diff` so a new source file whose
         # .d.ts was never committed also fails, not only an edited one.

@@ -14,12 +14,14 @@
 // createToolkit with wrong shapes and must fail, one that calls it correctly
 // and must pass. That is the proof the shipped declarations travel with the
 // package and describe the real API, which the import checks above cannot
-// give (they prove the exports exist, not their shapes).
+// give (they prove the exports exist, not their shapes). It then typechecks
+// every shipped .d.ts file together, so a declaration that names a type it
+// never imported fails here even when no consumer file imports that subpath.
 //
 // Run from the repository root, after `npm ci`: node scripts/pack-fixture-test.mjs
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -39,15 +41,17 @@ if (!existsSync(tsc)) {
   process.exit(1);
 }
 
-// Typecheck one consumer file inside the scratch project. Returns the tsc
-// exit code and its output; a non-zero code with no `error TS` line means
-// tsc itself failed to run, which the caller treats as a fixture bug.
-function typecheck(consumer, file) {
+// Typecheck files inside the scratch project. Returns the tsc exit code and
+// its output; a non-zero code with no `error TS` line means tsc itself
+// failed to run, which the caller treats as a fixture bug. No skipLibCheck,
+// on purpose: it is off by default for a consumer too, and it is what lets
+// a shipped .d.ts that names a type it never imported go unnoticed.
+function typecheck(consumer, files) {
   const args = [
     tsc, '--noEmit', '--strict', '--allowJs', '--checkJs',
     '--module', 'nodenext', '--moduleResolution', 'nodenext', '--target', 'es2022',
-    '--lib', 'es2022', '--skipLibCheck', '--pretty', 'false',
-    file,
+    '--lib', 'es2022', '--pretty', 'false',
+    ...files,
   ];
   try {
     return { code: 0, out: execFileSync(process.execPath, args, { cwd: consumer, encoding: 'utf8' }) };
@@ -219,13 +223,13 @@ const kv = { get: async () => undefined, set: async () => {}, getAll: async () =
 ${wrongCalls.join('\n')}
 `);
 
-  const right = typecheck(consumer, 'types-right.js');
+  const right = typecheck(consumer, ['types-right.js']);
   if (right.code !== 0) {
     console.error('PACK FIXTURE FAILURE: a correct call against the packed toolkit did not typecheck:');
     console.error(right.out);
     process.exit(1);
   }
-  const wrong = typecheck(consumer, 'types-wrong.js');
+  const wrong = typecheck(consumer, ['types-wrong.js']);
   const errorLines = wrong.out.split('\n').filter((l) => /error TS\d+/.test(l));
   if (wrong.code === 0 || errorLines.length !== wrongCalls.length) {
     console.error('PACK FIXTURE FAILURE: expected exactly ' + wrongCalls.length
@@ -234,6 +238,33 @@ ${wrongCalls.join('\n')}
     process.exit(1);
   }
   console.log('pack fixture: shipped declarations reject ' + wrongCalls.length + ' wrong calls and accept a right one');
+
+  // 5. Every shipped declaration file resolves on its own. The two consumer
+  //    files above only load the declarations they import; a subpath nobody
+  //    imported here (or a file the exports map does not even reach) can
+  //    still ship a type name it never imported, which a file opted out of
+  //    the check with @ts-nocheck can do silently. Checking the installed
+  //    types/ tree whole, with skipLibCheck off, catches that at the boundary.
+  const typesDir = path.join(consumer, 'node_modules', '@ai4a11y', 'toolkit', 'types');
+  const dts = [];
+  (function walk(dir) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.d.ts')) dts.push(path.relative(consumer, full));
+    }
+  })(typesDir);
+  if (dts.length === 0) {
+    console.error('PACK FIXTURE FAILURE: no .d.ts files found under the installed toolkit types/');
+    process.exit(1);
+  }
+  const whole = typecheck(consumer, dts);
+  if (whole.code !== 0) {
+    console.error('PACK FIXTURE FAILURE: the shipped declarations do not typecheck on their own:');
+    console.error(whole.out);
+    process.exit(1);
+  }
+  console.log('pack fixture: all ' + dts.length + ' shipped declaration files typecheck on their own');
   console.log('pack-fixture-test: PASS');
 } finally {
   rmSync(tmp, { recursive: true, force: true });

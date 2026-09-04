@@ -4,15 +4,12 @@
  * range-check so an out-of-range cross-app value is reported, not silently
  * clamped away.
  * @param {Record<string, {type:string, range?:[number,number]}>} settingsMeta
+ * @returns {ReturnType<typeof createSurfaceAdapter>}
  */
 export function createWebSurface(settingsMeta?: Record<string, {
     type: string;
     range?: [number, number];
-}>): {
-    id: string;
-    supportedKeys(): string[];
-    apply(settings: Record<string, any> | null | undefined): SurfaceApplyResult;
-};
+}>): ReturnType<typeof createSurfaceAdapter>;
 /**
  * Derive baseline web settings from an AbilityModel. Returns
  * `{ settings, strengthByKey, unmet }`. Empty `needs[]` (every current user)
@@ -113,4 +110,5 @@ export namespace WEB_DERIVATION {
     };
 }
 export default createWebSurface;
+import { createSurfaceAdapter } from '../../core/surface.js';
 //# sourceMappingURL=web-surface.d.ts.map

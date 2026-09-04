@@ -1071,6 +1071,15 @@ export function createLibrarian({
 
     // Compile a skill to the deterministic apply-plan (settings + adapter ids)
     // the host's adapter layer consumes. No LLM at apply-time.
+    // FLAG(review): the explicit types are for the declaration emitter. This
+    // file is opted out of the check, and @ts-nocheck also silences the error
+    // tsc raises when an inferred type cannot be named from another module,
+    // so without them types/core/librarian.d.ts wrote a bare SkillRecipeAction
+    // that no consumer could resolve.
+    /**
+     * @param {import('./skill.js').Skill} skill
+     * @returns {ReturnType<typeof resolveSkill>}
+     */
     resolveSkill(skill) {
       return resolveSkill(skill);
     },
