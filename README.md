@@ -49,6 +49,7 @@ The repository used to hold the extensions, the CLI, and team projects alongside
 
 The core is plain ES modules. Wire it to the reference Node platform bindings and go — no browser, no build, no API key:
 
+<!-- QUICKSTART:START -->
 ```javascript
 import { createToolkit } from './toolkit/index.js';
 import { memoryKV } from './toolkit/platforms/node/kv.js';
@@ -76,6 +77,7 @@ import { renderXRSettings } from './toolkit/surfaces/xr.js';
 renderWebSettings(model);                        // { fontScale: 140, ... }
 renderXRSettings(model, { fovDegrees: 100 });    // { text: { angularSizeDeg, ... }, ... }
 ```
+<!-- QUICKSTART:END -->
 
 Run the end-to-end demos with no setup:
 

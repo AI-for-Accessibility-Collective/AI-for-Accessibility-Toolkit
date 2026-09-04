@@ -19,6 +19,16 @@
 //       present in the model, proving the docs cover the whole extension
 //       surface.
 //
+//   (e) every scoped package specifier printed in API.md, SKILL.md and
+//       toolkit/index.js's header equals toolkit/package.json's `name`.
+//       Check (b) cannot see this: it compares a file against a fresh render
+//       from the SAME generator, so a wrong literal in the generator matches
+//       itself and passes. That is how `@a11y-toolkit/core` survived.
+//   (f) the README's own Quick Start block runs from the repo root and
+//       produces the output its comments advertise. (c) covers API.md and
+//       SKILL.md only, which is why the README's version could promise a
+//       fontScale it never computed.
+//
 //   node toolkit/test/api-docs-test.js
 
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
@@ -31,6 +41,7 @@ import { memoryKV } from '../platforms/node/kv.js';
 import { buildModel } from '../scripts/introspect.mjs';
 import { renderApiMd } from '../scripts/generate-api-docs.mjs';
 import { renderSkillMd } from '../scripts/generate-skill.mjs';
+import { PACKAGE_NAME } from '../scripts/generate-api-docs.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TOOLKIT_ROOT = path.join(__dirname, '..');
@@ -38,6 +49,8 @@ const REPO_ROOT = path.join(TOOLKIT_ROOT, '..');
 const API_MD_PATH = path.join(TOOLKIT_ROOT, 'API.md');
 const SKILL_MD_PATH = path.join(REPO_ROOT, '.claude', 'skills', 'ai4a11y-toolkit', 'SKILL.md');
 const BACKGROUND_JS_PATH = path.join(REPO_ROOT, 'personalized-extension', 'extension', 'background.js');
+const INDEX_JS_PATH = path.join(TOOLKIT_ROOT, 'index.js');
+const README_PATH = path.join(REPO_ROOT, 'README.md');
 
 let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; console.log('PASS:', name); } else { fail++; console.log('FAIL:', name); } }
@@ -173,6 +186,117 @@ if (!existsSync(BACKGROUND_JS_PATH)) {
     `every librarian* case in background.js (${caseNames.length} found, ${EXEMPT.size} exempt) maps to a method present in the model`,
     caseNames.length > 0 && gaps.length === 0,
   );
+}
+
+// ============================================================================
+// (e) every scoped package specifier we print equals package.json's name
+// ============================================================================
+// The one class of error check (b) is blind to. It compares a generated file
+// against a fresh render from the same generator, so a hardcoded name that is
+// wrong is wrong identically on both sides and the comparison passes. The
+// generators now derive PACKAGE_NAME from toolkit/package.json; this keeps
+// anyone from writing a literal back in, and covers toolkit/index.js's header
+// comment too, which no generator produces.
+{
+  const SPECIFIER = /@[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*/g;
+  const wrong = [];
+  let scanned = 0;
+  for (const [label, file] of [
+    ['toolkit/API.md', API_MD_PATH],
+    ['.claude/skills/ai4a11y-toolkit/SKILL.md', SKILL_MD_PATH],
+    ['toolkit/index.js', INDEX_JS_PATH],
+  ]) {
+    if (!existsSync(file)) { wrong.push(`${label} is missing`); continue; }
+    const found = [...new Set(readFileSync(file, 'utf8').match(SPECIFIER) || [])];
+    scanned += found.length;
+    for (const name of found) if (name !== PACKAGE_NAME) wrong.push(`${label} says ${name}`);
+  }
+  if (wrong.length) console.log('  wrong package name:', wrong.join('; '));
+  // scanned > 0 keeps this from passing vacuously if the mentions ever move.
+  check(
+    `every package specifier in the docs and the barrel header is ${PACKAGE_NAME} (${scanned} found)`,
+    scanned > 0 && wrong.length === 0,
+  );
+}
+
+// ============================================================================
+// (f) the README's Quick Start runs and produces what its comments claim
+// ============================================================================
+// (c) does this for API.md and SKILL.md, which is why their Quick Start was
+// right. Nothing did it for the README, which is why the README's version
+// annotated renderWebSettings(model) with `{ fontScale: 140, ... }` while
+// writing no textSize need, so it actually returned {}. The assertions live
+// here rather than in the README so the front page stays readable: this
+// appends them to whatever the README currently shows.
+//
+// What this does NOT catch: a surface renderer tolerant of the wrong argument.
+// renderXRSettings(null, ...) still returns a well-shaped object, so swapping
+// `model` for `null` in the README passes here. It catches the failure that
+// actually happened (an advertised output the block does not produce) and a
+// render call that goes missing.
+{
+  let extracted = null;
+  if (existsSync(README_PATH)) {
+    const readme = readFileSync(README_PATH, 'utf8');
+    const startMarker = '<!-- QUICKSTART:START -->';
+    const endMarker = '<!-- QUICKSTART:END -->';
+    const startIdx = readme.indexOf(startMarker);
+    const endIdx = readme.indexOf(endMarker);
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      const fence = readme.slice(startIdx + startMarker.length, endIdx).match(/```javascript\n([\s\S]*?)```/);
+      extracted = fence ? fence[1] : null;
+    }
+  }
+  check('Quick Start code block was found between QUICKSTART markers in README.md', !!extracted);
+
+  if (extracted) {
+    // Bind the README's OWN render calls rather than making fresh ones, so
+    // the assertions below are about the arguments the README actually shows.
+    // If either rewrite fails to match, the check fails instead of quietly
+    // testing nothing.
+    let bound = extracted.replace(
+      /^(\s*)renderWebSettings\(/m, '$1const __web = renderWebSettings(',
+    );
+    const boundWeb = bound !== extracted;
+    const beforeXr = bound;
+    bound = bound.replace(/^(\s*)renderXRSettings\(/m, '$1const __xr = renderXRSettings(');
+    const boundXr = bound !== beforeXr;
+    check('the README Quick Start calls both surface renderers, so they can be checked', boundWeb && boundXr);
+
+    // The README's imports are written from the repository root
+    // ('./toolkit/index.js'), so the snippet has to run from there.
+    const probe = [
+      bound,
+      "if (__web.fontScale !== 140) {",
+      "  throw new Error('README Quick Start: renderWebSettings returned ' + JSON.stringify(__web)",
+      "    + ', but the block advertises { fontScale: 140, ... }');",
+      "}",
+      "if (typeof __xr?.text?.angularSizeDeg !== 'number') {",
+      "  throw new Error('README Quick Start: renderXRSettings returned ' + JSON.stringify(__xr)",
+      "    + ', but the block advertises { text: { angularSizeDeg, ... }, ... }');",
+      "}",
+      "console.log('README Quick Start OK');",
+      '',
+    ].join('\n');
+    const tmpPath = path.join(REPO_ROOT, '.readme-quickstart-check.tmp.mjs');
+    writeFileSync(tmpPath, probe, 'utf8');
+    let ok = false;
+    let detail = '';
+    try {
+      const out = execFileSync(process.execPath, [tmpPath], { cwd: REPO_ROOT, encoding: 'utf8' });
+      ok = out.includes('README Quick Start OK');
+      detail = ok ? '' : `ran but did not print "README Quick Start OK": ${out}`;
+    } catch (e) {
+      // Report the thrown message, not the last line of the stack (which is
+      // the node version banner).
+      const text = (e.stderr || e.message || String(e)).toString();
+      const line = text.split('\n').find((l) => /^\s*(Error|[A-Za-z]*Error):/.test(l));
+      detail = (line || text.split('\n').find(Boolean) || 'failed').trim();
+    } finally {
+      try { unlinkSync(tmpPath); } catch { /* best-effort cleanup */ }
+    }
+    check(`the README Quick Start runs and renders what it advertises${detail ? ` (${detail})` : ''}`, ok);
+  }
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
