@@ -12,7 +12,7 @@
 // `<!-- QUICKSTART:START -->` / `<!-- QUICKSTART:END -->` bound the fenced
 // block in the rendered Markdown for that extraction).
 
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,6 +21,16 @@ import { renderMethodGroups, renderPorts, renderSurfaces, renderProtocol, render
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..'); // toolkit/
+
+// Read the package name rather than writing it out. A hardcoded name here
+// survives every check we have: api-docs-test.js compares the file on disk
+// against a fresh render from THIS generator, so a wrong literal matches
+// itself and passes. `@a11y-toolkit/core` sat in both generators that way,
+// telling readers to install a package that does not exist.
+// Exported so generate-skill.mjs states the same name from the same source.
+export const PACKAGE_NAME = JSON.parse(
+  readFileSync(path.join(ROOT, 'package.json'), 'utf8'),
+).name;
 
 // A self-contained smoke test of createToolkit on the node reference
 // adapters (toolkit/platforms/node/*) — imports are relative to toolkit/,
@@ -110,7 +120,7 @@ ${renderProtocol(model.protocol)}
 
 ## Barrel Exports (\`toolkit/index.js\`)
 
-Everything importable from \`@ai4a11y/toolkit\` (the package root).
+Everything importable from \`${PACKAGE_NAME}\` (the package root).
 
 ${renderBarrel(model.barrelExports)}
 
