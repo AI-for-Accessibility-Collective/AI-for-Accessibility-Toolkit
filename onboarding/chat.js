@@ -25,9 +25,10 @@ import { createLlmLane } from '/controller/lib/llm-lane.js';
 import { bestVoice, forSpeech, earconThinkPulse, earconDone, earconError } from '/controller/lib/web/ui.js';
 import { detectOnboarding, visionKindOf, isResetToProfile } from '/chat-routing.js';
 import { routeTurn, classifyControllerResult, fallbackHelp, generalAnswerPrompt } from '/chat-turn.js';
-import { mergeOnboarding, onboardingReply, resetReply, NO_PROFILE_TO_RESET, profilePill } from '/chat-profile.js';
+import { mergeOnboarding, onboardingReply, resetReply, NO_PROFILE_TO_RESET, profilePill, appliedSummary } from '/chat-profile.js';
 import { createHistory, onFirstLine, onLastLine } from '/chat-history.js';
 import { renderWebSettings } from '/toolkit/surfaces/web.js';
+import { settingsMeta } from '/controller/toolkit/registry/tools.js';
 
 const $ = (id) => document.getElementById(id);
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -85,8 +86,8 @@ async function applyOnboarding(o) {
   try { localStorage.setItem('onb-uid', d.uid); } catch {}
   await loadProfile();
   rebuildController(); // the operator model changed → re-derive presentation
-  await applyProfileSettings(); // …and the page itself follows the profile
-  return onboardingReply(d);
+  const applied = await applyProfileSettings(); // …and the page itself follows the profile
+  return onboardingReply(d, appliedSummary(applied, settingsMeta));
 }
 
 // Render the profile onto the page. Telling the surface about yourself has to
@@ -101,9 +102,12 @@ async function applyOnboarding(o) {
 // does not support.
 async function applyProfileSettings() {
   let settings;
-  try { settings = renderWebSettings(operatorModel || {}); } catch { return; }
-  if (!settings || !Object.keys(settings).length) return;
-  try { await currentControl.applySettings(settings); } catch { /* a receiver that refuses must not break the turn */ }
+  try { settings = renderWebSettings(operatorModel || {}); } catch { return null; }
+  if (!settings || !Object.keys(settings).length) return null;
+  try {
+    const res = await currentControl.applySettings(settings);
+    return (res && res.applied) || null; // what the receiver actually took, not what we asked for
+  } catch { return null; } // a receiver that refuses must not break the turn
 }
 
 // Drop the durable user-explicit setting overrides so the profile is the source

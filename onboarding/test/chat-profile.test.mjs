@@ -8,7 +8,7 @@
 //
 //   node onboarding/test/chat-profile.test.mjs
 
-import { mergeOnboarding, onboardingReply, resetReply, NO_PROFILE_TO_RESET, profilePill } from '../chat-profile.js';
+import { mergeOnboarding, onboardingReply, resetReply, NO_PROFILE_TO_RESET, profilePill, appliedSummary } from '../chat-profile.js';
 import { visionKindOf } from '../chat-routing.js';
 
 let pass = 0, fail = 0;
@@ -81,6 +81,51 @@ const merge = (prev, next) => mergeOnboarding(prev, next, visionKindOf);
 
   const empty = onboardingReply({ supportAreas: [] });
   check('an empty profile says “none” rather than trailing off', /Support areas: none/.test(empty));
+}
+
+// ── the page changed, so the answer has to say so ────────────────────────────
+// Onboarding applies settings immediately. A page that rearranges itself with
+// no explanation is worse than one that does nothing, so the reply names what
+// it did, using the registry's own words rather than a second set of labels.
+{
+  check('nothing applied means nothing claimed', appliedSummary({}) === '');
+  check('null is not a claim either', appliedSummary(null) === '');
+
+  check('one change is named', appliedSummary({ fontScale: 150 }) === 'larger text');
+  check('two changes read as a pair',
+    appliedSummary({ fontScale: 150, contrastMode: 'yellow-black' }) === 'larger text and higher contrast');
+  check('three changes read as a list',
+    appliedSummary({ lineHeight: 1.8, dyslexiaFont: true, autoSimplify: true })
+      === 'more line spacing, a dyslexia-friendly font and simpler wording');
+
+  // A blind profile applies six at once; a wall of them is not an answer.
+  const many = appliedSummary({ autoDescribe: true, autoFixLabels: true, fixLandmarks: true, skipLinks: true, announceUpdates: true });
+  check('beyond three, the rest are counted', /, and 2 more$/.test(many));
+  check('…and the first three are still named', many.startsWith('image descriptions, form and button labels, page landmarks'));
+
+  // The three caption mechanisms are ONE thing to the person they were applied
+  // for. Listing them separately describes our plumbing, not their page.
+  check('the caption settings collapse to one word',
+    appliedSummary({ showCaptions: true, liveCaptions: true, autoCaptions: true }) === 'captions');
+  check('…and so do the two announcement settings',
+    appliedSummary({ announceUpdates: true, spaFocus: true }) === 'screen-reader announcements');
+
+  // The registry is the fallback for anything without a person-facing label,
+  // lowercased to sit mid-sentence but never mangling its own capitals.
+  const meta = { bigTargets: { description: 'Enlarge small controls' }, autoDescribe: { description: 'AI image descriptions' } };
+  check('an unlabelled key falls back to the registry', appliedSummary({ bigTargets: true }, meta) === 'enlarge small controls');
+  check('a labelled key ignores the registry wording', appliedSummary({ autoDescribe: true }, meta) === 'image descriptions');
+  check('with no label and no registry, the key itself is used', appliedSummary({ mysterySetting: true }) === 'mysterySetting');
+
+  const reply = onboardingReply({ supportAreas: ['reading'] }, 'a dyslexia-friendly font');
+  check('the reply says the page changed', /changed this page to match/.test(reply));
+  check('…and names the change', /a dyslexia-friendly font/.test(reply));
+  check('…and still reports the profile', /Support areas: reading/.test(reply));
+
+  // A motor-only profile derives nothing today, so it must not claim otherwise.
+  const quiet = onboardingReply({ supportAreas: ['motor'] }, '');
+  check('with nothing applied, no page change is claimed', !/changed this page/.test(quiet));
+  check('…but the profile update is still reported', /Support areas: motor/.test(quiet));
 }
 
 {

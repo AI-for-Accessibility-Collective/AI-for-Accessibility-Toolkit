@@ -117,6 +117,14 @@ try {
     check('a disclosure applies its derived settings', await page.evaluate(
       () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
     ));
+
+    // …and says so. The page changing under someone with no explanation is
+    // worse than it not changing, so the reply names what it did, in words
+    // written for the person rather than the registry's developer wording.
+    const reply = await lastReply();
+    check('the answer says the page was changed', /changed this page to match/i.test(reply));
+    check('…and names it in plain words', /a dyslexia-friendly font/.test(reply));
+    check('…not in registry/developer wording', !/OpenDyslexic|settingsMeta|ARIA landmarks/.test(reply));
   }
 
   // ── the profile follows the person across a reload ────────────────────────

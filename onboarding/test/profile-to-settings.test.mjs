@@ -23,6 +23,7 @@ delete process.env.GEMINI_API_KEY;
 
 const { deriveDefaultNeeds } = await import('../server.js');
 const { renderWebSettings } = await import('../../toolkit/surfaces/web.js');
+const { CHANGE_LABELS } = await import('../chat-profile.js');
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -85,6 +86,24 @@ const settingsFor = (areas, freeText = '', visionKind) =>
 {
   check('an empty profile derives no settings', Object.keys(settingsFor([])).length === 0);
   check('an unknown area derives no settings', Object.keys(settingsFor(['nonsense'])).length === 0);
+}
+
+// ── every adaptation onboarding can apply has words for the person ──────────
+// Onboarding announces what it changed. A key with no person-facing label
+// falls back to the registry, which is written for developers and LLM prompts
+// ("Add missing ARIA landmarks (main, navigation, banner, contentinfo) so
+// screen-reader users can navigate by region"), so a new derivation would
+// quietly start speaking implementation detail mid-sentence.
+{
+  const derivable = new Set();
+  for (const area of ['vision', 'reading', 'cognitive', 'motor', 'hearing', 'sensory', 'attention']) {
+    for (const kind of [undefined, 'blind', 'lowVision']) {
+      for (const k of Object.keys(settingsFor([area], '', kind))) derivable.add(k);
+    }
+  }
+  const unlabelled = [...derivable].filter((k) => !CHANGE_LABELS[k]);
+  check(`every derivable setting has a person-facing label (${derivable.size} keys)`,
+    unlabelled.length === 0 || (console.log('   no label for:', unlabelled.join(', ')), false));
 }
 
 rmSync(dir, { recursive: true, force: true });

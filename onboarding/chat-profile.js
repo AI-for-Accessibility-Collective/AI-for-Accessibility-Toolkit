@@ -41,13 +41,95 @@ export function mergeOnboarding(prev, next, visionKindOf) {
   return { supportAreas, freeText, visionKind };
 }
 
-/** What to say after a profile update. Pure function of the server's answer. */
-export function onboardingReply(d) {
+// How many adaptations to name before summarizing the rest. A blind profile
+// applies eight or so at once, and a wall of them is not a useful answer.
+const NAMED_CHANGES = 3;
+
+// What to CALL each adaptation when speaking to the person it was applied for.
+//
+// Deliberately not the registry's settingsMeta descriptions. Those are written
+// for developers and for LLM system prompts, so they carry implementation
+// detail a person does not need mid-sentence: fixLandmarks reads "Add missing
+// ARIA landmarks (main, navigation, banner, contentinfo) so screen-reader users
+// can navigate by region", and fontScale reads "Font size percentage". Same
+// setting, different audience, different words.
+//
+// Several keys deliberately share a label: showCaptions, liveCaptions and
+// autoCaptions are three mechanisms for one thing a person asked for, and
+// listing them separately describes our plumbing rather than their page.
+// Duplicates are collapsed below.
+//
+// These are the 15 keys onboarding can derive today (every support area, both
+// vision kinds). Anything outside the list falls back to the registry.
+export const CHANGE_LABELS = {
+  fontScale:       'larger text',
+  contrastMode:    'higher contrast',
+  lineHeight:      'more line spacing',
+  dyslexiaFont:    'a dyslexia-friendly font',
+  autoSimplify:    'simpler wording',
+  motionReducer:   'no animations',
+  showCaptions:    'captions',
+  liveCaptions:    'captions',
+  autoCaptions:    'captions',
+  autoDescribe:    'image descriptions',
+  autoFixLabels:   'form and button labels',
+  fixLandmarks:    'page landmarks',
+  skipLinks:       'skip links',
+  announceUpdates: 'screen-reader announcements',
+  spaFocus:        'screen-reader announcements',
+};
+
+/**
+ * Say what actually changed on the page, in the person's terms.
+ *
+ * Onboarding applies settings immediately, so it has to REPORT them: a page
+ * that rearranges itself with no explanation is worse than one that does
+ * nothing.
+ *
+ * @param {object} applied  what the receiver reported it applied ({key: value})
+ * @param {object} [meta]   settingsMeta, used only for keys with no label yet
+ * @returns {string} a phrase like "larger text, higher contrast and 2 more", or ''
+ */
+export function appliedSummary(applied, meta) {
+  const keys = Object.keys(applied || {});
+  if (!keys.length) return '';
+
+  const label = (k) => {
+    if (CHANGE_LABELS[k]) return CHANGE_LABELS[k];
+    // Fallback: the registry's wording, lowercased to sit mid-sentence unless
+    // its first word carries its own capitals ("OpenDyslexic", "AI").
+    const d = (meta && meta[k] && meta[k].description) || k;
+    const firstWord = d.split(' ')[0];
+    return /[A-Z]/.test(firstWord.slice(1)) ? d : d.charAt(0).toLowerCase() + d.slice(1);
+  };
+
+  // Collapse the keys that mean one thing to a person (the three caption
+  // mechanisms), so the sentence describes their page and not our plumbing.
+  const labels = [...new Set(keys.map(label))];
+  const named = labels.slice(0, NAMED_CHANGES);
+  const rest = labels.length - named.length;
+
+  // With a remainder the "and" belongs to the count, not to the last item, or
+  // the sentence reads "a, b and c, and 2 more".
+  if (rest) return `${named.join(', ')}, and ${rest} more`;
+  return named.length > 1
+    ? named.slice(0, -1).join(', ') + ' and ' + named[named.length - 1]
+    : named[0];
+}
+
+/**
+ * What to say after a profile update. Pure function of the server's answer,
+ * plus what the page actually applied.
+ */
+export function onboardingReply(d, appliedText = '') {
   const areas = d.supportAreas && d.supportAreas.length ? d.supportAreas.join(', ') : 'none';
   const kind = d.visionKind
     ? ` (${d.visionKind === 'blind' ? 'screen-reader / no magnification' : 'low vision'})`
     : '';
-  return `Got it — updated your profile. Support areas: ${areas}${kind}. Tell me more any time, or edit it on the onboarding page.`;
+  // Only claim a change when one happened: a profile that derives nothing
+  // (motor, today) must not say the page was adapted.
+  const changed = appliedText ? ` I've changed this page to match: ${appliedText}.` : '';
+  return `Got it — updated your profile. Support areas: ${areas}${kind}.${changed} Tell me more any time, or edit it on the onboarding page.`;
 }
 
 /**
