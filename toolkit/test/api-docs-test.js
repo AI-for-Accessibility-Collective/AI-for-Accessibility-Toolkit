@@ -39,9 +39,9 @@ import { execFileSync } from 'node:child_process';
 import { createToolkit } from '../index.js';
 import { memoryKV } from '../platforms/node/kv.js';
 import { buildModel } from '../scripts/introspect.mjs';
-import { renderApiMd } from '../scripts/generate-api-docs.mjs';
+import { renderApiMd, PACKAGE_NAME } from '../scripts/generate-api-docs.mjs';
 import { renderSkillMd } from '../scripts/generate-skill.mjs';
-import { PACKAGE_NAME } from '../scripts/generate-api-docs.mjs';
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TOOLKIT_ROOT = path.join(__dirname, '..');

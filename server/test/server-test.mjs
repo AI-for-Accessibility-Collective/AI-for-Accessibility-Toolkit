@@ -384,6 +384,9 @@ async function main() {
       const del = await call('DELETE', '/admin/users/profile-a', { adminToken: ADMIN_PASSWORD });
       assert.equal(del.status, 200);
       assert.equal(del.body.ok, true);
+      // Pin the documented shape (HTTP_ENDPOINTS, CONTRACT.md): {ok, uid, revokedTokens}.
+      assert.equal(del.body.uid, 'profile-a');
+      assert.equal(typeof del.body.revokedTokens, 'number');
       const list2 = await call('GET', '/admin/users', { adminToken: ADMIN_PASSWORD });
       assert.ok(!list2.body.users.includes('profile-a'));
       assert.ok(list2.body.users.includes('profile-b'));
@@ -425,7 +428,7 @@ async function main() {
       };
 
       const served = new Set([...literals, ...usedPrefixes.map((p) => norm(p))].map(norm));
-      assert.ok(served.size > 0, 'parsed no paths out of app.js — the parser has gone stale');
+      assert.ok(served.size > 0, 'parsed no paths out of app.js, the parser has gone stale');
 
       const documented = new Set(HTTP_ENDPOINTS.map((e) => norm(e.path)));
 
@@ -447,7 +450,7 @@ async function main() {
         [...contractMd.matchAll(/^\|\s*(?:GET|POST|DELETE|PUT|PATCH)\s*\|\s*`([^`]+)`/gm)]
           .map((m) => norm(m[1])),
       );
-      assert.ok(contractPaths.size > 0, 'parsed no rows out of CONTRACT.md — the parser has gone stale');
+      assert.ok(contractPaths.size > 0, 'parsed no rows out of CONTRACT.md, the parser has gone stale');
       assert.deepEqual(
         [...served].filter((p) => !contractPaths.has(p)), [],
         'CONTRACT.md is missing a path app.js serves',
