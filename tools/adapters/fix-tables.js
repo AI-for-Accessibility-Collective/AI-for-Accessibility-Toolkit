@@ -90,7 +90,8 @@ export async function fixTableHeaders(table) {
       if (rejected) {
         console.warn(`[AI4A11y] fixTableHeaders: rejected model output for column ${col + 1} (${rejected})`);
       }
-      const header = rejected ? null : answer;
+      // The gate judges the trimmed value, so that is what gets written.
+      const header = (rejected || answer == null) ? null : answer.trim();
       headers.push(header || `Column ${col + 1}`);
     }
 

@@ -185,6 +185,10 @@ async function run() {
     fakeAI({ improveLinkText: () => 'y'.repeat(60) });
     await improveAmbiguousLink(doc60.querySelector('a'));
     check('links: a label of exactly 60 characters is accepted', doc60.querySelector('a').getAttribute('aria-label') === 'y'.repeat(60));
+    const docNl = mount(`<p><a href="https://example.com/q3">click here</a></p>`);
+    fakeAI({ improveLinkText: () => 'Open the Q3 report\n' });
+    await improveAmbiguousLink(docNl.querySelector('a'));
+    check('links: a trailing newline from the provider is trimmed, not rejected', docNl.querySelector('a').getAttribute('aria-label') === 'Open the Q3 report');
   }
 
   // ── TABLES ───────────────────────────────────────────────────────────────────
@@ -295,12 +299,12 @@ async function run() {
         <tr><td>SF</td><td>400</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td></tr>
       </table>`);
     let col = 0;
-    fakeAI({ inferColumnHeader: () => { const i = col++; return i === 0 ? 'City' : rejected[i]; } });
+    fakeAI({ inferColumnHeader: () => { const i = col++; return i === 0 ? 'City\n' : rejected[i]; } });
     const table = doc.querySelector('table');
     const changed = await fixTableHeaders(table);
     const ths = Array.from(table.querySelectorAll('thead th')).map(t => t.textContent);
     check('tables: the gate does not stop the header row from being generated', changed === true && ths.length === 7);
-    check('tables: a good answer is still used', ths[0] === 'City');
+    check('tables: a good answer is still used, trimmed of the trailing newline', ths[0] === 'City');
     check('tables: a refusal falls back to "Column N"', ths[1] === 'Column 2');
     check('tables: a header with a newline falls back to "Column N"', ths[2] === 'Column 3');
     check('tables: a whitespace answer falls back to "Column N"', ths[3] === 'Column 4');

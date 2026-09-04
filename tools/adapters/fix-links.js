@@ -22,11 +22,13 @@ export async function improveAmbiguousLink(link) {
   const context = link.closest('p, li, td, article, section')?.textContent?.trim().substring(0, 200) || '';
 
   try {
-    const improved = await improveLinkText(text, link.href, context);
+    const answer = await improveLinkText(text, link.href, context);
     // Gate the answer before it becomes the accessible name. A refusal or a
     // hedge in aria-label is announced as the link's name, which is worse
     // than the "click here" it replaced. Rejected answers degrade like null.
-    const rejected = improved == null ? null : rejectShortText(improved);
+    // The gate judges the trimmed value, so that is what gets written.
+    const rejected = answer == null ? null : rejectShortText(answer);
+    const improved = (rejected || answer == null) ? null : answer.trim();
     if (rejected) {
       console.warn(`[AI4A11y] improveAmbiguousLink: rejected model output (${rejected})`);
     } else if (improved && improved.toLowerCase() !== text.toLowerCase()) {
