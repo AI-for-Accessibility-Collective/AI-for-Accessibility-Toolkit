@@ -1,3 +1,7 @@
+// @ts-nocheck
+// FLAG(review): 9 errors under toolkit/tsconfig.json's strict check at the
+// time this header was added. Type declarations still emit from this file;
+// remove these lines and fix the errors to opt it into the check.
 // Node platform adapters — Clock, Scheduler, Consent. Mirrors
 // ../chrome/ports.js's chromeClock/chromeScheduler/chromeConsent, but built
 // on plain Node globals instead of `chrome.*`, per toolkit/ports/index.js's

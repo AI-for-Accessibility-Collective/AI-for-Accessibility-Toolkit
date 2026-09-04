@@ -9,6 +9,22 @@
 import { parseSkill, serializeSkill, validateSkill } from './skill.js';
 
 /**
+ * @typedef {import('./skill.js').Skill} Skill
+ * @typedef {import('./skill.js').ToolsRegistry & { forPrompt: () => import('./skill.js').ToolPromptEntry[] }} SkillBuilderTools
+ *   The registry members the Engineer needs: the prompt catalog on top of the
+ *   core's minimum.
+ */
+
+/**
+ * @typedef {Object} SkillBuildOptions
+ * @property {import('./ability.js').ProfileRecord} [profile]  ability profile (supportAreas, freeText)
+ * @property {SkillBuilderTools} tools                          AA_TOOLS registry (forPrompt + settingsVocabularyLines)
+ * @property {{ categoryIds: () => string[] }} [taxonomy]       AA_TAXONOMY (categoryIds) for siteRelevance
+ * @property {Skill|null} [previous]                            the prior built Skill the person rejected
+ * @property {string} [feedback]                                what the person said was wrong with it
+ */
+
+/**
  * Build the prompt that instructs the LLM to author a SKILL.md composing the
  * available adapters for a stated need. Grounds the model in the real adapter
  * catalog + settings vocabulary so it can only reference things that exist.
@@ -17,17 +33,20 @@ import { parseSkill, serializeSkill, validateSkill } from './skill.js';
  * with their feedback (`previous` + `feedback`) — the diagrams' evaluation
  * loop where a failed validation returns to the skill builder agent.
  *
+ * @overload
  * @param {string} need                 - the user's plain-language request
- * @param {Object} opts
- * @param {Object} [opts.profile]        - ability profile (supportAreas, freeText)
- * @param {Object} opts.tools            - AA_TOOLS registry (forPrompt + settingsVocabularyLines)
- * @param {Object} [opts.taxonomy]       - AA_TAXONOMY (categoryIds) for siteRelevance
- * @param {Object} [opts.previous]       - the prior built Skill the person rejected
- * @param {string} [opts.feedback]       - what the person said was wrong with it
+ * @param {SkillBuildOptions} opts
+ * @returns {string}
+ */
+/**
+ * The implementation signature keeps the runtime default (`= {}`) legal for
+ * the checker; callers see the overload above, where `tools` is required.
+ * @param {string} need
+ * @param {Partial<SkillBuildOptions> & { tools?: any }} [opts]
  * @returns {string}
  */
 export function buildSkillPrompt(need, { profile = {}, tools, taxonomy, previous = null, feedback = '' } = {}) {
-  const adapters = tools.forPrompt().map(t =>
+  const adapters = tools.forPrompt().map(/** @param {import('./skill.js').ToolPromptEntry} t */ t =>
     `- ${t.id} — ${t.name}: ${t.description} (helps: ${t.supportAreas.join(', ')})`).join('\n');
   const settingsVocab = tools.settingsVocabularyLines().join('\n');
   const categories = taxonomy ? taxonomy.categoryIds().join(', ') : 'news, social, video, shopping, education, productivity, reference, other';
@@ -90,8 +109,8 @@ Rules:
  * fences the model wraps the whole doc in.
  *
  * @param {string} llmOutput
- * @param {{ tools: any }} deps
- * @returns {{ skill: import('./skill.js').Skill, valid: boolean, errors: string[] }}
+ * @param {{ tools?: import('./skill.js').ToolsRegistry|null }} [deps]
+ * @returns {{ skill: Skill, valid: boolean, errors: string[] }}
  */
 export function parseBuiltSkill(llmOutput, { tools } = {}) {
   let text = String(llmOutput || '').trim();
@@ -109,15 +128,17 @@ export function parseBuiltSkill(llmOutput, { tools } = {}) {
  * model referenced anything invalid) return the errors so the caller can
  * re-prompt. Does not persist — the caller (Librarian) owns storage + consent.
  *
+ * @overload
  * @param {string} need
- * @param {Object} deps
- * @param {(prompt: string) => Promise<string>} deps.llm
- * @param {Object} deps.tools
- * @param {Object} [deps.taxonomy]
- * @param {Object} [deps.profile]
- * @param {Object} [deps.previous]  - prior attempt to revise
- * @param {string} [deps.feedback]  - the person's feedback on it
- * @returns {Promise<{ skill: import('./skill.js').Skill|null, valid: boolean, errors: string[] }>}
+ * @param {SkillBuildOptions & { llm: (prompt: string) => Promise<string> }} deps
+ * @returns {Promise<{ skill: Skill|null, valid: boolean, errors: string[] }>}
+ */
+/**
+ * Implementation signature; see buildSkillPrompt for why it is looser than
+ * the overload callers see.
+ * @param {string} need
+ * @param {Partial<SkillBuildOptions> & { llm?: (prompt: string) => Promise<string>, tools?: any }} [deps]
+ * @returns {Promise<{ skill: Skill|null, valid: boolean, errors: string[] }>}
  */
 export async function buildSkill(need, { llm, tools, taxonomy, profile, previous = null, feedback = '' } = {}) {
   if (!llm) return { skill: null, valid: false, errors: ['no LLM available'] };
@@ -125,7 +146,7 @@ export async function buildSkill(need, { llm, tools, taxonomy, profile, previous
   let out;
   try {
     out = await llm(prompt);
-  } catch (e) {
+  } catch (/** @type {any} */ e) {
     return { skill: null, valid: false, errors: [`LLM call failed: ${e.message}`] };
   }
   return parseBuiltSkill(out, { tools });

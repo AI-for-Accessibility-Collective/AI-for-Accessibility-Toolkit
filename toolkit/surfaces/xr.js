@@ -26,8 +26,11 @@ const BASE_TEXT_ANGULAR_DEG = 0.35;
 // Resolve needs[] into a dimension → winning-value map. A collision (two
 // needs targeting the same dimension) resolves the same way the web
 // derivation does: stronger strength wins, ties go to the later entry.
+/** @param {import('../core/ability.js').AbilityModel|null|undefined} model */
 function resolveNeeds(model) {
+  /** @type {Record<string, unknown>} */
   const winners = {};
+  /** @type {Record<string, string>} */
   const strengthByDim = {};
   const needs = (model && model.needs) || [];
   for (const need of needs) {
@@ -45,6 +48,7 @@ function resolveNeeds(model) {
 // The dimension names mirror platforms/chrome/web-surface.js's WEB_DERIVATION
 // (the live needs→web mapping) so XR and web read the exact same vocabulary
 // — one set of need names, two renderings.
+/** @param {import('../core/ability.js').AbilityModel|null|undefined} model */
 function needsToMagnitudes(model) {
   const w = resolveNeeds(model);
   return {
@@ -65,11 +69,11 @@ function needsToMagnitudes(model) {
 }
 
 /**
- * @param {ReturnType<import('../core/ability.js').toAbilityModel>} model - the needs AbilityModel (librarian.getAbilityModel() shape)
+ * @param {import('../core/ability.js').AbilityModel} model - the needs AbilityModel (librarian.getAbilityModel() shape)
  * @param {object} [sensors]
  * @param {number} [sensors.fovDegrees=90]        - headset horizontal FOV
  * @param {number} [sensors.viewingDistanceM=1.5] - typical UI panel distance
- * @returns {object} XR rendering parameters
+ * @returns XR rendering parameters
  */
 export function renderXRSettings(model, sensors = {}) {
   const fov = sensors.fovDegrees ?? 90;
@@ -120,6 +124,7 @@ export function renderXRSettings(model, sensors = {}) {
   };
 }
 
+/** @param {number} v */
 function round3(v) {
   return Math.round(v * 1000) / 1000;
 }

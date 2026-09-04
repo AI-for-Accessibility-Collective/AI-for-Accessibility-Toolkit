@@ -16,16 +16,36 @@ import { createLibrarian } from './core/librarian.js';
 import { systemClock, noopScheduler, noopConsent, noopDemo } from './ports/index.js';
 
 /**
- * @param {Object} ports
- * @param {import('./ports/index.js').KVStore} ports.kv               Required.
- * @param {import('./ports/index.js').Clock} [ports.clock]            Defaults to the system wall clock.
- * @param {import('./ports/index.js').Scheduler} [ports.scheduler]    Defaults to a no-op (drive the slow lane yourself).
- * @param {import('./ports/index.js').Consent} [ports.consent]        Defaults to a no-op.
- * @param {import('./ports/index.js').DemoHook} [ports.demo]          Defaults to a no-op.
- * @param {Object} [ports.taxonomy]                                   Defaults to the bundled web taxonomy.
- * @param {Object|null} [ports.toolsRegistry]                         The settings/tools registry (AA_TOOLS shape), or null.
- * @param {Array} [ports.builtinSkills]                               Built-in SKILL.md playbooks (parsed Skill objects), or [].
- * @returns {{ datastore: object, librarian: object }}
+ * @typedef {Object} ToolkitPorts
+ * What a host hands to `createToolkit`. Only `kv` is required; every other
+ * port has a no-op or wall-clock default (see ./ports/index.js).
+ * @property {import('./ports/index.js').KVStore} kv                    Required.
+ * @property {import('./ports/index.js').Clock} [clock]                 Defaults to the system wall clock.
+ * @property {import('./ports/index.js').Scheduler} [scheduler]         Defaults to a no-op (drive the slow lane yourself).
+ * @property {import('./ports/index.js').Consent} [consent]             Defaults to a no-op.
+ * @property {import('./ports/index.js').DemoHook} [demo]               Defaults to a no-op.
+ * @property {import('./core/taxonomy.js').Taxonomy} [taxonomy]         Defaults to the bundled web taxonomy.
+ * @property {import('./core/skill.js').ToolsRegistry|null} [toolsRegistry]  The settings/tools registry (AA_TOOLS shape), or null.
+ * @property {import('./core/skill.js').Skill[]} [builtinSkills]        Built-in SKILL.md playbooks (parsed Skill objects), or [].
+ */
+
+/**
+ * @typedef {Object} Toolkit
+ * @property {ReturnType<typeof createDatastore>} datastore
+ * @property {ReturnType<typeof createLibrarian>} librarian
+ */
+
+/**
+ * @overload
+ * @param {ToolkitPorts} ports
+ * @returns {Toolkit}
+ */
+/**
+ * The implementation signature keeps the runtime default (`= {}`) legal for
+ * the checker so the missing-kv error below stays a plain Error; callers see
+ * the overload above, where `kv` is required.
+ * @param {Partial<ToolkitPorts>} [ports]
+ * @returns {Toolkit}
  */
 export function createToolkit({
   kv,

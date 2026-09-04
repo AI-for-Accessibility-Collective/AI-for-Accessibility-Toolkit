@@ -18,6 +18,27 @@
 // classifications are keyed by these ids, so migration/compaction logic uses
 // the version to detect and repair out-of-vocabulary scopes.
 
+/**
+ * @typedef {Object} TaxonomyCategory
+ * @property {string} id
+ * @property {string} label
+ * @property {boolean} [noMemoryDefault]  True for the no-memory zones.
+ */
+
+/**
+ * @typedef {Object} Taxonomy
+ * The shape a host-supplied taxonomy must have (this module's `taxonomy` is
+ * the reference instance).
+ * @property {number} version
+ * @property {TaxonomyCategory[]} categories
+ * @property {{ id: string, label: string }[]} contexts
+ * @property {Record<string, string>} hostMap        hostname -> category id
+ * @property {() => string[]} categoryIds
+ * @property {() => string[]} noMemoryCategories
+ * @property {(hostname: string|null|undefined) => string|null} categoryForHost
+ */
+
+/** @type {Taxonomy} */
 export const taxonomy = {
   version: 2,
 

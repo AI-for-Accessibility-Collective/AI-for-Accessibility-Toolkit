@@ -9,11 +9,13 @@
     "test": "for f in tools/test/*-test.js toolkit/test/*-test.js toolkit/test/*-test.mjs toolkit/test/*.test.mjs controller/test/*.test.mjs onboarding/test/*.test.mjs; do node \"$f\" || exit 1; done",
     "validate:browser": "node tools/test/browser-validate.js",
     "test:e2e": "node onboarding/test/chat-e2e.mjs",
-    "build:cli": "esbuild cli/cli-tools.js --bundle --format=iife --outfile=cli/cli-tools.bundle.js"
+    "build:cli": "esbuild cli/cli-tools.js --bundle --format=iife --outfile=cli/cli-tools.bundle.js",
+    "build:types": "tsc -p toolkit/tsconfig.json"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",
     "jsdom": "^29.1.1",
-    "playwright": "^1.49.0"
+    "playwright": "^1.49.0",
+    "typescript": "5.9.3"
   }
 }

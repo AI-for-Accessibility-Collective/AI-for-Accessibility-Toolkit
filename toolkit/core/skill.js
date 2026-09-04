@@ -39,16 +39,55 @@
  * task saved from the Assistant becomes a skill). Most skills use only one.
  */
 
+/**
+ * @typedef {Object} ToolEntry
+ * One adapter in the tools registry (registry/tools.js `skillRegistry`).
+ * @property {string} id
+ * @property {string} name
+ * @property {string} description
+ * @property {string[]} supportAreas
+ * @property {string[]} siteRelevance
+ * @property {Record<string, any>} [settings]  Settings this adapter sets when enabled.
+ * @property {boolean} [requiresAI]
+ * @property {string} [icon]
+ * @property {string} [emoji]
+ * @property {boolean} [quickStart]
+ *
+ * @typedef {Pick<ToolEntry, 'id'|'name'|'description'|'supportAreas'|'siteRelevance'>} ToolPromptEntry
+ *
+ * @typedef {Object} ToolsRegistry
+ * The AA_TOOLS-shaped registry a host injects (registry/tools.js `asAATools()`
+ * builds the reference one). Only `settingsMeta` and `settingsVocabularyLines`
+ * are read on the core's main paths; the rest serve skill validation and the
+ * skill builder, so a minimal host may leave them out.
+ * FLAG(review): the optional members mirror what the core guards for at
+ * runtime today, not a design decision about the registry contract.
+ * @property {number} [version]
+ * @property {ToolEntry[]} [list]
+ * @property {import('./units.js').SettingsMeta} settingsMeta
+ * @property {() => string[]} settingsVocabularyLines  One prompt-ready line per setting.
+ * @property {(id: string) => ToolEntry|null|undefined} [byId]
+ * @property {(area: string) => ToolEntry[]} [byArea]
+ * @property {(ids: string[]) => Record<string, any>} [settingsFor]
+ * @property {() => ToolPromptEntry[]} [forPrompt]
+ */
+
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/;
 
 // Parse a tiny YAML subset: `key: value`, where value is a plain string or an
 // inline list `[a, b, c]`. Enough for name/description/supportAreas/siteRelevance.
+/**
+ * @param {string} text
+ * @returns {Record<string, any>}
+ */
 function parseFrontmatter(text) {
+  /** @type {Record<string, any>} */
   const out = {};
   for (const line of text.split('\n')) {
     const m = line.match(/^([a-zA-Z][\w-]*):\s*(.*)$/);
     if (!m) continue;
     const key = m[1];
+    /** @type {string|string[]} */
     let val = m[2].trim();
     if (val.startsWith('[') && val.endsWith(']')) {
       val = val.slice(1, -1).split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
@@ -61,6 +100,10 @@ function parseFrontmatter(text) {
 }
 
 // Extract the first ```json fenced block (the machine-runnable recipe).
+/**
+ * @param {string} body
+ * @returns {{ adapters: SkillRecipeStep[], actions: SkillRecipeAction[] }}
+ */
 function extractRecipe(body) {
   const m = body.match(/```json\s*([\s\S]*?)```/);
   if (!m) return { adapters: [], actions: [] };
@@ -94,8 +137,10 @@ export function parseSkill(markdown) {
   const fmStart = lines.findIndex((l, i) => l.trim() === '---' && /^\s*[a-zA-Z][\w-]*\s*:/.test(lines[i + 1] || ''));
   if (fmStart > 0) src = lines.slice(fmStart).join('\n');
   const fm = src.match(FRONTMATTER_RE);
+  /** @type {Record<string, any>} */
   const front = fm ? parseFrontmatter(fm[1]) : {};
   const body = fm ? fm[2].trim() : src.trim();
+  /** @param {any} v */
   const asArray = (v) => Array.isArray(v) ? v : (v ? [v] : []);
   return {
     name: front.name || '',
@@ -114,6 +159,7 @@ export function parseSkill(markdown) {
  * @returns {string}
  */
 export function serializeSkill(skill) {
+  /** @param {string[]|undefined} a */
   const list = (a) => `[${(a || []).join(', ')}]`;
   const front = [
     '---',
@@ -136,7 +182,7 @@ export function serializeSkill(skill) {
  * exist, every recipe adapter id is a real tool, and every settings key is in
  * the settings vocabulary. Returns collected errors (empty = valid).
  * @param {Skill} skill
- * @param {{ tools: any }} deps  - tools = the AA_TOOLS registry (byId + settingsMeta)
+ * @param {{ tools?: ToolsRegistry|null }} [deps]  - tools = the AA_TOOLS registry (byId + settingsMeta)
  * @returns {{ valid: boolean, errors: string[] }}
  */
 export function validateSkill(skill, { tools } = {}) {
@@ -179,9 +225,10 @@ export function validateSkill(skill, { tools } = {}) {
  * bridge skill → adapters, no LLM. Later steps win on key conflicts
  * (author-ordered).
  * @param {Skill} skill
- * @returns {{ settings: Object, adapterIds: string[], actions: SkillRecipeAction[] }}
+ * @returns {{ settings: Record<string, any>, adapterIds: string[], actions: SkillRecipeAction[] }}
  */
 export function resolveSkill(skill) {
+  /** @type {Record<string, any>} */
   const settings = {};
   const adapterIds = [];
   for (const step of (skill.recipe?.adapters || [])) {
@@ -222,6 +269,7 @@ const GENERIC_WORDS = new Set([
   'using', 'more', 'some', 'all', 'every', 'thing',
 ]);
 
+/** @param {string|null|undefined} text */
 function needTokens(text) {
   return String(text || '').toLowerCase().split(/[^a-z0-9]+/)
     .map(w => (w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) ? w.slice(0, -1) : w)
@@ -230,6 +278,10 @@ function needTokens(text) {
 
 // Same word, or one is a prefix of the other ("read" ~ "reading") — enough
 // stemming for needs phrased in plain language, without a stemmer dependency.
+/**
+ * @param {string} a
+ * @param {string} b
+ */
 function tokenLike(a, b) {
   if (a === b) return true;
   const [short, long] = a.length <= b.length ? [a, b] : [b, a];

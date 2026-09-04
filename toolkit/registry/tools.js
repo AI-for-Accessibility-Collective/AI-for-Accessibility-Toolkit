@@ -24,6 +24,7 @@
 //                are heuristic-first like this) — the field answers "does
 //                the toggle work without a key", not "may it ever call AI".
 
+/** @type {import('../core/skill.js').ToolEntry[]} */
 export const skillRegistry = [
   {
     id: 'dark-mode',
@@ -590,6 +591,7 @@ export const skillRegistry = [
 // Single source for prompts that let the LLM set values directly (e.g. the
 // popup's "what support do you need?" interpretNeeds call) — this replaces
 // the hand-maintained list that used to live inline in background.js.
+/** @type {import('../core/units.js').SettingsMeta} */
 export const settingsMeta = {
   agentWatch:      { type: 'boolean', description: 'Check what the assistant does against what you asked for' },
   darkMode:        { type: 'boolean', description: 'Dark theme' },
@@ -660,6 +662,7 @@ export const settingsMeta = {
 // Grouped, prompt-ready rendering of settingsMeta for LLM system prompts
 // (voice mode's capability vocabulary). One line per setting so registry
 // edits flow into every prompt automatically.
+/** @type {Array<[string, string[]]>} */
 const PROMPT_GROUPS = [
   ['Vision & color', ['darkMode', 'contrastMode', 'colorBlindMode', 'largeCursor', 'fixContrast', 'autoWcagFix', 'wcagRiskyFixes']],
   ['Text & reading', ['fontScale', 'lineHeight', 'letterSpacing', 'dyslexiaFont', 'readingGuide', 'readerMode', 'speechRate']],
@@ -676,7 +679,8 @@ export function settingsPromptLines() {
       const m = settingsMeta[key];
       if (!m) continue;
       const kind = m.type === 'enum'
-        ? `one of ${m.options.map(o => `"${o}"`).join(', ')}`
+        // An enum entry always carries options; the cast says so to the checker.
+        ? `one of ${/** @type {string[]} */ (m.options).map(o => `"${o}"`).join(', ')}`
         : m.range ? `${m.type} ${m.range[0]}-${m.range[1]}` : m.type;
       lines.push(`- ${key} (${kind}): ${m.description}`);
     }
@@ -684,10 +688,12 @@ export function settingsPromptLines() {
   return lines;
 }
 
+/** @param {string} id */
 export function getSkillById(id) {
   return skillRegistry.find(s => s.id === id);
 }
 
+/** @param {string} area */
 export function getSkillsByArea(area) {
   return skillRegistry.filter(s => s.supportAreas.includes(area));
 }
@@ -707,6 +713,8 @@ export function getRegistryForPrompt() {
 // AA_TOOLS-shaped live registry — the exact object a browser host's
 // build.js bakes into extension/lib/tools-registry.js, exported here so any
 // host can hand it to createToolkit({ toolsRegistry: asAATools() }).
+// The return type is inferred from the literal below, which satisfies the
+// core's ToolsRegistry contract (core/skill.js) with every member present.
 export function asAATools() {
   return {
     version: 1,
@@ -721,9 +729,13 @@ export function asAATools() {
         return `- ${k} (${t}): ${m.description}`;
       });
     },
+    /** @param {string} id */
     byId(id) { return this.list.find(s => s.id === id) || null; },
+    /** @param {string} area */
     byArea(area) { return this.list.filter(s => s.supportAreas.includes(area)); },
+    /** @param {string[]} ids */
     settingsFor(ids) {
+      /** @type {Record<string, any>} */
       const merged = {};
       for (const id of ids || []) {
         const t = this.byId(id);

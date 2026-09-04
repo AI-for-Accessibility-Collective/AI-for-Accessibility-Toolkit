@@ -20,8 +20,56 @@
 const VALID_STRENGTH = ['floor', 'preference', 'hint'];
 const VALID_UNIT = ['ratio', 'em', 'percent', 'boolean', 'enum'];
 
+/**
+ * @typedef {'floor'|'preference'|'hint'} NeedStrength
+ * @typedef {'ratio'|'em'|'percent'|'boolean'|'enum'} NeedUnit
+ */
+
+/**
+ * @typedef {Object} Need
+ * One modality-neutral need. `value` is read per dimension by each surface (a
+ * number for textSize, a boolean for reduceMotion, a variant string for
+ * contrast), so it stays `unknown` here and every reader narrows it.
+ * @property {string} dimension
+ * @property {unknown} value
+ * @property {NeedStrength} strength
+ * @property {NeedUnit} [unit]
+ * @property {number} [confidence]
+ * @property {string} [source]
+ */
+
+/**
+ * @typedef {Object} ProfileRecord
+ * The stored ability profile (`mine.profile`), as far as the pure helpers read
+ * it. Every field is optional because a stored record can predate any of them.
+ * @property {string[]} [supportAreas]
+ * @property {string} [freeText]
+ * @property {{ language?: string, sharing?: string } & Record<string, unknown>} [metaPreferences]
+ * @property {{ needs?: unknown[], readingLevel?: string|null, confidence?: number|null } & Record<string, unknown>} [fields]
+ * @property {number|null} [updatedAt]
+ */
+
+/**
+ * @typedef {Object} AbilityModel
+ * The modality-neutral view `librarian.getAbilityModel()` returns.
+ * @property {number} schemaVersion
+ * @property {string[]} supportAreas
+ * @property {string} freeText
+ * @property {string} language
+ * @property {string|null} readingLevel
+ * @property {number|null} confidence
+ * @property {Need[]} needs
+ */
+
+/**
+ * Canonicalize one raw need. Anything that is not an object with a
+ * `dimension` comes back null.
+ * @param {any} n
+ * @returns {Need|null}
+ */
 export function normalizeNeed(n) {
   if (!n || typeof n !== 'object' || !n.dimension) return null;
+  /** @type {Need} */
   const need = {
     dimension: String(n.dimension),
     value: n.value,
@@ -37,12 +85,15 @@ export function normalizeNeed(n) {
  * Project a stored profile into the AbilityModel view. Reads ONLY the specific
  * fresh sub-keys (fields.needs / fields.readingLevel / fields.confidence) so
  * unrelated legacy data in `fields` can never leak in.
- * @param {object|null} profile
+ * @param {ProfileRecord|null|undefined} profile
+ * @returns {AbilityModel}
  */
 export function toAbilityModel(profile) {
+  /** @type {NonNullable<ProfileRecord['fields']>} */
   const fields = (profile && profile.fields) || {};
   const needs = Array.isArray(fields.needs)
-    ? fields.needs.map(normalizeNeed).filter(Boolean)
+    // filter(Boolean) drops the nulls at runtime; the cast tells the checker so.
+    ? /** @type {Need[]} */ (fields.needs.map(normalizeNeed).filter(Boolean))
     : [];
   return {
     schemaVersion: 1,
