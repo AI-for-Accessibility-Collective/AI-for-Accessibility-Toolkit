@@ -48,7 +48,8 @@ ONBOARD_MODE=remote TOOLKIT_URL=http://127.0.0.1:8080 ADMIN_PASSWORD=<server-adm
 cover four layers: the profile logic against a real toolkit over a temp file
 store, the HTTP routes against the real server on an ephemeral port, the
 chat surface's own logic (routing precedence, the additive onboarding merge,
-the composer history), and the two write modes: how the remote path handles
+the composer history, when a remote receiver counts as connected), and the
+two write modes: how the remote path handles
 a failed write (`remote-write-failure.test.mjs`, against a stubbed toolkit
 service), and the contract both paths must satisfy
 (`onboard-contract.test.mjs`).
@@ -85,6 +86,10 @@ jsdom cannot run.
   setting still reaches the profile. Onboarding then renders the profile onto
   the page through the toolkit's web surface, and does so again on load, so a
   returning person's page matches their profile before they ask for anything.
+  The profile follows the person onto whatever the page drives: a remote
+  receiver such as browser-harness gets it the moment its connection opens
+  (connecting from Settings, or the reconnect after a reload), and the demo
+  preview gets it again when the person comes back to it.
 - **Add a profile** — a free-text "what do you need?" field + support-area
   checkboxes. Submitting creates/updates an ability profile (a `uid`),
   recording `supportAreas`, `freeText`, and a natural-language note.

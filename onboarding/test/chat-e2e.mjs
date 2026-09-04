@@ -30,6 +30,10 @@ delete process.env.GEMINI_API_KEY; // keep the general-answer lane offline
 
 const { chromium } = await import('playwright');
 const { server } = await import('../server.js');
+// The stand-in for a remote app such as browser-harness: the reference
+// in-memory receiver, served over the wire the page really speaks.
+const { createMockReceiver } = await import('../../controller/mock-receiver.js');
+const { serveControl } = await import('../../controller/transport/remote.js');
 
 let pass = 0, fail = 0;
 function check(name, cond) {
@@ -58,6 +62,45 @@ async function say(text) {
 }
 const profileText = () => page.locator('#profile').innerText();
 const lastReply = () => page.locator('#transcript .msg').last().innerText();
+// The connect controls live in the settings drawer, closed until the hamburger
+// opens it (and closed again by a reload).
+async function openSettings() {
+  if (await page.locator('#drawer').isHidden()) await page.click('#hamburger');
+}
+async function closeSettings() {
+  if (await page.locator('#drawer').isVisible()) await page.click('#drawer-close');
+}
+// Wait for something on the Node side (the mock remote receiver) to become
+// true; resolves false on timeout so the check that follows reports it.
+async function until(cond, timeoutMs = 10000) {
+  const end = Date.now() + timeoutMs;
+  while (Date.now() < end) {
+    if (cond()) return true;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  return !!cond();
+}
+
+// The stand-in for browser-harness. Playwright answers the page's WebSocket to
+// this address, and a mock receiver served over it records what the page
+// applied. One receiver per connection, so a reconnect gets a fresh one that
+// knows nothing, the way a restarted harness would. Registered before the
+// first navigation because the mock is installed with the page, not on the
+// fly; it does nothing until the page connects.
+const receivers = [];
+const routes = [];
+await page.routeWebSocket(/^ws:\/\/127\.0\.0\.1:9333\/?$/, (ws) => {
+  const recv = createMockReceiver();
+  const channel = {
+    post: (m) => ws.send(JSON.stringify(m)),
+    subscribe: (h) => { ws.onMessage((d) => { try { h(JSON.parse(String(d))); } catch {} }); return () => {}; },
+  };
+  serveControl(channel, recv);
+  receivers.push(recv);
+  routes.push(ws);
+});
+const latest = () => receivers[receivers.length - 1];
+const remoteHas = (key) => until(() => !!latest() && latest().settings[key] === true);
 
 try {
   // ── the front door ─────────────────────────────────────────────────────────
@@ -192,6 +235,58 @@ try {
     check('a relative change after a reset starts from the baseline', await page.evaluate(
       () => document.getElementById('demo-app').style.getPropertyValue('--aa-font-scale') === '1.1',
     ));
+  }
+
+  // ── the profile follows the person onto a receiver connected after boot ───
+  // A connected app is where a profile matters most: someone with a reading
+  // profile who connects browser-harness should get the dyslexia font there
+  // without asking. The stand-in harness registered above answers.
+  {
+    await openSettings();
+    await page.click('#use-local-harness');
+    check('the remote app gets the profile once its socket opens', await remoteHas('dyslexiaFont'));
+    check('…and the page shows the connection', /connected/.test(
+      await page.evaluate(() => document.getElementById('conn-status').className),
+    ));
+  }
+
+  // ── a disclosure made while a remote app is driven reaches that app ───────
+  // …and the preview, which was not being driven, catches up when the person
+  // comes back to it. The sensory area derives motionReducer, which neither
+  // side had before.
+  {
+    await say('I get sensory overload');
+    check('a disclosure while connected adapts the remote app', await remoteHas('motionReducer'));
+    check('…and not the preview, which was not being driven', !(await page.evaluate(
+      () => document.getElementById('demo-app').classList.contains('aa-reduce-motion'),
+    )));
+
+    await routes[routes.length - 1].close(); // the harness goes away
+    await closeSettings(); // the drawer sits over the status bar
+    await page.locator('#conn-status button', { hasText: 'Use demo preview' }).click();
+    await page.waitForFunction(
+      () => document.getElementById('demo-app').classList.contains('aa-reduce-motion'),
+      null,
+      { timeout: 10000 },
+    ).catch(() => {});
+    check('going back to the preview applies the profile to it', await page.evaluate(
+      () => document.getElementById('demo-app').classList.contains('aa-reduce-motion'),
+    ));
+  }
+
+  // ── a saved connection re-applies after a reload ──────────────────────────
+  // boot() reconnects to the receiver it was driving. That socket opens after
+  // boot has already rendered the profile onto the preview, so the remote app
+  // needs its own application when the reconnect lands.
+  {
+    await openSettings();
+    await page.click('#use-local-harness');
+    check('reconnecting gets a fresh receiver', await until(() => receivers.length === 2));
+    check('…and the fresh receiver gets the profile as well', await remoteHas('dyslexiaFont'));
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    check('the reload reconnects to the saved receiver', await until(() => receivers.length === 3));
+    check('the reconnected app gets the profile, unasked', await remoteHas('dyslexiaFont'));
   }
 } finally {
   await browser.close();
