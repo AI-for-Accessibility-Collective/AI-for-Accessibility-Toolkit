@@ -1,4 +1,4 @@
-// Simplify Text — jsdom tests for the output gate in simplify-text.js.
+// Simplify Text: jsdom tests for the output gate in simplify-text.js.
 //
 // simplifyText() and summarizeContent() replace or prepend what a person
 // reads, so a bad model answer is not a cosmetic problem: a refusal sentence
@@ -11,8 +11,11 @@ import { JSDOM } from 'jsdom';
 import { setAIProvider } from '../utils/ai.js';
 import { simplifyText, summarizeContent } from '../adapters/simplify-text.js';
 
+// console.log is stubbed while the adapter runs (below), so failures are
+// printed through the real one or they would be swallowed.
+const realWarn = console.warn, realLog = console.log;
 let pass = 0, fail = 0;
-const check = (name, cond) => { if (cond) { pass++; } else { fail++; console.log('FAIL:', name); } };
+const check = (name, cond) => { if (cond) { pass++; } else { fail++; realLog('FAIL:', name); } };
 
 function mount(bodyHTML) {
   const dom = new JSDOM(`<!DOCTYPE html><html><body>${bodyHTML}</body></html>`, { url: 'https://example.com/' });
@@ -28,7 +31,6 @@ const LONG = DENSE + ' ' + DENSE;
 const PLAIN = 'These rules apply to everyone who signed the agreement. '.repeat(3).trim(); // 167 chars, 0.53 of DENSE
 
 // Quiet the adapter's console output for the rejected cases.
-const realWarn = console.warn, realLog = console.log;
 const warnings = [];
 console.warn = (...a) => { warnings.push(a.join(' ')); };
 console.log = () => {};
