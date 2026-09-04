@@ -8076,8 +8076,11 @@ ${chunk}
       if (!handler) return { error: `No handler for rule: ${ruleId}` };
       const el = document.querySelector(selector);
       if (!el) return { error: `Element not found: ${selector}` };
-      const applied = await handler(el, getActiveProfileSettings());
-      if (applied === false) return { skipped: "risky", error: `Risky fix ${ruleId} is off (the active profile does not set wcagRiskyFixes)` };
+      const risky = isRiskyFix(ruleId);
+      const applied = risky ? await handler(el, getActiveProfileSettings()) : await handler(el);
+      if (risky && applied === false) {
+        return { skipped: "risky", error: `Risky fix ${ruleId} is off (the active profile does not set wcagRiskyFixes)` };
+      }
       return { success: true };
     }
   };
