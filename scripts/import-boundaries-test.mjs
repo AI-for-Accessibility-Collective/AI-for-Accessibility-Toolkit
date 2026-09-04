@@ -17,6 +17,8 @@
 // resolve outside the importing file's package root count as edges. Each edge
 // then has to pass:
 //
+//   - exists:     the specifier lands on a file on disk, so a mistyped deep
+//                 path cannot ride in on a pattern key in an exports map;
 //   - direction:  the importer's package lists the target in ALLOWED (rule 2,
 //                 and half of rule 1: there is no such thing as an edge that
 //                 is fine as long as it lands on a public file);
@@ -327,6 +329,13 @@ function check(name, offenders) {
 }
 
 console.log(`scanned ${filesScanned} files, found ${edges.length} cross-package imports in ${new Set(edges.map((e) => e.from)).size} files`);
+
+// the file the edge lands on is really there. tools/package.json exposes
+// ./adapters/*.js, so a mistyped deep path still matches that pattern key and
+// would otherwise pass rule 1 as a public file.
+check('every edge resolves to a file that exists',
+  edges.filter((e) => !existsSync(path.join(ROOT, e.to)))
+    .map((e) => `${e.from} -> ${e.to} (no such file)`));
 
 // direction
 check('every edge points in a direction ALLOWED lists',
