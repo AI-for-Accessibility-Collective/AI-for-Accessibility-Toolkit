@@ -87,24 +87,49 @@ jobs:
         id: validate
         run: npm run validate:browser
 
-      # Runs even when the previous suite failed, so one run shows both results,
-      # but not when a setup step failed before validate could start: then the
-      # summary would blame this suite for a missing Chromium or node_modules.
+      # Runs when everything before it passed, and also when the adapter suite
+      # itself failed, so one run shows both results. It does not run when a
+      # setup step failed before validate could start: the summary would then
+      # blame this suite for a missing Chromium or node_modules.
+      #
+      # Written as `success() || ... == 'failure'` rather than as a test for
+      # `skipped`. GitHub documents `skipped` as a possible step outcome, but
+      # it does not say whether a step skipped because an earlier step failed
+      # is recorded in the `steps` context at all. If it is not, a test for
+      # `skipped` reads an empty value, and the guard lets this suite run after
+      # a broken install, which is the case it exists to prevent. Naming the
+      # two cases we want avoids resting on that undocumented detail.
       - name: Chat end-to-end
         id: e2e
-        if: ${{ !cancelled() && steps.validate.outcome != 'skipped' }}
+        if: ${{ success() || steps.validate.outcome == 'failure' }}
         run: npm run test:e2e
 
+      # always(), so a red run still explains itself. When the adapter suite
+      # neither passed nor failed, neither suite ran: a step before them
+      # failed, or the job hit its timeout. The table on its own would read as
+      # two silent suites, so say which it is rather than leaving the reader to
+      # guess. An outcome we cannot read is reported as such, not as a blank
+      # cell.
       - name: Record the outcome
         if: ${{ always() }}
+        env:
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+          E2E_OUTCOME: ${{ steps.e2e.outcome }}
         run: |
           {
             echo "## Real-browser suites"
             echo
             echo "| Suite | Outcome |"
             echo "|---|---|"
-            echo "| tools/test/browser-validate.js | ${{ steps.validate.outcome }} |"
-            echo "| onboarding/test/chat-e2e.mjs | ${{ steps.e2e.outcome }} |"
+            echo "| tools/test/browser-validate.js | ${VALIDATE_OUTCOME:-not reported} |"
+            echo "| onboarding/test/chat-e2e.mjs | ${E2E_OUTCOME:-not reported} |"
             echo
+            case "$VALIDATE_OUTCOME" in
+              success|failure) ;;
+              *)
+                echo "Neither suite ran. A step before them failed, or the job hit its timeout, so nothing above says anything about the change under review. Read the failing step instead."
+                echo
+                ;;
+            esac
             echo "This job is not a required status check, so it does not block a merge. A failure here is worth reading, not ignoring."
           } >> "$GITHUB_STEP_SUMMARY"
