@@ -102,12 +102,17 @@ export function parseSkill(markdown) {
   const fm = src.match(FRONTMATTER_RE);
   const front = fm ? parseFrontmatter(fm[1]) : {};
   const body = fm ? fm[2].trim() : src.trim();
-  const asArray = (v) => Array.isArray(v) ? v : (v ? [v] : []);
+  // The two vocabulary lists are normalized here, not in validateSkill: a
+  // bare `vision, reading` (no brackets) or a capitalized `[Vision]` is a
+  // formatting slip, not a vocabulary miss, and both vocabularies are
+  // lowercase ids that matchSkill compares exactly. Split, trim, lowercase.
+  const asList = (v) => (Array.isArray(v) ? v : String(v ?? '').split(','))
+    .map(s => String(s).trim().toLowerCase()).filter(Boolean);
   return {
     name: front.name || '',
     description: front.description || '',
-    supportAreas: asArray(front.supportAreas),
-    siteRelevance: asArray(front.siteRelevance),
+    supportAreas: asList(front.supportAreas),
+    siteRelevance: asList(front.siteRelevance),
     recipe: extractRecipe(body),
     body,
   };
