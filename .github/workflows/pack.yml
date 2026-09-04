@@ -10,7 +10,7 @@ name: pack
 
 on:
   push:
-    branches: [main, rearch-experiment]
+    branches: [main, rearch-experiment, "release-candidate/**"]
   pull_request:
 
 jobs:
