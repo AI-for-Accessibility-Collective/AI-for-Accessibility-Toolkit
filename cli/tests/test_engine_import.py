@@ -29,6 +29,27 @@ def test_a_missing_dependency_names_itself(monkeypatch: pytest.MonkeyPatch) -> N
     assert "ai4a11y" not in str(raised.value), str(raised.value)
 
 
+def test_a_catalog_command_runs_without_playwright_installed() -> None:
+    """`ai4a11y list tools` needs no browser, so it has to finish on a machine
+    with no Playwright. The engine's exception classes used to be named in the
+    except clause around app(), which imported the engine on every run."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; sys.modules['playwright'] = None; sys.modules['playwright.sync_api'] = None; "
+            "sys.argv = ['ai4a11y', 'list', 'tools', '--json']; "
+            "from cli import cli; cli.main()",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "playwright" not in result.stderr.lower(), result.stderr
+
+
 def test_the_engine_still_loads_when_run_as_a_plain_script() -> None:
     """`python cli/cli.py` puts cli/ on sys.path with no package around it, so
     the engine has to be reachable by its bare name too."""

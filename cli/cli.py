@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ai4a11y — accessibility toolkit CLI for developers and coding agents.
+"""ai4a11y: accessibility toolkit CLI for developers and coding agents.
 
 One Typer app, three areas:
 
@@ -66,6 +66,17 @@ def _engine():
         # there is no package to import from.
         import ai4a11y
     return ai4a11y
+
+
+def _engine_if_loaded():
+    """The engine module if some command already imported it, else None.
+
+    Used where an exception may or may not be the engine's: if the engine was
+    never imported, the exception cannot be one of its classes, and importing
+    it just to find that out would pull in Playwright for no reason.
+    """
+    name = f"{__package__}.ai4a11y" if __package__ else "ai4a11y"
+    return sys.modules.get(name)
 
 
 # ---------------------------------------------------------------------------
@@ -700,7 +711,9 @@ def main() -> None:
     # leaf commands, which is where its help belongs, so move a leading one to
     # the end rather than break a script written against the older syntax. A
     # command with no --json still says so, in its own words.
-    while "--json" in argv[1:] and argv[1] == "--json":
+    # Only when something follows it: `ai4a11y --json` alone would move the
+    # flag to the end and find it at the front again, forever.
+    while len(argv) > 2 and argv[1] == "--json":
         argv.pop(1)
         argv.append("--json")
 
@@ -710,18 +723,29 @@ def main() -> None:
             argv.insert(1, "session")
     try:
         app()
-    except _engine().ForeignBrowser as ex:
-        # Refusing to drive a browser this session did not start is an ordinary
-        # outcome, not a crash, so it reads as a sentence and not a traceback.
-        # sys.exit, not typer.Exit: nothing catches a typer.Exit raised out
-        # here, so it prints as an unhandled exception with the original
-        # chained under it, which is the traceback this avoids.
-        typer.echo(str(ex), err=True)
-        sys.exit(_engine().SESSION_MISMATCH_EXIT)
-    except _engine().NoSession as ex:
-        # So is running a session command before starting a session.
-        typer.echo(str(ex), err=True)
-        sys.exit(_engine().NO_SESSION_EXIT)
+    except Exception as ex:
+        # The engine is imported on first use, so it is only looked up here,
+        # never imported. Naming its exception classes in the except clause
+        # itself evaluated `_engine()` every time app() raised, and Click ends
+        # every run with SystemExit, so a catalog command on a machine without
+        # Playwright died in the handler for an error it never had.
+        engine = _engine_if_loaded()
+        if engine is None:
+            raise
+        if isinstance(ex, engine.ForeignBrowser):
+            # Refusing to drive a browser this session did not start is an
+            # ordinary outcome, not a crash, so it reads as a sentence and not
+            # a traceback. sys.exit, not typer.Exit: nothing catches a
+            # typer.Exit raised out here, so it prints as an unhandled
+            # exception with the original chained under it, which is the
+            # traceback this avoids.
+            typer.echo(str(ex), err=True)
+            sys.exit(engine.SESSION_MISMATCH_EXIT)
+        if isinstance(ex, engine.NoSession):
+            # So is running a session command before starting a session.
+            typer.echo(str(ex), err=True)
+            sys.exit(engine.NO_SESSION_EXIT)
+        raise
 
 
 if __name__ == "__main__":
