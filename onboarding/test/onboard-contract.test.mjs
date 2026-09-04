@@ -388,8 +388,12 @@ function installLocalRecorder(state) {
 // scenario can observe the difference (a failed onboard() returns no uid to
 // reuse), but the stub should not claim a rule the service does not have.
 //
-// A per-user token is the uid with a prefix, since server.js treats it as
-// opaque and the stub only needs to get the uid back.
+// The admin routes check what the service checks (server/src/app.js): the
+// base URL, the method, and `Authorization: Bearer <ADMIN_PASSWORD>`. A
+// remoteAdmin() that dropped the header or changed the method would fail
+// against the service, so it fails here too. A per-user token is the uid
+// with a prefix, since server.js treats it as opaque and the stub only needs
+// to get the uid back.
 // FLAG(review): the stub is the test's own reading of the service; a change
 // in the real service's note upsert or listUsers rule would not show up here.
 function installRemoteStub(state) {
@@ -429,16 +433,26 @@ function installRemoteStub(state) {
 
   globalThis.fetch = async (url, opts = {}) => {
     const u = String(url);
+    const method = String(opts.method || 'GET').toUpperCase();
     const reply = (status, obj) => ({ status, json: async () => obj });
+    const base = process.env.TOOLKIT_URL;
+    if (!u.startsWith(base + '/')) throw new Error('unexpected fetch: ' + u + ' ' + method);
+    const route = u.slice(base.length);
+    const auth = new Headers(opts.headers || {}).get('authorization') || '';
     const body = opts.body ? JSON.parse(opts.body) : {};
-    if (u.endsWith('/admin/users')) return reply(200, { users: [...users].sort() });
-    if (u.endsWith('/admin/tokens')) {
+    if (route === '/admin/users' || route === '/admin/tokens') {
+      if (auth !== 'Bearer ' + process.env.ADMIN_PASSWORD) return reply(401, { error: 'unauthorized' });
+      // The service answers other methods on these paths with something
+      // else (a token listing, not-found); either way no token comes back.
+      if (route === '/admin/users') {
+        return method === 'GET' ? reply(200, { users: [...users].sort() }) : reply(404, { error: 'not-found' });
+      }
+      if (method !== 'POST') return reply(404, { error: 'not-found' });
       return reply(200, { token: TOKEN_PREFIX + body.uid, uid: body.uid });
     }
-    const m = /\/v1\/librarian\/([^/?]+)$/.exec(u);
-    if (!m) throw new Error('unexpected fetch: ' + u + ' ' + (opts.method || 'GET'));
+    const m = /^\/v1\/librarian\/([^/?]+)$/.exec(route);
+    if (!m) throw new Error('unexpected fetch: ' + u + ' ' + method);
     const bearer = 'Bearer ' + TOKEN_PREFIX;
-    const auth = String(opts.headers?.authorization || '');
     const uid = auth.startsWith(bearer) ? auth.slice(bearer.length) : null;
     if (!uid) return reply(401, { error: 'unauthorized' });
     const args = body.args || [];
