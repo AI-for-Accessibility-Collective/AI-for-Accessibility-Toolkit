@@ -1,0 +1,139 @@
+# Runs the two real-browser suites in headless Chromium:
+#   npm run validate:browser              each adapter's real effect and its
+#                                         exact reversal in a real layout
+#   npm run test:e2e                      onboarding/test/chat-e2e.mjs, the only
+#                                         test that executes onboarding/chat.js
+#
+# A separate workflow file on purpose. ci.yml runs `npm test`, which excludes
+# anything that needs a browser, and that split is deliberate: a Chromium
+# download is slow and can fail for reasons unrelated to the change under test.
+# This job keeps that risk out of ci.yml.
+#
+# It does not block a merge, and the reason is branch protection, not this
+# file. A check blocks a merge only when it is listed as a required status
+# check on the target branch, and at the time of writing main lists none. A
+# red run here shows on the pull request and in the Actions tab like any
+# other failure, and the maintainer decides what to do with it. The job is
+# deliberately not marked continue-on-error: on a job, that keyword only turns
+# the workflow run green in the Actions tab and stops the failure
+# notification, and it does not change whether the check blocks. The suites
+# here are the ones most likely to be flaky, and a flaky required check gets
+# ignored or bypassed; a visible optional one is the middle ground proposed
+# in issue #29. Add this job to the required list only once it has been green
+# for a while, and drop the paths filter in the same change, or pull requests
+# outside those paths will wait on a check that never reports. Five other
+# places tell a reader this job does not block a merge and would go stale in
+# the same change: the comment on `npm test` in ci.yml, the Testing section of
+# CONTRIBUTING.md, the Tests section of onboarding/README.md, and the headers
+# of tools/test/browser-validate.js and onboarding/test/chat-e2e.mjs.
+#
+# The two suites run one after the other, never in parallel: two Chromium
+# instances on a shared runner are how browser tests time out.
+name: browser
+
+# FLAG(review): the two paths lists below are a hand reading of what the
+# suites import at this commit, not something checked by code. A new import
+# from a directory outside them stops triggering this job, and nothing warns.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'onboarding/**'
+      - 'controller/**'
+      - 'tools/**'
+      - 'toolkit/**'
+      - 'server/src/**'
+      - 'server/package.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/browser.yml'
+  pull_request:
+    paths:
+      - 'onboarding/**'
+      - 'controller/**'
+      - 'tools/**'
+      - 'toolkit/**'
+      - 'server/src/**'
+      - 'server/package.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/browser.yml'
+
+jobs:
+  real-browser:
+    runs-on: ubuntu-latest
+    # FLAG(review): the first run of this job took 7 min 34 s, 7 min 1 s of it
+    # in npm ci, so 20 is a ceiling with room for a slow registry, not a tuned
+    # number. If it fires, the check reads as a failure unrelated to the change.
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Both suites import the npm `playwright` package, so the browser comes
+      # from npx after `npm ci`, which pins it to the version in
+      # package-lock.json, not from `python -m playwright` as in cli.yml.
+      # Both suites launch headless with no channel, which Playwright runs on
+      # chromium-headless-shell, so only that build is downloaded. Drop
+      # --only-shell if a suite ever launches headed or names a channel.
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps --only-shell chromium
+
+      - name: Adapter validation in a real layout
+        id: validate
+        run: npm run validate:browser
+
+      # Runs when everything before it passed, and also when the adapter suite
+      # itself failed, so one run shows both results. It does not run when a
+      # setup step failed before validate could start: the summary would then
+      # blame this suite for a missing Chromium or node_modules.
+      #
+      # Written as `success() || ... == 'failure'` rather than as a test for
+      # `skipped`. GitHub documents `skipped` as a possible step outcome, but
+      # it does not say whether a step skipped because an earlier step failed
+      # is recorded in the `steps` context at all. If it is not, a test for
+      # `skipped` reads an empty value, and the guard lets this suite run after
+      # a broken install, which is the case it exists to prevent. Naming the
+      # two cases we want avoids resting on that undocumented detail.
+      - name: Chat end-to-end
+        id: e2e
+        if: ${{ success() || steps.validate.outcome == 'failure' }}
+        run: npm run test:e2e
+
+      # always(), so a red run still explains itself. When the adapter suite
+      # neither passed nor failed, neither suite ran: a step before them
+      # failed, or the job hit its timeout. The table on its own would read as
+      # two silent suites, so say which it is rather than leaving the reader to
+      # guess. An outcome we cannot read is reported as such, not as a blank
+      # cell.
+      - name: Record the outcome
+        if: ${{ always() }}
+        env:
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+          E2E_OUTCOME: ${{ steps.e2e.outcome }}
+        run: |
+          {
+            echo "## Real-browser suites"
+            echo
+            echo "| Suite | Outcome |"
+            echo "|---|---|"
+            echo "| tools/test/browser-validate.js | ${VALIDATE_OUTCOME:-not reported} |"
+            echo "| onboarding/test/chat-e2e.mjs | ${E2E_OUTCOME:-not reported} |"
+            echo
+            case "$VALIDATE_OUTCOME" in
+              success|failure) ;;
+              *)
+                echo "Neither suite ran. A step before them failed, or the job hit its timeout, so nothing above says anything about the change under review. Read the failing step instead."
+                echo
+                ;;
+            esac
+            echo "This job is not a required status check, so it does not block a merge. A failure here is worth reading, not ignoring."
+          } >> "$GITHUB_STEP_SUMMARY"

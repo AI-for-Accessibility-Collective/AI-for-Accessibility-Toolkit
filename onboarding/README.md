@@ -69,13 +69,14 @@ The real-browser test is separate, because it needs a local Chromium:
 
 ```bash
 npx playwright install chromium   # one-time browser download; npm install does not do it
-npm run test:e2e                  # drives /chat in headless Chromium; not run in CI
+npm run test:e2e                  # drives /chat in headless Chromium
 ```
 
 It is named `chat-e2e.mjs` rather than `*.test.mjs` so `npm test` skips it, the
-same split `tools/test/browser-validate.js` uses. It is the only test that
-executes `chat.js` itself: the page loads it as an ES module over HTTP, which
-jsdom cannot run.
+same split `tools/test/browser-validate.js` uses. CI runs it in a separate,
+non-blocking job (`.github/workflows/browser.yml`) when the files it depends on
+change. It is the only test that executes `chat.js` itself: the page loads it
+as an ES module over HTTP, which jsdom cannot run.
 
 ## The page
 
