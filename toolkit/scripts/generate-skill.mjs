@@ -145,7 +145,7 @@ This file is **generated** by \`toolkit/scripts/generate-skill.mjs\` from the sa
 
 ## Quick Start
 
-Paths below are relative to the \`toolkit/\` package root (run from there, or adjust the specifiers when importing as a published \`@a11y-toolkit/core\` dependency).
+Paths below are relative to the \`toolkit/\` package root (run from there, or adjust the specifiers when importing as a published \`@ai4a11y/toolkit\` dependency).
 
 \`\`\`javascript
 ${QUICK_START_CODE}\`\`\`

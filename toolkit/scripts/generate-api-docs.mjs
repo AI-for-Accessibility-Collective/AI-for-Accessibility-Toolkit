@@ -110,7 +110,7 @@ ${renderProtocol(model.protocol)}
 
 ## Barrel Exports (\`toolkit/index.js\`)
 
-Everything importable from \`@a11y-toolkit/core\` (the package root).
+Everything importable from \`@ai4a11y/toolkit\` (the package root).
 
 ${renderBarrel(model.barrelExports)}
 

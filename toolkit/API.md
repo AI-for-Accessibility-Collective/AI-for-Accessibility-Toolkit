@@ -329,7 +329,7 @@ See [`protocol/README.md`](../protocol/README.md) for the full wire-format write
 
 ## Barrel Exports (`toolkit/index.js`)
 
-Everything importable from `@a11y-toolkit/core` (the package root).
+Everything importable from `@ai4a11y/toolkit` (the package root).
 
 | Export | Kind | From |
 | --- | --- | --- |
