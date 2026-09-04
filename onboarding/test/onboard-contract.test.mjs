@@ -354,6 +354,16 @@ function installLocalRecorder(state) {
 // unreachable datastore looks like from onboarding. The stub keeps just
 // enough state per uid (notes by topic, the profile, which uids hold data)
 // for the scenarios above to play out the way the real service plays them.
+//
+// Which uids /admin/users lists: every uid with a `users/<uid>/` partition
+// (store.listUsers). The service builds a uid's toolkit instance before it
+// invokes any librarian method, and building it runs the datastore
+// migrations, which write that partition. So a uid exists from its first
+// librarian call onward, even one whose method then throws; minting a token
+// alone creates nothing. The stub follows that: the uid is added when a
+// librarian call reaches it, before the injected failure is applied. No
+// scenario can observe the difference (a failed onboard() returns no uid to
+// reuse), but the stub should not claim a rule the service does not have.
 // FLAG(review): the stub is the test's own reading of the service; a change
 // in the real service's note upsert or listUsers rule would not show up here.
 function installRemoteStub(state) {
@@ -374,8 +384,7 @@ function installRemoteStub(state) {
         const note = existing || { id: 'note-' + (++nextNote), topic: opts.topic };
         note.text = body;
         if (!existing) mine.push(note);
-        users.add(uid);
-        return { ok: true, ...note };
+        return { ok: true, id: note.id, note: { ...note } };
       }
       case 'listNotes': {
         const [filter = {}] = args;
@@ -387,10 +396,7 @@ function installRemoteStub(state) {
         mine.splice(i, 1);
         return { ok: true, removed: true };
       }
-      case 'setProfileFields': {
-        users.add(uid);
-        return args[0];
-      }
+      case 'setProfileFields': return args[0];
       default: return undefined;
     }
   }
@@ -410,6 +416,7 @@ function installRemoteStub(state) {
     const uid = tokens.get(String(opts.headers?.authorization || '').replace(/^Bearer /, ''));
     if (!uid) return reply(401, { error: 'unauthorized' });
     const args = body.args || [];
+    users.add(uid); // getInstance ran; see the note above
     const entry = { method: m[1], args };
     const n = state.trace.push(entry);
     if (state.failAt === n) return reply(200, { ok: false, error: 'injected failure' });
