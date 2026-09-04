@@ -182,9 +182,11 @@ async function runOneMode(mode) {
   const outFile = outArg ? outArg.slice('--out='.length) : null;
 
   // Shared by both recorders: every Librarian call lands here, in order, with
-  // the uid it was made for, and `failAt` names the one call that must fail
-  // for the current scenario.
-  const state = { trace: [], failAt: 0 };
+  // the uid it was made for; `failAt` names the one call that must fail for
+  // the current scenario; `reached` counts how often the recorder was handed
+  // something to record, so a recorder that never engaged is reported as
+  // such rather than as server.js making no calls.
+  const state = { trace: [], failAt: 0, reached: 0 };
 
   process.env.ONBOARD_MODE = mode;
   delete process.env.GEMINI_API_KEY;
@@ -208,7 +210,14 @@ async function runOneMode(mode) {
     const { onboard, deriveDefaultNeeds } = await import('../server.js');
     for (const scen of SCENARIOS) {
       const input = { ...scen.input };
-      if (scen.uidFrom) input.uid = uids[scen.uidFrom];
+      if (scen.uidFrom) {
+        // Running on without the uid would test a fresh profile under the
+        // name of a re-onboard, and pass for the wrong reason.
+        check(`${mode} ${scen.key}: runs after ${scen.uidFrom}, which produced a uid`, scen.uidFrom in uids,
+          `      ${scen.uidFrom} did not resolve, or is not earlier in the table`);
+        if (!(scen.uidFrom in uids)) continue;
+        input.uid = uids[scen.uidFrom];
+      }
       state.trace = [];
       state.failAt = scen.failAt || 0;
 
@@ -230,6 +239,13 @@ async function runOneMode(mode) {
       report.scenarios.push(entry);
       assertScenario(mode, scen, entry, outcome, deriveDefaultNeeds);
     }
+
+    // A recorder that never engaged makes every scenario read as "no calls",
+    // which is also what a broken onboard() looks like. Say which it was.
+    check(mode === 'local'
+      ? 'local: the module hook wrapped the toolkit host that server.js built (onboard-contract.hooks.mjs)'
+      : 'remote: the fetch stub answered the Librarian calls server.js made',
+      state.reached > 0);
   } finally {
     if (dataDir) rmSync(dataDir, { recursive: true, force: true });
   }
@@ -354,20 +370,23 @@ function assertScenario(mode, scen, entry, outcome, deriveDefaultNeeds) {
 // this function. The proxy records each method call, throws when the call is
 // the one the scenario says must fail, and otherwise delegates unchanged.
 function installLocalRecorder(state) {
-  globalThis.__onboardContractRecord = (librarian, uid) => new Proxy(librarian, {
-    get(target, key) {
-      const v = target[key];
-      if (typeof key !== 'string' || typeof v !== 'function') return v;
-      return async (...args) => {
-        const entry = { method: key, args: structuredClone(args), uid };
-        const n = state.trace.push(entry);
-        if (state.failAt === n) throw new Error('injected failure');
-        const result = await v.apply(target, args);
-        if (key === 'listNotes') entry.listed = (result || []).map((x) => x.id);
-        return result;
-      };
-    },
-  });
+  globalThis.__onboardContractRecord = (librarian, uid) => {
+    state.reached++;
+    return new Proxy(librarian, {
+      get(target, key) {
+        const v = target[key];
+        if (typeof key !== 'string' || typeof v !== 'function') return v;
+        return async (...args) => {
+          const entry = { method: key, args: structuredClone(args), uid };
+          const n = state.trace.push(entry);
+          if (state.failAt === n) throw new Error('injected failure');
+          const result = await v.apply(target, args);
+          if (key === 'listNotes') entry.listed = (result || []).map((x) => x.id);
+          return result;
+        };
+      },
+    });
+  };
 }
 
 // ── remote mode: a stub of the toolkit service ───────────────────────────────
@@ -457,6 +476,7 @@ function installRemoteStub(state) {
     if (!uid) return reply(401, { error: 'unauthorized' });
     const args = body.args || [];
     users.add(uid); // getInstance ran; see the note above
+    state.reached++;
     const entry = { method: m[1], args, uid };
     const n = state.trace.push(entry);
     if (state.failAt === n) return reply(200, { ok: false, error: 'injected failure' });
@@ -510,22 +530,26 @@ async function runBothModesAndCompare() {
       const l = local.scenarios.find((s) => s.key === scen.key);
       const r = remote.scenarios.find((s) => s.key === scen.key);
       const tag = `${scen.key}:`;
-      check(`${tag} both modes ${scen.ok ? 'resolve' : 'reject'}`, l?.ok === r?.ok,
-        `      local ${l?.ok ? 'resolved' : 'rejected'}, remote ${r?.ok ? 'resolved' : 'rejected'}`);
+      // Two missing entries would compare equal below; say so instead.
+      check(`${tag} both modes ran the scenario`, !!l && !!r,
+        `      local ${l ? 'ran' : 'skipped'}, remote ${r ? 'ran' : 'skipped'}`);
+      if (!l || !r) continue;
+      check(`${tag} both modes ${scen.ok ? 'resolve' : 'reject'}`, l.ok === r.ok,
+        `      local ${l.ok ? 'resolved' : 'rejected'}, remote ${r.ok ? 'resolved' : 'rejected'}`);
       check(`${tag} same call sequence with the same arguments in both modes`,
-        canon(l?.trace) === canon(r?.trace),
-        `      local:  ${describe(l?.trace || [])}\n      remote: ${describe(r?.trace || [])}`);
+        canon(l.trace) === canon(r.trace),
+        `      local:  ${describe(l.trace)}\n      remote: ${describe(r.trace)}`);
       check(`${tag} same profile fields written in both modes`,
-        canon(l?.profileFields) === canon(r?.profileFields),
-        `      local:  ${canon(l?.profileFields)}\n      remote: ${canon(r?.profileFields)}`);
-      check(`${tag} calls made for the same uid in both modes`, l?.wroteUnder === r?.wroteUnder,
-        `      local ${l?.wroteUnder}, remote ${r?.wroteUnder}`);
+        canon(l.profileFields) === canon(r.profileFields),
+        `      local:  ${canon(l.profileFields)}\n      remote: ${canon(r.profileFields)}`);
+      check(`${tag} calls made for the same uid in both modes`, l.wroteUnder === r.wroteUnder,
+        `      local ${l.wroteUnder}, remote ${r.wroteUnder}`);
       if (scen.ok) {
-        check(`${tag} same uid outcome in both modes`, l?.uidOutcome === r?.uidOutcome,
-          `      local ${l?.uidOutcome}, remote ${r?.uidOutcome}`);
+        check(`${tag} same uid outcome in both modes`, l.uidOutcome === r.uidOutcome,
+          `      local ${l.uidOutcome}, remote ${r.uidOutcome}`);
         check(`${tag} same returned object in both modes, uid aside`,
-          canon(l?.returned) === canon(r?.returned),
-          `      local:  ${canon(l?.returned)}\n      remote: ${canon(r?.returned)}`);
+          canon(l.returned) === canon(r.returned),
+          `      local:  ${canon(l.returned)}\n      remote: ${canon(r.returned)}`);
       }
     }
   }
