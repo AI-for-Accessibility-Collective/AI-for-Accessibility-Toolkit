@@ -4,26 +4,81 @@
   "private": true,
   "description": "Platform-agnostic core of the AI for Accessibility Toolkit: Librarian (personal memory/profile agent), Datastore, ability + surface model, skill layer, and cross-app sync behind injected platform ports.",
   "type": "module",
+  "types": "./types/index.d.ts",
   "exports": {
-    ".": "./index.js",
-    "./core/librarian": "./core/librarian.js",
-    "./core/datastore": "./core/datastore.js",
-    "./core/taxonomy": "./core/taxonomy.js",
-    "./core/units": "./core/units.js",
-    "./core/surface": "./core/surface.js",
-    "./core/ability": "./core/ability.js",
-    "./core/strength": "./core/strength.js",
-    "./core/memory-class": "./core/memory-class.js",
-    "./core/skill": "./core/skill.js",
-    "./core/skill-builder": "./core/skill-builder.js",
-    "./platforms/chrome/web-surface": "./platforms/chrome/web-surface.js",
-    "./platforms/chrome/*.js": "./platforms/chrome/*.js",
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./index.js"
+    },
+    "./core/librarian": {
+      "types": "./types/core/librarian.d.ts",
+      "default": "./core/librarian.js"
+    },
+    "./core/datastore": {
+      "types": "./types/core/datastore.d.ts",
+      "default": "./core/datastore.js"
+    },
+    "./core/taxonomy": {
+      "types": "./types/core/taxonomy.d.ts",
+      "default": "./core/taxonomy.js"
+    },
+    "./core/units": {
+      "types": "./types/core/units.d.ts",
+      "default": "./core/units.js"
+    },
+    "./core/surface": {
+      "types": "./types/core/surface.d.ts",
+      "default": "./core/surface.js"
+    },
+    "./core/ability": {
+      "types": "./types/core/ability.d.ts",
+      "default": "./core/ability.js"
+    },
+    "./core/strength": {
+      "types": "./types/core/strength.d.ts",
+      "default": "./core/strength.js"
+    },
+    "./core/memory-class": {
+      "types": "./types/core/memory-class.d.ts",
+      "default": "./core/memory-class.js"
+    },
+    "./core/skill": {
+      "types": "./types/core/skill.d.ts",
+      "default": "./core/skill.js"
+    },
+    "./core/skill-builder": {
+      "types": "./types/core/skill-builder.d.ts",
+      "default": "./core/skill-builder.js"
+    },
+    "./platforms/chrome/web-surface": {
+      "types": "./types/platforms/chrome/web-surface.d.ts",
+      "default": "./platforms/chrome/web-surface.js"
+    },
+    "./platforms/chrome/*.js": {
+      "types": "./types/platforms/chrome/*.d.ts",
+      "default": "./platforms/chrome/*.js"
+    },
     "./package.json": "./package.json",
-    "./surfaces/web": "./surfaces/web.js",
-    "./surfaces/xr": "./surfaces/xr.js",
-    "./sync": "./sync/index.js",
-    "./ports": "./ports/index.js",
-    "./registry": "./registry/tools.js"
+    "./surfaces/web": {
+      "types": "./types/surfaces/web.d.ts",
+      "default": "./surfaces/web.js"
+    },
+    "./surfaces/xr": {
+      "types": "./types/surfaces/xr.d.ts",
+      "default": "./surfaces/xr.js"
+    },
+    "./sync": {
+      "types": "./types/sync/index.d.ts",
+      "default": "./sync/index.js"
+    },
+    "./ports": {
+      "types": "./types/ports/index.d.ts",
+      "default": "./ports/index.js"
+    },
+    "./registry": {
+      "types": "./types/registry/tools.d.ts",
+      "default": "./registry/tools.js"
+    }
   },
   "files": [
     "index.js",
@@ -35,6 +90,7 @@
     "registry/",
     "protocol/",
     "skills/",
+    "types/",
     "README.md"
   ],
   "scripts": {
@@ -42,6 +98,7 @@
     "docs": "node scripts/generate-api-docs.mjs && node scripts/generate-skill.mjs",
     "demo:xr": "node hosts/xr-demo/demo.js",
     "demo:skill": "node hosts/skill-demo/demo.js",
-    "demo:node": "node platforms/node/host.js"
+    "demo:node": "node platforms/node/host.js",
+    "types": "tsc -p tsconfig.json"
   }
 }
