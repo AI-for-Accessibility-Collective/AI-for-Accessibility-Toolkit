@@ -1592,6 +1592,17 @@
           box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.25) !important;
         }
       ` : ""}
+      /* OUT OF FLOW \u2014 see skip-links.js. These wrappers are injected as
+         children of <body> (one of them as the FIRST child), and an in-flow
+         child shifts every positional layout on body by one: grid rows/areas,
+         :first-child, :nth-child(), flex layouts assuming a child count. Their
+         contents are already fixed/absolute; only the wrappers were in flow. */
+      #ai4a11y-skip-links, .ai4a11y-badge-layer {
+        position: fixed;
+        top: 0; left: 0;
+        width: 0; height: 0;
+        z-index: 999999;
+      }
       .ai4a11y-skip-link {
         position: fixed;
         top: -100px;
@@ -1684,6 +1695,7 @@
       const focusables = getFocusable(document.body);
       const container = document.createElement("div");
       container.setAttribute("aria-hidden", "true");
+      container.className = "ai4a11y-badge-layer";
       this.badgeContainer = container;
       focusables.forEach((el, idx) => {
         const rect = el.getBoundingClientRect();
@@ -3359,7 +3371,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       region.id = REGION_ID;
       region.setAttribute("aria-live", "polite");
       region.setAttribute("aria-atomic", "false");
-      region.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
+      region.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
       (document.body || document.documentElement).appendChild(region);
       this.region = region;
       if (typeof MutationObserver !== "undefined") {
@@ -5292,6 +5304,20 @@ ${scope} table {
       const nav = document.querySelector(options.navSelector || NAV_SELECTOR);
       if (main || nav) {
         this.styleHandle = injectStyle(this.styleId, `
+        /* OUT OF FLOW. The container is the first child of <body> so the links
+           are the first Tab stop \u2014 but first in tab order must not mean first in
+           the box layout. In flow it takes a slot, and any positional layout on
+           body shifts by one: grid-template-rows/areas, body > *:first-child,
+           :nth-child(), a flex layout assuming a child count. (A real page laid
+           out with "grid-template-rows: auto 1fr" put its header in the 1fr row
+           and rendered it 878px tall.) Fixed + zero-size occupies no slot and
+           keeps the DOM order, so tab order is unchanged. */
+        #${this.containerId} {
+          position: fixed;
+          top: 0; left: 0;
+          width: 0; height: 0;
+          z-index: 2147483647;
+        }
         #${this.containerId} a {
           position: absolute;
           top: 0; left: 0;

@@ -99,7 +99,13 @@ const CAN_DO = 'I can adapt this page — try “bigger text”, “dark mode”
  * usually "no app is connected", which is the actual reason a request like
  * "play a podcast from spotify" goes nowhere.
  */
-export function fallbackHelp({ connected }) {
+export function fallbackHelp({ connected, framed = false }) {
+  // A framed page (screen-reader-on-a-VM mode) deliberately has no agent — the
+  // agent needs CDP and there is none here — so a free-form request has nowhere
+  // to go however many things are connected. Say that, not silence.
+  if (framed) {
+    return 'I can’t run that here. With the page open in this window there’s no agent to hand it to — I can adapt the page and read it, but not carry out free-form requests. ' + CAN_DO;
+  }
   if (!connected) {
     return 'Nothing is connected that could do that. I can only adapt this page and your profile right now — to run a request like that, connect an app first: Settings → Connect browser-harness. ' + CAN_DO;
   }

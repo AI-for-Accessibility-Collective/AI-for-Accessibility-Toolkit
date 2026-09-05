@@ -20,6 +20,7 @@
 
 import { createController } from '/controller/lib/createController.js';
 import { createDomReceiver } from '/controller/lib/web/dom-receiver.js';
+import { createIframeReceiver } from '/controller/lib/web/iframe-receiver.js';
 import { websocketChannel, remoteControl } from '/controller/lib/transport/remote.js';
 import { createLlmLane } from '/controller/lib/llm-lane.js';
 import { bestVoice, forSpeech, earconThinkPulse, earconDone, earconError } from '/controller/lib/web/ui.js';
@@ -213,8 +214,74 @@ function setConnStatus(state, url) {
   }
 }
 
+// ── iframe mode (screen reader on a hosted VM) ───────────────────────────────
+// The page under test renders HERE rather than behind CDP, so the chat and the
+// page share one accessibility tree and NVDA/JAWS can move between them.
+const FRAME_KEY = 'aa-chat-frame';
+let framedReceiver = null;
+
+// In this mode the tester reads the chat and the page in one document tree, so a
+// visual setting that reaches only the frame leaves the chat unadapted beside
+// it. Mirror every apply/undo onto the local receiver too — which drives the
+// demo preview and, through the surface mirror, the chat window itself.
+function alsoAdaptTheChat(port) {
+  return {
+    ...port,
+    async applySettings(changes, scope) {
+      const r = await port.applySettings(changes, scope);
+      try { await localReceiver.applySettings(changes, scope); } catch {}
+      return r;
+    },
+    async undoLast() {
+      const r = await port.undoLast();
+      try { await localReceiver.undoLast(); } catch {}
+      return r;
+    },
+  };
+}
+
+function closeFramed() {
+  if (framedReceiver) { try { framedReceiver.destroy(); } catch {} framedReceiver = null; }
+  $('framed').removeAttribute('src');
+  $('framed-panel').hidden = true;
+  $('close-framed').hidden = true;
+  try { localStorage.removeItem(FRAME_KEY); } catch {}
+}
+
+// Mutually exclusive with the remote receiver: one of them drives at a time.
+function useFramed(url, proxyBase) {
+  url = (url || '').trim();
+  if (!url) return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  proxyBase = (proxyBase || $('proxy-base').value || 'http://127.0.0.1:8124/').trim();
+  if (remoteChannel) { remoteChannel.close(); remoteChannel = null; try { localStorage.removeItem(WS_KEY); } catch {} }
+  setConnStatus('hidden');
+  if (framedReceiver) { try { framedReceiver.destroy(); } catch {} }
+
+  const frame = $('framed');
+  framedReceiver = createIframeReceiver(frame, { proxyBase });
+  framedReceiver.load(url);
+  $('framed-url').textContent = url;
+  $('framed-panel').hidden = false;
+  $('close-framed').hidden = false;
+  try { localStorage.setItem(FRAME_KEY, JSON.stringify({ url, proxyBase })); } catch {}
+
+  currentControl = alsoAdaptTheChat(framedReceiver);
+  $('drive-note').textContent = 'Driving the page in this window (' + url + ') + this window. No agent tasks in this mode.';
+  rebuildController();
+  if (unNote) { unNote(); unNote = null; }
+  wireNotes();
+
+  // The profile follows the person onto the frame, the same way useRemote sends
+  // it on the socket's open. Guarded by identity: a frame closed or replaced
+  // before it reports ready must not receive a stale apply.
+  const myFrame = framedReceiver;
+  myFrame.ready.then(() => { if (framedReceiver === myFrame) applyProfileSettings(); });
+}
+
 function useLocal() {
   if (remoteChannel) { remoteChannel.close(); remoteChannel = null; }
+  closeFramed();
   currentControl = localReceiver;
   try { localStorage.removeItem(WS_KEY); } catch {}
   setConnStatus('hidden');
@@ -226,6 +293,7 @@ function useLocal() {
 }
 function useRemote(url) {
   if (!url) return;
+  closeFramed(); // one driver at a time
   if (remoteChannel) remoteChannel.close();
   remoteChannel = websocketChannel(url);
   currentControl = remoteControl({ channel: remoteChannel });
@@ -326,7 +394,7 @@ function startWaiting() {
   for (let i = 0; i < 3; i++) { const d = document.createElement('span'); d.className = 'dot'; b.append(d); }
   // An icon Stop button (with tooltip) to interrupt the running task (ControlPort stop()).
   const stop = document.createElement('button'); stop.type = 'button'; stop.className = 'waiting-stop';
-  stop.textContent = 'Stop'; stop.title = 'Stop the running task'; stop.setAttribute('aria-label', 'Stop the running task');
+  stop.textContent = 'Stop'; stop.title = 'Stop the running task (Esc)'; stop.setAttribute('aria-label', 'Stop the running task (Escape)');
   stop.addEventListener('click', stopTask);
   waitingRow.append(b, stop); wrap.append(waitingRow); wrap.scrollTop = wrap.scrollHeight;
   // A repeating "thinking" earcon while the task runs — the audio counterpart of
@@ -431,7 +499,7 @@ async function handleTurn(text) {
 // "connected" is what decides whether the fallback can honestly offer to run
 // the request: with no remote channel, nothing but this page can act.
 async function generalAnswer(u) {
-  const help = () => fallbackHelp({ connected: !!remoteChannel });
+  const help = () => fallbackHelp({ connected: !!remoteChannel, framed: !!framedReceiver });
   try {
     return (await assistComplete(generalAnswerPrompt(u))).trim() || help();
   } catch {
@@ -469,6 +537,71 @@ function silenceAudioForDictation() {
     }
   } catch {}
 }
+// ── commands an EMBEDDER can send ────────────────────────────────────────────
+// A framed chat can't be given its keyboard shortcuts: `document` only sees a
+// press while focus is inside the chat, and a press landing in a neighbouring
+// panel can't be forwarded (a cross-origin frame refuses synthetic events, and
+// contentWindow.focus() from the embedder is ignored). The best an embedder can
+// do alone is focus the frame so the NEXT press works — a poor answer for this
+// shortcut in particular, since the person reaching for voice is often the
+// person for whom pressing twice is the friction they were avoiding.
+//
+// So: one door for every shortcut, rather than a message per key later.
+//   parent.postMessage({ kind: 'aa-chat-command', name: 'voice' }, '*')
+// Verified in Chrome that recognition starts with NO user activation once the
+// microphone permission is granted (the first grant still needs a gesture).
+const CHAT_COMMANDS = {
+  voice() {
+    if (!SR) return { ok: false, detail: 'speech recognition is unavailable in this browser' };
+    if (!voiceInOn || !recog) return { ok: false, detail: 'voice input is switched off in settings' };
+    toggleMic();
+    return { ok: true, detail: listening ? 'listening' : 'stopped' };
+  },
+  'voice-start'() {
+    if (!SR) return { ok: false, detail: 'speech recognition is unavailable in this browser' };
+    if (!voiceInOn || !recog) return { ok: false, detail: 'voice input is switched off in settings' };
+    if (listening) return { ok: true, detail: 'already listening' };
+    toggleMic();
+    return { ok: true, detail: 'listening' };
+  },
+  'voice-stop'() {
+    if (!recog || !listening) return { ok: true, detail: 'not listening' };
+    toggleMic();
+    return { ok: true, detail: 'stopped' };
+  },
+  focus() { try { $('composer-input').focus(); } catch {} return { ok: true, detail: 'focused' }; },
+  // Abort a running task. Same action as the Stop control and the Esc key.
+  stop() {
+    if (!waitingRow) return { ok: true, detail: 'nothing running' };
+    stopTask();
+    return { ok: true, detail: 'stopping' };
+  },
+};
+
+function runChatCommand(name) {
+  const fn = CHAT_COMMANDS[name];
+  if (!fn) return { ok: false, detail: `unknown command: ${name}` };
+  try { return fn(); } catch (e) { return { ok: false, detail: (e && e.message) || 'command failed' }; }
+}
+
+function initEmbedderCommands() {
+  window.addEventListener('message', (ev) => {
+    const m = ev && ev.data;
+    if (!m || m.kind !== 'aa-chat-command') return;
+    // ONLY the embedder. Any page can frame this chat (it sends no framing
+    // headers), and "start the microphone" must not be a message from any of
+    // them. The parent is the only party that can grant this frame a microphone
+    // at all, so it already holds that power — narrowing to it grants nothing
+    // new. (An origin allowlist would be firmer if the chat ever gains a way to
+    // be configured with one.)
+    if (window.parent === window || ev.source !== window.parent) return;
+    const res = runChatCommand(m.name);
+    // Tell the embedder whether it landed, so it can fall back to focusing the
+    // frame rather than silently doing nothing.
+    try { ev.source.postMessage({ kind: 'aa-chat-command-result', name: m.name, ...res }, '*'); } catch {}
+  });
+}
+
 function initVoiceInput() {
   const b = $('mic');
   if (!SR || !voiceInOn) { if (b) b.hidden = true; return; }
@@ -486,6 +619,19 @@ function initSettings() {
   const toggleDrawer = (open) => { drawer.hidden = !open; ham.setAttribute('aria-expanded', open ? 'true' : 'false'); };
   ham.addEventListener('click', () => toggleDrawer(drawer.hidden));
   $('drawer-close').addEventListener('click', () => { toggleDrawer(false); ham.focus(); });
+
+  // Esc aborts a running task. A driven task can run for minutes, and the Stop
+  // control is only reachable if you can see it and point at it — the shortcut
+  // is the whole point for anyone who can't. It stays inert when nothing is
+  // running, so Esc is still free for the page; an open settings drawer takes it
+  // first, since a modal that won't close on Esc is its own bug.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!drawer.hidden) { e.preventDefault(); toggleDrawer(false); ham.focus(); return; }
+    if (!waitingRow) return;               // nothing to stop — leave Esc alone
+    e.preventDefault();
+    runChatCommand('stop');
+  });
 
   // Speak replies
   const speakCb = $('speak-cb'); speakCb.checked = speakReplies;
@@ -509,6 +655,11 @@ function initSettings() {
   // Drive: connect a remote receiver (default is the local demo app + window).
   $('connect-remote').addEventListener('click', () => useRemote($('ws-url').value.trim()));
   $('use-local-harness').addEventListener('click', () => { $('ws-url').value = 'ws://127.0.0.1:9333'; useRemote('ws://127.0.0.1:9333'); });
+
+  // …or drive a page framed in this window (screen-reader-on-a-VM mode).
+  $('open-framed').addEventListener('click', () => { useFramed($('frame-url').value, $('proxy-base').value); toggleDrawer(false); });
+  $('close-framed').addEventListener('click', () => useLocal());
+  $('framed-close').addEventListener('click', () => useLocal());
 
   // Reset profile: forget the current user and clear every applied setting — a
   // reload gives a fresh receiver (no adaptations), an empty transcript, and no
@@ -548,23 +699,36 @@ async function boot() {
   initSettings();
   initVoiceInput();
 
-  // Reconnect to the receiver we were driving before a refresh, if any. The
-  // profile above went to the preview; the receiver gets it when its socket
-  // opens (useRemote), since it is not connected yet.
-  let savedWs = ''; try { savedWs = localStorage.getItem(WS_KEY) || ''; } catch {}
-  if (savedWs) useRemote(savedWs);
+// Restore whatever we were driving before a refresh. A screen-reader tester
+  // reloads often, and re-typing the URL each time is the kind of friction this
+  // mode exists to remove. The two are mutually exclusive; the frame wins. The
+  // profile above went to the preview; a remote receiver gets it when its
+  // socket opens (useRemote), and a frame when it reports ready (useFramed).
+  let savedFrame = null;
+  try { savedFrame = JSON.parse(localStorage.getItem(FRAME_KEY) || 'null'); } catch {}
+  if (savedFrame && savedFrame.url) {
+    $('frame-url').value = savedFrame.url;
+    if (savedFrame.proxyBase) $('proxy-base').value = savedFrame.proxyBase;
+    useFramed(savedFrame.url, savedFrame.proxyBase);
+  } else {
+    let savedWs = ''; try { savedWs = localStorage.getItem(WS_KEY) || ''; } catch {}
+    if (savedWs) useRemote(savedWs);
+  }
 
   $('composer-form').addEventListener('submit', (e) => { e.preventDefault(); handleTurn($('composer-input').value); });
   $('composer-input').addEventListener('keydown', onComposerKey); // Enter to send, Up/Down to recall history
 
-  // Ctrl+Space anywhere starts/stops voice input (only when the mic is available
-  // and enabled). Note: on macOS Ctrl+Space may also be the OS input-source
+  // Ctrl+Space anywhere in THIS document starts/stops voice input. The same
+  // action is reachable by an embedder as the 'voice' command (see
+  // CHAT_COMMANDS) — one door, so a framed chat isn't cut off from its own
+  // shortcuts. Note: on macOS Ctrl+Space may also be the OS input-source
   // switcher; the toggle here fires regardless.
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && (e.code === 'Space' || e.key === ' ')) {
-      if (SR && voiceInOn && recog) { e.preventDefault(); toggleMic(); }
+      if (SR && voiceInOn && recog) { e.preventDefault(); runChatCommand('voice'); }
     }
   });
+  initEmbedderCommands();
 
   addMessage('assistant', 'Hi — I set up your ability profile and adapt your connected application. Try “I’m blind”, “I need bigger text”, “dark mode”, or tell me what you need. Say “help” for more.');
   $('composer-input').focus();

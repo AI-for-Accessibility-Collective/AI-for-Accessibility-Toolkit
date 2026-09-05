@@ -63,8 +63,8 @@
   <div id="current" class="current" role="status" aria-live="polite">Current profile: not set</div>
 
   <section aria-labelledby="add-h">
-    <h2 id="add-h">Add a profile</h2>
-    <p class="muted">Describe the support this person needs. This creates an ability profile the toolkit can adapt to.</p>
+    <h2 id="add-h">Profile</h2>
+    <p class="muted">Describe the support this person needs. An existing profile is filled in below — change what has changed, and update.</p>
     <form id="add-form">
       <label for="need">What do you need? <span class="muted">(in your own words)</span></label>
       <div class="need-row">
@@ -157,7 +157,7 @@ async function loadCurrent() {
   if (!uid) { currentProfile = null; renderCurrent(null); return; }
   try {
     const d = await (await fetch('/api/profile?uid=' + encodeURIComponent(uid))).json();
-    currentProfile = d; renderCurrent(d);
+    currentProfile = d; renderCurrent(d); fillForm(d);
   } catch { currentProfile = { uid, exists: false }; renderCurrent(currentProfile); }
 }
 
@@ -180,6 +180,22 @@ async function loadConfig() {
       lbl.innerHTML = '<input type="checkbox" value="' + a + '" id="' + id + '"> ' + a;
       box.appendChild(lbl);
     });
+    // "None of these" is a positive answer, not an absence. Now the form is
+    // filled from the profile, an empty set of boxes is genuinely ambiguous —
+    // it could be a half-finished edit — so saying "nothing" needs its own box.
+    const noneLbl = document.createElement('label');
+    noneLbl.innerHTML = '<input type="checkbox" id="area-none"> none of these';
+    box.appendChild(noneLbl);
+    box.addEventListener('change', (e) => {
+      const none = $('area-none');
+      if (!none) return;
+      if (e.target === none) {
+        if (none.checked) realAreas().forEach((c) => { c.checked = false; });
+      } else if (e.target.checked) {
+        none.checked = false;
+      }
+      updateVisionKindVisibility();
+    });
     if (!cfg.adminEnabled) {
       setStatus($('admin-status'), 'Admin is disabled — start the service with ADMIN_PASSWORD to list/delete profiles.', 'err');
     }
@@ -194,8 +210,9 @@ $('add-form').addEventListener('submit', async (e) => {
     ? (document.querySelector('#vision-kind input:checked')?.value || undefined)
     : undefined;
   const payload = { uid: $('uid').value.trim() || undefined, freeText: $('need').value.trim(), supportAreas, visionKind };
-  if (!payload.freeText && supportAreas.length === 0) {
-    return setStatus($('add-status'), 'Enter a need or pick at least one area.', 'err');
+  // "None of these" IS an answer, so only an untouched form is refused.
+  if (!payload.freeText && supportAreas.length === 0 && !$('area-none')?.checked) {
+    return setStatus($('add-status'), 'Enter a need, pick an area, or choose “none of these”.', 'err');
   }
   speak('Updating the profile');    // announce the update on click / Enter
   setStatus($('add-status'), 'Updating…', '');
@@ -273,6 +290,30 @@ $('admin-form').addEventListener('submit', (e) => {
 
 // Typing/selecting a different profile id updates the banner.
 $('uid').addEventListener('change', loadCurrent);
+
+// The area checkboxes, excluding the "none of these" one — which is an answer
+// about the others rather than one of them.
+function realAreas() {
+  return [...document.querySelectorAll('#areas input[type=checkbox]')]
+    .filter((c) => c.id !== 'area-none');
+}
+
+// Show what the profile already says, so changing one answer does not mean
+// retyping all of them — and so "none" can be told apart from "not filled in".
+function fillForm(d) {
+  if (!d || !d.exists) return;
+  $('need').value = d.freeText || '';
+  if ($('uid') !== document.activeElement) $('uid').value = d.uid || '';
+  const areas = d.supportAreas || [];
+  realAreas().forEach((c) => { c.checked = areas.includes(c.value); });
+  const none = $('area-none');
+  if (none) none.checked = areas.length === 0;
+  updateVisionKindVisibility();
+  if (d.visionKind) {
+    const r = document.querySelector('#vision-kind input[value="' + d.visionKind + '"]');
+    if (r) r.checked = true;
+  }
+}
 
 // Show the blind vs low-vision question only when the vision area is selected.
 function updateVisionKindVisibility() {

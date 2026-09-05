@@ -74,6 +74,20 @@ export const SkipLinks = {
       // (still in the tab order and accessibility tree, unlike display:none),
       // then shown as a high-contrast pill in the top-left corner on :focus.
       this.styleHandle = injectStyle(this.styleId, `
+        /* OUT OF FLOW. The container is the first child of <body> so the links
+           are the first Tab stop — but first in tab order must not mean first in
+           the box layout. In flow it takes a slot, and any positional layout on
+           body shifts by one: grid-template-rows/areas, body > *:first-child,
+           :nth-child(), a flex layout assuming a child count. (A real page laid
+           out with "grid-template-rows: auto 1fr" put its header in the 1fr row
+           and rendered it 878px tall.) Fixed + zero-size occupies no slot and
+           keeps the DOM order, so tab order is unchanged. */
+        #${this.containerId} {
+          position: fixed;
+          top: 0; left: 0;
+          width: 0; height: 0;
+          z-index: 2147483647;
+        }
         #${this.containerId} a {
           position: absolute;
           top: 0; left: 0;

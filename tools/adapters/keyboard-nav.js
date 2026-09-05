@@ -111,6 +111,17 @@ export const KeyboardNavigator = {
           box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.25) !important;
         }
       ` : ''}
+      /* OUT OF FLOW — see skip-links.js. These wrappers are injected as
+         children of <body> (one of them as the FIRST child), and an in-flow
+         child shifts every positional layout on body by one: grid rows/areas,
+         :first-child, :nth-child(), flex layouts assuming a child count. Their
+         contents are already fixed/absolute; only the wrappers were in flow. */
+      #ai4a11y-skip-links, .ai4a11y-badge-layer {
+        position: fixed;
+        top: 0; left: 0;
+        width: 0; height: 0;
+        z-index: 999999;
+      }
       .ai4a11y-skip-link {
         position: fixed;
         top: -100px;
@@ -218,6 +229,7 @@ export const KeyboardNavigator = {
     // screen readers never announce the digit-only badge text as content.
     const container = document.createElement('div');
     container.setAttribute('aria-hidden', 'true');
+    container.className = 'ai4a11y-badge-layer'; // out of flow — see the CSS note
     this.badgeContainer = container;
 
     focusables.forEach((el, idx) => {
