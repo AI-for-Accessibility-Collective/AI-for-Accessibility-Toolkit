@@ -118,7 +118,7 @@
       "whatTheAgentLoses": "The agent might provide a phone number you do not own, preventing you from receiving the SMS code needed to verify your identity.",
       "speak": "on-event",
       "check": "What phone number or number options does the page show for receiving the code?",
-      "say_example": "It wants to text you a code. Should it go to the number ending <1234>?"
+      "say_example": "It wants to text you a code. Should it go to the number ending <[account number]>?"
      },
      {
       "question": "What is the verification code sent to my phone?",
@@ -952,11 +952,11 @@
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The text message specifies it is for Shannon's appointment at Rainbow Pediatric Center, so you must verify this matches the intended patient and visit before clicking the link to begin check-in.",
+        "why": "The text message specifies it is for [name]'s appointment at Rainbow Pediatric Center, so you must verify this matches the intended patient and visit before clicking the link to begin check-in.",
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify that the check-in link corresponds to the correct patient and appointment details before proceeding.",
         "speak": "if-wrong",
         "check": "Does the check-in text name the expected patient and clinic?",
-        "say_example": "This check-in text is for <Shannon> at <Rainbow Pediatric>. That's not your visit. Not opening it."
+        "say_example": "This check-in text is for <[name]> at <[clinic]>. That's not your visit. Not opening it."
        },
        {
         "question": "Does the page say when eCheck-in becomes available?",
@@ -1056,7 +1056,7 @@
         "whatTheAgentLoses": "You lose the opportunity to update your medical record if your primary care provider has recently changed.",
         "speak": "on-event",
         "check": "Which provider does the page list as your primary care provider?",
-        "say_example": "It lists <Ariella Martin> as your main doctor. Still right?"
+        "say_example": "It lists <[name]> as your main doctor. Still right?"
        }
       ]
      },
@@ -1173,7 +1173,7 @@
         "whatTheAgentLoses": "An agent might automatically proceed with the insurance on file, removing your opportunity to choose self-pay for this specific visit.",
         "speak": "always",
         "check": "Which insurance plan does the page show on file for this visit?",
-        "say_example": "Your <BCBS> plan is on file, member ID ending <4821>. Using it for this visit unless you say otherwise."
+        "say_example": "Your <BCBS> plan is on file, member ID ending <[account number]>. Using it for this visit unless you say otherwise."
        },
        {
         "question": "Should you add your insurance coverage before proceeding?",
@@ -1837,11 +1837,11 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The inbox displays a new message from Betty Larson regarding a referral appointment, requiring you to select which communication to review.",
+        "why": "The inbox displays a new message from [name] regarding a referral appointment, requiring you to select which communication to review.",
         "whatTheAgentLoses": "Delegating this step means you lose the ability to prioritize which provider communications to read first based on your current health concerns.",
         "speak": "always",
         "check": "Which messages does the inbox list as new?",
-        "say_example": "One new message, from <Betty Larson> about the referral. Opening it."
+        "say_example": "One new message, from <[name]> about the referral. Opening it."
        },
        {
         "question": "Do you need to reply to this message from your care team?",
@@ -1873,7 +1873,7 @@
         "whatTheAgentLoses": "You lose the oversight to guarantee the message is sent on behalf of the correct family member or dependent.",
         "speak": "on-event",
         "check": "Which patients does the on-behalf-of dropdown list, and which is selected?",
-        "say_example": "This message will file under <Maya>'s record. That's who it's about, yes?"
+        "say_example": "This message will file under <[name]>'s record. That's who it's about, yes?"
        }
       ]
      },
@@ -1890,7 +1890,7 @@
         "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong provider from the list, potentially delaying care or sending sensitive medical information to the wrong staff member.",
         "speak": "on-event",
         "check": "Which providers does the recipient dropdown list?",
-        "say_example": "Sending this to Dr <Chen>, your <cardiologist>. Right doctor?"
+        "say_example": "Sending this to Dr [name]>, your <cardiologist>. Right doctor?"
        },
        {
         "question": "Is the specific doctor you need to contact missing from the recipient dropdown list?",
@@ -1901,7 +1901,7 @@
         "whatTheAgentLoses": "The agent might select a different, incorrect doctor or fail the task entirely, whereas a human would look for a general clinic contact or call the office.",
         "speak": "on-event",
         "check": "Is the expected provider missing from the recipient list, and is a nurse pool offered?",
-        "say_example": "Dr <Chen> isn't in the list. There's a nurse line for the whole clinic instead. Send it there?"
+        "say_example": "Dr [name]> isn't in the list. There's a nurse line for the whole clinic instead. Send it there?"
        },
        {
         "question": "Does a warning appear stating that the selected provider is currently out of the office and will not receive messages until a certain date?",
@@ -1912,7 +1912,7 @@
         "whatTheAgentLoses": "The agent might send the message anyway, leaving the user waiting for a reply that won't come in time, instead of redirecting the message to the covering doctor.",
         "speak": "on-event",
         "check": "Does the page warn the selected provider is out of office, and until when?",
-        "say_example": "A note says Dr <Chen> is away until <Monday> and won't see messages. Urgent things go to Dr <Lee>. Still send it, or switch?"
+        "say_example": "A note says Dr [name]> is away until <Monday> and won't see messages. Urgent things go to Dr [name]>. Still send it, or switch?"
        }
       ]
      },
@@ -1946,7 +1946,7 @@
         "whatTheAgentLoses": "Delegating this step means losing the ability to personally describe your specific symptoms, nuances, and concerns directly to your doctor.",
         "speak": "gate",
         "check": "Does the form show an empty message field to the care team?",
-        "say_example": "What do you want to tell Dr <Chen>? Say it in your own words and I'll type it just like that."
+        "say_example": "What do you want to tell Dr [name]>? Say it in your own words and I'll type it just like that."
        },
        {
         "question": "Did the message text box silently truncate your input or show a red character limit warning?",
@@ -2019,7 +2019,7 @@
         "whatTheAgentLoses": "Delegating this step means losing the chance to personally verify the tone and accuracy of the medical information being sent to your doctor.",
         "speak": "gate",
         "check": "Does the page show the finished message with a send button?",
-        "say_example": "Here's what goes to Dr <Chen>. <Your message, read back>. Say send, or tell me what to change."
+        "say_example": "Here's what goes to Dr [name]>. <Your message, read back>. Say send, or tell me what to change."
        }
       ]
      },
@@ -2462,7 +2462,7 @@
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": true,
-        "why": "The screen showed the 'Sent' tab with the recent message to Mark Greene, confirming the message was successfully delivered.",
+        "why": "The screen showed the 'Sent' tab with the recent message to [name], confirming the message was successfully delivered.",
         "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that their specific medical question or request was successfully sent to their care team.",
         "speak": "if-wrong",
         "check": "Does the Sent list show the message at the top?",
@@ -2494,7 +2494,7 @@
         "whatTheAgentLoses": "Delegating this means you miss the immediate reassurance of seeing your doctor's direct response to your specific health concern.",
         "speak": "on-event",
         "check": "Does the inbox show a reply from the provider?",
-        "say_example": "Dr <Chen> replied about the eye drops. Want me to read it?"
+        "say_example": "Dr [name]> replied about the eye drops. Want me to read it?"
        },
        {
         "question": "Did you receive an immediate auto-reply stating the provider is out of the office and not monitoring messages?",
@@ -2505,7 +2505,7 @@
         "whatTheAgentLoses": "The agent might log the message as 'sent successfully' without alerting the user that their medical question will be ignored for weeks.",
         "speak": "on-event",
         "check": "Does an auto-reply say the provider is out of office?",
-        "say_example": "An automatic reply came straight back. Dr <Chen> is away until <Monday>. For urgent things it says call <the office>."
+        "say_example": "An automatic reply came straight back. Dr [name]> is away until <Monday>. For urgent things it says call <the office>."
        }
       ]
      },
@@ -2661,11 +2661,11 @@
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
-        "why": "The email entered for login was '[email]', but the resulting dashboard and downloaded report are for a patient named Raj Sharma.",
+        "why": "The email entered for login was '[email]', but the resulting dashboard and downloaded report are for a patient named [name].",
         "whatTheAgentLoses": "The user loses the assurance that their own medical records are being accessed, risking a severe privacy breach or medical mix-up.",
         "speak": "if-wrong",
         "check": "Does the patient name on the report match the account holder?",
-        "say_example": "This chart belongs to <Raj Sharma>. That's not you. Stopping before I read anything out."
+        "say_example": "This chart belongs to <[name]>. That's not you. Stopping before I read anything out."
        },
        {
         "question": "Do the message timestamps on the portal align with your local system clock?",
@@ -2738,7 +2738,7 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "The eCheck-In screen listed the patient name as 'Zola, Eighteen', but the waiting room screen displayed 'Eighteen Ztdv'.",
+        "why": "The eCheck-In screen listed the patient name as '[name], Eighteen', but the waiting room screen displayed 'Eighteen [name]'.",
         "whatTheAgentLoses": "The user loses the certainty that the agent is managing the correct patient's appointment and medical records.",
         "speak": "if-wrong",
         "check": "Does the patient name match the one shown at the start of check-in?",

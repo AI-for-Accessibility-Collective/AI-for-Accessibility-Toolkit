@@ -1,0 +1,1789 @@
+{
+ "task": "dispute a charge or report a fraudulent transaction on a bank, card, or payment account (Chase, Bank of America, Capital One, PayPal, Cash App): find the transaction in the account activity, open the dispute/report flow, pick the reason (unauthorized charge, wrong amount, item not received), answer the flow's questions, submit, and see the claim-submitted confirmation with a claim/reference state; complete when the dispute-submitted confirmation is on screen. Surface pinned: a bank, card, or payment app's dispute flow. Variants: general fraud-awareness or scam-story content, chargeback tutorials aimed at merchants, credit-repair content, and calling-the-bank-only videos with no on-screen flow do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Dispute a charge on a payment account",
+  "note": "1 then 2; 3 picks the resolution route before any formal filing; 4 through 7 are the platform dispute itself; 8 after any submission and whenever a case already exists; 9 where the platform offers the prevention steps",
+  "children": [
+   {
+    "id": "1",
+    "label": "Open the account",
+    "note": "1.1, then 1.2 where the session is signed out; 1.3 whenever an alert sits over the page",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the app or site",
+      "questions": [
+       {
+        "question": "Which search result should you click to access the official PayPal website?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results show multiple links, so you need to select the official PayPal Italia link to securely access your account.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent is navigating to the genuine PayPal website rather than a phishing link.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which app do you want to open to dispute the transaction?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a Finance folder with multiple banking and payment apps, so you must specify which account contains the fraudulent charge.",
+        "whatTheAgentLoses": "If the agent chooses the app, they might log into the wrong account and be unable to find or dispute the intended transaction.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Sign in",
+      "questions": [
+       {
+        "question": "What credentials will you use to sign in to your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires an Online ID and Passcode to authenticate and access your banking dashboard.",
+        "whatTheAgentLoses": "You lose the security of keeping your banking credentials private when you allow an agent to log in for you.",
+        "kind": "decision",
+        "verify_form": "Signing in means your online ID and passcode passed through the agent - check how they were provided and stored; banking credentials in an agent's hands are your liability, not the bank's.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you want to access your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage presents both Log In and Sign Up buttons, requiring you to select the correct path to access your existing profile.",
+        "whatTheAgentLoses": "You lose the ability to securely handle your own login credentials when authenticating into the payment platform.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you enter your email and password before clicking Log In?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows empty fields for your email and password, which must be filled to successfully authenticate and access the dashboard.",
+        "whatTheAgentLoses": "You lose the ability to securely provide your own credentials to ensure the correct account is accessed.",
+        "kind": "decision",
+        "verify_form": "The agent got past the login - check what credentials it used and where they came from; empty fields on a demo account hide that yours would have to be typed somewhere.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you verify that you're on the bank's legitimate website by checking the URL before entering your credentials to log in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must select the 'Log In' button in the top navigation bar to access your account dashboard before you can locate the transaction.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify the site's URL and securely initiate the login process themselves.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Triage the account alerts",
+      "questions": [
+       {
+        "question": "Should you address the account limitation warning before proceeding with the dispute?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The notification warns that account features are temporarily limited due to unauthorized activity, which might prevent you from successfully filing a dispute if ignored.",
+        "whatTheAgentLoses": "The user loses the opportunity to resolve a critical account security restriction that could block their ability to manage funds or complete the dispute.",
+        "kind": "decision",
+        "verify_form": "An account-limitation warning sat over the page and the agent chose whether to handle it first - check which it did; an unresolved limitation can block the dispute it went on to file.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you have any open disputes or actions required?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Resolution Center dashboard displays a red banner indicating limited account access and shows zero open cases.",
+        "whatTheAgentLoses": "The user loses visibility into their current account status and whether existing limitations or open cases might affect their ability to file a new dispute.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you review the 'New device login' security alert before proceeding with the transaction dispute?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The activity feed flags a recent 'New device login' that requires review, which could indicate that your account is compromised and explain the fraudulent charge.",
+        "whatTheAgentLoses": "The user loses the opportunity to secure their account from an unauthorized device, leaving the account vulnerable to further fraudulent charges while the agent focuses on just one dispute.",
+        "kind": "decision",
+        "verify_form": "A new-device login alert sat in the feed - check whether the agent reviewed it or skipped it; if that device was not yours, the charge it went on to dispute may be the smaller problem.",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Find the transaction",
+    "note": "2.1 in a multi-account app, then 2.2; 2.3 until the charge is on screen; 2.4 then 2.5; 2.6 before any dispute is attempted",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Select the account",
+      "questions": [
+       {
+        "question": "Which account contains the transaction you need to dispute?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple bank accounts, such as checking and savings, so you must select the specific one where the fraudulent or incorrect charge occurred.",
+        "whatTheAgentLoses": "You lose the ability to privately review your account list and independently verify which account was affected by the disputed charge.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Open the activity list",
+      "questions": [
+       {
+        "question": "Where should you navigate from the dashboard to find the transaction you want to dispute?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You need to select the Activity tab from the main dashboard menu to view your transaction history and locate the specific charge.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review your overall account balance and recent activity for any other suspicious charges before starting the dispute.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you view all transactions for this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays high-level account details and balances, requiring you to scroll down to find the option to view all transactions.",
+        "whatTheAgentLoses": "The user loses the opportunity to review their recent account activity and independently identify the specific transaction they want to dispute.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Filter or expand the list",
+      "questions": [
+       {
+        "question": "Should you adjust the transaction filters to find the specific charge?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to showing all activity from the past 30 days, so using the filters for date or transaction type might be necessary to locate an older or specific charge.",
+        "whatTheAgentLoses": "The user loses the ability to personally set the search parameters and ensure the agent is looking in the correct timeframe or category.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you view older transactions if the disputed charge isn't in the recent list?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The account details screen only displays recent activity by default, requiring you to expand the view to find older charges.",
+        "whatTheAgentLoses": "You lose the chance to personally review your complete transaction history to identify any other unrecognized charges.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Select the transaction",
+      "questions": [
+       {
+        "question": "Which transaction do you want to dispute?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The activity list displays several recent payments, such as charges from Adobe and SocialCatfish, requiring you to identify the exact charge that is incorrect or unauthorized.",
+        "whatTheAgentLoses": "Delegating this step means the agent might dispute a legitimate payment instead of the actual fraudulent or incorrect charge you intended to report.",
+        "kind": "decision",
+        "verify_form": "The agent picked a transaction to dispute - check the merchant, date and amount against the charge you actually meant; a dispute filed on a legitimate payment is itself a false claim.",
+        "speak": "gate"
+       },
+       {
+        "question": "Are there multiple identical charges from this merchant, and do you need to dispute more than one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "In cases of accidental double-billing or aggressive subscription retries, the activity list may show several identical charges on the same day, requiring you to identify exactly which ones are duplicates.",
+        "whatTheAgentLoses": "The agent might only dispute one of the charges, leaving other identical fraudulent or erroneous charges untouched and unpaid.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Review the transaction details",
+      "questions": [
+       {
+        "question": "What is the payment type and current dispute status of this transaction?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an open dispute warning and shows the payment was made under 'Friends and Family', which affects how the claim can be processed.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the payment category and the exact status of the existing dispute.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the 'Also known as' name or merchant category help you recognize the charge?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The transaction details often provide a 'doing business as' name or a specific category (like 'Computer software stores') that can explain a charge you initially didn't recognize.",
+        "whatTheAgentLoses": "You lose the chance to realize the charge is actually legitimate based on the extended merchant details, potentially avoiding a false fraud report.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the merchant name string and logo exactly match the fraudulent charge, or is it a visually similar legitimate purchase?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Fraudsters often use merchant names that look identical to popular services (like 'APPLE COM BILL' instead of the official Apple merchant) but lack the official verified merchant logo or have slight typos.",
+        "whatTheAgentLoses": "You lose the ability to catch a visually deceptive merchant name, which could lead the agent to mistakenly dispute a legitimate purchase while missing the actual fraudulent one.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is this the correct transaction to dispute, and where do you go to start the claim?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming details like the recipient and amount ensures you are targeting the right charge before clicking the Resolution Center link.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the transaction details and ensure the correct payment is being disputed.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which transaction detail should you copy to initiate the reversal?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a unique Transaction ID with a copy icon that is needed to identify the exact charge being disputed.",
+        "whatTheAgentLoses": "You lose the ability to verify that the correct transaction ID was captured for the dispute.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Check the posted status",
+      "questions": [
+       {
+        "question": "Is the transaction you want to dispute still marked as pending?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows recent charges labeled as \"Pending,\" which means you must wait for them to fully post to the account before the bank allows you to initiate a dispute.",
+        "whatTheAgentLoses": "You lose the awareness of whether the charge is actually eligible for a dispute right now or if you need to wait a few days before filing.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is the suspicious money request already marked as 'Expired'?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The activity feed shows requests that have expired; if a fraudulent request is already expired, no money moved and you don't need to file a formal dispute.",
+        "whatTheAgentLoses": "The agent might waste time trying to dispute or report a transaction that never actually processed and has already timed out.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Has this transaction fully posted so I can initiate a dispute?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the posted date ensures the transaction is no longer pending and is eligible for the dispute process started by the 'Report a problem' button.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the transaction has fully posted before attempting to report a problem.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Choose the resolution route",
+    "note": "the routes, simplest first: 3.1 while the payment is pending; 3.2 wherever a seller can be reached; 3.3 on a person-to-person send; 3.5 where the app hides the form behind support; 3.4 when the card behind the platform is the stronger arbiter; the formal dispute - goals 4 to 7 - comes last",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Cancel the pending payment",
+      "questions": [
+       {
+        "question": "Do you want to cancel the pending payment directly instead of filing a formal dispute?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates the transaction is still 'Pending' and offers a direct 'Cancel Payment' option, which can resolve the issue immediately.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to simply cancel the uncompleted payment or pursue a formal fraud report.",
+        "kind": "decision",
+        "verify_form": "The payment was still pending and cancel was on the table - check whether the agent canceled or filed a report; cancel ends it immediately, the report opens an investigation.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to confirm the cancellation of this payment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a confirmation dialog asking if you are sure you want to cancel the payment, requiring a choice between 'OK' and 'Close'.",
+        "whatTheAgentLoses": "You lose the final opportunity to decide whether to permanently stop the transaction or back out and keep it active.",
+        "kind": "decision",
+        "verify_form": "The cancel confirmation asked are-you-sure - check the agent's answer; OK kills the payment, Close leaves it running.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Weigh contacting the seller",
+      "questions": [
+       {
+        "question": "Do you want to contact the seller directly or proceed with reporting the problem?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen recommends getting in touch with the seller directly to resolve the issue before filing a formal claim.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to attempt a direct resolution with the merchant first or escalate immediately to a formal dispute.",
+        "kind": "decision",
+        "verify_form": "The screen offered direct seller contact against the formal report - check which rung the agent took; escalating immediately spends your one dispute on this transaction.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you message the seller directly before opening a formal dispute?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The transaction details show a 'Message' link under the contact information, providing an option to resolve the issue directly without involving the platform.",
+        "whatTheAgentLoses": "Delegating this decision means an agent might automatically escalate to a formal dispute, skipping a potentially faster or more amicable direct resolution with the seller.",
+        "kind": "decision",
+        "verify_form": "A Message link sat inside the transaction - check whether the agent messaged the seller or went straight to the report; the direct ask is the step the platform itself recommends first.",
+        "speak": "never"
+       },
+       {
+        "question": "What is the deadline to file a formal dispute if you cannot resolve the issue directly with the seller?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform provides a specific cutoff date by which you must escalate the issue to a formal claim to remain eligible for buyer protection.",
+        "whatTheAgentLoses": "You lose the awareness of your exact time window, which might cause you to wait too long for a seller's response and forfeit your right to dispute the charge.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you click 'See More' to read the full message from the seller?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a box marked 'IMPORTANT' from the seller, which could contain critical information or an immediate resolution for the transaction issue.",
+        "whatTheAgentLoses": "You lose the chance to see the seller's complete explanation or proposed solution before escalating the dispute.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Ask the recipient to refund",
+      "questions": [
+       {
+        "question": "Should I refund the payment or decline the request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents a choice to either refund the $5.00 payment or decline the request and provide additional information.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to voluntarily return the funds or contest the sender's claim.",
+        "kind": "decision",
+        "verify_form": "You are the recipient and the agent chose Refund or decline - check which; Refund moves your money out now, decline contests the sender's story.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Route through the bank"
+     },
+     {
+      "id": "3.5",
+      "label": "Chat with support instead",
+      "questions": [
+       {
+        "question": "Which option should you choose to contact support about this transaction?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents both Customer Service and Feedback Now, and selecting the correct channel is required to actually initiate a dispute rather than just leaving a comment.",
+        "whatTheAgentLoses": "You lose the ability to decide which specific support channel to use to address your transaction issue.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want me to contact support via chat since the payment cannot be canceled directly?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states that Cash App payments are instant and usually cannot be canceled, presenting alternative options like contacting support.",
+        "whatTheAgentLoses": "The user loses the ability to choose whether to contact support immediately or attempt to get a refund directly from the recipient first.",
+        "kind": "decision",
+        "verify_form": "Cancel was impossible and chat was offered - check whether the agent opened a support chat on your behalf; a chat is a conversation someone must finish.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you send a message to support right now?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented a general support chat interface rather than a structured dispute form.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to engage in an open-ended chat or navigate back to find the automated dispute flow.",
+        "kind": "decision",
+        "verify_form": "A support chat box was open - check whether anything was sent and what it said; a half-explained issue in a support queue speaks for you.",
+        "speak": "never"
+       },
+       {
+        "question": "Which button do you tap when the instructions say 'Contact Support' but the actual button is labeled 'Chat'?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen's text instructs you to tap 'Contact Support' to submit a new dispute, but the only available button under the contact heading is labeled 'Chat'.",
+        "whatTheAgentLoses": "You lose the opportunity to resolve the confusing mismatch between the app's written instructions and its actual button labels.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What details should you include in your message to support?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a Cash App Support chat interface, requiring you to decide how to best explain the fraudulent or mistaken transaction.",
+        "whatTheAgentLoses": "You lose the ability to personally articulate the specific context and nuances of the transaction issue to the support representative.",
+        "kind": "decision",
+        "verify_form": "A message to support got drafted - check it names the transaction, the problem and what you want back; the chat is the claim on this venue.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Reach the dispute form",
+    "note": "two doors: 4.1 then 4.2 then 4.4 through help, with 4.3 for the support-menu variant; or 4.5 straight from the transaction; 4.6 when the tool asks for the transaction after the door; 4.7 before the questions start; 4.8 whenever the flow is blocked",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Open the help or contact page",
+      "questions": [
+       {
+        "question": "How do you navigate to the dispute management area from the dashboard?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Activity dropdown contains multiple categories like Transactions and Resolution Center, so you must select the correct link to access your dispute cases.",
+        "whatTheAgentLoses": "You lose the chance to learn the platform's navigation structure and discover where to track your open or closed cases.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Where do you tap to access your account settings or support?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main screen displays multiple navigation options including a bottom bar and a profile icon, so you must know which one leads to the support area.",
+        "whatTheAgentLoses": "You lose the opportunity to learn where your account settings and support options are located within the app.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which section in the profile menu should you check to find the option to file a dispute?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile menu lists multiple account and settings categories, so you must identify which one houses the dispute or support features.",
+        "whatTheAgentLoses": "The user loses the opportunity to learn how their payment app organizes support and dispute functions within the settings menu.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which menu option should you select to reach customer service?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu lists various account settings, and choosing 'Support' is required to navigate toward the dispute flow.",
+        "whatTheAgentLoses": "You lose the chance to familiarize yourself with the app's settings menu and learn how to independently access customer support.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Where do you click to reach customer support from the dashboard?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard displays many account details and quick actions, making it necessary to know that the 'Contact' link is located down in the footer.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to contact support directly or attempt to resolve the issue through the automated transaction activity flow.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Open the Resolution Center",
+      "questions": [
+       {
+        "question": "Should you read the recommended article on canceling a payment, or go directly to the Resolution Center?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a recommended article on canceling payments that might resolve the issue quickly, but the Resolution Center link jumps directly to the formal dispute tool.",
+        "whatTheAgentLoses": "You lose the opportunity to read the platform's specific guidance on canceling payments before opening a formal claim.",
+        "kind": "decision",
+        "verify_form": "A recommended article on canceling the payment sat above the Resolution Center link - check which the agent took; the article route can resolve the charge without opening a formal case.",
+        "speak": "never"
+       },
+       {
+        "question": "Which help option should you choose to resolve a transaction issue?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Help Centre displays multiple support avenues, so you must specifically select the Resolution Centre to handle transaction disputes.",
+        "whatTheAgentLoses": "You lose the ability to choose the appropriate support channel for handling your specific account dispute.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you select the 'Resolution Center' button or the 'Disputes and account limitations' link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Help Center presents multiple dispute-related paths, and the Resolution Center serves as the dedicated hub for initiating and managing claims.",
+        "whatTheAgentLoses": "You lose the opportunity to learn how to navigate to the platform's primary hub for tracking and managing your own disputes.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Navigate the support categories",
+      "questions": [
+       {
+        "question": "Should you use the search bar or browse the support categories to find the dispute option?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple broad categories like 'Payments' and 'Cash App Card', making the search bar the fastest way to locate the specific 'Submit a New Dispute' flow.",
+        "whatTheAgentLoses": "You lose the opportunity to browse related support topics or FAQs that might explain the charge before you initiate a formal dispute.",
+        "kind": "decision",
+        "verify_form": "The agent chose between searching and browsing the support topics - check what the search skipped; the browsed FAQs sometimes explain the charge without a dispute.",
+        "speak": "never"
+       },
+       {
+        "question": "Which of these recently viewed topics should you select to start a dispute?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a recently viewed list, and choosing 'Submit a New Dispute' provides a direct shortcut to the dispute flow without needing to search.",
+        "whatTheAgentLoses": "You lose visibility into your account's recent help search history, which could provide context about other ongoing issues or unauthorized access.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Start a new report",
+      "questions": [
+       {
+        "question": "How do you initiate a new dispute from the Resolution Center?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that you currently have no open cases, so you must use the 'Report a Problem' button to begin a new claim.",
+        "whatTheAgentLoses": "You lose the opportunity to review your closed cases or verify that a similar dispute hasn't already been filed before starting a new one.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Report from the transaction",
+      "questions": [
+       {
+        "question": "Where do you click to report a problem with this transaction?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the full details of the ClickBank transaction and provides the entry point to resolve issues.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the exact transaction details, such as the invoice ID and amount, before initiating the dispute.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure you want to tap 'Report a problem' to dispute this transaction?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the transaction details and a 'Report a problem' button, which is the necessary option to begin the dispute process for a posted charge.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify that the agent is initiating a dispute on the correct transaction.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should you also cancel the automatic payment setup to prevent future charges from this merchant?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The transaction details indicate this is a recurring payment, and providing a link to manage automatic payments allows you to stop future billing in addition to disputing the current charge.",
+        "whatTheAgentLoses": "Delegating this means the agent might only dispute the past charge without canceling the underlying subscription, leaving you vulnerable to being billed again next month.",
+        "kind": "decision",
+        "verify_form": "The charge is a recurring payment and a manage-automatic-payments control sat beside the report - check whether the agent also cancelled the subscription; disputing one month leaves next month billing.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Pick the transaction to report",
+      "questions": [
+       {
+        "question": "Are you sure you selected the correct transaction to dispute?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks you to confirm that you want to proceed with reporting a problem specifically for Transaction [number] before continuing.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the agent is filing a dispute for the exact transaction you intended, which could result in disputing a legitimate purchase by mistake.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is the correct transaction visibly highlighted or selected on screen before you click Continue to advance to the dispute form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Continue' button only after a transaction is selected, which must be clicked to move forward with the claim.",
+        "whatTheAgentLoses": "You lose the chance to visually confirm that the correct transaction was highlighted before advancing to the dispute form.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Read the pre-dispute instructions",
+      "questions": [
+       {
+        "question": "Do you acknowledge the requirements for electronically submitting your dispute?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that you must complete all online questions, select submit, and receive a confirmation for the dispute to be processed.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the bank's specific instructions and disclosures regarding the electronic dispute process.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What information do I need to gather before continuing with this dispute?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The \"Let's get started\" screen explicitly advises having pertinent information like receipts or invoices on hand before proceeding to the questionnaire.",
+        "whatTheAgentLoses": "You lose the direct reminder to gather your personal offline evidence, such as physical receipts or invoices, before starting the dispute questions.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Handle the blocked flow",
+      "questions": [
+       {
+        "question": "Given the system's warning that this transaction is already cancelled, do you cancel the invoice as offered instead of continuing through the standard dispute flow?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a warning that the transaction is already cancelled and offers an option to cancel the invoice, which interrupts the standard dispute flow.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide how to handle a transaction that is already marked as cancelled.",
+        "kind": "decision",
+        "verify_form": "The transaction came up already cancelled and the flow offered its own options - check what the agent did with the warning; acting on a cancelled invoice is not the dispute you asked for.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did clicking 'Report a problem' actually start the dispute, or did the interface intercept you with a prompt to contact the seller instead?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform sometimes redirects you to a seller contact page instead of the dispute form, requiring you to scroll down and find a secondary 'report a problem' link to bypass the interception.",
+        "whatTheAgentLoses": "The agent might get stuck or assume the dispute cannot be filed if they don't realize the interface redirected them and they need to click a second link to proceed.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is the option to report a problem visually grayed out or disabled without an explicit error message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface may indicate that a transaction is ineligible for a dispute simply by graying out the button, without providing readable text explaining the restriction.",
+        "whatTheAgentLoses": "You lose the immediate visual cue that the transaction cannot be disputed, which helps explain why the agent might be stuck or unable to proceed.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is the 'Report a problem' button missing because there is already an active dispute for this transaction?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a dispute is already in progress, the transaction details page replaces the normal reporting button with a warning banner and a link to view the existing case, preventing duplicate claims.",
+        "whatTheAgentLoses": "The agent might stubbornly search for a way to open a new dispute and fail, instead of realizing they need to transition to managing the already-active case.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Classify the issue",
+    "note": "5.1 where the bank asks the fraud question first; then 5.2, 5.3 to confirm the definition fits, 5.4 for the follow-up detail",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Declare whether you authorized it",
+      "questions": [
+       {
+        "question": "Did you authorize this transaction?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify if the charge was authorized but problematic or completely unauthorized to route the dispute correctly.",
+        "whatTheAgentLoses": "You lose the ability to accurately declare whether you authorized the charge, which dictates if the bank handles it as a merchant dispute or outright fraud.",
+        "kind": "intent-check",
+        "speak": "gate"
+       },
+       {
+        "question": "Are you reporting a problem with a recognized transaction, or an unrecognized fraudulent charge?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks if you recognize the $214.17 T-Mobile transaction to determine whether to process the claim as a billing dispute or a fraud investigation.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might incorrectly classify a fraudulent charge as a simple billing error, affecting how the bank handles your account security.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Will selecting 'unauthorized transaction' cause the bank to immediately cancel your physical card?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Reporting a charge as outright fraud usually triggers the bank to instantly deactivate the compromised card to prevent further unauthorized charges, which will decline any upcoming legitimate payments tied to it.",
+        "whatTheAgentLoses": "You lose the chance to prepare for the card cancellation, such as updating your payment method for essential bills or ensuring you have an alternative way to pay for things while waiting for a replacement.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the shipping address correct for the replacement card the bank will automatically issue?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Reporting a transaction as outright fraud typically results in the immediate cancellation of the compromised card and the issuance of a new one, which must be sent to your current address.",
+        "whatTheAgentLoses": "The agent might approve sending the replacement card to an outdated address on file, leaving you without access to your account for days or weeks.",
+        "kind": "intent-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Pick the dispute reason",
+      "questions": [
+       {
+        "question": "Which issue category best describes the problem with your transaction?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select a specific reason for the dispute, such as not receiving an item, to help the platform understand and resolve the problem.",
+        "whatTheAgentLoses": "You lose the ability to accurately specify the exact nature of your dispute, which could lead to an incorrect or delayed resolution.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which dispute reason should you select, and what supporting details should you provide?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents specific dispute reasons like 'Top up to wrong number' and optional fields for descriptions and attachments that form the basis of the claim.",
+        "whatTheAgentLoses": "The user loses the opportunity to accurately explain their specific situation and provide supporting evidence to help win the dispute.",
+        "kind": "decision",
+        "verify_form": "A dispute reason and description went into the support form - check the reason matches what happened and the description says it; support routes the case by that field.",
+        "speak": "never"
+       },
+       {
+        "question": "Which issue best describes why you are reporting a problem with this purchase?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Report a problem' page requires selecting a specific issue, such as wanting a refund or not receiving an item, to categorize the dispute correctly.",
+        "whatTheAgentLoses": "You lose the ability to accurately specify the exact nature of your dispute, which could affect the outcome of your claim.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does filing this dispute automatically block the merchant from making future charges to your account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When disputing a recurring charge or subscription, the bank's dispute process may only address the past transaction, requiring you to take separate action (like replacing your card or blocking the merchant) to prevent future billing.",
+        "whatTheAgentLoses": "You lose the awareness of whether your account is protected from future charges by this merchant, potentially leaving you vulnerable to repeated unwanted billing next month.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Confirm the reason fits",
+      "questions": [
+       {
+        "question": "Does the detailed definition of this dispute category match your exact situation?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists specific criteria for when to choose or avoid this option, distinguishing between issues like an item never arriving versus simply being dissatisfied with its quality.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the selected dispute reason accurately reflects your specific situation based on the bank's strict definitions.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Answer the follow-up questions",
+      "questions": [
+       {
+        "question": "Which specific sub-reason best describes why you aren't satisfied with your order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple options for why the order was unsatisfactory, and the right choice ensures the dispute is investigated accurately.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact nature of your delivery issue, which could affect the outcome of the dispute.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Was the service never provided, or was it provided late?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify the exact issue with the service to accurately categorize your dispute.",
+        "whatTheAgentLoses": "An agent might select the wrong reason for the service failure, potentially causing your dispute claim to be rejected.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How does the billed amount differ from your receipt?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify whether the receipt was incorrectly totaled or if the billed amount was altered from the receipt.",
+        "whatTheAgentLoses": "You lose the chance to specify the exact nature of the billing discrepancy based on your physical receipt.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you have a copy of your receipt to provide for this dispute?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dispute flow explicitly asks if you have a copy of the receipt to support your claim, requiring you to select either yes or no.",
+        "whatTheAgentLoses": "An agent would not know if you actually possess a receipt for the transaction, potentially answering incorrectly and failing to provide necessary evidence for your claim.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you receive any of the merchandise or service you ordered?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dispute screen explicitly asks if you received any merchandise or service to determine the specific nature of your claim.",
+        "whatTheAgentLoses": "An agent might incorrectly guess whether you received the items, which could lead to your dispute being rejected or delayed.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific reason best describes why you did not receive the merchandise or service?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify whether the merchandise wasn't received, the merchant couldn't provide the service, or the delivery time passed to accurately categorize the dispute.",
+        "whatTheAgentLoses": "You lose the ability to ensure the exact nature of the missing merchandise or service is accurately reported to the bank.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the bank require you to confirm that you already tried to cancel this recurring subscription with the merchant?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "For disputes involving unwanted subscription renewals, banks typically require you to have attempted cancellation under the merchant's terms before they will step in and initiate a chargeback.",
+        "whatTheAgentLoses": "The agent might answer incorrectly or skip providing proof of cancellation, causing the bank to immediately reject the dispute and instruct you to contact the merchant.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Describe the claim",
+    "note": "6.1 and 6.2 for item claims, then 6.3; 6.4 where the form asks about the seller; 6.5 then 6.6, and 6.7 before anything is shared",
+    "questions": [
+     {
+      "question": "How should I provide the required supporting evidence for the refund?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen offers both a text area and a file upload option for submitting supporting information.",
+      "whatTheAgentLoses": "The user loses the ability to decide whether to write out a detailed explanation or upload specific files like receipts as evidence.",
+      "kind": "decision",
+      "verify_form": "The agent chose between writing the explanation and uploading proof - check which it did and whether the stronger evidence you hold made it in.",
+      "speak": "never"
+     }
+    ],
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Describe the item",
+      "questions": [
+       {
+        "question": "How should you categorize the item you are reporting?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify the item type and category for the disputed transaction, offering examples like products or digital downloads to help you choose correctly.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to ensure the disputed item is categorized accurately according to your specific purchase.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you describe the specific item you are disputing?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires specific details like the item name, type, category, and quantity to accurately process the report for the problematic item.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over exactly how the disputed item is described and categorized, which could affect the outcome of your claim.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How many items are you reporting in this dispute?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the exact quantity ensures the dispute claim accurately reflects the number of missing or incorrect items from the transaction.",
+        "whatTheAgentLoses": "You lose the ability to specify exactly how many items were problematic, which could result in an incorrect claim amount.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to check if your purchase is covered by the Buyer Protection Policy?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that not all items are covered and advises checking the User Agreement to confirm eligibility.",
+        "whatTheAgentLoses": "The user loses the chance to verify if their specific purchase is actually eligible for buyer protection before filing the dispute.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Add or remove items",
+      "questions": [
+       {
+        "question": "Do you need to add any additional items to this dispute?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the current item details alongside an 'Add another item' link, letting you include multiple items in a single claim if needed.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure all relevant items from the transaction are accurately included in the dispute before proceeding.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the item details correct, and do you need to add another item?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the details of the reported item and offers a link to add another item to the dispute.",
+        "whatTheAgentLoses": "The user loses the ability to verify the item details and ensure all disputed items are included in the claim.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you accidentally leave a blank item row that is preventing the dispute form from submitting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Clicking 'Add another item' creates a mandatory set of blank fields, which will trigger a validation error and block submission unless you click the trash can to remove the empty row.",
+        "whatTheAgentLoses": "The agent might get stuck on a form validation error, unable to submit the claim because they don't realize an empty, accidentally-added item row needs to be deleted.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Set the dates and amount",
+      "questions": [
+       {
+        "question": "What scheduled delivery date and expected refund amount do you want to provide for this claim?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires specific details about the expected delivery date and the exact refund amount you are requesting to process the dispute.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to specify the exact delivery timeline and refund amount you are legally claiming.",
+        "kind": "decision",
+        "verify_form": "A delivery date and a refund amount went into the form - check both against your order; the amount claimed is what the platform will refund at most.",
+        "speak": "gate"
+       },
+       {
+        "question": "What total amount do you expect to be refunded, including any extra charges?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for the expected refund amount and explicitly notes to include miscellaneous charges like shipping or tax.",
+        "whatTheAgentLoses": "The user loses the ability to ensure they are fully reimbursed for all associated costs of the disputed transaction.",
+        "kind": "decision",
+        "verify_form": "A total refund amount went in - check it includes the shipping and tax you actually paid; the claim caps at what was typed.",
+        "speak": "gate"
+       },
+       {
+        "question": "When was the item delivered to you?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dispute form asks for the specific date the item was delivered to help investigate the claim.",
+        "whatTheAgentLoses": "You lose the ability to provide the exact delivery date from your personal records, which could affect the outcome of the dispute.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What specific details, supporting links, and expected refund amount do you want to include in your dispute?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Report a problem' screen asks for a detailed description of the issue, a link to the service, and the specific refund amount you are requesting.",
+        "whatTheAgentLoses": "Letting an agent handle this means you lose control over the exact narrative, supporting evidence, and the specific refund amount submitted for your claim.",
+        "kind": "decision",
+        "verify_form": "Comments, a link and a refund amount went into the report - check each; the $2.00 the video claims on a $4.52 charge shows how quietly a partial claim happens.",
+        "speak": "never"
+       },
+       {
+        "question": "What is the correct amount you should have been charged instead of $8.05?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for the amount on your receipt or the amount you think you were charged to determine the exact amount being disputed.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact amount they believe they should have been charged, which could result in an incorrect refund.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the dispute amount field visually pre-filled with the full transaction total, and does it need to be changed for a partial dispute?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form often auto-populates the full charge amount by default, which must be manually overwritten if you are only disputing part of the transaction.",
+        "whatTheAgentLoses": "You lose the chance to catch a visually pre-filled value that might claim the wrong amount, potentially causing the bank to reject the dispute for inaccuracy.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Declare the seller contact",
+      "questions": [
+       {
+        "question": "Did you already contact the seller about this charge, and if so, when and how?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dispute flow asks for details about any previous communication with the seller, including the date and method of contact, to understand if you tried to resolve it directly.",
+        "whatTheAgentLoses": "Delegating this means the agent might incorrectly report whether or how you tried to resolve the issue with the merchant directly, which could weaken your claim.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you need to retrieve timestamps or screenshots from external social media messages to prove you contacted the seller?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dispute process often requires proof of contact, meaning you may need to open external platforms like Twitter to retrieve the exact message history.",
+        "whatTheAgentLoses": "You lose the ability to personally locate and extract the exact external communication that proves you tried to resolve the issue with the merchant.",
+        "kind": "decision",
+        "verify_form": "Proof of seller contact may live in your own external messages - check whether the agent needed it and what it pulled; those threads are yours to hand over or not.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Write the narrative",
+      "questions": [
+       {
+        "question": "What details and evidence should you provide to the seller about the unreceived item?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The contact page requires categorizing the purchase as a product or service, explaining the issue in a text box, and optionally uploading supporting files.",
+        "whatTheAgentLoses": "Letting an agent handle this means you lose control over exactly how the missing order is explained and which specific evidence is uploaded to support your claim.",
+        "kind": "decision",
+        "verify_form": "The agent composed what the seller sees about the missing item - check the category, the text and the attachment; this message is your side of the negotiation.",
+        "speak": "never"
+       },
+       {
+        "question": "What additional information do you want to provide to explain the issue?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a text box to explain the problem in your own words while warning against including confidential information.",
+        "whatTheAgentLoses": "You lose the ability to articulate the specific context and nuances of why you are requesting a refund.",
+        "kind": "decision",
+        "verify_form": "Free-text got written into the case - check what it says; those words are the version of events the reviewer reads.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the amount, dates, and description you're about to submit accurately reflect what actually happened with this charge?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires specific information like the amount, dates, and a description of the issue to advance the claim.",
+        "whatTheAgentLoses": "The user loses the opportunity to ensure their specific situation is accurately represented to the bank.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "What specific details and supporting evidence should you include to build your dispute case?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Dispute a Charge' form requires you to expand on the purchase details and provide compelling evidence to successfully build your case.",
+        "whatTheAgentLoses": "You lose the ability to personally articulate the exact context of the dispute and select the most compelling evidence, such as specific receipts or emails, to support your claim.",
+        "kind": "decision",
+        "verify_form": "The agent expanded the dispute details and evidence - check the story and the proof are yours; a generic narrative loses to the merchant's records.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Attach the evidence",
+      "questions": [
+       {
+        "question": "What supporting documents should you upload to support your case?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen allows uploading supporting files but warns that these documents will be shared with the seller, meaning you must carefully exclude confidential information.",
+        "whatTheAgentLoses": "You lose control over selecting which specific evidence to share with the seller while ensuring your sensitive personal information remains protected.",
+        "kind": "decision",
+        "verify_form": "Files were chosen to support the case - check which ones, knowing everything uploaded is shown to the seller; the wrong screenshot hands them your private details.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you upload supporting documents or just provide a text explanation for the dispute?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers an optional file upload area and a text box for additional details to help resolve the issue faster.",
+        "whatTheAgentLoses": "Delegating this means the agent might skip uploading crucial evidence you possess or fail to articulate the specific nuances of your case, potentially weakening the dispute.",
+        "kind": "decision",
+        "verify_form": "The agent decided between attaching documents and text alone - check whether the receipts you actually hold were uploaded; a text-only case is the weakest version of it.",
+        "speak": "never"
+       },
+       {
+        "question": "Did the file you selected actually appear in the attachments list?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface might silently fail to attach a file if it exceeds the size limit or is the wrong format, so you must verify the file name is visible before submitting.",
+        "whatTheAgentLoses": "The agent might submit the dispute without the crucial receipt or evidence if the upload silently failed and they didn't verify the attachment list.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the visual thumbnail of the uploaded evidence confirm that the correct and legible document was attached?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform displays a small visual preview of the uploaded file, which is the only way to confirm the correct image was attached before submitting.",
+        "whatTheAgentLoses": "You lose the ability to visually verify that the attached file is the right receipt and is legible, which could cause the dispute to be rejected if the agent uploaded the wrong image.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are your supporting documents in an acceptable file format and under the size limit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The upload tool strictly accepts specific formats (like JPG, PNG, or PDF) and enforces a maximum file size (e.g., 10MB), meaning unsupported or overly large files will fail to attach.",
+        "whatTheAgentLoses": "You lose the ability to ensure your crucial evidence is actually accepted by the system, as an agent might silently fail to upload oversized photos or unsupported document types.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Screen out confidential details",
+      "questions": [
+       {
+        "question": "Are you sure your explanation excludes confidential information that will be shared with the seller?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a warning that any information included in the dispute form will be shared directly with the seller.",
+        "whatTheAgentLoses": "The user loses the ability to personally screen the dispute explanation to ensure no sensitive or private details are exposed to the merchant.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Submit the claim",
+    "note": "7.1, 7.2 where the form demands declarations, 7.3 before anything files; then 7.4 - or 7.5 where the app routes completion to a phone line",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Review the claim summary",
+      "questions": [
+       {
+        "question": "Are the dispute details and attached file accurate and ready to submit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reviewing the explanation about the unreceived order and the attached image ensures the bank has the correct evidence to process the claim.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the agent accurately described the missing order and attached the correct supporting evidence before finalizing the dispute.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Accept the declarations",
+      "questions": [
+       {
+        "question": "Do you want to receive your claim documents and communications online or by regular mail?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform asks if you want to switch to paperless delivery for faster and more secure access to your claim documents.",
+        "whatTheAgentLoses": "You lose the ability to control your account's document delivery preferences, which could result in missing important physical mail or unexpected changes to your settings.",
+        "kind": "decision",
+        "verify_form": "A paperless-or-mail choice got made for your claim documents - check which; it silently rewrites how every future notice reaches you.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you signing a fraud affidavit under penalty of perjury by clicking submit?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Formal fraud disputes often require you to legally attest that you did not authorize or benefit from the charge, and false claims can lead to account closure or legal consequences.",
+        "whatTheAgentLoses": "You lose the opportunity to read the legal disclosures and ensure you are comfortable taking legal responsibility for the fraud claim before the agent submits it on your behalf.",
+        "kind": "decision",
+        "verify_form": "Submitting a fraud claim can be a sworn statement - check what the submission attested under your name; a false affidavit is your legal exposure, not the agent's.",
+        "speak": "gate"
+       },
+       {
+        "question": "Did you opt in to receive a provisional credit while the bank investigates the dispute?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many institutions offer a temporary credit for the disputed amount, but they may require you to explicitly check a box or request it during the submission process.",
+        "whatTheAgentLoses": "If the agent skips or misses the provisional credit option, you will be out of pocket for the disputed amount for the entire duration of the investigation, which can take up to 90 days.",
+        "kind": "decision",
+        "verify_form": "A provisional credit may have needed an explicit opt-in - check whether the agent requested it; without it you are out the money for the whole investigation.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you agree to the bank's declaration that the details you provided are accurate?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Chase dispute form requires you to explicitly check a box stating \"I understand accurate and specific details help resolve my dispute faster\" before allowing you to submit the claim.",
+        "whatTheAgentLoses": "You lose the opportunity to personally attest to the accuracy of your claim, which acts as a formal declaration to your bank.",
+        "kind": "decision",
+        "verify_form": "The form required declaring your details accurate - check what got attested; that checkbox is your signature on the claim.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Weigh the consequences of filing",
+      "questions": [
+       {
+        "question": "Are you certain you want to proceed with reporting this transaction as a scam?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking 'Next' with 'I was scammed' selected will initiate a fraud investigation that could flag or close the recipient's account.",
+        "whatTheAgentLoses": "The user loses the opportunity to halt the dispute process for a legitimate transaction, which could unjustly penalize the recipient.",
+        "kind": "decision",
+        "verify_form": "The scam report sat one tap from filing - check it was not submitted casually; filing flags a real person's account, and this sender may be someone you know.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Submit the claim"
+     },
+     {
+      "id": "7.5",
+      "label": "Call to finish the claim",
+      "questions": [
+       {
+        "question": "What must you do to officially complete the claim?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen explicitly states that a phone call to the provided number is required to finish the process.",
+        "whatTheAgentLoses": "The user would be unaware that the online process is incomplete and that they must make a phone call to finalize the dispute.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Track and manage the case",
+    "note": "8.1 the moment anything submits; 8.2 then 8.3 while the case sits open; 8.4 to 8.8 are the moves the case's state offers - escalate, retype, appeal through 8.6's own form, close, or re-report; 8.6's evidence and submission reuse 6.5, 6.6 and 7.1",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Confirm the case was recorded",
+      "questions": [
+       {
+        "question": "Is the dispute actually listed in your open cases?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Although the submission seemed complete, the Resolution Center shows zero open cases, indicating the claim may not have been successfully recorded.",
+        "whatTheAgentLoses": "If the agent assumes the dispute was filed without verifying the open cases list, you might lose your money because the claim was never actually processed.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "How do you want to proceed now that the message to the seller has been sent?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen confirms the message was sent to Wish.com and notes that PayPal can help if the issue isn't resolved directly, prompting a choice on what to do next.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to wait for the seller's response or immediately review the transaction details.",
+        "kind": "decision",
+        "verify_form": "The message to the seller went out and the agent chose what to do next - check whether it is waiting for the reply or already escalating; the 20-day window is yours to spend.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the open cases count actually increase to 4 after you submit the dispute, or does the final screen still show 3 open cases as before?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The open cases count remains at 3 in the final frame, contradicting the assertion that it increased to 4 after the dispute was submitted.",
+        "whatTheAgentLoses": "The user loses the certainty that their dispute was successfully submitted and registered by the platform.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you successfully submit the dispute update and note the escalation deadline?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen displays a green checkmark and a specific deadline to escalate the claim under the Purchase Protection Policy if the merchant does not resolve the issue.",
+        "whatTheAgentLoses": "You miss seeing the confirmation checkmark and directly knowing the exact deadline to escalate the claim if the merchant fails to resolve it.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What are the next steps and details of your submitted dispute?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen confirms the dispute was successfully submitted and outlines next steps, such as accessing the claim in the Message Center.",
+        "whatTheAgentLoses": "The user loses the immediate reassurance of the successful submission and the specific instructions on how to track the claim's progress.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Did you capture the claim reference number from the confirmation screen before navigating away?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The confirmation screen often displays a unique case or reference number that is required for future phone support, and it may not always be sent via email or appear immediately in the app's dispute history.",
+        "whatTheAgentLoses": "You lose the only immediate record of the claim number if the agent navigates away from the transient success screen before writing it down.",
+        "kind": "state-check",
+        "speak": "always"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Open the case",
+      "questions": [
+       {
+        "question": "Which closed dispute case do you want to review?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple closed cases with different Case IDs and amounts, so you must select the correct one to view its specific details.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the history and resolution details of a specific past dispute.",
+        "kind": "decision",
+        "verify_form": "The agent opened one of your closed cases - check it is the case you wanted revisited; each carries its own ID, amount and outcome.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you know that a dispute flagged as needing review will automatically close if left unaddressed for 20 days, and have you checked whether any of yours are approaching that deadline?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard flags 'Contestazioni da rivedere' as requiring your action, which is critical since unresolved disputes automatically close after 20 days.",
+        "whatTheAgentLoses": "You lose the immediate awareness of urgent deadlines and the context of which specific disputes are at risk of being automatically closed.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which open dispute do you want to review or escalate?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Resolution Center displays multiple open cases, requiring you to identify the correct case number, such as [number], to view its details or convert it into a claim.",
+        "whatTheAgentLoses": "You lose control over the timing of the escalation, as an agent might convert the dispute to a claim before you feel the seller has had adequate time to respond.",
+        "kind": "decision",
+        "verify_form": "The agent selected an open case to act on - check which case, and whether it escalated anything; converting a dispute to a claim ends the seller conversation on a clock you may have wanted to run longer.",
+        "speak": "never"
+       },
+       {
+        "question": "Are these the correct details for the dispute case you are reviewing?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Expanding the case details allows you to verify the disputed amount, seller information, and shipping address to ensure the correct claim is being handled.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct transaction and seller details were accurately recorded for your dispute.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Read the status and deadlines",
+      "questions": [
+       {
+        "question": "What is the outcome and timeline of your dispute?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Reviewing the case timeline confirms that the dispute was closed in your favor and a refund was issued.",
+        "whatTheAgentLoses": "You miss the direct reassurance of seeing the exact resolution timeline and the confirmation of your refund.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you know who is reviewing the dispute after the seller responds?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The dashboard updates to show 'In corso di revisione da parte di PayPal', indicating that PayPal has taken over the review process.",
+        "whatTheAgentLoses": "The user loses the reassurance of seeing exactly where their dispute stands and who is currently responsible for the next step.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to send a message to the seller or mark the issue as resolved?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays an open case for a $6.00 payment to KeepCalling with options to either message the seller or close the dispute, which determines the next step in the resolution process.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to communicate further with the seller or close the case based on their own assessment of the situation.",
+        "kind": "decision",
+        "verify_form": "The open case offered message-the-seller or mark-resolved - check which the agent took; resolved closes the door on the refund.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Escalate to a claim",
+      "questions": [
+       {
+        "question": "How do you escalate the unresolved dispute to PayPal?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a warning that the case will automatically close by a specific date unless you click 'Inoltra a PayPal' to convert it into a formal claim.",
+        "whatTheAgentLoses": "You lose control over the timing of the escalation, as you might prefer to wait for the merchant's response before officially involving PayPal.",
+        "kind": "decision",
+        "verify_form": "The agent may have escalated the dispute to a formal claim - check whether it did and when; escalation ends the seller conversation for good, and you may have wanted to wait out a reply.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Change the case type",
+      "questions": [
+       {
+        "question": "Should you change the case type to better fit the issue you are facing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers alternative options like reporting a lost card or an unauthorized subscription to ensure the dispute is categorized correctly.",
+        "whatTheAgentLoses": "You lose the ability to verify if a different dispute category better matches the specific details of your fraudulent transaction.",
+        "kind": "decision",
+        "verify_form": "The agent may have changed the case type - check what the case now claims; item-not-received and not-as-described are judged by different rules, and the switch is usually one-way.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Appeal the outcome",
+      "note": "8.6.1 then 8.6.2; the evidence and the submission reuse 6.5, 6.6 and 7.1",
+      "children": [
+       {
+        "id": "8.6.1",
+        "label": "Open the appeal",
+        "questions": [
+         {
+          "question": "What are the details of the case you need to appeal?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The email displays the specific case ID and outcome needed to identify which transaction to address in PayPal.",
+          "whatTheAgentLoses": "You lose the ability to review the specific context and case number of the dispute before taking action in your account.",
+          "kind": "state-check",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "8.6.2",
+        "label": "Justify the appeal",
+        "questions": [
+         {
+          "question": "What is your reason for filing this appeal?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to specify whether you will provide tracking information or proof of a previous refund to support your appeal.",
+          "whatTheAgentLoses": "Delegating this means the agent might select an appeal reason you cannot actually provide proof for, which could cause your claim to be denied.",
+          "kind": "decision",
+          "verify_form": "An appeal reason got selected - check it is one you can actually prove; an appeal filed on evidence you do not hold is denied on arrival.",
+          "speak": "never"
+         },
+         {
+          "question": "How did you issue the refund?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to specify whether the refund was issued through PayPal or another method to ensure the dispute is processed correctly.",
+          "whatTheAgentLoses": "You lose the ability to accurately report your specific refund method, which could lead to the dispute being mishandled if the agent guesses incorrectly.",
+          "kind": "intent-check",
+          "speak": "never"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Close the case",
+      "questions": [
+       {
+        "question": "Where do you navigate to find and close an existing dispute?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Resolution Centre' card specifically designed to resolve transaction or account issues.",
+        "whatTheAgentLoses": "The user loses the ability to properly manage and close their existing disputes if the agent navigates to the wrong section.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Am I sure I want to permanently close this case, knowing I cannot reopen it?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The warning modal explicitly states that once the case is closed, you cannot report another issue on this transaction.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether they are truly ready to permanently forfeit their right to dispute this specific transaction.",
+        "kind": "decision",
+        "verify_form": "The agent faced the close-case warning - check whether it closed; once closed, this transaction can never be disputed again.",
+        "speak": "never"
+       },
+       {
+        "question": "Are there any open cases in your queue that you can close?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The Resolution Centre displays '0 Open cases' and states there are no cases in your queue, indicating no active disputes are currently available to manage or close.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally verify the status of your open cases and manually close any resolved disputes.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you confirm the case was successfully marked as resolved and closed?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The green checkmark and closure message confirm that the system successfully processed the end of the dispute.",
+        "whatTheAgentLoses": "The user loses the immediate peace of mind that comes from seeing the final visual confirmation that their dispute is officially closed.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.8",
+      "label": "Report the transaction again",
+      "questions": [
+       {
+        "question": "How do you report another issue for a transaction that already has a closed case?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the initial case is already closed with a refund issued, so you must find the specific option to open a new dispute for the same transaction.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure all separate issues with a multi-item transaction are fully addressed and refunded.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Prevent the next mistake",
+    "note": "9.1 or 9.2 before the next send; 9.3 where the platform sells refund insurance",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Request the money instead"
+     },
+     {
+      "id": "9.2",
+      "label": "Scan the QR code",
+      "questions": [
+       {
+        "question": "Do you want to access the QR code scanner by tapping the scan icon in the top left corner?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Cash App home screen displays a scan icon in the top left corner next to the balance that activates the camera when tapped.",
+        "whatTheAgentLoses": "The user loses the ability to manually decide when to activate their device's camera and control what is being scanned.",
+        "kind": "decision",
+        "verify_form": "The agent opened the QR scanner - check the camera use was part of what you delegated, and what it went on to scan.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you display your personal QR code to receive money?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The QR Code Scanner screen offers both 'Scan' and 'My Code' tabs at the bottom, requiring a specific selection to show your own receiving code.",
+        "whatTheAgentLoses": "The user loses the physical agency of presenting their personal QR code on their own device to another person.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the payment amount and recipient details correct before you finalize the transfer?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a $5 payment queued for [name], and tapping Pay will immediately transfer the funds from your Cash Balance.",
+        "whatTheAgentLoses": "The user loses the chance to verify the recipient's identity, the payment amount, and the funding source before the money is irrevocably sent.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Weigh the early-refund subscription",
+      "questions": [
+       {
+        "question": "How do you access the full list of services to find the refund option?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen only displays a few quick services like Airtime and Data, requiring you to expand the menu to find the specific refund tool.",
+        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the app's full service menu and discover where specific account tools are located.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which service option should you select to initiate an early refund?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'My Service' screen lists several options under the 'Other' section, making it necessary to identify the specific icon for an early refund.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the correct service option is chosen for their specific refund needs.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to review the coverage limits and conditions for the Early Refund Service?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen details a coverage upgrade up to ₦[number].00 and specific conditions for automatic refunds, which determines if your transaction is eligible.",
+        "whatTheAgentLoses": "You lose the chance to personally verify the financial limits and conditions that apply to your refund.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should I subscribe to the Early Refund service for ₦50.00 per month to expedite this claim?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents an optional Early Refund subscription for ₦50.00 a month that promises a two-hour quick refund for transactions up to ₦10,000.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to incur a recurring monthly fee in exchange for faster dispute resolution.",
+        "kind": "decision",
+        "verify_form": "A paid early-refund subscription was on offer - check whether the agent subscribed; that is a recurring monthly fee traded for speed on one claim.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

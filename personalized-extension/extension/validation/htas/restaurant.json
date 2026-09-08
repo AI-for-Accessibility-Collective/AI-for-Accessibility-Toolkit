@@ -1100,11 +1100,11 @@
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The narrator instructs you to enter your name, phone number, and email, but the screen shows these fields are already filled with Sophia Cruz's details.",
+        "why": "The narrator instructs you to enter your name, phone number, and email, but the screen shows these fields are already filled with [name]'s details.",
         "whatTheAgentLoses": "The user loses the assurance that the agent can recognize when a form is already auto-filled and avoid redundant data entry.",
         "speak": "if-wrong",
         "check": "What name, phone, and email does the form show pre-filled?",
-        "say_example": "The form came pre-filled for <Sophia Cruz>. That's not you. I'm replacing it with your details."
+        "say_example": "The form came pre-filled for <[name]>. That's not you. I'm replacing it with your details."
        },
        {
         "question": "Is the reservation being booked under the name of the person who will actually be arriving at the restaurant?",
@@ -1252,7 +1252,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to read and evaluate the terms of service and privacy policy before legally consenting to them.",
         "speak": "gate",
         "check": "What restaurant, date, time, party size, name, card, and cancellation terms does the final page show?",
-        "say_example": "Ready to book. <The Zen Bistro>, <Friday June 12> at <7>, table for <4>, under <your name>. They'll hold your <Visa ending 4821>. There's no charge unless you don't show, then <$40>. Free to cancel until <Thursday>. Press to book, or say change."
+        "say_example": "Ready to book. <The Zen Bistro>, <Friday June 12> at <7>, table for <4>, under <your name>. They'll hold your <Visa ending [account number]>. There's no charge unless you don't show, then <$40>. Free to cancel until <Thursday>. Press to book, or say change."
        },
        {
         "question": "Did you complete the reservation before the hold timer expired?",
@@ -1436,7 +1436,7 @@
         "whatTheAgentLoses": "The user loses control over whether their personal credit card or a specific gift card is saved to the platform for this meal.",
         "speak": "gate",
         "check": "Does the page require a card number before continuing?",
-        "say_example": "The form wants a card number to go further. The field is yours. Or say the word and I'll use your <Visa ending 4821>."
+        "say_example": "The form wants a card number to go further. The field is yours. Or say the word and I'll use your <Visa ending [account number]>."
        }
       ]
      },

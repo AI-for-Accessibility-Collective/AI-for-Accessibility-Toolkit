@@ -23,7 +23,7 @@
         "whatTheAgentLoses": "You lose the chance to ensure the public review is tied to your preferred personal or professional identity rather than whichever account happens to be active.",
         "speak": "if-wrong",
         "check": "What name does the page show the review will post under, and is it <the person's name>?",
-        "say_example": "This would post under the name <Christine H.>. That isn't you. I've stopped. Say sign out, or tell me it's yours."
+        "say_example": "This would post under the name <[name]>. That isn't you. I've stopped. Say sign out, or tell me it's yours."
        }
       ]
      },
@@ -53,11 +53,11 @@
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The Mac system menu bar shows the user name 'Jay Campbell', but the Yelp account creation form is filled out with the name 'Christine Heffner'.",
+        "why": "The Mac system menu bar shows the user name '[name]', but the Yelp account creation form is filled out with the name '[name]'.",
         "whatTheAgentLoses": "The user loses control over their digital identity if the agent creates accounts using fabricated or mismatched personal details.",
         "speak": "if-wrong",
         "check": "What name is typed in the sign-up form's name fields, and is it <the person's name>?",
-        "say_example": "The sign-up form has the name <Christine Heffner> in it. That's not you. I've cleared it. Type your own name."
+        "say_example": "The sign-up form has the name <[name]> in it. That's not you. I've cleared it. Type your own name."
        },
        {
         "question": "Which details does the sign-up form need from you?",
@@ -400,7 +400,7 @@
         "whatTheAgentLoses": "You lose the chance to understand exactly what personal profile information will be visible to the public alongside your review.",
         "speak": "never",
         "check": "What does the posting notice say about who can see the review and under what name?",
-        "say_example": "Noted the review posts publicly under <Alana L.>"
+        "say_example": "Noted the review posts publicly under <[name]>"
        }
       ]
      }
@@ -842,7 +842,7 @@
         "whatTheAgentLoses": "You lose the chance to verify that the written text and star rating accurately reflect your experience before the review goes live.",
         "speak": "gate",
         "check": "Is the button about to be pressed the one that posts the review, and what does the form show for rating, text, name, and photos?",
-        "say_example": "Ready to post. <4> stars for <Tacorea>, under <Alana L.>, with <one> photo. It starts '<the tacos were great>'. Posting also says this is your own, unpaid visit. Press to post, or say change."
+        "say_example": "Ready to post. <4> stars for <Tacorea>, under <[name]>, with <one> photo. It starts '<the tacos were great>'. Posting also says this is your own, unpaid visit. Press to post, or say change."
        }
       ]
      },

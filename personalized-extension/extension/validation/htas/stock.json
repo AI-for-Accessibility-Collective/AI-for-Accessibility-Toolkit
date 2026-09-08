@@ -210,7 +210,7 @@
         "whatTheAgentLoses": "Delegating this step requires giving an agent access to your personal text messages, which compromises your two-factor authentication security.",
         "speak": "gate",
         "check": "Does the page ask for a verification code, and to which number does it say it was sent?",
-        "say_example": "They're texting a code to <your number ending 4821>. Read it to me and I'll type it in."
+        "say_example": "They're texting a code to <your number ending [account number]>. Read it to me and I'll type it in."
        },
        {
         "question": "Is your phone number verified and listed on the account?",
@@ -266,11 +266,11 @@
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen prompts for your business name and pre-fills 'Andy Peninger', which needs to be accurate for your account profile.",
+        "why": "The screen prompts for your business name and pre-fills '[name]', which needs to be accurate for your account profile.",
         "whatTheAgentLoses": "You lose the opportunity to correct or change the business name before it is submitted to the platform.",
         "speak": "if-wrong",
         "check": "What value is pre-filled in the field, and what does the field label ask for?",
-        "say_example": "It pre-filled <Andy Peninger> as the business name. That looks like a person, and the field wants a business. What should it say?"
+        "say_example": "It pre-filled <[name]> as the business name. That looks like a person, and the field wants a business. What should it say?"
        },
        {
         "question": "Are you comfortable providing your personal information to this third-party provider?",
@@ -1714,7 +1714,7 @@
    {
     "id": "6",
     "label": "Verify the outcome",
-    "note": "6.1, then 6.2 and 6.3 together - the arithmetic closes exactly in four keepers (eVJg, qzDH, ZWfJ, 77ew) and breaks somewhere in most of the rest. 6.4 and 6.5 when the fill is not instant. 6.6 when settlement lands off the platform (yeKU). 6.7 owns anything still open. every completed commit in the corpus is followed by some of this goal - the keepers treat it as part of the task, matching what David kept in hotel and amazon.",
+    "note": "6.1, then 6.2 and 6.3 together - the arithmetic closes exactly in four keepers (eVJg, qzDH, ZWfJ, 77ew) and breaks somewhere in most of the rest. 6.4 and 6.5 when the fill is not instant. 6.6 when settlement lands off the platform (yeKU). 6.7 owns anything still open. every completed commit in the corpus is followed by some of this goal - the keepers treat it as part of the task, matching what [name] kept in hotel and amazon.",
     "children": [
      {
       "id": "6.1",

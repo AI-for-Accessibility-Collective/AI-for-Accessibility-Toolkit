@@ -122,11 +122,11 @@
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The narrator tells you to create an account, but the profile name 'Amanda' is already visible in the top right corner.",
+        "why": "The narrator tells you to create an account, but the profile name '[name]' is already visible in the top right corner.",
         "whatTheAgentLoses": "The user loses time and risks account duplication if the agent blindly attempts to sign up instead of using the active session.",
         "speak": "if-wrong",
         "check": "Does the page header show a signed-in account name?",
-        "say_example": "You're already signed in as <Amanda>, so I'm skipping the sign-up."
+        "say_example": "You're already signed in as <[name]>, so I'm skipping the sign-up."
        }
       ]
      },
@@ -917,7 +917,7 @@
         "whatTheAgentLoses": "You lose the critical visual verification that ensures the property actually exists at the advertised location, risking engagement with a fraudulent listing.",
         "speak": "if-wrong",
         "check": "Does the street address on the page match the place named in the listing title?",
-        "say_example": "The listing calls itself <Palo Alto>. The address is really in <East Palo Alto>, across the freeway."
+        "say_example": "The listing calls itself <Redwood City>. The address is really in <San Carlos>, across the freeway."
        },
        {
         "question": "Does the actual monthly cost on the detail page match the advertised price from the search results?",
@@ -1425,7 +1425,7 @@
         "whatTheAgentLoses": "You lose the ability to personalize the greeting and carefully set the tone of your initial communication with the property manager.",
         "speak": "never",
         "check": "Which contact name does the listing show?",
-        "say_example": "Addressed the message to <Ms. Weber>."
+        "say_example": "Addressed the message to <[name]>."
        },
        {
         "question": "Which unique property identifier should you include in the inquiry template?",
@@ -1600,7 +1600,7 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen shows a save modal for the '[address] 82nd Street' rental that requires selecting a specific folder like 'Gus Waite' to organize the listing.",
+        "why": "The screen shows a save modal for the '[address] 82nd Street' rental that requires selecting a specific folder like '[name]' to organize the listing.",
         "whatTheAgentLoses": "The user loses the ability to organize their favorite apartment candidates into specific custom folders for later review.",
         "speak": "never",
         "check": "What folders does the save modal list?",
@@ -1720,7 +1720,7 @@
         "cluster": "select",
         "moment": "Completion",
         "moneyMoving": false,
-        "why": "Checking the 'Messaged Listings' screen allows you to track specific properties like [address] and 1 St Francis Pl that you have already contacted.",
+        "why": "Checking the 'Messaged Listings' screen allows you to track specific properties like [address] and [address] that you have already contacted.",
         "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify and keep track of exactly which apartments have already received your inquiries.",
         "speak": "never",
         "check": "Which listings does the messaged page list?",

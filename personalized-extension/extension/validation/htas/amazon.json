@@ -1058,7 +1058,7 @@
         "kind": "intent-check",
         "speak": "on-event",
         "check": "Which saved addresses does the page list, and does the task name or imply one of them?",
-        "say_example": "There are <three> saved addresses here, two of them nearly the same. Your ask says home, so I picked <the one ending in 027>. Right one?"
+        "say_example": "There are <three> saved addresses here, two of them nearly the same. Your ask says home, so I picked <the one ending in 015>. Right one?"
        },
        {
         "question": "Is the selected delivery address correct?",
@@ -1574,7 +1574,7 @@
         "kind": "state-check",
         "speak": "gate",
         "check": "What do the order screen's final lines show - items, quantities, variant, address, payment method, total, and any cancellation terms?",
-        "say_example": "Ready to order. <The kettle>, one, to <Home>, arriving <Friday>. <21.40> total on <your Mastercard ending 4821>. Cancelling stays free until it ships. Press to order, or say change."
+        "say_example": "Ready to order. <The kettle>, one, to <Home>, arriving <Friday>. <21.40> total on <your Mastercard ending 9034>. Cancelling stays free until it ships. Press to order, or say change."
        }
       ]
      },

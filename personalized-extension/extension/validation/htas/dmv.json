@@ -576,7 +576,7 @@
         "whatTheAgentLoses": "You lose the ability to personally confirm that the correct vehicle from your profile or search was selected for renewal.",
         "speak": "always",
         "check": "What vehicle does the page show as found and selected — plate, make, model, and the period being renewed?",
-        "say_example": "Found your <Honda, plate ABC123>, renewing through <April 2027>. That's the one I'm working on."
+        "say_example": "Found your <Honda, plate [confirmation number]>, renewing through <April 2027>. That's the one I'm working on."
        },
        {
         "question": "Which of your listed vehicles do you want to renew, or is your vehicle missing from the list?",
@@ -956,7 +956,7 @@
           "whatTheAgentLoses": "The delegator cannot visually distinguish between an editable text field and a locked field, missing the chance to realize their official record contains an unchangeable error.",
           "speak": "if-wrong",
           "check": "Does any locked or greyed-out identity field show a value different from what the person gave?",
-          "say_example": "Their record spells your name <Jonh> and that field is locked. I can't fix it here. The site says corrections mean an office visit. Keep going as is, or stop?"
+          "say_example": "Their record spells your name <[name]> and that field is locked. I can't fix it here. The site says corrections mean an office visit. Keep going as is, or stop?"
          }
         ]
        },
@@ -1705,7 +1705,7 @@
         "whatTheAgentLoses": "The user loses the final opportunity to review or correct their billing details before the payment is processed.",
         "speak": "gate",
         "check": "Is this the screen where continuing charges the payment — and what total, line items, payment method, and delivery destination does it show?",
-        "say_example": "Ready to pay. <$93.10> total on your <card>, for <plate ABC123>. That's <$89.05> renewal plus <$4.05> card fee. The sticker mails to <your address on file>. After this it can't be changed. Go?"
+        "say_example": "Ready to pay. <$93.10> total on your <card>, for <plate [confirmation number]>. That's <$89.05> renewal plus <$4.05> card fee. The sticker mails to <your address on file>. After this it can't be changed. Go?"
        }
       ]
      }

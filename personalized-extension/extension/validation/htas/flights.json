@@ -103,7 +103,7 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen shows a prompt to choose between the existing 'HEC Media' account or another account, which determines where the flight information and confirmation will be saved and sent.",
+        "why": "The screen shows a prompt to choose between the existing '[name]' account or another account, which determines where the flight information and confirmation will be saved and sent.",
         "whatTheAgentLoses": "The user loses the ability to ensure their flight confirmation and itinerary are linked to and sent to their preferred email address.",
         "speak": "on-event",
         "check": "Which accounts does the sign-in prompt list?",
@@ -114,7 +114,7 @@
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen requires the password for the selected 'HEC Media' account to be entered in the provided field to continue.",
+        "why": "The screen requires the password for the selected '[name]' account to be entered in the provided field to continue.",
         "whatTheAgentLoses": "Delegating this step means you must share your private account password with the agent.",
         "speak": "on-event",
         "check": "Does the page show a password or verification field, and for which account?",
@@ -944,7 +944,7 @@
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The form will not advance to the next step until you scroll up and select a required passenger profile like 'deborah abioye'.",
+        "why": "The form will not advance to the next step until you scroll up and select a required passenger profile like '[name]'.",
         "whatTheAgentLoses": "You lose the ability to ensure the correct saved passenger profile is chosen when resolving the form submission error.",
         "speak": "never",
         "check": "Does the page show a validation error, and which field does it name?",
@@ -1502,11 +1502,11 @@
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": true,
-        "why": "The screen displays a banner confirming reservation OJGMQU is on hold and will expire in 23 hours and 59 minutes, which dictates your payment deadline.",
+        "why": "The screen displays a banner confirming reservation XPLKQR is on hold and will expire in 23 hours and 59 minutes, which dictates your payment deadline.",
         "whatTheAgentLoses": "Delegating this means you miss seeing the exact confirmation code and the specific deadline to pay before the held reservation expires.",
         "speak": "on-event",
         "check": "What hold confirmation code and expiry does the page show?",
-        "say_example": "It's on hold. Nothing has been paid. Code <OJGMQU>, and the hold ends in <24 hours>. There's no ticket until it's paid."
+        "say_example": "It's on hold. Nothing has been paid. Code <XPLKQR>, and the hold ends in <24 hours>. There's no ticket until it's paid."
        },
        {
         "question": "Does the final confirmation match the 24-hour payment window promised by the Book Now Pay Later option?",
@@ -1545,7 +1545,7 @@
         "whatTheAgentLoses": "You lose the immediate peace of mind of personally verifying the confirmed status and passenger details on the official itinerary receipt.",
         "speak": "always",
         "check": "What confirmation number, flights, and total does the confirmation page show?",
-        "say_example": "Booked. Confirmation <ABC123>, <the flights you picked>, <6,051> charged. The email came, and it matches the page."
+        "say_example": "Booked. Confirmation <[confirmation number]>, <the flights you picked>, <6,051> charged. The email came, and it matches the page."
        },
        {
         "question": "Does the final itinerary receipt match the flight details you just entered?",

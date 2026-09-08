@@ -40,7 +40,7 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen is currently displaying Arabic text, such as the greeting 'مساء الخير، عابد', and offers an 'EN' button to change the language.",
+        "why": "The screen is currently displaying Arabic text, such as the greeting 'مساء الخير، [name]', and offers an 'EN' button to change the language.",
         "whatTheAgentLoses": "You lose the opportunity to ensure the complex insurance terms and quote details are presented in your preferred language.",
         "speak": "never",
         "check": "What language is the page text in, and does the header show a language switch such as EN?",
@@ -111,7 +111,7 @@
         "whatTheAgentLoses": "The agent might enter an incorrect or default ZIP code, resulting in an inaccurate insurance quote for your actual location.",
         "speak": "never",
         "check": "Which field does the start page require to begin the quote, and what value is entered in it?",
-        "say_example": "Started the quote with your ZIP, <94025>."
+        "say_example": "Started the quote with your ZIP, <94110>."
        }
       ]
      },
@@ -180,7 +180,7 @@
         "whatTheAgentLoses": "You lose the ability to provide your exact vehicle registration number to ensure the quote matches your specific car.",
         "speak": "never",
         "check": "Which field asks for the registration number, and what value is entered?",
-        "say_example": "Looked the car up by its plate, <AB12 CDE>."
+        "say_example": "Looked the car up by its plate, <[plate number]>."
        },
        {
         "question": "If the registration number isn't to hand, do you want to look it up so the quote matches the exact car, or continue without it?",
@@ -225,7 +225,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify that the insurance quote is tied to the exact vehicle you intend to purchase.",
         "speak": "never",
         "check": "Which field asks for the VIN, and what value is entered?",
-        "say_example": "Entered the car by VIN, <1N4AL3AP8KC123456>. That gives the exact trim."
+        "say_example": "Entered the car by VIN, <[VIN]>. That gives the exact trim."
        }
       ]
      },
@@ -394,7 +394,7 @@
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The selected RTO code 'TN07-CHENNAI' contradicts the reference photo which clearly displays the license plate 'TN-22-S-2680'.",
+        "why": "The selected RTO code 'TN07-CHENNAI' contradicts the reference photo which clearly displays the license plate '[plate number]'.",
         "whatTheAgentLoses": "The user receives an inaccurate quote based on incorrect vehicle registration details.",
         "speak": "if-wrong",
         "check": "What RTO code is selected, and what registration number is shown on the page or given in the task? Do the letters agree?",
@@ -615,7 +615,7 @@
         "whatTheAgentLoses": "You lose the opportunity to catch any typos in your personal details before the quote process begins.",
         "speak": "if-wrong",
         "check": "What name, date of birth and mailing address does the review screen show, and do they match the task or profile?",
-        "say_example": "The review shows your birthday as <April 2, 1991>, which isn't what you gave me. Fixing it before the quote runs."
+        "say_example": "The review shows your birthday as <[date of birth]>, which isn't what you gave me. Fixing it before the quote runs."
        }
       ]
      },
@@ -632,7 +632,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to trust the autocomplete suggestions or manually type the city to ensure accurate address validation.",
         "speak": "if-wrong",
         "check": "What city is in the address field after the dropdown pick, and does it match the city in the task?",
-        "say_example": "The address box picked <Palo Alto> from its list, but you live in <East Palo Alto>. Fixing it. The price depends on where the car is kept."
+        "say_example": "The address box picked <Redwood City> from its list, but you live in <San Carlos>. Fixing it. The price depends on where the car is kept."
        },
        {
         "question": "Does the address the site accepted still have your apartment number?",
@@ -643,7 +643,7 @@
         "whatTheAgentLoses": "The agent might accept an incorrect standardized address, which could lead to denied claims if the garaging location is deemed misrepresented.",
         "speak": "if-wrong",
         "check": "Does the address the site accepted or standardized still include the apartment or unit number from the task?",
-        "say_example": "The site dropped your apartment number when it tidied the address. Putting <E-027> back."
+        "say_example": "The site dropped your apartment number when it tidied the address. Putting <Unit 12> back."
        },
        {
         "question": "Is your flat or house number in the address list, or does it need typing by hand?",
@@ -851,11 +851,11 @@
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen showed a pre-filled Florida driver's license ending in 1400, which must be accurate to ensure a valid insurance quote.",
+        "why": "The screen showed a pre-filled Florida driver's license ending in [account number], which must be accurate to ensure a valid insurance quote.",
         "whatTheAgentLoses": "The user loses the opportunity to verify that their current and correct driver's license number is being used for the quote.",
         "speak": "if-wrong",
         "check": "What licence state and last digits does the page show pre-filled, and do they match the licence in the task or profile?",
-        "say_example": "The site pre-filled a <Florida> licence ending <1400>. Yours is <California>. Fixing it."
+        "say_example": "The site pre-filled a <Florida> licence ending <[account number]>. Yours is <California>. Fixing it."
        },
        {
         "question": "The site couldn't pull your credit. Do you want to lift a credit freeze first, or carry on without it?",
@@ -1007,7 +1007,7 @@
         "whatTheAgentLoses": "You lose control over ensuring your spouse's specific driving record and employment details are accurately represented for the quote.",
         "speak": "never",
         "check": "Which fields does the page require for the added driver, and which are filled?",
-        "say_example": "Filled in <Jennifer>'s details as the second driver."
+        "say_example": "Filled in <[name]>'s details as the second driver."
        },
        {
         "question": "Did the site find people at your address and add them as drivers?",
@@ -1018,7 +1018,7 @@
         "whatTheAgentLoses": "You lose the chance to catch and exclude auto-discovered drivers, which could result in them being silently added to your policy and inflating your rate.",
         "speak": "on-event",
         "check": "Does the page show household members it found from records, in a popup or sidebar, and are they marked to be added unless excluded?",
-        "say_example": "The site found <two> people it thinks live with you, <Maria> and <Tom>. They'll be added as drivers unless I exclude them. Do they drive your car?"
+        "say_example": "The site found <two> people it thinks live with you, <[name]> and <[name]>. They'll be added as drivers unless I exclude them. Do they drive your car?"
        }
       ]
      },
@@ -1143,7 +1143,7 @@
         "whatTheAgentLoses": "You lose the opportunity to choose which alternative email address to use when the system rejects your first entry.",
         "speak": "on-event",
         "check": "Does the page show an email format error, and what value is in the email field?",
-        "say_example": "The site says your email isn't valid as typed. I have <david.lin0424@gmail.com>. Is that right?"
+        "say_example": "The site says your email isn't valid as typed. I have <the email you gave me>. Is that right?"
        },
        {
         "question": "Is any box outlined red with no message, stopping the form?",
@@ -1727,7 +1727,7 @@
       "whatTheAgentLoses": "You lose the ability to easily retrieve and resume this specific quote if the session times out or you decide to complete the purchase later.",
       "speak": "never",
       "check": "Does the page show a quote reference number, and what is it?",
-      "say_example": "Saved quote reference <Q-48213> in case you come back to it."
+      "say_example": "Saved quote reference <[account number]> in case you come back to it."
      }
     ],
     "children": [
@@ -1783,7 +1783,7 @@
         "whatTheAgentLoses": "A person delegating this task loses the chance to verify or correct their personal contact and payment information before finalizing the purchase.",
         "speak": "if-wrong",
         "check": "What email, phone and bank account or IBAN does the checkout show pre-filled, and do they match the task or profile?",
-        "say_example": "The pay page has an account ending <4821> pre-filled. That's not the one you gave me. Fixing it before anything's charged."
+        "say_example": "The pay page has an account ending <[account number]> pre-filled. That's not the one you gave me. Fixing it before anything's charged."
        }
       ]
      },
@@ -1983,7 +1983,7 @@
           "whatTheAgentLoses": "The user loses the opportunity to see the actual payment execution and any subsequent confirmation screens required to finalize the policy purchase.",
           "speak": "always",
           "check": "After the pay or confirm button, does the page show a confirmation, policy number, amount and start date, or is it still on the payment screen?",
-          "say_example": "Paid. Policy <POL-48213>, <$640>, cover starts <the 15th>. Check your email for the confirmation. That's your proof."
+          "say_example": "Paid. Policy <[policy number]>, <$640>, cover starts <the 15th>. Check your email for the confirmation. That's your proof."
          },
          {
           "question": "Do you want to buy the policy now?",
@@ -1994,7 +1994,7 @@
           "whatTheAgentLoses": "The user loses the opportunity to review the final charge and securely enter their own payment information before completing the transaction.",
           "speak": "gate",
           "check": "What total, payment method, car, plan and start date does the final pay screen show, and what is the button labelled?",
-          "say_example": "Ready to buy. <Progressive>, <Standard> plan, the <Rogue>, from <the 15th>. <$640> for six months, on your <Visa ending 4821>. Press to buy, or say change."
+          "say_example": "Ready to buy. <Progressive>, <Standard> plan, the <Rogue>, from <the 15th>. <$640> for six months, on your <Visa ending [card number]>. Press to buy, or say change."
          },
          {
           "question": "What are the SADAD details to pay through your bank?",
@@ -2005,7 +2005,7 @@
           "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the exact invoice amount and payment routing numbers before transferring funds.",
           "speak": "on-event",
           "check": "Does the page show bank-transfer or SADAD payment details, a biller ID, number and exact amount, and does it say the policy starts only once paid?",
-          "say_example": "This one's paid through your bank. Biller <015>, SADAD number <1234567890>, amount <808.45>. The policy only starts once that's paid, and that payment has to come from you."
+          "say_example": "This one's paid through your bank. Biller <[biller id]>, SADAD number <[account number]>, amount <808.45>. The policy only starts once that's paid, and that payment has to come from you."
          }
         ]
        },

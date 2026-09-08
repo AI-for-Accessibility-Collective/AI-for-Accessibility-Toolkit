@@ -66,7 +66,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the security of personally verifying the login, potentially allowing unauthorized access to your university account.",
         "speak": "gate",
         "check": "What location and time does the two-step login prompt show for this attempt?",
-        "say_example": "Duo wants approval on your phone. It says <Palo Alto>, just now. That's this login. Tap approve when it buzzes."
+        "say_example": "Duo wants approval on your phone. It says <Oakland>, just now. That's this login. Tap approve when it buzzes."
        },
        {
         "question": "Did the browser prompt to save the password to the device?",
@@ -116,7 +116,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify your account details and ensure the registration will be tied to your specific student profile.",
         "speak": "if-wrong",
         "check": "What name does the profile menu show for the signed-in account?",
-        "say_example": "The account menu says <Jordan Lee>. That's not you. I'm signing out before touching anything."
+        "say_example": "The account menu says <[name]>. That's not you. I'm signing out before touching anything."
        },
        {
         "question": "Does the page warn that the Student Center shows private academic and financial records?",
@@ -361,7 +361,7 @@
         "whatTheAgentLoses": "The chance to notice an outdated address and update it before the system records it as confirmed.",
         "speak": "on-event",
         "check": "What address does the confirmation popup show on file?",
-        "say_example": "The portal wants you to confirm your details. It has your address as <4321 Liftoff St, Cape Canaveral>. Still right?"
+        "say_example": "The portal wants you to confirm your details. It has your address as <[address]>. Still right?"
        },
        {
         "question": "Which address should you provide for your registration and study materials?",
@@ -424,11 +424,11 @@
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "Selecting the correct document, shown here as the '#[id]...SAID871.pdf' file, ensures your identity is properly verified by the school.",
+        "why": "Selecting the correct document, shown here as the '#[id]...[file]' file, ensures your identity is properly verified by the school.",
         "whatTheAgentLoses": "You lose the ability to personally oversee the selection and handling of your highly sensitive personal identification files.",
         "speak": "gate",
         "check": "What file name is selected for the National ID upload?",
-        "say_example": "The portal wants your National ID uploaded. I found <SAID871.pdf> in your files. Is that the right one to send?"
+        "say_example": "The portal wants your National ID uploaded. I found <[file]> in your files. Is that the right one to send?"
        },
        {
         "question": "Which required documents do you still need to upload?",
@@ -2299,7 +2299,7 @@
         "whatTheAgentLoses": "You lose the critical tracking number needed to prove you paid your tuition if the bank transfer gets delayed or misrouted.",
         "speak": "never",
         "check": "What payment reference does the transfer page show?",
-        "say_example": "Saved the payment reference <ABC123>. The transfer must carry it or the money goes unmatched"
+        "say_example": "Saved the payment reference <REF456>. The transfer must carry it or the money goes unmatched"
        },
        {
         "question": "Does the money move when the portal finishes, or do you have to send the transfer yourself?",

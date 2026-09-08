@@ -495,7 +495,7 @@
         "whatTheAgentLoses": "You lose the reassurance of personally verifying that the system has loaded the correct account details for your payee.",
         "speak": "if-wrong",
         "check": "Which fields on the payment form are prefilled, and does the account number match the saved payee?",
-        "say_example": "The form filled in the account ending <4821>. Your bill says <1553>. I'm fixing it."
+        "say_example": "The form filled in the account ending <[account number]>. Your bill says <1553>. I'm fixing it."
        }
       ]
      },
@@ -730,7 +730,7 @@
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": false,
-          "why": "The account number field contains the name 'Anthony' instead of a valid number, suggesting a data entry error that could cause the payment to fail.",
+          "why": "The account number field contains the name '[name]' instead of a valid number, suggesting a data entry error that could cause the payment to fail.",
           "whatTheAgentLoses": "You lose the ability to catch and correct obvious data entry errors before adding a new payee to your account.",
           "speak": "if-wrong",
           "check": "Does the account number field contain digits, or a name or other text?",
@@ -1433,11 +1433,11 @@
         "cluster": "compare",
         "moment": "Completion",
         "moneyMoving": true,
-        "why": "The account identifier changed from 7600 during selection to 123 during review and 1234 on confirmation, raising concerns about which account will actually be debited.",
+        "why": "The account identifier changed from [account number] during selection to [account number] during review and [account number] on confirmation, raising concerns about which account will actually be debited.",
         "whatTheAgentLoses": "The user loses the opportunity to catch a potentially critical system glitch where the wrong bank account might be charged.",
         "speak": "if-wrong",
         "check": "Do the funding account's last digits stay the same from selection through confirmation?",
-        "say_example": "The account picked ended <7600>. The confirmation shows <1234>. I don't know which one gets charged. Holding."
+        "say_example": "The account picked ended <[account number]>. The confirmation shows <[account number]>. I don't know which one gets charged. Holding."
        },
        {
         "question": "Is the total exactly the bill amount plus the fee shown?",
@@ -1515,7 +1515,7 @@
         "whatTheAgentLoses": "Delegating this step removes your final chance to personally verify the payment amount, date, and funding account before the funds are committed.",
         "speak": "gate",
         "check": "What amount, payee, funding account, fee, send date, and delivery date does the review screen show?",
-        "say_example": "Ready to pay. <217.03> to <PG&E>, from checking ending <4521>. Arrives <June 12>. No fee. Press to pay, or say change."
+        "say_example": "Ready to pay. <217.03> to <PG&E>, from checking ending <[account number]>. Arrives <June 12>. No fee. Press to pay, or say change."
        },
        {
         "question": "Was Submit actually pressed, or did the page move on without it?",

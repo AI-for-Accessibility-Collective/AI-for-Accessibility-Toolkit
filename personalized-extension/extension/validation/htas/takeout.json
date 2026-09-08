@@ -1387,7 +1387,7 @@
         "whatTheAgentLoses": "You lose the ability to decide exactly which credit card or digital wallet is charged for the meal.",
         "speak": "gate",
         "check": "Which payment methods does the page list, which is selected, and does any show a cashback offer or a balance shortfall?",
-        "say_example": "Two ways to pay saved here. <Visa ending 4821>, or <Google Pay>. Which one?"
+        "say_example": "Two ways to pay saved here. <Visa ending [account number]>, or <Google Pay>. Which one?"
        }
       ]
      },

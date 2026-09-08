@@ -412,7 +412,7 @@
         },
         "speak": "never",
         "check": "Does the page ask for a mobile number to sign in?",
-        "say_example": "Used your number ending <4821>"
+        "say_example": "Used your number ending <[account number]>"
        },
        {
         "question": "Do you want to log in using your mobile number or your ABHA Health ID?",
@@ -469,7 +469,7 @@
         },
         "speak": "if-wrong",
         "check": "What account name does the welcome message show?",
-        "say_example": "The account says <Maria Santos>. You asked me to book for <you>. Stopping until that's sorted."
+        "say_example": "The account says <[name]>. You asked me to book for <you>. Stopping until that's sorted."
        }
       ]
      },
@@ -557,7 +557,7 @@
         },
         "speak": "gate",
         "check": "Does the page show a code-entry box and say where the code was sent?",
-        "say_example": "They texted a code to your phone ending <4821>. Read it to me when you have it."
+        "say_example": "They texted a code to your phone ending <[account number]>. Read it to me when you have it."
        },
        {
         "question": "Should you allow Google Play services to read your text messages to autofill verification codes?",
@@ -937,7 +937,7 @@
       },
       "speak": "always",
       "check": "What specialty, location, date, and insurance does the page show set?",
-      "say_example": "Looking for a <dermatologist> near <94025>, <next week>, on your <Aetna> plan."
+      "say_example": "Looking for a <dermatologist> near <94110>, <next week>, on your <Aetna> plan."
      }
     ],
     "children": [
@@ -2090,7 +2090,7 @@
         },
         "speak": "gate",
         "check": "What experience, rating, distance, and fee does the page list for each provider?",
-        "say_example": "Two good fits. <Dr. Rao>: <12 years> in, <4.8> stars, <1 mile> away, <500>. <Dr. Shah>: newer, <4.9> stars, <5 miles>, <350>. Which one?"
+        "say_example": "Two good fits. <Dr. [name]>: <12 years> in, <4.8> stars, <1 mile> away, <500>. <Dr. Shah>: newer, <4.9> stars, <5 miles>, <350>. Which one?"
        },
        {
         "question": "Do you want to select a sponsored provider or scroll down to the organic search results?",
@@ -2153,7 +2153,7 @@
         },
         "speak": "if-wrong",
         "check": "Does the profile say the provider is accepting new patients?",
-        "say_example": "Open slots, but the page says <Dr. Rao> isn't taking new patients. Booking anyway usually ends with the clinic cancelling on you. Skipping to one who is."
+        "say_example": "Open slots, but the page says <Dr. [name]> isn't taking new patients. Booking anyway usually ends with the clinic cancelling on you. Skipping to one who is."
        }
       ]
      },
@@ -2178,14 +2178,14 @@
         },
         "speak": "if-wrong",
         "check": "Does the page show the chosen provider as selected before continuing?",
-        "say_example": "The page never marked <Dr. Sotolongo> as picked. Re-selecting before I continue, or the wrong doctor rides along."
+        "say_example": "The page never marked <Dr. [name]> as picked. Re-selecting before I continue, or the wrong doctor rides along."
        },
        {
         "question": "Which specific provider and date range do you prefer for this appointment?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen requires you to select a specific doctor, such as Dr. Sotolongo, and allows you to set a preferred date range to narrow down the available appointments.",
+        "why": "The screen requires you to select a specific doctor, such as Dr. [name], and allows you to set a preferred date range to narrow down the available appointments.",
         "whatTheAgentLoses": "Delegating this step means you lose the ability to choose a doctor you are comfortable with and to restrict the search to dates that actually fit your personal schedule.",
         "costDims": {
          "money": 1,
@@ -2197,14 +2197,14 @@
         },
         "speak": "never",
         "check": "Does the page let you set a provider and a date range?",
-        "say_example": "Set <Dr. Sotolongo> and your <next two weeks> window"
+        "say_example": "Set <Dr. [name]> and your <next two weeks> window"
        },
        {
         "question": "Are you sure you want to book with a doctor other than your Primary Care Provider?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The dashboard listed Elisabeth B Nadler as your Primary Care Provider, but you selected Carlos A Sotolongo.",
+        "why": "The dashboard listed Elisabeth B [name] as your Primary Care Provider, but you selected Carlos A [name].",
         "whatTheAgentLoses": "The user loses the continuity of care and familiarity that comes from seeing their established primary doctor.",
         "costDims": {
          "money": 2,
@@ -2216,7 +2216,7 @@
         },
         "speak": "on-event",
         "check": "Does the page name a primary care provider different from the selected one?",
-        "say_example": "Your listed regular doctor is <Dr. Nadler>, but this books with <Dr. Sotolongo>. On purpose?"
+        "say_example": "Your listed regular doctor is <Dr. [name]>, but this books with <Dr. [name]>. On purpose?"
        },
        {
         "question": "Do you want to schedule with a provider you've seen before or search by the reason for your visit?",
@@ -2261,7 +2261,7 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen shows Dr. Brice Lichtenberger as your allocated General Practitioner, offering options to view his profile, call him, or return to the previous screen.",
+        "why": "The screen shows Dr. Brice [name] as your allocated General Practitioner, offering options to view his profile, call him, or return to the previous screen.",
         "whatTheAgentLoses": "You lose the ability to personally review your allocated doctor's details or decide if you want to contact them directly.",
         "costDims": {
          "money": 0,
@@ -2273,7 +2273,7 @@
         },
         "speak": "if-wrong",
         "check": "Which doctor does the page say is allocated to you?",
-        "say_example": "The site assigned you <Dr. Lichtenberger> - you didn't pick him, they did. You asked for <a woman doctor>, so I'm checking if that can change."
+        "say_example": "The site assigned you <Dr. [name]> - you didn't pick him, they did. You asked for <a woman doctor>, so I'm checking if that can change."
        }
       ]
      },
@@ -2349,7 +2349,7 @@
         },
         "speak": "on-event",
         "check": "Does the page say no appointments are available for this search?",
-        "say_example": "Nothing available near <94025>. Want me to try a wider area, or different dates?"
+        "say_example": "Nothing available near <94110>. Want me to try a wider area, or different dates?"
        },
        {
         "question": "Which date has suitable available appointments?",
@@ -2975,7 +2975,7 @@
           },
           "speak": "never",
           "check": "Does the form ask for a phone number?",
-          "say_example": "Used your number ending <4821>"
+          "say_example": "Used your number ending <[account number]>"
          },
          {
           "question": "Who should you list as your emergency contact, and what is their phone number?",
@@ -3093,7 +3093,7 @@
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": false,
-          "why": "The screen displays a 'Scheduled Patients' list with Steven Sanders and Angela Anderson, requiring you to verify the names before proceeding.",
+          "why": "The screen displays a 'Scheduled Patients' list with [name] and [name], requiring you to verify the names before proceeding.",
           "whatTheAgentLoses": "You lose the opportunity to personally ensure the appointment is being managed for the correct family member.",
           "costDims": {
            "money": 0,
@@ -3208,7 +3208,7 @@
         },
         "speak": "never",
         "check": "Does the form ask where the passport was issued?",
-        "say_example": "Issue place set to <Taipei>, off your passport"
+        "say_example": "Issue place set to <Lisbon>, off your passport"
        },
        {
         "question": "What is your passport expiry date?",
@@ -3694,7 +3694,7 @@
         },
         "speak": "gate",
         "check": "What summary does the page show for the booking?",
-        "say_example": "Ready to book. <Dr. Rao>, <Wednesday 9:40>, at <the Harlan clinic>, for <you>. <$20> copay at the visit. Free to cancel until <Tuesday>. Press to book, or say change."
+        "say_example": "Ready to book. <Dr. [name]>, <Wednesday 9:40>, at <the Harlan clinic>, for <you>. <$20> copay at the visit. Free to cancel until <Tuesday>. Press to book, or say change."
        },
        {
         "question": "Does the page show a time limit on the held slot?",
@@ -4038,7 +4038,7 @@
         },
         "speak": "always",
         "check": "What booked details does the confirmation show?",
-        "say_example": "Booked. <Dr. Kumari>, <tomorrow 6:15>, a <phone> visit. Reference <A123>. Free to cancel until <Monday>."
+        "say_example": "Booked. <Dr. [name]>, <tomorrow 6:15>, a <phone> visit. Reference <A123>. Free to cancel until <Monday>."
        },
        {
         "question": "Does the stated arrival time correctly account for the early arrival instructions?",
@@ -4291,7 +4291,7 @@
         "cluster": "undo",
         "moment": "Completion",
         "moneyMoving": true,
-        "why": "The screen shows an upcoming appointment on Oct 5 with Dr. Mathias and a cancel button, so you must decide if this specific visit should be removed.",
+        "why": "The screen shows an upcoming appointment on Oct 5 with Dr. [name] and a cancel button, so you must decide if this specific visit should be removed.",
         "whatTheAgentLoses": "The user loses the ability to personally verify that the correct appointment is being canceled instead of one they still need to attend.",
         "costDims": {
          "money": 1,
@@ -4303,7 +4303,7 @@
         },
         "speak": "gate",
         "check": "Which appointment does the page show with a cancel option?",
-        "say_example": "Cancelling <Dr. Mathias, October 5>. Once it's gone the slot may not come back. Your call - cancel it?"
+        "say_example": "Cancelling <Dr. [name], October 5>. Once it's gone the slot may not come back. Your call - cancel it?"
        }
       ]
      },

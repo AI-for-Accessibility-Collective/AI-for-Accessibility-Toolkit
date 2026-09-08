@@ -1213,7 +1213,7 @@
         "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong saved profile, potentially causing identification or payment issues at the rental counter.",
         "speak": "on-event",
         "check": "Which names does the driver dropdown list?",
-        "say_example": "The driver list has <you> and <Jennifer>. Who's driving?"
+        "say_example": "The driver list has <you> and <[name]>. Who's driving?"
        },
        {
         "question": "Does the driver name on the form match your licence exactly?",
@@ -1224,7 +1224,7 @@
         "whatTheAgentLoses": "An agent might use a preferred name or nickname, causing the rental agency to refuse to hand over the keys when the ID doesn't perfectly match.",
         "speak": "on-event",
         "check": "Does the form say the driver name must match the licence, and what name is entered?",
-        "say_example": "The form says the name has to match your licence exactly. I've entered <David Lin>. Is that how your licence reads?"
+        "say_example": "The form says the name has to match your licence exactly. I've entered <[name]>. Is that how your licence reads?"
        }
       ]
      },
@@ -1286,7 +1286,7 @@
         "whatTheAgentLoses": "You lose the ability to back out of the transaction before handing over your sensitive payment details if you change your mind about the booking.",
         "speak": "gate",
         "check": "Which payment options does the page show, and is a card already saved?",
-        "say_example": "Time to pay. It's <309>. Use the saved card ending <4821>, or a new one? If it's new, you type the number yourself."
+        "say_example": "Time to pay. It's <309>. Use the saved card ending <[account number]>, or a new one? If it's new, you type the number yourself."
        },
        {
         "question": "Do you want to apply for the credit card the checkout is advertising?",
@@ -1733,7 +1733,7 @@
           "whatTheAgentLoses": "The user loses the ability to physically inspect the vehicle for unrecorded damage and take real-time photos to protect against future liability claims.",
           "speak": "if-wrong",
           "check": "What plate, make, and model does the check-in screen show, and what does the booking show?",
-          "say_example": "The app is showing a <white Altima>, plate <7ABC123>. Your booking says <Sentra>. Don't unlock it yet."
+          "say_example": "The app is showing a <white Altima>, plate <9XYZ456>. Your booking says <Sentra>. Don't unlock it yet."
          }
         ]
        },

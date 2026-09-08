@@ -1,0 +1,1957 @@
+{
+ "task": "turn on two-factor authentication or run a security checkup on an account (Google, banks, social accounts): open the security settings, choose a second factor — authenticator app, SMS, or passkey — scan or enter and verify the code, save backup codes if offered; complete when the settings page shows 2FA enabled or the checkup finished. Surface pinned: account security settings on web or app. Variants: password reset or account recovery, disabling 2FA, and signing in with an existing second factor do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Turn on two-factor authentication",
+  "note": "1 to reach the setting; 2 can start before 1 when the factor is a purchase or a directory check; 3 opens the ceremony; 4 whenever an app or key must be readied - the videos run it before 1, between 3 and 5, or mid-5; then 5 to link, 6 to prove the loop, 7 for the backup codes, 8 to arm, confirm, and test; 9 whenever the factor needs changing later - 9.5 can precede everything when a gated privilege is the reason for arming",
+  "children": [
+   {
+    "id": "1",
+    "label": "Open the security settings",
+    "note": "1.1 when signed out; then 1.2 and 1.3; 1.4 when several profiles share the surface; 1.5 before touching anything; 1.6 before starting the setup",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Sign in to the account",
+      "questions": [
+       {
+        "question": "Is the external website open where 2FA setup continues, since the game client itself has no 2FA option?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The game lobby does not have a native 2FA setup option, so you must note the provided URL overlay to continue the process in a web browser.",
+        "whatTheAgentLoses": "The user loses the understanding that managing account security for this game requires leaving the client and navigating to an external website.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you on the correct Epic Games website to continue the 2FA setup process?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Epic Games 'STORE' homepage, which is the necessary starting point for accessing account security settings.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent has navigated to the legitimate Epic Games website before proceeding to account settings.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which account are you attempting to sign into?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the correct email address in the sign-in box ensures you are accessing and securing the intended Microsoft account.",
+        "whatTheAgentLoses": "You lose the assurance that the agent is logging into and securing your specific personal or work account rather than an incorrect one.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "What is your password for this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to enter your password to verify your identity before allowing access to sensitive security settings.",
+        "whatTheAgentLoses": "You lose the security of keeping your password private, as the agent must know it to sign in and continue.",
+        "kind": "intent-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Which credentials should you use to log in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Facebook login page requires an email or phone number and a password to access the account.",
+        "whatTheAgentLoses": "You lose the privacy of your primary login credentials by sharing them with the agent.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should you log in to an existing account or register a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The welcome screen requires choosing between 'Register' and 'Log In' to access the profile you intend to secure.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent accesses your specific existing account rather than creating a new one.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which app should you open to set up two-factor authentication?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple applications, so you must choose the specific account you want to secure.",
+        "whatTheAgentLoses": "You lose the ability to prioritize which of your personal accounts receives a security upgrade first.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Open the account menu",
+      "questions": [
+       {
+        "question": "Is the account management page open, reached from the Gmail account's avatar menu?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the profile avatar is necessary to reveal the 'Manage your Google Account' button that leads to your security settings.",
+        "whatTheAgentLoses": "You lose the familiarity of knowing exactly where to find and access your own account management dashboard from your inbox.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the account settings menu open?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The hamburger menu in the top right corner is the necessary starting point to open the sidebar where the settings are located.",
+        "whatTheAgentLoses": "You miss learning the specific navigation path and UI layout required to access your account settings.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the account settings page open, reached through the correct option among the account's other administrative menu items?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu displays multiple administrative options like Parental Controls and Reporting, so you must specifically select Settings to find the security and 2FA configurations.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review other available account management options like parental controls or reporting features.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the settings menu open, reached from the device's home screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the gear icon in the top right corner is the required first step to reach the account security options.",
+        "whatTheAgentLoses": "You lose the chance to learn where the main system settings are located on the console's dashboard.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the browser navigated to the account provider's legitimate security-settings domain, rather than a lookalike?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The text overlay 'security.google.com' ensures you navigate to the official Google page to safely manage your sensitive account settings.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the browser is navigating to the legitimate and secure Google domain.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Open the security section",
+      "questions": [
+       {
+        "question": "Is the authentication/login settings section open, found among the account's other settings categories?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left menu displays several account management categories like 'Personal info' and 'Security', so you must choose the correct section to find your two-factor authentication settings.",
+        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the layout of your account dashboard and discover where other important privacy or payment settings are located.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the security tab open, found among the app's other settings tabs?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The navigation bar displays many unrelated game settings like Video and Audio, so you must specifically locate the Account and Privacy tab to find the security options.",
+        "whatTheAgentLoses": "The user loses the chance to review other privacy and account preferences located in this specific tab while setting up two-factor authentication.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should I enter the Meta Accounts Centre to access your detailed security settings?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen groups options like 'Password and security' under the Meta Accounts Centre, requiring a click on the blue link to access the full management page.",
+        "whatTheAgentLoses": "You lose visibility into how your security and privacy settings are centralized across different Meta technologies.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Pick the profile to protect",
+      "questions": [
+       {
+        "question": "Which account do you want to set up two-factor authentication for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple connected profiles, like Facebook and Instagram, requiring you to specify which one needs the security upgrade.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might secure the wrong profile, potentially leaving your primary account vulnerable.",
+        "kind": "intent-check",
+        "speak": "gate"
+       },
+       {
+        "question": "Do you want to retrieve the verification code sent to your email, or abandon this setup and switch to a different account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a verification code sent to your email to continue the setup process.",
+        "whatTheAgentLoses": "The user loses the choice to avoid an inconvenient email verification step by switching to a different platform.",
+        "kind": "decision",
+        "verify_form": "A verification-code wall appeared and the agent chose between fetching the emailed code and abandoning that account for another - check which account actually got protected; the one you asked about may still be unlocked.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Confirm the signed-in account",
+      "questions": [
+       {
+        "question": "Are you logged into the correct account before modifying its security settings?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the username '[username]' and the recent games ensures you are securing the intended profile.",
+        "whatTheAgentLoses": "You lose the immediate visual confirmation that the agent is securing your primary account rather than a secondary or shared one.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Read the current 2FA status",
+      "questions": [
+       {
+        "question": "Did you verify the account's current security status to confirm that a standard 2FA setup was the right action?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial security settings page shows whether 2FA is already active or if there are existing alerts that might require a full checkup instead.",
+        "whatTheAgentLoses": "The user gives up the chance to evaluate their account's initial security context and make an informed decision on how to proceed.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to enable email notifications for successful logins to monitor for unauthorized access?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Account Security Settings page offers a toggle to 'Receive a notification via email when your account is successfully logged into.'",
+        "whatTheAgentLoses": "You lose the ability to decide if you want your inbox alerted every time a login occurs, balancing security awareness against email fatigue.",
+        "kind": "decision",
+        "verify_form": "The agent set the login-alert email toggle - check which way; it traded your inbox noise against knowing when someone signs in, and that balance is yours to strike.",
+        "speak": "never"
+       },
+       {
+        "question": "Are there any visual security alerts, such as red warning banners or exclamation marks, displayed on the main account dashboard before you navigate to the settings?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A red warning banner immediately alerts you to an active security breach or required action, dictating whether to proceed with a routine setup or address an immediate threat.",
+        "whatTheAgentLoses": "The user loses the immediate visual warning of an active security issue that might require emergency action rather than a standard settings change.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is two-factor authentication currently enabled, and where do you go to configure it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking that 2-Step Verification is marked as 'Off' confirms the account is currently unsecured before you click the row to initiate setup.",
+        "whatTheAgentLoses": "You lose the direct visibility into your account's current security baseline and the reassurance of knowing exactly when the setting was changed.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does the security checkup reveal any unrecognized devices or locations currently logged into your account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If an unauthorized user is already logged in, you must revoke their session immediately, as simply turning on 2FA might not disconnect active sessions.",
+        "whatTheAgentLoses": "The agent might blindly complete a checklist without recognizing the context of a malicious active session, leaving the attacker inside the account.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Choose the second factor",
+    "note": "2.1 when unsure the service offers 2FA; 2.2 to weigh the factor kinds; 2.3 when the choice is a purchase; then 2.4 on the service's own method screen - or 2.5 where the service dictates the method",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Check the service supports it",
+      "questions": [
+       {
+        "question": "How do you verify if a service supports software-based 2FA?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The 2FA Directory features a searchable table with a 'Software' column that explicitly indicates if a service supports app-based authentication.",
+        "whatTheAgentLoses": "You lose the contextual awareness of which specific security methods are available across your different service providers.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What do you do when the 2FA setup options are missing from the security settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed notifications and login history but no 2FA options, requiring a generic image to illustrate where they normally live.",
+        "whatTheAgentLoses": "The user loses the ability to know if their specific account actually supports 2FA or if the agent just couldn't find the right menu.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Compare the factor kinds",
+      "questions": [
+       {
+        "question": "Do you want to let the password manager extension autofill your login credentials?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Keeper extension pop-up shows matching logins for the specific sites being visited, confirming it recognizes the domain before populating the fields.",
+        "whatTheAgentLoses": "You lose the ability to manually verify the exact vault entry being selected before the credentials are automatically populated into the login form.",
+        "kind": "decision",
+        "verify_form": "The agent let the password-manager extension autofill the login - check which vault entry it accepted; a look-alike entry autofills just as smoothly, and you never saw which credentials went in.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you use a free authenticator app instead of buying a physical security key?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Google Authenticator app generating 6-digit codes, demonstrating a completely free alternative to purchasing hardware.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to save money by using an app or invest in a physical security key.",
+        "kind": "decision",
+        "verify_form": "The agent went one way on app-versus-hardware - check whether it committed you to a free app or a purchased key; one costs money and one changes what you must carry, and neither trade-off was its to make.",
+        "speak": "never"
+       },
+       {
+        "question": "Will you store the 2FA seed in your password manager or use a standalone authenticator app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Keeper vault displays an integrated 'Two-Factor Code' field for the Porkbun entry, offering the option to consolidate passwords and 2FA codes in one tool.",
+        "whatTheAgentLoses": "The user loses the ability to decide if keeping both their password and 2FA generator in a single vault aligns with their personal security risk tolerance.",
+        "kind": "decision",
+        "verify_form": "The agent decided where the 2FA seed lives - check whether it landed in the password manager beside the password or in a standalone app; together they are one point of failure, and that consolidation was your risk to accept.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you choose a physical security key for your two-factor authentication?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen highlights physical security keys, prompting a decision between maximum security and potential device compatibility limits.",
+        "whatTheAgentLoses": "You lose the opportunity to balance your personal need for maximum account security against the practical inconvenience of carrying and using a physical key.",
+        "kind": "decision",
+        "verify_form": "The agent weighed the physical-key option - check what it concluded for you; maximum security against carry-it-everywhere is a lifestyle trade, not a setup detail.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you use a physical security key to protect your password manager?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows your Keeper vault storing a Microsoft account password, highlighting the risk of a single point of failure if the password manager itself is not highly secured.",
+        "whatTheAgentLoses": "You lose the ability to make strategic, high-level security decisions about how your central password vault is protected.",
+        "kind": "decision",
+        "verify_form": "The agent took a position on hardware-protecting the vault itself - check what it chose; the vault guards everything else, so how it is guarded is the most strategic security choice in the whole session.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Buy the hardware key",
+      "questions": [
+       {
+        "question": "How many security keys should you purchase?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The on-screen text advises to always create backups for your security, meaning you need multiple physical keys to prevent getting locked out.",
+        "whatTheAgentLoses": "An agent cannot physically purchase or securely store backup hardware keys in a secondary physical location for you.",
+        "kind": "decision",
+        "verify_form": "The agent settled how many keys to buy - check the count; without a spare stored elsewhere, one lost key is a lockout, and buying hardware with your money was not its call.",
+        "speak": "never"
+       },
+       {
+        "question": "Which connection types do you need for your hardware security key?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple YubiKey form factors, so you need to select the ones that physically match the ports on your desktop and mobile devices.",
+        "whatTheAgentLoses": "Delegating this means the agent might choose a security key that is physically incompatible with the ports on your specific devices.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are you willing to purchase a physical security key for your two-factor authentication?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays YubiKey models ranging from $45 to $70, requiring a financial investment compared to free authentication methods.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might spend your money on a physical key or skip it entirely without considering your budget and hardware preferences.",
+        "kind": "decision",
+        "verify_form": "The agent resolved the buy-a-key question - check whether money moved; the models on screen run tens of dollars, and spending yours versus using a free app was a budget choice, not a setup step.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Pick the method on the screen",
+      "questions": [
+       {
+        "question": "Which 2FA method do you want to set up, or is the currently enabled one sufficient?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple 2FA options like an Authenticator App and shows that email authentication is already enabled, requiring a decision on whether to change the current setup.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide their preferred balance of convenience and security among the available authentication methods.",
+        "kind": "decision",
+        "verify_form": "One factor was already on and the agent still picked a method - check whether it added, replaced, or left the existing one; the convenience-versus-security balance across your methods is your call.",
+        "speak": "gate"
+       },
+       {
+        "question": "Do you want to enable app-based two-factor authentication, or choose a different security method?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers multiple security options, and selecting app-based 2FA requires you to have a compatible client app ready.",
+        "whatTheAgentLoses": "You lose the ability to choose the specific 2FA method that best fits your personal device setup and security preferences.",
+        "kind": "decision",
+        "verify_form": "The agent enabled the app-based method - check that an authenticator you actually use exists on your phone; if it picked app-based without one ready, the next login is a lockout.",
+        "speak": "gate"
+       },
+       {
+        "question": "Which two-factor authentication method do you want to set up?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple second-factor options like SMS, authenticator app, and passkey, each with different security and convenience trade-offs.",
+        "whatTheAgentLoses": "The user loses the ability to choose the authentication method that best fits their personal device ecosystem and security needs.",
+        "kind": "decision",
+        "verify_form": "The agent picked a second-factor method off the storefront's list - check which one it committed to; SMS, app, and passkey fail in different ways, and the one it chose has to fit devices you actually carry.",
+        "speak": "gate"
+       },
+       {
+        "question": "Do you want to enroll in the Advanced Protection Program instead of just adding a standard security key?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The setup screen notes that if you want to use only a security key, you should enroll in the Advanced Protection Program, which applies much stricter security policies to the entire account.",
+        "whatTheAgentLoses": "You lose the opportunity to discover and opt into the platform's highest tier of account security, which fundamentally changes how recovery and third-party app access work.",
+        "kind": "decision",
+        "verify_form": "The setup offered the Advanced Protection Program and the agent passed one way or the other - check whether you were enrolled; that program rewrites recovery and app access for the whole account, far beyond adding a key.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does the interface display any visual badges or text warnings indicating that a specific 2FA method, such as SMS, is less secure or not recommended?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms often use visual tags like a yellow warning triangle or 'Not recommended' text to discourage less secure methods, which a user not looking at the screen would miss.",
+        "whatTheAgentLoses": "The user loses the context of platform-specific security recommendations, potentially leading them to choose a vulnerable method without realizing the platform advised against it.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Which two-factor authentication method has a visual 'Recommended' or 'Most Secure' badge next to it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms often use visual badges to steer users toward specific methods, such as authenticator apps over SMS, which strongly influences the choice of which method to set up.",
+        "whatTheAgentLoses": "The user misses the platform's visual guidance on which security method is considered best practice, potentially causing them to choose a less secure option.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you enter a phone number for text messages, or click to show more options and select a physical security key?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to asking for a phone number for texts or calls, but clicking 'Show more options' reveals alternative methods like a physical security key.",
+        "whatTheAgentLoses": "The user loses the ability to evaluate their personal security needs and choose a stronger authentication method over the default SMS option.",
+        "kind": "decision",
+        "verify_form": "The screen defaulted to a phone number and the agent either fed it one or dug out the stronger options - check which factor got registered; accepting the SMS default quietly is how the weakest method becomes yours.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Which method should you choose to receive your verification codes?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose between a text message and an authenticator app, which offer significantly different levels of security.",
+        "whatTheAgentLoses": "You lose the opportunity to prioritize your account's security by ensuring an authenticator app is selected over a more vulnerable SMS text.",
+        "kind": "decision",
+        "verify_form": "The agent picked how codes arrive - check whether it took the text message or the app; the two differ exactly where it hurts, and the weaker one is usually the default.",
+        "speak": "gate"
+       },
+       {
+        "question": "Which method and device should you use for your second verification step?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen suggests a default phone prompt to a specific device but also lists alternative options like a security key or text message, requiring you to choose the most accessible method.",
+        "whatTheAgentLoses": "Delegating this means the agent might select a 2FA method or target device that you do not have immediate physical access to or prefer not to use.",
+        "kind": "decision",
+        "verify_form": "The agent chose the second step's method and target device - check which device will now receive your prompts; if it is not the phone in your pocket, you approved nothing and can approve nothing.",
+        "speak": "gate"
+       },
+       {
+        "question": "If the passkey creation fails, is your browser or operating system lacking the necessary biometric setup or keychain sync?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Passkeys require specific hardware support like Windows Hello or TouchID, and often a synced cloud keychain; without these, the browser will throw a generic error and fail.",
+        "whatTheAgentLoses": "The user loses the ability to realize their current device hardware or cloud settings are incompatible with passkeys, leaving them unable to proceed.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is your intended phone actually listed as an available device, or do you need to troubleshoot why it is missing?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The setup screen lists the specific devices eligible to receive prompts and provides a 'Don't see your device?' link if the system has silently failed to recognize your current phone.",
+        "whatTheAgentLoses": "You lose the chance to catch that your primary device is disconnected from the system before finalizing a security setup that relies on it.",
+        "kind": "intent-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Take the forced method or push back",
+      "questions": [
+       {
+        "question": "Why is the login interrupted, and what must you do to proceed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates that your organization requires more information to secure the account, meaning you must click Next to begin the setup process.",
+        "whatTheAgentLoses": "You lose the awareness that your organization has mandated additional security steps before allowing access to the account.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to proceed with the mandatory security setup for this organization, or click to use a different account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The prompt requiring more information for account security includes a 'Use a different account' link, giving you the choice to abandon the setup and log into another profile.",
+        "whatTheAgentLoses": "You lose the opportunity to opt out of the organization's mandatory security configuration by switching to a different account.",
+        "kind": "decision",
+        "verify_form": "The organization's mandatory enrollment offered a use-a-different-account exit and the agent picked a path - check which account went through enrollment; opting out was still on the table.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to use the recommended Microsoft Authenticator app, or choose a different method?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The setup screen prompts you to download Microsoft Authenticator but provides links to use a different app or an entirely different authentication method.",
+        "whatTheAgentLoses": "Letting an agent decide could result in it choosing an authenticator app you do not have installed, making it harder for you to log in later.",
+        "kind": "decision",
+        "verify_form": "The enrollment pushed one vendor's app and the agent accepted or swapped - check which app got wired in; if it is one you do not have installed, your next login stalls at a prompt you cannot answer.",
+        "speak": "gate"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Start the 2FA setup",
+    "note": "3.1, then 3.2 where the service challenges; 3.3 before leaving the screen for the app",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Select the 2FA feature",
+      "questions": [
+       {
+        "question": "Is the 2-Step Verification management screen open, as opposed to Password or Security Question?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The security menu displays multiple options like Password, Security Question, and 2-Step Verification, requiring you to specify which setting to modify.",
+        "whatTheAgentLoses": "You lose the ability to directly choose which specific account security parameter is being accessed or altered.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should I proceed past the explanation of 2-Step Verification and click 'Get started'?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides specific details on how the platform uses 2-Step Verification to protect your personal information.",
+        "whatTheAgentLoses": "You lose the chance to read the platform's specific explanation of how this security feature works before enabling it.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to proceed with setting up two-factor authentication, or should you run the security checkup first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The security settings page typically displays your current account vulnerabilities, which dictates which security measure you should prioritize.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally evaluate their account's specific security recommendations before applying a standard fix.",
+        "kind": "decision",
+        "verify_form": "The agent chose setup over running the security checkup first - check what the checkup would have flagged; the dashboard's own recommendations might have named a more urgent hole than a second factor.",
+        "speak": "gate"
+       },
+       {
+        "question": "Do you want to enable two-factor authentication?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states that enabling this feature is required before you can make withdrawals or whitelist wallet addresses.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether you are ready to commit to the additional login steps required for future account actions.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Re-enter the password",
+      "questions": [
+       {
+        "question": "How should I verify your identity to continue the 2FA setup?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for your password to verify your identity before allowing access to the 2FA configuration.",
+        "whatTheAgentLoses": "You lose the opportunity to manually enter your password and keep it secret from the agent.",
+        "kind": "intent-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Was the password submitted and accepted by the identity-verification step?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Password Verification' modal requires you to click the 'Verify' button to confirm your identity before proceeding with the setup.",
+        "whatTheAgentLoses": "You lose direct control over exactly when your password is submitted to authorize changes to your account security.",
+        "kind": "intent-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Read the instructions before leaving",
+      "questions": [
+       {
+        "question": "Do you want to verify your account details before proceeding?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The site warns that valid phone, email, and physical addresses are required for account recovery if you get locked out.",
+        "whatTheAgentLoses": "You lose the chance to verify your recovery contact details, risking permanent lockout if the current information is outdated.",
+        "kind": "decision",
+        "verify_form": "A warning said recovery needs current phone, email, and address, and the agent clicked past it - check whether your recovery details are up to date; stale ones plus a new lock is how permanent lockouts happen.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you need to pause and download an authenticator app before entering your password to proceed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen instructs you to download an app like Authy or Google Authenticator and requires your password in the input field to continue the setup.",
+        "whatTheAgentLoses": "The user loses the ability to choose which specific third-party authenticator app is installed and trusted on their device.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is the service's setup screen back in front, now that the app is installed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to download an app like Authy or Google Authenticator and requires you to click next to continue the setup.",
+        "whatTheAgentLoses": "You lose the ability to ensure the authenticator app is properly installed on your personal device before advancing the setup process.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Ready the authenticator",
+    "note": "4.1 then 4.2 when the app is not on the phone yet; 4.3 and 4.4 as the app asks on first run; 4.5 for a hardware key instead",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Find the app in the store",
+      "questions": [
+       {
+        "question": "Is the App Store open and ready to search for the authenticator app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The iPad home screen displays multiple app icons, requiring you to specifically locate and select the App Store to get the necessary software for the security setup.",
+        "whatTheAgentLoses": "The user loses direct control over navigating their personal device's home screen and managing their own app installations.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which authenticator app do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple highly-rated options like Google Authenticator, Microsoft Authenticator, and Twilio Authy.",
+        "whatTheAgentLoses": "You lose the opportunity to select the specific authenticator app that best fits your existing software ecosystem and privacy preferences.",
+        "kind": "decision",
+        "verify_form": "The agent picked which authenticator app to install - check the brand; your codes will live in it for years, and an app outside your ecosystem or trust is a bad long-term landlord for them.",
+        "speak": "gate"
+       },
+       {
+        "question": "What exactly should you type to find the official Google Authenticator app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The App Store search interface displays multiple autocomplete suggestions, making it important to select the exact official app to avoid third-party clones.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the downloaded app is the official version rather than a potentially malicious lookalike.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Install or open the app",
+      "questions": [
+       {
+        "question": "Do you want to review the app's developer details and ratings before installing it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the app's developer, ratings, and features, which helps verify its legitimacy and security before installation.",
+        "whatTheAgentLoses": "You lose the opportunity to personally vet the authenticator app's trustworthiness and reviews before allowing it on your device.",
+        "kind": "decision",
+        "verify_form": "The agent installed the app without dwelling on its listing - check the developer name and ratings now; a look-alike authenticator is a classic trap, and vetting it was skipped on your behalf.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you realize the authenticator app is already installed despite the instruction to download it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The App Store displays an 'Open' button instead of a download option, meaning the installation step is unnecessary.",
+        "whatTheAgentLoses": "You lose the human intuition to ignore an incorrect instruction and simply open the already installed app.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is the authenticator app open and ready to take a new entry?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The App Store search results display an 'OPEN' button next to Google Authenticator, which must be tapped to launch the app and continue the setup.",
+        "whatTheAgentLoses": "You lose the opportunity to visually confirm you are opening the official, trusted authenticator app from the store rather than a potentially malicious lookalike.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Choose the app's sync account",
+      "questions": [
+       {
+        "question": "Do you accept the risk that losing your physical device could lock you out, or do you prefer to trust a cloud-synced option?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly contrasts the risks of different authenticator options, warning that a device-bound key makes losing the device a 'big risk,' while a synced key means 'trusting your key to the cloud.'",
+        "whatTheAgentLoses": "You lose the opportunity to make an informed decision about your personal risk tolerance regarding physical device loss versus cloud storage vulnerabilities.",
+        "kind": "decision",
+        "verify_form": "The agent chose between a device-bound key and a cloud-synced one - check which; it set whether losing your phone locks you out or whether your seeds live on someone's server, and that risk posture is yours.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to enable multi-device syncing for your authenticator app?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Authy app provides an 'Allow Multi-device' toggle that lets you sync codes across devices, which offers convenience but stores your sensitive security keys in the cloud.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to weigh the convenience of multi-device access against the security risk of storing your 2FA keys in the cloud.",
+        "kind": "decision",
+        "verify_form": "The agent set the multi-device sync toggle - check which way; on means your 2FA seeds live in the cloud for convenience, off means one device holds them, and that trade was yours.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to back up your Authenticator codes to your Google account or use it without an account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks if you want to sign in to back up your codes to your Google Account or use Authenticator without an account.",
+        "whatTheAgentLoses": "You lose the ability to decide whether your 2FA codes are synced to the cloud for convenience or kept strictly local for privacy.",
+        "kind": "decision",
+        "verify_form": "The app's first run asked cloud backup or no account and the agent picked - check which; synced means your seeds survive a lost phone by living on a server, local means they die with the device. That is your risk to place.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Work through the app consents",
+      "questions": [
+       {
+        "question": "Do you accept the privacy statement?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to accept Microsoft's privacy statement before you can proceed to your account settings.",
+        "whatTheAgentLoses": "You lose the opportunity to read the privacy terms and make an informed decision about how your data is handled.",
+        "kind": "decision",
+        "verify_form": "The agent accepted the privacy statement to get past the gate - check that it was the app's standard statement and nothing bundled with it; the terms it agreed to on your behalf govern your data.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to share optional app usage data to help improve Microsoft Authenticator?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app presents a toggle switch asking if you want to share non-personal usage data to help improve the app before you can continue the setup.",
+        "whatTheAgentLoses": "Delegating this choice means you lose direct control over your privacy preferences regarding optional data collection.",
+        "kind": "decision",
+        "verify_form": "The app asked to share usage data and the agent set the toggle - check which way; optional telemetry is a privacy preference, and yours was not asked.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to allow the Authenticator app to access your camera?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system prompted for camera access, which the app needs to scan the QR code for two-factor authentication.",
+        "whatTheAgentLoses": "You lose the ability to strictly control which applications are granted access to your device's camera.",
+        "kind": "decision",
+        "verify_form": "The agent answered the camera prompt - check whether access was granted; the scan needs it once, but the grant is standing, and camera permissions are yours to hand out.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to allow the Authenticator app to send you notifications?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requests permission to send alerts, sounds, and icon badges, which determines how you will be notified of new authentication requests.",
+        "whatTheAgentLoses": "You lose the ability to control your personal notification preferences for alerts, sounds, and icon badges from this app.",
+        "kind": "decision",
+        "verify_form": "The agent answered the notifications prompt - check whether alerts were allowed; sign-in pushes are how this app will interrupt you forever after, and that is a preference, not a step.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to allow the Authenticator app to use Face ID?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This determines whether the app is permitted to use your biometric data to authenticate your identity with Microsoft services.",
+        "whatTheAgentLoses": "The user loses the ability to control whether their biometric data is integrated into the app's authentication process.",
+        "kind": "decision",
+        "verify_form": "The agent answered the Face ID prompt - check whether biometrics got wired into the app; whether your face unlocks your second factor is about as personal as a setting gets.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you allow the app to read your clipboard to automatically paste the verification code?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system prompt asks for permission to paste from the Authenticator app, forcing a choice between clipboard privacy and the convenience of auto-filling the code.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to grant the app access to your device's clipboard or manually type the code yourself.",
+        "kind": "decision",
+        "verify_form": "The system asked whether one app may paste from another and the agent allowed it - check that grant; it auto-filled the code this once, but clipboard access is a privacy call you did not make.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Ready the hardware key",
+      "questions": [
+       {
+        "question": "Is the official Yubico Authenticator app open, not a lookalike third-party app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The App Store search results show 'Yubico Authenticator' as the top option, so you must confirm this is the correct official app to handle your security keys.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent selects the official, trusted authenticator app rather than a potentially malicious third-party alternative.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you provide the requested physical security key?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly prompts you to insert your YubiKey to proceed with the authentication setup.",
+        "whatTheAgentLoses": "A remote agent cannot physically insert a hardware security key into your local computer.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Link the account to the factor",
+    "note": "5.1 decides the route; 5.2 then 5.3 when a second device can scan - 5.4 is the way back when it cannot; 5.2 then 5.5 and 5.6 when one device holds both apps; 5.7 for a hardware key; 5.8 for a texted or emailed code",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Choose scan or manual key",
+      "questions": [
+       {
+        "question": "Do you want to scan the QR code or enter the manual text code to link your authenticator app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Facebook popup provides both a QR code and a manual text code to link the third-party authenticator.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred method for securely transferring the setup secret to your personal authenticator device.",
+        "kind": "decision",
+        "verify_form": "The agent chose between scanning the QR and carrying the text key - check which route it took; the manual key passes your account's secret through a clipboard, and where that secret traveled matters.",
+        "speak": "gate"
+       },
+       {
+        "question": "How do you want to link the authenticator app: scan the QR code or copy the key?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The setup instructions offer two ways to link the app, either by scanning a barcode/QR code or by manually copying a text key.",
+        "whatTheAgentLoses": "You lose the choice of whether to scan the QR code with your device or manually copy and paste the text key into your authenticator app.",
+        "kind": "decision",
+        "verify_form": "The agent linked the app by scan or by copied key - check which; on one device the key rides the clipboard, and the clipboard is readable by more than the authenticator.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Start a new entry in the app",
+      "questions": [
+       {
+        "question": "How do you want to add the account to your authenticator app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers multiple ways to link an account, such as scanning a QR code or signing in directly, which depends on your specific setup.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to choose the most convenient linking method for your specific device and account type.",
+        "kind": "decision",
+        "verify_form": "The app offered several ways to add the account and the agent picked one - check which route it used; the right one depends on which devices were in reach, and a wrong pick strands the setup mid-ceremony.",
+        "speak": "never"
+       },
+       {
+        "question": "Is a new-entry form open in the authenticator app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping the '+' button in the bottom right corner is required to open the scanner or manual entry screen for the new 2FA token.",
+        "whatTheAgentLoses": "You lose direct physical control over linking your personal device's authenticator app to the account.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Scan the QR code",
+      "questions": [
+       {
+        "question": "Is the QR code displayed and ready to be scanned?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking 'Next' is necessary to reveal the QR code that must be scanned by your authenticator app.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their mobile device is ready to scan before the code is displayed on the screen.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the service accept the scan and move on to the verification step?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly instructs you to choose 'Next' only after you have successfully scanned the QR code to connect the authenticator app to your account.",
+        "whatTheAgentLoses": "Delegating this step means you lose the security guarantee of having the second factor tied exclusively to your personal, physical device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the organization name on the login screen match the account name added to your Authenticator app?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen displayed 'CONTOSO demo', but the account added to the Authenticator app was named '[org]', indicating a potential account mismatch.",
+        "whatTheAgentLoses": "You lose the assurance that the two-factor authentication was configured for the correct organization's account.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "How do you capture the QR code to link your authenticator app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The desktop screen displays a QR code that must be scanned by the mobile device's camera to securely transfer the setup key.",
+        "whatTheAgentLoses": "Delegating this step means the agent cannot physically point your personal mobile device at the screen to scan the code.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Reveal the manual fallback",
+      "questions": [
+       {
+        "question": "How do you want to receive this QR code or manual key to set up your authenticator app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a QR code and a manual key that must be scanned or entered into an authenticator app to generate the required verification code.",
+        "whatTheAgentLoses": "Delegating this step means the agent would possess your 2FA secret key, preventing you from generating your own login codes on your personal device.",
+        "kind": "decision",
+        "verify_form": "The linking screen offered the QR and the manual key and the agent took one - check which, and where the secret went; whoever holds that key can mint your codes, so its path to your device matters more than the click.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the QR code view restored after reading the manual key?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The setup modal provides a 'View QR code' link for users who prefer scanning a code instead of typing the manual entry key.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred method for linking the authenticator app to their device.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Copy the setup key",
+      "questions": [
+       {
+        "question": "What is the manual setup key you need to copy?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a 16-character code that must be copied into your authentication app when you cannot scan the QR code.",
+        "whatTheAgentLoses": "Delegating this step means you expose the secret key used to generate your authentication codes to a third-party agent.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you want to transfer the setup key to your authenticator app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a manual setup key that must be accurately entered into your authenticator app to link the account.",
+        "whatTheAgentLoses": "Letting an agent handle this means you lose direct control over copying and pasting the sensitive setup key between your personal apps.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How should I retrieve the setup key for your authenticator app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a setup key with a copy button to manually link the authenticator app.",
+        "whatTheAgentLoses": "Letting an agent copy the key means you lose direct control over where this highly sensitive 2FA secret is stored or pasted.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the security settings page reload and generate a new setup key while you were away in the authenticator app?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Mobile browsers often refresh background tabs to save memory; if the page reloads when you return to enter the 6-digit code, the original setup session is lost and the code will fail.",
+        "whatTheAgentLoses": "The agent might blindly paste the generated code into a refreshed setup screen, failing the verification because the underlying secret has silently changed.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Enter the key details in the app",
+      "questions": [
+       {
+        "question": "What account name and settings should you enter for this authenticator key?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires an account name, a setup key, and a choice between time-based or counter-based code generation to properly link the authenticator app.",
+        "whatTheAgentLoses": "You lose the opportunity to choose a recognizable custom name for the account in your authenticator app to easily distinguish it from others.",
+        "kind": "decision",
+        "verify_form": "The agent filled the new entry's name and type - check what the entry is called and that it is time-based; a vague nickname on the wrong account row is how the right code gets read off the wrong line at 2 a.m.",
+        "speak": "never"
+       },
+       {
+        "question": "Did you paste the exact setup key from the Twitter screen into the Google Authenticator app?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The setup key '[setup key]' must match exactly between the Twitter screen and the Authenticator app to successfully link the accounts and generate valid codes.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct secret key was transferred without alteration, which is critical for ensuring you don't get locked out of your account.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you paste the correct secret key into the field and tap Save?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Pasting the exact key into the obscured input field and tapping Save is necessary to successfully link the authenticator app to your account.",
+        "whatTheAgentLoses": "You lose the certainty that the correct secret key was pasted into the obscured field to properly secure the account.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Register the hardware key",
+      "questions": [
+       {
+        "question": "Are you ready to register your physical security key?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks you to ensure your security key is with you but not yet connected before clicking next to register it.",
+        "whatTheAgentLoses": "The agent cannot physically insert or tap a hardware security key on your device.",
+        "kind": "decision",
+        "verify_form": "The registration step needs the physical key in a hand - check whether the agent stalled or claimed this step; it cannot insert or tap your hardware, so anything past this screen without you is suspect.",
+        "speak": "never"
+       },
+       {
+        "question": "What name should you give this registered security key?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a text field to name your newly registered security key, which is important for identifying and removing the correct device if you ever lose it.",
+        "whatTheAgentLoses": "Letting an agent choose a generic name makes it difficult for you to know which specific physical key to revoke if one goes missing.",
+        "kind": "decision",
+        "verify_form": "The agent named the registered key - check what it typed; a generic name means that when a key goes missing you cannot tell which one to revoke.",
+        "speak": "never"
+       },
+       {
+        "question": "Did the YubiKey's tap or insert register -- does the prompt report Success?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The popup explicitly asks you to scan your YubiKey, which requires knowing where to physically tap the hardware key on the phone to trigger the 'Success' confirmation.",
+        "whatTheAgentLoses": "A remote agent cannot physically tap a hardware security key against the device's NFC reader to complete the authentication.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to require a physical touch on your YubiKey to access the codes?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Require touch' checkbox determines whether you must physically tap the YubiKey to display the authentication codes, adding an extra layer of security.",
+        "whatTheAgentLoses": "The user loses the ability to choose their personal balance between the convenience of instantly visible codes and the enhanced security of requiring a physical touch.",
+        "kind": "decision",
+        "verify_form": "The agent left the require-touch checkbox one way - check its final state; unchecked means anyone at the machine with the key inserted can read your codes, checked means you tap every time.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Confirm the delivery destination",
+      "questions": [
+       {
+        "question": "Are you using a supported mobile carrier number rather than a Google Voice number for your backup option?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns not to use a Google Voice number for the backup phone option, as virtual numbers can cause issues with SMS delivery or create account recovery loops.",
+        "whatTheAgentLoses": "An agent might blindly input a virtual number from a password manager, ignoring the explicit warning and potentially locking you out of your account if the SMS fails to deliver.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "If the SMS verification text fails to arrive, do you want to request a voice call instead or abandon SMS and switch to an authenticator app?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Carrier filtering or network delays frequently block automated SMS messages, requiring you to choose a fallback verification method to avoid getting stuck.",
+        "whatTheAgentLoses": "The agent cannot know if the delay is due to a network issue on your end and might just endlessly wait or fail the task instead of pivoting to a voice call.",
+        "kind": "decision",
+        "verify_form": "The SMS never came and the agent either kept waiting, asked for a voice call, or switched methods - check which; it cannot know whether your carrier eats these texts, and the wrong guess stalls the whole setup.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are you comfortable with how the platform's privacy policy allows them to use the phone number you provide for SMS authentication?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The setup screen often explicitly states that the provided number will be used in accordance with their privacy policy, which may permit them to use it for targeted advertising or other purposes beyond just account security.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether the security benefit of SMS authentication is worth the privacy trade-off of giving the platform your personal phone number.",
+        "kind": "decision",
+        "verify_form": "Handing over the number accepted the platform's uses for it - check what the policy line beside the field allows; trading your phone number for SMS codes is a privacy bargain you did not read.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the masked destination on the verification screen match your current phone or email, or are you waiting for a code that was sent to an outdated contact?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the expected SMS or email code doesn't arrive, checking the masked digits or address is the only way to catch that the system defaulted to an old, incorrect contact method.",
+        "whatTheAgentLoses": "The agent might sit indefinitely waiting for a message that will never arrive, rather than catching the wrong destination and requesting a change.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you accept that standard message and data rates may apply to the texts or phone calls used for your verification codes?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The setup screen for SMS or voice verification explicitly warns that your carrier may charge you for the messages or calls required to log in.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to incur potential carrier charges for every future login, or to choose a free alternative like an authenticator app instead.",
+        "kind": "decision",
+        "verify_form": "The agent accepted that carrier rates may apply to every future code - check that acceptance; a per-login charge forever was on the screen, and a free app was one option away.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Prove the loop first",
+    "note": "6.1 then 6.2 for a generated or delivered code; 6.3 where the test is a push prompt instead",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Read the fresh code",
+      "questions": [
+       {
+        "question": "Should you use the current verification code or wait for a fresh one?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Waiting for the code to refresh from [code] to [code] ensures you have the full time window to enter it before it expires.",
+        "whatTheAgentLoses": "You lose the intuitive judgment to wait for a fresh code, risking a verification failure if the agent uses a code right as it expires.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is the correct generated 2FA code retrieved from the right password-manager vault entry?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Keeper interface displays the generated six-digit code under the 'Two-Factor Code' section for the Porkbun entry, which must be copied to complete the verification.",
+        "whatTheAgentLoses": "You lose direct oversight of your secure password vault and the assurance that the correct authenticator code is being retrieved.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What is the current 6-digit verification code shown in the authenticator app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Google Authenticator app displays a time-sensitive 6-digit code for Porkbun that must be entered before it expires to successfully link the device.",
+        "whatTheAgentLoses": "Letting an agent read and enter the authenticator code means giving it access to your live secondary security credentials.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Was the account successfully added to your authenticator app, and what is the generated code?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the new Instagram entry and its six-digit code ensures the setup worked and provides the time-sensitive code needed to finish verification.",
+        "whatTheAgentLoses": "Delegating this step means you lose the direct visual confirmation that the account is securely linked to your personal authenticator app.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is there enough time left on the countdown to safely copy and paste this token?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a countdown timer indicating the token expires soon, which dictates whether you should copy it now or wait for the next one.",
+        "whatTheAgentLoses": "You lose the ability to personally monitor the time-sensitive token and ensure it is pasted before it expires.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is your authenticator app set up and ready to generate codes?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must scan the QR code or copy the authentication key into your app before proceeding, as the next screen requires the generated code.",
+        "whatTheAgentLoses": "Delegating this step means the agent would possess the primary authentication key, compromising the security of your second factor.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you want to wait for the countdown timer to expire to request a new email code, or try another way?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen enforces a countdown timer before you can request a new email code, but offers a 'Try another way' button if you cannot access that inbox.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to wait out the delay or immediately pivot to an alternative verification method if the email is inaccessible.",
+        "kind": "decision",
+        "verify_form": "The re-send was behind a countdown and a try-another-way link sat beside it - check which the agent did; waiting assumes you can reach that inbox, and only you know if you can.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Has the security code arrived in your inbox, or do you need to request a new one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The verification screen provides a 'Resend' link or countdown timer, requiring you to monitor your messages and judge if enough time has passed to assume the first code was lost.",
+        "whatTheAgentLoses": "You lose the ability to monitor your own inbox's delivery latency and decide when a retry is actually necessary versus just waiting.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Enter the code and submit",
+      "questions": [
+       {
+        "question": "Do you actually submit the confirmation code for the 2FA setup before the video cuts to a separate login screen?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen jumps from the 'Enter Confirmation Code' modal directly to a separate login screen without showing the code being submitted, leaving the actual verification step unconfirmed.",
+        "whatTheAgentLoses": "You lose proof that the agent successfully verified the 2FA setup code before initiating a new login attempt.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Where do you enter the verification code from your authenticator app to finalize the setup?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal requires you to type the code generated by your app into the 'Verification Code' field and click 'Submit' to prove the device is successfully linked.",
+        "whatTheAgentLoses": "Delegating this step means you must provide the agent with real-time access to the time-sensitive codes generated by your personal authenticator device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you enter the exact 6-digit code from the authenticator app into the verification field?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The code generated by the authenticator app must exactly match the input in the verification field to successfully link the second factor.",
+        "whatTheAgentLoses": "The user loses the certainty that the authenticator app was correctly linked using the specific generated code.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should I click 'Verify' to confirm the authenticator setup?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Authenticator Setup' modal shows the entered code and an enabled 'Verify' button to finalize the configuration.",
+        "whatTheAgentLoses": "The user loses the direct confirmation that their personal authenticator app is correctly synced and generating valid codes.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the code-entry screen open, with the key already saved in the authenticator app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a setup key to copy and a 'Next' button to advance to the verification step.",
+        "whatTheAgentLoses": "The person loses the ability to securely add the setup key to their own personal authenticator app.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Was the emailed code entered and submitted to finalize email authentication?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal requires pasting the six-digit code into the input boxes and clicking the enable button to finalize the email authentication setup.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally handle the verification code and confirm the activation of email authentication.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How will you provide the generated 2FA code to complete the setup?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Verification screen requires a valid 2FA code to enable the Continue button and proceed.",
+        "whatTheAgentLoses": "You lose the ability to personally handle the secure transfer of the authentication code from your generator app.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "If the authenticator code is rejected despite being typed correctly, do you need to force a time sync in your authenticator app's settings?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "TOTP codes rely on strict time synchronization; if your phone's clock drifts by even a few seconds, the server will reject the codes.",
+        "whatTheAgentLoses": "The agent cannot access your physical phone's settings to correct a clock drift, leaving it unable to resolve a persistent code rejection error.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did an 'Invalid code' error appear after you clicked submit, indicating the time-based token expired while you were switching apps?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Time-based codes expire quickly, and delays in copying or app switching can cause the submission to fail, requiring you to catch the error message and fetch a fresh code.",
+        "whatTheAgentLoses": "The agent might assume the setup succeeded just because it clicked submit, missing the error message and leaving the account unsecured.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Approve the push test",
+      "questions": [
+       {
+        "question": "What number do you need to enter in the app to approve the notification?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser displays a specific number, such as '68', which must be typed into the phone's authenticator app to prove you possess the device and verify the setup.",
+        "whatTheAgentLoses": "Delegating this step means you lose the physical confirmation that your personal mobile device is correctly receiving and approving the exact security prompts.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the authenticator test read as approved before the setup moves on?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen confirms the Microsoft Authenticator notification was approved and requires a choice to either proceed or set up a different method.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to add an alternative authentication method instead of proceeding with the current one.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Save the backup codes",
+    "note": "7.1 where the service offers a choice; 7.2, then 7.3 where a checkbox demands the promise",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Choose the backup option",
+      "questions": [
+       {
+        "question": "Which backup method do you want to add?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to add a backup method and suggests options like an authentication app to ensure you can always access your account.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a backup method you do not have installed or prefer not to use.",
+        "kind": "decision",
+        "verify_form": "The agent added a backup method off the suggested list - check which one; a backup you do not have installed or cannot receive protects nothing when the primary fails.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to enable SMS authentication as a backup method, or tap Done?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen confirms 2FA is activated but suggests adding a phone number as a backup before finishing the setup.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to link their personal phone number for account recovery, which impacts both their privacy and security.",
+        "kind": "decision",
+        "verify_form": "The success screen offered SMS backup and the agent tapped Done past it - check whether a backup exists at all now; skipping it kept your number private but left one app as the only key to the account.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Save the codes shown",
+      "questions": [
+       {
+        "question": "How do you want to store these backup codes?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a modal with new, single-use backup codes that must be safely stored to ensure account recovery if the primary authenticator is lost.",
+        "whatTheAgentLoses": "The user loses the ability to privately secure their backup codes, potentially exposing their ultimate account recovery keys to the agent.",
+        "kind": "decision",
+        "verify_form": "The backup codes appeared once and the agent handled them - check where they actually went; if the agent read them, your recovery keys passed through it, and if it saved them nowhere, they are simply gone.",
+        "speak": "gate"
+       },
+       {
+        "question": "Where will you save this backup code?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a single-use backup code that must be saved in a safe place to prevent account lockout.",
+        "whatTheAgentLoses": "The user loses direct control over where this highly sensitive recovery code is stored, risking permanent account lockout if they cannot retrieve it from the agent.",
+        "kind": "decision",
+        "verify_form": "The one backup code was shown with a save-it warning - check where the agent put it; that string is the only door left when the authenticator is lost, and a location you cannot find is the same as no code.",
+        "speak": "gate"
+       },
+       {
+        "question": "Does the backup code displayed upon successful setup match the one shown during the later reminder?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Verifying that the code '[backup code]' is identical across both screens ensures that the system is consistently displaying the correct recovery information.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify that the exact, correct backup codes were recorded for your account's future recovery.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are the backup codes initially obscured, blurred, or hidden behind a 'click to reveal' button on the screen?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Security interfaces often hide backup codes by default to prevent shoulder surfing, requiring a specific interaction to make them legible before they can be copied.",
+        "whatTheAgentLoses": "The user risks having the agent copy placeholder text or asterisks instead of the actual backup codes if the visual obfuscation is not recognized and removed.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you aware that generating these new backup codes will immediately invalidate any previously saved ones?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The backup codes modal explicitly warns that 'These backup codes replace any previously generated codes,' meaning old printouts or saved files will no longer work.",
+        "whatTheAgentLoses": "You lose the awareness that your existing backup codes are now void, which could lead to a permanent account lockout if you try to rely on the outdated codes you have in storage.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the backup codes provided as selectable text, a downloadable file, or an image that must be transcribed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The format of the backup codes dictates the secure storage method; an image requires transcription, while a text list or file can be securely saved directly to a password manager.",
+        "whatTheAgentLoses": "The user cannot visually determine the format, potentially losing the codes if the agent fails to handle an image or file download correctly.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Attest the codes are saved",
+      "questions": [
+       {
+        "question": "Did you record the backup codes for future use?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of single-use backup codes and requires you to check a box confirming you saved them before finishing the setup.",
+        "whatTheAgentLoses": "The user loses direct possession of their backup codes, which are critical for regaining account access if their primary verification method is unavailable.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Were the backup codes actually saved somewhere retrievable before checking the confirmation box?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal displays an unchecked box that must be checked to acknowledge you have safely stored the provided backup codes.",
+        "whatTheAgentLoses": "Delegating this step means the agent might confirm the prompt without ensuring you have personally and securely stored the backup codes, risking account lockout.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Confirm the protection works",
+    "note": "8.1 where a review screen gates the arming; 8.2 and 8.3 right after; 8.4 with 8.5 to prove a real login - 8.6 when the code is refused; 8.7 decides how often the lock will actually ask; 8.8 where a service pays for the arming",
+    "questions": [
+     {
+      "question": "Do the completion moments agree with each other -- the code accepted at setup, the confirmation shown, and the later login all consistent?",
+      "cluster": "facts",
+      "moment": "On demand",
+      "moneyMoving": false,
+      "why": "The claim that the authentication code was rejected during login is contradicted by the screen showing the fingertip resting on a greyed-out verify button.",
+      "whatTheAgentLoses": "The delegator loses an accurate understanding of whether the two-factor authentication setup is actually functional for future logins.",
+      "kind": "state-check",
+      "speak": "if-wrong"
+     }
+    ],
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Review the summary and turn on",
+      "questions": [
+       {
+        "question": "Did the setup modal close with the authenticator successfully registered on the account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must click 'Continue' on the setup modal to reach the screen where you can enter the confirmation code generated by your authenticator app.",
+        "whatTheAgentLoses": "The user loses the hands-on assurance of linking their personal authenticator app and directly verifying the security code.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What is the verification code sent to your mobile number, and are you ready to activate and be signed out of all devices?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires the SMS verification code to proceed and warns that activating 2-step verification will sign you out of all current devices.",
+        "whatTheAgentLoses": "Delegating this step means the agent would need access to your personal text messages and you lose control over exactly when you are signed out of your other devices.",
+        "kind": "decision",
+        "verify_form": "Activating read the code from your texts and warned it would sign out every device - check when that sign-out landed and who saw your messages; both were consequences the agent accepted for you.",
+        "speak": "gate"
+       },
+       {
+        "question": "Are you ready to confirm the settings and turn on 2-Step Verification?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because turning on the feature will sign you out of unlisted devices, requiring your password and new second step to regain access.",
+        "whatTheAgentLoses": "You lose the opportunity to verify your chosen second step, backup options, and the list of devices that will remain signed in before finalizing the security change.",
+        "kind": "decision",
+        "verify_form": "The agent hit the final turn-on - check the summary it accepted: the method, the backup, and the devices that stay signed in; everything else gets signed out, and that moment was chosen for you.",
+        "speak": "gate"
+       },
+       {
+        "question": "Did the enrollment complete and the original sign-in resume?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a success message explicitly instructing you to choose 'Done' to finish setting up your security info.",
+        "whatTheAgentLoses": "Delegating this step means you miss the direct visual confirmation that your new security information was successfully registered.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Read the success confirmation",
+      "questions": [
+       {
+        "question": "Does the screen show you successfully accessing the account as you claimed?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The audio claims the account was accessed, but the recording ends prematurely at a 'Remember Browser' prompt without showing the actual account screen.",
+        "whatTheAgentLoses": "The user loses visual confirmation that the security process was fully completed and the account was successfully accessed.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "How do you confirm that two-factor authentication is successfully turned on and finish the setup?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen explicitly states 'Two-factor authentication is on' and provides a 'Done' button to finalize the process.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of seeing the final confirmation that your account is now secured with two-factor authentication.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Did you confirm the two-factor authentication setup was successful?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Seeing the green success banner and the updated 'Enabled' section confirms that the email two-factor authentication is actively protecting the account.",
+        "whatTheAgentLoses": "You lose the immediate peace of mind of seeing the visual confirmation that your account security has been successfully upgraded.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Does the confirmation screen warn that you need to generate app passwords for older devices or mail clients that do not support 2FA?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Enabling 2FA often breaks legacy integrations (like older Outlook versions or smart TVs), requiring you to generate and input special one-time passwords for those specific apps.",
+        "whatTheAgentLoses": "The agent might successfully enable 2FA but fail to notify you that your other devices are now disconnected and require manual app password configuration.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Check the settings show it on",
+      "questions": [
+       {
+        "question": "Was the security key setup for macOS actually completed -- the management key entered -- rather than left at the setup dialog?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The video promises to show how to lock down the computer, but it ends at the 'Setup for macOS' dialog without actually entering the management key or finishing the process.",
+        "whatTheAgentLoses": "The user is left without the final steps needed to actually secure their device, making the tutorial incomplete and potentially leaving their account vulnerable.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do the devices listed for Google prompts during setup match the devices shown on the final settings page?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Confirming the authorized devices prevents old or unrecognized phones from receiving security prompts, although the frame actually showed a password entry page instead of the expected device list.",
+        "whatTheAgentLoses": "The user loses the opportunity to manually audit the list of authorized devices and remove any that are outdated or unrecognized.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you confirm that the authenticator app you intended to set up is now toggled on?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Verifying that the final settings screen shows the authenticator app as active ensures the initial goal of the task was successfully completed.",
+        "whatTheAgentLoses": "Delegating this means you lose the peace of mind of personally confirming your account is secured with the correct two-factor method.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Does the security dashboard show that your old SMS or email authentication is still active alongside your newly configured authenticator app?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Simply adding a strong 2FA method does not always remove the weaker ones; if SMS remains enabled, your account is still entirely vulnerable to SIM swapping attacks.",
+        "whatTheAgentLoses": "The user loses the critical realization that their account is only as secure as the weakest active method, leaving a backdoor open.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Log in again to test"
+     },
+     {
+      "id": "8.5",
+      "label": "Enter the code at the prompt",
+      "questions": [
+       {
+        "question": "How should I get the two-factor authentication code to log in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen requires a six-digit code from an authenticator app or a backup code to access the account.",
+        "whatTheAgentLoses": "Delegating this step requires you to provide the agent with live access to your authenticator codes or backup keys.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How will you retrieve the required 6-digit login code?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a 6-digit code from a code generator or third-party app to verify the authentication setup.",
+        "whatTheAgentLoses": "Delegating this step requires giving the agent access to your personal authenticator app or hardware key, which compromises the security of your second factor.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What code should you enter to verify the authenticator app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Enter Discord Auth Code' field that requires a time-sensitive number from your authenticator app to proceed.",
+        "whatTheAgentLoses": "The user loses the security of keeping their private, time-sensitive authenticator codes isolated on their personal device.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Retry with a fresh code",
+      "questions": [
+       {
+        "question": "When the entered code is rejected, do you want to fetch a fresh code or choose to verify with something else?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an 'Invalid two-factor code' error alongside a 'Verify with something else' option, requiring a decision on how to recover from the failure.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to choose your preferred fallback method when the primary authentication attempt fails.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Was the retried code submitted, and did the service accept it this time?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Hitting the exact 'Submit' button matters because tapping the adjacent 'Verify with something else' option by mistake will interrupt the verification process.",
+        "whatTheAgentLoses": "You lose the physical precision required to hit the correct touch target and the immediate awareness to instantly correct a misclick.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Decide to trust this browser",
+      "questions": [
+       {
+        "question": "Do you want to save this browser to bypass 2FA codes in the future?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks if you want to save the browser, which determines whether a 2FA code will be required for future logins on this device.",
+        "whatTheAgentLoses": "If an agent makes this choice, you lose control over the tradeoff between login convenience and strict account security on this specific browser.",
+        "kind": "decision",
+        "verify_form": "The agent answered the remember-this-browser prompt - check whether this browser now skips 2FA; a trusted browser is a standing hole in the lock you just built, on whatever machine this was.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "8.8",
+      "label": "Claim the enrollment reward"
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Manage the protection later",
+    "note": "any of 9.1 to 9.5 as the need arises; 9.5 can come before goal 1 when a gated privilege is the reason for arming",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Turn 2FA off",
+      "questions": [
+       {
+        "question": "Do you want to proceed with enabling 2-Step Verification, or intentionally set the status to Inactive?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 2-Step Verification dialog contains a Status dropdown that allows you to change the setting to Inactive.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to proceed with the security setup or intentionally disable the feature.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you see the resulting state change after confirming the 2-Step Verification status change?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video cuts to a title card right after clicking 'OK', so it never shows if the setting actually became inactive.",
+        "whatTheAgentLoses": "You lose the final confirmation that the security setting was successfully applied to your account.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Update the trusted number",
+      "questions": [
+       {
+        "question": "Do you need to update your mobile number before enabling 2-Step Verification?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The security settings menu displays separate options for 'Mobile Number' and '2-Step Verification', meaning you must decide if your current number is accurate before proceeding with the setup.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify or change the specific phone number that will receive your sensitive authentication codes.",
+        "kind": "intent-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Add another method later"
+     },
+     {
+      "id": "9.4",
+      "label": "Extend the key to device login",
+      "questions": [
+       {
+        "question": "Which YubiKey application should you select to configure computer login?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Applications menu offers OTP, FIDO2, and PIV, and selecting the wrong one will configure an incorrect security protocol for your intended use.",
+        "whatTheAgentLoses": "You lose the ability to control exactly which security protocols are activated on your physical hardware key.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to proceed with pairing your YubiKey for macOS login?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explains that completing this setup will pair a YubiKey with your user account using PIV certificates, allowing you to use it to log into macOS.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if you actually want to use a physical YubiKey to log into your local macOS account.",
+        "kind": "decision",
+        "verify_form": "The agent stood at the macOS pairing screen - check whether it went ahead; pairing the key into your computer login extends the lock to a whole new place, which you may not want.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to use the default management key, or do you have a specific one I should enter?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The macOS setup dialog requires a management key to proceed and provides a checkbox to use the default.",
+        "whatTheAgentLoses": "You lose the ability to apply a custom, potentially more secure management key to your hardware authenticator if the agent just selects the default.",
+        "kind": "decision",
+        "verify_form": "The pairing dialog asked for a management key and the agent chose the default or typed one - check which; the default is public knowledge, so a custom key is the only version that is actually yours.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Flip the gated privilege",
+      "questions": [
+       {
+        "question": "How do you want to handle the unsaved changes to your settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays prompts to apply the changes, restore to default, or go back, which determines whether your new security configuration is actually saved.",
+        "whatTheAgentLoses": "You lose the opportunity to review your configuration and decide whether to commit the changes or revert to the default settings.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did the settings menu close with the change kept, back at the main screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen only shows 'Restore to default' and 'Back' at the bottom right, so you must select the correct prompt to safely leave the menu.",
+        "whatTheAgentLoses": "The user loses control over the specific controller inputs used to navigate out of the menu, risking an accidental settings reset if the wrong button is pressed.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the screen actually show that the setting is already enabled?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen clearly displayed the setting as 'On' in the dropdown, confirming that the visual state matched the spoken claim.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent accurately reads the current toggle state before deciding whether to change it.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

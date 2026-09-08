@@ -128,7 +128,7 @@
         "whatTheAgentLoses": "You lose the ability to control which specific personal or work profile is associated with your news reading activity.",
         "speak": "gate",
         "check": "Which Google accounts does the account picker list?",
-        "say_example": "Google is asking which account to use. I see <david.lin> and <your work one>. Which one?"
+        "say_example": "Google is asking which account to use. I see <alex.chen> and <your work one>. Which one?"
        }
       ]
      },

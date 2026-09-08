@@ -677,7 +677,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the ability to personally verify that the search is targeting your exact local market for the upcoming year.",
         "speak": "if-wrong",
         "check": "Do the coverage year and ZIP on the page match what the person gave?",
-        "say_example": "The page is set to <90210> but you told me <94025>. Fixing it, the plans would all be wrong."
+        "say_example": "The page is set to <90210> but you told me <94110>. Fixing it, the plans would all be wrong."
        },
        {
         "question": "What pincode and mobile number should you enter to view the available plans?",
@@ -749,7 +749,7 @@
         "whatTheAgentLoses": "An agent might not know if you plan to add dependents later, potentially leaving family members uninsured or complicating future coverage.",
         "speak": "on-event",
         "check": "Does the form say dependents can be added at no cost?",
-        "say_example": "Adding your family costs nothing on this one. Want <Jennifer and the kids> on it?"
+        "say_example": "Adding your family costs nothing on this one. Want <[name] and the kids> on it?"
        },
        {
         "question": "Did you need to trigger the informational hover tooltips to read the exact legal definitions for household members or tax dependents?",
@@ -1120,7 +1120,7 @@
         "whatTheAgentLoses": "You lose the ability to verify that your exact prescriptions are included and to personally secure the retrieval credentials for your own future use.",
         "speak": "never",
         "check": "Does the page show a drug list ID and date for retrieving the list later?",
-        "say_example": "Saved the drug list ID <1234> in the report, so the list can be reloaded next time."
+        "say_example": "Saved the drug list ID <[account number]> in the report, so the list can be reloaded next time."
        },
        {
         "question": "Did a banner confirm your medication was saved to your profile?",
@@ -1340,7 +1340,7 @@
         "whatTheAgentLoses": "The agent might guess the wrong doctor profile, leading you to buy a plan that results in massive out-of-network bills.",
         "speak": "on-event",
         "check": "Does the provider search return more than one doctor with the same name?",
-        "say_example": "Two doctors named <Brianna Jones> near you. One's at <the clinic on Oak>, one's downtown. Which is yours?"
+        "say_example": "Two doctors named <[name]> near you. One's at <the clinic on Oak>, one's downtown. Which is yours?"
        }
       ]
      },
@@ -3027,7 +3027,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the final opportunity to personally verify your coverage details and payroll deductions before binding yourself to the enrollment.",
         "speak": "gate",
         "check": "What plans, members and total cost does the review summary show?",
-        "say_example": "Here's everything before we commit. <The medical and dental plans>, covering <you and Priya>. <120.70> a paycheck. Look right?"
+        "say_example": "Here's everything before we commit. <The medical and dental plans>, covering <you and [name]>. <120.70> a paycheck. Look right?"
        },
        {
         "question": "Does the amount being charged match the fee the site quoted earlier?",
@@ -3517,7 +3517,7 @@
         "whatTheAgentLoses": "The user misses the immediate confirmation of their coverage and the specific policy number assigned to them.",
         "speak": "always",
         "check": "Does the page confirm payment success and show a policy number?",
-        "say_example": "Paid and confirmed. Policy number <ABC123>. I saved the confirmation page."
+        "say_example": "Paid and confirmed. Policy number <[confirmation number]>. I saved the confirmation page."
        },
        {
         "question": "Did your submission succeed, and what must you click to continue?",

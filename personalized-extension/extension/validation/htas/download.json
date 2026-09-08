@@ -1,0 +1,2328 @@
+{
+ "task": "find and download a specific file (a government form PDF, a bank statement, a schedule/timetable PDF, a paper, a receipt/invoice): locate the artifact on the site, trigger the download, and verify the file actually arrived (the downloads bar or downloads folder shows the right file); complete when the downloaded file is visible in the downloads UI or opened. Surface pinned: any site's download flow plus the browser's download UI. Variants: piracy/torrent content, download-manager-software ads, and \"how to download YouTube videos\" (rights-violating rips) do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Find, download, and verify a specific file",
+  "note": "1, then 2 where the document lives behind an account - a third of the corpus starts already signed in; 3 finds the document or its generator; 4 when the site withholds the download until a prerequisite is met; 5 when the file must be produced rather than fetched; 6 lands it on the device; 7 proves it arrived and is the right file - and a failure caught there reopens 3, 4, or 5",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the site",
+    "note": "1.1 then 1.2; 1.3 before anything sensitive when the route came through search; 1.4 whenever a banner or popup gets in the way, at any point in the task",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the browser or app",
+      "questions": [
+       {
+        "question": "Which browser window should you select to access the LMS platform?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The taskbar displays multiple Chrome thumbnails, so you must identify the one for the Virtual University LMS to begin the task.",
+        "whatTheAgentLoses": "You lose the assurance that the agent will resume the correct active session rather than interacting with an unrelated window.",
+        "kind": "decision",
+        "verify_form": "Several windows were open - check the agent resumed the session you meant, not an unrelated window that happened to match.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Enter the site's address",
+      "questions": [
+       {
+        "question": "What website should you visit to access your Uber pay stubs?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a browser search bar waiting for input, meaning you must know the correct URL or search term to reach the platform hosting the pay stubs.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact website or portal where their specific documents are hosted.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to navigate directly to the main site or select a specific tax page from the dropdown suggestions?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The address bar dropdown shows both the root domain and specific shortcuts like the comprehensive income tax return page, which might lead to your target file faster.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to start your search from the homepage or use a browser shortcut to jump directly to a specific tax filing section.",
+        "kind": "decision",
+        "verify_form": "The agent chose between the site's homepage and a deep-link suggestion - check where it landed; a deep link can skip the context you wanted to see.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Verify the official source",
+      "questions": [
+       {
+        "question": "Which search result should you click to ensure you reach the legitimate government website?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that the search result's domain is actually 'canada.ca' ensures you are navigating to the authentic government site rather than a phishing page.",
+        "whatTheAgentLoses": "You lose the security of personally verifying the domain name to ensure your sensitive tasks are handled on the authentic site.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are you certain the URL in the address bar belongs to the legitimate government website?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking that the address bar displays the official canada.ca domain ensures you are not interacting with a visually identical phishing scam.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the domain name to ensure you are downloading forms from a safe, official source.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Dismiss the banners and popups",
+      "questions": [
+       {
+        "question": "Should you read the scam warning about fraudulent refund emails before dismissing it to reach the login page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Scam' warning pop-up about fraudulent FBR emails that blocks access to the underlying site.",
+        "whatTheAgentLoses": "You lose the opportunity to read the specific security advisory about fraudulent refund emails before it is dismissed.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Get through the identity gates",
+    "note": "2.1 then 2.4; 2.2 and 2.3 where the site forks them first; 2.5 when a second factor fires; 2.6 when the site names the limits of the identity you chose",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Find the sign-in link",
+      "questions": [
+       {
+        "question": "Do you need to log in to access the file?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the MyMountSinai login page, indicating that authentication is required to reach the target document.",
+        "whatTheAgentLoses": "The user loses the ability to retrieve private documents if the agent cannot securely navigate the login process.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Pick the portal",
+      "questions": [
+       {
+        "question": "Which portal should you log into to access your pay stubs?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu offers separate sign-in options for driving and riding, and only the driver portal contains earnings information.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent accesses the correct account type that actually holds their financial documents.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific login portal should you select for your needs?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page offers three different portals ('My Account', 'My Business Account', and 'Represent a Client'), so you must choose the one that matches the type of account you need to access.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent logs into your personal account rather than a business or client portal.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Pick the authentication method",
+      "questions": [
+       {
+        "question": "Which authentication method do you want to use to log in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents three different ways to access My Account, including a Sign-In Partner, a CRA user ID, and a BC Services Card.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred or most convenient authentication method for accessing your account.",
+        "kind": "decision",
+        "verify_form": "The agent picked a sign-in method - check which one; it cannot know which partner logins, certificates, or verifier apps you actually have.",
+        "speak": "never"
+       },
+       {
+        "question": "Which third-party app should you use to verify your identity?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a grid of private certificate apps like Naver, Toss, and PASS, and selecting one you already use makes the authentication process much quicker.",
+        "whatTheAgentLoses": "The agent does not know which third-party authentication apps you have accounts for or currently have access to on your personal device.",
+        "kind": "decision",
+        "verify_form": "The agent picked a verifier app from the grid - check it picked one you actually have; the authentication lands on your phone.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Enter the credentials",
+      "questions": [
+       {
+        "question": "Which email address or mobile number should you use to sign in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires an email or mobile number to proceed, and selecting the correct autofill option ensures you access the specific account containing your documents.",
+        "whatTheAgentLoses": "You lose control over deciding which specific personal or financial account is accessed to retrieve the document.",
+        "kind": "decision",
+        "verify_form": "The agent picked a sign-in identifier off the autofill list - check it is the account that actually holds your documents, not another profile saved on this device.",
+        "speak": "gate"
+       },
+       {
+        "question": "Which registration number and password should you use to log in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a login form requiring a specific Registration No and Password to access the portal.",
+        "whatTheAgentLoses": "The user loses control over their private login credentials and the choice of which specific account to access.",
+        "kind": "decision",
+        "verify_form": "The agent needs your registration number and password - check what it is about to submit and where; these credentials are yours to hand over, not its to guess.",
+        "speak": "never"
+       },
+       {
+        "question": "What password should I enter to sign in to your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a login form with a pre-filled card number that requires a password to sign on and access the banking portal.",
+        "whatTheAgentLoses": "You lose the ability to keep your banking password private and secure from the agent.",
+        "kind": "decision",
+        "verify_form": "The agent is at a password field - check it paused for you; your banking password is not something it should be filling from anywhere.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure the entered login details are correct to proceed into the account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays filled credential fields and a 'Log on' button, making this the moment to confirm the details before attempting authentication.",
+        "whatTheAgentLoses": "The user loses the ability to verify their own sensitive banking credentials before the system attempts to log them in.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What personal information must you provide to proceed as a guest?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a guest login form requiring a name, a resident registration number, and mandatory consent checkboxes for personal data processing.",
+        "whatTheAgentLoses": "You lose the ability to personally decide whether to share your highly sensitive resident registration number and agree to the site's data processing terms.",
+        "kind": "decision",
+        "verify_form": "Guest entry wants your name and resident registration number plus consents - check the agent paused; this is your most sensitive identifier and the consent is yours to give.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Pass the second factor",
+      "questions": [
+       {
+        "question": "What 4-digit verification code did you receive via SMS?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a 4-digit SMS verification code to authenticate your identity before allowing you to proceed.",
+        "whatTheAgentLoses": "The user loses the seamless automation of the task, as they must manually intervene to receive and provide a real-time SMS code to the agent.",
+        "kind": "decision",
+        "verify_form": "A verification code went to your phone, not the agent - it must stop here; check it is waiting for you and that the code prompt really belongs to the site you signed into.",
+        "speak": "gate"
+       },
+       {
+        "question": "What information do you need to enter to request identity verification?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires your name, birthdate, carrier, phone number, and mandatory consent to privacy terms to proceed with the verification.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to share your personal phone number and explicitly agree to the specific privacy and third-party terms.",
+        "kind": "decision",
+        "verify_form": "The verification request wants your carrier and phone number plus agreements - check what the agent entered and consented to on your behalf.",
+        "speak": "never"
+       },
+       {
+        "question": "Have you completed the authentication steps on your mobile device?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The '간편인증' popup states that an authentication request was sent to your phone, and clicking the blue completion button before finishing those external steps will result in an error.",
+        "whatTheAgentLoses": "The user loses full automation because they must physically interact with their personal mobile phone to approve the authentication request.",
+        "kind": "decision",
+        "verify_form": "The verification finishes on your phone, not in the browser - check the agent waited for you instead of clicking complete into an error.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Accept the access limits",
+      "questions": [
+       {
+        "question": "Has your session timed out, requiring you to log in again?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The browser tab title shows 'Session Timed Out', indicating that the current authentication has expired and the page needs to be reloaded or re-authenticated.",
+        "whatTheAgentLoses": "The user loses the awareness that the agent might be stuck on an expired session page instead of actively navigating to the file.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you accessing the site from outside North America, requiring a VPN to proceed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The login page explicitly warns 'If you are currently located outside North America, you will not be able to use MyMountSinai at this time,' indicating a hard regional block.",
+        "whatTheAgentLoses": "The user loses the awareness of regional network restrictions that explain why the site might fail to load or authenticate if the agent is running on an international server.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you complete the simple authentication and accept the limited non-member status?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to finalize the authentication and acknowledge a warning that you will only have access to limited services as a non-member.",
+        "whatTheAgentLoses": "You lose the chance to decide whether restricted non-member access is sufficient for the specific file you need to download.",
+        "kind": "decision",
+        "verify_form": "Proceeding as a non-member limits what the session can do - the agent accepted that; check limited access still covers the file you need.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Locate the file",
+    "note": "3.1 or 3.2 by whichever the site makes easier - search works better on form libraries, menus work better inside account portals; 3.3 after any search; 3.4 picks the account and period; 3.5 before you commit to downloading it; 3.6 is the last resort when the page offers no download at all",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Navigate to the document section",
+      "questions": [
+       {
+        "question": "Which menu option should you select to find the tax forms?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left navigation menu contains several document-related options like 'CGPS Student Forms' and 'Student Account Center', so you must identify the specific link for the 1098-T tax form.",
+        "whatTheAgentLoses": "You lose the opportunity to learn how your institution's portal organizes important financial and tax documents.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which link should you select to consent to receiving electronic forms?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The right sidebar displays several finance-related options, requiring you to distinguish the electronic consent link from account statements and payment portals.",
+        "whatTheAgentLoses": "You lose the chance to personally review and authorize the electronic delivery agreement before proceeding to the document.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which navigation tab should you select to access your account and past orders?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The bottom navigation bar presents multiple ambiguous options like 'Home', 'You', and 'Menu', requiring you to deduce which one leads to your personal records.",
+        "whatTheAgentLoses": "You lose the intuitive ability to recognize that a personalized label like 'You' is the correct path to your account settings and order history.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which profile menu option do you select to find your past invoices?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu presents multiple account-related options like 'Your Orders' and 'Your Account', so you must choose the correct path to access your purchase history.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the agent navigates directly to your order history rather than getting lost in general account settings.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which menu option should you select to access the detailed reports?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Gateway of Tally menu presents multiple high-level categories like Masters, Transactions, and Reports, so you must identify the correct path to locate the specific file.",
+        "whatTheAgentLoses": "You lose the opportunity to review the available accounting categories and ensure the agent navigates to the correct detailed report.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which category of reports should you select to find the sales data?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu displays numerous accounting and inventory options like 'Day Book' and 'Account Books', requiring you to know exactly where the specific sales records are stored.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent will navigate to the correct ledger rather than downloading an unrelated financial or inventory report.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to click the 'View your 2019 Notice of Assessment' link right away, or check your account balance first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the link to your [address] of Assessment alongside other account details, presenting a choice between downloading the document immediately or reviewing your overall balance first.",
+        "whatTheAgentLoses": "You lose the chance to review your current account balance and overall financial status before the agent proceeds directly to downloading the tax document.",
+        "kind": "decision",
+        "verify_form": "The document link and your account balance were both on screen - check what the agent did first; if you wanted the balance read, it may have skipped past it.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you review your outstanding income tax balance before proceeding to your statement?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a significant income tax balance of $16,475.05 debit and a 'Proceed to pay' option that might require immediate attention.",
+        "whatTheAgentLoses": "You lose the immediate awareness of a large outstanding tax debt that requires your financial attention.",
+        "kind": "decision",
+        "verify_form": "A large balance due was visible on the way to the document - the agent decided whether to surface it; check you were told about anything that needs your attention.",
+        "speak": "never"
+       },
+       {
+        "question": "Which section should you open to find your official statements and notices?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'View mail' tooltip explicitly states that it contains your letters, statements, and notices, making it the correct path to locate the official documents.",
+        "whatTheAgentLoses": "You lose the opportunity to learn how your account dashboard is organized and where your official correspondence is stored.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which tab should I click to find my video files?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard shows multiple tabs like 'My Institution' and 'Kaltura My Media', so you must select the correct one to locate your media.",
+        "whatTheAgentLoses": "The user loses the ability to specify which section of the platform contains the file they want to download.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which menu option should you select to access your electronic statements?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left-hand menu presents several similar financial options, such as \"Download Transactions\" and \"View eStatements,\" requiring you to choose the exact path for official statement documents.",
+        "whatTheAgentLoses": "The user loses the familiarity of navigating their own bank's specific menu layout and terminology for accessing official financial documents.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Where do you tap to view the full details or invoice for this specific order?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed various options like reordering or returning the item, making it important to specifically locate the order details to find the invoice.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent didn't accidentally initiate a return or reorder instead of fetching the invoice.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which menu option should you select to find your sales receipts?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Transaction Management dropdown contains several similar options like 'Sales by invoice' and 'Sales Receipt', so you must pick the exact category that holds the file you need.",
+        "whatTheAgentLoses": "You lose the opportunity to learn how your financial records are categorized and navigated within the tax portal.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you review the preliminary information before starting the tax settlement inquiry?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an informational page with guidelines to read before inquiring about the simplified year-end tax settlement data.",
+        "whatTheAgentLoses": "The user loses the opportunity to read potentially important instructions or warnings about their tax settlement data before proceeding.",
+        "kind": "decision",
+        "verify_form": "A guidance page stood before the inquiry - the agent chose to skip or read it; if the instructions mattered, they went unread.",
+        "speak": "never"
+       },
+       {
+        "question": "Which tab should you click to find individual lecture materials?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The navigation bar shows several plausible options like 'Lessons', 'Lesson Tutorials', and 'Downloads'.",
+        "whatTheAgentLoses": "The user loses the ability to intuitively navigate the course structure to find the specific materials they need.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which navigation option should you choose to find bulk course downloads?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a main course navigation bar with multiple icons, and the 'Course Website' icon was identified as the path for bulk downloads.",
+        "whatTheAgentLoses": "The user loses the ability to choose the specific section for bulk downloads, potentially missing out on downloading all handouts or slides together.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which menu option should you select to find your account statements?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard shows your account balances confirming a successful login, and you must identify the 'Documents' tab in the top navigation to locate your statements.",
+        "whatTheAgentLoses": "You lose the opportunity to see your current account balances and any important bank alerts displayed on the main dashboard before navigating away.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Search for the document",
+      "questions": [
+       {
+        "question": "What search term should you enter to find the specific form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Facing an empty search bar with a 'Search' placeholder, you must choose an effective keyword to successfully locate the target file.",
+        "whatTheAgentLoses": "You lose the ability to choose the specific, concise keyword that quickly and accurately pulls up the exact form you need.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you want to modify the search query to find the PDF version?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the search bar containing 'Health;docx', presenting a choice between editing the existing text or typing a completely new query.",
+        "whatTheAgentLoses": "The user loses the ability to dictate the exact search terms and strategy used to locate the specific file format.",
+        "kind": "decision",
+        "verify_form": "The agent reworked the search query - check the term it settled on; the file type and topic it searched for are your call.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you filter the search results by date?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left sidebar showed options to filter articles by specific years or a custom range, which could help narrow down the search.",
+        "whatTheAgentLoses": "The user loses the opportunity to specify a time frame for the document, which might be necessary to find the correct version.",
+        "kind": "decision",
+        "verify_form": "Date filters were available - the agent chose whether to narrow by year; if the version year matters to you, check what range it searched.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you start looking for the 1099 form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The IRS homepage displays numerous links and a search button, requiring a decision on the best path to find the specific form.",
+        "whatTheAgentLoses": "The person loses the assurance that the agent will use the search function rather than clicking through menus to find the form.",
+        "kind": "decision",
+        "verify_form": "The agent chose between the menus and the search box - check the route reached the actual form and not a near-relative.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Pick the right result",
+      "questions": [
+       {
+        "question": "Which search result should you select to find the blank Form 1098?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "With 258 matching items displayed, you must select the correct link to access the actual downloadable form rather than just general information.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the correct page containing the blank form rather than getting sidetracked by hundreds of related search results.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the search results showing the specific file type you requested?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the file extensions in the search results ensures your query successfully surfaced the requested document type before you click to download.",
+        "whatTheAgentLoses": "You lose the opportunity to visually confirm that the search results match the specific file format you need before proceeding.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are these search results from authentic academic sources?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results page displays various articles, making it important to verify if they come from reputable publishers, societies, or universities.",
+        "whatTheAgentLoses": "The user loses the ability to personally evaluate the credibility and academic rigor of the sources presented in the search results.",
+        "kind": "decision",
+        "verify_form": "The agent judged the sources credible on its own - check which publishers and sites it trusted; academic credibility is a judgment you may not share.",
+        "speak": "never"
+       },
+       {
+        "question": "Are there direct PDF or HTML links available next to the search results?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows direct PDF and HTML links on the right side of the results, which allow you to bypass intermediate publisher pages and access the file immediately.",
+        "whatTheAgentLoses": "You lose the opportunity to choose your preferred file format or select a specific trusted source for the download.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you click the direct PDF link in the search results, or open the publisher's article page first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display both a main title link and a direct '[PDF] wiley.com' link, offering two different paths to access the document.",
+        "whatTheAgentLoses": "You lose the opportunity to review the article's abstract and metadata on the publisher's page before downloading if the agent automatically clicks the direct PDF link.",
+        "kind": "decision",
+        "verify_form": "Two routes to the paper existed - the direct PDF and the publisher page; check which the agent took, since the abstract and metadata you might want live on the publisher page.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Choose the account and period",
+      "questions": [
+       {
+        "question": "Which specific statement or combination of statements do you need to download?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple statements for different cash-out amounts across various dates, requiring you to identify exactly which ones fulfill your specific documentation requirements.",
+        "whatTheAgentLoses": "The user loses the assurance that the correct set of statements will be selected to accurately represent their earnings for the required time period.",
+        "kind": "decision",
+        "verify_form": "Multiple statements were on offer - check which ones the agent picked; only you know which set satisfies the person asking for proof.",
+        "speak": "never"
+       },
+       {
+        "question": "Which course should you select for export?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard displays multiple published courses, requiring a choice of which specific course contains the desired file.",
+        "whatTheAgentLoses": "The user loses the ability to specify exactly which course's materials they need downloaded.",
+        "kind": "decision",
+        "verify_form": "The dashboard listed many courses - check the agent opened the one whose materials you actually need.",
+        "speak": "never"
+       },
+       {
+        "question": "Which tax year's form do you need to view?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page displays multiple 1098-T form links for different tax years ranging from 2021 to 2025.",
+        "whatTheAgentLoses": "If the agent selects the wrong year, you will receive outdated or incorrect tax documentation.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you select a standard monthly statement or use advanced search for custom dates?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown displays pre-generated monthly statements alongside an 'Advanced Search' option, requiring a choice on how to retrieve the specific transaction dates.",
+        "whatTheAgentLoses": "You lose the ability to decide whether a standard billing statement is sufficient or if a custom date range must be generated.",
+        "kind": "decision",
+        "verify_form": "Standard statements and a custom search were both offered - check which the agent used; whether a stock monthly statement suffices is your requester's call, not the agent's.",
+        "speak": "never"
+       },
+       {
+        "question": "Which statement period or activity range do you want to view?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown offers multiple activity ranges like 'Recent Activity' and specific past statements, so you need to know the exact time frame required.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact date range or statement period you need downloaded for your records.",
+        "kind": "decision",
+        "verify_form": "The agent set a statement period - check the range it chose against the span the person asking actually needs.",
+        "speak": "never"
+       },
+       {
+        "question": "Which invoice should you select to find a receipt?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows invoices with different statuses like 'Sent', 'Unpaid', and 'Paid', and only a paid invoice will have a receipt available.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects a completed transaction that actually has a receipt to download.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific invoice should you select from the list?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple invoices with different customers, amounts, and statuses, meaning you must identify the exact one that meets your criteria.",
+        "whatTheAgentLoses": "The user loses the ability to apply their specific criteria to ensure the correct invoice is selected and downloaded.",
+        "kind": "decision",
+        "verify_form": "Several invoices matched loosely - check the one the agent opened against your criteria; it cannot know which customer, amount, or date you meant.",
+        "speak": "never"
+       },
+       {
+        "question": "Which company's data should you open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a 'List of Companies' with multiple options like 'H G company (2023-24)' and 'Shiv Shakti Trading Co', making it necessary to choose the correct source for the file.",
+        "whatTheAgentLoses": "The user loses the ability to specify which company's financial records should be accessed to locate or generate the file.",
+        "kind": "decision",
+        "verify_form": "More than one company file was available - check the agent opened the books you meant.",
+        "speak": "never"
+       },
+       {
+        "question": "Which row in the correspondence list contains the correct Notice of Assessment, and where is its PDF link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The table displays multiple correspondence items, requiring you to match the document type and year to find the correct PDF link.",
+        "whatTheAgentLoses": "You lose the assurance that the agent downloaded the correct year's assessment rather than an older or unrelated document.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which video recording should you edit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'My Media' list displays multiple Kaltura Capture recordings with different dates and times, requiring you to identify the correct one.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the specific recording from December 17th is selected instead of the others.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which account are you selecting to view statements for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the 'MY ACCOUNTS' dashboard, requiring you to choose the specific account whose statements you need to download.",
+        "whatTheAgentLoses": "The user loses control over which specific account's financial records are accessed and downloaded.",
+        "kind": "decision",
+        "verify_form": "More than one account was listed - check the agent pulled statements for the account you meant, not the default.",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific order from your history do you need to access?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple past orders, such as the HMH book and EPAuto filters, so you must identify the exact transaction that contains the required receipt.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the correct past purchase from your order history to retrieve the intended receipt.",
+        "kind": "decision",
+        "verify_form": "The order history held several purchases - check the agent opened the order whose receipt you actually need.",
+        "speak": "never"
+       },
+       {
+        "question": "Which course's materials do you want to access?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage lists multiple courses like CS101 and ENG101, so you must select the correct course's website icon to find the relevant handouts.",
+        "whatTheAgentLoses": "You lose the ability to specify which class's helping materials to download if the agent selects the course for you.",
+        "kind": "decision",
+        "verify_form": "Several courses were listed - check the agent entered the one whose materials you wanted.",
+        "speak": "never"
+       },
+       {
+        "question": "Which lesson should you select to find the materials?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of lessons, requiring a choice to locate the specific file.",
+        "whatTheAgentLoses": "The user loses the ability to choose which specific lesson's materials to download.",
+        "kind": "decision",
+        "verify_form": "The lesson list was open - check the agent picked the lesson you are actually studying.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the file you need on this page, or should you click 'Next' to keep looking?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a list of files with pagination indicating seven total pages, meaning the target file might require further navigation to locate.",
+        "whatTheAgentLoses": "You lose the assurance that the agent will systematically check each page of results rather than skipping over the correct file or downloading the wrong one.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which account and date range do you need statements for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Document Library search form requires selecting a specific account and date range from the dropdown menus to filter the available files.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might download statements for the wrong account or an irrelevant time period.",
+        "kind": "decision",
+        "verify_form": "The library search wanted an account and a date range - check both against what your lender asked for.",
+        "speak": "never"
+       },
+       {
+        "question": "Which type of document do you want to download?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown offers different options like 'Statement' and 'Tax Certificate', so you must confirm the selected category matches the file you need.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent is downloading the correct category of document instead of just blindly accepting the default option.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Judge the document's fit",
+      "questions": [
+       {
+        "question": "Do you want to review the detailed breakdown of your earnings for this period?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays a comprehensive list of earnings, including base fares, promotions, and tips, which helps verify the statement's accuracy.",
+        "whatTheAgentLoses": "The user loses the chance to inspect the specific line items of their payout to ensure all expected earnings are accounted for before proceeding.",
+        "kind": "decision",
+        "verify_form": "A detailed earnings breakdown was available - the agent decided whether to review it; if you wanted the line items checked before export, verify it looked.",
+        "speak": "never"
+       },
+       {
+        "question": "Does this document contain your personal tax information, or is it just a blank template?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a blank W-2 template for 2021, meaning it lacks the actual wage and tax data required for your records.",
+        "whatTheAgentLoses": "You lose the human judgment to realize that a generic government template cannot substitute for a personalized tax document provided by an employer.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Can you actually download your personal W-2 from this IRS page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The text explains employer filing obligations, clarifying that the IRS does not provide personal W-2 downloads for employees here.",
+        "whatTheAgentLoses": "You lose the critical realization that the agent cannot complete this task on this website and must instead instruct you to contact your employer.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does this recent activity view cover the specific dates you need for your statement?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a custom 'Recent Activity' view starting June 25th rather than a standard monthly statement, which dictates exactly which transactions will be included in the download.",
+        "whatTheAgentLoses": "You lose the ability to apply outside context, such as knowing a third party specifically requested proof of recent un-statemented activity like an earnest money deposit.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is this on-screen tax assessment summary the actual downloadable PDF, or do you need to navigate elsewhere to get the file?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the tax assessment details as a webpage, but the task requires locating the actual PDF file to download.",
+        "whatTheAgentLoses": "The user loses the official PDF document for their records if the agent only captures the on-screen text instead of navigating back to find the download link.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does this transaction summary contain enough identifying details to satisfy the underwriter's requirements?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen only displays the last four digits of the account number, requiring you to evaluate if the specific transaction dates and amounts are sufficient for verification.",
+        "whatTheAgentLoses": "You lose the ability to use your personal judgment on whether partial account details combined with transaction history will meet the specific documentation standards of your underwriter.",
+        "kind": "decision",
+        "verify_form": "The agent judged partial account details sufficient - check that call against what your underwriter actually accepts; the standard is theirs, not the agent's.",
+        "speak": "never"
+       },
+       {
+        "question": "Do these files match your study needs, or should you check the lessons section instead?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a paginated list of miscellaneous files like 'WebPageHosting.doc', but your specific study method might require structured content directly from the lessons page.",
+        "whatTheAgentLoses": "An agent might blindly download a document from this list rather than following your personal preference to study directly from the lessons section.",
+        "kind": "decision",
+        "verify_form": "The agent judged whether these files fit your study method - check that call; browsing the bulk list and working from lessons are different ways of studying.",
+        "speak": "never"
+       },
+       {
+        "question": "Do the available standard statements cover the specific date range you need?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The most recent statement ended on March 9th while the current date was April 2nd, indicating a gap in the standard reporting period.",
+        "whatTheAgentLoses": "You lose the situational awareness to notice a gap in the standard documents and the initiative to manually generate a custom statement to cover the missing days.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does a statement showing a $0.00 balance fulfill the requirements of the requesting party?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The account activity page clearly shows a $0.00 available and current balance, which might not be sufficient if an underwriter is looking for proof of funds rather than just proof of an open account.",
+        "whatTheAgentLoses": "You lose the opportunity to apply your own judgment on whether an empty account statement will actually satisfy the specific administrative requirement you are trying to fulfill.",
+        "kind": "decision",
+        "verify_form": "The statement shows a zero balance - the agent cannot know whether that satisfies the person asking; check before it gets submitted as proof.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the file locked behind a paywall or an expired subscription?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Academic papers or premium reports often require an active subscription or one-time payment to unlock the download link.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to pay for access, log in with an institutional account, or abandon the search.",
+        "kind": "decision",
+        "verify_form": "The file sits behind a paywall - paying, signing in through an institution, or walking away is your decision, and the agent should have stopped here.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do the individual promotion line items in the earnings breakdown sum up exactly to the total promotions amount shown?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking the math ensures the statement is accurate, as the total listed ($611.00) might not match the sum of the individual line items ($608.00).",
+        "whatTheAgentLoses": "The user loses the ability to catch accounting discrepancies in the document if the agent does not verify the totals against the line items.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Dig out the hidden source",
+      "questions": [
+       {
+        "question": "How should you access the page's underlying HTML to find the file source?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The context menu showed options like 'Inspect Element', which allows you to view the page source to locate the hidden file URL.",
+        "whatTheAgentLoses": "The user loses the ability to choose exactly which element to inspect to extract the hidden file URL from the page source.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which path through this heavily nested HTML hierarchy should you take to find the video's source URL?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The DOM tree contains a deeply nested iframe, requiring you to visually map HTML nodes to the video player on the page to find the actual media source.",
+        "whatTheAgentLoses": "You lose the ability to visually correlate DOM elements with the rendered video player to efficiently hunt down the hidden media URL.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How should you open the highlighted URL from the developer tools?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The context menu provides several developer options, but opening the link in a new tab allows direct access to the media file.",
+        "whatTheAgentLoses": "The user loses the ability to manually inspect the page source and extract hidden URLs to access files directly.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Clear the prerequisites",
+    "note": "any of 4.1 to 4.3 as the site demands, then back into 3 or 6; in the corpus each ends its session with the file still pending or freshly unlocked",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Grant the delivery consent",
+      "questions": [
+       {
+        "question": "Do you agree to the terms for receiving your 1098-T electronically?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a required consent form stating that the 1098-T will be mailed to your home address unless you check the box to opt into electronic delivery.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to opt into electronic tax document delivery or retain standard paper mailing.",
+        "kind": "decision",
+        "verify_form": "The agent accepted the electronic-delivery terms in your name - check the consent it granted; paper mail was the default and the choice was yours.",
+        "speak": "gate"
+       },
+       {
+        "question": "Did your consent form submission succeed, and what should you do next?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays a confirmation message for the 1098-T consent form, indicating you must wait for an automatic redirection to the Finances tab to proceed.",
+        "whatTheAgentLoses": "The user loses the reassurance of seeing the success message confirming their electronic consent was properly registered.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Supply the missing personal data",
+      "questions": [
+       {
+        "question": "What are the specific requirements and deadlines for submitting your missing SSN?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Update SSN' widget stating that an SSN or ITIN is required to receive the 1098-T form and mentions an upcoming deadline.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the sensitive requirements and deadlines necessary to unlock your tax document.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did your submission succeed, and when will the form become available?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen confirms the SSN submission and explicitly states the 1098-T form will be available within one business day.",
+        "whatTheAgentLoses": "The user loses the accurate timeframe for when they can return to download the requested form.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What SSN should I enter to access the 1098-T form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an 'Update SSN' prompt requiring a Social Security Number to receive the 1098-T form.",
+        "whatTheAgentLoses": "The user loses control over whether and how their highly sensitive Social Security Number is provided to the site.",
+        "kind": "decision",
+        "verify_form": "The form wants your Social Security Number - the agent must not supply this; check it stopped and that you are willing to enter it on this site at all.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Enable the download option",
+      "questions": [
+       {
+        "question": "Which file format should you select before saving the download settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an 'Available Formats' section under the Downloads tab where you must specify the exact file type you need before saving.",
+        "whatTheAgentLoses": "The user loses the ability to choose the specific file format they need for their downloaded document.",
+        "kind": "decision",
+        "verify_form": "The platform offered download formats to enable - check which the agent switched on; the format others can now fetch is your call as the owner.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you apply the new format settings and return to the video?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed format options alongside a 'Save' button and a 'Go To Media' link, requiring an explicit action to apply the changes before navigating.",
+        "whatTheAgentLoses": "The user loses the ability to guarantee their specific format preferences are saved before the media is processed or downloaded.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Produce the file",
+    "note": "5.1 then 5.2 then 5.3 for an export the site builds; 5.4 when the mechanism is the print dialog; 5.5 when the document must be created from a form; whatever 5 produces still goes through 6",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Set the export scope",
+      "questions": [
+       {
+        "question": "Should you keep all default data selected for export, or clear the selections first?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 69 out of 71 products are selected by default, which would result in downloading a massive amount of unnecessary files.",
+        "whatTheAgentLoses": "The user loses the ability to prevent a bloated, disorganized download by manually filtering out irrelevant data sources.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific services do you want to include in the data export?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the user checking the boxes for 'Fit', 'Gemini', and 'Google Account' to include them in the export.",
+        "whatTheAgentLoses": "The user loses the ability to choose exactly which personal data is included in the downloaded file.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you selecting the services that the instructions actually requested?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The audio instructions specify Gmail, Google Photos, and Google Drive, but the screen shows Fit, Gemini, and Google Account being selected instead.",
+        "whatTheAgentLoses": "The user receives a downloaded archive containing completely different data than what they intended to export.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Was the filter actually applied to narrow the list, or is the default view about to be exported as-is?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the filter button next to the search field reveals options to narrow down the transaction list so you can find the specific statement.",
+        "whatTheAgentLoses": "You lose control over exactly which filter parameters are applied to narrow down your transaction history.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you enter the specific dates into the filter, or close the panel and browse manually?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed date filter fields that could narrow down the transaction list, so skipping them means you must rely on manual scrolling to find the right statement.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to use precise filtering tools or manually browse the transaction list to locate your document.",
+        "kind": "decision",
+        "verify_form": "A date filter was open - the agent chose to fill it or skip it; check which, and whether the resulting list is the span you wanted.",
+        "speak": "never"
+       },
+       {
+        "question": "Which report type should you select to export multiple vouchers?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu offers several report options like 'Sales Vouchers' and 'Multi-Voucher', which determines the exact contents of the downloaded file.",
+        "whatTheAgentLoses": "The user loses control over which specific report format or data grouping is exported.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which export configuration setting do you need to change first?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Export Configuration screen shows the Voucher Type is currently set to 'Payment', which must be updated to ensure the correct data is generated.",
+        "whatTheAgentLoses": "You lose control over the specific report parameters, risking the download of irrelevant or incorrect financial records.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which voucher type should you export?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a list of voucher types like 'Gst Sales' and 'Gst Tax Free', and the correct one must be selected to generate the right report.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact voucher type they need for their downloaded report.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which export configuration setting do you need to adjust next?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a list of export configurations, and selecting the period is necessary to ensure the generated file covers the correct date range.",
+        "whatTheAgentLoses": "The user loses the ability to manually specify and verify the exact date range and parameters for the downloaded report.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What date range should you select for the transaction filter?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The panel offers multiple date ranges like 30, 60, or 90 days, which determines the exact set of transactions included in the final document.",
+        "whatTheAgentLoses": "An agent might select an incorrect date range, resulting in a downloaded statement that misses the specific transactions you need.",
+        "kind": "decision",
+        "verify_form": "The agent set the transaction date range - check the span it picked; the requester's needed window is something only you know.",
+        "speak": "never"
+       },
+       {
+        "question": "Which tax deduction categories do you want to include in your document?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a grid of various tax deduction categories like health insurance, medical expenses, and credit cards, requiring you to select the ones relevant to your situation.",
+        "whatTheAgentLoses": "By delegating this step, you lose the opportunity to personally review and select the specific tax deductions that accurately reflect your financial situation.",
+        "kind": "decision",
+        "verify_form": "The category grid was open - check which deduction categories the agent inquired; only you know which apply to your finances.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the transaction list reflect the exact date range you need to export?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a specific date range header, so verifying it ensures you are about to download the correct set of records.",
+        "whatTheAgentLoses": "You lose the chance to manually verify that the applied filter captured the exact time period you need before generating the file.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you verify the date fields are actually populated before clicking search?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed both date fields still holding the grey placeholder 'mm/dd/yyyy' when the search was initiated.",
+        "whatTheAgentLoses": "The delegator loses the assurance that the correct date range filter is applied to locate the specific file.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "How do you want the transactions sorted on the statement?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The activity page includes a 'Sort by' dropdown, allowing you to change the order of transactions (e.g., Date Descending) before generating the document.",
+        "whatTheAgentLoses": "The user loses the ability to dictate the chronological order of the transactions appearing on their downloaded statement.",
+        "kind": "decision",
+        "verify_form": "A sort-order control was available - check the order the statement will print in; the agent picked it for you.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you unmask your full account number before saving the page as a PDF?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen hides the account number as '...7821' by default but provides a 'See full account number >' link, which must be clicked if an underwriter requires the complete number on the document.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the generated document contains the complete identifying information required by third parties for verification.",
+        "kind": "decision",
+        "verify_form": "The account number prints masked by default - unmasking it is a privacy trade only you can make against what the requester demands.",
+        "speak": "never"
+       },
+       {
+        "question": "Have you selected the correct data products and are you ready to configure the export details?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows '3 of 71 selected', meaning you must confirm the right subset is chosen before clicking 'Next step' to set up the file export.",
+        "whatTheAgentLoses": "You lose the peace of mind of manually verifying that the exact data products you need are included in the final download batch.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What type of export should you choose and how do you initiate it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers different export types like Course or Quiz and a button to create the export.",
+        "whatTheAgentLoses": "The user loses the ability to specify whether they need a full course export or just a quiz export.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do the current export settings match the file you need to download?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The export dialog displays default parameters like a \"Payment\" voucher type and a specific date, which must be configured correctly before generating the PDF.",
+        "whatTheAgentLoses": "You lose the assurance that the downloaded file will contain the correct date range and document type rather than just the system defaults.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Set the format and packaging",
+      "questions": [
+       {
+        "question": "How do you want the export delivered, how often, and in what format?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows options to configure the export's destination, frequency, and file type before creating it.",
+        "whatTheAgentLoses": "The user loses the ability to specify their preferred delivery method, export frequency, and file format.",
+        "kind": "decision",
+        "verify_form": "The export offered delivery, frequency, and format knobs - check what the agent set; a link by email, a Drive drop, and a recurring export are very different outcomes.",
+        "speak": "never"
+       },
+       {
+        "question": "Where should you save the exported file?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed options like 'Specify Path' and 'Select from Drive' to configure the exact folder destination for the export.",
+        "whatTheAgentLoses": "The user loses the ability to organize the downloaded file into a specific custom folder, potentially making it harder to locate later.",
+        "kind": "decision",
+        "verify_form": "The export asked where to put the file - check the destination the agent set; the default is rarely where you keep these.",
+        "speak": "never"
+       },
+       {
+        "question": "What is the exact folder path where you want to save the downloaded files?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The File Explorer address bar displays a specific local path that must be copied to ensure the invoices are routed to the correct custom folder.",
+        "whatTheAgentLoses": "You lose the ability to organize the downloaded files into your preferred local directory if the agent defaults to the standard downloads folder.",
+        "kind": "decision",
+        "verify_form": "The destination path was typed in by hand - check it against the folder you actually use for these files.",
+        "speak": "never"
+       },
+       {
+        "question": "What should you name the exported file?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an export settings menu where the default file name can be changed to help organize your downloads.",
+        "whatTheAgentLoses": "The user loses the ability to apply their own naming conventions to downloaded files for easier personal organization.",
+        "kind": "decision",
+        "verify_form": "The export's default filename was replaceable - check what the agent named it; your own naming convention is not something it knows.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you include personal information and set a password for the downloaded document?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options to hide or display personal information and a popup prompt asking whether to set a document password.",
+        "whatTheAgentLoses": "Delegating this choice means losing control over the privacy and security settings of your downloaded personal document.",
+        "kind": "decision",
+        "verify_form": "The download offered privacy options - masking personal info and a document password; check what the agent chose, since the file carries your data either way.",
+        "speak": "never"
+       },
+       {
+        "question": "Are all the desired sections selected before you confirm the download?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a checklist of queried categories in the download popup, requiring confirmation that the right sections are included.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent selected all the necessary sections for their specific needs before downloading the file.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which file format should you use for the export?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu offers multiple options like PDF, Excel, and CSV, which determines how the downloaded data is formatted and viewed.",
+        "whatTheAgentLoses": "You lose the ability to choose the specific file format that best fits your personal record-keeping or accounting software needs.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Request and retrieve the built file",
+      "questions": [
+       {
+        "question": "Which email should you open to find the download link for your requested data?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The inbox shows multiple emails regarding the data request, but only the one titled 'Your Google data is ready to download' contains the actual link to retrieve the files.",
+        "whatTheAgentLoses": "You lose the ability to distinguish between a mere status notification and the actionable email containing your actual files.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you proceed when the email lacks direct download links and only offers a 'Manage Google Takeout request' button?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The email states the data is ready but only provides a management button instead of the expected direct download links.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the email contents and safely navigate the management portal to find your files.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Has the export process started successfully?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows an 'Export progress' section indicating that Google is creating a copy of the data, confirming the export was initiated.",
+        "whatTheAgentLoses": "The user loses the confirmation that the export process has started and the awareness that it might take a long time before the file is ready to download.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "The finished export shows no button labeled 'Download' - did you find the real trigger (e.g. Canvas's confusingly-named 'New Export' link) rather than stalling or re-running the export?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Download' button next to the export details, which must be clicked to retrieve the file.",
+        "whatTheAgentLoses": "The user loses the ability to manually trigger and ensure the correct data export is downloaded to their device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you wait for the export process to finish?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a progress bar and a message stating the export could take a while before showing the success message.",
+        "whatTheAgentLoses": "The user loses the certainty that the file was fully generated and ready to be downloaded.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Print the page to PDF",
+      "note": "5.4.1 then 5.4.2; 5.4.3 until 5.4.4 shows what the recipient requires; 5.4.4 before every save",
+      "children": [
+       {
+        "id": "5.4.1",
+        "label": "Open the print dialog",
+        "questions": [
+         {
+          "question": "Do you want to print the activity statement or download it?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Activity Summary' box displays both 'Print' and 'Download' buttons for the recent activity.",
+          "whatTheAgentLoses": "The agent might click 'Download' instead of 'Print', missing your preference for how to output the statement.",
+          "kind": "intent-check",
+          "speak": "never"
+         },
+         {
+          "question": "How do you print the page if you cannot find the print button?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows the browser's right-click context menu with a Print option, which serves as a fallback when the page lacks a dedicated button.",
+          "whatTheAgentLoses": "The user loses the ability to use built-in browser fallbacks like the context menu when standard page elements are missing.",
+          "kind": "state-check",
+          "speak": "never"
+         },
+         {
+          "question": "Does 'Print current view' capture the exact date range and filters you need, or should you use 'Download' instead?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The interface provides multiple action links above the transaction list, such as 'Download' and 'Print current view', requiring you to select the specific option that formats the current view for printing.",
+          "whatTheAgentLoses": "You lose the ability to confirm that the generated document accurately reflects your desired date range and transaction filters before it is created.",
+          "kind": "state-check",
+          "speak": "never"
+         },
+         {
+          "question": "How do you initiate the print process from this printer-friendly page?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays 'Close' and 'Print' buttons at the top right, requiring you to choose the correct action to proceed with saving the document.",
+          "whatTheAgentLoses": "You lose the peace of mind of knowing the agent clicked the print button instead of accidentally closing the view before saving the file.",
+          "kind": "state-check",
+          "speak": "never"
+         },
+         {
+          "question": "Should you select 'Print...' from the browser menu to save the page?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The Chrome browser menu displays a 'Print...' option that can be used to save the current page or receipt as a PDF.",
+          "whatTheAgentLoses": "You lose the ability to choose your preferred method for initiating the print or save dialog.",
+          "kind": "state-check",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "5.4.2",
+        "label": "Set the destination",
+        "questions": [
+         {
+          "question": "How do you want to save or share this statement?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The iOS share sheet provides multiple options like AirDrop, Mail, or saving locally, so you must choose the correct destination to store the file.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to choose exactly where and how your sensitive document is stored or shared.",
+          "kind": "decision",
+          "verify_form": "The share sheet offered many destinations - check where the agent sent the statement; where a sensitive document lands is your call.",
+          "speak": "never"
+         },
+         {
+          "question": "Have you selected 'Save as PDF' as the destination to download the file?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The print dialog shows 'Save as PDF' as the destination, which is required to save the document locally instead of sending it to a physical printer.",
+          "whatTheAgentLoses": "You lose the ability to verify the print settings and ensure the document is actually being saved to your device rather than printed.",
+          "kind": "intent-check",
+          "speak": "never"
+         },
+         {
+          "question": "Should you change the share format from 'Automatic' to 'PDF' before saving?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The iOS share sheet defaults to 'Automatic' format, which might save the statement as a web archive instead of the universally accepted PDF format required for official documents.",
+          "whatTheAgentLoses": "You lose the ability to guarantee the document is saved in the correct, universally readable PDF format rather than a proprietary or web-based format.",
+          "kind": "state-check",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "5.4.3",
+        "label": "Tune the print settings",
+        "questions": [
+         {
+          "question": "Are you ensuring the URL is included when generating the bank statement?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows the account details and the URL in the address bar, which underwriters require to be visible on the statement.",
+          "whatTheAgentLoses": "The user loses the assurance that specific compliance details, like the URL, are included in the final downloaded document.",
+          "kind": "intent-check",
+          "speak": "never"
+         },
+         {
+          "question": "Did you check the box to include headers and footers before saving?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The print settings menu includes a 'Headers and footers' checkbox that must be selected so the bank receives the required transaction details.",
+          "whatTheAgentLoses": "The user loses the ability to ensure the downloaded document meets the specific formatting requirements of the receiving institution.",
+          "kind": "state-check",
+          "speak": "if-wrong"
+         },
+         {
+          "question": "Are your basic print settings correct, and do you need to access advanced options?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The print dialog displays 'Save as PDF' with basic settings and a collapsed 'More settings' section that might need adjustment before saving.",
+          "whatTheAgentLoses": "The user loses the opportunity to verify or customize the PDF output settings before the file is generated.",
+          "kind": "state-check",
+          "speak": "never"
+         },
+         {
+          "question": "Do you want to adjust any print settings, like the page range or paper size, before saving this as a PDF?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays default print settings like 'Range Pages 1-2' and 'Paper Size Letter' that will dictate the format of the generated PDF.",
+          "whatTheAgentLoses": "The user loses the opportunity to customize the resulting PDF, such as extracting only specific pages or changing the layout.",
+          "kind": "decision",
+          "verify_form": "Print settings like page range and paper size were left at defaults - check them if you needed only part of the document or a specific layout.",
+          "speak": "never"
+         },
+         {
+          "question": "Should you change the margins from 'None' to 'Default' so the header and footer options appear?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The header and footer checkboxes are hidden from the print menu when the margins are currently set to 'None'.",
+          "whatTheAgentLoses": "The user loses the ability to guarantee that necessary headers and footers are included in the final downloaded PDF.",
+          "kind": "state-check",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "5.4.4",
+        "label": "Check the print preview",
+        "questions": [
+         {
+          "question": "Are you ready to finalize the PDF creation with these settings?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays 'Cancel' and 'Save' buttons in the print dialog, requiring a choice to either accept the current document formatting or abort to make changes.",
+          "whatTheAgentLoses": "You lose the ability to manually verify and adjust the document's layout settings before the final file is generated.",
+          "kind": "intent-check",
+          "speak": "never"
+         },
+         {
+          "question": "Should you proceed with printing the document?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a print dialog with 'Print' and 'Cancel' buttons, requiring a final confirmation to process the file.",
+          "whatTheAgentLoses": "The user loses the ability to verify the print settings or choose the exact save destination before the document is processed.",
+          "kind": "state-check",
+          "speak": "never"
+         },
+         {
+          "question": "Do you see the required URL at the bottom of the print preview before saving?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The print preview showed the document with the URL at the bottom, confirming the saved PDF will contain the necessary source information.",
+          "whatTheAgentLoses": "The user loses the assurance that the saved document includes the required URL for verification or record-keeping.",
+          "kind": "state-check",
+          "speak": "if-wrong"
+         },
+         {
+          "question": "Did the print preview fail to render the transaction data, leaving a blank or cut-off page?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Web pages with complex tables or dynamic content often fail to load properly in the browser's print spooler, meaning you must catch the rendering failure before saving the PDF.",
+          "whatTheAgentLoses": "The agent might blindly click save on a broken print preview, delivering a useless PDF because it didn't verify the rendering succeeded.",
+          "kind": "state-check",
+          "speak": "if-wrong"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Fill in the document generator",
+      "questions": [
+       {
+        "question": "Should you click the '+ Add' button to create a new receipt, or select an existing one from the table?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of four existing receipts alongside a red '+ Add' button, requiring a choice between retrieving a past record and generating a new one.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to create a new receipt or download an existing one from their account history.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What buyer details and payment method should I enter in the 'Sale information' form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires specific buyer information and a payment type to proceed with generating the document.",
+        "whatTheAgentLoses": "The user loses control over the accuracy of the buyer details and payment method recorded on the generated document.",
+        "kind": "decision",
+        "verify_form": "The agent filled buyer details and a payment method into the form - check every field; these become part of a registered document.",
+        "speak": "never"
+       },
+       {
+        "question": "What quantity should you enter for the sale item, and are the auto-calculated tax and total amounts correct?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the correct quantity ensures the system accurately calculates the taxable supply price and tax amounts for the invoice.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify that the correct number of items was billed and that the resulting tax calculations are accurate.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What additional information do you want to include in the non-fiscal data field?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a 'Non-Fiscal Data' field for adding notes that are important for the trader and client but won't be transmitted to the KRA.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to add personalized or specific internal notes to the document before it is generated.",
+        "kind": "decision",
+        "verify_form": "A free-text note field was offered - the agent decided what, if anything, to write; check the note since it lives on the document.",
+        "speak": "never"
+       },
+       {
+        "question": "Did you open the newly generated receipt (Invoice No. 7), rather than an older one from the list?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Sales Receipt list page shows the newly created receipt with Invoice number '7' as a clickable link.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the correct receipt was selected from the list before proceeding.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the receipt complete and ready to be registered?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed a 'Sales Receipt' modal asking to confirm registration after clicking the save button.",
+        "whatTheAgentLoses": "The user loses the opportunity to review or modify the receipt details before it is permanently recorded in the system.",
+        "kind": "decision",
+        "verify_form": "Registering the receipt makes it permanent in the tax system - check the agent stopped for your confirmation before committing it.",
+        "speak": "gate"
+       },
+       {
+        "question": "Are the details of the generated receipt correct before you download it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a modal with specific transaction details such as the item name, total price, and invoice number that should be verified.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify that the receipt contains the correct transaction details before saving the file.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Trigger the download",
+    "note": "6.1, then whichever of 6.2 to 6.4 the browser raises, in the order it raises them; 6.5 to completion - a silent failure here is what 7 exists to catch",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Identify the real download control",
+      "questions": [
+       {
+        "question": "Which link on this page provides the most current version of the form?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page contains multiple sections and instructions, so you must specifically locate the 'Current Revision' section to ensure you download the up-to-date Form W-2 PDF.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the selected file is the most current revision rather than an outdated or incorrect tax form.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which option should you select to access the lesson content?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple formats for the lecture, including an online view, an Acrobat document, and PowerPoint slides.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred format or method for viewing the lecture material.",
+        "kind": "decision",
+        "verify_form": "The lesson offered an online view, a document, and slides - check which format the agent took; which one suits how you study is yours to say.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the prominent 'Download' button actually an advertisement rather than the legitimate file link?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many document hosting sites feature deceptive ads that mimic download buttons, which redirect to unwanted software or third-party sites instead of providing the file.",
+        "whatTheAgentLoses": "The user loses the ability to visually distinguish between the true download link and deceptive ads, risking malware infection or spam redirects.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is the download button visually greyed out, indicating a missing prerequisite?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A button might be present in the DOM but visually disabled until a prerequisite, like scrolling through terms or checking a box, is met.",
+        "whatTheAgentLoses": "The user loses the visual cue that an additional step is required before the file can actually be accessed.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should you click 'Download' or 'View statement' to access the document?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly warns to \"click view statement not download\", indicating the download button might not provide the desired PDF format or behavior on this mobile interface.",
+        "whatTheAgentLoses": "The agent might click the obvious 'Download' button and fail to retrieve the correct PDF format, whereas the user knows the workaround is to view and then share it.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the visual icon next to the link indicate the correct file format, such as a PDF or Excel logo?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sites frequently rely on visual icons rather than text to communicate file types, which is instantly recognizable to a sighted watcher but hidden if just reading link text.",
+        "whatTheAgentLoses": "The user loses the immediate visual confirmation that the link points to a usable file format before triggering the download.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which button do you click to download the receipt for this paid invoice?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple actions like 'Duplicate Invoice' and 'Archive Invoice', so you need to select the correct one to get the receipt.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the correct document type (receipt vs invoice) was selected for download.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you select 'Download Invoice' from the Action menu, rather than an unintended option like Duplicate or Delete?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Action menu on the preview page lists several management options, so you must explicitly select 'Download Invoice' to save the file.",
+        "whatTheAgentLoses": "You lose the peace of mind of knowing the agent selected the download option rather than accidentally deleting or duplicating the invoice.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you dismiss the accidental context menu and click the direct 'Registration Certificate' link, rather than an unintended menu option?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Registration Certificate' link next to a PDF icon and an accidentally opened context menu, requiring you to dismiss the menu and click the link directly to start the download.",
+        "whatTheAgentLoses": "The user loses the assurance that the correct link was clicked to directly download the certificate rather than accidentally selecting an unintended context menu option.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which file from the table should you download?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The table under the 'Download' tab lists multiple options, so you must identify the correct file, such as the 1.42 Mb 'Source' file, to ensure you get the right document.",
+        "whatTheAgentLoses": "You lose the ability to manually verify the file name and size before committing to the download.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which context menu option do you select to download this directly loaded video?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser's context menu presents multiple actions for the media, requiring you to specifically choose 'Save Video As...' to trigger the download.",
+        "whatTheAgentLoses": "You lose the ability to manually navigate the context menu and ensure the correct save option is chosen for the file.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Clear the browser's download gates",
+      "questions": [
+       {
+        "question": "Do you want to proceed with downloading the file again?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a warning dialog asking if you want to download 'TaxPayer Registration Certificate.pdf' again, indicating a copy already exists on the device.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether they actually need a duplicate copy or if they should just locate the previously downloaded file.",
+        "kind": "decision",
+        "verify_form": "A copy of this file already exists - the agent chose to download again; check whether you wanted a duplicate or the existing copy.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you allow this website to download files to your device?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser displays a security prompt requiring explicit permission before saving files from this specific domain.",
+        "whatTheAgentLoses": "The user loses the opportunity to manually verify if they trust this specific website to save files to their computer.",
+        "kind": "decision",
+        "verify_form": "The browser asked whether this site may download files at all - the agent answered a trust question on your behalf; check which site was just allowed.",
+        "speak": "gate"
+       },
+       {
+        "question": "How should you handle the duplicate download prompt?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The download manager detected that this file already exists and requires a decision on whether to overwrite it, rename the new file, or resume the existing one.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to keep multiple versions of the file or just rely on the previously downloaded copy.",
+        "kind": "decision",
+        "verify_form": "The download manager found a duplicate - overwrite, rename, or resume was decided for you; check which version of the file you now have.",
+        "speak": "never"
+       },
+       {
+        "question": "Should I confirm the download details and start the download?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Download File Info' dialog displays the file size and save path, requiring confirmation to actually begin the download.",
+        "whatTheAgentLoses": "You lose the chance to verify the file size and save destination before the file is downloaded to your device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the browser's pop-up blocker intercept the download attempt?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sites that generate files dynamically often trigger them via pop-ups, which browsers block by default, requiring manual intervention to allow the download.",
+        "whatTheAgentLoses": "The user loses the ability to notice the silent failure and manually override the pop-up blocker to retrieve their file.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "How should I interact with the download manager to save and verify the file?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The download manager requires explicit confirmation to start the download and then offers an option to open the file once finished.",
+        "whatTheAgentLoses": "The user loses control over confirming the file's save location and the opportunity to immediately inspect its contents.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the browser's download UI show a security warning requiring you to explicitly click 'Keep'?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Browsers sometimes flag files with a visual warning in the downloads bar that pauses the download until manually approved.",
+        "whatTheAgentLoses": "The user loses the awareness that the file is held in a suspended state by the browser's security filter.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Choose the file type at the point of download",
+      "questions": [
+       {
+        "question": "Do you want to download the statement as a PDF or a CSV file?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The portal offers both a 'View statement' option (which leads to a PDF) and a direct 'Download CSV' button for each pay period.",
+        "whatTheAgentLoses": "The user loses the ability to choose a spreadsheet format (CSV) over a visual document format (PDF) for their financial records.",
+        "kind": "decision",
+        "verify_form": "Both a PDF and a CSV were on offer - check which the agent took; whether your records need a document or a spreadsheet is your call.",
+        "speak": "never"
+       },
+       {
+        "question": "Which type of document do you want to download for this order?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The download prompt requires choosing between a standard invoice and a warranty document that includes the IMEI number.",
+        "whatTheAgentLoses": "You lose the ability to specify whether you need the standard receipt or the detailed warranty information for your records.",
+        "kind": "decision",
+        "verify_form": "Two document types were offered - the plain invoice and the warranty slip with the IMEI; which one your records need is your call - check which was fetched.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you download these statements individually or use the checkboxes to batch export them into a single combined file?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface provides checkboxes next to each statement and a 'Download selected' button, giving you the choice between managing multiple individual files or one consolidated document.",
+        "whatTheAgentLoses": "You lose the ability to dictate how your records are organized, potentially ending up with a cluttered folder of individual files instead of one neat, combined PDF.",
+        "kind": "decision",
+        "verify_form": "Checkboxes allowed one combined download - check whether the agent fetched one merged file or many singles; how your records are organized is your preference.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Name and place the file",
+      "questions": [
+       {
+        "question": "Where do you want to save the PDF, and should I create a new folder for it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Files app save interface presents multiple existing folders like 'Downloads' and 'Documents', along with an option to create a new folder.",
+        "whatTheAgentLoses": "The user loses the ability to organize the downloaded file into a specific or newly created folder of their choice.",
+        "kind": "decision",
+        "verify_form": "The save dialog offered folders and a new-folder option - check where the agent put the file and whether that is where you will look for it.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to rename this PDF receipt before saving it, or keep the default generated filename?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system 'Save As' dialog defaults to a random string of characters that does not describe the receipt.",
+        "whatTheAgentLoses": "The user loses the ability to assign a recognizable name to the file, potentially making it harder to find later.",
+        "kind": "decision",
+        "verify_form": "The proposed filename is a meaningless string - the agent decided whether to keep it; check you can still find and recognize the file later.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you okay with saving the file as 'MyMountSinai - Test Details' in the 'Test' folder?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The save dialog proposes a specific file name and destination folder, which dictates how easily you will be able to find the document later.",
+        "whatTheAgentLoses": "You lose the chance to rename the file to something more meaningful or select a specific folder for better organization.",
+        "kind": "decision",
+        "verify_form": "The dialog proposed a name and folder - the agent accepted them; check the file landed where you expect under a name you recognize.",
+        "speak": "never"
+       },
+       {
+        "question": "Where and with what name should you save the video file?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Save As dialog prompts for a filename and location, showing a default alphanumeric name and the Desktop folder.",
+        "whatTheAgentLoses": "The user loses the ability to choose a recognizable filename and a specific folder location for the downloaded file.",
+        "kind": "decision",
+        "verify_form": "The save dialog asked for a name and location - check both; a token filename on the desktop is what you get by default.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Watch the download complete",
+      "questions": [
+       {
+        "question": "Did the file open directly in a new browser tab instead of triggering a local download?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Browsers often render PDFs natively instead of downloading them, requiring a secondary action (like clicking the browser's save icon) to actually store the file locally.",
+        "whatTheAgentLoses": "The user loses the awareness that the file is only temporarily cached in the browser rather than permanently saved to their device.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did a brief 'Preparing download' toast notification appear and vanish on the page?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many portals show a transient visual message while generating a file. A sighted user sees this and knows to wait, but it disappears too quickly for a later check.",
+        "whatTheAgentLoses": "The user loses the immediate, transient confirmation that the site is actively processing the request, potentially leading to confusion if the browser download doesn't start instantly.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How is the download progressing, and what should you do while it finishes?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Chrome download bar shows the file is only partially downloaded with 35 seconds remaining, meaning you must decide whether to wait or proactively open the destination folder.",
+        "whatTheAgentLoses": "You lose the ability to monitor the real-time download speed and proactively prepare the destination folder before the file finishes arriving.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the download complete successfully, or did the browser report a network error that requires you to resume it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Large files or unstable connections can cause a download to fail midway, meaning you must check the download manager for an error state and manually trigger a retry.",
+        "whatTheAgentLoses": "The agent might see that the download started and assume it will finish, missing the silent network failure that requires intervention.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Verify the download",
+    "note": "7.1 then 7.2; 7.3 when the file is an archive; 7.4 where the file's real destination is elsewhere; 7.5 last on sensitive accounts",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Find the file on the device",
+      "questions": [
+       {
+        "question": "How do you locate the downloaded archive on your local file system?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Clicking the folder icon next to the most recent 354 KB zip file ensures you can access the actual file on your computer rather than just seeing its status in the browser.",
+        "whatTheAgentLoses": "You lose the immediate, visual confirmation of exactly which local folder the file was saved to.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Has the file fully finished downloading into your local Downloads folder?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The file explorer currently shows a '.crdownload' file, indicating that the download is still in progress and the file is not yet ready to use.",
+        "whatTheAgentLoses": "You lose the ability to visually confirm in your local file system that the temporary download file has successfully converted into the final, usable document.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the browser's download surface show the expected file arrived - the right name and a plausible size - before you rely on it?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows a download status bar at the bottom, indicating the file has arrived.",
+        "whatTheAgentLoses": "The user loses the ability to confirm the correct file was downloaded and is accessible.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the correct file shown as successfully downloaded in the browser's downloads menu?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking the Safari downloads menu confirms that the specific file, such as the 21 KB Notice of Assessment PDF, actually arrived on your device.",
+        "whatTheAgentLoses": "Delegating this step means you lose the immediate visual confirmation that the exact file you need was successfully saved to your local machine.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Before leaving the site, does the browser show the download actually triggered - an entry in the downloads UI rather than just the page you were on?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays the article abstract page, requiring you to confirm the download triggered successfully before returning to the desktop.",
+        "whatTheAgentLoses": "The user loses the opportunity to manually verify the file's arrival in their local environment before the browser session ends.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "If the file isn't in your standard downloads folder, did the browser silently save it to the last used directory instead?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Browsers often default to the last directory you saved a file to, so if it's missing from your expected folder, you must check the browser's download manager to find its actual location.",
+        "whatTheAgentLoses": "The agent might fail the task assuming the download didn't happen, rather than using the browser's history to locate the misrouted file.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Open and inspect the file",
+      "questions": [
+       {
+        "question": "Do you approve the final payment amount, including the added processing fee?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The payment portal adds a ₦4,500.00 processing fee to the original ₦300,000.00 invoice total, changing the final amount required to proceed.",
+        "whatTheAgentLoses": "You lose the opportunity to review and authorize unexpected surcharges before your funds are committed.",
+        "kind": "decision",
+        "verify_form": "A processing fee was added on top of the invoice total - the agent was at a payment step; check no money moved without you approving the new amount.",
+        "speak": "gate"
+       },
+       {
+        "question": "Did you open the downloaded file to verify its contents are correct?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Opening the 6-page PDF statement in the Files app confirms that the correct file was downloaded and saved properly.",
+        "whatTheAgentLoses": "The user loses the direct confirmation that the downloaded file contains the expected information and is not corrupted or incorrect.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Does the downloaded file match the specific form you set out to find?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The title screen promises to show how to get a W2 tax form, which matches the blank 2021 W-2 Wage and Tax Statement PDF accessed later.",
+        "whatTheAgentLoses": "If the agent downloads the wrong file, you will not have the correct document for your administrative needs.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you scroll past the initial notice to verify the actual tax form loaded?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The first page only displayed an 'Attention' notice, making it necessary to check the second page to confirm the actual Form 1098 was present.",
+        "whatTheAgentLoses": "You lose the assurance that the correct document was retrieved rather than just a generic cover sheet or an incomplete file.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which application should you use to open the downloaded file?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The system dialog presents multiple personal and work applications like Drive PDF Viewer and Mi PDF Viewer to open the document.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred PDF viewer and decide whether to make it the default application.",
+        "kind": "decision",
+        "verify_form": "An open-with chooser appeared - check which app the agent picked and whether it set a default; that choice sticks to future files.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you see all the selected invoices combined in the downloaded PDF?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Scrolling through the document revealed multiple distinct invoices like 'Invoice No. 331' and 'Invoice No. 338', confirming the multi-voucher export succeeded.",
+        "whatTheAgentLoses": "The user loses the visual confirmation that the downloaded file actually contains all the requested invoices rather than just a single one.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Has the file finished downloading, and how do you open it?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The browser's download bar displays 'onlineStatement.pdf' as completed, confirming the file is ready to be viewed.",
+        "whatTheAgentLoses": "The user loses the opportunity to immediately open and visually verify that the downloaded file contains the correct information.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the saved PDF display the required account balance, account number, and source URL?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Confirming the document shows the $1,600.00 balance, account ending in *4436, and the BMO Harris URL ensures it serves as valid proof even without a name.",
+        "whatTheAgentLoses": "You lose the peace of mind of manually verifying that the downloaded file contains the exact financial and source details required for your records.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the generated PDF receipt contain all the correct information?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays the contents of 'SalesReceipt-4.pdf', including specific billing details, item descriptions, and tax amounts that must be checked for accuracy.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify that the downloaded receipt contains the correct invoice details and amounts.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the presentation displaying correctly and what are the prerequisites?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows the opened CS101 PowerPoint presentation, confirming the file was successfully downloaded and can be viewed.",
+        "whatTheAgentLoses": "The user loses the direct confirmation that the file opens properly and the audio instructions regarding required software.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the downloaded PDF contain the correct statement details?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Reviewing the ANZ logo, statement dates, and transaction totals confirms that the correct document was successfully downloaded.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the downloaded file contains the correct financial records.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the downloaded file's extension actually a document format like PDF, rather than an executable or script?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Malicious sites often serve executable files disguised as documents, and checking the file extension before opening it is a critical security step.",
+        "whatTheAgentLoses": "The user loses the critical security check of verifying the file type, risking executing malware on their machine.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the system silently fail by generating a blank PDF instead of your populated tax form?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Opening the generated 1098-T PDF reveals a completely blank document, which is the system's silent failure mode when your Social Security Number is missing from your profile.",
+        "whatTheAgentLoses": "You lose the visual realization that the downloaded file is empty, which is the critical trigger to realize you must go update your SSN before the form can be generated properly.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the downloaded document clearly indicate that the invoice has been paid?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Opening the PDF reveals a large green 'PAID' watermark across the center, which serves as the official visual proof of payment for the client.",
+        "whatTheAgentLoses": "You lose the visual confirmation that the downloaded file is actually a finalized receipt rather than just a copy of the original unpaid invoice.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the browser download an HTML login page instead of the actual PDF?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If your session expired or you lack access rights, the site might silently redirect the download link to a login page, resulting in a downloaded file that is just HTML rather than your document.",
+        "whatTheAgentLoses": "The agent might see a successful file download and stop, handing over a useless login page instead of the requested academic paper or bank statement.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the downloaded file display the correct application icon in the file explorer?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A file saved as a PDF might actually be an HTML login page if the session expired, which is often immediately obvious because the OS assigns a generic or browser icon instead of the PDF reader icon.",
+        "whatTheAgentLoses": "The user loses the quick visual heuristic that the downloaded file is actually the expected document format rather than an error page.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the file size of the downloaded document indicate a successful export, or is it suspiciously small?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The browser's download manager displays the final file size, and a very small file (like 1 KB) often means the site exported an error page or an empty archive instead of the actual data.",
+        "whatTheAgentLoses": "The agent might blindly hand over a corrupted or empty file, leaving you without the actual document you requested.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Extract the archive",
+      "questions": [
+       {
+        "question": "How should you extract the downloaded file to access its contents?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The context menu offers multiple extraction options like WinRAR, and extracting to a dedicated folder keeps the downloaded contents organized.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred extraction utility and folder structure for organizing the downloaded files.",
+        "kind": "decision",
+        "verify_form": "The archive needed an extractor and a destination - check what unpacked it and where; a scattered extraction is hard to clean up.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the extracted archive contain all the expected product folders and files?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Opening folders like 'Fit' and 'Gemini' confirms that the downloaded archive successfully captured the specific data you requested.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your specific personal data, like your Fit activities or Gemini history, was actually included in the export.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Store or forward the file",
+      "questions": [
+       {
+        "question": "Where should you move the downloaded file for safekeeping?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows a file being copied from the Downloads folder to a specific folder on an external drive, indicating a need to store the file in a designated backup location.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the file is organized into their preferred personal storage hierarchy rather than just left in the default downloads folder.",
+        "kind": "decision",
+        "verify_form": "The file sits in Downloads - the agent decided whether to move it; check it reached the folder or drive where you actually keep these.",
+        "speak": "never"
+       },
+       {
+        "question": "Who are you sending this email to, and is the correct PDF attached?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an email draft with an Amazon order PDF attached, so you must ensure the recipient address is correct before sending sensitive purchase information.",
+        "whatTheAgentLoses": "You lose the chance to personally confirm the recipient's email address, risking the accidental disclosure of your private order receipt to the wrong person.",
+        "kind": "decision",
+        "verify_form": "The document is attached to an outgoing email - check the recipient address yourself before anything sends; a receipt to the wrong person cannot be recalled.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Close the session",
+      "questions": [
+       {
+        "question": "How do you confirm the logout prompt to securely end your session?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays a confirmation dialog asking if you want to log out, which requires clicking the confirm button to actually end the session.",
+        "whatTheAgentLoses": "The user loses the assurance that their account was securely closed after handling sensitive downloaded documents.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

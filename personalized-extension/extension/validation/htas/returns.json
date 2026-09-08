@@ -491,7 +491,7 @@
         "whatTheAgentLoses": "You lose the awareness that you are authorizing a conditional future charge on your credit card, which becomes a real financial penalty if you forget to drop off the package.",
         "speak": "on-event",
         "check": "Does the page state a charge to a payment method if the item is not returned within a number of days, and which card?",
-        "say_example": "This one charges your <card ending 1234> the full <price> if they don't get the item by <date>. OK with that? Or say refund only."
+        "say_example": "This one charges your <card ending [account number]> the full <price> if they don't get the item by <date>. OK with that? Or say refund only."
        }
       ]
      },
@@ -525,7 +525,7 @@
         "whatTheAgentLoses": "Delegating this step means the agent might choose the default store credit option for speed, locking your money into the retailer's ecosystem instead of returning it to your bank account.",
         "speak": "gate",
         "check": "Which refund destinations does the page list, which one is preselected, and what timing does each state?",
-        "say_example": "The refund can go to your <site> balance in a few hours. Or back to your <card ending 1234> in <5 to 7> days. Which one?"
+        "say_example": "The refund can go to your <site> balance in a few hours. Or back to your <card ending [account number]> in <5 to 7> days. Which one?"
        },
        {
         "question": "Does the 'Continue shopping' button carry the return forward, or leave it and go back to the store?",

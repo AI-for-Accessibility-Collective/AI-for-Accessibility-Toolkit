@@ -741,7 +741,7 @@
         "whatTheAgentLoses": "The user loses the chance to catch and update an old address before their tax return is filed with incorrect contact information.",
         "speak": "if-wrong",
         "check": "Does the pre-filled mailing address match the person's current address?",
-        "say_example": "The site pre-filled an old address, <450 Sarasota Terrace>. You're at <current address>. Correcting it - that's where the IRS sends letters and checks."
+        "say_example": "The site pre-filled an old address, <[address]>. You're at <current address>. Correcting it - that's where the IRS sends letters and checks."
        },
        {
         "question": "What is your current mailing address and state residency status?",
@@ -963,7 +963,7 @@
         "whatTheAgentLoses": "You lose control over accurately reporting your dependent's living situation and citizenship status, which could impact your final tax outcome.",
         "speak": "never",
         "check": "Which dependent fields and situations does the page require?",
-        "say_example": "Entered <Quinn>'s details from your info - relationship, birth date, lived with you all year."
+        "say_example": "Entered <[name]>'s details from your info - relationship, birth date, lived with you all year."
        },
        {
         "question": "The form was rejected for a missing field - do you fill it in yourself?",
@@ -985,7 +985,7 @@
         "whatTheAgentLoses": "Letting an agent choose the reason for a missing SSN could result in an inaccurate legal declaration that delays or complicates your tax filing.",
         "speak": "on-event",
         "check": "Which reasons does the page list for a missing dependent SSN?",
-        "say_example": "The form wants a reason <Quinn>'s Social Security Number is blank. If the card just isn't handy, tell me the number and I'll fill it - a return without it loses the credit."
+        "say_example": "The form wants a reason <[name]>'s Social Security Number is blank. If the card just isn't handy, tell me the number and I'll fill it - a return without it loses the credit."
        },
        {
         "question": "Have you added all of your eligible household members?",
@@ -1018,7 +1018,7 @@
         "whatTheAgentLoses": "You lose the chance to accurately reflect your legal custody arrangement, risking a rejected return or IRS audit if the other parent also claims the child.",
         "speak": "on-event",
         "check": "What does the page ask about a custody agreement and the other parent?",
-        "say_example": "The form asks if a custody agreement lets <the other parent> claim <Quinn>. That decides who gets the child credit. How is it set up?"
+        "say_example": "The form asks if a custody agreement lets <the other parent> claim <[name]>. That decides who gets the child credit. How is it set up?"
        },
        {
         "question": "What type of dependent are you adding?",
@@ -1207,7 +1207,7 @@
         "whatTheAgentLoses": "You lose the opportunity to verify or update the specific phone number used to secure and recover your tax account.",
         "speak": "if-wrong",
         "check": "Does the recovery phone number shown match the person's real number?",
-        "say_example": "The recovery number on file ends <1234>, but yours ends <5678>. Fixing it - next year's sign-in depends on it."
+        "say_example": "The recovery number on file ends <[account number]>, but yours ends <5678>. Fixing it - next year's sign-in depends on it."
        }
       ]
      },
@@ -2019,11 +2019,11 @@
           "cluster": "select",
           "moment": "Now",
           "moneyMoving": false,
-          "why": "You must verify the extracted name, Anthony Fontana, and assign the $156,709.08 W-2 to the correct person on the return.",
+          "why": "You must verify the extracted name, [name], and assign the $156,709.08 W-2 to the correct person on the return.",
           "whatTheAgentLoses": "You lose the chance to verify that the automated system correctly assigned your specific income documents to the right individual.",
           "speak": "never",
           "check": "Which name does the imported W-2 show, and which taxpayers can it be assigned to?",
-          "say_example": "Assigned the imported W-2 to <Anthony> - the name on the form matches."
+          "say_example": "Assigned the imported W-2 to <name> - the name on the form matches."
          },
          {
           "question": "Does every box entered match the same box on the W-2?",
@@ -3092,7 +3092,7 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "The screen shows a $500.00 payment to ABC optical for Zoey S's eyeglass frames, which must be verified to ensure accurate medical deductions.",
+        "why": "The screen shows a $500.00 payment to ABC optical for [name]'s eyeglass frames, which must be verified to ensure accurate medical deductions.",
         "whatTheAgentLoses": "The user loses the chance to personally verify that the pre-filled medical expense matches their actual receipt.",
         "speak": "if-wrong",
         "check": "Do the medical expense details on screen match the receipt?",
@@ -3196,7 +3196,7 @@
         "whatTheAgentLoses": "You lose the chance to review the software's recommendation and confirm which spouse's income threshold yields the highest medical expense credit.",
         "speak": "always",
         "check": "Which spouse does the page recommend claiming the expenses, and why?",
-        "say_example": "The site puts the medical claim on <Zoey> - the lower income makes the credit bigger. Going with that."
+        "say_example": "The site puts the medical claim on <[name]> - the lower income makes the credit bigger. Going with that."
        }
       ]
      },
@@ -3820,7 +3820,7 @@
         "whatTheAgentLoses": "You lose the opportunity to decide whether to correct the dependent's validation error immediately or proceed with placeholder data.",
         "speak": "on-event",
         "check": "What does the accuracy report say about the dependent's SSN?",
-        "say_example": "The check says <Quinn>'s Social Security Number isn't valid. Filing with it gets the return rejected. Can you read me the number straight off the card?"
+        "say_example": "The check says <[name]>'s Social Security Number isn't valid. Filing with it gets the return rejected. Can you read me the number straight off the card?"
        },
        {
         "question": "Do you want to review the flagged underpayment penalty before finalizing your return?",
@@ -3960,7 +3960,7 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "Verifying that the $6,551 combined refund on the medical expense page matches the sum of Zoey and Vince's individual refunds from the donations page ensures the software is calculating your total correctly.",
+        "why": "Verifying that the $6,551 combined refund on the medical expense page matches the sum of [name] and [name]'s individual refunds from the donations page ensures the software is calculating your total correctly.",
         "whatTheAgentLoses": "Delegating this means you lose the opportunity to manually verify the software's math across different deduction screens to ensure your final refund is accurate.",
         "speak": "if-wrong",
         "check": "Does the combined refund equal the sum of the individual refunds shown earlier?",
@@ -4549,7 +4549,7 @@
         "whatTheAgentLoses": "Delegating this step requires sharing a time-sensitive, highly secure government verification code with a third party.",
         "speak": "gate",
         "check": "Where does the page say the one-time password was sent?",
-        "say_example": "A code just went to the phone ending <1234>, from the tax office. That code signs the return. Read it to me when it lands."
+        "say_example": "A code just went to the phone ending <[account number]>, from the tax office. That code signs the return. Read it to me when it lands."
        }
       ]
      },
@@ -4616,7 +4616,7 @@
         "whatTheAgentLoses": "The agent might blindly remove the dependent to clear the error, costing you thousands in child tax credits, or get stuck in an unresolvable e-file rejection loop.",
         "speak": "on-event",
         "check": "What does the page say about the dependent's SSN and another return?",
-        "say_example": "The IRS says someone already claimed <Quinn> on another return. E-file will bounce. We can drop <Quinn> and lose the credit, or file on paper and dispute it. Your call."
+        "say_example": "The IRS says someone already claimed <[name]> on another return. E-file will bounce. We can drop <[name]> and lose the credit, or file on paper and dispute it. Your call."
        },
        {
         "question": "Do you want to temporarily change the filing method to 'File by mail' to preview the full tax return PDF before submitting?",

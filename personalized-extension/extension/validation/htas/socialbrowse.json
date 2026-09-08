@@ -175,11 +175,11 @@
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "A close inspection of the screen at 0:10 reveals the handle is actually @Akshay, contradicting the assumption that it was @AkshayWeb.",
+        "why": "A close inspection of the screen at 0:10 reveals the handle is actually @[handle], contradicting the assumption that it was @[handle].",
         "whatTheAgentLoses": "The user loses the assurance that the agent is tracking the correct, authentic account rather than getting confused by similar handles.",
         "speak": "if-wrong",
         "check": "Does the handle in the search field match the handle shown on the target's profile page, character for character?",
-        "say_example": "The search says <@AkshayWeb>, but the profile is <@Akshay>. Those are different accounts. Fixing it."
+        "say_example": "The search says <@[handle]>, but the profile is <@[handle]>. Those are different accounts. Fixing it."
        },
        {
         "question": "Which exact handle should you copy from this profile?",

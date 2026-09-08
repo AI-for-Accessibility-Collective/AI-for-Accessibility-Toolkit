@@ -36,7 +36,7 @@
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The top right header showing the username \"HUGE COFFEE FAN\" and a \"LOGOUT\" link confirms you meet the prerequisite to access your past orders.",
+        "why": "The top right header showing the username \"BARGAIN HUNTER99\" and a \"LOGOUT\" link confirms you meet the prerequisite to access your past orders.",
         "whatTheAgentLoses": "You lose the ability to verify that the agent is operating under your specific profile before it accesses your personal order history.",
         "speak": "if-wrong",
         "check": "Does the header show a signed-in account name or a Logout link, and what name does it show?",
@@ -650,7 +650,7 @@
         "whatTheAgentLoses": "You lose the chance to switch the charge to a different card, potentially causing budgeting issues or a declined transaction if the default card is no longer appropriate.",
         "speak": "never",
         "check": "Which payment method does the checkout show as selected, by type and last digits?",
-        "say_example": "Kept the saved <Mastercard ending 4821>"
+        "say_example": "Kept the saved <card ending [account number]>"
        },
        {
         "question": "Is the card from last time still good, or has it expired?",
@@ -661,7 +661,7 @@
         "whatTheAgentLoses": "The user loses the ability to proactively update their payment details, resulting in a declined transaction and a delayed order.",
         "speak": "on-event",
         "check": "Does the page show the selected card as expired or declined, or an expiry date in the past?",
-        "say_example": "The card on file, ending <4821>, expired <March>. The page won't take it. Which card should I use?"
+        "say_example": "The card on file, ending <[account number]>, expired <March>. The page won't take it. Which card should I use?"
        }
       ]
      },
@@ -678,7 +678,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to apply a last-minute discount code or choose to round up your total for charity.",
         "speak": "gate",
         "check": "What does the summary list: items, quantities, subtotal, fees, tip, total, payment method, and pickup or delivery time?",
-        "say_example": "Ready to place it. <28> items, <89.00> total on your <Mastercard ending 4821>. Pickup <Saturday 10 to 11> at <store>. <Two coffee>, <no brush>, as you asked. Press to order, or say change."
+        "say_example": "Ready to place it. <28> items, <89.00> total on your <card ending [account number]>. Pickup <Saturday 10 to 11> at <store>. <Two coffee>, <no brush>, as you asked. Press to order, or say change."
        },
        {
         "question": "Are there fees on this order beyond the items?",
@@ -728,7 +728,7 @@
         "whatTheAgentLoses": "You lose the certainty that the modified order was successfully submitted and processed by the app.",
         "speak": "always",
         "check": "Does the page show an order confirmation with an order number, and what total and time does it list?",
-        "say_example": "Order placed. Number <1234>, <89.00>, pickup <Saturday 10 to 11>."
+        "say_example": "Order placed. Number <[account number]>, <89.00>, pickup <Saturday 10 to 11>."
        },
        {
         "question": "Do the items on the confirmation match the cart changes you asked for?",

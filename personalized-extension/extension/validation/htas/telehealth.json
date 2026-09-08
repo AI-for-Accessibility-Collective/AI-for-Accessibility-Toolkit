@@ -1,0 +1,2590 @@
+{
+ "task": "have or set up a telehealth visit (Teladoc, Amwell, MDLive, Sesame, a health system's video-visit flow): sign in, request or schedule a visit, work through the intake questions, pass the camera/mic tech check, and join the video visit or reach the visit-confirmed or waiting-room state; complete when the in-visit screen or the confirmed-visit state is shown. Surface pinned: the telehealth product's flow — not telehealth-industry commentary, not in-person clinic vlogs. (Booking an in-person appointment belongs to doctor; records belong to patientportal.)",
+ "tree": {
+  "id": "0",
+  "label": "Have or set up a telehealth visit",
+  "note": "1 to 5 book the visit; 6 to 9 attend it; a visit booked elsewhere starts at 6; 6 runs any time before the appointment, and 6.6 with 6.7 usually fires mid-8 as the meeting app first launches; 7 before 8 where the venue gates the visit on check-in; 8 at the appointed time; 9 once the provider arrives",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the care service",
+    "note": "1.1 for a fresh booking; 1.2 when the account already exists; 1.3 where a guest run is allowed; 1.4 when several patients share the account; 1.5 before starting anything",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the booking page",
+      "questions": [
+       {
+        "question": "Is the booking flow actually entered from the service's own start control?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage features a prominent 'GET STARTED' button alongside introductory pricing, serving as the primary entry point to initiate a new appointment.",
+        "whatTheAgentLoses": "The user misses the opportunity to review the platform's advertised starting prices and marketing claims before starting the booking flow.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Sign in to the account",
+      "questions": [
+       {
+        "question": "Are these the correct login credentials for your OSF MyChart account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a pre-filled username and password, which must be accurate to successfully access your patient portal.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent is logging into your specific health account rather than an incorrect one.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is the sign-in completed on the account this visit belongs to?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a login form requiring a username and password to proceed into the patient portal.",
+        "whatTheAgentLoses": "The user must share their personal login credentials, giving the agent full access to their health account.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What credentials are required, and where do I enter them?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a MyChart login form for The Baton Rouge Clinic requiring a username and password to proceed.",
+        "whatTheAgentLoses": "The user loses the security of keeping their personal login credentials private if they delegate this authentication step to an agent.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the system indicate an account already exists for this email, requiring a password reset instead of a new registration?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Users often forget they have an existing account with a telehealth platform or health system, and attempting to register again can result in a locked state or split medical records.",
+        "whatTheAgentLoses": "The agent might get stuck in an error loop or use an alternate email address, which splits your medical history across multiple disconnected patient profiles.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Decline the sign-in offer",
+      "questions": [
+       {
+        "question": "Should I enter my email to get a 20% discount, log in, or dismiss the pop-up?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented a pop-up offering a discount on the first appointment in exchange for an email address, which affects both the cost of the visit and account registration.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to trade their email address for a promotional discount or dismiss the pop-up to continue browsing.",
+        "kind": "decision",
+        "verify_form": "The agent hit the discount pop-up - check whether it handed over your email for the 20 percent offer, signed in, or dismissed it; if it typed your email, you were signed up for marketing you never asked for.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Pick the patient profile",
+      "questions": [
+       {
+        "question": "Which patient profile are you scheduling the appointment for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard asks who needs help today and displays multiple family member profiles alongside an option to add a dependent.",
+        "whatTheAgentLoses": "Delegating this step means the agent might select the wrong family member's profile for the medical consultation.",
+        "kind": "intent-check",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Read the account warnings",
+      "questions": [
+       {
+        "question": "Do you want to review the COVID-19 resources or proceed directly to login?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a COVID-19 alert with informational links for specific medical centers before allowing access to the login page.",
+        "whatTheAgentLoses": "You lose the opportunity to read potentially important COVID-19 updates and resources specific to your medical center.",
+        "kind": "decision",
+        "verify_form": "The agent went straight past the service's information banners to the login - check nothing it skipped applied to your situation; it decided for you that none of it mattered.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you address the unconfirmed email warning before updating your health profile?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard displays a red banner stating your email is unconfirmed and a tooltip indicating an account is not yet active.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to verify your contact information before entering personal health details.",
+        "kind": "decision",
+        "verify_form": "The agent skipped the account's unconfirmed-email warning - check whether reminders and results can actually reach you; it decided the warning could wait.",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Choose the visit kind",
+    "note": "2.1 where the venue asks; then 2.2; 2.3 where the venue prices insurance against self-pay",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Pick the care path",
+      "questions": [
+       {
+        "question": "Which option best describes your need for care today?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks whether you need urgent care, ongoing care, or are just browsing to route you to the correct scheduling path.",
+        "whatTheAgentLoses": "You lose the ability to personally classify the urgency and nature of your medical needs.",
+        "kind": "decision",
+        "verify_form": "The agent picked a care path - check whether it read your need as urgent or ongoing, because everything offered after follows from that reading of your situation.",
+        "speak": "gate"
+       },
+       {
+        "question": "Which type of service do you want to request?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose between a Medical Visit and a Therapist, both listed at $0, to ensure you are routed to the appropriate provider.",
+        "whatTheAgentLoses": "Delegating this choice means an agent might select the wrong type of care, such as booking a therapist when you actually need a general medical visit.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Pick the specific service",
+      "questions": [
+       {
+        "question": "Which category of care and specific provider do you want to choose?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists different providers with varying credentials, patient ratings, and out-of-pocket prices for you to evaluate.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally balance a provider's ratings and credentials against their specific cost.",
+        "kind": "decision",
+        "verify_form": "The agent chose a care category and a provider - check who it booked and for what kind of visit; a plausible-looking mismatch here books a real clinician's time for the wrong problem.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Choose insurance or self-pay",
+      "questions": [
+       {
+        "question": "Which appointment duration and payment method do you want to select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers various appointment lengths ranging from 15 to 60 minutes, split between out-of-pocket cash prices and insurance-covered options.",
+        "whatTheAgentLoses": "Letting an agent choose could result in paying out-of-pocket for a visit instead of using your insurance, or booking a longer session than you actually need.",
+        "kind": "decision",
+        "verify_form": "The agent picked an appointment length and a rate - check whether it chose the insurance price or a cash rate, and how long a session; both change what this costs you.",
+        "speak": "gate"
+       },
+       {
+        "question": "Did the platform flag your insurance as out-of-network or inactive, automatically switching your payment to a high self-pay rate?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If insurance verification fails in the background, the system often silently defaults to charging the full cash price to the backup credit card.",
+        "whatTheAgentLoses": "The user might be charged a massive out-of-pocket fee because the agent ignored the insurance rejection and proceeded with the booking.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you need to contact the clinic to verify your insurance is accepted before booking?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The scheduling instructions explicitly prompt you to contact the clinic to ask if your insurance is accepted before setting up the telehealth appointment.",
+        "whatTheAgentLoses": "The user loses the prompt to verify their insurance coverage directly with the clinic, potentially resulting in an unexpected out-of-network bill for the visit.",
+        "kind": "decision",
+        "verify_form": "The agent booked without verifying your coverage with the clinic - check whether the plan was confirmed anywhere; if not, the visit may bill at a rate nobody agreed to.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to bill your insurance for this visit or pay out-of-pocket?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The eCheck-In flow explicitly asks if you want to use the insurance on file to pay for the appointment, giving you the option to self-pay if you prefer not to submit a claim.",
+        "whatTheAgentLoses": "Delegating this means the agent might automatically bill your insurance when you would have preferred to pay cash for privacy or deductible reasons.",
+        "kind": "decision",
+        "verify_form": "The agent chose how the visit gets paid - check whether insurance or out-of-pocket was selected; the wrong one is a bill or a claim you did not intend.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Pick the provider and time",
+    "note": "3.1 to narrow the list; 3.2 to weigh who is left; 3.3 where a profile needs vetting; 3.4 decides now against later; then 3.5 and 3.6; 3.7 when nothing offered fits",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Filter the provider list",
+      "questions": [
+       {
+        "question": "Which filters do you want to apply to narrow down the list of available doctors?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 144 available providers with filtering options for availability, ratings, credentials, gender, and language.",
+        "whatTheAgentLoses": "The user loses the ability to personally prioritize specific provider characteristics like gender, language, or ratings when selecting a doctor.",
+        "kind": "decision",
+        "verify_form": "The agent filtered the provider list - check which availability and rating filters it set; those filters silently removed providers you never saw.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the provider search page currently toggled to show 'Self-Pay' prices or 'Insurance-Covered' prices?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms often use a global visual toggle at the top of the search page that drastically changes the displayed out-of-pocket costs for all providers listed below it.",
+        "whatTheAgentLoses": "The user cannot visually verify which global pricing context is currently active, risking the agent selecting a provider based on a misunderstood or entirely incorrect price.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Compare the providers",
+      "questions": [
+       {
+        "question": "Is the specific doctor you want to select currently available, or are they marked as being with another patient?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The provider list displays real-time statuses, and selecting a doctor who is 'Currently with patient' could result in a significant delay before your visit begins.",
+        "whatTheAgentLoses": "An agent might blindly select a preferred doctor without noticing their busy status, causing you to wait indefinitely instead of choosing an available alternative.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Vet the provider profile",
+      "questions": [
+       {
+        "question": "Do this provider's credentials and patient reviews give you enough confidence to book them?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the provider's specialties, languages, and specific review scores like bedside manner helps ensure they are a good fit for your medical needs.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally evaluate the provider's specific ratings and credentials before committing to an appointment.",
+        "kind": "decision",
+        "verify_form": "The agent moved on from the provider's profile - check the credentials and reviews it skimmed past; it judged this stranger good enough to treat you.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Choose now or a scheduled time",
+      "questions": [
+       {
+        "question": "Do you want to see the first available provider or schedule a specific appointment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers the choice to either see the first available provider immediately or schedule a visit for a specific time and provider.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select an immediate visit with a random provider when you would have preferred to schedule a specific doctor.",
+        "kind": "decision",
+        "verify_form": "The agent chose between the first available provider and scheduling ahead - check which it did; one trades your choice of provider for speed.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Pick the date"
+     },
+     {
+      "id": "3.6",
+      "label": "Pick the slot and mode",
+      "questions": [
+       {
+        "question": "Which provider and time slot should you select for your consultation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented multiple providers with different prices and available appointment times.",
+        "whatTheAgentLoses": "The user loses the ability to choose a provider and appointment time that best fits their schedule and budget.",
+        "kind": "decision",
+        "verify_form": "The agent committed to one provider at one time - check both halves of that line; it spent your appointment on its own reading of cheap and soon.",
+        "speak": "gate"
+       },
+       {
+        "question": "Which time slot should I select for the appointment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple available time slots for the selected date, requiring you to choose one that fits your schedule.",
+        "whatTheAgentLoses": "You lose the ability to ensure the chosen appointment time aligns perfectly with your personal availability.",
+        "kind": "decision",
+        "verify_form": "The agent picked a slot - check the day and hour against your calendar; you are the one who must be free then.",
+        "speak": "never"
+       },
+       {
+        "question": "Which appointment type and time slot should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing between a video or phone visit and selecting a specific time slot from the available options to book the appointment.",
+        "whatTheAgentLoses": "Delegating this means the agent might select an appointment type or time slot that does not fit your schedule or communication preferences.",
+        "kind": "decision",
+        "verify_form": "The agent set the visit mode and the hour - check whether it booked video or phone and for when; the wrong mode changes what the visit can even do.",
+        "speak": "never"
+       },
+       {
+        "question": "What timezone is the selected appointment time displayed in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Telehealth platforms often display available slots in the provider's timezone or use small, low-contrast text to indicate the timezone, which can easily be overlooked.",
+        "whatTheAgentLoses": "The user might miss their appointment entirely if the agent books a slot assuming local time when the platform is actually displaying a different timezone.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Widen the search window",
+      "questions": [
+       {
+        "question": "Do any of the available time slots this week work for you?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The calendar showed no availability for most days in the current week, requiring a decision on whether to check the following week's schedule.",
+        "whatTheAgentLoses": "You lose the ability to weigh the urgency of your medical needs against the delay of waiting another week for an appointment.",
+        "kind": "decision",
+        "verify_form": "The agent judged this week's slots unsuitable and paged forward - check what it passed over; a workable time may have been on the first screen.",
+        "speak": "on-event"
+       },
+       {
+        "question": "If there are no acceptable appointments in the near future, is there an option to join a cancellation waitlist?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When schedules are full, clinics often provide a secondary option to be notified if an earlier slot opens up rather than forcing you to book months out.",
+        "whatTheAgentLoses": "The agent might just book a date months away or abandon the task, missing the opportunity to get you an earlier appointment through the waitlist.",
+        "kind": "decision",
+        "verify_form": "The agent did or did not join the cancellation waitlist - check for a waitlist confirmation; joining changes when you might suddenly be expected to show up.",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Complete the intake",
+    "note": "4.1 then 4.2 as the triage asks; 4.3 where free text or a photo is offered; 4.4 and 4.5 to settle the record and the pharmacy - on portal venues the same checks run inside 7 instead",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Answer the triage reason",
+      "questions": [
+       {
+        "question": "Is the health assistant chatbot correctly associated with your employer or sponsor's benefits?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The chatbot introduces itself as the health assistant for a specific sponsor (e.g., Black Car Fund), confirming that your specific organizational benefits are being applied to the visit.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify that they are using the correct sponsored portal, which could affect whether the visit is covered by their benefits.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the intake questionnaire flag your symptoms as a potential emergency, halting the telehealth flow to recommend in-person care?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Telehealth platforms have liability triggers for severe symptoms (like chest pain or shortness of breath) that stop the virtual visit and redirect the patient to an ER or urgent care.",
+        "whatTheAgentLoses": "An agent might alter your symptom answers to bypass the block and complete the task, resulting in inappropriate or dangerous medical care.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Answer the symptom follow-ups",
+      "questions": [
+       {
+        "question": "Do you need to add any recent trips outside your state or country?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The intake form prompts you to update the states or countries you have traveled to since a specific date.",
+        "whatTheAgentLoses": "An agent might skip adding your recent trips, potentially withholding relevant travel history from your healthcare provider.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you experiencing any of the listed new or worsening symptoms or recent exposure to communicable diseases?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to complete a communicable disease screening by selecting any current symptoms and disclosing recent contact history.",
+        "whatTheAgentLoses": "Delegating this means the agent might inaccurately report your current symptoms or exposure history, potentially affecting the medical advice or safety protocols for your visit.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are your answers to the communicable disease screening correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen asks you to review your responses about symptoms and recent contacts before clicking Submit.",
+        "whatTheAgentLoses": "The user loses the opportunity to ensure their medical screening answers are accurate before they are finalized.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "How long have your symptoms been present?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The intake form asks when the problem started to give the provider context on the duration of your issue.",
+        "whatTheAgentLoses": "The agent might select the wrong duration, providing an inaccurate medical history to the doctor.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How severe are your symptoms?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The intake form requires you to rate how bothersome your symptoms are to help the provider understand their impact on your normal activities.",
+        "whatTheAgentLoses": "An agent cannot accurately assess your subjective experience of how much the symptoms limit your daily activities.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you have a fever?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The intake form requires specific details about your symptoms, such as the presence and severity of a fever, to help the provider assess your condition.",
+        "whatTheAgentLoses": "Delegating this means the agent might provide inaccurate symptom details, potentially affecting the medical advice or treatment you receive.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What additional context or symptoms do you need to provide?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The intake flow asks for recent travel, existing medical issues, and additional details about your symptoms.",
+        "whatTheAgentLoses": "An agent might not know your complete medical history or the specific details of your current symptoms.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you have any of the listed medical issues?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The telehealth platform needs to know your medical history to provide the doctor with accurate context for your visit.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report their personal medical history, which is essential for receiving safe and appropriate care.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the triage answers submit and the flow move past the chatbot?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The chat interface confirms the information was received and provides a 'CONTINUE' button to move forward.",
+        "whatTheAgentLoses": "The user loses the reassurance of seeing the confirmation message and manually controlling the transition to the next step.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Add details or a photo",
+      "questions": [
+       {
+        "question": "Is the uploaded photo of your symptom or insurance card actually in focus and legible in the preview thumbnail?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The system accepts any valid image file, but the provider needs a clear, well-lit photo to diagnose a condition or bill insurance.",
+        "whatTheAgentLoses": "The user risks the provider rejecting the image during the visit, causing delays or out-of-pocket billing, because the agent cannot judge the visual legibility of the upload.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Review the health profile",
+      "questions": [
+       {
+        "question": "Do you want to fill out your health history and body measurements, or skip this section?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen asks for details like allergies, medications, and height and weight, which you can provide for the doctor or choose to leave blank.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which personal medical details and measurements are shared with the doctor before the visit.",
+        "kind": "decision",
+        "verify_form": "The agent filled or skipped the health-history section - check what the profile now holds; a blank history is what your provider will diagnose against.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to import your allergy and medication data from HealthKit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The app presented a dialog asking for permission to import your allergy and medication data from HealthKit to help complete the intake process.",
+        "whatTheAgentLoses": "You lose the ability to control whether your personal health data is automatically shared from your device to the telehealth provider.",
+        "kind": "decision",
+        "verify_form": "The agent answered the HealthKit prompt - check whether your phone's health data was poured into this account; that import is a one-tap disclosure of your medical history.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is my health profile complete and accurate?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen prompts you to review your imported allergies, medications, and pre-existing conditions before continuing.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify their medical history, which could result in the doctor making decisions based on outdated or incorrect information.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the intake form pre-fill 'None' or 'No' for your medical history, allergies, or medications, and are those defaults actually correct?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many telehealth platforms default to negative responses for medical history to speed up the intake process, requiring manual intervention to report actual conditions.",
+        "whatTheAgentLoses": "The user risks having an incomplete or inaccurate medical record submitted because the agent blindly accepted the visual default states without verifying them.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Choose the pharmacy",
+      "questions": [
+       {
+        "question": "Are your current medications up to date, and which pharmacy do you want to use for this visit?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to verify your existing medications, such as Alprazolam and Ondansetron, and select a preferred pharmacy for any new prescriptions.",
+        "whatTheAgentLoses": "You lose the opportunity to personally ensure your medication list is perfectly accurate and to select the most convenient pharmacy for your current needs.",
+        "kind": "decision",
+        "verify_form": "The agent confirmed the medication list and a pharmacy - check both; prescriptions from this visit land at whatever pharmacy it left on file.",
+        "speak": "never"
+       },
+       {
+        "question": "Which pharmacy do you want to use for your prescriptions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires selecting a pharmacy for potential prescriptions and offers multiple ways to search, such as by zip code, city, or pharmacy name.",
+        "whatTheAgentLoses": "The user loses the ability to choose their most convenient pharmacy location or preferred delivery method for their medications.",
+        "kind": "decision",
+        "verify_form": "The agent set a pharmacy by search - check the branch it picked; your prescription physically goes there.",
+        "speak": "gate"
+       },
+       {
+        "question": "Are you sure you want to confirm this pharmacy selection?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a confirmation modal with the specific pharmacy name and address to ensure your prescriptions will be sent to the correct location.",
+        "whatTheAgentLoses": "You lose the opportunity to verify the exact pharmacy address and ensure it is the most convenient location for your prescriptions.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you verify that your preferred pharmacy was successfully updated?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displayed a success message along with the details of the selected Costco Pharmacy, ensuring any new prescriptions will be sent to the correct location.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally confirm that your medications will be routed to your most convenient pharmacy.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Commit the booking",
+    "note": "5.1 to check the order; 5.2 where a code exists; 5.3 to refuse the upsell; 5.4 for the patient fields, with 5.5 when the form bounces; 5.6 then 5.7 to pay or confirm; 5.8 to 5.10 to prove it landed",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Review the order summary",
+      "questions": [
+       {
+        "question": "Are the appointment details and $89 total correct, and are you ready to create a new account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because you must verify the appointment time and out-of-pocket cost before providing your personal information to register.",
+        "whatTheAgentLoses": "The user loses the opportunity to review the final price and appointment time before an account is created on their behalf.",
+        "kind": "decision",
+        "verify_form": "The agent moved toward checkout with an $89 total on screen - check the appointment line matches what you asked for, and whether it went on to create an account in your name; a new account is a standing identity you may never have wanted.",
+        "speak": "never"
+       },
+       {
+        "question": "Are the discount amounts consistent across the screens?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The banner states a flat $20 savings, which contradicts the earlier Sesame Plus card that promised $20 to $30 off all visits.",
+        "whatTheAgentLoses": "An agent might ignore the conflicting discount information, causing you to misunderstand the actual savings of the membership.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are the held appointment details correct before I complete the booking?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a pop-up holding your selected appointment time for 10 minutes and requires you to confirm the details to finish booking.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the held appointment time and provider before finalizing the booking.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Apply the promo code",
+      "questions": [
+       {
+        "question": "Do you have a promo code to apply to this booking?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The payment details section includes a promo code field that updates the order summary to reflect a discounted total when applied.",
+        "whatTheAgentLoses": "An agent might proceed with the standard price, missing the opportunity to save you money with an available discount code.",
+        "kind": "decision",
+        "verify_form": "The agent either applied a promo code or paid full price - check the order total; if you had a code and it went unused, the difference is real money.",
+        "speak": "never"
+       },
+       {
+        "question": "Did the order summary successfully update to reflect the promo code discount?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The system must process the entered promo code and reduce the total price, which confirms the code is valid and the discount has been successfully applied before payment.",
+        "whatTheAgentLoses": "An agent might enter a promo code but fail to verify that the total actually decreased, resulting in you paying the full price if the code was expired or invalid.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Decline the membership offer",
+      "questions": [
+       {
+        "question": "Do you want to upgrade to Sesame Plus to get $20 off this visit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The waiting room screen advertises a Sesame Plus membership that offers a $20 discount on the current visit and other future perks.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide if the membership's financial benefits are worth the subscription cost based on their personal healthcare needs.",
+        "kind": "decision",
+        "verify_form": "The agent answered the membership upsell - check whether a recurring membership was declined or bought alongside your visit; that is a subscription decision, not a booking step.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Fill the patient fields",
+      "questions": [
+       {
+        "question": "What is the reason for your appointment and what phone number should be used for notifications?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires the patient's information, the reason for the appointment, and a valid US phone number to complete the booking.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact reason for their visit and ensure their preferred contact information is used for notifications.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Who is this appointment for, and what sex do you select for the patient profile?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform requires a binary sex selection because some pharmacies do not support other options for prescriptions.",
+        "whatTheAgentLoses": "You miss the platform's explanation for why the sex options are limited to male and female.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you enter a phone number before continuing?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The contact information form includes fields for a mobile and home phone, and leaving them blank might trigger an error.",
+        "whatTheAgentLoses": "The user loses the ability to specify the best phone number for the provider to reach them if the video connection fails.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to opt out of receiving a reminder call for this appointment?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The appointment details page includes a specific link to let staff know you don't need a reminder call, which updates your notification preferences for this visit.",
+        "whatTheAgentLoses": "The user loses the ability to decline an unnecessary phone call from the clinic staff reminding them of the upcoming video visit.",
+        "kind": "decision",
+        "verify_form": "The agent set the reminder-call preference - check whether calls are on or off; a silenced reminder is how an appointment gets missed.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Fix the form errors",
+      "questions": [
+       {
+        "question": "Which phone number will you provide to resolve the form submission error?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a red error banner stating that either a mobile or home phone number must be provided to proceed.",
+        "whatTheAgentLoses": "The user loses the opportunity to specify their preferred contact number for this telehealth visit.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Choose the payment method",
+      "questions": [
+       {
+        "question": "Which payment method do you want to use for this visit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The checkout screen defaults to Google Pay, but you can choose to enter a credit or debit card to pay for the appointment.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over which specific payment method or account is charged for the telehealth visit.",
+        "kind": "decision",
+        "verify_form": "The agent picked how to pay - check whether the card or the wallet button carried the charge, and that it is the instrument you meant.",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you need to enter actual payment and personal details to complete the purchase?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed a 'Purchase complete' page even though mandatory fields like email, name, and credit card were left completely blank.",
+        "whatTheAgentLoses": "The user receives a meaningless confirmation from a mock or broken site instead of a real, scheduled telehealth appointment.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Accept the terms and pay",
+      "questions": [
+       {
+        "question": "Did the checkout submit and reach a confirmation?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a 'Book with G Pay' button at the bottom of the checkout form, but the video cuts abruptly to the confirmation page without showing the actual click.",
+        "whatTheAgentLoses": "The user loses the opportunity to select their preferred payment method or review the final cost before the booking is confirmed.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you ready to commit to this payment and accept the terms and cancellation policy?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires agreeing to the privacy policy, terms of service, and self-pay agreement, and outlines the cancellation policy before finalizing the payment.",
+        "whatTheAgentLoses": "The user loses the opportunity to review the specific terms, self-pay agreement, and cancellation policy before their funds are committed.",
+        "kind": "decision",
+        "verify_form": "The agent clicked the pay button under a cancellation policy - check the amount charged and the policy line above it; that click moved your money under terms only it saw.",
+        "speak": "gate"
+       },
+       {
+        "question": "What is the deadline to cancel this virtual appointment for free?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout screen specifies that virtual appointments can be canceled for free up to 3 hours before the appointment time.",
+        "whatTheAgentLoses": "The user loses the knowledge of the exact timeframe they have to cancel the appointment without being charged.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to add a primary care provider, and do you accept the informed consent and privacy terms?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This matters because you must explicitly check the boxes to agree to the medical group's informed consent and privacy policy to proceed, and you have the option to link a primary care physician to your visit.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to read the specific privacy and consent terms you are legally agreeing to, as well as the choice of whether to share this visit's records with your primary doctor.",
+        "kind": "decision",
+        "verify_form": "The agent handled the add-a-primary-care-physician offer and the two consent boxes - check whether a PCP was attached and what got consented; both live on your record after the click.",
+        "speak": "never"
+       },
+       {
+        "question": "Where would you have sought care if this telehealth service were not available?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The confirmation screen requires you to select an alternative care option, such as Urgent Care, from a dropdown menu to proceed with the booking.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report their alternative care plan, which the platform requires for its records or insurance routing.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Read the booking confirmation",
+      "questions": [
+       {
+        "question": "Does the confirmed appointment time match the date and time you selected earlier?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying the final confirmation screen ensures the system correctly booked the Friday, December 4, 2020 at 12:45 PM CST slot you originally requested.",
+        "whatTheAgentLoses": "An agent might silently accept a modified or incorrect appointment time, causing you to miss your scheduled telehealth visit.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you review the appointment confirmation details and the text message?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the confirmation screen and SMS ensures the video visit with [provider] is officially booked for the correct time.",
+        "whatTheAgentLoses": "Delegating this means you miss the immediate reassurance of seeing the confirmation text and verifying the appointment time yourself.",
+        "kind": "state-check",
+        "speak": "always"
+       }
+      ]
+     },
+     {
+      "id": "5.9",
+      "label": "Add it to the calendar",
+      "questions": [
+       {
+        "question": "Do you want to add this appointment to your calendar?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The confirmation popup offers a choice to add the scheduled visit to your device's calendar or simply return to the home screen.",
+        "whatTheAgentLoses": "You lose the convenience of having the appointment automatically synced to your personal calendar for easy reminders.",
+        "kind": "decision",
+        "verify_form": "The agent skipped or took the add-to-calendar offer - check whether the visit is on your calendar; a rendezvous nothing reminds you of is one you can miss.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.10",
+      "label": "Check the dashboard lists it",
+      "questions": [
+       {
+        "question": "Is your upcoming appointment visible on the dashboard?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Confirming the appointment details on the home screen ensures you are ready to click the start button at the scheduled time.",
+        "whatTheAgentLoses": "You lose the reassurance of personally verifying the correct date, time, and doctor for your upcoming visit.",
+        "kind": "state-check",
+        "speak": "always"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Ready the device",
+    "note": "6.1 to learn what the visit needs; 6.2 to 6.4 when an app or browser is missing; 6.5 where the default browser matters; 6.6 as each consent fires, with 6.7 when one was denied; 6.8 with 6.9 where the venue offers a rehearsal",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Read the pre-visit requirements",
+      "questions": [
+       {
+        "question": "Do you want to complete the required medical history and pharmacy information now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The post-booking screen explicitly lists completing your medical history and updating your pharmacy as required actions before the visit.",
+        "whatTheAgentLoses": "The user loses the choice of whether to provide their sensitive medical history and pharmacy details immediately or at a later time.",
+        "kind": "decision",
+        "verify_form": "The agent chose whether to do the medical-history and pharmacy tasks now or leave them - check which pre-visit tasks still show undone; skipped ones surface later, sometimes during the visit itself.",
+        "speak": "never"
+       },
+       {
+        "question": "What is the next required step before your visit?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The appointment details page explicitly states that you must complete the eCheck-in process before joining the video visit.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify and submit your current health information and consent forms.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the hardware test actually run and passed before the visit, rather than skipped?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The appointment details page provides specific preparation instructions and a 'TEST HARDWARE' button to verify your equipment works before the visit.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally verify that your specific camera and microphone are functioning correctly.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Who do you contact if you need help downloading Zoom or accessing your account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides specific contact information for technical assistance with the required video application and patient portal.",
+        "whatTheAgentLoses": "Delegating this means you might not have the direct support phone number or email saved if you experience technical difficulties joining the visit.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to watch the tutorial on how to set up Zoom for your visit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offers a video tutorial on downloading Zoom, connecting audio and video, and setting your display name, which is helpful if you are unfamiliar with the platform.",
+        "whatTheAgentLoses": "You lose the opportunity to learn how to properly configure your device and Zoom app settings for a successful telehealth visit.",
+        "kind": "decision",
+        "verify_form": "The agent chose whether to sit through the setup tutorial - check whether the steps it teaches were followed anyway; skipping the lesson is fine only if nothing it warns about happens.",
+        "speak": "never"
+       },
+       {
+        "question": "What application do you need to install for the visit?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen explicitly instructs you to install the Zoom application on your device in preparation for the video visit.",
+        "whatTheAgentLoses": "Delegating this means you might not realize you need to download a specific third-party app to successfully join the appointment.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to fill out your medical history first, or proceed directly to join the virtual appointment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The confirmation screen notes that your medical history is required for prescriptions, presenting a choice to either provide it now or join the call directly.",
+        "whatTheAgentLoses": "Delegating this means the agent might skip the medical history step, potentially preventing the clinician from prescribing medication if you need it.",
+        "kind": "decision",
+        "verify_form": "The agent chose between finishing the medical history and joining now - check which happened; an empty history meets a live provider either way.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Find the app in the store",
+      "questions": [
+       {
+        "question": "Is the app downloaded through the official app store, rather than from an unofficial source?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app drawer shows multiple icons, and you must select the Play Store to search for and install the required app.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent uses the official app store to download the correct application.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which search suggestion matches the app you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a dropdown of search suggestions like 'chrome', and selecting the correct one is required to find the browser needed to access the telehealth platform.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred browser or app to navigate to the telehealth service.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which search result corresponds to the App Store?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple search results for 'app', including 'App Store' and 'Apple Store', requiring the correct selection to download the telehealth app.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent opens the correct app store rather than a similarly named application.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What exactly should you search for in the App Store?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search suggestions include general terms like 'mychart' alongside specific ones like 'mychart cleveland clinic', so you need to know which app matches your provider.",
+        "whatTheAgentLoses": "Delegating this means the agent chooses which specific telehealth or patient portal app to download, which might not be the correct one for your health system.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which app from the search results should you select to access your health system?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display an unrelated ad, the official MyChart app, and a specific regional version, requiring you to identify the correct portal for your provider.",
+        "whatTheAgentLoses": "You lose the ability to ensure the correct, official health portal app is used rather than a sponsored ad or an incompatible regional app.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which supported web browser should you download to continue?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen indicates your current browser is unsupported and requires you to select Chrome, Firefox, or Safari to proceed with the video visit.",
+        "whatTheAgentLoses": "You lose the ability to decide which new web browser gets installed on your device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which application should you download from the search results?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The top search result is a sponsored ad for a different app, so you must carefully select the official Zoom app to successfully join the visit.",
+        "whatTheAgentLoses": "The user loses the ability to verify and approve exactly which third-party communication applications are being installed on their personal device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you want to get the required Zoom app to join the meeting?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires the Zoom app to join the meeting and provides a link to the App Store for first-time users.",
+        "whatTheAgentLoses": "The agent does not know if you already have the Zoom app installed on your device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is this the correct application to download for your telehealth appointment?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the installation page for ZOOM Cloud Meetings, which must be the correct app required by your provider to join the video visit.",
+        "whatTheAgentLoses": "The user loses the ability to confirm that the correct, official video conferencing application is being installed on their device.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Check it is already installed",
+      "questions": [
+       {
+        "question": "Is Google Chrome already installed on this device, or do you need to download it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Play Store page displays an 'Open' button rather than 'Install', confirming the browser is already available for the tech check.",
+        "whatTheAgentLoses": "The user loses direct awareness of which specific browser is being used and configured for their telehealth visits.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Install and open the app",
+      "questions": [
+       {
+        "question": "Are you opening the authentic app for the video visit?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the developer name and review count, which confirm the app is legitimate and not a spoofed copy.",
+        "whatTheAgentLoses": "The user loses the chance to verify the app's authenticity through developer details and reviews before opening it.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the software need to be installed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen asks if VSee is installed and provides options to either install it or test an existing installation.",
+        "whatTheAgentLoses": "The user loses control over whether new software is installed on their personal device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the video conferencing software actually confirmed installed, not just an install attempt that silently failed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows an 'Installation completed' dialog box that must be dismissed by clicking 'OK' to continue the telehealth setup.",
+        "whatTheAgentLoses": "The user loses the direct reassurance that the necessary video conferencing software was successfully installed on their computer.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you download the Zoom app to join the visit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a cloud download icon for Zoom Cloud Meetings, indicating this specific app is required to connect to the video visit.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to install and grant permissions to a new third-party application on their personal device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the downloaded executable's name and source verified before it's run, rather than clicked without checking?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The browser's download bar displayed the Zoom executable file that must be clicked to install the required video software.",
+        "whatTheAgentLoses": "The user loses the ability to verify the name and source of the executable file before allowing it to run on their device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Has the Zoom app finished installing so you can open it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Play Store screen shows the status changing from 'Installing...' to an 'Open' button, indicating the video app required for the visit is ready to launch.",
+        "whatTheAgentLoses": "The user loses the assurance that the necessary third-party video conferencing app was successfully installed on their specific device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you need to install a required video application to join the visit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The waiting room screen attempts to launch the clinic's video application, which requires you to install software like VSee to actually connect with the provider.",
+        "whatTheAgentLoses": "You lose control over approving and installing the necessary third-party video software on your personal device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you willing to download and install the required mobile app to join the visit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen states that the VSee Clinic mobile app must be downloaded and installed to continue to the online clinic.",
+        "whatTheAgentLoses": "The user loses control over whether to install a new, third-party application on their personal device.",
+        "kind": "decision",
+        "verify_form": "The agent installed an app to make the visit possible - check what landed on your device; a permanent install was traded for a fifteen-minute call.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you open the app directly from the Play Store or return to the browser?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Play Store shows the 'Open' button is active, but returning to the browser ensures you use the original link to join your specific visit.",
+        "whatTheAgentLoses": "An agent might tap 'Open' and land on the app's generic start screen, losing the active visit context from the browser.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Set the default browser",
+      "questions": [
+       {
+        "question": "Which app's settings do you need to modify?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed a list of installed apps, requiring a choice of which app's permissions to adjust for the tech check.",
+        "whatTheAgentLoses": "The user loses control over which specific app is granted camera and microphone permissions on their device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which app do you want to set as your default browser?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The system is prompting to select a default browser app, offering options like Chrome and Samsung Internet.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred browser for handling web links on the device.",
+        "kind": "decision",
+        "verify_form": "The agent set a default browser for the whole phone - check which one now owns every link you tap; that reaches far beyond this visit.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Grant camera and mic access",
+      "questions": [
+       {
+        "question": "Are you ready to grant camera and microphone access to start the appointment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The platform requires explicit permission to use your device's camera and microphone before it can start the video appointment.",
+        "whatTheAgentLoses": "Delegating this step means you lose direct control over exactly when your device's camera and microphone are activated.",
+        "kind": "decision",
+        "verify_form": "The agent granted the visit camera and microphone access - check what was allowed; that is your room and your voice opened to the call.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to enable microphone access for the Zoom app?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the microphone toggle for Zoom is currently off, which would prevent the doctor from hearing you during the visit.",
+        "whatTheAgentLoses": "The user loses the ability to control which applications have access to their device's microphone.",
+        "kind": "decision",
+        "verify_form": "The agent turned the microphone permission on - check the toggle and which app got it; the grant outlives this one visit.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to enable camera access for the Zoom app?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the camera permission for Zoom is currently off, which must be enabled to participate in the video visit.",
+        "whatTheAgentLoses": "The user loses the ability to manage their device's privacy settings and control which apps can access the camera.",
+        "kind": "decision",
+        "verify_form": "The agent turned the camera permission on - check the toggle and the app; every future launch of that app inherits it.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to allow Zoom access to your microphone, camera, and storage?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The dialog box states that Zoom needs these permissions for the best meeting experience.",
+        "whatTheAgentLoses": "The user loses the opportunity to control which hardware and storage permissions are granted to the application.",
+        "kind": "decision",
+        "verify_form": "The agent answered the app's bundled permission asks - check which of microphone, camera, and storage got granted; storage is more than the call needs.",
+        "speak": "never"
+       },
+       {
+        "question": "Should I allow Zoom to send me notifications?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The system prompts you to allow or deny alerts, sounds, and icon badges from the Zoom app.",
+        "whatTheAgentLoses": "You lose the chance to control whether this app is allowed to send push notifications to your device.",
+        "kind": "decision",
+        "verify_form": "The agent answered the notifications ask - check whether the meeting app can now ping you; that choice outlasts the visit.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Repair permissions in settings",
+      "questions": [
+       {
+        "question": "After the denied prompt, are the app's permissions actually repaired in system settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Navigating to the Settings app from the home screen is necessary to manually grant the camera or microphone permissions required for the telehealth visit.",
+        "whatTheAgentLoses": "Letting an agent navigate your system settings means you lose direct oversight over which device-level privacy permissions are being modified.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which privacy permission should you enable first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a list of device privacy settings, requiring you to select which hardware access, such as the microphone, to grant the telehealth app.",
+        "whatTheAgentLoses": "You lose the ability to manually control which system-level privacy permissions are granted to the application.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "After a failed tech check, are the browser's camera and microphone permissions actually set to Allow and the page reloaded?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows errors like \"Your camera seems to be off!\" and requires you to manually change browser site settings to \"Allow\" and reload the page.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that your own physical camera and microphone are correctly configured for the actual video visit.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did you reload the page after updating the browser's camera and microphone permissions?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The browser displays a banner requiring you to reload the page to apply the updated site settings, otherwise the telehealth platform will still be blocked from accessing your hardware.",
+        "whatTheAgentLoses": "An agent might change the permissions in the browser settings but fail to reload the active tab, causing the tech check to remain stuck in a failed state.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Run the hardware test",
+      "questions": [
+       {
+        "question": "Are my camera and microphone configured correctly so I can join the call?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen confirms your hardware test was successful and provides device dropdowns to ensure the correct equipment is selected before entering the visit.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify that your local camera and microphone are working correctly before the doctor appears.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should I test my connection while waiting for the provider?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The waiting room screen provides a 'TEST CONNECTION' button to ensure your camera and microphone are properly configured before the session begins.",
+        "whatTheAgentLoses": "An agent cannot physically verify the user's local hardware setup or grant the necessary browser permissions for the camera and microphone.",
+        "kind": "decision",
+        "verify_form": "The agent did or did not run the connection test while waiting - check for the test's result screen; skipping it means the first real test is the visit itself.",
+        "speak": "never"
+       },
+       {
+        "question": "Which link do you click to test your Zoom setup?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The visit instructions explicitly require you to test your Zoom application using the provided link prior to the appointment.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to verify that your personal device's camera and microphone work properly with the required software.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the speaker and microphone actually confirmed working through the test, not just assumed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Running the speaker and microphone test ensures your audio hardware is functioning properly so you can communicate during the visit.",
+        "whatTheAgentLoses": "An agent cannot physically hear the test ringtone or speak into your microphone to verify your local audio setup.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is your microphone picking up sound?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "You need to speak and watch for the waveform animation to confirm your audio hardware is working before joining the visit.",
+        "whatTheAgentLoses": "An agent cannot physically speak into your microphone to verify that your local audio hardware is capturing sound.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is your system volume muted or set too low?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the Windows volume popup ensures the speakers are not muted and are set to an audible level for the upcoming visit.",
+        "whatTheAgentLoses": "An agent cannot verify or adjust the local system volume, potentially leaving you unable to hear the doctor during the visit.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to run the recommended camera and audio test?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The platform recommends testing your camera and microphone to ensure you have a good connection before the video call begins.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that your physical camera and microphone are working properly before the doctor joins.",
+        "kind": "decision",
+        "verify_form": "The agent accepted or skipped the recommended hardware test - check for its results page; the venue offered a rehearsal and someone answered for you.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the user's camera feed visible on the screen?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen asks you to confirm that your camera is working by clicking 'I See Video' before proceeding.",
+        "whatTheAgentLoses": "An agent cannot see your local camera feed to confirm that your video is working properly.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you able to hear the test sound?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This confirms that your speakers are working properly so you can hear the provider during the video visit.",
+        "whatTheAgentLoses": "An agent cannot physically hear your device's audio output to verify that the speakers are working.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you need to close the hardware test tab to return to your appointment details?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The hardware test opens in a separate browser tab, and once it succeeds, you must manually close it or switch tabs to navigate back to the main portal and continue the check-in process.",
+        "whatTheAgentLoses": "An agent might complete the test and stall on the success screen, not realizing they need to return to the original tab to continue the task.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are your audio and video working?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying that the mute and video buttons at the bottom of the screen do not have a red line across them ensures the provider will be able to see and hear you.",
+        "whatTheAgentLoses": "An agent cannot physically test your local microphone and camera to ensure you are ready to communicate with the doctor.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.9",
+      "label": "Judge the test verdict",
+      "questions": [
+       {
+        "question": "Do you proceed when the test shows green checkmarks but warns of connection difficulties?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays conflicting information with a connection error message appearing directly above green checkmarks for all hardware components.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to contact support or restart the test to guarantee a stable connection for their medical appointment.",
+        "kind": "decision",
+        "verify_form": "The test passed its checkmarks beside a connection warning and the agent went on - check that warning; joining anyway bets your visit on a link the test itself doubted.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did the network or firewall block the WebRTC connection during the tech check, requiring you to switch networks?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Corporate or public Wi-Fi networks often block the specific ports needed for live video, causing the tech check to fail even if the camera and mic permissions are granted.",
+        "whatTheAgentLoses": "The agent might get stuck in a loop trying to grant browser permissions when the actual issue requires switching to a cellular network or different Wi-Fi.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is your camera or microphone failing the test because it is currently locked by another background application?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Even if browser permissions are granted, the tech check will fail if the operating system has locked the webcam or mic to another running program like Teams or Skype.",
+        "whatTheAgentLoses": "An agent operating in the browser cannot diagnose or close other local desktop applications that are hoarding the hardware, leaving the user unable to connect.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Check in before the visit",
+    "note": "7.1 opens it; 7.2 and 7.7 to verify what is on file; 7.3 then 7.4 for the consents; 7.5 with 7.6 where the room asks its own form; 7.8 to prove it landed",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Start the check-in",
+      "questions": [
+       {
+        "question": "Is the check-in opened for the appointment being attended?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The welcome screen displays a prominent check-in button that must be clicked to begin the intake flow for the appointment.",
+        "whatTheAgentLoses": "The user misses seeing the health system's branding on the welcome screen, which provides reassurance that they are checking into the correct portal.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the video-visit questionnaires actually entered rather than skipped?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a 'Questionnaires' tab with an 'ANSWER' button that must be clicked to begin the required intake process.",
+        "whatTheAgentLoses": "Delegating this step means the user loses the opportunity to personally initiate and review the specific intake questions required for their visit.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which appointment are you preparing for, and how do you begin the required check-in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a scheduled video visit with a specific doctor and time, requiring you to choose between starting the eCheck-in or viewing the appointment details.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the provider and time of the appointment you are about to check in for.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you have enough time right now to complete the eCheck-in process?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The eCheck-in process can be lengthy, requiring up to half an hour to complete all the necessary forms and signatures before the visit.",
+        "whatTheAgentLoses": "The user loses the context of how much time this step requires, which could lead to them starting it too late and missing their scheduled appointment time.",
+        "kind": "decision",
+        "verify_form": "The agent started a check-in it may not have had time to finish - check whether every screen was completed or the flow sits half done; a half-done check-in can lock until staff reset it.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the eCheck-in process available for you to complete right now?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The health system locks the eCheck-in process until 24 hours before the scheduled visit, preventing you from completing it immediately after booking if the appointment is further out.",
+        "whatTheAgentLoses": "An agent might repeatedly try to check in and fail, not realizing the system intentionally restricts access to this step until the day before the appointment.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Verify the personal info",
+      "questions": [
+       {
+        "question": "Does the patient name shown remain consistent across these booking steps, rather than switching mid-flow?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking that the name [patient name] appears consistently ensures the system hasn't switched patient profiles mid-booking.",
+        "whatTheAgentLoses": "An agent might fail to notice a profile switch, resulting in the telehealth visit and medical records being assigned to the wrong person.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the listed primary care provider and their contact information still accurate?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The eCheck-In process requires you to verify if the primary care provider and clinic details currently on file are still correct.",
+        "whatTheAgentLoses": "Delegating this step means an agent might blindly confirm an outdated primary care provider, potentially causing your visit records to be sent to the wrong clinic.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are your listed allergies accurate, or do you need to add or remove any?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen asks you to verify that your current allergy list, which includes items like Sulfa and Latex, is up to date before proceeding.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify your medical history and ensure any newly developed allergies are reported.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are your current health issues accurate and up to date?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen asks you to verify that your listed health conditions, such as anxiety and depression, are up to date before proceeding.",
+        "whatTheAgentLoses": "You lose the opportunity to review and update your medical history to ensure the provider has accurate context for your visit.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you verify that your pre-filled current location is correct before submitting?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires your current country and state to ensure you are matched with a telehealth provider licensed to practice in your actual physical location.",
+        "whatTheAgentLoses": "You lose the chance to correct an inaccurate default location, which could result in being matched with a provider who is not legally permitted to treat you.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is my personal information correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Confirming your contact details and personal information ensures the provider can reach you and update your medical records accurately.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to verify and update your own contact information before the appointment.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Read the consent terms",
+      "questions": [
+       {
+        "question": "Which documents do you want to review and sign before the visit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents legal documents like the \"Telemedicine Acknowledgement\" and \"Outpatient Agreement Form\" that require your signature and password to complete.",
+        "whatTheAgentLoses": "Letting an agent handle this means you lose the chance to read the legal terms of your care and decide which agreements to actually sign.",
+        "kind": "decision",
+        "verify_form": "The agent picked which pre-visit documents to open and sign - check what it signed and what it left; each signed one is a consent given in your name.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to review the telemedicine consent terms before agreeing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires your consent to participate in the consultation, and this document spells out the specific terms of the telemedicine services.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to personally read and understand the legal and medical terms you are agreeing to for the visit.",
+        "kind": "decision",
+        "verify_form": "The agent checked the consent box - check whether the terms were ever opened first; agreeing unread is a choice someone made for you.",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Sign the consent",
+      "questions": [
+       {
+        "question": "Are you the patient?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly asks 'ARE YOU THE PATIENT?' to ensure the visit is booked under the correct medical profile.",
+        "whatTheAgentLoses": "The user loses the ability to specify whether the appointment is for themselves or a dependent.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you consent to the use of your health information and wish to sign the form?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires your signature on a consent form to legally authorize the use and disclosure of your protected health information for treatment and operations.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally review and understand how your protected health information will be handled before legally consenting.",
+        "kind": "decision",
+        "verify_form": "The agent signed the health-information consent for you - check what the form authorizes; your signature on a release is not a formality.",
+        "speak": "gate"
+       },
+       {
+        "question": "Is the signature actually drawn by the patient, rather than auto-filled or supplied by the agent?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires a drawn signature on the provided line to authorize the visit.",
+        "whatTheAgentLoses": "The user loses the ability to personally sign their own medical consent forms.",
+        "kind": "decision",
+        "verify_form": "The agent produced a signature on the consent line - check what got drawn there; a machine-drawn scrawl standing in for your hand is a real legal artifact.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you agree to the video visit terms and conditions?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to accept the telehealth terms and conditions to proceed with the appointment.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to read and personally consent to the legal and privacy terms of the telehealth service.",
+        "kind": "decision",
+        "verify_form": "The agent accepted the video-visit terms - check the consent it granted; treatment-by-video conditions bind the visit that follows.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to skip signing the Outpatient Agreement Form?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Outpatient Agreement Form is listed as 'Not Signed Yet', but the active 'NEXT' button allows you to bypass it.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to sign or skip an optional legal agreement regarding your outpatient care.",
+        "kind": "decision",
+        "verify_form": "The agent skipped an optional agreement - check which form went unsigned; the skip may resurface as a paper handed to you at the visit.",
+        "speak": "never"
+       },
+       {
+        "question": "Have you verified that the form is complete and ready to submit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Confirming your entries ensures that all required details are accurate before moving forward in the intake process.",
+        "whatTheAgentLoses": "You lose the final opportunity to review and correct your information before it is submitted to the provider.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you consent to participate in this telemedicine consultation?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to check a box giving your explicit consent to participate in the telemedicine consultation before you can proceed.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review and personally agree to the legal and medical terms of the telehealth visit.",
+        "kind": "decision",
+        "verify_form": "The agent granted the telemedicine-participation consent - check the box and the document behind it; that is your agreement to be treated this way.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Enter the patient identity",
+      "questions": [
+       {
+        "question": "What is your date of birth?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a required 'Date of birth' field with a date picker that must be completed to verify your identity.",
+        "whatTheAgentLoses": "Delegating this requires sharing your exact date of birth, which exposes sensitive personal demographic information to a third party.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Where are you physically located at the time of this video visit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to select your current state to proceed with the visit.",
+        "whatTheAgentLoses": "An agent would not know your current physical location without asking, especially if you are traveling.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What phone number should the provider call if the video connection drops?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The platform requires a backup contact number to ensure the provider can still reach you if the video connection fails during the visit.",
+        "whatTheAgentLoses": "An agent might provide a generic or incorrect phone number, preventing the doctor from reaching you directly if the video call disconnects.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What patient details and consent must you provide to proceed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires your name, date of birth, and explicit consent to participate in the telemedicine consultation before you can continue.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify the patient details and review the telemedicine consent terms.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which intake fields are visually marked with a red asterisk as mandatory versus optional?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Health intake forms frequently mix required medical history with optional demographic, marketing, or research questions, indicated only by visual cues like asterisks.",
+        "whatTheAgentLoses": "An agent might unnecessarily expose sensitive optional health data because it cannot easily distinguish visual required-field indicators from standard form labels.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Attach the documents or skip",
+      "questions": [
+       {
+        "question": "What health concern should I describe, and do I have any relevant medical files to upload?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires your basic details and consent, but also provides an optional upload field for health records or labs that could help the doctor.",
+        "whatTheAgentLoses": "An agent might not know the specific details of your current health concern or have access to the personal medical files you want the doctor to see.",
+        "kind": "decision",
+        "verify_form": "The agent described your concern and decided about uploads - check the text it wrote and whether any file went up; that description is the first thing your provider reads.",
+        "speak": "gate"
+       },
+       {
+        "question": "Do you want to upload any photos or insurance cards for the visit?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides an 'Add photo' button to include relevant images or insurance cards for the provider.",
+        "whatTheAgentLoses": "An agent might skip this step, preventing the provider from seeing visual symptoms or processing your insurance.",
+        "kind": "decision",
+        "verify_form": "The agent chose whether to upload photos or cards - check what, if anything, was attached; an unsent insurance card can mean a self-pay bill.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Verify the coverage and billing",
+      "questions": [
+       {
+        "question": "Is the insurance information on file correct, and do you accept responsibility for payment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Confirming your insurance details and accepting payment responsibility ensures the telehealth visit will be billed correctly.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify their current insurance details and understand their financial responsibility for the visit.",
+        "kind": "decision",
+        "verify_form": "The agent attested your insurance and accepted payment responsibility - check the plan shown and the responsibility line; that attestation decides who gets billed.",
+        "speak": "gate"
+       },
+       {
+        "question": "Are there any payments due for this visit?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Payments tab during eCheck-In confirms whether you owe a copay or fee before you can proceed to the appointment.",
+        "whatTheAgentLoses": "The user loses the chance to personally verify their financial responsibility for the visit and ensure no unexpected charges are applied.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What should you expect regarding prescriptions, billing, and records after the visit?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen outlines important post-visit information, including how prescriptions are routed, how insurance claims are submitted, and where to find your visit summary.",
+        "whatTheAgentLoses": "Delegating this means you miss reading the specific policies on how your prescriptions, insurance billing, and medical records will be handled after the appointment.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you agree to sign the financial responsibility agreement?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires reviewing and signing a financial responsibility agreement to proceed with the telehealth visit.",
+        "whatTheAgentLoses": "You lose the opportunity to read the specific terms of your financial liability before legally binding yourself to them.",
+        "kind": "decision",
+        "verify_form": "The agent agreed to the financial-responsibility form - check the terms it accepted; that is you promising to pay whatever insurance leaves.",
+        "speak": "never"
+       },
+       {
+        "question": "Who is listed as the guarantor responsible for costs not covered by insurance?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The eCheck-In process requires verifying the specific person on file who will be billed for any out-of-pocket costs not covered by insurance.",
+        "whatTheAgentLoses": "An agent might blindly confirm the guarantor, potentially leaving the wrong person financially responsible for the visit's residual costs.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.8",
+      "label": "Confirm the check-in landed",
+      "questions": [
+       {
+        "question": "Did you receive confirmation that your eCheck-in information is on file?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays a message thanking you for using eCheck-in and confirming that your submitted information is on file.",
+        "whatTheAgentLoses": "The user loses the reassurance of seeing the confirmation that their intake information was successfully submitted and recorded.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Has your check-in been confirmed, and do you see the option to test your video?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen confirms that your submitted information is on file and provides a button to test your video setup for the upcoming visit.",
+        "whatTheAgentLoses": "The user misses the peace of mind that their check-in was successful and the specific reminder to verify their tech setup before the appointment.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the appointment now ready to begin?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The green video camera icon replacing the 'eCheck-in' text indicates that the appointment is ready to join.",
+        "whatTheAgentLoses": "The user loses the reassurance of seeing the visual cue that their appointment is ready to begin.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you see the 'Join video visit' button become active after completing the required eCheck-In steps?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen initially showed a disabled join button with a warning, which must be resolved by completing the eCheck-In process to access the visit.",
+        "whatTheAgentLoses": "An agent might fail to realize that a disabled join button requires completing a separate eCheck-In workflow, preventing the user from attending their appointment.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should you log out now that your eCheck-In is confirmed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows your eCheck-In is complete, prompting a decision on whether to log out until it is time for the actual visit.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally review the final appointment details before the session is closed.",
+        "kind": "decision",
+        "verify_form": "The agent chose whether to stay signed in after check-in - check the session state it left; logged out means signing back in at the appointed minute.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Join at the appointed time",
+    "note": "8.1 then 8.5 on a portal; 8.2 then 8.3 on a link; 8.4 when no link arrived; 8.6 and 8.7 as launches fail or ask; 8.8 at the threshold; 8.9 to hold until the provider comes",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Find the scheduled visit",
+      "questions": [
+       {
+        "question": "Which app should you open to access your telehealth visit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple apps, and you must select the specific patient portal app connected to your healthcare provider to begin the visit.",
+        "whatTheAgentLoses": "Delegating this step means the agent chooses the telehealth platform, potentially missing your preferred healthcare provider's specific app or existing patient portal.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which tab should you select to view your upcoming appointments?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top navigation menu contains several options, and clicking 'Visits' is required to locate and manage your scheduled telehealth appointments.",
+        "whatTheAgentLoses": "You lose the chance to notice other dashboard alerts, like unread messages or new test results, before proceeding to your appointments.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which appointment should you select to proceed with the visit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a specific upcoming video visit with an 'eCheck-In' button alongside a generic scheduling button, making it important to select the correct option to attend your scheduled appointment.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify the provider and time details of the appointment they are about to attend.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which icon do you tap to access your scheduled video visit?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The dashboard presents multiple options, so you must identify the 'Appointments' icon with the red dot to find your upcoming visit.",
+        "whatTheAgentLoses": "Delegating this step means you miss seeing the visual notification on your dashboard that confirms your appointment is registered in the system.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which appointment do I need to prepare for and how do I view its details?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The welcome page displays an upcoming video visit with [provider], and clicking the appointment block instead of the 'Begin Visit' button reveals specific instructions needed before joining.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the pre-visit instructions and ensure you are fully prepared before the provider joins the call.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Open the link from the message",
+      "questions": [
+       {
+        "question": "Is the text invitation's sender and link verified as genuine before it's opened, rather than clicked without checking?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The text message provides a direct link that must be clicked to access the pre-visit questionnaire and start the appointment.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify the sender's phone number and the exact link before accessing their medical appointment.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which link should you click to join the waiting room?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The text conversation displayed multiple messages, making it important to select the most recent invitation link to access the active session.",
+        "whatTheAgentLoses": "You lose the assurance that the correct, most up-to-date link from your personal text messages was used to join the visit.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How should you access the video visit from the email invitation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The email provides both a direct button and a raw URL in case the button fails, giving you different ways to launch the clinic's platform.",
+        "whatTheAgentLoses": "You lose the ability to choose whether to click the provided button or manually copy the link into a specific browser.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Put the link in the browser",
+      "questions": [
+       {
+        "question": "Is the URL entered actually the clinic's own address, not a wrong or mistyped link?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser is on a new tab page, so the specific telehealth URL must be entered in the address bar to proceed.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the correct clinic URL is being accessed.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you opening the current page in the correct browser, such as Google Chrome?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The browser menu displayed an 'Open in Chrome' option, which was ignored despite instructions to use it to ensure platform compatibility.",
+        "whatTheAgentLoses": "The user risks encountering technical failures with their camera or microphone during the visit by proceeding in an unsupported in-app browser.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Join by meeting ID instead",
+      "questions": [
+       {
+        "question": "Do you want to join the meeting without signing in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a 'Join a Meeting' option alongside sign-in and sign-up, allowing you to enter directly using a provider meeting ID.",
+        "whatTheAgentLoses": "The user loses the choice of whether to log into their account or join the meeting as a guest.",
+        "kind": "decision",
+        "verify_form": "The agent joined the meeting without signing in to any account - check the visit accepted a guest entry; if your clinic expects the portal identity, a guest join may not match your chart.",
+        "speak": "never"
+       },
+       {
+        "question": "What name should you enter in the Zoom dialog box?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a Zoom prompt asking for a name before letting you join the meeting.",
+        "whatTheAgentLoses": "You lose the ability to ensure the display name matches your medical records so the provider admits the right person from the waiting room.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How else can you join the visit if you do not receive a text link?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The narrator explains that the clinical team may call you with a personal meeting ID to use as an alternative way to join the appointment.",
+        "whatTheAgentLoses": "An agent would not be able to receive the phone call from the clinical team providing the alternative meeting ID.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "What name should be displayed to the provider, and do you want your audio and video connected when joining?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen defaults to a generic device name and provides toggles to disable audio or video, requiring you to choose how you are identified and whether your media is active upon joining.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure your actual name is displayed to the provider and to control your initial camera and microphone privacy settings.",
+        "kind": "decision",
+        "verify_form": "The agent set the on-screen name and the entry AV state - check what name the provider will greet and whether camera and mic are live; a device-name default tells the clinic nothing about who arrived.",
+        "speak": "on-event"
+       },
+       {
+        "question": "What is the meeting ID you need to copy to join the visit?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The email displays a specific Meeting ID, [number], which is required to manually enter the Zoom telehealth session.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally handle and verify the meeting credentials sent to your private email.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to navigate away from the Zoom meeting link to the main Zoom website?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The browser address bar showed a Zoom meeting link with a success status, indicating the telehealth visit was ready to join.",
+        "whatTheAgentLoses": "The user loses their connection to the telehealth visit if the agent navigates away from the meeting link.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the meeting joined through the verified 'Join a Meeting' path, rather than any generic homepage link?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Zoom homepage features a top navigation menu with a 'JOIN A MEETING' option required to access the video visit.",
+        "whatTheAgentLoses": "The user loses the ability to manually initiate the connection and verify they are joining the correct telehealth session.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the Meeting ID entered actually the one copied for this visit, not a stale or mistyped value?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The 'Join a Meeting' page requires the specific meeting ID to connect to the correct telehealth session.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify that the correct meeting ID is used for their private medical appointment.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Begin the visit from the portal",
+      "questions": [
+       {
+        "question": "Do you proceed to the visit even though the stated $50 deposit wasn't collected?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The instructions explicitly stated a $50 deposit was required, but the system allowed you to begin the visit without prompting for payment.",
+        "whatTheAgentLoses": "The user loses the opportunity to clarify the payment discrepancy and might face an unexpected bill or administrative issue later.",
+        "kind": "decision",
+        "verify_form": "The instructions named a deposit and the agent proceeded without paying one - check whether money is still owed at the visit; the mismatch is either a fee waived or a surprise bill.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is the visit started from the appointment's begin control once check-in completes?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The appointment details page confirms your intake information is on file and provides a specific button to launch the video connection.",
+        "whatTheAgentLoses": "The user misses the visual confirmation that their intake information was successfully submitted and the immediate readiness cue to join the provider.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you ready to join the video visit now?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen indicates that it is time for your appointment and provides a button to begin the video visit.",
+        "whatTheAgentLoses": "You lose the ability to personally confirm you are present and ready to transition into the live consultation with your doctor.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the visit started from the reminder for the correct provider and time, not a different listed appointment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The home page displays a reminder for your upcoming appointment with the specific provider along with a direct button to begin the visit.",
+        "whatTheAgentLoses": "Delegating this step means you miss the chance to verify the provider's name and the exact appointment time before entering the virtual waiting room.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you on the correct appointment details page with an active button to start the video visit?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying the provider and time details before clicking the start button ensures you are joining the correct scheduled session.",
+        "whatTheAgentLoses": "Delegating this step means you miss the chance to personally verify your appointment details and control exactly when you enter the virtual waiting room.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Recover from a launch failure",
+      "questions": [
+       {
+        "question": "What should you do when Safari says the address is invalid?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The browser displays an 'invalid address' error because the device lacks the Zoom app needed to open the video link.",
+        "whatTheAgentLoses": "The user loses the context that they must install a separate application to successfully attend their telehealth visit.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you join the meeting directly from this generic app screen?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen prompts for a Meeting ID to join manually, but telehealth visits typically must be launched directly from the patient portal app to connect properly.",
+        "whatTheAgentLoses": "The user loses their appointment if the agent gets stuck trying to manually enter a meeting ID instead of returning to launch the visit through the health app.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you reconnect if the video call drops?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides specific instructions to return to the OSF MyChart appointment screen to reconnect if you accidentally get disconnected.",
+        "whatTheAgentLoses": "The user misses the knowledge of how to independently troubleshoot and rejoin their medical appointment if the connection fails.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Let the browser open the app",
+      "questions": [
+       {
+        "question": "Do you accept the Terms of Service and Privacy Policy to create your account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The platform requires your agreement to its terms and privacy policy, which explain what data is stored and why, before you can create an account.",
+        "whatTheAgentLoses": "You lose the opportunity to review how your personal health data will be stored and used by the platform before granting consent.",
+        "kind": "decision",
+        "verify_form": "The agent accepted the video client's terms and privacy policy on your behalf - check what was agreed to; that consent binds you, and nobody read it to you.",
+        "speak": "on-event"
+       },
+       {
+        "question": "How do you want to handle the blocked popup warning?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The browser displayed a \"Popup blocked\" warning, which must be resolved by allowing popups for this site to open the video test window.",
+        "whatTheAgentLoses": "You lose the ability to manage your browser's security preferences and decide whether to permanently allow popups for this specific healthcare site.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which website's pop-ups do you allow to ensure the telemedicine video window can open?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Safari Preferences window lists multiple open websites, and you must identify the correct Johns Hopkins domain to grant pop-up permissions to so the visit can launch.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify and control which specific medical domains are granted permission to open pop-up windows on your device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How should I handle the browser prompt to open the external video application?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The browser prompts to open the VSee application to launch the online clinic video session.",
+        "whatTheAgentLoses": "The user loses control over whether to install the required video software or proceed with an existing installation.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Which option do you choose to launch the newly installed app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offers both an 'OPEN IN APP' banner and a 'Launch here' text link to transition from the browser to the app.",
+        "whatTheAgentLoses": "The user's preference for which interface element to interact with when opening the external application.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should the browser remember your choice to always open VSee links automatically?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The browser prompt to open the external video application includes a checkbox to 'Remember my choice for VSee links' for future visits.",
+        "whatTheAgentLoses": "The user loses control over their browser's security settings regarding whether external medical applications can launch automatically in the future without asking.",
+        "kind": "decision",
+        "verify_form": "The browser offered to remember the open-the-app choice - check whether it was remembered; that default fires on every future link of this kind.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.8",
+      "label": "Choose video and audio to enter",
+      "questions": [
+       {
+        "question": "Is the webcam enabled for the meeting, and is the setting to show the preview dialog every time checked?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen asks whether to join the meeting with your video feed active and provides a toggle to always show this preview dialog in the future.",
+        "whatTheAgentLoses": "Delegating this means the agent decides your initial camera state and future preview settings, potentially broadcasting your video before you are ready.",
+        "kind": "decision",
+        "verify_form": "The agent chose whether your camera is live on entry - check the join-with-video choice and the preview toggle; walking in camera-on is a decision about your own room.",
+        "speak": "never"
+       },
+       {
+        "question": "How will you connect your audio for the visit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to select an audio connection method, such as internet audio or dialing in, so you can hear the provider.",
+        "whatTheAgentLoses": "The user loses the opportunity to select the most reliable audio connection method for their current network situation.",
+        "kind": "decision",
+        "verify_form": "The agent picked the audio route - check it chose internet audio rather than leaving the call silent; the videos call this the step that decides whether anyone hears you.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you need to use the provided one-tap mobile number to dial into the meeting's audio?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The invitation includes a one-tap mobile dial-in number, allowing you to connect to the audio via a standard phone call if your internet audio is unreliable.",
+        "whatTheAgentLoses": "The user loses awareness of the dial-in alternative, which could be crucial if they experience internet audio issues during the visit.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.9",
+      "label": "Hold in the waiting room",
+      "questions": [
+       {
+        "question": "Am I in the correct waiting room and is my connection stable?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the displayed patient name, appointment time, and connection strength ensures you are in the right place and technically ready for the provider to join.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of personally verifying your connection strength and appointment details right before the doctor appears.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What best practices should you follow while waiting for the provider?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reviewing the on-screen tips ensures your connection, camera, and physical environment are properly set up for a smooth video visit.",
+        "whatTheAgentLoses": "An agent cannot physically adjust your camera, find a quiet space, or ensure your local environment is ready for the consultation.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Am I in the right place, and what happens next?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen confirms you are in the provider's waiting room and instructs you to wait for them to admit you.",
+        "whatTheAgentLoses": "An agent cannot wait in the waiting room and conduct the actual medical visit with the provider.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What instructions or document uploads are required before entering the waiting room?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The waiting room screen specifically asks you to upload your ID, insurance card, and relevant photos before your appointment begins.",
+        "whatTheAgentLoses": "You lose the chance to personally review the doctor's specific pre-visit instructions and ensure your sensitive documents are securely uploaded.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is this the correct provider's room, and should you enter the waiting room now?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the provider's name and status, requiring you to click a button to officially enter the waiting room.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify they are in the correct provider's room and see the current waitlist status.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the room form submit and the waiting room accept the entry?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking the green 'Enter Waiting Room' button finalizes the visit form and places you into the virtual queue to see the provider.",
+        "whatTheAgentLoses": "You lose the immediate visual confirmation that your intake details were successfully submitted and you are officially in line for the visit.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What rules must I acknowledge before entering the waiting room?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen outlines crucial safety and privacy guidelines, such as not driving and ensuring a private location, that must be reviewed before proceeding.",
+        "whatTheAgentLoses": "You miss the direct reminder to secure a private location and avoid driving during your upcoming medical conversation.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you successfully in the waiting room and what is your current status?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying your queue position and live video feed confirms that you have successfully reached the waiting room and are ready for the provider.",
+        "whatTheAgentLoses": "Delegating this to an agent means you are not physically present on the live video feed when the provider connects to start the medical consultation.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Does the waiting room display a notification that the provider is running significantly behind schedule, and does it offer an option to reschedule?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Telehealth doctors frequently run late, and platforms often pop up a delay notification giving the patient the choice to keep waiting or reschedule without penalty.",
+        "whatTheAgentLoses": "The user loses the choice to reclaim their time and reschedule if the doctor is an hour late, as the agent might just sit in the virtual room indefinitely.",
+        "kind": "decision",
+        "verify_form": "A running-late notice with a reschedule offer may be on screen - check whether the agent kept waiting or rescheduled; either answer spends your time without asking.",
+        "speak": "on-event"
+       },
+       {
+        "question": "How long should you wait in the video room if the provider is late?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The appointment details page explicitly instructs you to wait up to 20 minutes past your scheduled time if the provider is not yet in the video.",
+        "whatTheAgentLoses": "You miss the clinic's specific policy on provider tardiness, which could cause you to abandon the call prematurely and miss your appointment.",
+        "kind": "decision",
+        "verify_form": "The agent is holding in the waiting room - check how long it has waited and what the venue promises; when to give up and call the clinic is your call, not its.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Attend and wrap up",
+    "note": "9.1 and 9.2 as the visit runs; 9.3 to leave; 9.4 where the venue holds a checkout; 9.5 for whatever the venue asks after",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Handle the in-visit requests",
+      "questions": [
+       {
+        "question": "Do you have the provider's permission to record the session?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The provider shook his head on the video feed to deny recording permission, prompting the decision to click the 'Leave call' button.",
+        "whatTheAgentLoses": "The user loses the ability to personally ask for consent and respectfully interpret the provider's non-verbal response.",
+        "kind": "decision",
+        "verify_form": "The agent asked or did not ask to record - check whether recording happened and what the provider answered; recording a medical conversation without consent is a serious line.",
+        "speak": "gate"
+       },
+       {
+        "question": "Is the provider's camera feed visible on the screen, or is it just a black screen with their name?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The waiting room might automatically transition to the visit room, but the provider's camera might be off, loading, or blocked, meaning the consultation hasn't truly started.",
+        "whatTheAgentLoses": "You lose the visual confirmation that the provider is physically present and visible on the other end, potentially speaking into a void if the agent assumes the connection is fully established just because the UI state changed.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Use the call controls",
+      "questions": [
+       {
+        "question": "Do you need to change your microphone or speaker selection, or test your audio?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The menu provides options to select specific hardware like the Internal Microphone or Speakers and test them to ensure your audio works for the visit.",
+        "whatTheAgentLoses": "You lose the opportunity to manually verify and test that your preferred physical audio devices are properly connected and functioning.",
+        "kind": "decision",
+        "verify_form": "The agent toured the audio-device menu - check which mic and speaker are selected; the wrong device is a silent visit.",
+        "speak": "never"
+       },
+       {
+        "question": "How will you communicate with the provider if your audio or video isn't working?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The interface includes a chat button that serves as a text-based fallback if you are unable to see or hear your provider during the session.",
+        "whatTheAgentLoses": "You lose the ability to personally type real-time messages to your provider if technical difficulties disrupt the video feed.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you turn your video on or off during the visit?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The bottom toolbar displays a 'Stop Video' button, which is essential for managing your visual privacy during the live consultation.",
+        "whatTheAgentLoses": "You lose the ability to instantly control your own camera feed and physical privacy during the live medical appointment.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Leave the visit",
+      "questions": [
+       {
+        "question": "Is the visit ended through the leave control rather than by abandoning the page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides specific instructions to click the 'Leave Visit' button when you are ready to disconnect.",
+        "whatTheAgentLoses": "You lose the direct knowledge of how to securely terminate your own private medical consultation.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Stay for the checkout",
+      "questions": [
+       {
+        "question": "Do you need to stay on this page after the video call ends?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen explicitly instructs you not to leave the page until the consultation is over so you can complete the necessary checkout process.",
+        "whatTheAgentLoses": "An agent might prematurely close the browser tab once the video disconnects, causing you to miss important post-visit checkout steps or follow-up instructions.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Handle the post-visit offers"
+     }
+    ]
+   }
+  ]
+ }
+}

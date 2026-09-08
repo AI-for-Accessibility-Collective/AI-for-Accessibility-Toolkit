@@ -264,11 +264,11 @@
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
-        "why": "The screen displays 82 results for 'kiwanis_club_of_fort_frances', so you must confirm you are viewing the correct inventory before selecting an item.",
+        "why": "The screen displays 82 results for 'sellerhandle123', so you must confirm you are viewing the correct inventory before selecting an item.",
         "whatTheAgentLoses": "You lose the ability to personally browse the seller's specific inventory and choose the exact item that interests you.",
         "speak": "if-wrong",
         "check": "Does the results header name the seller you asked for?",
-        "say_example": "These results are for <kiwanis_club_of_fort_frances>, but you asked for a different seller. I'm searching again."
+        "say_example": "These results are for <sellerhandle123>, but you asked for a different seller. I'm searching again."
        }
       ]
      },
@@ -490,7 +490,7 @@
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen shows the seller 'guanweidianzi' has a feedback score of 0, which could indicate a higher risk for a buyer.",
+        "why": "The screen shows the seller 'sellerhandle456' has a feedback score of 0, which could indicate a higher risk for a buyer.",
         "whatTheAgentLoses": "The user loses the ability to apply their own risk tolerance when evaluating an unestablished seller.",
         "speak": "on-event",
         "check": "What feedback score does the seller info box show?",
@@ -647,7 +647,7 @@
           "whatTheAgentLoses": "You lose the ability to choose exactly which personal credit card or financial account is kept on file for automatic charges if you win.",
           "speak": "on-event",
           "check": "Does a modal ask for a payment method, and which saved methods does it list?",
-          "say_example": "eBay needs a card on file before it takes bids. You have a <Mastercard ending 4821>. Use that one?"
+          "say_example": "eBay needs a card on file before it takes bids. You have a <card ending [account number]>. Use that one?"
          }
         ]
        },
@@ -767,7 +767,7 @@
         "whatTheAgentLoses": "You lose the chance to verify your exact maximum bid limit and ensure the correct payment method and shipping address are used if you win.",
         "speak": "gate",
         "check": "What max bid, payment method and delivery address does the confirm screen show?",
-        "say_example": "Ready to bid. Max <$40>, your <Mastercard ending 4821>, shipping to <Home>. If you win, it's binding and the card is charged. Press to bid, or say change."
+        "say_example": "Ready to bid. Max <$40>, your <card ending [account number]>, shipping to <Home>. If you win, it's binding and the card is charged. Press to bid, or say change."
        },
        {
         "question": "Does the review screen mark duties or taxes as an estimate?",

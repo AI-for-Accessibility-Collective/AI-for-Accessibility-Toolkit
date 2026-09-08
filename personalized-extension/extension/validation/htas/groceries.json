@@ -372,7 +372,7 @@
         "whatTheAgentLoses": "You lose the ability to specify the exact delivery destination, which dictates the available stores and inventory.",
         "speak": "gate",
         "check": "What address or zip does the page currently have, if any?",
-        "say_example": "Where's this going? I have <350 Sharon Park Dr, E-027> on file - use that?"
+        "say_example": "Where's this going? I have <[address]> on file - use that?"
        },
        {
         "question": "How should you provide your location to the app?",
@@ -394,7 +394,7 @@
         "whatTheAgentLoses": "You lose the opportunity to catch a location-tracking error that could result in your groceries being sourced from or delivered to the wrong area.",
         "speak": "if-wrong",
         "check": "What zip code is filled in on the page?",
-        "say_example": "The zip came up <10001>. Yours is <94025>, so I fixed it - wrong zip means wrong stores."
+        "say_example": "The zip came up <10001>. Yours is <94110>, so I fixed it - wrong zip means wrong stores."
        }
       ]
      },
@@ -433,7 +433,7 @@
         "whatTheAgentLoses": "You lose the ability to ensure your groceries are sourced from your preferred local store.",
         "speak": "if-wrong",
         "check": "What store location does the page show as selected?",
-        "say_example": "The store came up as <Walmart Salt Lake City>. You're in <Menlo Park>, so I switched to the one near you."
+        "say_example": "The store came up as <Walmart Salt Lake City>. You're in <Oakland>, so I switched to the one near you."
        },
        {
         "question": "Are you willing to risk changes to inventory and delivery slots to switch your store location?",
@@ -522,7 +522,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to provide precise unit details, which could result in the driver being unable to locate the correct door and delaying the grocery delivery.",
         "speak": "if-wrong",
         "check": "Does the address on the page include the apartment or unit number?",
-        "say_example": "The address saved without your apartment number. Adding <E-027> so the driver can find you."
+        "say_example": "The address saved without your apartment number. Adding <12B> so the driver can find you."
        }
       ]
      },
@@ -2703,7 +2703,7 @@
         "whatTheAgentLoses": "Delegating this step means the agent might charge the groceries to a card you did not intend to use for this specific purchase.",
         "speak": "gate",
         "check": "Which payment methods does the page offer, including saved cards?",
-        "say_example": "Paying how? Your saved <Visa ending 4821>, or something else? Gift card and <EBT> are options here too."
+        "say_example": "Paying how? Your saved <Visa ending [account number]>, or something else? Gift card and <EBT> are options here too."
        },
        {
         "question": "If paying with EBT SNAP, has a secondary credit or debit card been added to cover the remaining balance?",
@@ -3090,11 +3090,11 @@
         "cluster": "watch",
         "moment": "On demand",
         "moneyMoving": true,
-        "why": "The screen shows that your shopper, Melissa, has found 1 of your 14 items, and checking the list lets you monitor her progress and any substitutions.",
+        "why": "The screen shows that your shopper, [name], has found 1 of your 14 items, and checking the list lets you monitor her progress and any substitutions.",
         "whatTheAgentLoses": "You lose the ability to personally monitor the live shopping progress and intervene if an unwanted substitution is made.",
         "speak": "never",
         "check": "What does the tracking page show as found so far?",
-        "say_example": "<Melissa> has <1> of <14> so far - I'm watching, ask me any time"
+        "say_example": "<[name]> has <1> of <14> so far - I'm watching, ask me any time"
        },
        {
         "question": "Did the item get added to your active order?",
@@ -3146,11 +3146,11 @@
         "cluster": "watch",
         "moment": "On demand",
         "moneyMoving": true,
-        "why": "Checking the app for shopper updates reveals that a new shopper named Ashley L took over the order and shifted the delivery window to between 6:45 and 8:45.",
+        "why": "Checking the app for shopper updates reveals that a new shopper named [name] took over the order and shifted the delivery window to between 6:45 and 8:45.",
         "whatTheAgentLoses": "You lose real-time awareness of who is handling your groceries and any unexpected delays to your delivery window.",
         "speak": "on-event",
         "check": "Does the tracking page show a different shopper or a changed window?",
-        "say_example": "New shopper - <Ashley> took it over, and delivery moved to <6:45 to 8:45>."
+        "say_example": "New shopper - <[name]> took it over, and delivery moved to <6:45 to 8:45>."
        }
       ]
      },
@@ -3286,7 +3286,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to exercise human empathy and provide a generous rating that protects the gig worker's livelihood.",
         "speak": "on-event",
         "check": "Does the page show a rating prompt, and for whom?",
-        "say_example": "The app's asking you to rate <Melissa>. It touches her pay, so that's yours - I won't pick stars."
+        "say_example": "The app's asking you to rate <[name]>. It touches her pay, so that's yours - I won't pick stars."
        }
       ]
      },

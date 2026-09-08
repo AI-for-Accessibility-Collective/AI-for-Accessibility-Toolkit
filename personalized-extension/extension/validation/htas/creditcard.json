@@ -780,7 +780,7 @@
         "whatTheAgentLoses": "Letting an agent handle this means it might provide a number you do not actively monitor for important security alerts and verification codes.",
         "speak": "always",
         "check": "Which mobile number is entered for the application?",
-        "say_example": "I'm putting in your mobile number ending <1234>. Every code will go there."
+        "say_example": "I'm putting in your mobile number ending <[account number]>. Every code will go there."
        },
        {
         "question": "What residence city does the form show entered?",
@@ -926,7 +926,7 @@
         "whatTheAgentLoses": "You lose the chance to customize or verify the exact name that will be printed on your physical credit card.",
         "speak": "always",
         "check": "What name does the form show entered, and what will print on the card?",
-        "say_example": "Your legal name goes in, and the card will print <DAVID C LIN>."
+        "say_example": "Your legal name goes in, and the card will print <[name]>."
        },
        {
         "question": "How should you format the phonetic and romanized versions of your name?",
@@ -1048,7 +1048,7 @@
         "whatTheAgentLoses": "An agent would not know your exact province and city of birth, which could lead to identity verification failures if entered incorrectly.",
         "speak": "never",
         "check": "What place of birth does the form show entered?",
-        "say_example": "Birthplace entered as <Taipei, Taiwan>."
+        "say_example": "Birthplace entered as <Lisbon, Portugal>."
        },
        {
         "question": "What is your mother's full name?",
@@ -1226,7 +1226,7 @@
           "whatTheAgentLoses": "You lose the chance to personally verify and correct inaccuracies in your pre-filled data before it becomes part of your official application.",
           "speak": "if-wrong",
           "check": "Do the prefilled name, address, and details match the applicant's real details?",
-          "say_example": "The form pulled your details from <TransUnion> and got your middle name wrong, <Chaun> for <Chuan>. A mismatch can bounce the application. Fixing it."
+          "say_example": "The form pulled your details from <TransUnion> and got your middle name wrong, <[name]> for <[name]>. A mismatch can bounce the application. Fixing it."
          },
          {
           "question": "Did the bank's address standardization tool remove or alter your apartment number?",
@@ -1341,7 +1341,7 @@
         "whatTheAgentLoses": "You lose the ability to accurately report your specific employment situation and ensure the most appropriate job title is selected from the provided options.",
         "speak": "gate",
         "check": "What employment and income fields does the application require?",
-        "say_example": "Now the money part. It wants where you work, your title, and your income. I have <Stanford, postdoc> on file. What yearly figure should I put? It has to be the real one, and there's a spot for spouse income too if you want it counted."
+        "say_example": "Now the money part. It wants where you work, your title, and your income. I have <Acme Corp, postdoc> on file. What yearly figure should I put? It has to be the real one, and there's a spot for spouse income too if you want it counted."
        }
       ],
       "children": [
@@ -1397,7 +1397,7 @@
           "whatTheAgentLoses": "You lose the ability to ensure your employer's specific corporate designation and contact details are entered accurately for the credit check.",
           "speak": "never",
           "check": "What employer name, location, and phone does the form show entered?",
-          "say_example": "Employer entered as <Stanford University, Palo Alto>, with the main line as the phone."
+          "say_example": "Employer entered as <Acme Corp, San Jose>, with the main line as the phone."
          },
          {
           "question": "Which industry best describes the nature of your business?",
@@ -2317,11 +2317,11 @@
         "cluster": "compare",
         "moment": "Completion",
         "moneyMoving": true,
-        "why": "The spelling of the last name changed from 'RAput' on the initial eligibility screen to 'RAJPUT' on the final virtual card screen.",
+        "why": "The spelling of the last name changed from '[surname, misspelled]' on the initial eligibility screen to '[surname]' on the final virtual card screen.",
         "whatTheAgentLoses": "The user loses the opportunity to catch a typo in their name before the physical credit card is printed and mailed.",
         "speak": "if-wrong",
         "check": "Is the name spelled the same on the application and on the final card screen?",
-        "say_example": "The card came back as <RAJPUT> and the application said <RAPUT>. A name mismatch causes trouble at ID checks, so it's worth a call to fix."
+        "say_example": "The card came back as <[surname]> and the application said <[surname, misspelled]>. A name mismatch causes trouble at ID checks, so it's worth a call to fix."
        }
       ]
      },
@@ -2558,7 +2558,7 @@
         "whatTheAgentLoses": "An agent might not know which specific phone number is officially tied to your bank account, potentially causing the security verification to fail.",
         "speak": "never",
         "check": "Which phone number does the page ask for at this step?",
-        "say_example": "Entered the number your bank has on file, the one ending <1234>."
+        "say_example": "Entered the number your bank has on file, the one ending <[account number]>."
        },
        {
         "question": "Is your bank down for online setup because of maintenance?",

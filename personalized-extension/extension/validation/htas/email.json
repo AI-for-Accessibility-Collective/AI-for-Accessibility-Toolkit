@@ -1445,7 +1445,7 @@
         "whatTheAgentLoses": "The user loses control over selecting the exact historical context or conversation to share with the new recipient.",
         "speak": "on-event",
         "check": "Which threads in the inbox match the message the person described?",
-        "say_example": "Two threads match <'weekend'>, one from <Ted>, one from <Woggle Guides>. Which one?"
+        "say_example": "Two threads match <'weekend'>, one from <[name]>, one from <Woggle Guides>. Which one?"
        }
       ]
      },
@@ -1458,7 +1458,7 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The expanded thread shows multiple messages, such as the ones from Ted Harland at 6:14 AM and Woggle Guides at 6:20 AM, and you must select the exact one containing the picture you want to share.",
+        "why": "The expanded thread shows multiple messages, such as the ones from [name] at 6:14 AM and Woggle Guides at 6:20 AM, and you must select the exact one containing the picture you want to share.",
         "whatTheAgentLoses": "You lose the ability to personally select which specific message and context from the ongoing conversation gets forwarded to your friend.",
         "speak": "on-event",
         "check": "How many messages does the expanded thread contain, and which matches the person's description?",

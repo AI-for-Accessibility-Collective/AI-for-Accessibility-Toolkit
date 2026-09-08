@@ -1,0 +1,2970 @@
+{
+ "task": "unsubscribe from marketing emails and clean up an inbox (Gmail, Outlook, Yahoo Mail): find the unwanted sender or use the unsubscribe affordance, confirm the unsubscribe, and/or bulk-select and delete, archive, or block; complete when the unsubscribed confirmation or the cleaned mailbox state is on screen. Surface pinned: a webmail or mail app inbox. Variants: email-marketing (sender-side) content, inbox-zero productivity philosophy talking heads, and third-party cleanup-app ads as the main subject (Clean Email/Unroll.me demos are fine if they show the real flow) do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Stop the unwanted mail and clean the inbox",
+  "note": "1 first, then repeat from 2 until the inbox reads clean - 2 isolates each batch; per sender, 3 asks the sender to stop and 4 stops them without asking - 4 when 3 fails or the sender is not legitimate; 5 then 6 clears the pile that already arrived; 7 makes a deletion permanent or takes it back; 8 replaces the per-sender loop of 3 wholesale, but the user has to give a third party access to the mailbox; 9 after every destructive or suppressive act",
+  "children": [
+   {
+    "id": "1",
+    "label": "Open the mailbox",
+    "note": "1.1, then 1.2 where more than one account or app could hold the mail; 1.3 before touching anything - the counts read here are what 9 reconciles against",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the mail client",
+      "questions": [
+       {
+        "question": "How should you navigate to your email inbox?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Google homepage displays multiple navigation options like a direct Gmail link and an apps menu, requiring a choice to reach the inbox.",
+        "whatTheAgentLoses": "You lose the opportunity to specify which email service or specific account should be accessed for the cleanup.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which email app should you open to manage your inbox?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows Edison Mail is installed and ready to open, prompting a decision on which specific mail client to use for the task.",
+        "whatTheAgentLoses": "The user loses the ability to ensure a trusted, preferred email client is used to access their personal messages.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Pick the account or mailbox",
+      "questions": [
+       {
+        "question": "Which mailbox or account should you open to locate the unwanted emails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple connected accounts and folders like Gmail and All Inboxes, so you must choose the specific one containing the marketing emails you want to target.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might clean up the wrong email account or miss the specific inbox you intended to declutter.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Read the baseline counts",
+      "questions": [
+       {
+        "question": "How many emails are currently in your inbox before you start cleaning?",
+        "cluster": "refine",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Checking the pagination showing 254 total emails establishes a baseline to measure the success of your cleanup efforts.",
+        "whatTheAgentLoses": "You lose the initial context of the inbox size, making it impossible to independently verify how much clutter the agent actually removed.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Find the unwanted mail",
+    "note": "any of 2.1 through 2.7 as the mailbox demands, repeated per batch; 2.8 whenever the folder that holds the mail is not on screen; 2.9 where the client can keep the search",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Search the unsubscribe keyword",
+      "questions": [
+       {
+        "question": "How do you filter your inbox to find emails with an unsubscribe option?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Using the search bar to look for the word 'unsubscribe' efficiently gathers all marketing emails into a single view.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which keywords or specific senders to target when filtering your unwanted mail.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you apply a specific search filter from the dropdown or perform a general keyword search?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown offers specific filters like 'Subject contains: unsubscribe' that could narrow your results more strictly than a general search.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to cast a wide net for all emails mentioning the word or to strictly filter by specific fields.",
+        "kind": "decision",
+        "verify_form": "The agent searched broadly rather than field-scoped - check the query it ran; a whole-message match catches receipts that merely mention unsubscribing.",
+        "speak": "never"
+       },
+       {
+        "question": "Did your search query return zero results because of a typo in the sender's email address or search operator?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Entering the wrong address or misspelling a search operator will falsely make the inbox look clear of that sender, hiding the actual clutter.",
+        "whatTheAgentLoses": "The agent might assume the sender has already been cleaned up and skip the task, leaving the actual unwanted emails hidden in the inbox due to a simple input error.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Search with operators",
+      "questions": [
+       {
+        "question": "What search operator do you use to find all unread emails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing 'is:unread' into the search bar filters the inbox to display only unread messages so they can be bulk-selected for cleanup.",
+        "whatTheAgentLoses": "You lose the chance to manually review the unread emails to ensure no important messages are accidentally deleted during the bulk cleanup.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you filter your inbox by specific attachment types like JPGs?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results show that using operators like 'filename:jpg' successfully isolates emails containing specific image attachments for easier cleanup.",
+        "whatTheAgentLoses": "You lose the opportunity to specify which exact attachment types or file extensions should be targeted for cleanup.",
+        "kind": "decision",
+        "verify_form": "The agent filtered by an attachment type - check which filename: term it used; type-based sweeps take personal photos along with the promos.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you filter for large emails to free up space?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing a size-based search operator in the search bar helps you quickly identify the specific emails consuming the most storage quota.",
+        "whatTheAgentLoses": "You lose control over the specific size threshold used to target emails for deletion.",
+        "kind": "decision",
+        "verify_form": "A size cutoff was used to find deletable mail - check the threshold the agent set; size says nothing about what you would keep.",
+        "speak": "on-event"
+       },
+       {
+        "question": "How do you select all the target emails without manually clicking through pages?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The pagination controls showed only 100 out of 1,973 emails were visible, meaning a search filter was necessary to gather them all efficiently.",
+        "whatTheAgentLoses": "The user loses control over the specific search criteria used to safely isolate the unwanted emails from the rest of the inbox.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How many unwanted emails did your search filter return?",
+        "cluster": "refine",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the total count of messages in the top right corner confirms whether your filter successfully captured the expected volume of unwanted emails.",
+        "whatTheAgentLoses": "You lose the awareness of exactly how much clutter had accumulated in your inbox before the cleanup.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Refine the search terms",
+      "questions": [
+       {
+        "question": "Do you need to add any other search criteria to isolate the correct emails?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search options dropdown provides fields like 'From' and 'Subject' that can help narrow down the results if the current query in 'Includes the words' is too broad.",
+        "whatTheAgentLoses": "You lose the ability to precisely define the search parameters, which could lead to an agent accidentally including and deleting important emails that match a broad query.",
+        "kind": "decision",
+        "verify_form": "The agent ran the search with the default field placement - check whether it added any narrowing criteria; a broader query than you intended sweeps in mail you wanted.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you use the advanced search filters or stick to a simple keyword search?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The advanced search panel offers granular options like \"From\", \"Subject\", and \"Date within\", but deciding whether to use them affects how efficiently you locate the unwanted emails.",
+        "whatTheAgentLoses": "You lose the ability to decide whether a quick, simple search or a highly specific, multi-field filter is the best approach for your inbox cleanup.",
+        "kind": "decision",
+        "verify_form": "The agent chose how to search - check whether it used the advanced fields or one bare keyword; the choice decides how much unrelated mail lands in the results.",
+        "speak": "never"
+       },
+       {
+        "question": "Are there any important emails in these search results that you need to exclude?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial search results for 'Unsubscribe' included critical Google security alerts that shouldn't be accidentally deleted.",
+        "whatTheAgentLoses": "The user loses the ability to personally identify and protect specific important emails that happen to match the broad search criteria.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How should you adjust your search to find the next batch of emails to delete?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a specific search view for 'alaska-airlines' with filter chips like 'From' and 'Any time' rather than general inbox tabs, requiring a decision on whether to modify these filters or clear the search to locate more unwanted mail.",
+        "whatTheAgentLoses": "The user loses the ability to prioritize which specific senders or categories of promotional emails are targeted for the next round of cleanup.",
+        "kind": "decision",
+        "verify_form": "The agent moved to the next batch - check what it searched for next; each new target is a fresh chance to sweep mail you keep.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to search across all mailboxes or just this specific inbox?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows options for 'Search: All' and 'Inbox', and choosing the broader scope ensures you find unwanted emails across every folder.",
+        "whatTheAgentLoses": "Delegating this means the agent might restrict the search to a single inbox, leaving unwanted marketing emails hidden in other folders.",
+        "kind": "decision",
+        "verify_form": "The search scope was set - check whether the agent searched one inbox or everything; scope decides which folders the sweep can reach.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Open the target folder",
+      "questions": [
+       {
+        "question": "Should you check the newly added Updates tab to see which emails were categorized there?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The inbox now displays an 'Updates' tab alongside the others, which likely contains automated emails that need to be reviewed for cleanup.",
+        "whatTheAgentLoses": "You lose the chance to see exactly which of your emails the system automatically sorted into the new Updates category.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Have you confirmed the criteria for identifying which marketing emails to target?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Validating the initial search parameters or inbox filters on the screen ensures you do not accidentally target important personal emails.",
+        "whatTheAgentLoses": "The user loses the ability to personally define the nuanced boundary between unwanted spam and desired promotional content.",
+        "kind": "decision",
+        "verify_form": "Before the sweep, check the criteria the agent settled on - the line between spam and promotions you wanted is a preference it cannot know.",
+        "speak": "never"
+       },
+       {
+        "question": "Which inbox tab should you check to find unwanted marketing emails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Primary tab currently shows promotional emails from senders like Express and Amy Porterfield, but other marketing emails might be filtered into the Social tab.",
+        "whatTheAgentLoses": "The user loses the ability to prioritize which specific inbox categories or tabs should be targeted for cleaning.",
+        "kind": "decision",
+        "verify_form": "The agent picked which tab to clean next - check the tab; marketing hides in Primary and Social too, and the pick decides what gets touched.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to unsubscribe from any of the social media notifications in this tab?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Social tab filled with automated updates from platforms like Meetup and Twitter, which might be considered unwanted clutter.",
+        "whatTheAgentLoses": "You lose the ability to decide whether social media notifications should be kept or treated as unwanted marketing emails.",
+        "kind": "decision",
+        "verify_form": "The agent treated social-media notifications as unwanted - check whether those updates are clutter to you before they are gone.",
+        "speak": "never"
+       },
+       {
+        "question": "Which folder do you want to empty?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The sidebar displays multiple folders such as 'Example Folder' and '[name]'s Folder', requiring a choice of which specific location to clean out.",
+        "whatTheAgentLoses": "The user loses control over which specific folder of emails gets permanently deleted.",
+        "kind": "decision",
+        "verify_form": "The agent emptied a folder - check which one it picked from the sidebar; a whole folder went with that choice.",
+        "speak": "never"
+       },
+       {
+        "question": "Which view should you use to bulk select the emails for deletion?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Using the 'All Mail' view risks accidentally deleting important emails that were already sorted into custom folders like 'Coupons' or 'target'.",
+        "whatTheAgentLoses": "The user loses the assurance that their previously organized and saved emails won't be accidentally wiped out during the cleanup.",
+        "kind": "decision",
+        "verify_form": "The agent chose the view to select in - check that it was not All Mail; selecting there takes the mail you already filed.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you also clean out the Social tab now that Promotions is empty?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Promotions tab is now empty, but the adjacent Social tab presents another category of potentially unwanted emails to clear.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal preference for ignoring and clearing out entire inbox categories like the Social tab.",
+        "kind": "decision",
+        "verify_form": "With Promotions empty the agent moved to Social - check whether wiping that category was on your list at all.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Find all mail from one sender",
+      "questions": [
+       {
+        "question": "Which specific sender's emails do you want to target for deletion?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing the exact email address in the search bar ensures you only locate and delete messages from that specific sender without affecting the rest of your inbox.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally decide which specific senders are considered unwanted and should be purged.",
+        "kind": "decision",
+        "verify_form": "The agent picked a sender to purge - check which address it typed into the search; if that is not a sender you consider unwanted, it chose your targets for you.",
+        "speak": "never"
+       },
+       {
+        "question": "What criteria are you using to identify the unwanted marketing emails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Establishing the exact sender or search parameters ensures you only target the intended promotional messages without affecting important mail.",
+        "whatTheAgentLoses": "The user loses the opportunity to define exactly which senders or types of emails are considered unwanted.",
+        "kind": "decision",
+        "verify_form": "The agent decided what counts as unwanted - check the search or filter it used as the boundary; that boundary is your call, not its.",
+        "speak": "gate"
+       },
+       {
+        "question": "Which sender's email should you select to start the cleanup process?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Promotions inbox displays multiple marketing emails from various senders, requiring you to choose a specific one like Alaska Airlines to target.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which promotional sender is targeted for unsubscribing and deletion.",
+        "kind": "decision",
+        "verify_form": "The agent started with one sender - check which one it isolated; if that sender still matters to you, the sweep starts wrong.",
+        "speak": "never"
+       },
+       {
+        "question": "Did the filter correctly isolate only the emails from this specific sender?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing only Alaska Airlines emails in the search results confirms the filter worked and prevents accidental deletion of unrelated messages.",
+        "whatTheAgentLoses": "You lose the chance to verify the search results yourself to ensure no important emails were accidentally caught in the filter before bulk deleting.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you find all emails from this specific sender to mass-delete them?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The right-click context menu contains a 'Find emails from' option that instantly filters the inbox to show only messages from that specific sender.",
+        "whatTheAgentLoses": "You lose the opportunity to manually review the filtered list of emails to ensure no important correspondence is accidentally included in the bulk deletion.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to delete only the currently visible email, or search and bulk-delete all past emails from this sender?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the open marketing email, but there are likely many older messages from this same sender cluttering the inbox.",
+        "whatTheAgentLoses": "The user loses the ability to decide how thoroughly they want their inbox purged of this specific sender's past communications.",
+        "kind": "decision",
+        "verify_form": "The agent chose how thorough the purge is - check whether it took one email or the sender's whole history.",
+        "speak": "never"
+       },
+       {
+        "question": "Should I use the 'Filter messages like these' option to gather all emails from this sender?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'More' menu contains a 'Filter messages like these' option that isolates all past emails from this specific address.",
+        "whatTheAgentLoses": "You lose the ability to choose the specific method used to locate and group unwanted emails for bulk deletion.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Sort or group the list",
+      "questions": [
+       {
+        "question": "How should you sort the inbox to group the unwanted newsletters together?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Sort by Date' dropdown menu that can be changed to 'From' to group identical newsletters together for easier bulk processing.",
+        "whatTheAgentLoses": "You lose the chance to choose your preferred sorting method for organizing and reviewing the massive list of emails.",
+        "kind": "decision",
+        "verify_form": "The list got re-sorted to group senders - check the sort key; grouping by From is what makes the chunks safe to grab.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Review the junk folder",
+      "questions": [
+       {
+        "question": "Where do you find your junk email, and how many messages are currently there?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Locating the Junk Email folder in the left navigation pane allows you to review and manage the four messages currently flagged as spam.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally review the junk folder to ensure no legitimate emails were incorrectly flagged.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which email do you want to select first for spam management?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Junk Email folder displays multiple senders like 'Sales and Marketing' and 'Retail', requiring a choice of which to target.",
+        "whatTheAgentLoses": "You lose the ability to prioritize which specific senders or categories of marketing emails are most important to clean up.",
+        "kind": "decision",
+        "verify_form": "The agent chose which junk sender to process first - check which one it opened; if a sender in that folder is not junk to you, the order matters.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Reveal the hidden folders",
+      "questions": [
+       {
+        "question": "Should you click 'More' to reveal hidden folders in the sidebar?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sidebar only displays a limited set of default folders, meaning unwanted marketing emails might be hidden in collapsed categories.",
+        "whatTheAgentLoses": "You lose the ability to manually explore your folder structure and identify specific hidden categories that need cleaning.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you add the 'All Mail' folder to your visible mailboxes list?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Edit List' screen displays checkboxes next to folders like 'All Mail', letting you control which ones appear in your main navigation view.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to customize your mailbox layout to fit your personal preferences.",
+        "kind": "decision",
+        "verify_form": "The agent changed which mailboxes show in your list - check what it added; the view change persists after the cleanup.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.9",
+      "label": "Save the search as a mailbox",
+      "questions": [
+       {
+        "question": "Did the search successfully find the targeted emails, and how do you want to handle the results?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Verifying the thousands of search matches ensures you have correctly identified the marketing emails before saving them into a Smart Mailbox.",
+        "whatTheAgentLoses": "You lose the opportunity to review the specific search results to ensure no important emails were accidentally included in the bulk selection.",
+        "kind": "decision",
+        "verify_form": "The search results got saved into a Smart Mailbox - check the match count and what the agent did with it; how those thousands get handled is your call.",
+        "speak": "never"
+       },
+       {
+        "question": "How should you configure the parameters for the Smart Mailbox?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog lets you define the mailbox name, set the condition to search the entire message for 'unsubscribe', and choose whether to include Sent or Trash messages.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to customize the search criteria, such as excluding your own sent emails from the results.",
+        "kind": "decision",
+        "verify_form": "A Smart Mailbox was created with defaults - check its conditions; the default includes your Sent mail, which puts your own messages in the deletable pile.",
+        "speak": "on-event"
+       },
+       {
+        "question": "How do you view the emails collected by the new Smart Mailbox?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left sidebar displays the newly created 'unsubscribe' Smart Mailbox with a count of 3,301 emails ready to be reviewed.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to verify exactly which emails were caught by the filter before they are bulk deleted.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Unsubscribe from the sender",
+    "note": "3.1 picks the target and whether unsubscribing is even the right remedy; then 3.2 and 3.3 where the client offers its own link, or 3.4 and 3.5 through the sender's page; 3.6 closes each pass and 3.9 where the client offers it; 3.7 and 3.8 cover what no keeper video shows - links that phish or harvest the address, and opt-outs that do nothing",
+    "questions": [
+     {
+      "question": "Should you use the email client's native unsubscribe button at the top, or click the unsubscribe link in the email footer?",
+      "cluster": "compare",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The native button offers a quick and safe opt-out, while the footer link often leads to a preference center where you can choose to receive fewer emails instead of none.",
+      "whatTheAgentLoses": "The user loses the ability to granularly manage their email preferences or opt down to a lower frequency for this specific sender.",
+      "kind": "decision",
+      "verify_form": "Two unsubscribe routes were on screen and the agent picked one - check which; the native button is a clean stop, the footer link can open a preference center with more options.",
+      "speak": "never"
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Pick the target email",
+      "questions": [
+       {
+        "question": "Which email should you open to initiate the unsubscribe process?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The inbox displays multiple promotional emails, and you must select a specific sender like 'Noun Project' to access their unsubscribe options.",
+        "whatTheAgentLoses": "You lose the ability to decide which specific newsletters or senders are targeted for removal.",
+        "kind": "decision",
+        "verify_form": "The agent opened one sender to unsubscribe from - check which one; if that sender was not on your list, it decided which mail you stop getting.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you evaluate the costs and benefits of the Patreon offer before deciding to unsubscribe?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a promotional video and text slide detailing a $6 monthly Patreon subscription for ad-free videos and live meetings.",
+        "whatTheAgentLoses": "The user loses the opportunity to discover and evaluate the creator's subscription benefits before the email is deleted or the sender is unsubscribed.",
+        "kind": "decision",
+        "verify_form": "The agent passed a sender's paid offer on its way to unsubscribe - check whether that subscription had value you wanted weighed first.",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific marketing email should you select to unsubscribe from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a promotional email for an 'A to Z Computer Mastery Pendrive Course,' and selecting the correct message is necessary to target the right sender for removal.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might unsubscribe you from a sender whose emails you actually wanted to keep.",
+        "kind": "decision",
+        "verify_form": "One sender got unsubscribed - check that it is a sender you are done with; the wrong pick silences mail you wanted.",
+        "speak": "never"
+       },
+       {
+        "question": "Which senders in this Promotions tab do you want to unsubscribe from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Promotions tab displays multiple marketing emails from various senders like Turbo Tax and Sam's Club, requiring you to identify which ones are actually unwanted.",
+        "whatTheAgentLoses": "The user loses the ability to selectively keep certain promotional subscriptions while discarding others based on their personal preferences.",
+        "kind": "decision",
+        "verify_form": "The agent chose which Promotions senders to drop - read the list it acted on; keep-or-toss per sender is your preference.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you use the unsubscribe link or mark this legitimate sender as junk?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The on-screen text advises using the unsubscribe link for legitimate senders to avoid permanently blocking services you might need.",
+        "whatTheAgentLoses": "The user loses the ability to distinguish between legitimate services to politely unsubscribe from and actual spam to aggressively block.",
+        "kind": "decision",
+        "verify_form": "The agent chose between unsubscribing and junking the sender - check which it did; junking a legitimate service can bury mail you will need.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is this email tied to a paid service where unsubscribing from the mailing list does not cancel the recurring financial charge?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Stopping notification or newsletter emails from a paid service like Substack or Patreon does not stop them from billing your credit card.",
+        "whatTheAgentLoses": "The awareness that a separate cancellation workflow in a billing portal is required to actually stop the money from moving.",
+        "kind": "intent-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "How do you proceed to the next email in the search results?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an 'Older' arrow button in the top right corner, providing a shortcut to the next message without requiring a return to the main inbox list.",
+        "whatTheAgentLoses": "You lose the opportunity to manually pace the cleanup process and inspect each subsequent email before deciding what to do with it.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Use the header unsubscribe link",
+      "questions": [
+       {
+        "question": "Where should you click to quickly unsubscribe from this sender?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a native unsubscribe link next to the sender's address, which offers a faster and safer alternative to searching for an unsubscribe link within the email body.",
+        "whatTheAgentLoses": "The user loses the ability to verify the exact sender address and choose the native mail client's secure unsubscribe feature over a potentially unreliable link in the email body.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Confirm the one-click dialog",
+      "questions": [
+       {
+        "question": "Are you sure you want to confirm unsubscribing from this sender?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a confirmation popup asking if you want to stop receiving messages from Noun Project, requiring a final decision.",
+        "whatTheAgentLoses": "Delegating this step means you lose the final opportunity to change your mind and keep receiving emails from this specific sender.",
+        "kind": "decision",
+        "verify_form": "The agent confirmed the unsubscribe - check which sender the dialog named; this was your last chance to keep that sender.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Find the footer link",
+      "questions": [
+       {
+        "question": "Where do you look for the unsubscribe link if it isn't provided in the email header?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the bottom of the IconScout email where the sender's address and an unsubscribe link are located, which is the standard fallback when the email client lacks a shortcut.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify the sender's physical address and observe how they format their mandatory opt-out links.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should I manually unsubscribe from specific emails by clicking the link in the footer?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows an opened email from Facebook with an unsubscribe link in the footer, providing a way to stop emails from this specific sender.",
+        "whatTheAgentLoses": "The user loses the ability to choose which specific senders to manually unsubscribe from instead of using a bulk action.",
+        "kind": "decision",
+        "verify_form": "The agent went sender by sender through footer links - check which senders it unsubscribed; each click was a per-sender choice that was yours.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Complete the external page",
+      "questions": [
+       {
+        "question": "How do you confirm your request to unsubscribe on the sender's external website?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking the blue 'Unsubscribe me' button on the IconScout page is necessary to finalize the process and actually stop receiving their marketing emails.",
+        "whatTheAgentLoses": "You lose the opportunity to review the specific unsubscribe terms or alternative mailing preferences presented on the sender's confirmation page.",
+        "kind": "decision",
+        "verify_form": "The agent clicked the sender's own unsubscribe button - check the page it landed on and what it confirmed; sender pages sometimes offer partial opt-outs it may have skipped.",
+        "speak": "on-event"
+       },
+       {
+        "question": "When the unsubscribe link opens a preference center, do you want to unsubscribe from all communications or only specific lists?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The unsubscribe link opened a new tab showing multiple checkbox options for different email types instead of a simple one-click confirmation.",
+        "whatTheAgentLoses": "The user loses the ability to selectively keep useful notifications while stopping unwanted promotional spam.",
+        "kind": "decision",
+        "verify_form": "The link opened a preference center - check which boxes the agent left; all-off kills notifications you may rely on, and partial keeps some marketing.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Read the unsubscribe outcome",
+      "questions": [
+       {
+        "question": "Did you verify the success message confirming your unsubscribe request?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Seeing the 'Success' message on the page confirms that the request was processed and future emails from this sender will stop.",
+        "whatTheAgentLoses": "Delegating this step means losing the peace of mind of personally seeing the confirmation that the unwanted emails have been successfully stopped.",
+        "kind": "state-check",
+        "speak": "always"
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Vet the unsubscribe link",
+      "questions": [
+       {
+        "question": "Does the URL of the unsubscribe link look like a legitimate domain associated with the sender, or is it a suspicious redirect?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Clicking a malicious unsubscribe link in a spam email can confirm your address is active or expose you to malware, so verifying the URL is safer than blindly clicking.",
+        "whatTheAgentLoses": "The user loses the security check of inspecting the destination URL, risking exposure to phishing or spam validation if the agent clicks a malicious link.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does the unsubscribe page ask you to manually type in your email address to confirm the opt-out?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Legitimate unsubscribe links usually pass a secure token, while forms asking you to type your email are often used by spammers to harvest and verify active addresses.",
+        "whatTheAgentLoses": "The user loses the defensive judgment to abandon the unsubscribe attempt and block the sender instead when faced with a potentially sketchy email harvesting form.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the checkboxes on the external preference center visually styled as opt-in or opt-out?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Dark patterns often use deceptive visual layouts where checking a box actually keeps you subscribed, requiring careful visual parsing to avoid doing the opposite of what you intend.",
+        "whatTheAgentLoses": "The user loses the ability to visually parse deceptive UI patterns, risking the agent misinterpreting the form and keeping the subscription active.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Handle the failed unsubscribe",
+      "questions": [
+       {
+        "question": "Does the unsubscribe page require you to log into an account you no longer use or do not have the password for?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Some legitimate services require authentication to change email preferences, forcing a decision between going through a password reset or just blocking the sender locally.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether it is worth the effort to recover an old account just to unsubscribe, or if they should just use the email client's block feature instead.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the email client display an error saying it could not automatically unsubscribe you from this mailing list?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Native unsubscribe buttons sometimes fail if the sender's mailto link is broken or unsupported, requiring you to manually hunt for the footer link or block the sender instead.",
+        "whatTheAgentLoses": "The user loses the awareness that the automated unsubscribe failed, leaving them subscribed unless they intervene with a manual fallback method.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the unsubscribe link open a pre-filled draft email, and is it sending from the exact alias subscribed to the list?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Some lists process opt-outs via an automated email reply, which will silently fail if sent from a different alias or if the draft is never actually sent.",
+        "whatTheAgentLoses": "The ability to verify that the opt-out email is actually sent and uses the correct sender address, preventing the unsubscribe from failing silently.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the external unsubscribe page display a success message, or did it return an error like 'link expired' or 'server not found'?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the external link is broken, the unsubscribe failed, and you must fall back to blocking the sender or creating a local spam filter.",
+        "whatTheAgentLoses": "The ability to notice a silent failure on the third-party site and take alternative action to actually stop the emails.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "3.9",
+      "label": "Move the sender to spam",
+      "questions": [
+       {
+        "question": "Do you want to move this specific email to spam now that you have unsubscribed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays an unsubscribe confirmation banner that offers a quick action button to move the email to spam.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to actively train your email provider's spam filter with this specific message.",
+        "kind": "decision",
+        "verify_form": "The agent also moved the unsubscribed email to spam - check whether training your spam filter on this sender is what you wanted.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you click 'Move to spam' on the confirmation banner or return to your search results?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a dark unsubscribe confirmation banner with a 'Move to spam' button on the currently open email.",
+        "whatTheAgentLoses": "You lose control over whether to further penalize the sender by marking them as spam or simply proceed to the next email.",
+        "kind": "decision",
+        "verify_form": "On the banner the agent chose spam or moving on - check which; spam-marking punishes the sender beyond the unsubscribe.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Block or filter the sender",
+    "note": "4.1 then 4.2 and 4.3 where the client has a block control; 4.4 through 4.7 builds the rule where it does not, or where the block should reach a whole domain; 4.8 audits what exists; 4.9 undoes a mistake",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Open the sender actions",
+      "questions": [
+       {
+        "question": "Which specific email is from the sender you want to block?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the email from 'A_Tech Insider' is necessary to access the specific options to block or unsubscribe from that sender.",
+        "whatTheAgentLoses": "You lose the ability to personally decide which specific sender is considered unwanted and should be blocked.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Where should you tap in the expanded header to access the sender's contact details?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping the 'From: A_Tech Insider >' field in the expanded header is necessary to open the additional options menu for managing or blocking the sender.",
+        "whatTheAgentLoses": "You lose the opportunity to manually inspect the sender's profile and verify their exact email address before taking action.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the email address on the contact card match the sender you actually intend to block?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Spammers often spoof display names, so verifying the actual email address on the contact card ensures you are blocking the real source and not a spoofed legitimate address.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the underlying email address, risking blocking a legitimate service if the display name was spoofed.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Choose the block method",
+      "questions": [
+       {
+        "question": "Which option should you select from the sender's context menu to prevent future emails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The email header menu lacks a direct block button, requiring you to copy the address to manually set up a filtering rule in your preferences.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly how the blocking workaround is implemented, such as routing the emails to the trash versus a dedicated spam folder.",
+        "kind": "decision",
+        "verify_form": "The client had no block button so the agent picked a workaround - check what it chose from the menu; copy-address-plus-rule and report-spam behave differently.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to block this sender or mark the message as not junk?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The context menu provides options to either permanently block the sender or mark the message as safe to return it to the inbox.",
+        "whatTheAgentLoses": "You lose the ability to personally evaluate whether a specific sender in the junk folder should be trusted or permanently blocked.",
+        "kind": "decision",
+        "verify_form": "In the junk folder the agent chose block or not-junk - check which way; one exiles the sender, the other invites them back.",
+        "speak": "never"
+       },
+       {
+        "question": "Which junk menu option should you apply to this sender?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a Junk submenu with options like 'Block Sender' and 'Never Block Sender' that dictate how future emails from this address are routed.",
+        "whatTheAgentLoses": "You lose the opportunity to manually dictate the exact blocking or whitelisting rules for this specific sender.",
+        "kind": "decision",
+        "verify_form": "The junk submenu offered block, never-block and domain scopes - check the one the agent clicked; scope decides how much mail the rule swallows.",
+        "speak": "never"
+       },
+       {
+        "question": "Does this sender use multiple different email addresses or subdomains that require a broader domain-level block rather than just filtering this specific address?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Aggressive marketers often rotate sending addresses (e.g., info@, deals@, marketing@), so a simple block on a single address will not stop the flow of unwanted mail.",
+        "whatTheAgentLoses": "The user loses the ability to recognize a pattern of rotating sender addresses and apply a more robust domain-wide filter to actually stop the clutter.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Confirm the block",
+      "questions": [
+       {
+        "question": "Should you proceed with blocking this contact?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a confirmation dialog requiring you to verify your intent to block the sender.",
+        "whatTheAgentLoses": "You lose the final opportunity to reconsider whether you might actually need future emails from this specific sender before they are blocked.",
+        "kind": "decision",
+        "verify_form": "The block confirmation was accepted - check the sender it named; blocked senders vanish without telling you.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to stop seeing this confirmation message when blocking senders in the future?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Outlook dialog box includes a 'Don't show this message again' checkbox that determines whether you will be interrupted by this popup every time you block a sender.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides your long-term interface preferences regarding notification popups.",
+        "kind": "decision",
+        "verify_form": "The do-not-show-this-again box was in reach - check whether the agent ticked it; ticked means future blocks skip the confirmation you would want to see.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you manually delete the email after blocking the sender, or does the system remove it automatically?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Blocking a sender prevents future emails from reaching your inbox, but it may leave the current email behind, requiring a manual deletion to fully clean the inbox.",
+        "whatTheAgentLoses": "The user loses the opportunity to fully clear the unwanted email from their view if the agent assumes blocking automatically deletes existing messages.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Open the filter settings",
+      "questions": [
+       {
+        "question": "Which settings tab should you select to manage email filters?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The settings page presents multiple categories like General and Accounts, so you must identify the correct tab to access your filtering and blocking rules.",
+        "whatTheAgentLoses": "The user loses the opportunity to review their current list of blocked addresses and active filters before new rules are applied.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Set the rule criteria",
+      "questions": [
+       {
+        "question": "Should you modify the filter criteria before searching, or just run the search for 'unsubscribe' as is?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal shows 'unsubscribe' in the 'Includes the words' field, and adjusting the other parameters could help prevent accidentally targeting important emails.",
+        "whatTheAgentLoses": "You lose the opportunity to fine-tune the search parameters to ensure important emails aren't accidentally caught in the bulk cleanup.",
+        "kind": "decision",
+        "verify_form": "A filter was created from the word 'unsubscribe' - check the criteria the agent left in place; unedited defaults make the filter match more than you may want.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure you want to create a filter for all emails containing the word 'unsubscribe'?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The search options pop-up shows the filter will apply to any email containing the word 'unsubscribe', which could inadvertently catch important messages.",
+        "whatTheAgentLoses": "You lose the opportunity to review and refine the search criteria to prevent legitimate emails from being caught in the automated cleanup.",
+        "kind": "decision",
+        "verify_form": "A standing filter on the word 'unsubscribe' was created - check its criteria; from now on it acts on matching mail without asking.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you want to identify the emails to be blocked?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The rule creation screen requires setting specific conditions, such as matching the exact sender address, to ensure only the unwanted messages are moved or blocked.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact sender address or domain to filter, risking the accidental blocking of emails you actually want to keep if the agent sets the rule too broadly.",
+        "kind": "decision",
+        "verify_form": "The rule's match condition was set - check the address or domain it targets; too broad and wanted mail dies with the spam.",
+        "speak": "never"
+       },
+       {
+        "question": "What criteria should trigger this filter?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The form offered multiple fields like 'Subject' and 'Includes the words', but only the 'From' field was used to target the specific sender.",
+        "whatTheAgentLoses": "You lose the ability to set nuanced conditions, such as only filtering emails with specific keywords or attachments from this sender.",
+        "kind": "decision",
+        "verify_form": "Only the From field drove the filter - check the address in it; every other field was left open on your behalf.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the automatically populated 'From' address the exact sender you want to filter?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The filter dialog pre-filled the 'From' field with '[email]', which dictates exactly which messages will be targeted for cleanup.",
+        "whatTheAgentLoses": "You lose the chance to verify that the specific email address chosen for the filter won't accidentally catch important messages.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Pick the rule action",
+      "questions": [
+       {
+        "question": "What action do you want to apply to the emails matching this filter?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides various filter actions to manage the matching emails, such as deleting, archiving, or categorizing them.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to decide whether these emails should be permanently deleted or just moved out of the inbox.",
+        "kind": "decision",
+        "verify_form": "The agent picked the filter's action - check whether it is Delete, a label or archive; Delete makes the filter a silent shredder.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Apply the rule to existing mail",
+      "questions": [
+       {
+        "question": "Do you want to apply this new rule to the messages already in your mailbox?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The dialog warns that applying the rule to selected mailboxes may change their contents, requiring you to decide if existing emails should be affected.",
+        "whatTheAgentLoses": "You lose the opportunity to manually review your existing emails before the new rule automatically moves or deletes them.",
+        "kind": "decision",
+        "verify_form": "The apply-to-existing dialog was answered - check which way; applied means the rule just ran over everything already in the box.",
+        "speak": "on-event"
+       },
+       {
+        "question": "What label should you apply to these emails, and do you want the rule to apply to past messages as well?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the box to apply the filter to matching conversations ensures that all previously received emails from this sender are immediately organized under the new label.",
+        "whatTheAgentLoses": "You lose control over how the sender's emails are categorized and whether your existing inbox is retroactively organized.",
+        "kind": "decision",
+        "verify_form": "The filter labels the sender's past mail retroactively - check the label and the checkbox; your whole history with this sender was just refiled.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Review the saved rules",
+      "questions": [
+       {
+        "question": "Do you want to review your existing email filters and blocked addresses?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The settings menu displays a 'Filters and blocked addresses' tab where you can manage the rules that automatically handle your incoming emails.",
+        "whatTheAgentLoses": "You lose the ability to personally audit and customize the specific rules dictating how your incoming mail is filtered or blocked.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the new filter appear in your settings with the correct conditions and actions?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking the 'Filters and blocked addresses' tab ensures the rule to delete emails from the unwanted sender was saved correctly.",
+        "whatTheAgentLoses": "You lose the certainty of visually confirming the filter's exact rules and knowing where to manage or delete it in the future.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Unblock the sender",
+      "questions": [
+       {
+        "question": "Which specific email address do you want to unblock?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a list of blocked addresses with checkboxes, requiring you to identify the exact sender to remove from the block list.",
+        "whatTheAgentLoses": "You lose the ability to personally decide which specific senders are allowed back into your inbox.",
+        "kind": "decision",
+        "verify_form": "A sender came off the block list - check which address; unblocking reopens your inbox to them.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you unblock the selected sender?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays an 'unblock' link directly on the selected row, providing a specific target to reverse the block for that address.",
+        "whatTheAgentLoses": "You lose the opportunity to manually confirm that the correct email address is being unblocked before the action is executed.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to unblock messages from Kong?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The confirmation dialog explicitly states that unblocking will allow messages from Kong to appear in your inbox.",
+        "whatTheAgentLoses": "You lose control over whether this specific sender is granted permission to reach your inbox again.",
+        "kind": "decision",
+        "verify_form": "The unblock confirmation was accepted - check the sender it named; their mail lands in your inbox again from now on.",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Select the emails in bulk",
+    "note": "5.1 then 5.2 whenever the pile is bigger than one page; 5.3 protects the keepers before the delete; 5.4 grabs a contiguous block; 5.5 through 5.7 are the mobile workarounds where no master checkbox exists",
+    "questions": [
+     {
+      "question": "Do you want to manually select individual emails to delete, or use a bulk deletion method?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen shows the 'Edit' mode with multiple emails selected manually, highlighting the choice between a tedious manual process and a faster bulk action.",
+      "whatTheAgentLoses": "The user loses the ability to decide whether to use a slow, manual deletion process or a more efficient bulk method.",
+      "kind": "decision",
+      "verify_form": "The agent chose the selection method - check whether it went one-by-one or used the all-at-once trick; the trick has no confirmation step anywhere.",
+      "speak": "on-event"
+     }
+    ],
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Select the visible page",
+      "questions": [
+       {
+        "question": "Do you want to select all visible emails at once using the top checkbox?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the top left checkbox selects all 50 emails currently displayed on the page, which drastically speeds up the bulk cleanup process.",
+        "whatTheAgentLoses": "You lose the opportunity to manually review the batch of selected emails to ensure no important messages are accidentally included in the deletion.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Extend to every match",
+      "questions": [
+       {
+        "question": "Should you select just the visible emails on this page or all the conversations in the inbox?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a banner offering to select all 316 conversations after the master checkbox is clicked, which dictates whether the cleanup action applies to just one page or the entire inbox.",
+        "whatTheAgentLoses": "You lose the ability to control the exact scope of the bulk selection, risking the accidental deletion of important emails if the agent chooses to select everything.",
+        "kind": "decision",
+        "verify_form": "The agent chose the selection's scope - check whether the banner says this page or every conversation; the difference is 50 versus thousands.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you select all the emails grouped under the new label?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a new 'Unwanted Emails' label containing 351 messages and a master checkbox in the toolbar that enables bulk selection.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review the filtered emails before bulk selecting them for deletion.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to select all emails in this tab or just the ones on the current page?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a banner offering to select all conversations in the tab instead of just the 50 visible on the current page.",
+        "whatTheAgentLoses": "You lose the ability to control whether the cleanup applies to the entire category or just the most recent page of emails.",
+        "kind": "decision",
+        "verify_form": "Tab-wide or page-only - check what the banner said when the agent acted; the difference is the whole category.",
+        "speak": "never"
+       },
+       {
+        "question": "How many emails are you selecting to delete?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The selection banner displays the exact number of messages chosen, which reveals if the app's bulk-action limit has been reached.",
+        "whatTheAgentLoses": "The user loses the awareness of exactly how many emails are being deleted in this batch versus how many remain.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the selection banner text visually change to confirm that 'All X conversations in Primary are selected'?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The link to select all emails across pagination is a small visual element; verifying the text actually changed is the only way to know the bulk action will apply to the whole batch rather than just the first 50.",
+        "whatTheAgentLoses": "The user loses the visual confirmation that the agent successfully expanded the selection beyond the first page before hitting the destructive delete button.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Exclude the keepers",
+      "questions": [
+       {
+        "question": "Are the emails currently visible in the inbox the unwanted marketing messages you intend to process?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the sender and subject lines on the screen ensures you are targeting the correct emails for cleanup before taking action.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify that the targeted emails are actually unwanted rather than important notifications.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are these standard marketing emails that can be processed normally?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the emails are standard promotional messages ensures that routine unsubscribing and bulk deletion is the safe and appropriate action.",
+        "whatTheAgentLoses": "An agent might blindly apply standard bulk deletion to everything, causing you to lose important account notifications mixed in with the spam.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which of these emails do you want to select for deletion?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display multiple emails from the same sender, requiring a decision on whether to delete specific messages or the entire list.",
+        "whatTheAgentLoses": "You lose the chance to manually review the subjects of the filtered emails to save any potentially useful messages before they are deleted.",
+        "kind": "decision",
+        "verify_form": "The agent selected some of the results for deletion - check the picks; the unchecked rows are the ones that survive.",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific emails should you exclude from the bulk deletion?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Manually unchecking specific emails like the Chromebook and Google Slides tutorials prevents the loss of useful reference materials during a bulk cleanup.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal judgment to save specific, valuable emails from being swept up in a bulk deletion.",
+        "kind": "decision",
+        "verify_form": "The agent unchecked some emails before deleting - check what it kept and what it did not; only you know which of those were worth saving.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you select all emails on the page or only the unread ones?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The selection dropdown offers options like 'Unread' to help prevent the accidental deletion of previously read emails.",
+        "whatTheAgentLoses": "The user loses the opportunity to specify exactly which types of emails should be preserved during the bulk cleanup.",
+        "kind": "decision",
+        "verify_form": "The selection dropdown got a choice - check whether the agent took all or only unread; read mail may be mail you meant to keep.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to delete all existing emails from this sender, or keep non-promotional messages like past receipts?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The search results for the sender show a mix of marketing emails and potentially important account notifications.",
+        "whatTheAgentLoses": "The user loses the ability to selectively preserve important account history while clearing out unwanted spam.",
+        "kind": "decision",
+        "verify_form": "The sender's history held receipts as well as promos - check what the agent kept; account records do not come back with a resubscribe.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to exclude emails saved under specific labels from being deleted?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The left sidebar shows 8 emails under the 'Saved Email' label, which will be permanently lost if you bulk delete all messages from this sender without taking precautions.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to manually review and protect specific labeled emails that you intended to keep.",
+        "kind": "decision",
+        "verify_form": "A saved-mail label sat inside the wipe's blast radius - check whether the agent protected it; the wipe takes labeled mail too.",
+        "speak": "never"
+       },
+       {
+        "question": "Did deselecting a specific email silently cancel your command to select all matching conversations across the entire inbox?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "In Gmail, if you click 'Select all conversations that match this search' but then uncheck a single email to save it, the system silently reverts to only selecting the remaining visible emails on that page.",
+        "whatTheAgentLoses": "The agent might assume it is still bulk-deleting thousands of emails, failing to realize the interface silently downgraded the selection to just the current page.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Select a range at once",
+      "questions": [
+       {
+        "question": "Which email should you select to start the selection range?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing the correct top email, such as the 'Tech Time' message, establishes the correct starting boundary for bulk-deleting the unwanted messages.",
+        "whatTheAgentLoses": "You lose the ability to manually verify that the first selected email is actually part of the unwanted batch rather than an important personal message.",
+        "kind": "decision",
+        "verify_form": "A range-select started at one email - check the top boundary; one row too high and a keeper is inside the range.",
+        "speak": "never"
+       },
+       {
+        "question": "Which email should you select as the end of your range?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing the correct final email ensures you highlight the exact block of unwanted messages without accidentally including emails you want to keep.",
+        "whatTheAgentLoses": "You lose the ability to manually verify the exact boundary of the bulk selection, risking the accidental deletion of important emails.",
+        "kind": "decision",
+        "verify_form": "The range's bottom boundary was set - check the last selected row; everything between the two clicks goes together.",
+        "speak": "never"
+       },
+       {
+        "question": "Which chunk of consecutive emails from this sender should you select to delete at once?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sorted list shows multiple consecutive emails from Advance Auto Parts spanning several months, making it efficient to select and delete a large batch simultaneously.",
+        "whatTheAgentLoses": "You lose the ability to visually verify the dates and decide exactly how large of a batch to bulk-delete at one time.",
+        "kind": "decision",
+        "verify_form": "A consecutive chunk from one sender was grabbed - check its first and last dates; the chunk boundary is where mistakes hide.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Select by hand on mobile",
+      "questions": [
+       {
+        "question": "Should you cancel the current selection to view the Airfarewatchdog email?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows three emails currently selected, meaning you must tap Cancel in the top right to exit edit mode before opening a different message.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to delete or archive the currently selected emails before navigating away.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you select multiple emails for deletion in the mobile app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Because the mobile app lacks a bulk-delete option, you must tap the circular avatars next to each email to select them individually.",
+        "whatTheAgentLoses": "The user loses the ability to manually tap the avatars and verify exactly which specific emails are being selected for deletion.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Trigger the select-all trick",
+      "questions": [
+       {
+        "question": "How do you initiate the trick to select all emails at once?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping 'Edit', selecting the email from 'Grovo', and holding the 'Move' button while unchecking it allows you to bulk-select emails when a native select-all option is missing.",
+        "whatTheAgentLoses": "You lose the ability to utilize undocumented multi-touch gestures to quickly manage and clean up your inbox.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Load the older mail first",
+      "questions": [
+       {
+        "question": "Is the folder fully synced so you know exactly how many emails you need to process?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The status changing from 'Checking for Mail...' to 'Updated Just Now' confirms the exact number of emails you need to load and clean.",
+        "whatTheAgentLoses": "You lose the ability to verify the exact total volume of emails the agent is about to handle before the cleanup begins.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you load all older emails into the app's memory so they can be selected?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The on-screen text explicitly states 'You have to scroll down to load more email,' meaning older messages won't be included in a bulk selection unless they are manually rendered first.",
+        "whatTheAgentLoses": "The user loses the ability to monitor the email dates as they scroll to ensure they aren't loading and subsequently deleting messages from a timeframe they want to keep.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Remove or file the selection",
+    "note": "6.1 decides what happens to the pile; 6.2 fires it and 6.3 guards every bulk run; 6.4 is the wait the toast asks for; 6.5 and 6.6 file instead of destroy; 6.7 reshapes the inbox itself",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Choose delete or archive",
+      "questions": [
+       {
+        "question": "Should I permanently delete all past emails from this sender, or would you prefer to just archive them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The interface provides options to either delete or archive the selected messages, determining if they can be recovered later.",
+        "whatTheAgentLoses": "The user loses the ability to reference past emails from this sender if the agent permanently deletes them instead of archiving.",
+        "kind": "decision",
+        "verify_form": "The agent picked delete over archive or the reverse - check which; archive keeps a searchable copy, delete does not.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to permanently delete these selected emails, or just archive them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows multiple past emails from the sender selected, requiring a choice between permanent removal and keeping them searchable.",
+        "whatTheAgentLoses": "The user loses the ability to retain past communications or receipts if the agent automatically deletes them instead of archiving.",
+        "kind": "decision",
+        "verify_form": "Check whether the batch was deleted or archived - recovery later depends entirely on that choice.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to permanently delete all past emails from this sender, or just archive them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The inbox interface allows for bulk actions like deleting or archiving, and choosing the wrong one might destroy emails you wanted to keep for reference.",
+        "whatTheAgentLoses": "The agent loses the user's personal preference regarding whether to permanently destroy the emails or just hide them from the main inbox.",
+        "kind": "decision",
+        "verify_form": "The delete-versus-archive choice repeated on this sender - check what the agent did this time; consistency is not guaranteed.",
+        "speak": "never"
+       },
+       {
+        "question": "Did you choose to delete the selected emails rather than archiving them?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The inbox toolbar displays both delete and archive options once the unwanted emails are bulk-selected.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to permanently destroy these messages or keep them hidden but searchable.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to permanently delete all existing emails from this sender, or just archive them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows multiple selected emails from the unwanted sender with options to either delete or archive them.",
+        "whatTheAgentLoses": "The user loses the choice of whether to keep a searchable record of past emails or free up storage space by deleting them completely.",
+        "kind": "decision",
+        "verify_form": "Storage space against a paper trail - check which way the agent resolved it for these emails.",
+        "speak": "never"
+       },
+       {
+        "question": "Should I delete, archive, or ignore the existing emails from this sender?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays multiple past emails from the unsubscribed sender that can be bulk-selected for cleanup.",
+        "whatTheAgentLoses": "The user loses control over their email retention if the agent automatically deletes or archives these messages without asking.",
+        "kind": "decision",
+        "verify_form": "Delete, archive or leave alone - check which the agent applied to the sender's existing mail.",
+        "speak": "never"
+       },
+       {
+        "question": "Which action did you choose to clean up the existing emails: delete, archive, or block?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The inbox toolbar presents multiple cleanup actions, and the choice determines whether the emails are permanently removed, hidden, or if the sender is restricted.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether they want to keep a searchable archive of the emails or permanently destroy them to save storage space.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you want to remove this email from your inbox?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The dropdown menu offers multiple ways to handle the message, such as deleting it, blocking the sender, or reporting it as spam.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to simply delete the current message or take stricter actions like permanently blocking the sender.",
+        "kind": "decision",
+        "verify_form": "The dropdown offered delete, block and report-spam - check which the agent used on this email; they escalate very differently.",
+        "speak": "never"
+       },
+       {
+        "question": "Which action do you want to apply to the selected emails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The action toolbar provides multiple ways to manage the selected messages, such as archiving, deleting, or marking them as read.",
+        "whatTheAgentLoses": "You lose the ability to decide whether these specific messages should be permanently deleted or just archived for future reference.",
+        "kind": "decision",
+        "verify_form": "The toolbar action on the selection was the agent's pick - check whether it archived, deleted or marked; each leaves your inbox in a different state.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Execute the removal",
+      "questions": [
+       {
+        "question": "Does hovering over the email row reveal a quick-action trash can icon, bypassing the need to open the email or select it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sighted users can use hover states to quickly delete emails without opening them, a visual affordance that speeds up manual cleanup.",
+        "whatTheAgentLoses": "The user loses the ability to utilize fast, hover-based visual shortcuts for inbox management that are not exposed in the static DOM.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you permanently delete all 254 selected emails right now?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows all 254 conversations in the Primary inbox are selected, meaning a single click on the delete icon would wipe out a massive batch of potentially mixed emails.",
+        "whatTheAgentLoses": "You lose the ability to decide whether a broad bulk deletion is safe or if a more targeted cleanup by specific sender is necessary.",
+        "kind": "decision",
+        "verify_form": "The agent had every conversation selected with delete one click away - check whether a whole-inbox wipe is what you asked for, or a per-sender sweep.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you select all these search results and delete them?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking the master select checkbox and the delete button will remove all the displayed emails from Cloudflare at once.",
+        "whatTheAgentLoses": "You lose the chance to review individual emails in the search results before they are bulk deleted.",
+        "kind": "decision",
+        "verify_form": "The agent bulk-deleted a search's results - check the query above the list; everything matching it went.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you delete the selected emails and confirm they were removed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Clicking the delete icon in the top toolbar executes the removal and triggers a banner confirming the exact number of conversations moved to the trash.",
+        "whatTheAgentLoses": "You lose the immediate visual reassurance of the confirmation banner proving that the correct number of emails were successfully deleted.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to select and delete all these filtered emails before returning to the inbox?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Bulk-selecting and deleting the filtered search results clears out the unwanted messages and visibly reduces the inbox unread count.",
+        "whatTheAgentLoses": "You lose the opportunity to review the selected emails to ensure no important messages are accidentally deleted.",
+        "kind": "decision",
+        "verify_form": "The filtered results got selected and deleted in one pass - check the filter and the count; the pass ran before anyone reviewed the rows.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you delete the 1,294 selected emails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The top toolbar displays a 'Delete' icon to remove the large batch of selected emails at once.",
+        "whatTheAgentLoses": "You lose the opportunity to review the selected emails to ensure no important messages are accidentally deleted.",
+        "kind": "decision",
+        "verify_form": "1,294 selected emails went to the delete button - check the count before it fired; that is the whole Social tab.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you back up your important emails before using this mass deletion tool?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A red warning slide explicitly advises backing up all emails because the upcoming method will delete everything in the inbox.",
+        "whatTheAgentLoses": "The user loses the ability to personally identify and secure their most critical emails and attachments before a total inbox wipe.",
+        "kind": "decision",
+        "verify_form": "The wipe ran with or without a backup - check whether anything was exported first; after Empty Trash there is no copy.",
+        "speak": "on-event"
+       },
+       {
+        "question": "How do you delete the selected emails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Tapping the trash can icon at the bottom center of the screen removes the unwanted messages from your inbox.",
+        "whatTheAgentLoses": "You lose the opportunity to review the selected emails one last time before they are moved to the trash.",
+        "kind": "decision",
+        "verify_form": "The trash tap took the selected batch - check the count in the bar before it went; on mobile there was no confirm dialog after it.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Confirm the bulk action",
+      "questions": [
+       {
+        "question": "Are you sure you want to proceed with deleting all selected emails?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The 'Confirm bulk action' dialog warns that this action affects all conversations in the search, making it critical to ensure no important emails are accidentally deleted.",
+        "whatTheAgentLoses": "The user loses the chance to personally verify that the search criteria didn't accidentally capture important emails before confirming the bulk deletion.",
+        "kind": "decision",
+        "verify_form": "The confirm-bulk-action dialog was accepted - check the count and scope it named; that dialog was the last stop before the sweep.",
+        "speak": "gate"
+       },
+       {
+        "question": "Are you sure you want to delete all 62,556 emails selected in this search?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The banner confirms that all conversations in the search are selected, meaning the deletion will apply to tens of thousands of emails at once.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that no important emails were caught in the search before permanently deleting them.",
+        "kind": "decision",
+        "verify_form": "The agent confirmed a five-digit deletion - check the number in the banner; at that scale a wrong query is a catastrophe, not a mistake.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure you want to delete all of the selected emails?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The banner confirms that all 2,549 conversations in the category are selected, meaning clicking the delete icon will trigger a massive cleanup.",
+        "whatTheAgentLoses": "You lose the chance to review the thousands of selected emails to ensure no important messages are accidentally sent to the trash.",
+        "kind": "decision",
+        "verify_form": "Another confirm dialog got an OK - check the count it stated; each OK is a scope you accepted.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure you want to apply this bulk action to all 100 conversations from this sender?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a confirmation modal warning that the action will affect 100 conversations from 'duluth trading', making it critical to verify the scope before proceeding.",
+        "whatTheAgentLoses": "Delegating this step removes your ability to double-check the exact number and label of the emails being permanently altered or deleted.",
+        "kind": "decision",
+        "verify_form": "The 100-conversation confirm was accepted - check the label it named; the count and the label are the whole contract.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to confirm archiving the selected messages?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows an 'Archive Selected Messages' popup that must be confirmed to actually remove the emails from the inbox.",
+        "whatTheAgentLoses": "Delegating this means losing the ability to decide whether to thoroughly clean up the old emails or just leave them to save time.",
+        "kind": "decision",
+        "verify_form": "The archive-selected popup was confirmed - check the count; archived mail leaves the inbox but keeps existing, which may or may not be what you meant.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Wait out the deferred delete",
+      "questions": [
+       {
+        "question": "Since some emails are still visible after the bulk delete, should you wait or try deleting them again?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The toast notification says the deletion is processing and might take time, but the unwanted emails are still visible in the inbox list.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to trust the system to finish the delayed deletion or to manually intervene and retry.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should you wait for the 'Loading...' indicator to disappear and the confirmation toast to appear before navigating away?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Bulk deleting thousands of emails takes time to process on the server, and navigating away or closing the tab too early might interrupt the action.",
+        "whatTheAgentLoses": "The user loses the assurance that the bulk deletion fully completed if the agent navigates away before the system confirms the action.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you need to keep the tab open while the remaining conversations are moved to the Trash?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The banner explicitly states that the system will continue moving the remaining conversations in a few minutes, meaning the massive bulk deletion is safely processing in the background.",
+        "whatTheAgentLoses": "The user loses the time saved by navigating away to other tasks if the agent unnecessarily idles on the page waiting for the visible email count to drop to zero.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Label the emails",
+      "questions": [
+       {
+        "question": "What should you name the new label to organize this email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a 'New label' dialog, meaning you must choose an appropriate name like 'Business Newsletters' to categorize the selected email.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to choose the specific names for the custom categories used to organize your inbox.",
+        "kind": "decision",
+        "verify_form": "The agent named a new label - check the name; it is your filing system it just extended.",
+        "speak": "never"
+       },
+       {
+        "question": "Which color should you choose for the 'Business Newsletters' label?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a color palette in the label's options menu, allowing you to visually distinguish these specific emails in the inbox.",
+        "whatTheAgentLoses": "You lose the ability to choose a color code that intuitively fits your personal visual organization system.",
+        "kind": "decision",
+        "verify_form": "A label color was picked - check that it reads correctly against the labels you already use.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to apply the 'Business Newsletters' label to this email?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the 'Labels' dropdown menu, and selecting a specific label determines how this sender's emails are organized in your inbox.",
+        "whatTheAgentLoses": "You lose the opportunity to personally choose the exact category or label that makes the most sense for organizing this specific sender.",
+        "kind": "decision",
+        "verify_form": "The label landed on an email - check which label on which mail; a filing mistake hides mail rather than deleting it.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to create a new label from the sidebar to organize these emails?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a 'New label' dialog for 'Monday.com', indicating a choice to categorize emails by sender rather than just deleting or archiving them.",
+        "whatTheAgentLoses": "You lose the ability to define custom organizational categories for your cleaned-up emails.",
+        "kind": "decision",
+        "verify_form": "The agent created a label instead of deleting - check that the category it invented matches how you actually organize.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you apply a newly created label to multiple emails at once?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows four selected emails and an open label dropdown, requiring you to choose the correct custom label like 'Monday.com' to organize them.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly which custom label is used to categorize these specific marketing emails in your personal filing system.",
+        "kind": "decision",
+        "verify_form": "One label went onto several emails at once - check the batch; everything selected got filed the same way.",
+        "speak": "never"
+       },
+       {
+        "question": "What should the new label be named, and where should it be nested?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The 'New label' dialog requires a name for the new category and offers the option to nest it under existing labels like 'Monday.com' for better organization.",
+        "whatTheAgentLoses": "You lose the ability to define your own folder hierarchy and name labels according to your personal organizational preferences.",
+        "kind": "decision",
+        "verify_form": "The agent named and nested the label - check the parent it chose; nesting decides where you will look for this mail later.",
+        "speak": "never"
+       },
+       {
+        "question": "Which email should you apply the new sub-label to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The inbox displays multiple messages, so you must choose the correct one to categorize under the newly created 'Monday Newsletter' sub-label.",
+        "whatTheAgentLoses": "You lose the ability to personally decide which specific past emails are grouped into your custom categories during the cleanup process.",
+        "kind": "decision",
+        "verify_form": "The agent chose which emails get the new sub-label - check the picks against your own filing.",
+        "speak": "never"
+       },
+       {
+        "question": "How should you categorize the selected emails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The top toolbar provides a 'Labels' dropdown menu, allowing you to organize the inbox by creating a new category or applying an existing one.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to define your own custom organizational structure and label names for your inbox.",
+        "kind": "decision",
+        "verify_form": "The selection got categorized - check the label the agent chose for it; your filing system is the thing being edited.",
+        "speak": "never"
+       },
+       {
+        "question": "How should you rename the label to resolve the naming conflict?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The dialog displays a red error message stating the chosen label name already exists, meaning a unique name must be provided to continue organizing the emails.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose a meaningful alternative label name that fits their personal organizational system.",
+        "kind": "decision",
+        "verify_form": "The label name collided and the agent invented a new one - check the name it settled on; it is now part of your system.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you customize the appearance of the new label?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the newly created label in the sidebar with an options menu next to it, which is where customization settings like color are located.",
+        "whatTheAgentLoses": "The user loses the ability to choose a specific color or visual style that fits their personal organizational preferences.",
+        "kind": "decision",
+        "verify_form": "Label appearance was set - check the color against the labels you already scan for.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you apply a label to categorize this email?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The top toolbar displays a 'Labels' icon, offering a way to organize the email before archiving or deleting it.",
+        "whatTheAgentLoses": "The user loses the opportunity to apply their personal organizational system by choosing specific labels for these emails.",
+        "kind": "decision",
+        "verify_form": "The agent labeled rather than deleted - check the label it applied; filing changes where mail lives, not whether it exists.",
+        "speak": "never"
+       },
+       {
+        "question": "Which label should you apply to these emails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a 'Label as:' dropdown menu with custom options like '* Action Required', requiring a decision on how to categorize the messages.",
+        "whatTheAgentLoses": "Delegating this step means losing the ability to personally organize your inbox according to your own custom workflow and priorities.",
+        "kind": "decision",
+        "verify_form": "A label was chosen from your list - check that it is the one that means what this mail is.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you update the email's label to mark the action as completed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Updating the label from the red '* Action Required' to the green '* Responded / Completed' ensures the inbox accurately reflects the current status of the task.",
+        "whatTheAgentLoses": "The user loses the ability to personally manage their custom organizational system and track task completion statuses.",
+        "kind": "decision",
+        "verify_form": "The status label was swapped - check that the swap reflects work actually done, not just tidiness.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Move to a folder",
+      "questions": [
+       {
+        "question": "Which email do you want to keep and move to another folder?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Promotions tab displays multiple marketing emails, and choosing which ones to save prevents the accidental deletion of useful content.",
+        "whatTheAgentLoses": "The user loses the personal judgment required to determine which specific promotional emails are still relevant and worth saving.",
+        "kind": "decision",
+        "verify_form": "The agent saved one email from the sweep - check which one and where it went; keep-worthiness is yours to judge.",
+        "speak": "never"
+       },
+       {
+        "question": "Which label or folder should you move this email to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The dropdown menu displays several custom and default labels, requiring a choice of where to file the message.",
+        "whatTheAgentLoses": "You lose control over your personal organizational system by letting an agent decide which custom folder an email belongs in.",
+        "kind": "decision",
+        "verify_form": "A destination was picked for the moved email - check the folder; filed wrong is functionally lost.",
+        "speak": "never"
+       },
+       {
+        "question": "Which folder should you move the selected emails to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen lists multiple destination folders like Trash, Junk, and custom SaneBox folders, which determines whether the emails are deleted, marked as spam, or saved for later.",
+        "whatTheAgentLoses": "Delegating this choice means losing the ability to decide whether these specific emails should be permanently deleted in the Trash or categorized elsewhere.",
+        "kind": "decision",
+        "verify_form": "The mass-selected mail went to a folder - check which one on the picker; Trash, Junk and a save folder are one tap apart.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Toggle the category tabs",
+      "questions": [
+       {
+        "question": "Which inbox categories do you want to enable to better organize incoming emails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Settings menu shows options like 'Promotions' and 'Updates', which determine how automated emails are grouped and filtered in your inbox.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to customize how your inbox automatically categorizes and separates different types of incoming mail.",
+        "kind": "decision",
+        "verify_form": "The agent changed which category tabs are on - check which boxes it ticked in Settings; tab changes re-sort your whole inbox, not just this batch.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you open the full settings menu to configure advanced cleanup options?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The quick settings panel contains a 'See all settings' button that grants access to advanced features like filters and blocked addresses.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review and customize the specific filtering and blocking rules applied to your inbox.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which inbox category do you want to hide, and how do you save the changes?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The settings page displays checkboxes for categories like 'Promotions', 'Social', and 'Updates', allowing customization of the inbox layout.",
+        "whatTheAgentLoses": "The user loses the ability to personalize their inbox layout by choosing which email categories are displayed as separate tabs.",
+        "kind": "decision",
+        "verify_form": "The agent changed which category tabs your inbox shows - check the checkboxes it saved; the layout change outlives the cleanup.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Manage the trash",
+    "note": "7.1, then 7.2 and 7.3 to make the delete permanent, or 7.4 to take something back; 7.5 is the seconds-long window the toast offers",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Open the trash folder",
+      "questions": [
+       {
+        "question": "Should you navigate to the Trash folder to permanently delete the messages?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The expanded sidebar reveals the 'Trash' label, which is where you must go to permanently erase the deleted emails.",
+        "whatTheAgentLoses": "You lose the chance to review the contents of the Trash before the emails are permanently and irreversibly removed.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you check the Trash folder to verify the deleted emails?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The toast notification confirms the conversations were moved to the Trash, so opening it allows you to verify the deletion or recover any mistakes.",
+        "whatTheAgentLoses": "You lose the chance to visually confirm that only the intended marketing emails were deleted before they are permanently removed.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Empty the trash",
+      "questions": [
+       {
+        "question": "Do you want to empty the Bin now or let the emails delete automatically after 30 days?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a banner offering to 'Empty Bin now' instead of waiting 30 days for automatic deletion.",
+        "whatTheAgentLoses": "The user loses the 30-day grace period to recover accidentally deleted emails if the agent empties the bin immediately.",
+        "kind": "decision",
+        "verify_form": "The agent chose between emptying the Bin now and the 30-day wait - check which; emptying now forfeits your recovery window.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you click 'Empty Trash now' to permanently delete all 62,754 messages?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays 62,754 messages in the trash and an 'Empty Trash now' link that will permanently delete them instead of waiting the standard 30 days.",
+        "whatTheAgentLoses": "You lose the 30-day grace period to review the trash and recover any emails that might have been deleted by mistake.",
+        "kind": "decision",
+        "verify_form": "Empty Trash now was clicked - check the count it named; permanent means the 30-day recovery is gone.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Confirm the permanent delete",
+      "questions": [
+       {
+        "question": "Are you sure you want to permanently delete all these messages?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a warning dialog stating that continuing will permanently delete all 62,754 conversations currently in the Trash.",
+        "whatTheAgentLoses": "Delegating this step removes your final opportunity to review the Trash for any accidentally deleted emails before they are gone forever.",
+        "kind": "decision",
+        "verify_form": "The permanent-delete confirmation was accepted - check the count; nothing after this dialog can bring those back.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Recover a deleted email",
+      "questions": [
+       {
+        "question": "How do you recover emails from the Trash that you want to keep?",
+        "cluster": "undo",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The Trash folder displays a warning that messages are automatically deleted after 30 days, making it necessary to move mistakenly deleted emails back to a safe folder like Inbox or Promotions.",
+        "whatTheAgentLoses": "You lose the chance to review the deleted items and rescue specific emails from permanent deletion.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Undo from the toast",
+      "questions": [
+       {
+        "question": "Should I undo the bulk deletion?",
+        "cluster": "undo",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The appearance of a deletion confirmation toast provides a brief window to reverse the action if unintended emails were selected.",
+        "whatTheAgentLoses": "The user loses the immediate opportunity to catch and reverse an accidental deletion before the notification disappears.",
+        "kind": "decision",
+        "verify_form": "The undo window was open after the delete - check whether anything in that batch needed rescuing while the toast still offered it.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the transient 'Undo' link still visible in the confirmation toast, or has it already faded away?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The ability to reverse a massive bulk deletion is tied to a small visual toast that disappears after a few seconds, requiring immediate visual confirmation if a mistake was made.",
+        "whatTheAgentLoses": "The user loses the ambient awareness of their exact window of opportunity to reverse a destructive action before the UI element vanishes.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Use a cleanup service",
+    "note": "8.1 through 8.3 hands the mailbox over - 8.3 is where the cost lives; 8.4 through 8.6 does the actual unsubscribing; 8.7 and 8.8 when the tool also deletes; 8.9 fires whenever the tool wants money or a favor; 8.10 and 8.11 close it out",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Choose the cleanup service",
+      "questions": [
+       {
+        "question": "Do you want to sign up for a free account to manage your subscriptions?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage offers a 'Sign Up For Free' button to start using the tool to manage a cluttered mailbox.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to decide whether to grant a third-party service access to your email data.",
+        "kind": "decision",
+        "verify_form": "The agent was offered a third-party cleanup account - check whether it signed up; that hands an outside service a road into your mailbox.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you sign in to an existing account or start a free trial?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage displays options to 'Sign In' or 'Try for Free', requiring you to choose your account status before proceeding.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent uses your existing account rather than unnecessarily signing up for a new trial.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to use a third-party service to bulk unsubscribe from these emails?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The inbox displays thousands of emails in the Primary and Promotions tabs, making manual unsubscribing impractical.",
+        "whatTheAgentLoses": "You lose control over deciding whether to grant a third-party application access to your email data.",
+        "kind": "decision",
+        "verify_form": "The agent brought in a third-party service - confirm you wanted an outside tool involved at all; the alternative was doing it inside the mailbox.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to initiate the signup process for Unroll.Me?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Unroll.Me homepage loading, which is the entry point for granting a third-party service access to manage your emails.",
+        "whatTheAgentLoses": "The user loses the ability to evaluate the privacy implications and decide whether to trust a third-party service with their inbox data.",
+        "kind": "decision",
+        "verify_form": "The agent started signup with the cleanup service - confirm you wanted this service in the loop before it touches the mailbox.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Accept the terms",
+      "questions": [
+       {
+        "question": "Should you read the terms and privacy policy before agreeing to them?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to check a box agreeing to the terms and privacy policy to continue, which determines how your email data is handled.",
+        "whatTheAgentLoses": "You lose the ability to evaluate the privacy risks and data usage policies before granting a third-party tool access to your inbox.",
+        "kind": "decision",
+        "verify_form": "The terms box got checked - check whether anyone read what the tool may do with your mail data; agreeing is yours to give.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you agree to the platform's terms of service and privacy policy to proceed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a privacy popup detailing data usage and requires clicking 'I Accept' to agree to the Terms of Service and Privacy Policy before continuing.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the specific terms and make an informed decision about how your personal email data will be collected and used.",
+        "kind": "decision",
+        "verify_form": "The agent accepted the tool's terms and privacy policy - check whether that trade of your email data is one you would make.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Connect the mailbox",
+      "note": "8.3.1, then 8.3.2 where OAuth is on offer; 8.3.3 through 8.3.5 is the app-password detour when it is not - a full-access credential minted mid-task",
+      "questions": [
+       {
+        "question": "Which upgrade method should you use to connect your inbox?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a choice between an automatic upgrade requiring a specific OS version and a manual upgrade using an app password.",
+        "whatTheAgentLoses": "The user loses the opportunity to select the upgrade method that is supported by their specific device and region.",
+        "kind": "decision",
+        "verify_form": "The automatic connection was unavailable and the agent took the manual path - check that you accept the app-password route it committed to; that path mints a full-access credential.",
+        "speak": "on-event"
+       }
+      ],
+      "children": [
+       {
+        "id": "8.3.1",
+        "label": "Pick the mail provider",
+        "questions": [
+         {
+          "question": "Which email provider do you want to sign in with?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays multiple sign-in options like Google, Yahoo, and Outlook, requiring you to select the specific account you intend to clean up.",
+          "whatTheAgentLoses": "The user loses control over which specific personal email account the agent accesses and modifies.",
+          "kind": "intent-check",
+          "speak": "if-wrong"
+         },
+         {
+          "question": "Which email address should you link to Unroll.me?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts you to enter an email address to link your mailbox, which determines exactly which account the service will access and clean.",
+          "whatTheAgentLoses": "You lose the ability to control which of your specific email accounts is shared with and scanned by this third-party service.",
+          "kind": "intent-check",
+          "speak": "if-wrong"
+         }
+        ]
+       },
+       {
+        "id": "8.3.2",
+        "label": "Grant the mailbox access",
+        "questions": [
+         {
+          "question": "Which account should you connect, and are you comfortable granting the tool permission to read and permanently delete your emails?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen states that Clean Email wants to access your Google Account to read, compose, send, and permanently delete all your email, which is a significant privacy and security decision.",
+          "whatTheAgentLoses": "Delegating this step means you lose the opportunity to evaluate whether you trust a third-party application with full access to manage and delete your personal emails.",
+          "kind": "decision",
+          "verify_form": "The agent granted the tool permission to read and permanently delete your mail - confirm that grant is one you accept; it outlives this session.",
+          "speak": "gate"
+         },
+         {
+          "question": "Are you comfortable granting this third-party app permission to view and manage your mail and contacts?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen shows the app requesting broad access to view and manage your mail, profile, and contacts, which requires a careful privacy consideration before accepting.",
+          "whatTheAgentLoses": "Delegating this step means you lose the opportunity to evaluate the privacy trade-offs of giving a third-party service broad access to your personal inbox and contacts.",
+          "kind": "decision",
+          "verify_form": "The consent screen listed mail, profile and contacts - check what the agent granted; contacts were not needed to unsubscribe from anything.",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "8.3.3",
+        "label": "Enable two-step verification",
+        "questions": [
+         {
+          "question": "Should I enable 2-Step Verification on your Google account to set up the application password?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen requires enabling 2-Step Verification and creating an app password to successfully connect the third-party service to your inbox.",
+          "whatTheAgentLoses": "You lose direct control over changes to your Google Account security settings and the creation of access credentials.",
+          "kind": "decision",
+          "verify_form": "The agent turned on 2-Step Verification to satisfy the tool - check your Google security settings for the change; it reshapes how you sign in everywhere, not just here.",
+          "speak": "on-event"
+         },
+         {
+          "question": "What is the password to verify your identity for the [email] account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The Google Sign-in screen requires a password to verify your identity before you can continue.",
+          "whatTheAgentLoses": "You lose the security of keeping your account password private by sharing it with an agent.",
+          "kind": "decision",
+          "verify_form": "A password prompt was satisfied mid-flow - check who typed it; an agent that cleared it was holding your password.",
+          "speak": "gate"
+         }
+        ]
+       },
+       {
+        "id": "8.3.4",
+        "label": "Generate the app password",
+        "questions": [
+         {
+          "question": "What should you name the custom app password being generated?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires selecting 'Other (Custom name)' from the dropdown and entering a label to generate a specific password for third-party access.",
+          "whatTheAgentLoses": "You lose the ability to choose a recognizable label for the app password, which helps you easily identify and revoke access later.",
+          "kind": "decision",
+          "verify_form": "The agent named the new app password - check the label on the App passwords page; an unrecognizable name is the one you fail to revoke later.",
+          "speak": "never"
+         },
+         {
+          "question": "Do you want to copy and save this generated app password before clicking done?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a 16-character app password that grants complete access to your Google Account and must be entered into your device or application.",
+          "whatTheAgentLoses": "Delegating this step means you lose direct visibility and control over a highly sensitive password that grants full access to your account.",
+          "kind": "decision",
+          "verify_form": "A full-access app password was generated - check where the agent put the copy; a credential it kept is one you cannot see or revoke from memory.",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "8.3.5",
+        "label": "Enter the app password",
+        "questions": [
+         {
+          "question": "Are you comfortable providing a Google app password to grant this third-party service access to your inbox?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen prompts for a 16-digit Google app password to connect Unroll.me, which grants the application direct access to read and manage your emails.",
+          "whatTheAgentLoses": "You lose the ability to assess the privacy and security risks before handing over an app password to a third-party service.",
+          "kind": "decision",
+          "verify_form": "The agent handed the tool a Google app password - confirm you accept that grant; it gives the service complete access to the account, not just this cleanup.",
+          "speak": "never"
+         },
+         {
+          "question": "Where should you go after copying the generated app password?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays the newly created app password, which must be taken back to the Unroll.me tab to grant the service access to your inbox.",
+          "whatTheAgentLoses": "You lose the ability to securely handle the sensitive app password yourself and verify exactly which third-party service is receiving it.",
+          "kind": "state-check",
+          "speak": "never"
+         },
+         {
+          "question": "Do both app-password setup steps show a green checkmark before you click Continue?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "This matters because the green checkmarks on Steps 1 and 2 indicate the setup is successfully finished and ready to advance.",
+          "whatTheAgentLoses": "A person delegating to an agent loses the chance to visually confirm that the app password was successfully generated and applied before moving forward.",
+          "kind": "state-check",
+          "speak": "never"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Run the inbox scan",
+      "questions": [
+       {
+        "question": "Do you want to click 'Start Editing' to manage the 10 subscriptions found?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen confirms 10 subscriptions were found and prompts you to click 'Start Editing' to choose which to keep or toss.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the 10 identified subscriptions and decide which specific senders to keep.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you wait on this screen for the scan to finish or request an email notification?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states the scan can take up to two minutes and offers an email notification if you prefer not to wait.",
+        "whatTheAgentLoses": "You lose the choice to actively monitor the scan's progress versus moving on to other tasks while waiting for an email.",
+        "kind": "decision",
+        "verify_form": "The agent chose how to wait out the scan - check whether it parked on the screen or asked for the email notice; only you know if the wait was worth it.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Pick the cleanup feature",
+      "questions": [
+       {
+        "question": "Which inbox management option should you choose to start cleaning?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a menu of automated cleaning options, including one that has already located 9 active mailing lists.",
+        "whatTheAgentLoses": "You lose the chance to review the high-level overview of your inbox clutter and choose which category of unwanted mail to tackle first.",
+        "kind": "decision",
+        "verify_form": "The agent picked one of the tool's cleanup features - check which card it clicked; stopping all spam and unsubscribing do very different things to your mail.",
+        "speak": "never"
+       },
+       {
+        "question": "Which dashboard option should you select to unsubscribe from emails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard presents multiple email management tools like blocking senders or stopping spam, so you must select the specific unsubscribe option to manage mailing lists.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to explore or utilize the other inbox cleanup tools available on the dashboard.",
+        "kind": "decision",
+        "verify_form": "The agent picked the unsubscribe card off the dashboard - check that is the feature you meant it to run, not blocking or auto-cleaning.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Triage the subscription list",
+      "questions": [
+       {
+        "question": "Which specific email subscriptions do you want to unsubscribe from?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a list of active email subscriptions, such as Coverr, Feedspot, and Instagram, requiring you to decide which specific senders to remove.",
+        "whatTheAgentLoses": "Delegating this decision means an agent might unsubscribe you from newsletters or notifications that you actually want to keep receiving.",
+        "kind": "decision",
+        "verify_form": "The agent ticked senders in the tool's list - read the list it removed; a wanted newsletter in that batch is gone with one click.",
+        "speak": "gate"
+       },
+       {
+        "question": "What action do you want to apply to the selected subscriptions?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen provides multiple management options for the selected items, such as unsubscribing, pausing, or routing to a folder, requiring a specific choice.",
+        "whatTheAgentLoses": "Delegating this step means the agent might permanently unsubscribe from emails you would have preferred to just pause or route to a different folder.",
+        "kind": "decision",
+        "verify_form": "The agent applied an action to the selected subscriptions - check whether it chose unsubscribe, pause or a folder; those differ in what you can undo.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Which of these mailing lists do you want to unsubscribe from first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Unsubscriber list shows multiple active mailing lists like Adobe and NKG, requiring you to choose which specific sender to remove first.",
+        "whatTheAgentLoses": "You lose the personal judgment of deciding which specific senders are no longer relevant to your interests.",
+        "kind": "decision",
+        "verify_form": "The agent picked which mailing list to drop first - read the row it chose; the order only matters if a wrong row is in it.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to check 'Do not ask for confirmation again' and 'Move existing messages to Trash' when confirming the unsubscribe?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The 'Unsubscribe?' modal includes options to bypass future confirmation prompts and automatically trash existing messages, which speeds up processing multiple senders.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to bypass safety prompts or automatically delete existing emails for each individual sender.",
+        "kind": "decision",
+        "verify_form": "The confirmation-suppressing toggle got set - check it; every unsubscribe after this one happens without asking you.",
+        "speak": "on-event"
+       },
+       {
+        "question": "When should you stop unsubscribing and finish the process?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a warning to make sure you do not unsubscribe from important emails, prompting the decision to stop after 64 removals and leave 133 active.",
+        "whatTheAgentLoses": "The user loses the ability to personally evaluate which remaining subscriptions are genuinely important to keep versus which are safe to remove.",
+        "kind": "decision",
+        "verify_form": "The agent stopped at some number of removals - check the remaining list; where to stop is a judgment about which of the rest still matter to you.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Refine the tool's filters",
+      "questions": [
+       {
+        "question": "Which filter criteria should you adjust to find the specific emails?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed options for labels, email size, and sent or received dates, which determine exactly which emails are isolated for cleanup.",
+        "whatTheAgentLoses": "Delegating this means losing the ability to choose your preferred filtering method, such as targeting specific date ranges, to isolate the unwanted emails.",
+        "kind": "decision",
+        "verify_form": "The agent narrowed the tool's view with filters - check which label, size or date bounds it set; those bounds decide what the next trash click takes.",
+        "speak": "never"
+       },
+       {
+        "question": "What end date should you select to filter the emails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The calendar interface allows you to set a specific end date, determining whether recent emails are included in the search results for cleanup.",
+        "whatTheAgentLoses": "The user loses the ability to define the exact timeframe of emails they want to preserve from deletion.",
+        "kind": "decision",
+        "verify_form": "A date cutoff was set on the calendar - check the end date the agent picked; one day off moves this year's mail into the deletable pile.",
+        "speak": "never"
+       },
+       {
+        "question": "Which label should you select to filter the emails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Choose labels...' dropdown with options like 'Coupons' and 'Target Deals', which determines which specific category of emails will be isolated.",
+        "whatTheAgentLoses": "You lose the ability to decide which specific custom categories of emails are targeted for the cleanup process.",
+        "kind": "decision",
+        "verify_form": "The agent filtered by one of your labels - check which label it chose; the label picked is the category that gets emptied.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to filter the emails by age, read status, or star status?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top bar displays dropdown menus for 'Older than', 'Read and Unread', and 'Star' to help you precisely target the emails you want to manage.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to apply your own specific criteria, like protecting starred emails, during the cleanup process.",
+        "kind": "decision",
+        "verify_form": "The agent set the age, read and star filters - check what each dropdown says; starred mail is only safe if the filter says so.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the applied date filter capture all the emails you want to remove?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed only 73 out of 131 emails were selected by the date filter, meaning some unwanted emails would be left behind if you proceeded.",
+        "whatTheAgentLoses": "You lose the ability to verify if a filter's results actually match your broader cleanup goals before taking destructive action.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are these the coupon emails you want to select?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 99 of 126 emails selected under the 'Coupons' filter, making it important to confirm these are the correct messages before taking bulk action.",
+        "whatTheAgentLoses": "You lose the ability to manually review the filtered list and adjust the search criteria to ensure no important emails are accidentally included.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.8",
+      "label": "Trash the mail inside the tool",
+      "questions": [
+       {
+        "question": "Should you delete only the selected emails or create an automatic rule for future ones?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The popup offers a choice between moving only the currently selected emails to the Trash or creating an automatic rule to trash future similar emails.",
+        "whatTheAgentLoses": "You lose control over whether future emails from this sender are automatically routed to the trash without your review.",
+        "kind": "decision",
+        "verify_form": "The tool offered a standing auto-clean rule and the agent picked one option - check which radio was active; the rule version keeps acting after you stop watching.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "8.9",
+      "label": "Pass the limit gates",
+      "questions": [
+       {
+        "question": "Do you want to start a free trial to use the unsubscribe feature?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a warning that the unsubscribe feature requires a paid account, presenting options to either upgrade or try it for free.",
+        "whatTheAgentLoses": "The user loses control over whether to initiate a free trial or commit to a paid subscription for a third-party service.",
+        "kind": "decision",
+        "verify_form": "The agent hit the paywall and picked the trial - check what it signed you up for; trials attached to your mailbox have a way of billing later.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does the page say the unsubscribe feature needs a paid account even though the flow was presented as free?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator states that no payment is required, but an on-screen popup explicitly warns that unsubscriber features require a paid account.",
+        "whatTheAgentLoses": "An agent might get stuck on a paywall or unexpectedly agree to charges because it cannot resolve the contradiction between the audio instructions and the visual warning.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you start a free trial to use the premium unsubscribe feature and move existing messages to the trash?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The modal requires choosing between upgrading or starting a free trial to use the unsubscribe feature, along with toggles for moving existing messages to the trash and skipping future confirmations.",
+        "whatTheAgentLoses": "Delegating this means the agent might sign you up for a free trial without your consent or permanently delete emails you wanted to keep.",
+        "kind": "decision",
+        "verify_form": "The agent set the unsubscribe modal's toggles and took the trial - check both switches; move-existing-to-trash deletes history, and do-not-ask-again removes your future say.",
+        "speak": "never"
+       },
+       {
+        "question": "Which share option should you use to bypass the unsubscribe limit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal requires sharing the service on Facebook or via other options to unlock more than 5 unsubscribes.",
+        "whatTheAgentLoses": "The user loses the ability to choose which personal social media account is used to endorse the service.",
+        "kind": "decision",
+        "verify_form": "The tool demanded a share to continue and the agent picked a channel - check what was posted where; your accounts should not advertise a tool as payment.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to share the Unroll.Me promotional post on your Facebook account to proceed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a Facebook share dialog prompting a promotional post about Unroll.Me to unlock the unsubscribe feature.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to post promotional content to their personal social media and control its privacy settings.",
+        "kind": "decision",
+        "verify_form": "A promotional post went toward your Facebook - check its audience and whether it actually posted; Only Me was the least bad setting, but posting at all was your call.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to start a 14-day free trial that limits you to cleaning 1,000 messages and 25 subscriptions?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The popup offers a 14-day free trial that caps your usage at 1,000 cleaned messages and 25 unsubscribes without requiring a credit card upfront.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to opt into a third-party service's trial and accept its specific usage caps.",
+        "kind": "decision",
+        "verify_form": "The agent accepted a capped trial - check the caps it agreed to; the message and list limits are where the tool will stop and ask for money.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.10",
+      "label": "Configure the rollup digest",
+      "questions": [
+       {
+        "question": "Do you want to share your cleanup stats on social media, or just continue to the dashboard?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The summary screen displays your unsubscribe statistics and offers options to share them on Twitter or Facebook before proceeding.",
+        "whatTheAgentLoses": "You lose the opportunity to review your exact cleanup statistics and decide whether to publicly share your progress.",
+        "kind": "decision",
+        "verify_form": "The tool's summary offered social sharing and the agent moved on - check the stats it skipped past; the numbers are your record of what happened.",
+        "speak": "never"
+       },
+       {
+        "question": "Which tab should you select to view the emails you just unsubscribed from?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The Unroll.me dashboard defaults to the 'New' tab, requiring you to actively switch to the 'Unsubscribed' tab to verify your recent actions.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally review the unsubscribed list and catch any important senders that were removed by mistake.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to return to the list of remaining active subscriptions to continue sorting them?",
+        "cluster": "approve",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Edit Subscriptions' link with a '3 new' badge, indicating there are more active subscriptions to review.",
+        "whatTheAgentLoses": "The person loses the ability to decide whether to continue managing the remaining active subscriptions or stop.",
+        "kind": "decision",
+        "verify_form": "The tool flagged more subscriptions to sort - check whether the agent went back or stopped; the remainder stays live either way.",
+        "speak": "never"
+       },
+       {
+        "question": "When do you want your daily rollup email delivered, and is the summary of your unsubscribes correct?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen asks you to choose a delivery time for your Rollup email and displays a summary of the 64 unsubscribed and 7 rolled-up emails to review.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a delivery time that doesn't fit your daily email reading routine.",
+        "kind": "decision",
+        "verify_form": "The rollup delivery time was set and the summary shown - check both; the digest now arrives on the agent's schedule, not yours, unless you change it.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.11",
+      "label": "Disconnect and revoke access",
+      "questions": [
+       {
+        "question": "Do you want to delete your account and data from this third-party service?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a 'Delete Account and Data' button under the 'Data Removal' tab that will permanently erase your information from Clean Email's servers.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to permanently erase your personal data from this third-party tool for privacy or keep the account active for future use.",
+        "kind": "decision",
+        "verify_form": "The agent asked the tool to delete your account and data - check the confirmation and the error that followed; an errored deletion may mean your data is still there.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you investigate this data integrity error or just dismiss it?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Data integrity check failed' error, which could indicate a serious issue with your mailbox that requires troubleshooting.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to investigate a potentially critical mailbox error or ignore it to finish the current task.",
+        "kind": "decision",
+        "verify_form": "A data-integrity error appeared and the agent clicked past it - check the error text; dismissed errors do not resolve themselves.",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which account action do you want to take next?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The account dropdown menu presents several options like editing subscriptions or settings, requiring you to decide if it is time to log out.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to securely log out immediately or stay signed in to adjust other account settings.",
+        "kind": "decision",
+        "verify_form": "The agent picked logout from the account menu - check that the session actually ended; staying signed in leaves the tool live on your mailbox.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Verify the cleanup",
+    "note": "9.1 after every action; 9.2 is this domain's own arithmetic - counts before against counts after; 9.3 checks state rather than messages; 9.4 is the check no tutorial stays around for; 9.5 catches the runs that only look finished; 9.6 closes the loop",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Read the confirmation toast",
+      "questions": [
+       {
+        "question": "Did you verify the confirmation toast that the emails were moved to the trash?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The black toast notification at the bottom left confirms that the selected conversations were successfully moved to the trash.",
+        "whatTheAgentLoses": "Delegating this step means you lose the immediate opportunity to click the 'Undo' link if the wrong emails were accidentally deleted.",
+        "kind": "state-check",
+        "speak": "always"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Reconcile the counts",
+      "questions": [
+       {
+        "question": "Does the search's unread total match the inbox's own unread counts?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The title card introduces the task with 62,000 unread emails, but the search results display exactly 62,556 unread messages.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is handling the correct scope of emails if it fails to notice the discrepancy in the unread count.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is the same mailbox and account on screen across the whole run, with counts that agree between steps?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen shows 19 emails in the Drafts folder, which acts as a visual baseline to ensure the same account is used continuously throughout the recording.",
+        "whatTheAgentLoses": "The user loses the assurance that the task was completed in a single, continuous session on their specific account without unexpected context switches.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the total number of emails in the Bin match the sum of the emails you just deleted?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The 21 emails shown in the Bin perfectly match the sum of the 9 Cloudflare and 12 TikTok emails deleted in previous steps.",
+        "whatTheAgentLoses": "You lose the mathematical certainty that only the intended emails were removed and nothing else was accidentally deleted.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do the email counts remain consistent after adding and removing the Updates tab?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The Primary inbox count drops from 252 to 81 when adding the Updates tab, but returns to only 159 instead of the expected 240 after deleting 12 emails and removing the tab.",
+        "whatTheAgentLoses": "The user loses certainty that their inbox was managed safely if emails disappear without a clear reason during the cleanup process.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the unread email count in your search results reconcile with the sidebar and your recent deletions?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The 'is:unread' search showing 25 emails must reconcile with the 'Inbox 24' sidebar count to confirm that exactly three conversations were successfully trashed from the initial 27.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the math between the search results, the sidebar, and the deleted items perfectly aligns to confirm no unintended emails were removed.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do the numbers from your initial scan match your final unsubscribe and remaining counts?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The initial scan screen at 05:34 showed 8 email subscriptions found, which contradicts the claim of 10 total subscriptions.",
+        "whatTheAgentLoses": "The user loses an accurate accounting of their inbox cleanup if the agent hallucinates or miscalculates the subscription totals.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the updated inbox count accurately reflect the exact number of emails you just deleted?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The inbox count only decreased by two after four emails were moved to the bin, indicating that either new emails arrived or the deletion was incomplete.",
+        "whatTheAgentLoses": "The user loses certainty that the inbox was properly cleaned if the agent ignores conflicting email counts.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are the inbox message counts consistent across screens?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The analyst claimed the inbox count fluctuated between timestamps, but the mail app was not even open at the first cited moment, indicating disjointed or edited footage.",
+        "whatTheAgentLoses": "The user loses an accurate accounting of how many emails were actually removed during the cleanup process.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the number of emails actually deleted match what the narrator said would happen?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The narrator claimed about 50 emails would be deleted, but the inbox count dropped from 228 to 128, showing exactly 100 were removed.",
+        "whatTheAgentLoses": "If an agent deletes more emails than expected without noticing the discrepancy, you might lose important messages that were accidentally caught in the bulk action.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are the inbox counts consistent across the interface?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The left sidebar displays an inbox count of 1,118, but the top right counter shows 7,648, indicating a significant discrepancy in the displayed email totals.",
+        "whatTheAgentLoses": "The user loses the assurance that their inbox is fully cleaned and accurately represented if the agent ignores conflicting email counts.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you notice the discrepancy in the Trash folder's email count after moving the messages?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The pagination initially showed 70 emails but updated to 19 after 50 were moved, revealing a minor display inconsistency in the mailbox interface.",
+        "whatTheAgentLoses": "The user loses the opportunity to notice minor interface glitches that could cause confusion about exactly how many emails were actually processed.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the final inbox count match the initial count minus the emails you deleted?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Reconciling the final inbox count of 3,544 with the initial 3,650 minus the 106 deleted emails confirms that no unintended messages were removed.",
+        "whatTheAgentLoses": "You lose the mathematical assurance that the agent only deleted the exact batch of unwanted emails and nothing else.",
+        "kind": "state-check",
+        "speak": "always"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Check the block or filter took",
+      "questions": [
+       {
+        "question": "Are emails from this sender now showing up in your inbox?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing the email from 'Kong' in the Primary inbox confirms the messages are accessible so you can proceed to unsubscribe or delete them.",
+        "whatTheAgentLoses": "You lose the reassurance of visually confirming exactly where the unwanted sender's emails are currently landing in your mailbox.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you need to read the rest of this help page to complete the task?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The help page outlines the standard methods to block or unsubscribe, which you may already know how to execute without reading further.",
+        "whatTheAgentLoses": "The user loses the opportunity to discover alternative or advanced methods for managing unwanted emails that might be detailed further down the page.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you confirm the sender is successfully blocked?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Verifying the blocked list banner and the red strikethrough icon next to the sender's name confirms that your inbox rules have been updated correctly.",
+        "whatTheAgentLoses": "You lose the direct visual reassurance of the blocked status banner and icon, leaving you to trust the agent actually applied the restriction.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you want to learn more about how blocking works?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The yellow confirmation banner includes a 'Learn more' link that explains how blocked messages are routed to Spam.",
+        "whatTheAgentLoses": "You lose the opportunity to read the documentation and fully understand how the platform handles blocked addresses.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Check the mail stopped"
+     },
+     {
+      "id": "9.5",
+      "label": "Catch the partial completion",
+      "questions": [
+       {
+        "question": "Does the number of emails in the deletion confirmation match the number you originally selected?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interface showed 165 emails selected, but the subsequent confirmation dialog only asked to move 27 emails to the trash.",
+        "whatTheAgentLoses": "The user loses the guarantee of a fully cleaned inbox if the agent blindly accepts a partial deletion without noticing the mismatched email counts.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you actually select and delete all the unwanted emails, or just the first page?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator claims to delete all the emails, but the screen shows only 50 out of 351 conversations were selected and the actual deletion is never shown.",
+        "whatTheAgentLoses": "The user is left with hundreds of unwanted emails still cluttering their inbox because the agent failed to properly execute the bulk deletion.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the Empty Trash step actually run, or did the cleanup stop at moved-to-Trash?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The narrator explicitly instructs you to permanently delete the messages by emptying the trash, but the video cuts off before this action is shown.",
+        "whatTheAgentLoses": "The user loses the assurance that the unwanted emails were permanently deleted rather than just moved to the trash folder.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the bulk deletion successfully remove all 62,556 emails, or did the massive batch size cause it to partially fail?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Deleting tens of thousands of emails at once can cause the server request to time out or silently drop some messages, requiring you to verify if a second pass is needed.",
+        "whatTheAgentLoses": "The user loses a fully cleaned inbox if the agent assumes a single massive bulk-delete command succeeded perfectly without verifying the final count.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Check the empty state",
+      "questions": [
+       {
+        "question": "Are the unwanted promotional emails gone from your inbox?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The inbox view shows the remaining emails, which confirms whether the bulk deletion successfully removed the promotional clutter.",
+        "whatTheAgentLoses": "The user loses the visual confirmation that their inbox is now clean and free of unwanted promotional emails.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is your primary inbox completely empty?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Clicking the Inbox link to see the 'Primary tab is empty' message confirms that all unwanted emails have been successfully removed.",
+        "whatTheAgentLoses": "You lose the peace of mind that comes from personally seeing the empty inbox confirmation message.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Did you verify that the unwanted emails were successfully moved to the trash?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Seeing the 'No Message Selected' screen confirms that the bulk deletion was successful and the inbox is now clean.",
+        "whatTheAgentLoses": "You lose the visual reassurance of an empty inbox confirming that the unwanted messages were actually removed.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

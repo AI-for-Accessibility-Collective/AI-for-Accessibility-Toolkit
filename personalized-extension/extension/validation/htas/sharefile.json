@@ -1,0 +1,2610 @@
+{
+ "task": "share a file, folder, or photo album with specific people at the right permission level (Google Drive, Google Photos, Dropbox, OneDrive, iCloud): pick the item, open the sharing dialog, add people or create a link, set the permission (viewer/commenter/editor; link scope), send the invite or copy the link, and verify who has access; complete when the shared state (the people list, or the created link with its permission) is on screen. Surface pinned: a cloud storage or photos service's share flow. Variants: file-transfer-service marketing, torrenting, IT-admin tenant sharing policies, and camera/photography content do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Share the item at the right level",
+  "note": "1 then 2 where the content is not yet staged; 3 fixes which item is shared and how far the share reaches; 4 opens the dialog where the grant is set; 5 and 6 in the order the platform interleaves them - the fork in 5.1 decides whether 6 configures people or a token; 7 hands it over; 8 immediately after, because the sharer cannot see the recipient's screen from their own account; 9 whenever a standing share needs changing - and 8.5's contradictions are fixed there",
+  "children": [
+   {
+    "id": "1",
+    "label": "Open the sharing venue",
+    "note": "1.1 then 1.2; 1.3 where the platform gates sharing behind a sync or feature toggle; 1.4 when storage or plan limits could block the share; 1.5 only on the desktop-app detours",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the app or site",
+      "questions": [
+       {
+        "question": "Do you want to allow the browser to open the Dropbox app?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser displayed a prompt asking whether to allow www.dropbox.com to open the associated Dropbox application.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to continue the task in the web browser or switch to the dedicated desktop application.",
+        "kind": "decision",
+        "verify_form": "At the open-the-app prompt the agent picked web or desktop - check which surface the share actually happened on; their dialogs differ.",
+        "speak": "never"
+       },
+       {
+        "question": "Which app should you open to start sharing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app drawer displays multiple applications, so you must select the correct cloud storage or photos service to locate the item you want to share.",
+        "whatTheAgentLoses": "You lose the ability to decide which specific cloud service or app contains the file or album you intend to share.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the button you clicked land you in your existing personal Drive rather than starting an enterprise trial?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The product page displays multiple options like 'Go to Drive' and 'Try Drive for Work', requiring you to select the correct path for a personal account.",
+        "whatTheAgentLoses": "You lose the assurance that the agent navigates to your existing personal workspace rather than accidentally starting an enterprise trial.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which app should you open from the Microsoft 365 launcher?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app launcher displays multiple Microsoft 365 services like Outlook, Word, and OneDrive, requiring you to select the specific cloud storage app where your file is located.",
+        "whatTheAgentLoses": "The user loses the ability to specify exactly which Microsoft 365 service houses the file they intend to share.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Verify the signed-in account",
+      "questions": [
+       {
+        "question": "How should you proceed to log into your existing account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows options to sign up with Google, Apple, or email, but you need to navigate to the login route to access your existing files.",
+        "whatTheAgentLoses": "The agent might create a brand new account instead of navigating back to log in, leaving you unable to access and share your existing files.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you logged into the correct Google Drive account to select the item you want to share?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the active account, indicated by the 'u/2' in the URL and the specific files visible like 'Example.png', ensures you do not accidentally share items from the wrong profile.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to visually confirm that the agent is operating within the correct personal or professional workspace before it starts sharing files.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are you in the correct account and selecting the intended item to share?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the active account profile and file name ensures you do not accidentally expose data from the wrong workspace.",
+        "whatTheAgentLoses": "The user loses the intuitive visual check of their current environment and file context before initiating a potentially sensitive sharing action.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Enable the sharing precondition",
+      "questions": [
+       {
+        "question": "Do you want to enable the Shared Albums feature in your iCloud settings?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the iCloud Photos settings where the Shared Albums toggle must be turned on before you can create or subscribe to shared albums.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to activate a system-level iCloud feature that affects your device's photo sharing capabilities and storage.",
+        "kind": "decision",
+        "verify_form": "The agent may have flipped the Shared Albums toggle - check whether it was off before, because turning on a system-wide sharing feature is a device-level change.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the account menu show your current backup status and storage usage as expected before you open Photos settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The account menu displays various options like backup status and storage, requiring you to explicitly select 'Photos settings' to access deeper app configurations.",
+        "whatTheAgentLoses": "The user loses the opportunity to review their current backup status and storage usage before navigating into the settings menu.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the file located in iCloud Drive so that it can be shared?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The folder path dropdown confirms whether the item is stored in iCloud Drive, which is a requirement for using iCloud's sharing features.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the file is saved in the correct cloud location rather than locally before attempting to share it.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the correct Apple ID signed in before you proceed into iCloud settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Settings menu displays the Apple ID profile at the top, which must be selected to reach the iCloud configuration options.",
+        "whatTheAgentLoses": "The user loses the chance to verify that the correct Apple ID is signed in before proceeding with iCloud sharing.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are your photos currently syncing to iCloud?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The status bar at the bottom confirms that your recent photos and videos are actively syncing to iCloud.",
+        "whatTheAgentLoses": "You lose the reassurance of seeing the live progress message indicating your items are safely backing up to the cloud before you share them.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is iCloud Photos checked in your settings so you can use the Shared Library?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The settings screen shows the iCloud Photos checkbox, which must be enabled before the Shared Library feature can be used.",
+        "whatTheAgentLoses": "You lose the chance to manually verify your cloud sync settings and ensure your photos are backed up before enabling a shared library.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Check storage and plan",
+      "questions": [
+       {
+        "question": "Do you need to review the storage limits of your Google Workspace plan?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen displays Google Workspace pricing plans and storage limits, which is useful for confirming you have enough space before sharing large files.",
+        "whatTheAgentLoses": "The user loses the opportunity to understand their account's storage capacity and ensure they won't hit limits.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you upgrade to a paid Dropbox subscription plan?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays various paid tiers like Plus and Essentials with different storage limits and billing frequencies that require a financial commitment.",
+        "whatTheAgentLoses": "The user loses control over their financial budget and the choice of whether to stick with the free version or pay for specific storage needs.",
+        "kind": "decision",
+        "verify_form": "Check that no plan purchase got started; sharing never requires the upsell the page leads with.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you verifying that the yearly billing option actually saves you money compared to the monthly rate?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screens at different moments show the monthly rate of $11.99 and the yearly rate of $9.99 per month, requiring a calculation to confirm the $24 annual savings before upgrading to access premium sharing features.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify pricing consistency and make an informed financial decision between subscription tiers.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Configure the synced surface",
+      "questions": [
+       {
+        "question": "Do you want to select the file from your synchronized desktop drive?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows Google Drive integrated as a local G: drive with 23.2 GB of free space, which offers a desktop-native way to access cloud files.",
+        "whatTheAgentLoses": "You lose visibility into your remaining cloud storage capacity and the choice to manage files through your local operating system.",
+        "kind": "decision",
+        "verify_form": "Check which surface the agent worked from - the mounted drive letter or the web; the desktop route can mask whether a file has actually reached the cloud.",
+        "speak": "never"
+       },
+       {
+        "question": "Which menu option do you select to access your offline files?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The side menu displays an 'Offline' option alongside 'Recent', 'Trash', and storage details.",
+        "whatTheAgentLoses": "The user loses the ability to specifically locate and share files that have been saved for offline access.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Stage the content",
+    "note": "2.1 where a container is needed, then 2.2; 2.3 until the set is right - on photo platforms 2.3 is itself the scope of the share; 2.4 before anything is granted",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Create the container",
+      "questions": [
+       {
+        "question": "What should you name the new folder, and do you want to enable automation?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a 'Create folder' modal with a text field for the name and an 'Add automation' checkbox for automatically organizing content.",
+        "whatTheAgentLoses": "You lose the chance to catch spelling errors in the folder name and to decide whether automated file organization rules should be applied.",
+        "kind": "decision",
+        "verify_form": "Check the folder name the agent typed and the automation checkbox it left; recipients see the spelling, and auto-organizing rules act on their own.",
+        "speak": "never"
+       },
+       {
+        "question": "What should the album be named?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The album creation screen presents an 'Untitled' placeholder that needs to be filled.",
+        "whatTheAgentLoses": "The user loses control over the specific name given to the newly created album.",
+        "kind": "decision",
+        "verify_form": "The agent named the album - check the title recipients will see; it invented one if u didn't give it.",
+        "speak": "never"
+       },
+       {
+        "question": "What name should you give the new folder?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'New folder' dialog with a default name, and choosing a descriptive name helps recipients identify the shared content.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to choose a specific, meaningful name for the folder you are about to share.",
+        "kind": "decision",
+        "verify_form": "Check the folder's name - recipients identify the share by it, and the agent chose it.",
+        "speak": "never"
+       },
+       {
+        "question": "What should you name the new folder and where do you want to save it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Create folder' modal requires a name and offers location options like 'Camera Uploads' or 'YouTube', which determines how the content is organized before sharing.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might pick an unhelpful name or bury the folder in an unexpected location, making it hard for you to find later.",
+        "kind": "decision",
+        "verify_form": "Check where the agent put the folder and what it called it; a buried or misnamed folder is hard for u and for recipients to find.",
+        "speak": "never"
+       },
+       {
+        "question": "Which type of shared album do you want to create?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple sharing options like 'Create shared album', 'Create family album', and 'Create ev album', which dictate the context and default settings of the new album.",
+        "whatTheAgentLoses": "The user loses the ability to choose the specific album category that best fits their intended audience and organizational preference.",
+        "kind": "decision",
+        "verify_form": "Check which album type the agent created - the category changes the defaults and the audience.",
+        "speak": "never"
+       },
+       {
+        "question": "What do you want to name the newly created folder?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog defaults to 'Untitled folder', so providing a specific name helps both you and the future recipients identify the shared content.",
+        "whatTheAgentLoses": "You lose the opportunity to choose a meaningful folder name that fits your personal organizational preferences.",
+        "kind": "decision",
+        "verify_form": "Check the name the agent gave the folder; both u and the recipients navigate by it.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to get started creating an iCloud Shared Photo Library?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen warns that you can only have one Shared Library and the creator must provide the iCloud storage for all included items.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether you are willing to commit your personal iCloud storage quota to host the shared library.",
+        "kind": "decision",
+        "verify_form": "Creating the shared library commits your iCloud storage to host everything anyone adds - check the agent didn't start one u never asked for.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Add the content",
+      "questions": [
+       {
+        "question": "How should I add the file to this folder?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple options for adding content like 'Upload or drop' and 'Create', and choosing the right method affects how the file is brought into the cloud storage.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred method for adding files, such as drag-and-drop versus using the upload menu.",
+        "kind": "decision",
+        "verify_form": "The agent added the file by whichever method it preferred - the check that matters is where the file landed, and the drop banner names the target folder.",
+        "speak": "never"
+       },
+       {
+        "question": "Which file should you select to upload to the Dropbox folder?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The local file explorer displays a grid of pictures, requiring you to identify the correct file to drag into the Dropbox upload zone.",
+        "whatTheAgentLoses": "You lose the opportunity to visually confirm the exact local photo being selected for upload and sharing.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which file should you drag, and where exactly should you drop it to ensure it goes into the correct folder?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Hovering over the 'Important docs' folder row triggers a blue dashed outline confirming the file will be uploaded directly into that specific folder.",
+        "whatTheAgentLoses": "Delegating this means you lose the visual confirmation of the drop zone overlay to guarantee the file is placed in the exact intended folder.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which file do you want to add to the shared folder?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple items in the 'Documents' folder, requiring a choice of which specific file to select for sharing.",
+        "whatTheAgentLoses": "The user loses the ability to choose the exact file they want to share with others.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you uploading an existing file or creating a new document?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The '+ New' menu offers different options for adding content, such as uploading a local file or creating a new cloud document from scratch.",
+        "whatTheAgentLoses": "You lose the ability to specify whether the content to be shared already exists on your local drive or needs to be created directly in the cloud.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific files from your computer do you want to upload?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The file explorer shows multiple image files in the directory, and selecting the wrong ones could result in sharing incorrect or private photos.",
+        "whatTheAgentLoses": "You lose the ability to visually review the local directory and hand-pick the exact photos you want to share.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you need to upload a new file before selecting what to share?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The '+ New' dropdown menu provides the option to add more files to your cloud storage if the item you intend to share is not already present.",
+        "whatTheAgentLoses": "You lose the opportunity to realize a required file is missing and upload it before initiating the sharing workflow.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you need to add photos from your computer?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the 'Select from computer' button allows you to upload local files but discards the three photos already selected from the library.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh whether adding local files is worth having to re-select the library photos.",
+        "kind": "decision",
+        "verify_form": "Check whether the agent pulled in local files on this screen - doing so silently discards the library photos already picked.",
+        "speak": "on-event"
+       },
+       {
+        "question": "How do you move the selected photo to the Shared Library?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Image menu provides the direct option to transfer the selected waterfall photo from your personal library to the Shared Library.",
+        "whatTheAgentLoses": "You lose the opportunity to manually verify that the correct photo is being transferred to the shared space before the action is executed.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Curate the selection",
+      "questions": [
+       {
+        "question": "Which existing photos do you want to initially move into the shared library?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to move all photos, choose by people or date, choose manually, or wait until later, which dictates the initial contents of the shared library.",
+        "whatTheAgentLoses": "Delegating this decision means the agent might overshare your entire personal photo library or fail to include the specific memories you wanted to share.",
+        "kind": "decision",
+        "verify_form": "The agent seeded the shared library - check which option it took: all photos, by people or date, manual, or none. If u never said what to seed, it chose the starting contents of a library every participant can edit and delete.",
+        "speak": "never"
+       },
+       {
+        "question": "Do the selected photos look correct before finalizing the share?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the 16 selected photos ensures you are not sharing anything unintended before inviting participants.",
+        "whatTheAgentLoses": "You lose the opportunity to visually confirm the exact photos being moved to the Shared Library before the invitation is sent.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific photos do you want to include in the shared album?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The selection counter updating as you drag across the grid confirms exactly how many and which photos will be grouped into the shared album.",
+        "whatTheAgentLoses": "You lose the ability to personally curate the exact batch of photos that will be shared with others.",
+        "kind": "decision",
+        "verify_form": "The agent picked the album's photos - check the count and scan the grid; the curation was its call unless u named the set.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you add more photos to the album?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The album screen displays an 'Add photos' icon, prompting a decision on whether the album's contents are complete before sharing.",
+        "whatTheAgentLoses": "The user loses the ability to review and finalize the exact set of photos included in the shared album.",
+        "kind": "decision",
+        "verify_form": "Check whether the agent stopped at the photos it had or added more; the album's completeness is a call only u can make.",
+        "speak": "never"
+       },
+       {
+        "question": "What text description should you add to the album?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The album creation screen includes a text tool that lets you add context or captions to the collection.",
+        "whatTheAgentLoses": "You lose the chance to add personal commentary or specific context to the album before sharing it.",
+        "kind": "decision",
+        "verify_form": "If a caption went on the album, read it - the agent wrote words that ship in your voice.",
+        "speak": "never"
+       },
+       {
+        "question": "Which photos and from what date range do you want to share?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to share all photos from all time or restrict the share to specific dates and specific people.",
+        "whatTheAgentLoses": "You lose the ability to personally define the privacy boundaries and exact scope of the memories shared with your partner.",
+        "kind": "decision",
+        "verify_form": "The agent set the partner-share scope - check the date range and the all-vs-selected-people choice; the default hands over every backed-up photo from all time.",
+        "speak": "never"
+       },
+       {
+        "question": "How should you populate the newly created shared album?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers options to either create an auto-updating album by selecting people and pets or to manually select photos.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether the album will automatically update with new photos of specific people or remain a manually curated collection.",
+        "kind": "decision",
+        "verify_form": "Check whether the album auto-updates with photos of chosen people or stays manually curated; auto keeps sharing future photos without asking again.",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific photos do you want to select for sharing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct items from the photo grid determines exactly what gets shared, and picking a large number may increase the time it takes to generate the iCloud link.",
+        "whatTheAgentLoses": "You lose the ability to handpick the exact photos from your gallery that you want to include in the share.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you re-select the library photos that were lost when switching to the computer upload?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The album currently only displays the newly uploaded photo, indicating that the previous library selections were cleared and must be added again.",
+        "whatTheAgentLoses": "The user loses the certainty that the exact photos they originally intended to include are successfully re-added to the album.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you add specific people to automatically include their photos?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog provides an option to automatically include past photos and videos of specific people in the shared album.",
+        "whatTheAgentLoses": "The user loses the ability to decide if photos of specific people should be automatically included in the shared album.",
+        "kind": "decision",
+        "verify_form": "Check whether auto-inclusion of chosen people's photos got turned on; that keeps pulling future shots of them into the shared set.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Confirm the content is ready",
+      "questions": [
+       {
+        "question": "Did you wait for the file to finish uploading successfully?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The 'Uploads' widget displays a progress bar and a green checkmark to confirm the file is fully uploaded to the intended folder, which is required before it can be selected and shared.",
+        "whatTheAgentLoses": "You lose the visual confirmation that your specific file was successfully uploaded to the correct location before the sharing process began.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Have you verified the contents of the file you are about to share?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Opening the file to see the preview of the man in the Batman shirt confirms you are selecting the correct image.",
+        "whatTheAgentLoses": "The user loses the ability to visually confirm the exact contents of the file before granting others access.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to fix the typo in the folder name before sharing?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The folder name 'My studff' has a typo, and the '...' menu offers a 'Rename' option to correct it.",
+        "whatTheAgentLoses": "The user loses the chance to present a professional, correctly spelled folder name to the recipients.",
+        "kind": "decision",
+        "verify_form": "The folder went out under whatever name it had - check for the typo the rename menu could have fixed; recipients see it as written.",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is your album complete and ready to be saved?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the assembled draft with its title, text, and photos, which need to be verified before tapping the checkmark to finalize the album.",
+        "whatTheAgentLoses": "You lose the chance to personally review the album's narrative and layout before it becomes a finalized, shareable collection.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the newly created folder visible in the list, and how do you open it?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the 'Files To Share' folder appears in the Drive list ensures the creation step succeeded before you navigate inside it.",
+        "whatTheAgentLoses": "Delegating this step means you lose the immediate visual confirmation that the folder was created with the correct name in the right location.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are the files you intend to share correctly listed in the folder?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays five rows of files with their details, confirming they are present and ready to be selected for sharing.",
+        "whatTheAgentLoses": "You lose the ability to visually confirm that all the correct files are present in the folder before initiating the sharing process.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Target the item and scope",
+    "note": "3.1 then 3.2 - sharing the right item correctly depends on picking the right item first; 3.3 fixes how far the share reaches, file against folder; 3.4 on org surfaces where the container outranks the dialog; 3.5 when a restriction forces a different artifact",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Locate the item",
+      "questions": [
+       {
+        "question": "How should you search for the file you want to share?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a search bar with multiple matching results for the partial query 'HF', meaning a specific search term is needed to find the right item.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact search terms used to locate the file.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you open the 'Management Team Offsite' folder?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Opening the folder allows you to browse its contents to find the specific file or subfolder you intend to share.",
+        "whatTheAgentLoses": "You lose the chance to personally verify the folder's contents before deciding which specific item to share.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Inspect the item before sharing",
+      "questions": [
+       {
+        "question": "How do you preview a file's contents and details without fully opening it?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "Opening the preview panel lets you verify the video content and check details like the 4.65 GB file size before deciding to share it.",
+        "whatTheAgentLoses": "You lose the opportunity to visually confirm the video's content and size to ensure it is the exact file you intend to share.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to select multiple files to share them all at once?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides checkboxes next to each file and a 'Share selected' button in the top action bar, allowing you to bundle items into a single share action.",
+        "whatTheAgentLoses": "You lose the ability to handpick the exact combination of files you want to bundle together for the recipient.",
+        "kind": "decision",
+        "verify_form": "The agent may have bundled several files into one share - check the selection count and the list; if u asked for one file, everything beyond it is over-sharing.",
+        "speak": "never"
+       },
+       {
+        "question": "Which file are you preparing to share?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple files and folders in iCloud Drive, and selecting the correct one is necessary before opening the sharing dialog.",
+        "whatTheAgentLoses": "The user loses the ability to choose exactly which file to share from their storage.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which file do you want to select to share?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the newly uploaded file and a success notification, confirming it is ready to be selected.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the correct file was uploaded and selected for sharing.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which file or folder in your OneDrive do you want to select for sharing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the files and their details, such as the modification date of 'Cellular Metabolism' or the 'Video' folder, ensures you pick the correct item to share.",
+        "whatTheAgentLoses": "You lose the ability to visually verify file details like size and modification date to ensure the exact right item is selected before sharing.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you in the correct iCloud Drive folder to select the item you want to share?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the path 'iCloud Drive > Documents > Projects' ensures you are looking at the right set of files before initiating the share.",
+        "whatTheAgentLoses": "You lose the ability to visually verify that the agent is operating in the intended directory before it selects a file to share.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which album do you want to share?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a grid of multiple albums, such as '[address]' and 'The Green Room', requiring a choice of which specific item to share.",
+        "whatTheAgentLoses": "The user loses control over which specific album is selected for sharing.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you need to clear any existing file selections before picking the item you want to share?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface remembers checkboxes across the folder view, so if you previously selected items for a different task, they will be included in your new share action unless explicitly deselected.",
+        "whatTheAgentLoses": "The agent might accidentally bundle previously selected, unrelated, or sensitive files into the share action meant for a single document.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the file or folder icon include a badge indicating it is already shared?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Cloud storage systems overlay a small 'person' badge on folder icons to visually indicate that the item is already shared with others.",
+        "whatTheAgentLoses": "The user loses the immediate visual warning that they are modifying an already-shared item, which might prompt them to review existing access before adding new people.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is this the most up-to-date version of the document you intend to share?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The top toolbar displays 'Last edit was 7 hours ago', providing a quick check on the file's freshness before sharing.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch that they are about to share an outdated draft instead of the final version.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Choose file or folder scope",
+      "questions": [
+       {
+        "question": "Do you want to share this entire folder and everything inside it?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Share' button when hovering over the folder, offering a way to grant access to all its contents at once.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether sharing the entire folder is appropriate or if only specific files should be shared.",
+        "kind": "decision",
+        "verify_form": "The agent shared at folder scope - check whether everything inside was meant to travel; one file may have been the ask, the folder is the blast radius.",
+        "speak": "gate"
+       },
+       {
+        "question": "How do you share the entire folder instead of just the currently selected file?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the information panel for an individual file, requiring it to be deselected to access the parent folder's share button.",
+        "whatTheAgentLoses": "The user loses control over the scope of the shared content, which could lead to sharing an entire directory when only a single file was intended, or vice versa.",
+        "kind": "decision",
+        "verify_form": "Check which scope actually got shared - the selected file or the folder around it; the two grants differ by everything else inside.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Place the item in the right container",
+      "questions": [
+       {
+        "question": "Do you want to share an item from your personal drive or a shared workspace?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 'My Drive' being compared to a local 'Documents' folder, establishing it as a personal storage area.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether the file should originate from their private storage or an organizational shared drive.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you checking the drive's details pane to confirm corporate ownership before selecting your file?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the details pane confirms that the company owns the Shared drive, which dictates how file permissions and access are managed.",
+        "whatTheAgentLoses": "The user loses the contextual awareness of corporate ownership and administrative structure that governs the drive's broader sharing policies.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you place this file in a Shared Drive, knowing it transfers ownership to the company?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The animation of the document transforming into a building icon illustrates that adding a file to a Shared Drive permanently transfers its ownership to the organization.",
+        "whatTheAgentLoses": "You lose the awareness and control over whether your file's ownership is permanently transferred to the company.",
+        "kind": "decision",
+        "verify_form": "If the agent moved the file into a shared drive, ownership went to the org permanently - check that trade was actually authorized.",
+        "speak": "never"
+       },
+       {
+        "question": "Which folder should you move the document to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a move dialog with destination options like 'Executive' and 'Content'.",
+        "whatTheAgentLoses": "The delegator loses the ability to organize the document into the correct folder for their own workflow.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which shared drive do you want to move the project into?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Move Project' dialog shows different locations like 'My Drive' and 'Shared drives', and moving a file to a shared drive dictates who automatically gets access to it.",
+        "whatTheAgentLoses": "The user loses the ability to choose the specific shared drive and team that will inherit access to the file.",
+        "kind": "decision",
+        "verify_form": "Check the destination drive - whoever belongs to it inherits the file.",
+        "speak": "never"
+       },
+       {
+        "question": "What happens to the files in a Shared Drive if an employee's account is deactivated?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The animation shows a user profile icon disappearing while the document remains, illustrating that files in Shared Drives are retained even if the creator leaves the company.",
+        "whatTheAgentLoses": "The user loses the opportunity to understand the long-term data retention policies and ownership implications of using Shared Drives.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to move this file to your personal drive, taking ownership and removing access from the current shared drive members?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The warning dialog explicitly states that moving the file will make you the new owner and cause everyone who can see the current folder to lose access.",
+        "whatTheAgentLoses": "The user loses the ability to prevent an unintended transfer of ownership and the accidental revocation of team access to a shared file.",
+        "kind": "decision",
+        "verify_form": "If the file moved out of the shared drive, check who owns it now and who just lost access - the warning names everyone.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Work around a sharing restriction",
+      "questions": [
+       {
+        "question": "Do you want to secure this file in the Personal Vault?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Personal Vault' shortcut and a text overlay suggesting to lock down specific files.",
+        "whatTheAgentLoses": "The user loses the ability to decide if this specific file requires the heightened security of the Personal Vault.",
+        "kind": "decision",
+        "verify_form": "Check whether the agent moved the file toward the vault; the vault exists to make things unshareable.",
+        "speak": "never"
+       },
+       {
+        "question": "Should I proceed with setting up the Personal Vault?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explains that the Personal Vault automatically turns off sharing, which directly conflicts with your goal of sharing a file.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to use a secure folder that restricts the very sharing they are trying to accomplish.",
+        "kind": "decision",
+        "verify_form": "Vault setup turns sharing off for what's inside - check the agent didn't route the very file u want shared into it.",
+        "speak": "on-event"
+       },
+       {
+        "question": "What should you do if the file is restricted to view-only?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The window title explicitly states the file is view-only, meaning direct edits are blocked unless a local copy is made.",
+        "whatTheAgentLoses": "The user loses the choice of how to handle the restriction, such as deciding what to name the new local copy or whether to request edit access instead.",
+        "kind": "decision",
+        "verify_form": "The agent hit a view-only wall - check what it did next: a local copy, a rename, or an access request each leave a different artifact behind.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you compress the folder into a zip file to bypass iCloud account requirements for your recipients?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The context menu offers both 'Share...' and 'Compress', and compressing the folder creates a single static file that can be shared without forcing recipients to log into an iCloud account.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to share a live folder for native collaboration or a static zip file for simpler, account-free access.",
+        "kind": "decision",
+        "verify_form": "Check whether the share went out as a live folder or a zip; the zip frees recipients from the Apple ID but freezes the contents at send time.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Open the sharing controls",
+    "note": "4.1 by whichever route the surface offers; 4.2 when a lookalike sits beside Share; 4.3 where the share button forks by mechanism; 4.4 when no control exists at all",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Open the share dialog",
+      "questions": [
+       {
+        "question": "Which action icon do you want to use to share the selected photos?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows six selected photos with a top action bar containing multiple options like Share, Add to, and Delete.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to share the photos directly or add them to a shared album first.",
+        "kind": "decision",
+        "verify_form": "Check whether the agent shared the photos directly or dropped them into a shared album first; the two put different things in recipients' hands.",
+        "speak": "never"
+       },
+       {
+        "question": "Which file should you share, and how do you open its sharing options?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Hovering over 'Geometric Architecture' revealed its metadata to confirm it was the correct file before right-clicking to access the 'Share' option.",
+        "whatTheAgentLoses": "The user loses the ability to verify the file's details via tooltips before initiating the sharing process.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Pick share over the lookalikes",
+      "questions": [
+       {
+        "question": "Did the menu action you selected actually open the Share flow, not Rename or Delete?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The file options menu presents multiple actions like 'Share', 'Rename', and 'Delete', requiring you to explicitly choose the sharing flow.",
+        "whatTheAgentLoses": "The user loses the ability to verify they are initiating the share flow rather than accidentally triggering another action like deleting or moving the file.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which context menu option should you select to manage existing sharing settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The context menu displays both 'Share...' and 'Manage Shared File', making it important to choose the correct option to adjust or revoke current access.",
+        "whatTheAgentLoses": "The user loses direct visibility into who currently has access and the peace of mind of personally verifying or revoking those permissions.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you trying to send the form to respondents to fill out, or add collaborators to help edit it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "In Google Forms, the prominent 'Send' button distributes the form for data collection, while sharing edit access requires opening the 'More' menu and explicitly selecting 'Add collaborators'.",
+        "whatTheAgentLoses": "The user risks having the agent merely send a survey link to their colleagues instead of granting them the necessary backend access to edit the form's questions.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to share the folder's contents, or just request others to upload files into it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The context menu offers both 'Share' and 'Request files', and choosing the latter creates a blind drop folder where recipients can upload files without seeing what is already inside.",
+        "whatTheAgentLoses": "The user loses the ability to securely collect files from others without exposing the folder's existing contents to them.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to use the quick email field to send a link, or click the '...' button to manage access?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog provides a quick entry field to send a link immediately, but the '...' button reveals advanced options to manage existing permissions.",
+        "whatTheAgentLoses": "The user loses the opportunity to review or modify existing access settings if the agent defaults to the quick-send method.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Choose the sharing mechanism",
+      "questions": [
+       {
+        "question": "Which sharing option should you select to share photos with a specific person?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers different sharing configurations like partner sharing and family shortcuts, which determine how the photos will be shared.",
+        "whatTheAgentLoses": "The user loses the ability to choose the specific sharing framework that best fits their relationship with the recipient.",
+        "kind": "decision",
+        "verify_form": "Check which framework the agent picked - partner sharing hands over a stream, an album hands over a set; they are not interchangeable.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to collaborate on the live file or just send a static copy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The share menu presents a choice between 'Collaborate' and 'Send Copy', which determines whether recipients get access to the live, updating document or just a standalone duplicate.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might send a static file instead of setting up a live collaboration, potentially preventing real-time teamwork.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Handle the missing share control",
+      "questions": [
+       {
+        "question": "Is the 'Share' button greyed out or completely missing from the context menu due to administrative restrictions?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Enterprise policies, DRM, or specific file states can disable the sharing functionality entirely, blocking the task from proceeding.",
+        "whatTheAgentLoses": "The user loses the ability to diagnose why they cannot initiate the share, potentially wasting time looking for a button that isn't there.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Choose recipients or a link",
+    "note": "5.1 is the fork - an invite goes to named people, a link works for whoever holds it; 5.2 then 5.3 for addressed grants; 5.4 where a group stands in for people; 5.5 creates the link instead",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Choose invite or link",
+      "questions": [
+       {
+        "question": "Which sharing option do you want to use for this file?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The share menu presents distinct options like 'Add people' and 'Copy link', which dictate how recipients will be granted access to the file.",
+        "whatTheAgentLoses": "You lose the ability to decide the exact mechanism of sharing, which impacts how securely or broadly the file is distributed.",
+        "kind": "decision",
+        "verify_form": "Check which mechanism the agent used: an invite reaches named people, a link grants whoever ever holds it.",
+        "speak": "never"
+       },
+       {
+        "question": "Which delivery method should you select, and what permission level should you set for the recipient?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The share dialog requires choosing a delivery method like Copy Link or Mail, and setting the permission level to either view-only or editing.",
+        "whatTheAgentLoses": "Delegating this means the agent might select an inappropriate delivery method or grant unintended editing access to your file.",
+        "kind": "decision",
+        "verify_form": "Check both halves of what the agent set - how the grant travels, and whether it lets recipients change your original.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you want to share the selected photos?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The share sheet offers multiple methods for sharing, such as copying an iCloud link, adding to a shared album, or sending directly via apps like Messages or Mail.",
+        "whatTheAgentLoses": "The user loses the ability to choose the specific sharing method or platform that best suits their recipients.",
+        "kind": "decision",
+        "verify_form": "Check which share-sheet route the agent took; an iCloud link is anyone-with-link, a Messages send is addressed.",
+        "speak": "never"
+       },
+       {
+        "question": "How is the file currently shared, and who should you share it with?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that \"Anyone with the link can edit\" is already active, which affects whether you need to add specific names or just copy the link.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to rely on the existing broad link access or explicitly invite specific individuals.",
+        "kind": "decision",
+        "verify_form": "The file already carried an anyone-can-edit link - check whether the agent piggybacked on it or added named people; riding the broad link means nothing was scoped to your recipient.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you select a recent contact or tap 'Share to...' to generate a link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sharing interface presents options to send directly to recent contacts or use the 'Share to...' button for other methods.",
+        "whatTheAgentLoses": "The user loses the ability to choose the specific sharing method and channel for the item.",
+        "kind": "decision",
+        "verify_form": "Check whether the agent sent to a recent contact or made a link via Share-to; the recents row is one mis-tap from the wrong person.",
+        "speak": "never"
+       },
+       {
+        "question": "Which sharing method should you use from the iOS share sheet?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple sharing options like AirDrop, Messages, Mail, and 'Create link', which determine how the item will be shared.",
+        "whatTheAgentLoses": "The user loses control over the specific sharing channel used to distribute the item.",
+        "kind": "decision",
+        "verify_form": "Check what the agent picked off the share sheet - Create link mints a bearer token, AirDrop and Messages address a person.",
+        "speak": "never"
+       },
+       {
+        "question": "Should I invite specific people or create a shareable link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sharing dialog offers multiple methods to share the album, including searching for specific contacts, posting to social media, or creating a general link.",
+        "whatTheAgentLoses": "The user loses control over the privacy of the album by not deciding whether to restrict access to specific contacts or open it to anyone with the link.",
+        "kind": "decision",
+        "verify_form": "Check which the agent chose for the album - named invitees, or a link that lets anyone holding it see the photos and the people in them.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you want to send the invitation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose a delivery method, such as sending a text message or copying a link, to deliver the Shared Library invitation.",
+        "whatTheAgentLoses": "You lose the ability to choose the most appropriate communication channel, like a direct text message, for notifying the recipient.",
+        "kind": "decision",
+        "verify_form": "Check which channel carried the invitation - a Messages text is addressed and visible, a copied link becomes whatever it gets pasted into.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Enter the recipients",
+      "questions": [
+       {
+        "question": "Who do you want to invite to this shared library?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen notes that you can only invite up to five people and that all participants will have full permission to add, edit, or delete content.",
+        "whatTheAgentLoses": "Delegating this choice means you lose control over exactly who gets full access to modify or delete your shared content.",
+        "kind": "decision",
+        "verify_form": "Check who the agent invited - everyone on that list can add, edit and delete everything in the library, up to the five-person cap.",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific contact named '[name]' do you want to share this with?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown shows multiple contacts matching '[name]', such as [name] and [name], so the exact recipient must be identified to avoid sharing the file with the wrong person.",
+        "whatTheAgentLoses": "The user loses the ability to visually verify and select the correct contact from their personal history of similarly named colleagues.",
+        "kind": "decision",
+        "verify_form": "Several contacts matched the name - check the exact address the agent picked; the wrong same-name person gets your file.",
+        "speak": "gate"
+       },
+       {
+        "question": "What name, recipients, and message should you provide for the new shared album?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows fields for 'Shared Album Name', 'Invite People...', and 'Comment', which are needed to properly identify and distribute the album.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally choose the album's title and write a custom greeting for your invitees.",
+        "kind": "decision",
+        "verify_form": "Check the three things the agent filled - the album's title, the invitees, the greeting; all of them ship as u.",
+        "speak": "never"
+       },
+       {
+        "question": "Who do you want to share this item with?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a share menu with a field to enter a name, phone number, or email, along with suggested contacts.",
+        "whatTheAgentLoses": "The user loses control over selecting the specific individuals who will receive access to the shared item.",
+        "kind": "decision",
+        "verify_form": "Check the recipient list the agent entered; access follows exactly those names.",
+        "speak": "never"
+       },
+       {
+        "question": "Which specific contact should you select from the autocomplete suggestions to receive the invitation?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing a partial name brings up autocomplete suggestions, and picking the exact right email address ensures the file goes to the intended recipient.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the exact email address or contact chosen from the autocomplete suggestions before the file is shared.",
+        "kind": "decision",
+        "verify_form": "Check the address the autocomplete resolved to - the suggestion the agent accepted is who actually gets in.",
+        "speak": "never"
+       },
+       {
+        "question": "Who should you share this document with, what message should you include, and what permission level should they get?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sharing dialog requires entering specific names or emails, an optional message, and selecting access levels like 'Can edit' or 'Can view' from the dropdown.",
+        "whatTheAgentLoses": "You lose the ability to handpick the exact recipients, craft a personalized message, and strictly control their editing privileges.",
+        "kind": "decision",
+        "verify_form": "Check recipients, the message text and the level together - the dialog commits all three in one Send.",
+        "speak": "never"
+       },
+       {
+        "question": "Did the email address successfully convert into a recipient chip after you selected it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Typing an email address is not enough; the interface must resolve it and convert it into a distinct contact chip to confirm the system recognizes the recipient before sending.",
+        "whatTheAgentLoses": "The agent might type an email and immediately click send without waiting for the system to validate and tokenize the address, resulting in a failed invitation.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the profile picture in the autocomplete dropdown match the intended recipient?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When typing a common name, the dropdown provides email addresses and profile pictures (avatars), which are crucial for visually distinguishing between contacts with identical names.",
+        "whatTheAgentLoses": "The user loses the visual safety check of recognizing the recipient's face, increasing the risk of sending the file to the wrong contact.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is the person you are inviting under 13 years old, requiring them to be in your Family Sharing Group?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly warns that while anyone can be invited to a Shared Photo Library, children under 13 must already be part of your Family Sharing Group to participate.",
+        "whatTheAgentLoses": "The user loses the awareness of age-based restrictions that might cause an invitation to a younger family member to fail.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you comfortable with the fact that the people you invite will be able to see the names and email addresses of the other collaborators?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Unlike a BCC email, adding multiple recipients to a shared cloud document typically allows any participant to open the sharing menu and view the identities of everyone else who has access.",
+        "whatTheAgentLoses": "You lose the awareness that grouping these specific individuals onto one shared file exposes their contact information to each other, which could be a privacy issue for clients or external vendors.",
+        "kind": "decision",
+        "verify_form": "Everyone on the share can see the other names and addresses - check the roster doesn't mix people u wouldn't introduce; clients and vendors meet each other here.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Vet the external recipient",
+      "questions": [
+       {
+        "question": "Does the recipient's email domain suggest they lack an account with this cloud service, meaning a direct invitation will force them to create one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sending a restricted invite to a non-ecosystem email (e.g., a Yahoo address for Google Drive) often requires the recipient to create an account or use a verification code, which can cause significant friction.",
+        "whatTheAgentLoses": "The opportunity to switch to a more accessible sharing method, like a password-protected public link, to ensure the recipient can actually open the file without hassle.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the input field display a warning indicating the email address is invalid or blocked from receiving shares by company policy?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When typing an external email in an enterprise environment, the system often immediately flags it as restricted before you even try to send.",
+        "whatTheAgentLoses": "The user loses the immediate feedback that their chosen recipient violates policy or is mistyped, which prevents the share from succeeding.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the recipient's name pill turn yellow or display a warning icon after you select it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The interface often uses subtle visual styling on the contact pill to silently alert you that the selected email address is outside your organization's domain.",
+        "whatTheAgentLoses": "The user loses the immediate visual warning that they are about to grant access to an external guest, which might violate security policies.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Share through a group",
+      "note": "5.4.1 once per group, then 5.4.2 as membership changes; 5.4.3 is the actual grant - the group's role on the drive, not the person's",
+      "children": [
+       {
+        "id": "5.4.1",
+        "label": "Create the security group",
+        "questions": [
+         {
+          "question": "Should you check the 'Security' box when creating this new group?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Security' checkbox on the creation dialog dictates whether the group can be used to manage access to specific Workspace resources and apps.",
+          "whatTheAgentLoses": "The user loses the ability to decide if the group should have strict security-level access controls or function merely as a standard mailing list.",
+          "kind": "decision",
+          "verify_form": "Check whether the group carries the Security label - without it the group is a mailing list, not an access-control object, and the label can't be added by accident later.",
+          "speak": "never"
+         },
+         {
+          "question": "How should you configure the basic information and labels for this new group?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Setting the group name, email, and labels like 'Mailing' or 'Security' determines how the group is identified and what policies can be applied to it.",
+          "whatTheAgentLoses": "Delegating this means you lose control over the group's naming conventions and its specific security or mailing classifications.",
+          "kind": "decision",
+          "verify_form": "Check the group's name, address and labels the agent set; policies key off them.",
+          "speak": "never"
+         },
+         {
+          "question": "What access type and specific permissions should you set for the group?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen provides options like Restricted or Custom, along with granular checkboxes for who can view members or post, which dictate the group's privacy.",
+          "whatTheAgentLoses": "The user loses the ability to precisely control the privacy boundaries and interaction permissions for the group.",
+          "kind": "decision",
+          "verify_form": "Check the group's access type and visibility boxes; unchecking member visibility silently flips the type to Custom.",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "5.4.2",
+        "label": "Add the members",
+        "questions": [
+         {
+          "question": "Who do you want to add to the Executive Group?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows an 'Add members to Executive Group' dialog with a search field, so specifying the exact user ensures the right person receives access.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify the correct individual from the search dropdown before granting them group access.",
+          "kind": "decision",
+          "verify_form": "Check who landed in the group - the membership IS the access.",
+          "speak": "never"
+         },
+         {
+          "question": "Should you remove individual access to enforce group-based permissions?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Manage members' dialog shows individual accounts with 'Manager' access and a 'Remove access' option, which allows transitioning to group-based permissions.",
+          "whatTheAgentLoses": "The user loses the ability to enforce their specific security policy regarding group versus individual permissions.",
+          "kind": "decision",
+          "verify_form": "Check whether the individual grant got removed; leaving it means that person's access outlives the group policy.",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "5.4.3",
+        "label": "Grant the group its role",
+        "questions": [
+         {
+          "question": "Which Google Group should you share this document with?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows multiple available groups, such as Marketing and Production, that could be used as recipients.",
+          "whatTheAgentLoses": "The delegator loses the ability to choose the correct group based on the document's intended audience.",
+          "kind": "decision",
+          "verify_form": "Check which group got the grant; a group is however many people its membership says, today and later.",
+          "speak": "never"
+         },
+         {
+          "question": "Which group do you want to add to the 'Executive' shared drive, and what role should they have?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows the 'Add people and groups' dialog where specific recipients and their permission levels must be defined.",
+          "whatTheAgentLoses": "The user loses the ability to determine exactly which group receives access and what level of control they have over the shared drive.",
+          "kind": "decision",
+          "verify_form": "Check which group the drive grant went to and at what role; Manager can delete everything on the drive.",
+          "speak": "never"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Create the link",
+      "questions": [
+       {
+        "question": "Where is the document's shareable link?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sharing dialog displays the exact URL under the 'Get link' section that needs to be copied.",
+        "whatTheAgentLoses": "You lose the opportunity to see the specific URL being generated and shared for your document.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you wait for the link generation progress to finish before trying to copy it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Creating link...' progress bar and spinner, meaning the link and copy button are not yet available.",
+        "whatTheAgentLoses": "The user loses the ability to monitor the system's progress and ensure the link generation completes successfully without stalling.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the 'Copy link' button briefly change its icon to a checkmark or its text to 'Copied'?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many interfaces confirm a successful clipboard copy by momentarily altering the button's appearance before it reverts back to normal.",
+        "whatTheAgentLoses": "The user loses the momentary visual feedback directly on the button that confirms the link was successfully grabbed.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you see the confirmation that the link was copied and check its permissions?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The toast notification confirms the link to [id].JPG was copied and explicitly states that anyone with the link can view it.",
+        "whatTheAgentLoses": "The user loses the immediate visual confirmation of the exact permissions granted to the copied link before it is shared.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Did the Copy Link option appear, confirming the sharing setup actually completed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The share menu dynamically updates to display a 'Copy Link' option only after the initial sharing setup is complete.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the link was successfully generated and to manually copy it for alternative distribution.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Set the permission matrix",
+    "note": "6.1 and 6.2 are the matrix - audience times capability; 6.3 tightens the token; 6.4 sets what recipients may do onward; 6.5 where the container's policy outranks the dialog; 6.6 before anything goes out, because the defaults here are the domain's trap",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Set the link audience",
+      "questions": [
+       {
+        "question": "Do you want to restrict access to specific people or make the link public?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown options 'Only people you invite' and 'Anyone with the link' determine whether the item remains private to specific individuals or becomes publicly accessible.",
+        "whatTheAgentLoses": "Delegating this choice means you lose direct control over the privacy level and potential public exposure of your shared item.",
+        "kind": "decision",
+        "verify_form": "Check where the audience landed - invited-only or anyone-with-link; the second is an open door whose only lock is the URL itself.",
+        "speak": "gate"
+       },
+       {
+        "question": "Do you actually change the folder access to 'Anyone with the link'?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator mentions changing the access to 'Anyone with the link', but the video cuts away before showing the action being performed.",
+        "whatTheAgentLoses": "The user loses the ability to verify if the permission was actually changed to match the stated intention.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should I make this album a public website and allow subscribers to post?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows options for 'Subscribers Can Post' and 'Public Website', which dictate whether invitees can add their own media and if the album is accessible to anyone with a link.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might expose your photos publicly or allow unwanted additions to your album without your explicit consent.",
+        "kind": "decision",
+        "verify_form": "Check both album switches - Public Website mints an anyone-can-view URL, Subscribers Can Post lets invitees add media; once the link circulates neither is truly reversible.",
+        "speak": "never"
+       },
+       {
+        "question": "Who should I explicitly add to the folder, and what should the general link access be?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sharing dialog provides options to invite specific people and to change the general link access from restricted to anyone with the link.",
+        "whatTheAgentLoses": "You lose the ability to dictate the precise mix of direct invitations and public link visibility, which could compromise file security.",
+        "kind": "decision",
+        "verify_form": "Check the pair the agent left - the named grants AND the general-access line; a careful roster under an anyone-with-link line is not restricted.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you restrict general access to only explicitly authorized people?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'General access' dropdown defaults to allowing anyone in the organization to view the file, which might expose it to unintended internal audiences.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate whether this specific file requires stricter access controls than the organizational default.",
+        "kind": "decision",
+        "verify_form": "Check the file's general-access line - the org default lets anyone inside the company with the link read it.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Set the permission level",
+      "questions": [
+       {
+        "question": "Do you want the recipients to be able to edit your original file or just view it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing between 'Can make changes' and 'View only' in the dropdown determines if recipients can alter your original file on iCloud Drive.",
+        "whatTheAgentLoses": "You lose the ability to personally ensure your original file is protected from unwanted modifications by restricting access to view only.",
+        "kind": "decision",
+        "verify_form": "Check the level the agent granted - edit lets recipients change your original, everywhere it syncs.",
+        "speak": "gate"
+       },
+       {
+        "question": "What permission level do you want to grant the group, and do you want to send them an email notification?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sharing dialog provides options for Viewer, Commenter, or Editor access, as well as a checkbox to notify the recipients.",
+        "whatTheAgentLoses": "The user loses control over the exact level of access granted and whether the recipients are actively alerted about the shared item.",
+        "kind": "decision",
+        "verify_form": "Check the role and the notify box on the group grant - Editor plus silence means people gain power over the doc and nobody is told.",
+        "speak": "never"
+       },
+       {
+        "question": "Which permission role should you assign to this group?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the 'Manager' role from the dropdown grants the group full control to edit and delete files across the entire Shared Drive.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that granting full administrative control is appropriate for this specific group.",
+        "kind": "decision",
+        "verify_form": "Check the role - Manager hands the group full control of the drive, deletes included.",
+        "speak": "never"
+       },
+       {
+        "question": "Which role should you assign to the new member of the shared drive?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown offers specific roles ranging from 'Viewer' to 'Manager' that dictate whether the user can edit, delete, or share the drive's content.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate whether the default 'Content manager' role provides the appropriate level of access for this specific person.",
+        "kind": "decision",
+        "verify_form": "Check what role the member actually got; the default Content manager can add, edit, move, delete and share.",
+        "speak": "never"
+       },
+       {
+        "question": "Which role should you select to allow editing but prevent deleting?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown lists multiple roles with varying access, so you must choose 'Contributor' to ensure the recipient can add and edit files without being able to delete them.",
+        "whatTheAgentLoses": "You lose the ability to carefully evaluate the specific permissions of each role to ensure the recipient gets exactly the right level of access without compromising data security.",
+        "kind": "decision",
+        "verify_form": "If edit-without-delete was the requirement, check the grant reads Contributor - one step up and they can delete.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the permission dropdown disabled because you only have 'Editor' access and the file owner has restricted editors from changing permissions?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If you are not the owner of the file, the original owner may have locked the sharing settings, preventing you from adding new people or changing link scopes.",
+        "whatTheAgentLoses": "The realization that you lack the administrative rights to share the file, requiring you to ask the owner to grant access instead.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are you sure you want to grant Editor access, knowing it allows the recipient to view and delete all collected form responses?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The sharing dialog for Google Forms includes a specific warning that editors will be able to view and delete form responses, which is a significant data loss risk compared to editing a standard document.",
+        "whatTheAgentLoses": "The user loses the opportunity to evaluate the high-stakes risk of exposing or losing their collected survey data before granting edit access to a collaborator.",
+        "kind": "decision",
+        "verify_form": "Editor on a form includes the responses - check the grant was made knowing it covers deleting collected data, not just editing questions.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to restrict the recipient to only suggesting changes rather than directly editing the document?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The permissions dropdown includes a 'Can review' option that allows collaborators to leave comments and suggest edits without being able to permanently alter the original text themselves.",
+        "whatTheAgentLoses": "The user loses the ability to enforce a safer review-only workflow, potentially allowing the agent to grant full edit access that results in unwanted direct modifications to the document.",
+        "kind": "decision",
+        "verify_form": "Check whether the grant is suggest-only or full edit; review mode is the one that protects the text.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to grant Editor access, knowing the recipient will be able to delete questions from your Google Form?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly points out that granting editor access on a Google Form allows the collaborator to delete questions and alter the form's structure.",
+        "whatTheAgentLoses": "The user loses the opportunity to consider whether they trust the collaborator enough to not accidentally or intentionally delete important questions from their form.",
+        "kind": "decision",
+        "verify_form": "Check the collaborator grant against how much u trust them with the form's structure; Editor can remove questions outright.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Apply link restrictions",
+      "questions": [
+       {
+        "question": "Do you want to set an expiration date for their access?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The permission settings allow giving temporary access, which is useful for time-bound collaboration.",
+        "whatTheAgentLoses": "The user loses the ability to automatically revoke access after a certain period.",
+        "kind": "decision",
+        "verify_form": "Check whether any expiry got set; without one the grant runs forever - and the temporary-access path demotes the role silently.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you configure the link settings before copying the link?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a 'Link settings' option alongside the 'Copy link' button, allowing you to adjust permissions before sharing.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the shared link has the appropriate access restrictions before it is distributed.",
+        "kind": "decision",
+        "verify_form": "Check whether Link settings got opened before the copy or the default shipped; the default is anyone-with-link.",
+        "speak": "never"
+       },
+       {
+        "question": "What permissions and restrictions should you apply to this shared link?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to change link access from 'Anyone', set an expiration date, or disable downloads, which dictates how securely the item is shared.",
+        "whatTheAgentLoses": "You lose the opportunity to enforce specific security measures like download prevention or link expiration based on the sensitivity of your files.",
+        "kind": "decision",
+        "verify_form": "Check what the agent applied to the token - audience, expiry, downloads; whatever it skipped, the link carries the loosest setting.",
+        "speak": "never"
+       },
+       {
+        "question": "Are the options to add a password or expiration date disabled or marked with a premium icon?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many cloud services restrict advanced link security to paid tiers, meaning you cannot protect a public link as intended without upgrading your account.",
+        "whatTheAgentLoses": "The chance to realize the link will be less secure than intended and decide whether to pay for the upgrade or use a different sharing method.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does the system force you to set a password or an expiration date before it allows you to create a public link?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many enterprise cloud storage settings mandate that any public link must have an expiration date or password to prevent perpetual unauthorized access.",
+        "whatTheAgentLoses": "The user loses the awareness that their link will expire or requires a password they need to communicate to the recipient, leading to access failures later.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to secure the shared file with a password?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The advanced settings in the share dialog provide an option to set a password, adding an explicit authentication barrier to the shared link.",
+        "whatTheAgentLoses": "The user loses the ability to enforce strict password protection, potentially leaving the file accessible to anyone who intercepts the link.",
+        "kind": "decision",
+        "verify_form": "Check whether a password went on the link; without one the URL is the only secret.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Set onward rights",
+      "questions": [
+       {
+        "question": "Do you want to restrict editors from sharing or viewers from downloading the file?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The advanced settings menu offers checkboxes to restrict editors from changing permissions and to prevent viewers from downloading, printing, or copying the item.",
+        "whatTheAgentLoses": "You lose the opportunity to enforce stricter security controls over whether recipients can share, download, print, or copy your file.",
+        "kind": "decision",
+        "verify_form": "Check both advanced boxes - as they default, editors can re-share your file onward and viewers can walk out with copies.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to prevent viewers and commenters from downloading, printing, or copying these files?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Shared drive settings' dialog includes a checkbox to 'Allow viewers and commenters to download, print and copy files', which controls whether users with view-only access can exfiltrate data.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether strict data protection measures should be enforced to prevent unauthorized duplication of your documents.",
+        "kind": "decision",
+        "verify_form": "Check the download-print-copy box for viewers; left on, view-only still walks out the door.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to allow recipients to add their own photos or leave comments on the shared album?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The album options menu contains toggles for 'Collaborate' and 'Comments & likes' that dictate whether invitees can contribute media or interact socially with the collection.",
+        "whatTheAgentLoses": "The user loses the ability to restrict the album to a read-only presentation, potentially allowing others to clutter the shared space with unwanted images or commentary.",
+        "kind": "decision",
+        "verify_form": "Check Collaborate and Comments after the share; both default on, and either lets others write into your album.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Configure the container policy",
+      "questions": [
+       {
+        "question": "Should you switch to group-based permissions before configuring the shared drive?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays 'GROUP BASED PERMISSIONS', indicating that this setting must be configured before setting up shared drives.",
+        "whatTheAgentLoses": "The user loses the opportunity to establish a group-level access strategy before the shared drive is created.",
+        "kind": "decision",
+        "verify_form": "Check whether grants went to groups or to individuals; individual grants die with the person, which is the failure this setup exists to avoid.",
+        "speak": "never"
+       },
+       {
+        "question": "What security restrictions should you apply to the 'Contractor' shared drive?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Shared drive settings' dialog presents options to restrict outside access, non-member access, and downloading, which are critical for securing sensitive information.",
+        "whatTheAgentLoses": "The user loses the ability to determine the exact security restrictions needed to protect highly sensitive company information.",
+        "kind": "decision",
+        "verify_form": "Check the drive's restriction boxes - external access, non-member access, downloads; each unchecked box is a wall, each checked one a door.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you allow external users or non-members to access files in this shared drive?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The shared drive settings dialog contains checkboxes to explicitly allow or restrict access for people outside the organization and non-members.",
+        "whatTheAgentLoses": "The user loses the ability to define the overarching security boundaries for the shared drive before sharing specific files.",
+        "kind": "decision",
+        "verify_form": "Check both external toggles on the drive; they outrank every per-file dialog inside it.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Review the grant before it goes out",
+      "questions": [
+       {
+        "question": "Have you selected the correct recipient and verified their permission level before finalizing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Share Folder dialog displays the selected contact alongside the 'Only people you invite' scope and 'View only' permission, which dictate exactly who gets access and what they can do.",
+        "whatTheAgentLoses": "You lose the opportunity to personally double-check that the right individual was selected and granted the appropriate access limits before the invitation is sent.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What is the current link sharing status?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates the link is 'Restricted' to only added people, which is crucial to confirm so you do not accidentally grant broad public access.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the file's privacy settings are correctly restricted before the link is distributed.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the 'Access updated' toast appear to confirm your permission changes were saved?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dropdown UI updates instantly, but the actual permission change requires a server round-trip; the toast is the only proof the server accepted the new privacy level.",
+        "whatTheAgentLoses": "The agent might close the dialog and copy the link before the server saves the change, accidentally sending a restricted link instead of a public one.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you select 'Apply' to ensure your updated permissions are saved?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator instructs the user to select 'Apply' to save the updated permissions, indicating that changes are not immediate and require explicit confirmation.",
+        "whatTheAgentLoses": "The user loses the certainty that their permission adjustments were actually committed and saved to the file.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should you confirm sharing this file with 'Anyone with the link' set to 'View only'?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen indicates the file will be accessible to anyone with the link, which sacrifices strict security for the recipient's convenience.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide if the convenience of a public link outweighs the security risks for this specific file.",
+        "kind": "decision",
+        "verify_form": "This is the public-link commit - check audience and level on the confirm; the recipient's convenience is the file's exposure.",
+        "speak": "never"
+       },
+       {
+        "question": "Are the sharing settings correct, and should you copy the link?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed the sharing dialog with 'Anyone with the link' set to 'Viewer' and the pointer resting on 'Copy link', indicating permissions are ready.",
+        "whatTheAgentLoses": "The user loses the chance to confirm the exact access level and scope before the link is copied.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Send or copy out",
+    "note": "7.1 for addressed grants - the notify toggle decides whether the platform speaks for you; 7.2 where a warning interposes; 7.3 delivers the token by hand; 7.4 closes the dialog without undoing the work; 7.5 is the failure the toast hides",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Send the invitation",
+      "questions": [
+       {
+        "question": "Should you notify the recipients via email and include a custom message?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Unchecking the 'Notify people' box skips the email alert and removes the message area, while leaving it checked allows you to provide context to the recipient.",
+        "whatTheAgentLoses": "Delegating this means the agent decides whether to send an email notification and what the accompanying message says, potentially omitting important context or sending unnecessary alerts.",
+        "kind": "decision",
+        "verify_form": "Check the notify box and the message - off means recipients are never told, on means the platform emails them as u.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to share all photos from all time with this partner?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows you are about to confirm an invitation that grants a specific email address access to all your backed-up photos from all time.",
+        "whatTheAgentLoses": "You lose the opportunity to restrict the shared photos to a specific date range or specific faces before sending the invitation.",
+        "kind": "decision",
+        "verify_form": "The confirm hands every backed-up photo from all time to that address - check the scope wasn't left at the default if u ever wanted less.",
+        "speak": "gate"
+       },
+       {
+        "question": "Do you want to add a custom message to the invitation before sending it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Message' field is currently empty, meaning the recipient will receive a generic notification without any specific context about the form.",
+        "whatTheAgentLoses": "The user loses the opportunity to provide personal context or specific instructions to the collaborator in the invitation email.",
+        "kind": "decision",
+        "verify_form": "Check whether any context went with the invite; a bare notification asks the recipient to trust a nameless grant.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure the recipients, message, and permissions are correct before sending?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the final sharing dialog with the selected recipients, message, and permission summary, which must be reviewed before clicking Send.",
+        "whatTheAgentLoses": "The user loses the chance to verify the exact recipients, message, and permissions before the sharing invitation is sent.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Will the automated notification likely be blocked by the recipient's spam filter, requiring you to copy the link and send it manually instead?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "System-generated sharing emails from cloud providers are frequently quarantined by strict corporate spam filters, meaning the recipient may never know the file was shared.",
+        "whatTheAgentLoses": "The foresight to bypass unreliable automated emails and guarantee delivery by sending the copied link through a trusted, direct communication channel.",
+        "kind": "decision",
+        "verify_form": "Check whether the agent relied on the platform's automated email alone; if the recipient's filter eats it, nobody ever learns the share exists - a manual message is the insurance.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the file name contain sensitive information that you do not want broadcasted in the email subject line?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The platform's automated notification email will include the exact file name in the subject and body, meaning confidential titles will be exposed in plain text even before the recipient opens the file.",
+        "whatTheAgentLoses": "You lose the opportunity to realize the file's title is too sensitive for an email and choose to either rename the file or send a secure link manually instead.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Pass the interposed warning",
+      "questions": [
+       {
+        "question": "Do you want to proceed with sharing this folder even though it overrides the access of already shared items inside it?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The warning dialog states that sharing this folder will restrict access to its inner items only to the newly added people.",
+        "whatTheAgentLoses": "You lose the chance to evaluate whether it is safe to revoke access from people who previously had access to the individual items inside this folder.",
+        "kind": "decision",
+        "verify_form": "The org-boundary warning got a Continue - check the external address was the intended one; that wall exists for exactly this mistake.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you confirm sharing this item with someone outside of your organization?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a warning dialog indicating that the recipient's email address is external to your organization.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate the security risk of exposing potentially sensitive internal data to an external party.",
+        "kind": "decision",
+        "verify_form": "Share Anyway re-scopes items already shared inside the folder - check who loses access when the folder's new audience wins.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Deliver the link",
+      "questions": [
+       {
+        "question": "Do you want to customize the message before sending?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Messages window displays the generated iCloud link, providing an opportunity to add a personal note before hitting send.",
+        "whatTheAgentLoses": "You lose the opportunity to add a personalized greeting or context to the message that helps the recipient understand what you are sharing.",
+        "kind": "decision",
+        "verify_form": "Read what actually went out - the agent either shipped the bare link or wrote words in your name.",
+        "speak": "never"
+       },
+       {
+        "question": "Which conversation should you send the link to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple recent message threads like '[group]' and '[group]', requiring you to select the correct recipient for the shared file.",
+        "whatTheAgentLoses": "The user loses the ability to personally ensure the link is sent to the intended contact rather than accidentally shared with the wrong group.",
+        "kind": "decision",
+        "verify_form": "Check the thread the link landed in - a mis-picked group chat is an instant over-share.",
+        "speak": "never"
+       },
+       {
+        "question": "Where do you place the copied link so you can send it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a new Gmail message with a right-click menu open to 'Paste', indicating the link is being inserted into the email body.",
+        "whatTheAgentLoses": "The user loses control over the specific communication channel and message used to share the link.",
+        "kind": "decision",
+        "verify_form": "Check where the link got pasted and to whom; the token grants whoever receives that message.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Close out without undoing",
+      "questions": [
+       {
+        "question": "How do you close the share dialog and save the restricted access setting?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the general access is set to restricted, and clicking 'Done' ensures this privacy setting is successfully applied.",
+        "whatTheAgentLoses": "The user loses the peace of mind of personally confirming the dialog closed and the restricted permissions were saved.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Catch the failed send",
+      "questions": [
+       {
+        "question": "Did an error message appear indicating the invitation failed to send or the link failed to generate, requiring a retry?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Network blips or API rate limits can cause the final 'Send' action to fail, often displaying a brief error toast.",
+        "whatTheAgentLoses": "The user loses the ability to catch a failure at the final step, mistakenly believing the file was shared when the server actually rejected the request.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Verify the recipient's access",
+    "note": "8.1 as the sharer - the roster and the logs; 8.2 through 8.4 as the recipient, because the grant's effect is on someone else's screen; 8.5 reconciles what the surfaces claim - and disagreements route to 9",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the roster and the logs",
+      "questions": [
+       {
+        "question": "Do you want to allow other editors and owners to see your view history for this document?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays privacy toggles that determine whether document editors and owners can track your viewing activity.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide their personal comfort level regarding whether collaborators can monitor their viewing habits.",
+        "kind": "decision",
+        "verify_form": "Check the view-history toggles the agent left; they decide whether collaborators can watch when u read the doc.",
+        "speak": "never"
+       },
+       {
+        "question": "Who currently has access to this item and at what permission level?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Reviewing the sharing dialog confirms that only the intended users, such as [name] as an Editor, have access and that the general link remains restricted.",
+        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying that the file is restricted to the correct individuals with the appropriate permissions.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Do you want to check the activity dashboard to see who has viewed the document?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Activity dashboard with a list of viewers and their last viewed times, allowing you to track engagement.",
+        "whatTheAgentLoses": "The user loses the ability to monitor document engagement and verify if the intended recipients have actually accessed the shared file.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you review the sharing history to verify recent permission changes?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays a chronological list of sharing events, allowing you to audit exactly when and how access was recently modified.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to personally audit the sequence of past permission changes to ensure the document's security history aligns with your expectations.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Who is the owner of this file, and is it properly shared via groups rather than individual users?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The 'People with access' list shows various groups and their roles, allowing you to verify if the file follows group-based sharing policies.",
+        "whatTheAgentLoses": "The user loses the ability to spot-check document ownership and ensure adherence to company sharing policies.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Who specifically has access to the selected shared drive according to the details panel?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen showed the 'Shared drives' list and the 'Details' tab with 'Who has access' information for the selected drive.",
+        "whatTheAgentLoses": "The delegator loses the ability to review and verify the specific groups and members that have access to the shared drive.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Test the link as an outsider",
+      "questions": [
+       {
+        "question": "Should you test the public link to confirm it actually grants immediate edit access?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing a new value into cell E5 and seeing the total in F5 update to 266.00 proves that the public link actively allows anyone to alter the document's data.",
+        "whatTheAgentLoses": "You lose the direct, hands-on confirmation of exactly how vulnerable your document is to unwanted edits from anonymous visitors.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you verify that the granted permissions prevent the recipient from breaking the spreadsheet's formulas?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows the recipient manually changing the Total for row 7 to 411.00, which breaks the implied calculation of Units multiplied by UnitCost.",
+        "whatTheAgentLoses": "The user loses data integrity if an agent grants unrestricted edit access without protecting calculated fields.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to click the URL to verify the public link works?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The settings popover displays the public URL, and opening it confirms that the album is actually accessible to anyone.",
+        "whatTheAgentLoses": "You lose the visual confirmation of seeing exactly how the shared album appears to others on the public website.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the correct files displayed when you open the copied link?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The preview page showed the six shared items, confirming that the link works and points to the right content.",
+        "whatTheAgentLoses": "The user loses the visual confirmation that the recipient will see exactly the intended files when opening the link.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should you test the link in an incognito window to verify it works for unauthenticated users?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Testing the link in an incognito window confirms that the file loads correctly without requiring a login, as shown by the video player and 'Sign in' button.",
+        "whatTheAgentLoses": "The user loses the independent verification that the shared link actually functions correctly for external or unauthenticated recipients.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which application should you use to open the shared link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The context menu provides multiple options like Safari, Chrome, and iCloud for opening the link, which determines the environment used to verify the shared file.",
+        "whatTheAgentLoses": "The user loses the ability to specify their preferred browser or application for testing the shared link.",
+        "kind": "decision",
+        "verify_form": "Check which browser or app the verification ran in; a signed-in app hides exactly the wall an outsider would hit.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you tap the iCloud link preview in the chat to verify how the recipient will see the photos?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat timeline shows an iCloud preview with an expiration date, and opening it confirms exactly what the recipient can view or download.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the exact visual presentation and download options your recipient will experience.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to test downloading the shared items from the recipient's view?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the recipient's view of the shared media, but the download functionality was not demonstrated.",
+        "whatTheAgentLoses": "The delegator loses confirmation that the recipient can successfully download the shared files.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Walk the recipient's accept flow",
+      "questions": [
+       {
+        "question": "Should I allow downloads from www.icloud.com?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Safari displayed a prompt asking whether to grant the website permission to download files.",
+        "whatTheAgentLoses": "The user loses the ability to control their browser's security permissions regarding which websites can download files to their device.",
+        "kind": "decision",
+        "verify_form": "The browser asked to let the site download files - check what got allowed and on which site; it's a device-level permission.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to open the shared document in Pages or select 'Not Now'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts the recipient to either join the document by opening it in Pages or postpone the action by clicking 'Not Now'.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to immediately join and open the shared document in the native app or wait until later.",
+        "kind": "decision",
+        "verify_form": "On the recipient side the agent chose Open or Not Now - check which, and under which account it joined; joining adds the doc to that account's drive.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you add the shared file to your iCloud Drive or select 'Not Now'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents an invitation to join the shared item 'IMG_3975' with options to either add it to your iCloud Drive or decline it.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to accept the shared file into their personal iCloud storage or ignore the invitation.",
+        "kind": "decision",
+        "verify_form": "Check whether the invitation got accepted into the drive or declined; accepting pulls someone else's file into your storage.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to download a local copy of the shared file?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The toolbar displays a 'Download' button for the selected file, offering the option to save it directly to your device.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to keep the file strictly in the cloud or download it for offline, local access.",
+        "kind": "decision",
+        "verify_form": "Check whether a copy got downloaded - a local copy stops tracking the live share from that moment on.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to accept this shared folder invitation and add it to your iCloud Drive?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an invitation to join the 'Example Files' folder shared by [account], requiring a choice to either add it to your account or decline.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the sender and the folder name before accepting an external folder into your private cloud storage.",
+        "kind": "decision",
+        "verify_form": "Check the sender and folder name on the invitation that got accepted; an unchecked accept syncs a stranger's folder into the account.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are you logged into the correct recipient account to verify the shared file?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking the account popover for the email address ensures you are verifying access from the perspective of the intended recipient.",
+        "whatTheAgentLoses": "You lose the absolute certainty of knowing the file is accessible to the recipient by seeing it open in their specific account.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you verify the file appears in the recipient's account?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Navigating to the 'Shared with me' section confirms that the sharing process worked and the file actually appears for the recipient.",
+        "whatTheAgentLoses": "You lose the direct visual confirmation that the file successfully appeared in the recipient's workspace.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you see visual confirmation that the recipient actually received the email notification?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The narrator claims an email notification will be sent, but the screen never shows the recipient's inbox to prove it arrived.",
+        "whatTheAgentLoses": "You lose the certainty that the sharing notification successfully reached the intended person.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does clicking Open in the recipient's email notification actually load the shared file?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the blue 'Open' button in the email notification confirms that the recipient can successfully access the shared file.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify the email notification and confirm the access link works correctly for the recipient.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to include a message with your access request?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an optional 'Message' text area above the 'Request access' button.",
+        "whatTheAgentLoses": "The delegator loses the chance to explain to the file owner why they need access.",
+        "kind": "decision",
+        "verify_form": "If the flow hit the request-access wall, check whether a message went with the request and what it said; those words reach the file's owner as u.",
+        "speak": "never"
+       },
+       {
+        "question": "Did the partner sharing invitation notification actually arrive on the receiving phone?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The lock screen displays a new partner sharing invite notification that must be tapped to proceed with accepting the shared access.",
+        "whatTheAgentLoses": "You lose the opportunity to personally confirm that the invitation successfully arrived on the receiving device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to accept the partner sharing invitation from [name]?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a prompt to accept or decline a partner sharing invitation, which determines if you will receive access to their photos.",
+        "whatTheAgentLoses": "The user loses the choice of whether to accept or decline an incoming partner sharing invitation.",
+        "kind": "decision",
+        "verify_form": "Check whether the partner share got accepted on the receiving side; accepting starts a standing feed of that person's photos.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to download a copy or add the shared file to your iCloud Drive?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to either 'Download a copy' locally or 'Add to iCloud Drive', depending on whether you want to sign in with an Apple ID.",
+        "whatTheAgentLoses": "Delegating this step means the agent might choose an access method that doesn't match your account availability or preferred way of saving the file.",
+        "kind": "decision",
+        "verify_form": "Check which access route the recipient side took - download is account-free and static, add-to-drive demands the Apple ID and stays live.",
+        "speak": "never"
+       },
+       {
+        "question": "Will the recipient need an Apple ID to access this shared folder?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows an 'Add to iCloud Drive' button and requires signing in with an Apple ID instead of providing a direct download link.",
+        "whatTheAgentLoses": "You lose the awareness that your recipient will be forced to use or create an Apple ID to access the files.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Check what the recipient can do",
+      "questions": [
+       {
+        "question": "Do you want to configure auto-save rules for the shared photos?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented a dialog asking whether to automatically save some or all photos from the shared partner.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether shared photos are automatically saved to their own library, which could impact their storage space.",
+        "kind": "decision",
+        "verify_form": "Check the auto-save scope the agent chose - All floods your library and storage with everything the partner ever shares.",
+        "speak": "never"
+       },
+       {
+        "question": "What actions can the recipient take with their current view-only access?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The top bar confirms the document is restricted to 'View Only', but the wrench menu reveals they can still download or print a copy.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally confirming exactly what a recipient can and cannot do with the shared file.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the item count update to reflect the newly added file?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The item count in the Safari browser window increased from 14 to 15, confirming the file was successfully added to the shared folder.",
+        "whatTheAgentLoses": "You lose the visual reassurance that the shared folder successfully received the new file.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Can you see the recipient's edits appearing in real-time in the owner's view?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The owner's window shows the cell updating with a pink border and the recipient's name tag, confirming the edit permission is active.",
+        "whatTheAgentLoses": "The user loses the direct confirmation that the shared document is fully editable and syncing properly for the recipient.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you see who else is currently active in the shared document?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays active user profile icons at the top right that reveal the names and email addresses of current viewers when hovered over.",
+        "whatTheAgentLoses": "You lose the real-time awareness of exactly which collaborators are actively viewing or editing the document alongside you.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you save or favorite the shared photo?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a star icon that triggers a prompt about automatically saving shared photos.",
+        "whatTheAgentLoses": "The user loses the choice of whether to integrate the shared photo into their personal saved items.",
+        "kind": "decision",
+        "verify_form": "Check whether the star got tapped and what auto-save it triggered; saved photos land in and bill against your storage.",
+        "speak": "never"
+       },
+       {
+        "question": "Can you see the shared photos successfully appearing on the recipient's phone?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Comparing the photo grids on both screens confirms that the sharing process worked and the recipient actually received the items.",
+        "whatTheAgentLoses": "You lose the physical confirmation of seeing the photos successfully load on the recipient's actual device.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the shared folder download and unzip correctly?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows the Finder window displaying the unzipped contents of the 'Shared Folder' in the Downloads directory.",
+        "whatTheAgentLoses": "The user loses the physical confirmation that the shared files can be successfully downloaded and accessed by the recipient.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Reconcile the claimed state",
+      "questions": [
+       {
+        "question": "Do the storage capacity reports you see across different screens agree with each other?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The app's account preferences show 1.5 TB used out of 2.04 TB, which contradicts the desktop setup window that reported a total account size of only 153.7 GB.",
+        "whatTheAgentLoses": "The user loses the opportunity to spot conflicting account storage information that might indicate a sync error or that the wrong account is being used.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the final permission level match what you set earlier?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen shows the folder permission as 'Can make changes' despite being explicitly set to 'View only' when the share link was created.",
+        "whatTheAgentLoses": "The user loses control over their file's security if the agent fails to notice the permission mismatch.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Do the recorded permissions in the sharing history match the actions you took earlier?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The sharing history shows the Marketing group was given 'Can comment' access, but you previously cancelled the dialog that would have made this change, leaving them as an 'Editor'.",
+        "whatTheAgentLoses": "The user loses the ability to catch system inconsistencies where a cancelled permission change is incorrectly recorded as applied.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you want to review the expiration date displayed on the sent link?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows 'Expires Aug 31' under the link preview, confirming the link's validity period.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the exact expiration date communicated to the recipient.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the confirmation dialog show the correct recipients and permission level?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Reviewing the confirmation dialog showing the user avatars and the edit status ensures the correct access was actually granted before you close the prompt.",
+        "whatTheAgentLoses": "Letting an agent handle this means you lose the immediate visual reassurance that your file was successfully shared with the right people at the intended permission level.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did the visual badge on the file icon update to show it is now shared?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "After sharing, the file or folder icon in the main storage view updates to include a 'shared' badge (like a small group of people), providing persistent visual proof of its state.",
+        "whatTheAgentLoses": "The user loses the persistent visual confirmation in the main file explorer that the item's state has successfully changed to shared.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Manage or revoke the share",
+    "note": "9.1 to change a person's standing grant, 9.2 to change the token's; 9.3 ends it from the owner's side and 9.4 from the recipient's - both warn that content vanishes from other people's devices",
+    "questions": [
+     {
+      "question": "Should you adjust individual permissions or stop sharing the file entirely?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": true,
+      "why": "The dialog provides options to change a specific user's access level via the three-dot menu or to revoke all access using the 'Stop Sharing' button.",
+      "whatTheAgentLoses": "Delegating this step means you lose the final say on whether to tweak individual access rights or completely lock down the file.",
+      "kind": "decision",
+      "verify_form": "Check which lever the agent pulled - one person's level, or Stop Sharing, which pulls the file back from everyone at once.",
+      "speak": "never"
+     }
+    ],
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Change a person's access",
+      "questions": [
+       {
+        "question": "Who do you want to add or remove from the Shared Library?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Shared Library settings display current participants and provide options to add new people or remove existing ones.",
+        "whatTheAgentLoses": "The user loses the ability to review the participant list and make specific additions or removals.",
+        "kind": "decision",
+        "verify_form": "Check the participant list after the agent touched it - who got added, who removed; every name on it holds full edit rights.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to remove this participant or view their contact card?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a context menu for '[email]' with options to either show their contact card or remove them from the share list.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the participant's identity or decide if their access should be revoked.",
+        "kind": "decision",
+        "verify_form": "Check what the agent did in the participant's menu - a removal cuts that person's access on the spot.",
+        "speak": "never"
+       },
+       {
+        "question": "Whose permission level do you need to modify?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Manage Access' pane lists multiple collaborators with varying current access levels, so you must select the correct individual to update.",
+        "whatTheAgentLoses": "You lose direct oversight of ensuring the correct collaborator's access rights are modified without accidentally altering someone else's permissions.",
+        "kind": "decision",
+        "verify_form": "Check which person's row the agent changed in Manage Access; the wrong row re-permissions the wrong human.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Change the link's power",
+      "questions": [
+       {
+        "question": "Do you want to confirm the link setting change, knowing it affects everyone who uses it?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a warning that modifying the link setting will impact everyone who currently has access via that link.",
+        "whatTheAgentLoses": "You lose the chance to evaluate how this permission change will disrupt or alter access for existing collaborators.",
+        "kind": "decision",
+        "verify_form": "The change-it dialog warns the edit hits everyone using the link - check the new level was meant for all of them, not one person.",
+        "speak": "on-event"
+       },
+       {
+        "question": "How do you modify the specific link granting access to this user?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The access summary shows the person has access via a specific link rather than direct access, meaning you must adjust that link's settings to change their permissions.",
+        "whatTheAgentLoses": "The user loses the ability to audit exactly which link is granting access and manually fine-tune its specific permissions.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Stop sharing or remove content",
+      "questions": [
+       {
+        "question": "Are you sure you want to delete this file?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displayed a confirmation dialog asking to confirm the deletion of a specific file from a shared folder.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether a specific file should be permanently removed from their shared folder.",
+        "kind": "decision",
+        "verify_form": "The agent confirmed a delete inside a shared folder - check which file went, because it vanishes for every recipient too.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you permanently remove a file from the shared drive?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displayed a warning that the file would be deleted forever and could not be restored.",
+        "whatTheAgentLoses": "The delegator loses the ability to prevent irreversible data loss if the agent permanently deletes a file without explicit permission.",
+        "kind": "decision",
+        "verify_form": "The agent confirmed a delete-forever - check which file; there is no bin after this one.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure you want to stop sharing and delete this document from everyone else's devices?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The confirmation dialog explicitly warns that stopping the share will revoke access and delete the document from iCloud Drive on all collaborators' devices.",
+        "whatTheAgentLoses": "The user loses the opportunity to evaluate whether the disruptive consequence of deleting the file from others' devices is truly intended before proceeding.",
+        "kind": "decision",
+        "verify_form": "Stop Sharing removes the doc from every collaborator's devices - check that blast was intended before trusting the confirm.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Remove yourself",
+      "questions": [
+       {
+        "question": "Do you want to remove yourself from this shared file?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Manage Shared File dialog shows a 'Remove Me' option next to your name that will delete the shared document from your drive.",
+        "whatTheAgentLoses": "Delegating this step means the agent might permanently remove your access to a shared document without your explicit confirmation.",
+        "kind": "decision",
+        "verify_form": "Remove Me deletes the shared doc from your own devices - check the agent didn't cut your access while tidying up.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,3042 @@
+{
+ "task": "edit a video in a video editor (CapCut, iMovie, DaVinci Resolve, Premiere, Clipchamp): import footage, make concrete edits — trim or split clips, add captions or text, add music or adjust audio, apply transitions or speed changes — and export the result; complete when the export finishes (the saved/share screen or the rendered file is shown). Surface pinned: the editing session itself — not editing-theory talks, not before/after showcases without the session. One-click AI editing flows (auto-edit, AI video generators like Sora or Runway) are off-task; ordinary tool features such as auto-captions used inside a manual edit are fine.",
+ "tree": {
+  "id": "0",
+  "label": "Edit and export video",
+  "note": "1 prepares the project and 2 gathers the media; use 3 to assemble the sequence; repeat 3 through 6 in the order the edit needs, checking the result with 7 after each meaningful change and saving progress with 9.1; do 8 when the reviewed edit is ready; return from 8 to the relevant editing goal if the export exposes a problem; use 9.2 through 9.5 only when separately asked to manage saved projects or source files",
+  "children": [
+   {
+    "id": "1",
+    "label": "Prepare the project",
+    "note": "1.1 opens the editor and 1.2 resolves account access where required; use 1.3 and 1.4 for a new project or 1.5 to resume one; check 1.6 and 1.7 before detailed editing; 1.8 can repeat whenever the required controls are hidden",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the video editor"
+     },
+     {
+      "id": "1.2",
+      "label": "Choose the sign-in account",
+      "questions": [
+       {
+        "question": "Is the editor using the account intended for this project?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Project media could be stored in another account.",
+        "whatTheAgentLoses": "Project media could be stored in another account.",
+        "costDims": {
+         "money": 0,
+         "privacy": 2,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 1
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the signed-in account identity. A sign-in provider button does not prove the account used.",
+        "say_example": "The editor is signed in as <account>. This project was meant for <requested account>."
+       },
+       {
+        "question": "Does connecting this account to the editor have your authorization?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The editor could receive unapproved access to an account.",
+        "whatTheAgentLoses": "The editor could receive unapproved access to an account.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "decision",
+        "verify_form": "Does connecting this account to the editor have your authorization?",
+        "speak": "gate",
+        "check": "Read the account-connection prompt, receiving app, account identity, and requested permissions.",
+        "say_example": "<Editor> is asking for <access> to <account>. Allow that connection?"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Create a manual project",
+      "questions": [
+       {
+        "question": "Did the agent create the kind of project you requested?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The editor may generate or constrain the sequence in ways you did not request.",
+        "whatTheAgentLoses": "The editor may generate or constrain the sequence in ways you did not request.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected project mode or template name and the available editing controls.",
+        "say_example": "This project uses <mode>. Your request needs <requested mode>."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Name the project",
+      "questions": [
+       {
+        "question": "Does the saved project have the name you requested?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The project may be difficult to find when editing resumes.",
+        "whatTheAgentLoses": "The project may be difficult to find when editing resumes.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 1,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the saved project name in the title or project listing.",
+        "say_example": "The project was named <actual>. You asked for <requested>."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Reopen a saved project",
+      "questions": [
+       {
+        "question": "Is the agent working in the project you meant to edit?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Changes could be made to a different project.",
+        "whatTheAgentLoses": "Changes could be made to a different project.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the active project name and any displayed location or distinguishing date.",
+        "say_example": "The open project is <actual>. You asked me to edit <requested>."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Set the canvas shape",
+      "questions": [
+       {
+        "question": "Does the canvas shape match the requested video?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The finished video could have the wrong shape.",
+        "whatTheAgentLoses": "The finished video could have the wrong shape.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected canvas width and height or aspect ratio.",
+        "say_example": "The canvas is <actual ratio>. You asked for <requested ratio>."
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Set the timeline format",
+      "questions": [
+       {
+        "question": "Does the timeline format match the agreed editing settings?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The sequence may be edited at the wrong size or frame rate.",
+        "whatTheAgentLoses": "The sequence may be edited at the wrong size or frame rate.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the active timeline resolution and frame rate, separately from source and export settings.",
+        "say_example": "The timeline uses <actual setting>. We agreed on <requested setting>."
+       },
+       {
+        "question": "Does this format change require a decision before it becomes difficult to undo?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Later edits may have to be recreated to change this setting.",
+        "whatTheAgentLoses": "Later edits may have to be recreated to change this setting.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "decision",
+        "verify_form": "Does this format change require a decision before it becomes difficult to undo?",
+        "speak": "gate",
+        "check": "Read the proposed setting and the exact warning about undoing or changing it later.",
+        "say_example": "The editor says <warning>. Change the timeline to <setting>?"
+       }
+      ]
+     },
+     {
+      "id": "1.8",
+      "label": "Arrange the editing workspace"
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Gather source media",
+    "note": "2.1 identifies a source; use 2.2 to inspect candidates and 2.3 to import the selected files; 2.4 and 2.5 cover library assets; 2.6 and 2.7 check what arrived; use 2.8 when media is missing; repeat this goal whenever another asset is needed",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Choose the media source"
+     },
+     {
+      "id": "2.2",
+      "label": "Preview the source clips",
+      "questions": [
+       {
+        "question": "Do the selected files contain the footage you asked to use?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The finished edit could use the wrong people, event, or take.",
+        "whatTheAgentLoses": "The finished edit could use the wrong people, event, or take.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "This clip shows <observed content>. You asked for <requested content>."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Import the selected files",
+      "questions": [
+       {
+        "question": "Did the media arrive in the intended project or library?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The intended project may still be missing its source media.",
+        "whatTheAgentLoses": "The intended project may still be missing its source media.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the destination project or library name and the imported file listing.",
+        "say_example": "The files went into <actual project>. The edit is in <intended project>."
+       },
+       {
+        "question": "Do the selected filenames match the sources you requested?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The wrong source could be imported before its contents are reviewed.",
+        "whatTheAgentLoses": "The wrong source could be imported before its contents are reviewed.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected filenames and displayed source locations.",
+        "say_example": "The selection includes <actual file>. You requested <requested file>."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Find suitable stock assets"
+     },
+     {
+      "id": "2.5",
+      "label": "Check asset access costs",
+      "questions": [
+       {
+        "question": "Does a selected asset or feature add a cost you have not approved?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Finishing the edit may require payment or replacement of the selected item.",
+        "whatTheAgentLoses": "Finishing the edit may require payment or replacement of the selected item.",
+        "costDims": {
+         "money": 2,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected asset or feature name and its displayed price or subscription requirement.",
+        "say_example": "<Selected item> requires <paid plan or price>. That cost has not been approved."
+       },
+       {
+        "question": "Does this paid plan or asset purchase have your authorization?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The user could be charged once or repeatedly for something they did not agree to pay for.",
+        "whatTheAgentLoses": "The user could be charged once or repeatedly for something they did not agree to pay for.",
+        "costDims": {
+         "money": 2,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "decision",
+        "verify_form": "Does this paid plan or asset purchase have your authorization?",
+        "speak": "gate",
+        "check": "Read the selected paid item or plan, total charge, billing period, and renewal terms when applicable.",
+        "say_example": "<Item or plan> costs <price>, with <billing terms>. Make this purchase?"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Organize the imported media"
+     },
+     {
+      "id": "2.7",
+      "label": "Inspect the media details",
+      "questions": [
+       {
+        "question": "Is the source long enough for the passage the edit requires?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The edit cannot include that passage without another source or a changed request.",
+        "whatTheAgentLoses": "The edit cannot include that passage without another source or a changed request.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the source identity, total duration, and selected in and out points, with units.",
+        "say_example": "This source ends at <source end>. The requested passage continues to <requested end>."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Relink missing source files",
+      "questions": [
+       {
+        "question": "Is any required media missing or offline?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The export may contain a missing-media screen or omit part of the edit.",
+        "whatTheAgentLoses": "The export may contain a missing-media screen or omit part of the edit.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Read the exact missing-media warning and any named files.",
+        "say_example": "The editor cannot find <file>. That part of the video is not ready to export."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Assemble the timeline",
+    "note": "3.1 and 3.2 establish the sequence; repeat 3.3 for passages that need trimming; 3.4 adds or protects layers; use 3.5 for an intentional copy and 3.6 to revert an unwanted change; 3.7 supplies a background where needed; check the changed sequence with 7 before continuing",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Place clips on the timeline",
+      "questions": [
+       {
+        "question": "Did inserting or pasting this clip replace footage that should stay?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Part of the earlier edit could disappear without being noticed.",
+        "whatTheAgentLoses": "Part of the earlier edit could disappear without being noticed.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "Adding <clip> replaced <earlier passage>. That passage was meant to stay."
+       },
+       {
+        "question": "Did the insertion include the required video and audio?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "A clip may have no sound, no picture, or an extra sound track.",
+        "whatTheAgentLoses": "A clip may have no sound, no picture, or an extra sound track.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Clip> was added without <required component>."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Arrange the clip sequence",
+      "questions": [
+       {
+        "question": "Does the sequence keep the order you requested?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video may tell the story in the wrong order.",
+        "whatTheAgentLoses": "The video may tell the story in the wrong order.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Clip> now appears <actual position>. It was meant to appear <requested position>."
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Trim the selected clips",
+      "note": "3.3.1 identifies what to keep; 3.3.2 selects a source range before insertion where useful; 3.3.3 divides the timeline clip or 3.3.4 changes its edges; 3.3.5 removes unwanted footage; use 3.3.6 only when the remaining gap should close; repeat and review the cut with 7.2",
+      "children": [
+       {
+        "id": "3.3.1",
+        "label": "Identify the useful passage"
+       },
+       {
+        "id": "3.3.2",
+        "label": "Set source selection boundaries",
+        "questions": [
+         {
+          "question": "Does the selected passage include the moments you asked to keep?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "An important part of the requested footage could be omitted.",
+          "whatTheAgentLoses": "An important part of the requested footage could be omitted.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The selected passage leaves out <required moment>."
+         },
+         {
+          "question": "Do the selected source boundaries match the requested timestamps?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The inserted passage could begin or end at the wrong moment.",
+          "whatTheAgentLoses": "The inserted passage could begin or end at the wrong moment.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the selected source identity and source in and out times, separately from sequence time.",
+          "say_example": "The source selection runs from <actual in> to <actual out>. You requested <requested range>."
+         }
+        ]
+       },
+       {
+        "id": "3.3.3",
+        "label": "Split the timeline clip",
+        "questions": [
+         {
+          "question": "Did the split affect the intended tracks at the same sequence time?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Later trimming could move the camera angles or audio apart.",
+          "whatTheAgentLoses": "Later trimming could move the camera angles or audio apart.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Track> was split at <actual time>. The other intended tracks were split at <target time>."
+         }
+        ]
+       },
+       {
+        "id": "3.3.4",
+        "label": "Trim the clip edges",
+        "questions": [
+         {
+          "question": "Did trimming remove a word or action that should be kept?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The sentence or action may become incomplete or change meaning.",
+          "whatTheAgentLoses": "The sentence or action may become incomplete or change meaning.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The cut removes <word or action> at <time>. It belongs to the passage you wanted to keep."
+         }
+        ]
+       },
+       {
+        "id": "3.3.5",
+        "label": "Remove the unwanted footage",
+        "questions": [
+         {
+          "question": "Did the editor add a promotion at the end that you did not ask to keep?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The delivered video could contain an unwanted advertisement.",
+          "whatTheAgentLoses": "The delivered video could contain an unwanted advertisement.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "An editor promotion follows your ending at <time>."
+         }
+        ]
+       },
+       {
+        "id": "3.3.6",
+        "label": "Close the intended gaps",
+        "questions": [
+         {
+          "question": "Did deleting the passage preserve the intended gap or join?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The edit may introduce an empty frame or remove an intended pause.",
+          "whatTheAgentLoses": "The edit may introduce an empty frame or remove an intended pause.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The deletion <left or removed> the gap from <start> to <end>. You asked to <close or preserve> it."
+         },
+         {
+          "question": "Did deletion change a retained clip or title outside the intended removal?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "A title, cutaway, or audio cue may disappear or play at the wrong time.",
+          "whatTheAgentLoses": "A title, cutaway, or audio cue may disappear or play at the wrong time.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "Deleting that passage also changed <retained layer> from <before> to <after>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Arrange the media layers",
+      "note": "3.4.1 creates tracks where necessary; 3.4.2 places the overlay on the intended layer; 3.4.3 selects how it appears; 3.4.4 controls which tracks can be changed or heard; check the result with 7.3 and 7.4",
+      "children": [
+       {
+        "id": "3.4.1",
+        "label": "Add the required track"
+       },
+       {
+        "id": "3.4.2",
+        "label": "Place the overlay clip"
+       },
+       {
+        "id": "3.4.3",
+        "label": "Choose the overlay layout",
+        "questions": [
+         {
+          "question": "Does the overlay show the intended content without hiding something that must remain visible?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The viewer could miss the main action or explanation.",
+          "whatTheAgentLoses": "The viewer could miss the main action or explanation.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Overlay> covers <required content> at <time>."
+         }
+        ]
+       },
+       {
+        "id": "3.4.4",
+        "label": "Set the track controls",
+        "questions": [
+         {
+          "question": "Are the tracks needed for this operation protected or enabled as intended?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "An unrelated part of the sequence could change.",
+          "whatTheAgentLoses": "An unrelated part of the sequence could change.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "This operation includes <track>, which was meant to stay unchanged."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Duplicate the selected clip"
+     },
+     {
+      "id": "3.6",
+      "label": "Undo or restore changes",
+      "questions": [
+       {
+        "question": "Did undo restore the intended change without undoing later work you wanted to keep?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The correction may leave the original mistake or remove additional work.",
+        "whatTheAgentLoses": "The correction may leave the original mistake or remove additional work.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "Undo also removed <retained change>. That change was meant to stay."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Add a background clip",
+      "questions": [
+       {
+        "question": "Does the background cover the intended title or sequence interval?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Part of a title or ending may appear against the wrong background.",
+        "whatTheAgentLoses": "Part of a title or ending may appear against the wrong background.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "The background ends at <time>, while <title or layer> continues to <end>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Adjust the picture",
+    "note": "use 4.1 for composition, 4.2 for playback timing, 4.3 for color, 4.4 for visual effects, and 4.5 for transitions; these branches are optional and can repeat in any order; a timing change requires another pass through 6 and 7",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Frame the visible content",
+      "note": "4.1.1 chooses what remains in frame; 4.1.2 sets its placement and scale; 4.1.3 changes orientation where needed; 4.1.4 adds motion only when wanted; review the visible content with 7.3",
+      "children": [
+       {
+        "id": "4.1.1",
+        "label": "Choose crop or fit",
+        "questions": [
+         {
+          "question": "Does the crop preserve the content that must remain visible?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The viewer could lose part of the action, slide, or explanation.",
+          "whatTheAgentLoses": "The viewer could lose part of the action, slide, or explanation.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The crop cuts off <required content> at <time>."
+         }
+        ]
+       },
+       {
+        "id": "4.1.2",
+        "label": "Position and scale content",
+        "questions": [
+         {
+          "question": "Does the position and scale preserve the requested framing?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The subject or demonstration may be difficult to see.",
+          "whatTheAgentLoses": "The subject or demonstration may be difficult to see.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Required content> is outside the frame at <time>."
+         }
+        ]
+       },
+       {
+        "id": "4.1.3",
+        "label": "Rotate or mirror content",
+        "questions": [
+         {
+          "question": "Is the resulting image oriented as requested?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The shot or text may become difficult to understand.",
+          "whatTheAgentLoses": "The shot or text may become difficult to understand.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The flip reversed <visible text> in the picture."
+         }
+        ]
+       },
+       {
+        "id": "4.1.4",
+        "label": "Animate the framing",
+        "questions": [
+         {
+          "question": "Does the animated framing keep following the intended subject?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The camera movement could hide the part of the shot you wanted.",
+          "whatTheAgentLoses": "The camera movement could hide the part of the shot you wanted.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The framing loses <subject> from <start> to <end>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Change the playback timing",
+      "note": "4.2.1 changes constant speed or 4.2.2 varies speed across the clip; use 4.2.3 to reverse and 4.2.4 to hold a frame; check resulting duration with 7.5 and sound with 7.4",
+      "children": [
+       {
+        "id": "4.2.1",
+        "label": "Set the playback speed",
+        "questions": [
+         {
+          "question": "Was the requested playback speed applied to the intended clip?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The wrong passage could play too quickly or too slowly.",
+          "whatTheAgentLoses": "The wrong passage could play too quickly or too slowly.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the selected clip identity and speed value, including whether the value is a percentage or multiplier.",
+          "say_example": "<Clip> is set to <actual speed>. You asked for <requested speed>."
+         },
+         {
+          "question": "Did the speed change preserve the intended timing of the rest of the sequence?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Other clips or audio cues may no longer line up.",
+          "whatTheAgentLoses": "Other clips or audio cues may no longer line up.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "Changing the speed moved <later cue> from <before> to <after>."
+         },
+         {
+          "question": "Did the speed change preserve the intended voice and sound?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The voice may sound different or become hard to understand.",
+          "whatTheAgentLoses": "The voice may sound different or become hard to understand.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The speed change makes <passage> hard to understand."
+         }
+        ]
+       },
+       {
+        "id": "4.2.2",
+        "label": "Shape the speed curve",
+        "questions": [
+         {
+          "question": "Does the speed ramp preserve the important action and its intended timing?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The effect could obscure the action it was meant to emphasize.",
+          "whatTheAgentLoses": "The effect could obscure the action it was meant to emphasize.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The speed ramp passes over <required action> at <time>."
+         }
+        ]
+       },
+       {
+        "id": "4.2.3",
+        "label": "Reverse the selected clip",
+        "questions": [
+         {
+          "question": "Does reversing this passage produce the requested result?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Speech or action could run backward unintentionally.",
+          "whatTheAgentLoses": "Speech or action could run backward unintentionally.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Passage> now plays backward, including <component that should remain forward>."
+         }
+        ]
+       },
+       {
+        "id": "4.2.4",
+        "label": "Hold a selected frame",
+        "questions": [
+         {
+          "question": "Does the freeze frame hold the intended image for the requested time?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The pause could emphasize the wrong moment or interrupt the sequence.",
+          "whatTheAgentLoses": "The pause could emphasize the wrong moment or interrupt the sequence.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The freeze holds <actual frame> for <duration>. You asked for <requested hold>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Adjust the clip color",
+      "note": "4.3.1 handles source color profiles where offered; 4.3.2 balances color and 4.3.3 makes manual adjustments; 4.3.4 applies a preset if wanted; use 4.3.5 to compare or reset before keeping the change",
+      "children": [
+       {
+        "id": "4.3.1",
+        "label": "Check the source profile",
+        "questions": [
+         {
+          "question": "Does the selected color conversion match the source recording format?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The conversion could produce the wrong color or brightness.",
+          "whatTheAgentLoses": "The conversion could produce the wrong color or brightness.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The source is recorded as <source format>. The selected conversion expects <different format>."
+         }
+        ]
+       },
+       {
+        "id": "4.3.2",
+        "label": "Balance the clip color"
+       },
+       {
+        "id": "4.3.3",
+        "label": "Adjust exposure and color"
+       },
+       {
+        "id": "4.3.4",
+        "label": "Apply a color preset",
+        "questions": [
+         {
+          "question": "Was the requested color preset applied at the agreed strength?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The clip could use a different look than the one chosen.",
+          "whatTheAgentLoses": "The clip could use a different look than the one chosen.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the selected clip, applied preset name, and strength value.",
+          "say_example": "<Clip> uses <actual preset and strength>. You chose <requested preset and strength>."
+         }
+        ]
+       },
+       {
+        "id": "4.3.5",
+        "label": "Compare or reset adjustments",
+        "questions": [
+         {
+          "question": "Did the color adjustment preserve the detail and appearance the edit needs?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Important image detail or a requested appearance could be lost.",
+          "whatTheAgentLoses": "Important image detail or a requested appearance could be lost.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The adjustment hides <required detail> in <affected passage>."
+         },
+         {
+          "question": "Is the preview showing the color adjustments that are being reviewed?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The displayed preview could hide the changes being checked.",
+          "whatTheAgentLoses": "The displayed preview could hide the changes being checked.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read whether color-grade bypass is enabled or disabled. The button label alone does not show whether bypass is active.",
+          "say_example": "Color adjustments are bypassed. This preview is showing the ungraded result."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Apply the visual effects",
+      "note": "choose only the effects the edit needs; 4.4.1 manages the effect stack, 4.4.2 changes blending, 4.4.3 changes values over time, 4.4.4 stabilizes motion, 4.4.5 changes appearance, and 4.4.6 isolates a subject; review each result with 7.3",
+      "children": [
+       {
+        "id": "4.4.1",
+        "label": "Choose and adjust effects",
+        "questions": [
+         {
+          "question": "Does the visual effect preserve the content it was meant to enhance?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The effect could make the scene harder to understand.",
+          "whatTheAgentLoses": "The effect could make the scene harder to understand.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Effect> hides <required content> from <start> to <end>."
+         },
+         {
+          "question": "Did the required effect fail to load or apply?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The requested appearance may be absent from the edit.",
+          "whatTheAgentLoses": "The requested appearance may be absent from the edit.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "on-event",
+          "check": "Read the exact load or application error and the affected effect name.",
+          "say_example": "The editor reports <error> for <effect>. That effect has not been confirmed."
+         },
+         {
+          "question": "Does the selected effect setting match the value you requested?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The agent’s chosen effect could differ from your explicit instruction.",
+          "whatTheAgentLoses": "The agent’s chosen effect could differ from your explicit instruction.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the selected clip, applied effect name, and the particular parameter named in the request.",
+          "say_example": "<Effect parameter> is set to <actual value>. You requested <requested value>."
+         }
+        ]
+       },
+       {
+        "id": "4.4.2",
+        "label": "Set blending and opacity",
+        "questions": [
+         {
+          "question": "Does the blend or opacity change leave the intended layers visible?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The viewer could lose information carried by a layer.",
+          "whatTheAgentLoses": "The viewer could lose information carried by a layer.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Layer> disappears at <time> after the opacity change."
+         },
+         {
+          "question": "Does the selected opacity match the requested value?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "A layer could be more or less visible than intended.",
+          "whatTheAgentLoses": "A layer could be more or less visible than intended.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the selected layer and opacity at the requested time.",
+          "say_example": "<Layer> has <actual opacity> opacity at <time>. You requested <requested opacity>."
+         }
+        ]
+       },
+       {
+        "id": "4.4.3",
+        "label": "Set the animation keyframes"
+       },
+       {
+        "id": "4.4.4",
+        "label": "Stabilize the camera motion",
+        "questions": [
+         {
+          "question": "Did stabilization reduce the unwanted movement without losing important content?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "A steadier shot could still lose or distort the subject.",
+          "whatTheAgentLoses": "A steadier shot could still lose or distort the subject.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The stabilized shot still has <observed problem> at <time>."
+         }
+        ]
+       },
+       {
+        "id": "4.4.5",
+        "label": "Review the retouching options",
+        "questions": [
+         {
+          "question": "Did retouching change only the subject and features you intended?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Someone’s appearance or the scene could be altered beyond the request.",
+          "whatTheAgentLoses": "Someone’s appearance or the scene could be altered beyond the request.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The retouch also changes <unrequested feature or subject>."
+         }
+        ]
+       },
+       {
+        "id": "4.4.6",
+        "label": "Mask the selected subject",
+        "questions": [
+         {
+          "question": "Does the mask preserve the intended subject throughout the shot?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The cutout could remove part of the person or leave unwanted content.",
+          "whatTheAgentLoses": "The cutout could remove part of the person or leave unwanted content.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The mask removes <part of the subject> from <start> to <end>."
+         },
+         {
+          "question": "Would stopping this process discard work you have not agreed to lose?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Completed edits may have to be recreated.",
+          "whatTheAgentLoses": "Completed edits may have to be recreated.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "decision",
+          "verify_form": "Would stopping this process discard work you have not agreed to lose?",
+          "speak": "gate",
+          "check": "Read the cancellation warning and identify the work it says will be discarded.",
+          "say_example": "Stopping will discard <work named in warning>. Stop anyway?"
+         },
+         {
+          "question": "Does the requested redaction cover the information throughout the affected passage?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The delivered video could reveal information you asked to remove.",
+          "whatTheAgentLoses": "The delivered video could reveal information you asked to remove.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Requested redaction> is incomplete at <time>: <type of information> remains <visible or audible>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Connect the adjacent clips",
+      "note": "4.5.1 chooses a transition or a hard cut; 4.5.2 sets the affected cut and duration; 4.5.3 finishes the final image; review transitions with 7.2 and return to 3.3 if more source footage is needed",
+      "children": [
+       {
+        "id": "4.5.1",
+        "label": "Choose the transition style"
+       },
+       {
+        "id": "4.5.2",
+        "label": "Set transition placement and duration",
+        "questions": [
+         {
+          "question": "Does the transition match the chosen effect, cut, and duration?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The wrong cut could receive the effect or its timing could change.",
+          "whatTheAgentLoses": "The wrong cut could receive the effect or its timing could change.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The transition at <cut> lasts <actual duration>. You asked for <requested duration>."
+         },
+         {
+          "question": "Is the transition using available footage without an unintended frozen or repeated frame?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The cut may appear to stop or jump.",
+          "whatTheAgentLoses": "The cut may appear to stop or jump.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The transition shows <unintended frozen or repeated image> at <time>."
+         }
+        ]
+       },
+       {
+        "id": "4.5.3",
+        "label": "Set the visual ending"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Add text and graphics",
+    "note": "5.1 selects a title style and 5.2 sets its words; 5.3 controls typography, 5.4 placement, and 5.5 timing; use 5.6 for captions and 5.7 for stickers; check with 5.8 whether the text stays readable as the background changes",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Choose the title style"
+     },
+     {
+      "id": "5.2",
+      "label": "Enter the title text",
+      "questions": [
+       {
+        "question": "Does the title use the wording you approved?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video could display the wrong name or message.",
+        "whatTheAgentLoses": "The video could display the wrong name or message.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the title text from the editor’s text field, without assuming every word is visible in playback.",
+        "say_example": "The title says <actual wording>. You approved <requested wording>."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Set the text appearance",
+      "questions": [
+       {
+        "question": "Does the title use the style that was explicitly requested?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The title could violate the requested visual style.",
+        "whatTheAgentLoses": "The title could violate the requested visual style.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 1,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected title’s font, color, or template for the specified property.",
+        "say_example": "The title uses <actual property>. You chose <requested property>."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Position and size text"
+     },
+     {
+      "id": "5.5",
+      "label": "Set the text timing",
+      "questions": [
+       {
+        "question": "Does the title appear with the intended passage for long enough to read it?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The text may be missed or attached to the wrong scene.",
+        "whatTheAgentLoses": "The text may be missed or attached to the wrong scene.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Title> appears during <actual passage>. It belongs with <intended passage>."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Prepare and correct captions",
+      "questions": [
+       {
+        "question": "Will generating captions replace corrections that should be retained?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Names and wording already corrected could be lost.",
+        "whatTheAgentLoses": "Names and wording already corrected could be lost.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "decision",
+        "verify_form": "Will generating captions replace corrections that should be retained?",
+        "speak": "gate",
+        "check": "Read the selected caption source, existing caption status, and explicit replacement setting or warning.",
+        "say_example": "Generating captions will replace <existing captions>. Replace them?"
+       },
+       {
+        "question": "Do the captions accurately represent the spoken words?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "People relying on captions may receive the wrong information.",
+        "whatTheAgentLoses": "People relying on captions may receive the wrong information.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "At <time>, the caption says <caption>. The audio says <spoken words>."
+       },
+       {
+        "question": "Do captions appear with the words they represent?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "People relying on captions could attribute words to the wrong scene or speaker.",
+        "whatTheAgentLoses": "People relying on captions could attribute words to the wrong scene or speaker.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "The caption <caption> appears at <caption time>. Its words are spoken at <speech time>."
+       },
+       {
+        "question": "Are captions being generated from the requested audio and language?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The generated captions could describe another track or use the wrong language.",
+        "whatTheAgentLoses": "The generated captions could describe another track or use the wrong language.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected caption audio source and language settings.",
+        "say_example": "Captions are set to use <actual source or language>. You requested <requested value>."
+       },
+       {
+        "question": "Can the captions be read in the video at the intended viewing size?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "People relying on captions could miss part of the spoken content.",
+        "whatTheAgentLoses": "People relying on captions could miss part of the spoken content.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "The caption at <time> has <observed reading problem>."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Add and place graphics",
+      "questions": [
+       {
+        "question": "Does the added graphic show the intended mark without covering required content?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video could show the wrong identity or hide part of the message.",
+        "whatTheAgentLoses": "The video could show the wrong identity or hide part of the message.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Graphic> covers <required content> at <time>."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Check the text readability",
+      "questions": [
+       {
+        "question": "Can the title be read throughout the time it appears?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The viewer may miss the title’s message.",
+        "whatTheAgentLoses": "The viewer may miss the title’s message.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Words> become hard to read against <background> at <time>."
+       },
+       {
+        "question": "Will destination controls cover important text or graphics?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The title or captions could be hidden when the video is watched.",
+        "whatTheAgentLoses": "The title or captions could be hidden when the video is watched.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Destination control> covers <text or graphic> in this preview."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Mix the soundtrack",
+    "note": "6.1 gathers audio or 6.2 records narration; use 6.3 to balance and process it, and 6.4 to align it with the picture; repeat 6.3 and 6.4 after changes to clip length or order; use 7.4 to review the complete mix",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Gather the audio sources",
+      "note": "6.1.1 finds and previews music; 6.1.2 checks the available rights and cost information; 6.1.3 imports the chosen file; 6.1.4 selects sound effects; return to these operations if the sound does not suit the edit",
+      "children": [
+       {
+        "id": "6.1.1",
+        "label": "Find and preview music",
+        "questions": [
+         {
+          "question": "Does connecting the sound library grant only the access you approved?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Another app could receive access to the account.",
+          "whatTheAgentLoses": "Another app could receive access to the account.",
+          "costDims": {
+           "money": 0,
+           "privacy": 2,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 1
+          },
+          "kind": "decision",
+          "verify_form": "Does connecting the sound library grant only the access you approved?",
+          "speak": "gate",
+          "check": "Read the account identity, receiving app, and permission scope in the actual authorization prompt.",
+          "say_example": "<App> is asking for <access> to <account>. Allow that connection?"
+         }
+        ]
+       },
+       {
+        "id": "6.1.2",
+        "label": "Check music access terms",
+        "questions": [
+         {
+          "question": "Do the displayed music terms cover the intended use?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The music may need replacing before the video can be delivered as requested.",
+          "whatTheAgentLoses": "The music may need replacing before the video can be delivered as requested.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the asset’s stated allowed uses and restrictions. A search filter or automated copyright pass does not establish permission.",
+          "say_example": "The terms for <track> exclude <requested use>. We need a track whose terms cover it."
+         }
+        ]
+       },
+       {
+        "id": "6.1.3",
+        "label": "Import the chosen audio",
+        "questions": [
+         {
+          "question": "Is the soundtrack the track and passage you asked to use?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The video could use different music or the wrong version of a track.",
+          "whatTheAgentLoses": "The video could use different music or the wrong version of a track.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The edit uses <actual track or passage>. You selected <requested track or passage>."
+         },
+         {
+          "question": "Is the selected audio file the one you specified?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The edit could use another recording or music version.",
+          "whatTheAgentLoses": "The edit could use another recording or music version.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the selected audio filename and displayed location or version.",
+          "say_example": "The selected audio is <actual file>. You requested <requested file>."
+         }
+        ]
+       },
+       {
+        "id": "6.1.4",
+        "label": "Select the sound effect",
+        "questions": [
+         {
+          "question": "Does the sound effect match the intended event and passage?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The added sound could misrepresent or obscure the scene.",
+          "whatTheAgentLoses": "The added sound could misrepresent or obscure the scene.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The sound at <time> suggests <observed event>. You asked for <intended sound>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Record the narration",
+      "note": "6.2.1 chooses the input and target track; 6.2.2 checks that sound reaches the recorder; then use 6.2.3 for the take and review it with 7.4",
+      "children": [
+       {
+        "id": "6.2.1",
+        "label": "Configure the recording input",
+        "questions": [
+         {
+          "question": "Is the voiceover recording using the intended input and destination track?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The take may capture the wrong source or record onto the wrong track.",
+          "whatTheAgentLoses": "The take may capture the wrong source or record onto the wrong track.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the selected input device, armed track, and recording destination.",
+          "say_example": "Recording is set to <actual device and track>. The intended setup is <requested setup>."
+         }
+        ]
+       },
+       {
+        "id": "6.2.2",
+        "label": "Check the recording conditions",
+        "questions": [
+         {
+          "question": "Does a short test recording capture the voice clearly?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "A complete voiceover take could be unusable.",
+          "whatTheAgentLoses": "A complete voiceover take could be unusable.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The test recording contains <observed problem>. The main take is not ready to start."
+         }
+        ]
+       },
+       {
+        "id": "6.2.3",
+        "label": "Record the voiceover take",
+        "questions": [
+         {
+          "question": "Does the retained voiceover contain the complete take you asked to use?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The narration could omit or repeat part of the explanation.",
+          "whatTheAgentLoses": "The narration could omit or repeat part of the explanation.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The retained voiceover <omits or repeats> <phrase> at <time>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Balance the audio tracks",
+      "note": "6.3.1 separates audio when independent editing is needed; 6.3.2 sets levels; 6.3.3 controls temporary muting; 6.3.4 adjusts processing; restore the intended track states before the complete playback check",
+      "children": [
+       {
+        "id": "6.3.1",
+        "label": "Separate audio from video",
+        "questions": [
+         {
+          "question": "Did editing linked or detached media preserve the intended picture and sound timing?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The voice or scene sound could play at the wrong time.",
+          "whatTheAgentLoses": "The voice or scene sound could play at the wrong time.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Audio or video component> moved by <offset> while its paired component stayed in place."
+         }
+        ]
+       },
+       {
+        "id": "6.3.2",
+        "label": "Set the audio levels",
+        "questions": [
+         {
+          "question": "Is the required speech understandable at the intended listening level?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The viewer may be unable to follow the spoken content.",
+          "whatTheAgentLoses": "The viewer may be unable to follow the spoken content.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The words at <time range> are <observed listening problem>."
+         },
+         {
+          "question": "Does the audio level setting match the value and scope you requested?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The change could affect the wrong sound or more clips than intended.",
+          "whatTheAgentLoses": "The change could affect the wrong sound or more clips than intended.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the selected clip or track, its level value with units, and whether the change applies to one clip or all clips.",
+          "say_example": "<Track or clip> is set to <actual level>. You requested <requested level>."
+         }
+        ]
+       },
+       {
+        "id": "6.3.3",
+        "label": "Set mute and solo",
+        "questions": [
+         {
+          "question": "Are the audio tracks required by the edit included in the mix?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The export could lose the voiceover or include unwanted sound.",
+          "whatTheAgentLoses": "The export could lose the voiceover or include unwanted sound.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 3,
+           "reversibility": 2,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Required track> is excluded from the mix."
+         }
+        ]
+       },
+       {
+        "id": "6.3.4",
+        "label": "Adjust the sound processing",
+        "questions": [
+         {
+          "question": "Does the audio effect apply only to the intended clip or track?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Other voices or sounds could be changed unintentionally.",
+          "whatTheAgentLoses": "Other voices or sounds could be changed unintentionally.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Effect> applies to <actual scope>. You asked to change <requested scope>."
+         },
+         {
+          "question": "Did audio processing preserve the words and natural sound that should remain?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Cleaning up the sound could also damage the recording.",
+          "whatTheAgentLoses": "Cleaning up the sound could also damage the recording.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The processed passage has <observed sound problem> at <time>."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Align sound with picture",
+      "note": "6.4.1 positions the sound, 6.4.2 trims its boundaries, 6.4.3 extends music where needed, and 6.4.4 sets fades; check the result with 7.4 and repeat after picture edits",
+      "children": [
+       {
+        "id": "6.4.1",
+        "label": "Position the audio cues",
+        "questions": [
+         {
+          "question": "Does the editor report a new offset between media that should stay synchronized?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The edit may need a synchronization review before continuing.",
+          "whatTheAgentLoses": "The edit may need a synchronization review before continuing.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Read the signed offset and affected linked media identifiers. Color alone does not prove an offset.",
+          "say_example": "The editor reports <offset> between <paired media>. Their intended offset is <target>."
+         },
+         {
+          "question": "Does the sound occur with the intended visible event?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The action and its sound could appear disconnected.",
+          "whatTheAgentLoses": "The action and its sound could appear disconnected.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "<Sound> occurs <observed timing> relative to <event>."
+         }
+        ]
+       },
+       {
+        "id": "6.4.2",
+        "label": "Trim the audio boundaries",
+        "questions": [
+         {
+          "question": "Does the audio end with the intended closing passage?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The finished video may end abruptly or keep playing after its intended end.",
+          "whatTheAgentLoses": "The finished video may end abruptly or keep playing after its intended end.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The ending cuts off <word or sound> at <time>."
+         },
+         {
+          "question": "Does the selected audio begin with the intended passage?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The sound may start abruptly or miss its intended opening.",
+          "whatTheAgentLoses": "The sound may start abruptly or miss its intended opening.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The audio starts with <actual passage>. You asked it to start with <requested passage>."
+         }
+        ]
+       },
+       {
+        "id": "6.4.3",
+        "label": "Extend or loop music",
+        "questions": [
+         {
+          "question": "Does the repeated music cover the intended passage without an audible break?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The music could sound interrupted or unfinished.",
+          "whatTheAgentLoses": "The music could sound interrupted or unfinished.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "There is <audible problem> at the music join at <time>."
+         }
+        ]
+       },
+       {
+        "id": "6.4.4",
+        "label": "Set fades and crossfades",
+        "questions": [
+         {
+          "question": "Do the fades preserve the words and sound they should leave audible?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Part of the speech may disappear even though the clip remains on the timeline.",
+          "whatTheAgentLoses": "Part of the speech may disappear even though the clip remains on the timeline.",
+          "costDims": {
+           "money": 0,
+           "privacy": 0,
+           "recovery": 2,
+           "reversibility": 1,
+           "safety": 0,
+           "thirdParty": 0
+          },
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "say_example": "The fade hides <word or sound> at <time>."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Review the edited sequence",
+    "note": "7.1 plays the relevant passage; use 7.2 through 7.5 to check cuts, visible content, sound, and total length; return to the operation that caused a problem; use 7.6 only when preview performance prevents judging the edit",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Play the edited sequence"
+     },
+     {
+      "id": "7.2",
+      "label": "Inspect the cuts and transitions",
+      "questions": [
+       {
+        "question": "Does the cut preserve the intended continuity of the passage?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The viewer may struggle to follow the action or sentence.",
+        "whatTheAgentLoses": "The viewer may struggle to follow the action or sentence.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "The cut at <time> <observed continuity problem>."
+       },
+       {
+        "question": "Are there unintended flash frames or black gaps in the rendered sequence?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video could briefly flash an unrelated image or black frame.",
+        "whatTheAgentLoses": "The video could briefly flash an unrelated image or black frame.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "There is <unexpected frame or gap> at <time>."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Inspect the visible layers"
+     },
+     {
+      "id": "7.4",
+      "label": "Listen to the complete mix",
+      "questions": [
+       {
+        "question": "Does the music or added sound cover any required speech?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The viewer could miss the explanation even when the voice track sounds clear on its own.",
+        "whatTheAgentLoses": "The viewer could miss the explanation even when the voice track sounds clear on its own.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Music or effect> covers the words <passage> at <time range>."
+       },
+       {
+        "question": "Does the complete sound mix preserve the requested balance?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "An added effect or music bed could overwhelm the intended scene sound.",
+        "whatTheAgentLoses": "An added effect or music bed could overwhelm the intended scene sound.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Sound> is <observed prominence> at <time>. You asked for <requested prominence>."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Check the sequence duration",
+      "questions": [
+       {
+        "question": "Does the edited sequence meet the requested duration?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The edit may be too long or too short for its intended use.",
+        "whatTheAgentLoses": "The edit may be too long or too short for its intended use.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the total active sequence duration and its time units.",
+        "say_example": "The sequence lasts <actual duration>. Your limit is <requested limit>."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Improve the preview playback"
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Export and check video",
+    "note": "8.1 chooses the output kind; 8.2 sets the range; 8.3 through 8.6 configure quality, captions, and the file destination; 8.7 reviews requirements before 8.8 starts the job; 8.9 checks whether the export has finished; 8.10 opens the saved output; 8.11 is optional and requires explicit authorization to publish or link an external account",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Choose the output kind",
+      "questions": [
+       {
+        "question": "Will this export produce the kind of deliverable you requested?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The resulting files may not be usable for the requested purpose.",
+        "whatTheAgentLoses": "The resulting files may not be usable for the requested purpose.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected export type and mode, including single-file versus individual-clips output.",
+        "say_example": "This export will produce <actual type>. You asked for <requested type>."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Set the exported range",
+      "questions": [
+       {
+        "question": "Does the export include the requested sequence range?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The export could omit the opening or ending, or include unwanted material.",
+        "whatTheAgentLoses": "The export could omit the opening or ending, or include unwanted material.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the export range mode, start, end, and duration for the active sequence.",
+        "say_example": "The export is set from <start> to <end>. The requested range is <requested range>."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Set output dimensions and rate",
+      "questions": [
+       {
+        "question": "Does the selected export resolution meet the delivery request?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The delivered video could have the wrong size or lose required detail.",
+        "whatTheAgentLoses": "The delivered video could have the wrong size or lose required detail.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected export width and height, separately from the preview resolution.",
+        "say_example": "The export is set to <actual dimensions>. You requested <required dimensions>."
+       },
+       {
+        "question": "Does the export frame-rate control retain the requested value?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The delivered video could have a different frame rate.",
+        "whatTheAgentLoses": "The delivered video could have a different frame rate.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected export frame rate after the control settles. File-size estimates do not establish the selected rate.",
+        "say_example": "The export frame rate is <actual>. You requested <requested>."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Set encoding and quality",
+      "questions": [
+       {
+        "question": "Do the export format settings satisfy the stated delivery requirements?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The file could be rejected or displayed incorrectly by its intended destination.",
+        "whatTheAgentLoses": "The file could be rejected or displayed incorrectly by its intended destination.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected export format and the encoding properties specified by the request.",
+        "say_example": "<Export property> is set to <actual>. The delivery requirement is <requested>."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Choose the caption delivery",
+      "questions": [
+       {
+        "question": "Will captions be delivered in the form you requested?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "People who need captions may not receive them.",
+        "whatTheAgentLoses": "People who need captions may not receive them.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected subtitle export mode and any selected caption track.",
+        "say_example": "Captions are set to <actual mode>. You requested <required mode>."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Name and locate the output",
+      "questions": [
+       {
+        "question": "Does the export use the requested filename?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The delivered file may be hard to identify or be mistaken for another version.",
+        "whatTheAgentLoses": "The delivered file may be hard to identify or be mistaken for another version.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the output filename and extension in the save or render dialog.",
+        "say_example": "The output is named <actual filename>. You requested <requested filename>."
+       },
+       {
+        "question": "Is the file being saved to the destination you requested?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The file could be hard to find or placed in the wrong account.",
+        "whatTheAgentLoses": "The file could be hard to find or placed in the wrong account.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the selected save destination and account if one is displayed.",
+        "say_example": "The selected destination is <actual>. You requested <requested destination>."
+       },
+       {
+        "question": "Is replacing this existing output file authorized?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "An earlier finished version could be lost.",
+        "whatTheAgentLoses": "An earlier finished version could be lost.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 3,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "decision",
+        "verify_form": "Is replacing this existing output file authorized?",
+        "speak": "gate",
+        "check": "Read the existing filename, destination, and replacement warning.",
+        "say_example": "<Filename> already exists in <destination>. Replace it?"
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Review the export requirements",
+      "questions": [
+       {
+        "question": "Does the estimated export size exceed a stated delivery limit?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The file may be too large to upload or deliver.",
+        "whatTheAgentLoses": "The file may be too large to upload or deliver.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the estimated output file size and its units.",
+        "say_example": "The estimated file size is <estimate>. The delivery limit is <limit>."
+       },
+       {
+        "question": "Does the destination have enough space for the export?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The export may fail before the file is saved.",
+        "whatTheAgentLoses": "The export may fail before the file is saved.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read free space for the selected destination and the displayed space requirement or exact insufficient-space warning.",
+        "say_example": "<Destination> has <available space>. The export requires <required space>."
+       },
+       {
+        "question": "Does the export add a watermark excluded by the request?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The delivered picture could contain unwanted branding.",
+        "whatTheAgentLoses": "The delivered picture could contain unwanted branding.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the exact watermark warning and the feature or asset it applies to.",
+        "say_example": "The export warning says <watermark> will be added because of <selected item>."
+       }
+      ]
+     },
+     {
+      "id": "8.8",
+      "label": "Start the export job"
+     },
+     {
+      "id": "8.9",
+      "label": "Check the export result",
+      "questions": [
+       {
+        "question": "Did the editor report that this export failed?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The expected output may not exist or may be incomplete.",
+        "whatTheAgentLoses": "The expected output may not exist or may be incomplete.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Read a captured error or failure message and associate it with the current export job.",
+        "say_example": "The export failed with <error>. <Output> has not been confirmed."
+       },
+       {
+        "question": "Does the editor confirm that each requested export finished?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The task could be reported complete while a file is still missing.",
+        "whatTheAgentLoses": "The task could be reported complete while a file is still missing.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Read a completion or save confirmation naming the output, or a saved-file listing that identifies it. Progress, Render All, and a thumbnail alone are insufficient.",
+        "say_example": "The editor reports that <output> was saved to <destination>."
+       },
+       {
+        "question": "Did the automated sound check report a restriction or warning?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The service may limit how the video can be delivered or heard.",
+        "whatTheAgentLoses": "The service may limit how the video can be delivered or heard.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 2,
+         "reversibility": 1,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Read the exact result and any stated restriction.",
+        "say_example": "The sound check reports <warning>. It says <stated effect on delivery>."
+       }
+      ]
+     },
+     {
+      "id": "8.10",
+      "label": "Open the saved video",
+      "questions": [
+       {
+        "question": "Does the saved video open and play through the requested content?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "A successful export message could still accompany an unusable file.",
+        "whatTheAgentLoses": "A successful export message could still accompany an unusable file.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "The saved file <filename> has <observed playback problem> at <time>."
+       },
+       {
+        "question": "Does the saved file meet the actual delivery requirements?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The exported file could be rejected even though the settings appeared correct.",
+        "whatTheAgentLoses": "The exported file could be rejected even though the settings appeared correct.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Filename> has <actual property>. The delivery requires <requested property>."
+       },
+       {
+        "question": "Are the requested captions present and usable in the delivered files?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The delivered video may be inaccessible to people relying on captions.",
+        "whatTheAgentLoses": "The delivered video may be inaccessible to people relying on captions.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "The delivered <file or track> has <observed caption problem>."
+       },
+       {
+        "question": "Does the delivered file contain the latest changes you approved?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The recipient could receive an outdated edit.",
+        "whatTheAgentLoses": "The recipient could receive an outdated edit.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Filename> still contains <earlier content>. The approved version has <changed content>."
+       },
+       {
+        "question": "Did export introduce a visible problem that is absent from the approved sequence?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The delivered video could differ from the edit that was approved.",
+        "whatTheAgentLoses": "The delivered video could differ from the edit that was approved.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "The exported file has <visible problem> at <time>. The approved sequence does not."
+       }
+      ]
+     },
+     {
+      "id": "8.11",
+      "label": "Choose the sharing destination",
+      "questions": [
+       {
+        "question": "Is publishing or uploading this video authorized for this account and audience?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The video could be sent to an unintended account or audience.",
+        "whatTheAgentLoses": "The video could be sent to an unintended account or audience.",
+        "costDims": {
+         "money": 0,
+         "privacy": 2,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 2
+        },
+        "kind": "decision",
+        "verify_form": "Is publishing or uploading this video authorized for this account and audience?",
+        "speak": "gate",
+        "check": "Read the pending output, destination account, and audience or visibility setting. Do not assume an upload is public.",
+        "say_example": "<Video> will be uploaded to <account> with <visibility>. Upload it?"
+       },
+       {
+        "question": "Does the publishing connection grant only the access you approved?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The editor could gain more access to the account than intended.",
+        "whatTheAgentLoses": "The editor could gain more access to the account than intended.",
+        "costDims": {
+         "money": 0,
+         "privacy": 2,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 2
+        },
+        "kind": "decision",
+        "verify_form": "Does the publishing connection grant only the access you approved?",
+        "speak": "gate",
+        "check": "Read the actual authorization prompt, account identity, and permissions requested.",
+        "say_example": "<App> is asking for <permissions> on <account>. Allow that access?"
+       },
+       {
+        "question": "Does the destination confirm that the authorized upload finished?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The local export may exist while the delivered copy is missing.",
+        "whatTheAgentLoses": "The local export may exist while the delivered copy is missing.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the destination’s completed-upload confirmation or file listing identifying this output.",
+        "say_example": "<Destination> reports <upload problem> for <output>."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Manage the saved files",
+    "note": "9.1 preserves editing progress throughout the edit; the remaining operations are optional file management after a separate request; 9.2 inspects the saved project; 9.3 verifies its source media; 9.4 and 9.5 require an explicit decision about what to delete and what to retain",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Save the editing project",
+      "questions": [
+       {
+        "question": "Have the latest project changes been saved before leaving the editor?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The latest edits may be lost when the project closes.",
+        "whatTheAgentLoses": "The latest edits may be lost when the project closes.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the current save status or explicit unsaved-changes warning. An Edited label during ongoing work is normal.",
+        "say_example": "The editor still reports unsaved changes in <project>."
+       },
+       {
+        "question": "Is the editable project saved where you asked to keep it?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The editable project could be unavailable or stored in an unintended account.",
+        "whatTheAgentLoses": "The editable project could be unavailable or stored in an unintended account.",
+        "costDims": {
+         "money": 0,
+         "privacy": 2,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 1
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Read the saved project location and account or cloud status.",
+        "say_example": "The project is saved in <actual location>. You requested <intended location>."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Inspect the project actions"
+     },
+     {
+      "id": "9.3",
+      "label": "Verify the retained media",
+      "questions": [
+       {
+        "question": "Are the source files that should be retained still available after cleanup?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The project may no longer be editable from its original media.",
+        "whatTheAgentLoses": "The project may no longer be editable from its original media.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "<Required source> is no longer available after cleanup."
+       },
+       {
+        "question": "Does the saved project reopen with the latest edit and required media?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Further editing could require rebuilding work or locating missing sources.",
+        "whatTheAgentLoses": "Further editing could require rebuilding work or locating missing sources.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 2,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "say_example": "The saved project has <observed reopening problem>."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Confirm the project deletion",
+      "questions": [
+       {
+        "question": "Is deleting this project covered by your cleanup request?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The editable sequence could be lost.",
+        "whatTheAgentLoses": "The editable sequence could be lost.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 3,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "decision",
+        "verify_form": "Is deleting this project covered by your cleanup request?",
+        "speak": "gate",
+        "check": "Read the project identity and the exact deletion dialog, including any affected media.",
+        "say_example": "This will delete <project>. The dialog says <what happens to its media>. Delete it?"
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Review source-file removal",
+      "questions": [
+       {
+        "question": "Is removing these source files covered by your cleanup request?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Other projects or future revisions could lose their original media.",
+        "whatTheAgentLoses": "Other projects or future revisions could lose their original media.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "recovery": 3,
+         "reversibility": 3,
+         "safety": 0,
+         "thirdParty": 0
+        },
+        "kind": "decision",
+        "verify_form": "Is removing these source files covered by your cleanup request?",
+        "speak": "gate",
+        "check": "Read the selected file identities and the deletion warning, including any trash or permanent-delete distinction.",
+        "say_example": "This will remove <source files>. They may still be needed by other edits. Remove them?"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

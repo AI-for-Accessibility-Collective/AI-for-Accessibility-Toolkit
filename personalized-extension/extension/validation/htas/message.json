@@ -40,7 +40,7 @@
         "whatTheAgentLoses": "You lose control over your sender identity, risking the agent making a commitment on behalf of the wrong account.",
         "speak": "on-event",
         "check": "Does the page show an account chooser listing more than one account? Which email addresses are listed?",
-        "say_example": "Two accounts here, <david@gmail.com> and <dlin@stanford.edu>. I'll use <the Stanford one>. OK, or say the other one?"
+        "say_example": "Two accounts here, <[email]> and <[email]>. I'll use <the work one>. OK, or say the other one?"
        },
        {
         "question": "Which email address should you use to log in?",
@@ -51,7 +51,7 @@
         "whatTheAgentLoses": "Delegating this choice means you lose control over which specific sender identity is used to make the commitment.",
         "speak": "never",
         "check": "Is the sign-in page showing an empty email or phone field?",
-        "say_example": "Signed in as <david@gmail.com>"
+        "say_example": "Signed in as <[email]>"
        },
        {
         "question": "Do you want to type the password in yourself?",
@@ -264,7 +264,7 @@
         "whatTheAgentLoses": "The delegator loses the ability to personally select the exact recipient from their contacts or suggestions.",
         "speak": "if-wrong",
         "check": "What name and address does the To chip show, and does it match the recipient named in the ask?",
-        "say_example": "The To field picked <sam.lee@hotmail.com>. You said <Sam at work>. Changing it to <sam@company.com>."
+        "say_example": "The To field picked <[email]>. You said <[name] at work>. Changing it to <[email]>."
        },
        {
         "question": "Which of their addresses do you want to use?",
@@ -286,7 +286,7 @@
         "whatTheAgentLoses": "The user risks sending a binding commitment to the wrong person because the agent selected a matching name without verifying the visual context.",
         "speak": "on-event",
         "check": "Does the autocomplete list more than one person with the same name? What distinguishes them: the address domain, the avatar, the title?",
-        "say_example": "There are two people called <Alex Chen> here. One at <stanford.edu>, one at <gmail.com>. Which one? Say Stanford or Gmail."
+        "say_example": "There are two people called <[name]> here. One at <stanford.edu>, one at <gmail.com>. Which one? Say Berkeley or Gmail."
        },
        {
         "question": "Does it say this person is out of office?",
@@ -654,7 +654,7 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The messaging sidebar displays past threads like the one with Teddy Burriss, allowing you to reference previous interactions for tone and context while drafting.",
+        "why": "The messaging sidebar displays past threads like the one with [name], allowing you to reference previous interactions for tone and context while drafting.",
         "whatTheAgentLoses": "You lose the ability to personally select the most relevant past conversation to use as a benchmark for your new message.",
         "speak": "on-event",
         "check": "Does the messaging sidebar list an existing thread with <recipient>? What is its date?",
@@ -1127,11 +1127,11 @@
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The draft screen shows an attached PDF file named 'Naveen Demo.pdf' with an 'X' button next to it for removal.",
+        "why": "The draft screen shows an attached PDF file named '[name] Demo.pdf' with an 'X' button next to it for removal.",
         "whatTheAgentLoses": "The user loses the ability to catch and remove an incorrect file before committing to the message.",
         "speak": "if-wrong",
         "check": "What is the name of the attached file chip, and does it match the file the ask named?",
-        "say_example": "The attached file is <Naveen Demo.pdf>. You asked for <the invoice>. Swapping it."
+        "say_example": "The attached file is <[name] Demo.pdf>. You asked for <the invoice>. Swapping it."
        }
       ]
      },
@@ -1815,7 +1815,7 @@
         "whatTheAgentLoses": "You lose the awareness of your team's prior relationship with the recipient, which could lead to an uncoordinated or embarrassing message.",
         "speak": "on-event",
         "check": "Does the activity feed show a message or note from a colleague to this candidate? Who and when?",
-        "say_example": "<Priya> already messaged <name> <two weeks ago>. Yours might double up. Still send?"
+        "say_example": "<[name]> already messaged <name> <two weeks ago>. Yours might double up. Still send?"
        },
        {
         "question": "What status should the candidate get now that you've messaged them?",

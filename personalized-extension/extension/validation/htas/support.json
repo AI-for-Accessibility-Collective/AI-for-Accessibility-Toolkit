@@ -19,11 +19,11 @@
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The homepage displays a personalized greeting like 'Hi David!', which confirms the active profile that will be linked to your support request.",
+        "why": "The homepage displays a personalized greeting like 'Hi [name]!', which confirms the active profile that will be linked to your support request.",
         "whatTheAgentLoses": "You lose the opportunity to ensure the support request is tied to your specific account rather than a shared or incorrect profile.",
         "speak": "if-wrong",
         "check": "What name does the signed-in greeting or account menu show?",
-        "say_example": "This page is signed in as <Sarah>. The case would go on their account, not yours. I'll sign out so you can sign in."
+        "say_example": "This page is signed in as <[name]>. The case would go on their account, not yours. I'll sign out so you can sign in."
        }
       ]
      },
@@ -145,7 +145,7 @@
         "whatTheAgentLoses": "The user loses the ability to ensure their account location is set correctly, which might affect the availability of certain support options or regional routing.",
         "speak": "never",
         "check": "What address does the location popup show, and was it left unchanged after dismissing?",
-        "say_example": "Left the delivery address as <12 Main St> when the location popup asked"
+        "say_example": "Left the delivery address as <45 Oak St> when the location popup asked"
        },
        {
         "question": "Should you call the 'Account Management Service' number on the dashboard, instead of going through the help menus?",
@@ -503,7 +503,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide what name or alias to provide when starting the support chat.",
         "speak": "on-event",
         "check": "Does the chat require a first and last name before starting, and is the name entered the one shown on the account?",
-        "say_example": "The chat wants your name before it starts. Putting in <David Lin>, from your account."
+        "say_example": "The chat wants your name before it starts. Putting in <[name]>, from your account."
        },
        {
         "question": "Which of the contact options do you want to use?",
@@ -1011,7 +1011,7 @@
         "whatTheAgentLoses": "The user loses the certainty that their message was successfully delivered to the organizer.",
         "speak": "always",
         "check": "Does the page show a submitted confirmation banner or case number, or is the form still on screen?",
-        "say_example": "Sent. Case number <123456>. They'll reply to <david@example.com>."
+        "say_example": "Sent. Case number <[account number]56>. They'll reply to <david@example.com>."
        }
       ]
      }
@@ -1201,7 +1201,7 @@
         "whatTheAgentLoses": "The user loses visual proof that this specific navigation path successfully bypasses the automated maze to reach a real person.",
         "speak": "gate",
         "check": "Does the chat show a message from a named representative, and what does it say?",
-        "say_example": "<Fabian> is here now, a real person. Want me to tell them about the <torn fleece>? Say go, or type it yourself."
+        "say_example": "<Ravi> is here now, a real person. Want me to tell them about the <torn fleece>? Say go, or type it yourself."
        },
        {
         "question": "Is the call connected, with a timer running?",
@@ -1240,7 +1240,7 @@
         "whatTheAgentLoses": "The user loses the ability to personally frame their issue and ensure sensitive information is withheld as instructed.",
         "speak": "if-wrong",
         "check": "What does the representative's greeting say not to share, and does the opening message contain any of it?",
-        "say_example": "<Fabian> says never to share your <full card number>. My message had it. I took it out."
+        "say_example": "<Ravi> says never to share your <full card number>. My message had it. I took it out."
        }
       ]
      },
@@ -1375,7 +1375,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to press the representative for a definitive answer if an AI prematurely agrees to close the chat.",
         "speak": "on-event",
         "check": "Does the representative's message ask whether everything is resolved or whether you are still there?",
-        "say_example": "<Fabian> is asking if that's everything. Their answer on the account was final, <it stays closed>. Say done, or tell me what to ask next."
+        "say_example": "<Ravi> is asking if that's everything. Their answer on the account was final, <it stays closed>. Say done, or tell me what to ask next."
        },
        {
         "question": "Is the chat warning it will close for inactivity, and how long is left?",
@@ -1397,7 +1397,7 @@
         "whatTheAgentLoses": "An agent might wait indefinitely for a reply from a stalled or disconnected representative instead of pinging them to force a response or realizing the session is dead.",
         "speak": "on-event",
         "check": "What is the time on the representative's last message, and how long ago is that?",
-        "say_example": "<Fabian> hasn't written in <8 minutes>. Want me to ask if they're still there?"
+        "say_example": "<Ravi> hasn't written in <8 minutes>. Want me to ask if they're still there?"
        }
       ]
      },
@@ -1465,7 +1465,7 @@
         "whatTheAgentLoses": "The user loses the visual confirmation that their specific issue was successfully resolved by the live representative.",
         "speak": "never",
         "check": "Does the chat show a representative message stating the account is verified or the issue resolved?",
-        "say_example": "Got <Fabian>'s confirmation at <3:20 pm> that <the account is verified>"
+        "say_example": "Got <Ravi>'s confirmation at <3:20 pm> that <the account is verified>"
        },
        {
         "question": "Do you want to ask for an email copy of what was agreed?",

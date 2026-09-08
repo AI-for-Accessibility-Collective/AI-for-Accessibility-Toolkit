@@ -234,7 +234,7 @@
         "whatTheAgentLoses": "The user loses the ability to ensure the correct tracking number and carrier were accurately extracted from their personal document.",
         "speak": "always",
         "check": "What carrier name and tracking number does the order page or document show for this shipment?",
-        "say_example": "Got it. Your <DHL> package, number ending <4821>, from the <Amazon> order."
+        "say_example": "Got it. Your <DHL> package, number ending <[account number]>, from the <Amazon> order."
        }
       ]
      },
@@ -624,7 +624,7 @@
         "whatTheAgentLoses": "The user arrives at the physical locker knowing their package is inside but is completely unable to retrieve it because the agent didn't extract the necessary access code.",
         "speak": "on-event",
         "check": "Does the status say delivered to a locker, and does the page show a pickup code or barcode?",
-        "say_example": "It's in a locker at <location>. The pickup code is <1234>. I've put it in your report."
+        "say_example": "It's in a locker at <location>. The pickup code is <[account number]>. I've put it in your report."
        }
       ]
      },
@@ -720,7 +720,7 @@
         "whatTheAgentLoses": "The user loses the chance to catch a misrouted package or a fraudulent tracking number early, before it gets delivered to the wrong state.",
         "speak": "if-wrong",
         "check": "Does the destination city on the tracking page match the order's address, and do its dates fit the expected delivery date?",
-        "say_example": "This number is going to <Phoenix>. Your order ships to <Menlo Park>. It's not your package. Ask the seller for the right number."
+        "say_example": "This number is going to <Phoenix>. Your order ships to <Oakland>. It's not your package. Ask the seller for the right number."
        }
       ]
      },

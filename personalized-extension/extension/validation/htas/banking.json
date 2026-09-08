@@ -14,7 +14,7 @@
     "whatTheAgentLoses": "Delegating this choice means the agent might order a cheque book for the wrong account, leading to checks being drawn from an unintended source.",
     "speak": "never",
     "check": "Which accounts does the page list for the cheque book, and which one is selected?",
-    "say_example": "Ordered the book for the salary account ending <4521>, the one from your ask."
+    "say_example": "Ordered the book for the salary account ending <[account number]>, the one from your ask."
    },
    {
     "question": "How many cheque leaves do you need in your new cheque book?",
@@ -80,7 +80,7 @@
     "whatTheAgentLoses": "You lose the opportunity to verify that the replacement card will be shipped to your actual current address.",
     "speak": "never",
     "check": "What mailing address does the page show for the replacement card?",
-    "say_example": "The new card mails to the address on file, <12 Oak Street>."
+    "say_example": "The new card mails to the address on file, <[address]>."
    },
    {
     "question": "Does the page show the card as active, and is the block toggle available?",
@@ -135,7 +135,7 @@
     "whatTheAgentLoses": "Letting an AI handle this means you lose the final opportunity to catch errors in the delivery address before the checkbook is printed and mailed.",
     "speak": "gate",
     "check": "What cheque book type, account, and delivery address does the review screen show?",
-    "say_example": "The cheque book goes to <12 Oak Street>, for the account ending <4521>. The page says a wrong address needs a branch visit to fix. Say go ahead, or give me the right one."
+    "say_example": "The cheque book goes to <[address]>, for the account ending <[account number]>. The page says a wrong address needs a branch visit to fix. Say go ahead, or give me the right one."
    },
    {
     "question": "Are you ready to accept the terms and conditions and finalize this EMI conversion?",
@@ -186,7 +186,7 @@
       "whatTheAgentLoses": "You lose the opportunity to choose a memorable PIN that you alone know for future access to your banking app.",
       "speak": "gate",
       "check": "What PIN does the page ask to be set, and what rules does it list for it?",
-      "say_example": "The app wants a new 4-digit PIN. No runs like 1234, no repeats. Tell me the digits you want, or say make one up and I'll read it back."
+      "say_example": "The app wants a new 4-digit PIN. No runs like [account number], no repeats. Tell me the digits you want, or say make one up and I'll read it back."
      },
      {
       "question": "Did the app confirm the new mPIN was actually registered before the 'Awesome! mPIN Set' prompt was cleared?",
@@ -375,7 +375,7 @@
         "whatTheAgentLoses": "The user loses control over which of their personal devices or contact methods receives the sensitive two-factor authentication code.",
         "speak": "never",
         "check": "Which delivery methods does the page offer for the security code?",
-        "say_example": "Had the security code texted to your phone ending <1234>, the first option."
+        "say_example": "Had the security code texted to your phone ending <[account number]>, the first option."
        },
        {
         "question": "What verification code did you receive?",
@@ -386,7 +386,7 @@
         "whatTheAgentLoses": "An agent cannot independently retrieve a security code sent to your personal phone or email, requiring your manual intervention to proceed.",
         "speak": "gate",
         "check": "Where does the page say the verification code was sent, and how many digits is it?",
-        "say_example": "A <6>-digit code just went to your phone ending <1234>. Read it to me when it lands."
+        "say_example": "A <6>-digit code just went to your phone ending <[account number]>. Read it to me when it lands."
        },
        {
         "question": "Does the login page include a CAPTCHA to solve?",
@@ -404,11 +404,11 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "Verifying the displayed security image (a mushroom) and phrase ('Sayam') ensures you are on the legitimate banking site and not a phishing page.",
+        "why": "Verifying the displayed security image (a mushroom) and phrase ('[phrase]') ensures you are on the legitimate banking site and not a phishing page.",
         "whatTheAgentLoses": "An agent would not know your personal security image and phrase, making it unable to verify the site's authenticity before handing over your password.",
         "speak": "always",
         "check": "What security image and phrase does the page show above the password field?",
-        "say_example": "Your security picture is a <mushroom> and the phrase says <Sayam>. If that's not what you set, this isn't the real site and I won't type the password."
+        "say_example": "Your security picture is a <mushroom> and the phrase says <[phrase]>. If that's not what you set, this isn't the real site and I won't type the password."
        },
        {
         "question": "Which mobile number will you enter to sign in?",
@@ -580,7 +580,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify that the bank has correctly identified your specific customer profile.",
         "speak": "never",
         "check": "Which customer IDs does the page list to choose from?",
-        "say_example": "Confirmed the one customer ID shown, <XXX123>."
+        "say_example": "Confirmed the one customer ID shown, <XX[clearance code]>."
        },
        {
         "question": "Which existing bank account does the Connect option on the Bank tab reconnect?",
@@ -633,7 +633,7 @@
       "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally verify the available balance and ensure the correct account is being accessed.",
       "speak": "never",
       "check": "Which accounts does the page list, and which matches the task?",
-      "say_example": "Opened the checking account ending <4521>, the one from your ask."
+      "say_example": "Opened the checking account ending <[account number]>, the one from your ask."
      },
      {
       "question": "Which customer support contact method do you want to select from the 'Reach Us' menu?",
@@ -883,7 +883,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to heed the bank's specific fraud warning and evaluate the trustworthiness of the recipient before adding them.",
         "speak": "on-event",
         "check": "Does the page show a warning about only paying people you know and trust?",
-        "say_example": "Zelle warns these payments can't be pulled back, so they're for people you trust. This is the <Mark Johnson> from your ask."
+        "say_example": "Zelle warns these payments can't be pulled back, so they're for people you trust. This is the <[name]> from your ask."
        }
       ]
      },
@@ -1000,7 +1000,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify that the auto-populated bank name matches your intended external institution before linking the account.",
         "speak": "always",
         "check": "What identifier fields does the page require for the new account?",
-        "say_example": "I'm typing the routing and account numbers from your note. The bank reads back the name they belong to next, and I'll check it against <Mark Johnson>."
+        "say_example": "I'm typing the routing and account numbers from your note. The bank reads back the name they belong to next, and I'll check it against <[name]>."
        },
        {
         "question": "How will you identify the new recipient?",
@@ -1011,7 +1011,7 @@
         "whatTheAgentLoses": "You lose the ability to choose the most reliable or preferred contact method for your specific recipient.",
         "speak": "never",
         "check": "Which identifier types does the page accept for the recipient?",
-        "say_example": "Set <Mark> up by his mobile number, the one in your note."
+        "say_example": "Set <[name]> up by his mobile number, the one in your note."
        },
        {
         "question": "Do you want to use the camera to scan a check for your account details or enter them manually?",
@@ -1083,7 +1083,7 @@
         "whatTheAgentLoses": "Delegating this means the agent might not know the correct address for the intended recipient, potentially causing the transfer setup to fail or be flagged.",
         "speak": "never",
         "check": "What address fields does the page require for the recipient?",
-        "say_example": "Typed <Mark>'s address from your note."
+        "say_example": "Typed <[name]>'s address from your note."
        },
        {
         "question": "What type of external account are you linking?",
@@ -1116,7 +1116,7 @@
         "whatTheAgentLoses": "The user loses the assurance that their exact legal name is entered exactly as the bank has it on file.",
         "speak": "never",
         "check": "What name fields does the page require for the account holder?",
-        "say_example": "Entered the name from your note, <Mark Johnson>. The bank checks it against the account later."
+        "say_example": "Entered the name from your note, <[name]>. The bank checks it against the account later."
        },
        {
         "question": "Are you adding an individual or a company as the new beneficiary?",
@@ -1127,7 +1127,7 @@
         "whatTheAgentLoses": "Delegating this means the agent might select the wrong category for your payee, which could cause the bank to reject the transfer setup.",
         "speak": "never",
         "check": "Does the page ask whether the beneficiary is an individual or a company?",
-        "say_example": "Marked <Mark> as an individual."
+        "say_example": "Marked <[name]> as an individual."
        },
        {
         "question": "Which currency do you want to select for the transfer?",
@@ -1205,7 +1205,7 @@
         "whatTheAgentLoses": "An agent might blindly accept the fetched name and proceed with the transfer without actually knowing if it belongs to your intended payee.",
         "speak": "if-wrong",
         "check": "Does the account name the page displays for the entered number match the intended recipient?",
-        "say_example": "The account comes back under the name <R. Sharma>. Your note says <Mark Johnson>. Money sent there doesn't come back, so I stopped."
+        "say_example": "The account comes back under the name <[name]>. Your note says <[name]>. Money sent there doesn't come back, so I stopped."
        }
       ]
      },
@@ -1222,7 +1222,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to personally verify the exact account digits, risking an irreversible transfer to the wrong person if there is a typo.",
         "speak": "gate",
         "check": "What recipient name, bank, and account number does the review screen show?",
-        "say_example": "About to add <Mark Johnson>, <Chase>, account ending <4821>. The bank sends money wherever this number points, right or wrong. Does everything match your note?"
+        "say_example": "About to add <[name]>, <Chase>, account ending <[account number]>. The bank sends money wherever this number points, right or wrong. Does everything match your note?"
        },
        {
         "question": "Do you own the non-Wells Fargo account you are adding?",
@@ -1272,7 +1272,7 @@
         "whatTheAgentLoses": "The user loses control over which of their devices will receive the security codes required to authorize future transfers.",
         "speak": "never",
         "check": "What verification contacts does the page require registering?",
-        "say_example": "Registered your mobile ending <1234> for transfer approvals."
+        "say_example": "Registered your mobile ending <[account number]> for transfer approvals."
        },
        {
         "question": "How do you approve the pending request?",
@@ -1519,7 +1519,7 @@
         "whatTheAgentLoses": "Delegating this choice means losing control over which specific account's balance is depleted to fund the transfer.",
         "speak": "never",
         "check": "Which source accounts does the transfer-from menu list, and which is selected?",
-        "say_example": "Sending from checking ending <4521>, like your ask says."
+        "say_example": "Sending from checking ending <[account number]>, like your ask says."
        },
        {
         "question": "Which bank should I select for the netbanking payment?",
@@ -1543,11 +1543,11 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen lists both internal and external options, including a pre-linked 'Anthony Well...' account, so you must specify exactly where the funds should go.",
+        "why": "The screen lists both internal and external options, including a pre-linked '[name]...' account, so you must specify exactly where the funds should go.",
         "whatTheAgentLoses": "You lose the ability to personally verify that the correct external or internal account is chosen to receive your funds.",
         "speak": "always",
         "check": "Which destination accounts does the page list, and which is selected?",
-        "say_example": "Sending to <Anthony>, the saved account from your ask."
+        "say_example": "Sending to <[name]>, the saved account from your ask."
        }
       ]
      },
@@ -1642,7 +1642,7 @@
         "whatTheAgentLoses": "The user might mistakenly assume the agent can send a message to the recipient through the notes field, leading to miscommunication if the recipient requires a reference number or invoice detail.",
         "speak": "never",
         "check": "What does the page say about who sees the notes?",
-        "say_example": "The page says notes stay on your side; <Mark> never sees them. So I used the field for your records."
+        "say_example": "The page says notes stay on your side; <[name]> never sees them. So I used the field for your records."
        }
       ]
      },
@@ -1742,7 +1742,7 @@
         "whatTheAgentLoses": "You lose the final opportunity to catch a mistake in the transfer amount or destination before the transaction becomes final.",
         "speak": "gate",
         "check": "What amount, source, destination, fee, total and delivery date does the review screen show?",
-        "say_example": "Ready to send. <500> to <Mark Johnson> at <Chase>, from your checking. <25> fee, <525> total, landing <Friday>. After this there's no pulling it back. Send it?"
+        "say_example": "Ready to send. <500> to <[name]> at <Chase>, from your checking. <25> fee, <525> total, landing <Friday>. After this there's no pulling it back. Send it?"
        },
        {
         "question": "Is the fee large next to the amount you're sending?",
@@ -1792,7 +1792,7 @@
         "whatTheAgentLoses": "Delegating this step deprives you of the chance to evaluate whether to use a different payment method or to personally alert the recipient about the enrollment requirement.",
         "speak": "on-event",
         "check": "Does the review warn the recipient is not enrolled, and what happens if they don't enroll?",
-        "say_example": "One catch. <Mark> isn't on Zelle yet. If he doesn't join within 14 days, the money comes back to you. I'll say it again at the review."
+        "say_example": "One catch. <[name]> isn't on Zelle yet. If he doesn't join within 14 days, the money comes back to you. I'll say it again at the review."
        },
        {
         "question": "Does your transfer involve any of these scam red flags, such as a last-minute change to a home closing wire?",
@@ -1847,7 +1847,7 @@
         "whatTheAgentLoses": "The user loses the safety net of catching an accidental double-payment if the agent blindly clicks to override the warning.",
         "speak": "on-event",
         "check": "Does the page flag this transfer as a possible duplicate, and of which transaction?",
-        "say_example": "The bank says this looks like a repeat. The same <500> went to <Mark> on <Tuesday>. I stopped so you can say send it or skip it."
+        "say_example": "The bank says this looks like a repeat. The same <500> went to <[name]> on <Tuesday>. I stopped so you can say send it or skip it."
        },
        {
         "question": "Does the review screen warn that your transaction will be delayed until the next business day due to a weekend or bank holiday?",
@@ -2086,7 +2086,7 @@
       "whatTheAgentLoses": "You lose the opportunity to visually verify the clarity of the check images and to add a specific memo for your own financial tracking.",
       "speak": "gate",
       "check": "What amount, account and check images does the deposit review show, and what does it say about canceling?",
-      "say_example": "Ready to deposit. <100.25> into checking ending <4521>, both photos attached. Once it goes in, it can't be canceled. Send it?"
+      "say_example": "Ready to deposit. <100.25> into checking ending <[account number]>, both photos attached. Once it goes in, it can't be canceled. Send it?"
      },
      {
       "question": "Are you ready to finalize this redemption to your checking account?",
@@ -2115,7 +2115,7 @@
       "cluster": "facts",
       "moment": "Completion",
       "moneyMoving": true,
-      "why": "The app instructed you to write 'For electronic deposit at Chase only,' but the check image shows you wrote 'Guerra's Enterprises Inc for deposit only,' which could cause the deposit to be rejected later despite the success message.",
+      "why": "The app instructed you to write 'For electronic deposit at Chase only,' but the check image shows you wrote '[business name] for deposit only,' which could cause the deposit to be rejected later despite the success message.",
       "whatTheAgentLoses": "The user loses the security of a guaranteed deposit, as an agent ignoring the bank's specific endorsement instructions could cause the funds to be reversed after the initial confirmation.",
       "speak": "if-wrong",
       "check": "Does the endorsement visible on the check image match the phrase the page required?",
@@ -2401,7 +2401,7 @@
       "whatTheAgentLoses": "You lose the ability to specify exactly which account's financial records are accessed and retrieved.",
       "speak": "never",
       "check": "Which accounts does the summary list, and which matches the task?",
-      "say_example": "Getting the statement for savings ending <4521>, the account from your ask."
+      "say_example": "Getting the statement for savings ending <[account number]>, the account from your ask."
      },
      {
       "question": "Is the NOC being requested for the loan you paid off, and not one of the other service documents listed?",
@@ -2496,7 +2496,7 @@
         "whatTheAgentLoses": "You lose control over selecting the exact transaction, meaning the agent might download a receipt for the wrong payment.",
         "speak": "never",
         "check": "Which transactions does the page list, and which matches the task?",
-        "say_example": "Downloaded the receipt for the <April 12> transfer to <Mark>, the one from your ask."
+        "say_example": "Downloaded the receipt for the <April 12> transfer to <[name]>, the one from your ask."
        }
       ]
      },
@@ -2656,7 +2656,7 @@
         "whatTheAgentLoses": "Delegating this step means an agent might send your sensitive financial statement to an outdated or incorrect email address without your verification.",
         "speak": "if-wrong",
         "check": "Does the email address shown match the address the task uses?",
-        "say_example": "The statement would go to <old…@yahoo.com>, which isn't the address you use. I put your current one in."
+        "say_example": "The statement would go to <[email]>, which isn't the address you use. I put your current one in."
        }
       ]
      },
@@ -2823,7 +2823,7 @@
           "whatTheAgentLoses": "You lose the opportunity to keep your date of birth private by having an agent construct the password on your behalf to access your financial records.",
           "speak": "always",
           "check": "What password format does the email say unlocks the attached statement?",
-          "say_example": "The PDF is locked. The email says the password is your name plus your birth date, like <DAVI0424>. Trying that now."
+          "say_example": "The PDF is locked. The email says the password is your name plus your birth date, like <JOHN0101>. Trying that now."
          }
         ]
        },
@@ -3073,7 +3073,7 @@
         "whatTheAgentLoses": "Delegating this step deprives you of the immediate peace of mind that comes from seeing the green checkmark and confirming the funds moved successfully.",
         "speak": "always",
         "check": "Does the page confirm the transfer, and what amount, reference and arrival does it show?",
-        "say_example": "Sent. <500> to <Mark>, reference <TXN123>, landing <Friday>."
+        "say_example": "Sent. <500> to <[name]>, reference <[reference number]>, landing <Friday>."
        },
        {
         "question": "Did you actually submit the transaction and reach a final confirmation screen for the task you started?",
@@ -3095,7 +3095,7 @@
         "whatTheAgentLoses": "Delegating this means losing the immediate peace of mind and the ability to personally verify the confirmation details and updated account balances.",
         "speak": "always",
         "check": "Does the page confirm the deposit, and what does it say about the paper check?",
-        "say_example": "Deposit's in. <100.25>, confirmation <ABC123>. The page says keep the paper check for <two weeks>."
+        "say_example": "Deposit's in. <100.25>, confirmation <[confirmation number]>. The page says keep the paper check for <two weeks>."
        },
        {
         "question": "Did you verify the success message and the final repayment details for the closed fixed deposit?",
@@ -3117,7 +3117,7 @@
         "whatTheAgentLoses": "The user loses the immediate confirmation and the specific reference number needed to track the status of their new cheque book.",
         "speak": "always",
         "check": "Does the page confirm the cheque book request and show a reference number?",
-        "say_example": "Cheque book ordered. Reference <REF123>. It comes by courier to <12 Oak Street>."
+        "say_example": "Cheque book ordered. Reference <[reference number]>. It comes by courier to <[address]>."
        },
        {
         "question": "Is the success confirmation on screen, and do you know the expected delivery timeframe?",
@@ -3266,7 +3266,7 @@
         "whatTheAgentLoses": "An agent might blindly click through the review screen without noticing the contradictory enrollment warning, potentially causing a delayed or failed payment.",
         "speak": "if-wrong",
         "check": "Does the review's enrollment warning agree with the recipient's status shown earlier?",
-        "say_example": "The page called <Mark> a recent contact, but now says he isn't enrolled. Those don't fit together. Worth checking his email address before sending."
+        "say_example": "The page called <[name]> a recent contact, but now says he isn't enrolled. Those don't fit together. Worth checking his email address before sending."
        },
        {
         "question": "Does the remaining deposit limit match the check amount you just entered?",
@@ -3497,7 +3497,7 @@
         "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the bank's abbreviated confirmation name actually corresponds to your intended recipient.",
         "speak": "if-wrong",
         "check": "Does the recipient name on the confirmation match the name verified earlier?",
-        "say_example": "The receipt names someone other than the <Mark Johnson> we verified. Call the bank now; a recall gets harder by the hour."
+        "say_example": "The receipt names someone other than the <[name]> we verified. Call the bank now; a recall gets harder by the hour."
        },
        {
         "question": "Does the destination account format in the confirmation match what you entered?",
@@ -3537,11 +3537,11 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "Verifying that the dashboard updates to show the new Flipkart card ending in 6092 instead of 4322 confirms the bank actually processed the replacement correctly.",
+        "why": "Verifying that the dashboard updates to show the new Flipkart card ending in [card number] instead of [card number] confirms the bank actually processed the replacement correctly.",
         "whatTheAgentLoses": "Delegating this step means losing the immediate peace of mind that comes from visually confirming your new account details are active in the system.",
         "speak": "if-wrong",
         "check": "Does the dashboard show the new card number promised during the replacement?",
-        "say_example": "The dashboard still shows the old card ending <4322>, not the promised <6092>. A refresh didn't fix it, so the replacement may not have gone through."
+        "say_example": "The dashboard still shows the old card ending <[card number]>, not the promised <[card number]>. A refresh didn't fix it, so the replacement may not have gone through."
        },
        {
         "question": "Do the displayed transactions actually match the 'Last Month' filter you applied?",
@@ -3645,7 +3645,7 @@
         "whatTheAgentLoses": "You lose the immediate reassurance of personally verifying the official reference number and timestamp of your completed transfer.",
         "speak": "never",
         "check": "Does the history show the transfer with the expected reference and date?",
-        "say_example": "The transfer is in the history with reference <TXN123>, dated today."
+        "say_example": "The transfer is in the history with reference <[reference number]>, dated today."
        },
        {
         "question": "What is the exact status of your request and the expected timeline for resolution?",
@@ -3663,11 +3663,11 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "Seeing the new card entry ending in 6092 with the 'View Digital Card' button confirms the replacement was successful and is ready for immediate use.",
+        "why": "Seeing the new card entry ending in [card number] with the 'View Digital Card' button confirms the replacement was successful and is ready for immediate use.",
         "whatTheAgentLoses": "You miss the peace of mind of personally verifying the new card details and knowing exactly when the digital version becomes available while waiting for the physical mail.",
         "speak": "never",
         "check": "Does the dashboard show the new digital card?",
-        "say_example": "The new digital card ending <6092> is on the dashboard, ready to use."
+        "say_example": "The new digital card ending <[card number]> is on the dashboard, ready to use."
        }
       ]
      }

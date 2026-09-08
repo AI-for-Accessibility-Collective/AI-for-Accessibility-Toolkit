@@ -460,7 +460,7 @@
         "whatTheAgentLoses": "You lose control over verifying the final transaction total and deciding whether to authorize automatic recurring payments.",
         "speak": "gate",
         "check": "What total, fee line and payment method does the checkout show?",
-        "say_example": "Ready to pay. <190.30> for <20> hours, including a <0.72> card fee, on your <card ending 4821>. Press to pay, or say change."
+        "say_example": "Ready to pay. <190.30> for <20> hours, including a <0.72> card fee, on your <card ending [account number]>. Press to pay, or say change."
        }
       ]
      },
@@ -1425,7 +1425,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to weigh trade-offs between price, experience, and ratings according to their personal preferences.",
         "speak": "gate",
         "check": "What name, rate, rating, lesson count and headline does each shortlisted tutor card show?",
-        "say_example": "Two good tutors under <20>. <Ana>: <15> an hour, <4.9> stars, <800> lessons, native. <Luis>: <12>, <4.8>, newer, free trial. Which one? Say Ana or Luis."
+        "say_example": "Two good tutors under <20>. <[name]>: <15> an hour, <4.9> stars, <800> lessons, native. <[name]>: <12>, <4.8>, newer, free trial. Which one? Say [name] or [name]."
        }
       ]
      }
@@ -1798,7 +1798,7 @@
         "whatTheAgentLoses": "You lose the final opportunity to review the actual cost and back out of the transaction before your funds are spent.",
         "speak": "gate",
         "check": "What tutor, date, time, length, lesson type, total, payment source, cancellation terms, note to the tutor and commit-button label does the final page show?",
-        "say_example": "Ready to book. <Ana>, <Tuesday> at <7 pm>, <60> minutes. <14> total, <11> from your balance and <3> on your card. Free to cancel until <Monday 7 pm>. Your note says you're preparing for <DELF B1>. Press to book, or say change."
+        "say_example": "Ready to book. <[name]>, <Tuesday> at <7 pm>, <60> minutes. <14> total, <11> from your balance and <3> on your card. Free to cancel until <Monday 7 pm>. Your note says you're preparing for <DELF B1>. Press to book, or say change."
        },
        {
         "question": "Is there a pre-ticked box that would start a monthly charge after this?",
@@ -1861,7 +1861,7 @@
         "whatTheAgentLoses": "You lose the immediate understanding that your booking is not yet guaranteed and that you must monitor your account for the tutor's response over the next 48 hours.",
         "speak": "always",
         "check": "Does the confirmation say scheduled, or pending the tutor's acceptance, and by when?",
-        "say_example": "Booked. <Ana>, <Tuesday> at <7 pm>. It's pending until <Ana> accepts, within <48> hours. Credits come off when they do."
+        "say_example": "Booked. <[name]>, <Tuesday> at <7 pm>. It's pending until <[name]> accepts, within <48> hours. Credits come off when they do."
        },
        {
         "question": "Does the confirmation page show the date, time and place you booked?",
@@ -1907,7 +1907,7 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "The screen shows an unread message preview from Kyle M. saying 'Sup dawg', which you need to open to read the full context of their reply.",
+        "why": "The screen shows an unread message preview from [name] saying 'Sup dawg', which you need to open to read the full context of their reply.",
         "whatTheAgentLoses": "You lose the chance to personally evaluate the tutor's communication style and professionalism before committing to a booking.",
         "speak": "on-event",
         "check": "Does the messages panel show a reply from the tutor, with what text and timestamp?",

@@ -180,7 +180,7 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The account menu displays multiple profiles like Moonward Media and Andy Knode, so you must select the correct identity before posting.",
+        "why": "The account menu displays multiple profiles like Moonward Media and [name], so you must select the correct identity before posting.",
         "whatTheAgentLoses": "The user loses the ability to choose which specific brand or personal profile will author the post.",
         "speak": "gate",
         "check": "Which account names does the account menu list?",
@@ -760,7 +760,7 @@
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen displays multiple audio messages and files in the conversation with 'Muffin', requiring you to select the correct one to capture for the post.",
+        "why": "The screen displays multiple audio messages and files in the conversation with '[name]', requiring you to select the correct one to capture for the post.",
         "whatTheAgentLoses": "The user loses the creative control of choosing the exact audio clip they want to feature in their social media post.",
         "speak": "never",
         "check": "Which audio files does the conversation show?",
@@ -1424,7 +1424,7 @@
         "whatTheAgentLoses": "You lose the personal knowledge required to visually verify that the selected profile belongs to your actual friend or the official brand.",
         "speak": "on-event",
         "check": "Which accounts do the search results list for <the name>, with which handles and markers?",
-        "say_example": "Three accounts match <Jamie Smith>. I'd pick the <verified one with 12k followers>. That one, or another?"
+        "say_example": "Three accounts match <[name]>. I'd pick the <verified one with 12k followers>. That one, or another?"
        },
        {
         "question": "Did the specific account you searched for appear in the tagging suggestions?",

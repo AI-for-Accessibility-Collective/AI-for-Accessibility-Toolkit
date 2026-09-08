@@ -169,7 +169,7 @@
         "whatTheAgentLoses": "You lose the peace of mind of verifying that the donation is being made under your own name rather than a previously logged-in user on a shared device.",
         "speak": "if-wrong",
         "check": "What account name does the navigation bar show as signed in?",
-        "say_example": "This site is signed in as <Maria>. The gift would go under her name and card. I'll sign out first."
+        "say_example": "This site is signed in as <[name]>. The gift would go under her name and card. I'll sign out first."
        },
        {
         "question": "Are you fully logged out of the account?",
@@ -180,7 +180,7 @@
         "whatTheAgentLoses": "Delegating this means you cannot personally verify that your account session was securely terminated after the transaction.",
         "speak": "never",
         "check": "Does the navigation show Login and Register links instead of an account name?",
-        "say_example": "Signed out of <Maria's> account before starting."
+        "say_example": "Signed out of <[name]'s> account before starting."
        }
       ]
      }
@@ -225,7 +225,7 @@
         "whatTheAgentLoses": "The user loses the ability to specify whether their donation should be credited to an individual participant, a team, or a company.",
         "speak": "never",
         "check": "Which search types does the page offer: participant, team, or company?",
-        "say_example": "Searched for <Jerika Henderson> as a participant."
+        "say_example": "Searched for <[name]> as a participant."
        }
       ]
      },
@@ -303,7 +303,7 @@
         "whatTheAgentLoses": "You lose the critical human judgment needed to distinguish a legitimate, family-authorized campaign from a well-disguised scam.",
         "speak": "on-event",
         "check": "Who is named as the organizer, and does the page show a verified badge or a statement that the organizer is the beneficiary?",
-        "say_example": "This fundraiser is run by <Sam Lee>. The page doesn't say <the family> set it up, and there's no verified mark. Do you still want to give here?"
+        "say_example": "This fundraiser is run by <[name]>. The page doesn't say <the family> set it up, and there's no verified mark. Do you still want to give here?"
        },
        {
         "question": "Does the page say the organization is a registered 501(c)(3) charity?",
@@ -905,7 +905,7 @@
         "whatTheAgentLoses": "The user loses control over which of their phone numbers is linked to the donation account and receives the verification texts.",
         "speak": "never",
         "check": "Does the page ask for a phone number to send a code?",
-        "say_example": "Entered your number ending <1234> for the code."
+        "say_example": "Entered your number ending <[account number]> for the code."
        }
       ]
      },
@@ -950,7 +950,7 @@
         "whatTheAgentLoses": "You lose the security of personally handling the two-factor authentication required to authorize the payment.",
         "speak": "gate",
         "check": "Does the page ask for a code sent to the phone, and how many digits?",
-        "say_example": "A <six>-digit code went to your phone ending <1234>. Read it to me."
+        "say_example": "A <six>-digit code went to your phone ending <[account number]>. Read it to me."
        }
       ]
      },
@@ -1013,7 +1013,7 @@
         "whatTheAgentLoses": "You lose the opportunity to decide whether to use an alternative card or abandon the donation entirely if your preferred payment method is rejected.",
         "speak": "on-event",
         "check": "Which payment methods does the page say are accepted, and which does it say are not?",
-        "say_example": "This site doesn't take <American Express>. Your other card is a <Visa ending 4821>. Use that?"
+        "say_example": "This site doesn't take <American Express>. Your other card is a <Visa ending [account number]>. Use that?"
        },
        {
         "question": "Does the page contradict itself about whether your payment method is accepted?",
@@ -1041,7 +1041,7 @@
         "whatTheAgentLoses": "By letting the agent decide, you lose control over which of your financial accounts is charged for the donation.",
         "speak": "gate",
         "check": "Which payment options does the checkout show, and is any saved method listed?",
-        "say_example": "Pay with your <Visa ending 4821>, or <PayPal>? Say card or PayPal."
+        "say_example": "Pay with your <Visa ending [account number]>, or <PayPal>? Say card or PayPal."
        }
       ]
      },
@@ -1130,7 +1130,7 @@
           "whatTheAgentLoses": "The user loses the ability to verify if their payment method was successfully saved before proceeding with the donation.",
           "speak": "never",
           "check": "Does the page confirm the card was added?",
-          "say_example": "Added the card <ending 4821> to the account."
+          "say_example": "Added the card <ending [account number]> to the account."
          }
         ]
        }
@@ -1315,7 +1315,7 @@
         "whatTheAgentLoses": "You lose the final opportunity to verify the exact charge amount and ensure all personal details are correct before the funds are committed.",
         "speak": "gate",
         "check": "What amount, recipient, frequency, and payment method are shown at the give button, and does the page show any tip or fee added?",
-        "say_example": "Ready to give. <50>, one time, to <the Red Cross>, from your <Visa ending 4821>. <Nothing added>. Press to give, or say change."
+        "say_example": "Ready to give. <50>, one time, to <the Red Cross>, from your <Visa ending [account number]>. <Nothing added>. Press to give, or say change."
        },
        {
         "question": "After pressing give, did the page hang or show an error?",

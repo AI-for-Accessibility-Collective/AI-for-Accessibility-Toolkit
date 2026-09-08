@@ -148,7 +148,7 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to share your real identity with the rideshare platform and its drivers.",
         "speak": "never",
         "check": "What name is entered in the first and last name fields?",
-        "say_example": "Gave them your name, <Alex>, so the driver knows who to ask for."
+        "say_example": "Gave them your name, <Sam>, so the driver knows who to ask for."
        },
        {
         "question": "Are the account details consistent between the sign-up process and the profile screen?",
@@ -159,7 +159,7 @@
         "whatTheAgentLoses": "An agent might ignore this discrepancy, leaving you unaware that the app is using unexpected or incorrect profile information.",
         "speak": "if-wrong",
         "check": "What name does the account or profile screen display?",
-        "say_example": "The profile shows your name as <Bo P>, not <Alex>. The driver would look for <Bo P>. Fixing it."
+        "say_example": "The profile shows your name as <Ray K>, not <Sam>. The driver would look for <Ray K>. Fixing it."
        }
       ]
      },
@@ -299,7 +299,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the ability to personally verify or choose exactly which credit card or account will be billed for the trip.",
         "speak": "never",
         "check": "Does the wallet screen list a saved card or payment method?",
-        "say_example": "Your <Visa ending 4821> is already saved, so payment's ready."
+        "say_example": "Your <Visa ending [account number]> is already saved, so payment's ready."
        }
       ]
      },
@@ -375,14 +375,14 @@
       "whatTheAgentLoses": "You lose the ability to specify your exact starting point and destination, which could result in the agent booking a ride to or from the wrong place.",
       "speak": "always",
       "check": "What do the pickup and destination fields show?",
-      "say_example": "Got it. Pickup at <425 Oak Street>, going to <SFO>."
+      "say_example": "Got it. Pickup at <500 Maple Street>, going to <SFO>."
      },
      {
       "question": "Are the pickup and destination addresses correct?",
       "cluster": "approve",
       "moment": "Now",
       "moneyMoving": false,
-      "why": "Confirming that the pickup at Watford and the destination at 6 Royal Cl are accurate ensures the driver will go to the right places.",
+      "why": "Confirming that the pickup at Watford and the destination at 12 Elm Cl are accurate ensures the driver will go to the right places.",
       "whatTheAgentLoses": "You lose the ability to verify that the exact pickup and drop-off locations match your intended route before proceeding.",
       "speak": "if-wrong",
       "check": "Do the pickup and destination fields read <the pickup the person gave> and <the destination the person gave>?",
@@ -403,7 +403,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify that the app's GPS accurately pinpointed your exact physical whereabouts.",
         "speak": "if-wrong",
         "check": "What pickup address has the app auto-set at the top of the screen?",
-        "say_example": "The app set your pickup to <12 Bedale Street>. You told me <Kaplan College>."
+        "say_example": "The app set your pickup to <[address]>. You told me <Kaplan College>."
        }
       ]
      },
@@ -470,7 +470,7 @@
         "whatTheAgentLoses": "The ability to visually fine-tune the drop-off location on the map to ensure it points to the exact building or entrance.",
         "speak": "if-wrong",
         "check": "What address does the dropped pin's label show?",
-        "say_example": "The pin's label reads <8 Royal Close>, but you asked for <6>."
+        "say_example": "The pin's label reads <14 Elm Close>, but you asked for <12>."
        }
       ]
      },
@@ -502,7 +502,7 @@
         "whatTheAgentLoses": "You lose the ability to personally verify that the correct person will receive the ride updates and driver communications.",
         "speak": "if-wrong",
         "check": "What contact name and phone number does the rider popup show?",
-        "say_example": "The ride is set up for <Priya>, but you said it's for <your mom>. The driver's details would go to the wrong phone."
+        "say_example": "The ride is set up for <[name]>, but you said it's for <your mom>. The driver's details would go to the wrong phone."
        }
       ]
      },
@@ -751,7 +751,7 @@
         "whatTheAgentLoses": "Delegating this choice means you lose control over which specific card or account is charged, potentially missing out on credit card rewards or proper business expense tracking.",
         "speak": "never",
         "check": "Which payment method is currently selected?",
-        "say_example": "Paid with your usual <Mastercard ending 4821>."
+        "say_example": "Paid with your usual <Mastercard ending [card number]>."
        },
        {
         "question": "Is the selected payment method the one you meant to use?",
@@ -1245,7 +1245,7 @@
         "whatTheAgentLoses": "Delegating this step means you miss seeing the specific vehicle details and the OTP required to verify your ride in person.",
         "speak": "always",
         "check": "What driver name, car, plate, arrival time, and start code does the screen show?",
-        "say_example": "Your driver is <Ramesh>. <White Swift>, plate <KA 05 1234>, <4 minutes> out. The start code is <2413>. Give it only in the right car."
+        "say_example": "Your driver is <[name]>. <White Swift>, plate <[license plate]>, <4 minutes> out. The start code is <[code]>. Give it only in the right car."
        },
        {
         "question": "Did the driver cancel the trip, forcing the app to search for a new ride?",
@@ -1372,7 +1372,7 @@
         "whatTheAgentLoses": "An agent cannot physically look at the approaching car in the real world to verify its license plate and make before you board.",
         "speak": "on-event",
         "check": "Does the app say the driver has arrived, and what car model, color, and plate does it list?",
-        "say_example": "The app says they've arrived. Before you get in, it should be a <silver Civic>, plate <201 KJJ>. If checking the plate is hard, ask the driver who they're picking up. Don't offer your name first."
+        "say_example": "The app says they've arrived. Before you get in, it should be a <silver Civic>, plate <[license plate]>. If checking the plate is hard, ask the driver who they're picking up. Don't offer your name first."
        },
        {
         "question": "Did the app screen change to show the ride is in progress before you have actually entered the vehicle?",

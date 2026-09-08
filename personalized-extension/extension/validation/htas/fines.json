@@ -461,7 +461,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the final displayed records actually fulfill their original request to check a specific vehicle's citation.",
         "speak": "if-wrong",
         "check": "What plate or ticket number does the results page display, and does it match the one the person gave?",
-        "say_example": "The results are for plate <ABC123>. You said <ABC128>. Something got mistyped. I'm searching again."
+        "say_example": "The results are for plate <[confirmation number]>. You said <ABC128>. Something got mistyped. I'm searching again."
        }
       ]
      },
@@ -519,11 +519,11 @@
         "cluster": "compare",
         "moment": "After",
         "moneyMoving": false,
-        "why": "You searched for a defendant with the middle initial 'A', but the system returned a case for 'KANE, THOMAS FRANCIS; JR'.",
+        "why": "You searched for a defendant with the middle initial 'A', but the system returned a case for '[name], [name]; JR'.",
         "whatTheAgentLoses": "The user loses the chance to catch a mistaken identity issue before accidentally paying someone else's fine.",
         "speak": "if-wrong",
         "check": "Does the name on the result match the full name and middle initial that was searched for?",
-        "say_example": "The result is <Thomas Francis Kane Jr>. You gave me <Thomas A Kane>. This may be someone else's ticket. I won't pay it until you confirm."
+        "say_example": "The result is <[name]>. You gave me <[name]>. This may be someone else's ticket. I won't pay it until you confirm."
        }
       ]
      },
@@ -562,7 +562,7 @@
         "whatTheAgentLoses": "You lose the chance to personally verify the citation details to ensure you are paying the right ticket.",
         "speak": "always",
         "check": "What violation, date, location, plate, vehicle and amount does the ticket details page show?",
-        "say_example": "Found it. <Speeding> on <May 3> at <Main and 5th>, plate <ABC123>. <$164>. Match your notice?"
+        "say_example": "Found it. <Speeding> on <May 3> at <Main and 5th>, plate <[confirmation number]>. <$164>. Match your notice?"
        },
        {
         "question": "Is the car on the ticket the one you drive?",
@@ -897,7 +897,7 @@
           "whatTheAgentLoses": "Delegating this step means you lose control over which specific credit card is charged and where the payment receipt is emailed.",
           "speak": "always",
           "check": "Which card fields does the form require, and does it show the card the person gave, masked?",
-          "say_example": "I'm filling in your card ending <4821>, expiry and code now."
+          "say_example": "I'm filling in your card ending <[account number]>, expiry and code now."
          },
          {
           "question": "Is the box to save your card for next time unchecked?",
@@ -959,7 +959,7 @@
         "whatTheAgentLoses": "You lose the final opportunity to review the exact total charge, including unexpected convenience fees, before the funds are irrevocably withdrawn.",
         "speak": "gate",
         "check": "What ticket number, amount, fee, total, and card or method does the review screen show, and does it state a refund rule?",
-        "say_example": "Ready to pay. Ticket <ABC0123>, <$164> plus a <$3.28> fee, <$167.28> total, your card ending <4821>. The site says no refunds. Press to pay, or say stop."
+        "say_example": "Ready to pay. Ticket <ABC0123>, <$164> plus a <$3.28> fee, <$167.28> total, your card ending <[account number]>. The site says no refunds. Press to pay, or say stop."
        },
        {
         "question": "If the card is declined, what reason does the page give?",
@@ -1022,7 +1022,7 @@
         "whatTheAgentLoses": "You lose the proof of payment needed to resolve future disputes if the agent cannot provide a valid confirmation number or receipt.",
         "speak": "always",
         "check": "Is a confirmation page on screen with a success message, an amount, and a reference or receipt number? Does it offer a print or download of the receipt?",
-        "say_example": "Paid. <$167.28>, reference <R-48812>. I saved the receipt to your downloads."
+        "say_example": "Paid. <$167.28>, reference <[reference number]>. I saved the receipt to your downloads."
        },
        {
         "question": "Does the receipt give a DMV code or steps to lift a registration hold?",
@@ -1033,7 +1033,7 @@
         "whatTheAgentLoses": "You lose the awareness that your vehicle registration or license remains suspended until you take the extra step of providing the clearance document to the DMV.",
         "speak": "on-event",
         "check": "Does the receipt mention the DMV, a registration hold, a suspension, or a clearance code with instructions?",
-        "say_example": "The receipt has a DMV clearance code, <X123>. The site says the hold on your registration won't lift on its own. You'll need to send this code to the DMV."
+        "say_example": "The receipt has a DMV clearance code, <[clearance code]>. The site says the hold on your registration won't lift on its own. You'll need to send this code to the DMV."
        }
       ]
      },
@@ -1071,7 +1071,7 @@
         "whatTheAgentLoses": "You lose certainty that your specific ticket was successfully paid, which could result in late fees or legal trouble for an unresolved citation.",
         "speak": "if-wrong",
         "check": "Does the ticket number shown as paid or disposed match the ticket number that was selected for payment?",
-        "say_example": "The site now shows ticket ending <210> as paid. The one we picked ends in <041>. The money may have gone to the wrong ticket. I'm not doing anything else until we sort this out."
+        "say_example": "The site now shows ticket ending <[account number]> as paid. The one we picked ends in <[account number]>. The money may have gone to the wrong ticket. I'm not doing anything else until we sort this out."
        },
        {
         "question": "Does the court site now show the ticket as paid, or still pending?",

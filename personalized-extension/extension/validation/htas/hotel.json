@@ -1347,7 +1347,7 @@
         "verify_form": "The agent decided about the map check - look at the pin; a street address alone does not tell you the area.",
         "speak": "if-wrong",
         "check": "What area does the listing name, and what area does the map or address actually show?",
-        "say_example": "This one says <Palo Alto>, but it's really across the freeway, in <East Palo Alto>."
+        "say_example": "This one says <Redwood City>, but it's really across the freeway, in <San Carlos>."
        }
       ]
      },
@@ -2247,7 +2247,7 @@
         "verify_form": "The agent picked a payment method - check card, Google Pay, or PayPal, and which of your accounts it reaches into.",
         "speak": "gate",
         "check": "What payment methods does the page offer, and is a saved card already selected?",
-        "say_example": "Time to pay. The page has your <Mastercard ending 4821> saved, or I can use <PayPal> or a new card. Which one?"
+        "say_example": "Time to pay. The page has your <card ending [account number]> saved, or I can use <PayPal> or a new card. Which one?"
        },
        {
         "question": "Is the save-card-for-future-use box checked?",
@@ -2337,7 +2337,7 @@
         "verify_form": "The agent supplied payment information - check which card number, expiry, and ZIP it used; that is your money moving.",
         "speak": "always",
         "check": "What card fields does the page ask for, and which card is being used?",
-        "say_example": "I'm entering your <Visa ending 4821> now. No charge happens until the last press."
+        "say_example": "I'm entering your <Visa ending [account number]> now. No charge happens until the last press."
        }
       ]
      },

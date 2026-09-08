@@ -1,0 +1,2889 @@
+{
+ "task": "set up autopay or an alert (bank and credit-card autopay, price or balance alerts): navigate to the payments or alerts settings, configure what fires and when — amount, date, threshold, funding source — save, and verify it shows as armed; complete when the confirmation that the standing order or alert is active is on screen. Surface pinned: a bank, card, retailer, or utility website/app settings area. Variants: making a one-time bill payment, and cancelling an existing autopay, do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Set up autopay or alerts",
+  "note": "1, then 2; 3 for whatever groundwork the platform demands; 4, then 5 where the bank requires a mandate step, then 6; 7 after every commit; 8 whenever a standing order already exists; 9 when it is a price alert being set up - it replaces 3 through 6 with its own steps",
+  "children": [
+   {
+    "id": "1",
+    "label": "Open the account",
+    "note": "1.1, then 1.2 - or 1.3 where no login exists yet; 1.4 once inside",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the app or site",
+      "questions": [
+       {
+        "question": "Which app do you want to open to set up autopay?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen shows multiple apps with payment features like Google Pay, PayPal, and Amazon, so you must choose the correct one for the task.",
+        "whatTheAgentLoses": "You lose control over which specific financial account or service the agent modifies.",
+        "kind": "decision",
+        "verify_form": "Several payment apps sat on that home screen - check which one the agent opened; the account it automates is the account behind whichever icon it picked.",
+        "speak": "never"
+       },
+       {
+        "question": "What web address should you use to access the utility bill services?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the correct URL in the address bar ensures you reach the official Portland Water Bureau customer service page.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent is accessing the legitimate utility website rather than a phishing portal.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which option should you select to access the payment and login portal?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a large blue 'Pay Your Bill' button alongside an option to register for a new Customer Self Service system, requiring you to choose the correct path for an existing account.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to proceed with the standard login or explore the newly advertised customer self-service system.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Sign in",
+      "questions": [
+       {
+        "question": "Do you want to log in using your EasyPIN or your password?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen offers both EasyPIN and Password tabs, requiring you to choose the authentication method you have credentials for.",
+        "whatTheAgentLoses": "You lose control over which specific security credential is used to access your banking app.",
+        "kind": "decision",
+        "verify_form": "The login offered EasyPIN and password tabs - check which credential the agent used; which of your secrets it handled is worth knowing.",
+        "speak": "never"
+       },
+       {
+        "question": "What credentials and account type should I use to log in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The secure login form requires a User ID, password, and an account type selection from the dropdown to access your profile.",
+        "whatTheAgentLoses": "You lose the security of keeping your sensitive banking credentials private.",
+        "kind": "decision",
+        "verify_form": "The login form took a user id, a password, and an account-type dropdown - check what the agent entered and which type it left selected; it handled your banking credentials to do it.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you confirm this is the correct account before authenticating with Face ID?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows '[handle]' pre-filled alongside a Face ID prompt, requiring you to confirm this is the correct account to access.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to switch to a different account or choose a manual authentication method like a password or token.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What credentials do I need to provide to sign in to my account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a sign-in form requiring your email and password to authenticate before you can access the payment settings.",
+        "whatTheAgentLoses": "Delegating this step requires sharing your private email and password with the agent, which compromises your account security.",
+        "kind": "decision",
+        "verify_form": "Signing in took your email and password - check what the agent submitted; it handled the credentials that open your billing.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Register the account",
+      "questions": [
+       {
+        "question": "Where do you go to create a new account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that users must complete a new account registration for the updated system even if they had a login for the previous website.",
+        "whatTheAgentLoses": "Delegating this step means losing the awareness that your previous login credentials are no longer valid and a new account must be created.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What account details must you provide to register for online access?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires your account number without dashes, account last name, and service location zip code to verify your identity before granting access.",
+        "whatTheAgentLoses": "Delegating this step requires sharing sensitive account verification details, like your exact account number and service zip code, with a third party.",
+        "kind": "decision",
+        "verify_form": "Registration wanted your account number, last name, and service zip - check what the agent typed into each; those verify your identity to the utility and they came from somewhere.",
+        "speak": "never"
+       },
+       {
+        "question": "Which email address and password should you use to register for online access?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a primary email address and a password meeting specific length and character requirements to complete your online access registration.",
+        "whatTheAgentLoses": "You lose the ability to choose the specific login credentials and primary contact email associated with your account.",
+        "kind": "decision",
+        "verify_form": "The registration set a login email and password - check which address and what password the agent chose; those credentials are how this account is reached from now on.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you use the browser's autofill suggestion for the service location zip code?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a Chrome autofill suggestion alongside a note stating you need to receive your first bill in the mail, making it critical to ensure the exact service address is entered.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally verify that the entered zip code accurately matches the physical location where the required first bill will be mailed.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Pick the account or product",
+      "questions": [
+       {
+        "question": "Which tab should you select to manage your SIP investments?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The bottom navigation bar displays multiple financial products like Stocks, F&O, and UPI, so you must choose the correct category to access your investment settings.",
+        "whatTheAgentLoses": "You lose the ability to dictate exactly which type of financial product or asset class the automated payment will fund.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which account do you want to set up automatic payments for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple accounts, including checking, savings, and a credit card, so you must specify which one needs the autopay configured.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might set up autopay for the wrong account, potentially causing unintended payments or missed payments on the intended account.",
+        "kind": "decision",
+        "verify_form": "The dashboard listed checking, savings, and a card - check which account the agent picked to automate; a standing order on the wrong account pays the wrong bill from the wrong money.",
+        "speak": "never"
+       },
+       {
+        "question": "Which account do you want to select to set up AutoPay?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard displays multiple options, including a Discover credit card and bank accounts with their current balances, so you must choose the specific account you want to configure.",
+        "whatTheAgentLoses": "You lose the opportunity to review your current account balances and verify your overall financial status before navigating to the payment settings.",
+        "kind": "decision",
+        "verify_form": "The dashboard showed a card and bank accounts with balances - check which one the agent opened for AutoPay; the wrong tile arms the wrong account.",
+        "speak": "never"
+       },
+       {
+        "question": "Which investment pie do you want to set up auto-investing for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers the choice to either create a new pie or select an existing portfolio like 'Mostly Dividends' to receive the automated payments.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might direct your automated funds into the wrong portfolio or create an unnecessary new one.",
+        "kind": "decision",
+        "verify_form": "The portfolio offered an existing pie and a new-pie button - check which pie the agent pointed the auto-investing at; recurring money flows into whichever it picked.",
+        "speak": "never"
+       },
+       {
+        "question": "Which account do you want to set up the alert or autopay for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists your available accounts, such as a Roth Contributory IRA, so you must select the specific one you want to configure.",
+        "whatTheAgentLoses": "Delegating this step means the agent might set up an alert or payment rule on the wrong account.",
+        "kind": "decision",
+        "verify_form": "The accounts list held more than one - check which account the agent set the alert or plan on; automation on the wrong account moves the wrong money.",
+        "speak": "never"
+       },
+       {
+        "question": "Which mutual fund do you want to enroll in the automatic plan?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Automatic Investing Status table lists multiple unenrolled funds like SWT SX and SWISX, requiring a choice of which specific asset to automate.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide exactly which of their existing mutual fund positions receives the automated investments.",
+        "kind": "decision",
+        "verify_form": "The enroll table listed more than one fund - check which the agent enrolled; the recurring buys flow into that fund and no other.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Find the autopay setting",
+    "note": "2.1 wherever a status line already links to the setting; otherwise 2.2, with 2.3 when the menus fail; then 2.4",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Read the current autopay status",
+      "questions": [
+       {
+        "question": "What scheduled payments are currently active before you navigate away to set up autopay?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Noting the existing scheduled payment of $182.31 for Bank of America ensures you do not accidentally set up duplicate payments.",
+        "whatTheAgentLoses": "You lose the situational awareness of your upcoming cash flow and existing scheduled payments before the agent creates new automated rules.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is autopay currently off, and where do you go to turn it on?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly lists 'Autopay Off' under the payment info, confirming the feature needs to be enabled by selecting 'Set up Autopay'.",
+        "whatTheAgentLoses": "You lose the immediate visibility into your current autopay status and recent payment history before initiating the setup.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you see consistent account balances displayed on the screen?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Total Balance' of $0.23 contradicts the $1,006,940.23 'Available Balance' listed for the online savings account.",
+        "whatTheAgentLoses": "You lose the ability to spot glaring data inconsistencies that might indicate a glitch or a fake banking website.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "What is the current status of your credit card, and where should you navigate to configure automatic payments?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard shows a $0.00 balance and no payment required, confirming the current state before setting up future automated payments.",
+        "whatTheAgentLoses": "The user misses seeing their current zero balance status and learning where the autopay settings are located within the dashboard.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What is the initial state of your accounts upon logging in?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a Rollover IRA with a $0.00 balance and a Roth Contributory IRA with a $2,534.19 balance, establishing the baseline before configuring any automation.",
+        "whatTheAgentLoses": "The user loses the baseline awareness of their account balances before the automation is set up.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to review your currently active SIPs before navigating back to the home screen?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an active monthly SIP of ₹100 for the Kotak Small Cap Fund with the next installment on March 3rd, which confirms your existing standing orders.",
+        "whatTheAgentLoses": "You lose the chance to verify your current automated investment contributions before the agent navigates away.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What is the current status of your SIPs and contributions this month?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your active SIPs and a ₹100 monthly contribution, providing a snapshot of your current investments before you navigate to configure a new mandate.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to review your existing active SIPs and monthly contribution totals before authorizing new automated payments.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What is your statement balance and when is it due?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a statement balance of $1,000.00 due on May 17, 2018, which dictates how much you need to automate and by when to avoid late fees.",
+        "whatTheAgentLoses": "You lose the baseline awareness of your upcoming payment obligation before configuring the automation.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the interface warn that your account is currently past due and cannot be covered by a newly created autopay schedule?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many billing systems will not automatically pull funds for past-due balances when a new autopay is created, meaning you remain in default unless a manual payment is made immediately.",
+        "whatTheAgentLoses": "You lose the critical warning that your immediate debt remains unpaid and subject to late fees despite the new automation being established.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Navigate the menus",
+      "questions": [
+       {
+        "question": "Should you tap 'Autopay' or go back to the home screen?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile screen shows an 'Autopay' option, but you might need to return to the home screen to select a specific biller first.",
+        "whatTheAgentLoses": "You lose the opportunity to choose whether to explore the profile's autopay menu or return to the main screen to find the specific payee.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you review your current statement balance and minimum payment due before navigating to configure your autopay parameters?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your current balance and a one-time 'Pay card' button, but you need to locate the specific menu or section to configure recurring payments.",
+        "whatTheAgentLoses": "You lose the chance to review your current statement balance and minimum payment due before deciding on your autopay parameters.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which dashboard icon should you select to find the autopay or alert settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Because autopay or alerts could logically live under 'Bill Payments' or 'Manage Cards', you must know that 'Services' is the correct path in this specific app.",
+        "whatTheAgentLoses": "You lose the mental map of how your bank categorizes its features, making it harder to find these settings if you need to adjust them manually later.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which service option should you select to set up the automated payment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple banking services like 'Online Nomination' and 'Standing Instruction', requiring you to identify the correct menu item for recurring payments.",
+        "whatTheAgentLoses": "The user loses the opportunity to discover other available account services or ensure the exact standing instruction feature is chosen.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which option in the 'Pay & Transfer' menu should you select to set up your payment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown contains multiple distinct payment categories like credit cards, wires, and bill pay, meaning you must choose the right path to find the correct autopay settings.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent is navigating to the correct payment module for the specific bill you want to automate.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which tab should you select to manage your payment options?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers multiple payment-related buttons like 'Pay Card' and 'Payment' alongside a 'Manage' tab, making it unclear which path leads to the recurring payment settings.",
+        "whatTheAgentLoses": "You lose the chance to learn how your bank's interface categorizes automated payment features versus one-time manual payments.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which option should you select to set up recurring payments for this pie?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple inactive automation features like Goal, AutoInvest, and Invest spare change, requiring you to identify the correct one for scheduled payments.",
+        "whatTheAgentLoses": "The user loses visibility into other available automation features, like goal tracking or spare change investing, that they might want to utilize later.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which 'Automatic payments' link should you select for your credit card?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu lists 'Automatic payments' under both Chase Payments and Bill Pay, so you must choose the one specific to your credit card products.",
+        "whatTheAgentLoses": "You lose the awareness of how your bank categorizes internal credit card payments versus external bill pay systems.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which menu option should you select to manage automatic payments?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile menu lists multiple configuration areas like 'Settings' and 'Bank account', so you must specifically find and select 'Autopay' to set up your standing orders.",
+        "whatTheAgentLoses": "Delegating this navigation step means you lose the opportunity to see at a glance whether you currently have any pending autopay requests.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Search the help pages"
+     },
+     {
+      "id": "2.4",
+      "label": "Start the setup",
+      "questions": [
+       {
+        "question": "Do you review your active ₹100 SIP details before tapping 'Setup AutoPay' to begin?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Setup AutoPay' button alongside your active ₹100 SIP, which is the direct path to begin automating your future installments.",
+        "whatTheAgentLoses": "You lose the opportunity to review your active SIP details and consciously decide whether to authorize automatic deductions for this specific investment.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you visually verify your bank and branch details on the bank details screen before clicking 'SETUP AUTOPAY'?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must locate and click the green 'SETUP AUTOPAY' button on the bank details screen to begin configuring your payment parameters.",
+        "whatTheAgentLoses": "You lose the opportunity to visually verify your specific bank and branch details before starting the automated payment setup.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you creating a new standing instruction or managing an existing one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The menu requires you to choose between creating a new standing instruction, viewing or canceling an existing one, and checking your history.",
+        "whatTheAgentLoses": "You lose the chance to review or cancel your current standing instructions before setting up a new one.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to click '+ New AutoPay Setup' to begin configuring your automatic payments?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows you are not currently enrolled in AutoPay and provides a link to start a new setup.",
+        "whatTheAgentLoses": "The user loses the explicit choice of whether to initiate the AutoPay enrollment process.",
+        "kind": "decision",
+        "verify_form": "Enrollment only starts if someone clicks New AutoPay Setup - check whether the agent clicked it; turning on automatic billing at all was your call, not a step it should assume.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you make a one-time manual payment or set up AutoPay?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options for a one-time payment on the left and managing AutoPay on the right, requiring a choice between an immediate transaction and a recurring schedule.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to decide whether to maintain manual control over your payments or automate them for convenience.",
+        "kind": "decision",
+        "verify_form": "The page offered a one-time payment on the left and AutoPay on the right - check which the agent set up; a recurring authorization and a single payment are different commitments.",
+        "speak": "never"
+       },
+       {
+        "question": "Did you tap 'Set up' to re-initiate the automatic payment setup for this card, which currently shows automatic payments as off?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed that automatic payments were currently off for the [account] card, requiring you to explicitly select the setup option to begin.",
+        "whatTheAgentLoses": "You lose the ability to decide whether or not to re-initiate the autopay setup for this specific account.",
+        "kind": "decision",
+        "verify_form": "The setup had been cancelled once - check whether the agent re-entered it and got the same parameters; restarting the enrollment was a choice, and the second pass starts clean.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you use the home screen banner to enable EMI auto debit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays a prominent red warning banner prompting you to enable NACH auto debit for your Insta Loan.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to initiate the auto debit setup immediately via the alert banner.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to modify an existing payment schedule or create a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a list of active recurring payments alongside a 'Create New' button, requiring a choice between editing an existing setup or starting fresh.",
+        "whatTheAgentLoses": "The user loses the opportunity to review or consolidate their existing payment schedules before a new one is created.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Meet the prerequisites",
+    "note": "whichever the platform demands: 3.1 before card autopay unlocks; 3.2, with 3.3 first when the numbers live elsewhere; 3.4 when no payment method is on file; 3.5 before auto-invest enrolls",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Request the eBills",
+      "questions": [
+       {
+        "question": "Do you need to refresh the page to make the AutoPay link appear?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The AutoPay link does not show up immediately after closing the eBill confirmation, requiring a manual page reload to update the interface.",
+        "whatTheAgentLoses": "Delegating this means losing the human intuition to refresh a stagnant page when an expected link fails to appear.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you need to refresh the page to make the AutoPay link active?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The success modal states you can set up AutoPay now, but the underlying page requires a manual refresh before the link actually becomes clickable.",
+        "whatTheAgentLoses": "You lose the human intuition to troubleshoot a contradictory UI by refreshing the page when a promised link fails to activate.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you need to request eBills before you can set up AutoPay for this account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The second account lacks the green 'ON' badge for eBills and displays a 'Request eBills' link, indicating it is a prerequisite for AutoPay.",
+        "whatTheAgentLoses": "You lose the visibility into account-specific prerequisites like needing to request eBills before automated payments can be configured.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to opt into sharing your email address with the selected billers?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The setup form includes an optional checkbox that allows the platform to share your email address with billers for additional communications.",
+        "whatTheAgentLoses": "You lose the ability to protect your privacy and keep your inbox free of unwanted marketing emails by leaving the optional checkbox unchecked.",
+        "kind": "decision",
+        "verify_form": "An optional checkbox shared your email with billers - check whether the agent left it unchecked; the video's narrator calls the box sneaky, and ticking it invites marketing you never asked for.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Link the funding account",
+      "questions": [
+       {
+        "question": "Which category -- bank account, credit card, or UPI Lite -- do you select on the profile screen to add your funding source?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile screen displays multiple payment setup options like bank accounts, credit cards, and UPI Lite, so you must select the correct category to add your funding source.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to decide which specific type of payment method is added to your profile.",
+        "kind": "decision",
+        "verify_form": "The profile offered bank account, card, and UPI as things to add - check which category the agent went into; what kind of funding source lands on your profile follows from that pick.",
+        "speak": "never"
+       },
+       {
+        "question": "What account information will you enter to link your external bank?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Add an Account' form that requires a routing number, account number, and account type to establish a new funding source.",
+        "whatTheAgentLoses": "You lose the privacy of your sensitive banking details by sharing your routing and account numbers with the agent.",
+        "kind": "decision",
+        "verify_form": "Linking the external bank took a routing and account number - check which account the agent entered; it decided which of your accounts gets tied to this biller.",
+        "speak": "never"
+       },
+       {
+        "question": "How will you complete the micro-deposit verification steps?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states that adding this account requires waiting two business days to verify two test deposits.",
+        "whatTheAgentLoses": "You lose the ability to complete the setup immediately since the agent cannot access your external account to verify the test deposits later.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What should you do if the account you want to pay from isn't listed in the dropdown?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal provides a 'Link an external account' link right below the 'Pay from' dropdown for adding a new funding source.",
+        "whatTheAgentLoses": "You lose the ability to securely choose and link a specific external bank account of your preference.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is your bank listed for automatic linking, or do you need to enter the account details manually?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of major banks for quick linking but requires you to select the manual entry option if your specific institution is missing.",
+        "whatTheAgentLoses": "The user loses the choice between authenticating through a third-party linking service or manually providing their routing and account numbers.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What account details should you provide to set up this funding source?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires your specific account number and account type to correctly link the funding source for your automatic payments.",
+        "whatTheAgentLoses": "Letting an agent fill this out means you lose control over which specific bank account is used to fund these payments.",
+        "kind": "decision",
+        "verify_form": "The manual form took an account number, type, and nickname - check what the agent entered; which account it wired in is the one that pays from now on.",
+        "speak": "never"
+       },
+       {
+        "question": "Did you notice the error message explaining why the routing number was rejected?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The system explicitly states that Bank of America accounts cannot be added as external 'Pay From' accounts, meaning you must use a different routing number or a different setup flow for internal accounts.",
+        "whatTheAgentLoses": "You lose the specific feedback on why the account linking failed, which is necessary to correct the mistake and successfully configure the funding source.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Look up the funding numbers",
+      "questions": [
+       {
+        "question": "Should an agent be allowed to click through and view your unmasked account and routing numbers here?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The account number is currently masked in the header, so you must click the info icon next to the routing number to view the full digits required for the autopay setup.",
+        "whatTheAgentLoses": "Delegating this step means an agent gains direct visibility of your highly sensitive, unmasked bank account and routing numbers.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What routing number and bank name should you use when linking this account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the routing number and specifies using 'UMB Bank' as the bank name for direct debits from a third-party biller.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the exact routing details and partner bank name required to set up the funding source.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which UPI ID should you enter to match the selected bank account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The main screen shows the Kotak Mahindra Bank account is selected, so you must use the UPI ID specifically linked to that account rather than a default one to ensure the mandate succeeds.",
+        "whatTheAgentLoses": "You lose the assurance that the agent will correctly identify and use the specific UPI ID tied to this exact bank account across your different payment apps.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Save a payment method",
+      "questions": [
+       {
+        "question": "Did my new payment method save correctly, and where do I go to enable AutoPay?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the card details in the 'Saved Payment Methods' list ensures the funding source is ready before clicking the link in the info box to configure AutoPay.",
+        "whatTheAgentLoses": "You lose the chance to verify that the correct default card was added before the agent links it to your automatic payments.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which type of payment method do you want to add?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows you have no saved payment methods and requires you to choose between adding a credit card or a bank account.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether their payments will be drawn from a credit card or directly from a bank account.",
+        "kind": "decision",
+        "verify_form": "The account had no saved method - check whether the agent added a card or a bank; which kind of money backs your bills differs in fees and failure modes.",
+        "speak": "never"
+       },
+       {
+        "question": "What are your credit card details, and should this be set as the default payment method?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires your full credit card information and billing address to save the card, plus a checkbox to designate it as the default.",
+        "whatTheAgentLoses": "Delegating this step means giving up control over which specific credit card is stored and whether it automatically becomes the default for future transactions.",
+        "kind": "decision",
+        "verify_form": "The card form ended in a default checkbox - check which card the agent saved and whether it made it the default; both outlive this one setup.",
+        "speak": "never"
+       },
+       {
+        "question": "Which state should you select for your billing address?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a required 'Billing State' dropdown currently set to 'Select State' alongside an empty zip code field, indicating this information is needed to configure the funding source.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select an incorrect state, which could cause the payment method verification to fail.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to set this card as your default payment method?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a 'Default' checkbox alongside the billing zip code field, requiring a choice on whether this card should be the primary funding source.",
+        "whatTheAgentLoses": "You lose the ability to control whether this specific credit card becomes the primary payment method for all future transactions on the account.",
+        "kind": "decision",
+        "verify_form": "A Default checkbox sat beside the zip field - check whether the agent ticked it; making this card the primary for everything after was a side effect you may not have wanted.",
+        "speak": "never"
+       },
+       {
+        "question": "Did the billing zip code you entered trigger a formatting error?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form strictly validates the zip code format and displays an inline error if it doesn't match the expected 5-digit or 9-digit pattern, preventing the card from being saved.",
+        "whatTheAgentLoses": "You lose the chance to notice that a simple formatting mistake is blocking your payment method from being successfully added to the account.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Hold the fund position",
+      "questions": [
+       {
+        "question": "Do you already own shares of the mutual fund you want to set up automatic investments for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Positions table shows a $30.01 market value for SWTSX, confirming you meet the prerequisite of already owning shares before setting up a recurring investment.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review your current portfolio holdings and confirm you meet the prerequisites for the automated investment.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which filters should you select in the screener to find funds eligible for automatic investing?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Fund Screener' section offers checkboxes like 'Automatic Investment Plan' and '$[address] Minimum Investment' that instantly update the number of matches on the green button.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to apply additional constraints like a low initial minimum investment, which might result in matching with funds outside your budget.",
+        "kind": "decision",
+        "verify_form": "The screener's checkboxes decide which funds even show up - check which filters the agent applied; skipping the low-minimum filter, as this video does, changes what you end up buying.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you confirm the correct fund and share class are selected in the search results before setting the alert?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen features a search box with an 'Enter Name or Symbol' placeholder and a 'Research' button to locate the exact asset to monitor.",
+        "whatTheAgentLoses": "The user gives up the chance to review the search results and confirm the correct fund or share class is selected before setting the alert.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is this specific mutual fund eligible for automatic recurring investments?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the 'Details' section for a 'Yes' next to 'Automatic Investment Plan' confirms the fund actually supports recurring investments before you attempt to configure them.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that your preferred mutual fund actually allows automated recurring investments.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you notice your available balance of $28.22 is less than the demo trade amount, and enter an amount that can actually execute?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed an available balance of $28.22, meaning you must decide whether to enter a demonstration amount that exceeds your funds or an amount that can actually execute.",
+        "whatTheAgentLoses": "Delegating this to an agent means losing the discretion to intentionally test the system with a hypothetical amount that exceeds your available balance.",
+        "kind": "decision",
+        "verify_form": "The trade ticket took a buy above the available cash - check what the agent entered and whether it placed the order; an initial position is real money spent to unlock the automation.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Configure the payment",
+    "note": "4.1 and 4.2 for the funding account and the counterparty; 4.3 then 4.4; 4.5 and 4.6 for the calendar; 4.7 to 4.9 where the form offers them",
+    "questions": [
+     {
+      "question": "How do you want to configure the automatic payment amount, timing, and funding source?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The modal requires selecting the funding account, payment date, and amount to ensure the bill is paid according to your preferences.",
+      "whatTheAgentLoses": "You lose the ability to control exactly how much money is withdrawn from which account and on what specific date.",
+      "kind": "decision",
+      "verify_form": "One modal set the funding account, the date, and the amount together - check each line the agent left behind; three separate choices rode through on one Save.",
+      "speak": "never"
+     },
+     {
+      "question": "Do you want to review the default AutoInvest settings and value projection before making changes?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays a value projection based on a 17.47% annual return and a self-balancing distribution, alongside important risk warnings about your capital.",
+      "whatTheAgentLoses": "You lose the opportunity to evaluate the risk warnings and projected outcomes of the default investment strategy before committing your funds.",
+      "kind": "state-check",
+      "speak": "never"
+     },
+     {
+      "question": "What amount and frequency do you want to set for the automatic investment?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The 'Enroll Fund' form requires you to specify an investment amount of at least $100 and choose a schedule from the dropdown to configure the automatic transfers.",
+      "whatTheAgentLoses": "You lose the ability to align the recurring investment amount and specific withdrawal dates with your personal cash flow.",
+      "kind": "decision",
+      "verify_form": "The enroll form took an amount with a 100-dollar floor and a frequency - check both values the agent set; that pair is the whole plan.",
+      "speak": "never"
+     },
+     {
+      "question": "Did the selected payment date or amount trigger a visual warning, such as red text or an alert icon, indicating a potential late fee?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Interfaces often allow you to schedule a payment past the due date or below the minimum, using only a visual color change to warn you of the consequences rather than blocking the action.",
+      "whatTheAgentLoses": "You lose the visual warning that your chosen parameters might result in late fees or penalties, which an agent might overlook if they only verify that the system accepted the input.",
+      "kind": "state-check",
+      "speak": "on-event"
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Pick the funding source",
+      "questions": [
+       {
+        "question": "Do the account details shown across different screens match?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The claim that the profile screen matches the payment methods screen is contradicted by the frame at 0:22, which actually shows the GPay home screen.",
+        "whatTheAgentLoses": "The user loses the assurance that the correct funding source is consistently identified and used for the setup.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which bank do you want to use for AutoPay?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple verified options, such as Central Bank of India and Indian Bank, so you must select the correct funding source.",
+        "whatTheAgentLoses": "You lose the ability to decide which specific bank account will be debited for your automated payments.",
+        "kind": "decision",
+        "verify_form": "Two verified banks sat on the list - check which one the agent chose to be debited; every future installment rides on that pick.",
+        "speak": "never"
+       },
+       {
+        "question": "What are your credit card and billing details?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires a card number, expiration date, name, and billing ZIP code to set up the funding source.",
+        "whatTheAgentLoses": "You lose the ability to choose which specific credit card is charged for these automatic payments.",
+        "kind": "decision",
+        "verify_form": "The form took a card number, expiry, name, and zip - check which card the agent entered; whose plastic backs this schedule is not a detail.",
+        "speak": "never"
+       },
+       {
+        "question": "Which account do you want to debit, and which transfer mode should you use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct debit account ensures funds are pulled from the right place, while choosing between NEFT and RTGS is necessary based on the transfer amount.",
+        "whatTheAgentLoses": "You lose control over which specific bank account funds the payment and the appropriate transfer method for your transaction size.",
+        "kind": "decision",
+        "verify_form": "The debit account and the NEFT-or-RTGS mode both had defaults - check what the agent left selected; the account drained and the transfer rail were both picks.",
+        "speak": "never"
+       },
+       {
+        "question": "Which bank account do you want to use to fund your automatic payments?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Pay From' dropdown requires selecting a specific checking or savings account to draw the funds from.",
+        "whatTheAgentLoses": "Delegating this choice means you lose control over which specific bank account's balance is drawn down to pay the credit card bill.",
+        "kind": "decision",
+        "verify_form": "The Pay From dropdown listed checking and savings - check which account the agent set; that balance is the one every payment draws down.",
+        "speak": "gate"
+       },
+       {
+        "question": "Should you use this cash management account as your funding source to earn interest on idle cash?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 3.54% yield on the SPAXX core position, which provides a financial incentive to hold your autopay funds in this account.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate if earning the 3.54% yield on idle cash outweighs the benefits of using a traditional checking account for your payments.",
+        "kind": "decision",
+        "verify_form": "The narrator's case for this funding account was its 3.54 percent on idle cash - check which account the agent used; the yield argument was a preference, not a requirement.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the selected funding source show an error indicating it needs to be re-authenticated before it can be used?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Third-party bank connections frequently expire; if the agent selects a stale account and ignores the warning, the autopay will fail when it tries to draw funds.",
+        "whatTheAgentLoses": "The human ability to recognize a broken API connection to their bank and intervene to re-enter their credentials.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does the selected credit card or bank account show an 'expired' or 'requires update' badge?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "An agent might blindly select the default or first payment method in a dropdown, but if that card is expired, the autopay will silently fail when the bill comes due.",
+        "whatTheAgentLoses": "You lose the visual check that the selected funding source is actually in good standing and capable of processing future payments.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Pick the counterparty",
+      "questions": [
+       {
+        "question": "Are the auto-filled name and email correct, and do you notice the account number field shows 'None Provided'?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen auto-filled the name and email for [name] but showed \"None Provided\" for the account number, which needs verification to ensure the setup applies to the correct profile.",
+        "whatTheAgentLoses": "You lose the opportunity to catch outdated or missing contact information before the alert or payment is finalized.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "What type of destination account are you setting up this standing instruction for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose between \"Self Accounts\", \"Other SBI Accounts\", or \"Other Bank Accounts\" to properly route the automated payment.",
+        "whatTheAgentLoses": "You lose the ability to personally ensure the automated payments are directed to the correct internal or external banking institution.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which of your saved beneficiary accounts should receive the funds?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu requires you to specify the exact recipient account to ensure the automated payment goes to the correct destination.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct payee account is selected to receive your automated payments.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do the auto-populated beneficiary details match your intended recipient?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays specific account numbers, names, and branch codes that must be verified to ensure your automated payments go to the correct destination.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the exact account number and branch details match your intended recipient before committing to the automated payment.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Choose the amount type",
+      "questions": [
+       {
+        "question": "Did you notice the total interest you have paid this year before you configure your autopay amount?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dashboard explicitly displays a 'Total Interest Year-to-Date' of $126, which is a critical piece of financial context that might convince you to pay the full statement balance rather than just the minimum.",
+        "whatTheAgentLoses": "You lose direct visibility into how much interest debt is costing you, which could fundamentally change your decision on how much to automatically pay each month.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should I set the invoice type to an itemized list or a flat amount?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing between an 'Itemized List' with specific products and quantities or an 'Amount Only' for a flat recurring bill.",
+        "whatTheAgentLoses": "Delegating this means you lose control over whether the recipient sees a detailed breakdown of items or just a single total charge.",
+        "kind": "decision",
+        "verify_form": "The invoice could be an itemized list or a flat amount - check which the agent chose and what landed in it; the itemized route auto-filled values that overrode the flat figure in this corpus.",
+        "speak": "never"
+       },
+       {
+        "question": "Which payment amount should you choose to avoid interest charges?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown offers options like 'Total Min Payment Due' and 'Statement Balance', and selecting the wrong one could result in unwanted interest charges.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal financial strategy to choose the optimal payment amount that avoids interest.",
+        "kind": "decision",
+        "verify_form": "The amount menu held Total Min Payment Due and Statement Balance - check which the agent selected; the minimum keeps you in interest every month, and that trade was made at this dropdown.",
+        "speak": "gate"
+       },
+       {
+        "question": "Should you pay the minimum payment or the full statement balance?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires selecting a payment amount, which determines how much cash is deducted from your funding source and whether you will accrue interest on the remaining balance.",
+        "whatTheAgentLoses": "You lose the ability to balance your immediate cash flow needs against the long-term cost of credit card interest.",
+        "kind": "decision",
+        "verify_form": "The two radios were minimum payment and statement balance - check which the agent picked; the minimum accrues interest on everything left over, every month, indefinitely.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you notice that the promised 'Grace Period Payment Amount' option is missing from the selection screen?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The introductory screen stated you could choose the Grace Period Payment Amount, but the actual selection screen only provides options for Minimum Payment and Statement Balance.",
+        "whatTheAgentLoses": "The user loses the opportunity to pause and decide if they want to proceed with a different payment amount than originally advertised.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to pay the statement balance, the minimum payment due, or a custom amount?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to paying the full statement balance, which you must confirm or change to control how much is deducted.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly how much money is automatically withdrawn from your funding source each cycle.",
+        "kind": "decision",
+        "verify_form": "The default was statement balance with minimum and custom beside it - check what the agent confirmed; the default happened to be the safe one here, but it was still a choice.",
+        "speak": "never"
+       },
+       {
+        "question": "What does the 'Statement Balance' option entail for your payment?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a tooltip anchored to the Statement Balance info icon explaining that it pays the previous month's statement balance.",
+        "whatTheAgentLoses": "A person delegating to an agent loses the chance to review the exact definitions of the payment options before committing their funds.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What payment amount do you want to set for this automatic payment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The setup screen requires a payment amount to be selected before the 'Next' button becomes active.",
+        "whatTheAgentLoses": "The user loses control over the exact amount of money automatically deducted from their account each month.",
+        "kind": "decision",
+        "verify_form": "The amount field gated the Next button - check what the agent chose there; the deduction it locked in repeats monthly.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Set the amount",
+      "questions": [
+       {
+        "question": "What is the maximum amount you can transfer to this beneficiary?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Knowing the ₹ 1,00,000.00 beneficiary transfer limit ensures you do not attempt to set up an autopay amount that will be rejected.",
+        "whatTheAgentLoses": "Delegating this step means you miss knowing the exact transfer limit imposed on this specific beneficiary, which might affect your broader financial planning.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How much money do you want to transfer?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Amount to be transferred : ₹' field requires a specific value to ensure the correct sum is moved.",
+        "whatTheAgentLoses": "You lose the ability to dictate exactly how much of your money is moved if the agent has to guess the amount.",
+        "kind": "decision",
+        "verify_form": "The amount field is the sum that moves every cycle - check what the agent entered; in this corpus the form even accepted it empty, so look at the value, not the fact it submitted.",
+        "speak": "never"
+       },
+       {
+        "question": "How much do you want to deposit each month?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The slider defaulted to a high amount of €1,000, which could easily drain your account if not manually adjusted.",
+        "whatTheAgentLoses": "You lose the financial control of deciding exactly how much of your monthly budget you can afford to allocate to this recurring transfer.",
+        "kind": "decision",
+        "verify_form": "The deposit slider started at 1,000 euro - check where the agent dragged it; the default would drain ten times what the video's narrator meant to invest.",
+        "speak": "never"
+       },
+       {
+        "question": "Does your desired payment amount fall within the allowed range for this mandate?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The active SIP is for ₹100, but the mandate creation screen requires the scheduled amount to be between ₹500 and ₹1,00,000.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide whether to increase their payment to meet the minimum threshold or abandon the setup.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does the system warn you that your chosen fixed autopay amount is currently lower than your minimum payment due?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the fixed amount doesn't cover the minimum due, the autopay might process but still leave the account in a past-due state, incurring late fees.",
+        "whatTheAgentLoses": "The financial judgment to adjust the fixed payment amount to ensure it actually satisfies the account's minimum obligations.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did the payment amount field auto-format your input, potentially changing the intended value?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Input fields often dynamically add decimals or commas (e.g., typing '5000' might become '50.00'), requiring visual confirmation of the final interpreted number.",
+        "whatTheAgentLoses": "You risk authorizing a drastically incorrect payment amount if the agent inputs numbers blindly without visually verifying the auto-formatted result.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Choose the payment date",
+      "questions": [
+       {
+        "question": "When do you want the recurring payments to begin and end?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select specific dates from the calendar to define exactly when the automated payment schedule starts and expires.",
+        "whatTheAgentLoses": "Letting an agent choose these dates means you lose direct control over the exact timeframe during which your funds will be automatically withdrawn.",
+        "kind": "decision",
+        "verify_form": "Start and end dates came off two calendars - check what the agent picked for both; the window it set is when your money moves, and when it stops.",
+        "speak": "never"
+       },
+       {
+        "question": "When do you want the automatic payment to be delivered?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Delivery By' dropdown offers options like 'Due Date' or 'Before the Due Date', which determines your buffer time against potential technical failures.",
+        "whatTheAgentLoses": "You lose the chance to apply your personal risk tolerance by scheduling the payment early as a buffer against unexpected technical issues.",
+        "kind": "decision",
+        "verify_form": "Delivery offered Due Date, Before the Due Date, and earliest - check what the agent picked; the buffer against a failed or slow payment was set there.",
+        "speak": "never"
+       },
+       {
+        "question": "How many days of buffer do you want before the due date?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a dropdown to select one to five days before the due date, which determines your safety buffer for weekends and holidays.",
+        "whatTheAgentLoses": "Delegating this means the agent might select a shorter buffer that doesn't leave you enough time to handle issues over a long holiday weekend.",
+        "kind": "decision",
+        "verify_form": "The buffer dropdown ran one to five days - check what the agent chose; how much slack you want against weekends and holidays is your risk tolerance, not a default.",
+        "speak": "never"
+       },
+       {
+        "question": "When will the first payment occur if I select 15 days after the closing date?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen dynamically updates to show that selecting 15 days results in a first automatic debit on April 26, letting you confirm the exact timing.",
+        "whatTheAgentLoses": "You lose the ability to see the exact calculated date of the first payment and adjust the timing to fit your personal financial situation.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How many days after the statement closing date should the payment occur?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provided a dropdown to select between 15 and 25 days, which dynamically updated the exact date of your first automatic debit.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to align the exact payment date with your personal cash flow preferences.",
+        "kind": "decision",
+        "verify_form": "The dropdown ran 15 to 25 days after closing, each moving the first-debit date - check what the agent picked; which day of the month your money leaves is personal cash-flow, and the video's narrator says exactly that.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the scheduled payment date shift exactly as expected when you change the days after the closing date?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the scheduled payment date shifting exactly seven days from April 26 to May 3 when the setting was changed from 15 to 22 days, confirming the scheduling logic works.",
+        "whatTheAgentLoses": "You lose the opportunity to manually verify that the system's date calculation aligns perfectly with your intended payment timeline.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "How does the bank handle automatic payments when your due date falls on a weekend?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The fine print explicitly states that if a due date falls on a Saturday, the payment is made on the Friday before, meaning the money will leave your account a day earlier than the nominal schedule.",
+        "whatTheAgentLoses": "You lose the awareness that funds will be deducted early on certain months, which could cause an overdraft if you were relying on a Friday paycheck to cover a Saturday bill.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Set the frequency and term",
+      "questions": [
+       {
+        "question": "How often do you want this recurring payment to occur?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown lists options from daily to yearly, dictating exactly how often funds will be automatically deducted.",
+        "whatTheAgentLoses": "You lose control over matching the payment schedule to your personal cash flow and budgeting preferences.",
+        "kind": "decision",
+        "verify_form": "The frequency dropdown ran from daily to yearly - check what the agent selected; how often money leaves is the schedule's whole point.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to set this up as a one-time payment or a recurring standing instruction?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides radio buttons for 'Pay Now', 'Schedule Later', and 'Standing Instruction', which dictate whether the transaction is a single event or a recurring autopay.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might schedule a single payment instead of establishing the ongoing automated payments you need.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "How many payments do you want to schedule?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify the exact number of payments to be made for this autopay setup.",
+        "whatTheAgentLoses": "Delegating this means the agent might schedule an incorrect number of payments, potentially causing you to overpay or miss future obligations.",
+        "kind": "decision",
+        "verify_form": "The form asked how many payments to schedule - check the count the agent entered; ten and twelve are different sums of money over different months.",
+        "speak": "never"
+       },
+       {
+        "question": "How often do you want the payment to repeat, and on which day?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The recurring payments sheet requires selecting a repeat frequency, such as monthly or weekly, and a specific day for the transaction.",
+        "whatTheAgentLoses": "Letting the agent decide means you lose control over exactly when and how often the funds are deducted from your account.",
+        "kind": "decision",
+        "verify_form": "The repeat sheet took a frequency and a day of the month - check what the agent left set; the 11th and the 28th are different cash-flow months.",
+        "speak": "never"
+       },
+       {
+        "question": "How many years should the investment plan run?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the duration slider directly changes the estimated return shown on the graph, helping you align the investment timeline with your financial goals.",
+        "whatTheAgentLoses": "You lose the opportunity to explore how different timeframes affect your projected returns and to choose the duration that best fits your personal risk tolerance.",
+        "kind": "decision",
+        "verify_form": "The years slider moved the projection as it went - check what duration the agent set; how long to stay invested is a goal, not a parameter to guess.",
+        "speak": "never"
+       },
+       {
+        "question": "Which type of AutoPay do you want to set up: monthly or intra-cycle?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a choice between standard monthly payments and more frequent intra-cycle payments like daily or weekly.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether your automatic payments should occur once a month or on a more frequent schedule.",
+        "kind": "decision",
+        "verify_form": "AutoPay came in Monthly and Intra-Cycle flavors - check which the agent started; more-than-monthly payments change how your balance and interest behave.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Cap the payment",
+      "questions": [
+       {
+        "question": "Should you set a maximum limit for the automatic payment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes an optional 'Do not pay if over' field, prompting a decision between preventing unexpectedly large withdrawals and guaranteeing the full balance is paid to avoid interest.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to balance your personal risk tolerance for large unexpected bills against your preference for avoiding interest charges.",
+        "kind": "decision",
+        "verify_form": "An optional do-not-pay-if-over cap sat empty - check whether the agent filled it; capping surprise withdrawals versus always paying in full is a preference with money on both sides.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Choose the notifications",
+      "questions": [
+       {
+        "question": "Do you want to notify your customer that this recurring payment has been set up?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The notifications section includes a checkbox to send an automated message to your customer about the recurring payment.",
+        "whatTheAgentLoses": "You lose the ability to manage your customer communication preferences regarding automated payment reminders.",
+        "kind": "decision",
+        "verify_form": "A checkbox offered to notify the customer - check whether the agent ticked it; what your customer hears about this setup is your communication, not its.",
+        "speak": "never"
+       },
+       {
+        "question": "Which email notifications do you want enabled for this AutoPay setup?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers checkboxes to notify you when a payment is scheduled or sent, letting you control how much confirmation you receive.",
+        "whatTheAgentLoses": "Delegating this means the agent might skip these optional alerts, leaving you without the peace of mind that your payments are actively being processed.",
+        "kind": "decision",
+        "verify_form": "Two email checkboxes offered scheduled and sent notices - check which the agent enabled; how much confirmation you get each cycle was set there.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Name the standing order",
+      "questions": [
+       {
+        "question": "What do you want to name this recurring payment since your customer will see it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly states that this payment name will be visible to the customer.",
+        "whatTheAgentLoses": "You lose control over how the payment is identified to your customer, which could lead to confusion if the agent picks a generic name.",
+        "kind": "decision",
+        "verify_form": "The schedule's name shows to your customer - read what the agent typed in; a generic or wrong label is what they will see on every charge.",
+        "speak": "never"
+       },
+       {
+        "question": "What should you select for the purpose of this transaction?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a 'Purpose of Transaction' dropdown marked with an asterisk, indicating it is likely a required field.",
+        "whatTheAgentLoses": "The user loses the ability to accurately categorize the transaction, which could affect their financial records or cause the setup to fail.",
+        "kind": "decision",
+        "verify_form": "The purpose dropdown was marked required - check what the agent selected, if anything; the categorization follows the payment into your records.",
+        "speak": "never"
+       },
+       {
+        "question": "What should you name the mandate to resolve the 'already used' error?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed an error stating the previous mandate name was invalid or already used, requiring a new, correctly formatted name to continue.",
+        "whatTheAgentLoses": "The user loses the ability to choose a personally meaningful name for the mandate that helps them easily identify the transaction later.",
+        "kind": "decision",
+        "verify_form": "The old mandate name was taken and a new one had to be invented - read what the agent named it; that label is how you find this mandate later.",
+        "speak": "never"
+       },
+       {
+        "question": "Why did your form submission fail?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a 'Mandate name can't be empty' error, indicating that a custom label was required before the system would let you proceed.",
+        "whatTheAgentLoses": "You lose the ability to assign a personally recognizable name to the mandate, which makes tracking your specific autopay setups much easier.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Authorize the mandate",
+    "note": "5.1, then 5.2; the checks the mode demands - 5.3 and 5.4 on the card path, 5.5 on the UPI path; 5.6 at the clearing page; 5.7 when an attempt fails",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the mandate terms",
+      "questions": [
+       {
+        "question": "Are you comfortable with the ₹100,000 mandate limit, and which bank will you select to fund it?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The modal specifies a ₹100,000 maximum limit for the mandate and requires selecting a funding bank before the approval button becomes active.",
+        "whatTheAgentLoses": "You lose the chance to review the maximum withdrawal limit authorized on your account and to choose which specific bank to link for the payments.",
+        "kind": "decision",
+        "verify_form": "The mandate sheet set a 100,000-rupee ceiling and would not go on until a bank was picked - check which bank the agent selected and that it saw the ceiling; both were made on your behalf.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you comfortable setting a maximum AutoPay limit of ₹100,000 for a monthly SIP of only ₹100?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a massive discrepancy between the ₹100 monthly payment and the ₹100,000 authorized limit, which could expose the account to unexpectedly large deductions.",
+        "whatTheAgentLoses": "The user loses the ability to apply their own risk tolerance and set a tighter security limit that closely matches their actual expected payment.",
+        "kind": "decision",
+        "verify_form": "The ceiling reads 100,000 rupees over a 100-rupee SIP - check whether the agent accepted that gap; how much authorization headroom to grant is a risk call only you can make.",
+        "speak": "gate"
+       },
+       {
+        "question": "Are you comfortable authorizing a maximum AutoPay limit of ₹1,00,000 on your State Bank of India account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The setup screen specifies a ₹1,00,000 maximum limit for the mandate, which allows for future SIP increases without needing a new approval.",
+        "whatTheAgentLoses": "You lose the chance to personally review and consent to the maximum withdrawal limit being placed on your bank account.",
+        "kind": "decision",
+        "verify_form": "The setup put a 100,000-rupee ceiling on your bank account - check whether the agent accepted it; consenting to that headroom was yours to give.",
+        "speak": "never"
+       },
+       {
+        "question": "What is the cancellation policy for this AutoPay mandate?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The setup screen explicitly states that \"AutoPay can be cancelled any time,\" which provides important reassurance before you authorize a ₹1,00,000 limit on your bank account.",
+        "whatTheAgentLoses": "You lose the direct reassurance of knowing the exact terms for revoking the automated payment authorization if you change your mind.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you okay with a temporary ₹1 deduction to authorize this AutoPay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen states that ₹1 will be immediately deducted for setup and refunded in 3-5 working days.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review and consent to the temporary charge and the specific AutoPay terms.",
+        "kind": "decision",
+        "verify_form": "The setup takes one rupee now, refunded in days - check whether the agent accepted the charge; even a token debit off your account deserved your nod.",
+        "speak": "never"
+       },
+       {
+        "question": "Are the mandate details correct before you proceed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the final mandate details for the Indian Clearing Corporation Ltd, which must be accurate before you authorize the setup.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the exact terms of the mandate before it is officially issued to the clearing corporation.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "What terms and potential penalties are you accepting?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displayed a specific service charge for failed standing instructions due to insufficient funds, which is a critical financial risk to acknowledge.",
+        "whatTheAgentLoses": "The user loses the opportunity to review and understand the specific financial penalties for failed payments before agreeing to the terms.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the e-mandate summary match the duration of the loan plan you selected?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The e-mandate summary displays a start date and maximum amount that must be verified against your original loan terms to prevent over-authorization.",
+        "whatTheAgentLoses": "You lose the opportunity to catch a discrepancy between your intended loan duration and the actual period authorized for automatic payments.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you notice that the authorized autopay mandate amount is significantly higher than the actual loan amount?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen showed an INSTA LOAN of ₹40,000, but the final ECS mandate authorized a maximum withdrawal amount of ₹54,996.00.",
+        "whatTheAgentLoses": "You lose the opportunity to question the discrepancy between the loan principal and the maximum mandate limit before legally authorizing the automated payments.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are you comfortable authorizing a mandate that allows deductions 'As And When Presented' rather than on a fixed monthly schedule?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The eMandate summary for the loan lists the frequency as 'Adhoc (As And When Presented),' which gives the lender the right to pull funds at their discretion rather than sticking to a strict monthly EMI date.",
+        "whatTheAgentLoses": "You lose the opportunity to realize you are granting open-ended withdrawal timing rather than a predictable, scheduled payment, which could lead to unexpected deductions.",
+        "kind": "decision",
+        "verify_form": "The mandate's frequency reads As And When Presented - check whether the agent accepted that; it lets the lender pull on their schedule, not a fixed monthly one, and that comfort is yours to give.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Pick the verification mode",
+      "questions": [
+       {
+        "question": "Which authorization method -- Coin UPI, another UPI app, or Bank eNACH -- do you select to create the new mandate?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interface requires navigating to the Mandates section and choosing an authorization method like Coin UPI, another UPI app, or Bank eNACH to begin the setup.",
+        "whatTheAgentLoses": "You lose the ability to select the specific payment authorization network that will be used to fund your recurring deductions.",
+        "kind": "decision",
+        "verify_form": "The mandate could ride Coin UPI, any UPI app, or bank eNACH - check which rail the agent picked; which of your payment networks carries the recurring debit was yours to choose.",
+        "speak": "never"
+       },
+       {
+        "question": "Which verification mode do you want to use to authorize this AutoPay setup?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to choose between Debit Card, Net Banking, or Aadhaar to verify the AutoPay mandate.",
+        "whatTheAgentLoses": "You lose the ability to decide which of your sensitive credentials is used to authenticate this financial mandate.",
+        "kind": "decision",
+        "verify_form": "Verification offered debit card, net banking, and Aadhaar - check which one the agent used; it decided which of your credentials got exercised.",
+        "speak": "never"
+       },
+       {
+        "question": "Which payment method do you want to use to create the mandate?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal requires selecting between Coin UPI, any UPI app, or Bank eNACH to determine how the recurring payment will be processed.",
+        "whatTheAgentLoses": "You lose the opportunity to choose the specific payment channel and account that will be charged for the recurring payments.",
+        "kind": "decision",
+        "verify_form": "The create modal offered Coin UPI, any UPI app, and bank eNACH - check which rail the agent chose; the mandate lives on that network.",
+        "speak": "never"
+       },
+       {
+        "question": "Are the mandate details correct, and do you want to verify the authorization using your debit card?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "You must confirm the maximum amount of ₹100,000 and the specific bank account before agreeing to the terms and submitting the mandate.",
+        "whatTheAgentLoses": "You lose the opportunity to review the long-term withdrawal limits and choose your preferred verification method for the authorization.",
+        "kind": "decision",
+        "verify_form": "The mandate sheet paired the 100,000 ceiling with a verification-method pick - check what the agent accepted and which method it chose; both were consent moments.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Pass the OTP checks",
+      "questions": [
+       {
+        "question": "Are you ready to enter the OTP to authorize the Aadhaar mandate?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires an OTP sent to your registered mobile number to authorize the INR 100,000.00 mandate to the Indian Clearing Corporation Ltd.",
+        "whatTheAgentLoses": "Delegating this step requires sharing a highly sensitive Aadhaar OTP, which bypasses a critical security measure protecting your identity and bank account.",
+        "kind": "decision",
+        "verify_form": "The mandate wanted the OTP off your phone - check how the agent got past this screen; a code from your device is a secret you pass on deliberately or not at all.",
+        "speak": "never"
+       },
+       {
+        "question": "What is the OTP sent to my registered mobile number, and should I submit it to finalize the setup?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires a one-time password sent to your phone to proceed with the transaction and activate the standing order.",
+        "whatTheAgentLoses": "You lose the ability to complete the setup seamlessly, as the agent cannot access the one-time password sent to your personal device.",
+        "kind": "decision",
+        "verify_form": "Finalizing needed the OTP sent to your number - check what the agent did at that gate; if it moved past, your code went through hands you should know about.",
+        "speak": "gate"
+       },
+       {
+        "question": "How will you retrieve and enter the OTP to finalize this transaction?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen explicitly requires an OTP to be entered and submitted to proceed with the transaction.",
+        "whatTheAgentLoses": "You lose the security of keeping your secondary authentication channels private if an agent needs access to your OTPs.",
+        "kind": "decision",
+        "verify_form": "The screen would not proceed without the OTP - check how it was retrieved and entered; the second factor is yours, and how it traveled matters.",
+        "speak": "never"
+       },
+       {
+        "question": "Have you entered your Aadhaar number correctly and are you ready to request the OTP?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays an Aadhaar input field and a 'SEND OTP' button that must be used to authenticate and finalize the setup.",
+        "whatTheAgentLoses": "The user loses the ability to personally handle their sensitive government ID and control exactly when the verification code is sent to their device.",
+        "kind": "decision",
+        "verify_form": "The e-sign wanted your Aadhaar number before it would send an OTP - check what the agent entered; that number is your national identity, not a form field.",
+        "speak": "never"
+       },
+       {
+        "question": "Have you entered the correct OTP shown in your notification, and are you ready to verify it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows the entered OTP '[otp]', which must be verified to successfully save and activate the standing order.",
+        "whatTheAgentLoses": "You lose the chance to personally verify that the correct security code is being submitted to authorize the setup.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does this OTP message match the transaction you are trying to authorize?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The notification shade displays an OTP for Aadhaar, and checking the message details ensures you are authorizing the correct transaction.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the OTP message details to confirm it matches your intended transaction before it is submitted.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Validate the debit card",
+      "questions": [
+       {
+        "question": "Which debit card should you select to fund the autopay?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists an active card ending in [last4] under the funding options, and you must choose the correct one to ensure payments process successfully.",
+        "whatTheAgentLoses": "Delegating this choice means you lose control over which specific account is charged for your automated payments.",
+        "kind": "decision",
+        "verify_form": "The funding list showed an active card by its last digits - check which card the agent selected; the debit rides that card from now on.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you complete the debit card validation form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires sensitive details like your card PIN and a specific captcha code to proceed with the setup.",
+        "whatTheAgentLoses": "You lose the security of keeping your debit card PIN private and the assurance of manually solving the captcha.",
+        "kind": "decision",
+        "verify_form": "The validation form wanted the card PIN and a captcha - check what the agent submitted; your PIN is a secret it should never have handled silently.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you verify the success status and reference number before continuing past debit card validation?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen confirms the validation was a success and provides a specific link to return to the mandate portal to finish the setup.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the success status and reference number of your card validation.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Approve in the UPI app",
+      "questions": [
+       {
+        "question": "Are the mandate details correct before you authorize the action with your PIN?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a maximum mandate amount of ₹ 199.00 to Google Play, and entering your PIN finalizes this financial commitment.",
+        "whatTheAgentLoses": "You lose the chance to personally review the mandate amount and recipient before authorizing the transaction with your secure PIN.",
+        "kind": "decision",
+        "verify_form": "The PIN screen re-stated the mandate above the pad - check that the agent read the amount and counterparty there; the PIN entry is the last exit before it binds.",
+        "speak": "gate"
+       },
+       {
+        "question": "Has the mandate request been successfully submitted, and what do you need to do next?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The confirmation screen with the green checkmark indicates the request was sent, but it explicitly states you must still approve it within your UPI app to activate the mandate.",
+        "whatTheAgentLoses": "You lose the immediate awareness that a secondary, manual approval step is required on your personal device to finalize the autopay setup.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure you want to approve this autopay mandate for up to ₹1,00,000?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen warns that this authorization allows automatic transfers of up to ₹1,00,000 from your account until February 2055.",
+        "whatTheAgentLoses": "You lose the chance to personally review and accept the high maximum limit and long duration of these automatic withdrawals.",
+        "kind": "decision",
+        "verify_form": "The approval authorized up to 100,000 rupees until 2055 - check whether the agent approved; a limit and horizon that size deserved your own eyes first.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you comfortable approving a ₹1.00 test charge to verify your ₹100,000 autopay limit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a ₹100,000 maximum limit being authorized, followed by a UPI notification for a ₹1.00 charge to verify the active account.",
+        "whatTheAgentLoses": "Delegating this means you lose the context to understand that the small immediate charge is just a standard verification step for your new autopay mandate.",
+        "kind": "decision",
+        "verify_form": "A 1-rupee test charge landed alongside the 100,000 authorization - check whether the agent approved it knowingly; the probe is normal, but normal is worth confirming, not assuming.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Accept the clearing terms",
+      "questions": [
+       {
+        "question": "Do you consent to using your Aadhaar number for UIDAI authentication to create this mandate?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This matters because checking the box grants explicit legal consent for the platform to authenticate your identity via UIDAI for the NACH mandate.",
+        "whatTheAgentLoses": "You lose the opportunity to read the disclaimer and make an informed choice about sharing your Aadhaar number for this specific transaction.",
+        "kind": "decision",
+        "verify_form": "A checkbox consented to Aadhaar authentication with UIDAI - check whether the agent ticked it; your government identity was the thing being handed over.",
+        "speak": "never"
+       },
+       {
+        "question": "Are the mandate details correct, and do you agree to the processing charges?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the final mutual fund payment details and a checkbox for processing charges that must be accepted to finalize the mandate.",
+        "whatTheAgentLoses": "Delegating this step means losing the opportunity to personally verify the maximum debit amount and explicitly consent to the bank's processing charges.",
+        "kind": "decision",
+        "verify_form": "The final details page added a processing-charges consent - check whether the agent agreed; those charges ride every collection.",
+        "speak": "never"
+       },
+       {
+        "question": "Are the mandate payment details correct before you accept?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "You need to verify the maximum amount of 9997.00 Rupees, the frequency, and the collection dates before agreeing to the Razorpay mandate.",
+        "whatTheAgentLoses": "You lose the chance to verify the exact maximum withdrawal amount and collection dates before legally authorizing the automated payments.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you ready to accept the mandate conditions?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to accept the terms and warns you to maintain a sufficient balance to avoid registration failure.",
+        "whatTheAgentLoses": "You lose the opportunity to read the balance warning and decide whether to accept or reject the mandate conditions.",
+        "kind": "decision",
+        "verify_form": "Accept sat under a warning to keep balance available - check whether the agent accepted; the mandate registers against an account that must stay funded.",
+        "speak": "never"
+       },
+       {
+        "question": "Which third-party entities are you actually authorizing to process your digital signature?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen states that \"DESK NINE PRIVATE LIMITED\" requested the signature and requires you to authorize \"Protean eGov Technologies Limited,\" neither of which is the Moneyview app you are using.",
+        "whatTheAgentLoses": "You lose the awareness of which specific third-party entities are handling your highly sensitive Aadhaar data and digital signature.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Recover from a failed attempt",
+      "questions": [
+       {
+        "question": "Did you notice that the main dashboard's autopay link leads to an empty list, forcing you to navigate through the profile menu instead?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Setup AutoPay' button on the dashboard displays an empty bank list, meaning you must use the alternative route in the profile settings to successfully configure the payment.",
+        "whatTheAgentLoses": "You lose the awareness of which navigation paths are broken and how to successfully work around them within the platform.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you close the setup screen if the expected list of banks is empty?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Select Bank' bottom sheet is empty, requiring a decision on whether to explore alternative payment options or abort the setup.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to cancel the setup or troubleshoot alternative payment methods when your expected bank is missing.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "What should you do if your initial UPI ID fails to process the mandate?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explains that failures happen and advises trying an alternative UPI ID as a workaround to successfully complete the setup.",
+        "whatTheAgentLoses": "You lose the human intuition to troubleshoot a failing mandate request by switching to an alternative UPI ID rather than abandoning the setup.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What should you do when the app says no payment option is supported?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an error stating there are no eligible AutoPay payment options, meaning the current setup attempt has failed and an alternative method is required.",
+        "whatTheAgentLoses": "Delegating to an agent means you lose the ability to troubleshoot the unsupported payment error and strategically choose an alternative UPI app or funding source.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Commit the setup",
+    "note": "6.1, then 6.2 where declarations gate the button, then 6.3",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Review the summary",
+      "questions": [
+       {
+        "question": "Have you entered all the required parameters and are you ready to proceed to the review page?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the next button confirms your entered settings and transitions the setup process to the final review screen.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct amounts, dates, and funding sources were entered before moving forward.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure the payment amount, timing, and notification settings are correct before starting AutoPay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reviewing the configured settings, such as paying the statement balance five days before the due date, ensures the correct amount will be deducted at the right time.",
+        "whatTheAgentLoses": "You lose the chance to personally verify that the automated payment schedule and amount align with your current cash flow before committing to the setup.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the pre-filled account and payment details correct, and should you activate AutoPay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The form automatically selects an account and credit card, which you must verify before choosing to turn on AutoPay.",
+        "whatTheAgentLoses": "You lose the chance to confirm exactly which credit card will be automatically charged for this specific bill.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are your selected payment preferences correct before continuing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows your chosen payment option, funding account, and withdrawal date, which must be accurate before moving to the final confirmation step.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct payment amount will be withdrawn from the right account on your preferred schedule.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the overview screen accurately reflect the deposit amounts and projected totals you intended to configure?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Mostly Dividends Overview screen must display the correct initial and monthly deposit totals to confirm your configuration is accurate.",
+        "whatTheAgentLoses": "The user loses the ability to spot discrepancies between their intended deposits and the system's displayed summary.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you read the 'Important Information' regarding when your first automatic payment will take effect?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen includes a disclaimer about the timing of the first payment, which is critical to know so you do not miss a payment while waiting for the automation to kick in.",
+        "whatTheAgentLoses": "You lose the opportunity to review the specific terms dictating when the automated schedule actually begins, potentially leaving you responsible for a manual payment in the interim.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the recurring payment details correct before you submit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a summary of the recurring payment, including the $15.00 weekly amount and start date, which must be verified before clicking Submit.",
+        "whatTheAgentLoses": "Delegating this step means you lose the final opportunity to catch errors in the payment amount, frequency, or contact details before the schedule is activated.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the review screen match the amount you configured?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The review screen showed a total of $15.00 based on an itemized list instead of the $100.00 you entered on the previous screen.",
+        "whatTheAgentLoses": "An agent might blindly confirm the setup without noticing the discrepancy, resulting in the wrong payment amount being scheduled.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the tentative schedule look correct before you confirm?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a list of upcoming payment dates and instruction numbers that need to be verified before finalizing the standing instruction.",
+        "whatTheAgentLoses": "You lose the chance to personally verify that the automated payment dates align with your expectations and financial planning before the schedule is locked in.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do the transfer amount and purpose shown on the confirmation screen match what you entered before clicking submit?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Comparing the submitted form to the confirmation screen ensures that mandatory details like the transfer amount were actually captured by the system and not left blank.",
+        "whatTheAgentLoses": "The user loses the peace of mind that their standing order is configured with the correct financial details rather than generating a blank or invalid schedule.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are the autopay details and effective date correct before I confirm?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The review screen displays the funding source, frequency, and a warning that the setup won't take effect until the next statement cycle, meaning a manual payment might still be required.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the effective date and funding source, which could lead to a missed payment if the agent ignores the warning about needing an immediate one-time payment.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the automatic payment details correct before you finalize?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The review screen displays the payment destination, source account, and amount, which must be accurate before you commit to the schedule.",
+        "whatTheAgentLoses": "You lose the final opportunity to verify the funding source and payment amount before the standing order is activated.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the auto-invest summary details correct, and are you ready to commit funds to this plan?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reviewing the summary ensures the €50 initial deposit and €80 monthly recurring payment match your financial goals before you finalize the setup.",
+        "whatTheAgentLoses": "You lose the final opportunity to verify the exact deposit amounts and investment schedule before your funds are committed.",
+        "kind": "decision",
+        "verify_form": "The summary held the initial deposit, the monthly amount, and the duration - check whether the agent committed them; from that tap forward the money moves on schedule.",
+        "speak": "gate"
+       },
+       {
+        "question": "Are the automatic investment details correct before you submit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the mutual fund, investment amount, frequency, and start date, which must be verified before finalizing the setup.",
+        "whatTheAgentLoses": "Delegating this means you lose the final chance to review your investment amount and schedule before the automated transfers begin.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Accept the terms",
+      "questions": [
+       {
+        "question": "Do you agree to the terms allowing this mandate to be used for all Groww products?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires your explicit consent to apply this mandate across all Groww products before you can continue to the verification step.",
+        "whatTheAgentLoses": "The user loses the ability to review the specific terms and conditions before granting broad payment permissions across the platform.",
+        "kind": "decision",
+        "verify_form": "A consent box applied this mandate to every product on the platform - check whether the agent ticked it; that grant reaches past the one SIP you asked about.",
+        "speak": "gate"
+       },
+       {
+        "question": "Do you want to review the terms and conditions or the mandate-related charges before continuing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes links to learn more about transaction limits and mandate-related charges that apply once you accept the terms.",
+        "whatTheAgentLoses": "You lose the chance to review potential fees and transaction limits before legally committing to the autopay agreement.",
+        "kind": "decision",
+        "verify_form": "Links to the transaction limits and mandate charges sat above the consent box - check whether the agent opened them before agreeing; the fees live behind those links, not on the form.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you finalize and save the updated automatic payment settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The update button remains disabled until you explicitly check the box to agree to the terms and conditions.",
+        "whatTheAgentLoses": "You lose the chance to review the specific terms and conditions governing your automatic payments before legally agreeing to them.",
+        "kind": "decision",
+        "verify_form": "The Update button stayed dead until the terms box was ticked - check whether the agent ticked and updated; the agreement it accepted governs every future payment.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you agree to the terms and conditions for the pre-authorized debit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays the TD Pre-Authorized Debit terms and conditions alongside your payment details, which must be accepted to finalize the setup.",
+        "whatTheAgentLoses": "Delegating this step means an agent accepts legally binding financial terms and conditions on your behalf without your direct review.",
+        "kind": "decision",
+        "verify_form": "The pre-authorized debit terms sat above Accept - check whether the agent accepted them unread; that document is the legal basis for every pull from your account.",
+        "speak": "never"
+       },
+       {
+        "question": "Are the payment details correct, and do I agree to the authorization terms before confirming?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This matters because the screen displays the exact withdrawal amount, date, funding source, and legal authorization text that binds you to the autopay terms once confirmed.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally review the fine print and verify that the exact withdrawal date and funding source align with your current financial situation.",
+        "kind": "decision",
+        "verify_form": "The verify screen carried the authorization fine print - check whether the agent confirmed without opening it; the terms it bound you to are one click deep.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Submit the setup",
+      "questions": [
+       {
+        "question": "Did you actually click the final button to activate the automatic payments?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The video ends before the 'Start Sending Payments' button is clicked, meaning the successful completion of the setup is never confirmed on screen.",
+        "whatTheAgentLoses": "You lose the guarantee that your autopay is fully armed, leaving you vulnerable to missed payments and late fees if the setup was not actually saved.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Verify the setup is active",
+    "note": "7.1 on the spot; 7.2 wherever the platform defers to a bank; 7.3 whenever screens disagree; 7.4 when an email closes the loop",
+    "questions": [
+     {
+      "question": "Do you notice that the immediate notification contradicts the stated five-hour processing time?",
+      "cluster": "compare",
+      "moment": "After",
+      "moneyMoving": true,
+      "why": "The screen promised a maximum of five working hours for processing, making the instant notification suspicious or confusing.",
+      "whatTheAgentLoses": "An agent might ignore the mismatched timelines, leaving you unaware of a potential system glitch or misleading status.",
+      "kind": "state-check",
+      "speak": "never"
+     }
+    ],
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Read the confirmation",
+      "questions": [
+       {
+        "question": "Did the update succeed, and what are your final settings?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Reviewing the 'AUTOMATIC PAYMENT DETAILS' screen ensures the system correctly saved your fixed amount and payment date.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the final payment date and amount were saved exactly as you intended.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do the payment dates shown before, during, and after editing agree with each other?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The payment date format changes between a specific date and a relative day during the setup process, which requires verification.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the system correctly interpreted and saved their intended recurring payment schedule.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you see the confirmation that the recurring payment is active?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displayed a green success banner and a new highlighted row in the list confirming the payment is active.",
+        "whatTheAgentLoses": "The user misses the visual confirmation and peace of mind that their recurring payment was successfully scheduled.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Are your AutoPay settings confirmed and correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a confirmation modal with the AutoPay details, which must be verified to ensure the correct account and timing were applied.",
+        "whatTheAgentLoses": "The user loses the peace of mind of personally verifying the exact AutoPay details, such as the funding source and delivery date, before the setup is finalized.",
+        "kind": "intent-check",
+        "speak": "always"
+       },
+       {
+        "question": "Is the automatic payment confirmed and how do you exit?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays a green checkmark and a confirmation message that automatic payments are set up, requiring you to click 'Done' to finish.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the final payment details and seeing the success confirmation before closing the workflow.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you verify that the automatic payment was successfully scheduled?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation page displays a green checkmark and a success message alongside the final payment details to prove the setup is complete.",
+        "whatTheAgentLoses": "You lose the immediate peace of mind that comes from personally seeing the success confirmation and verifying the final payment details.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Did you verify that the AutoPay status successfully changed from 'OFF' to 'ON'?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The Payments page initially displayed the status as 'OFF', so seeing the green 'AutoPay On' indicator is necessary to confirm the setup worked.",
+        "whatTheAgentLoses": "Delegating this means losing the direct visual reassurance that the automated payment system is actively armed to pay your bills.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the setup complete, and when will your first automated payment occur?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen notes that the September 30 payment will be skipped because the balance is already paid, which is crucial for understanding your actual payment schedule.",
+        "whatTheAgentLoses": "You lose the immediate awareness of scheduling exceptions, like knowing your upcoming payment is skipped and when the automation will actually take effect.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the autopay confirmation correctly reflect the zero balance status you saw earlier?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The completion screen notes the September 30 payment will be skipped because the balance is paid, which confirms the system correctly registered the earlier 'No Payment Due' status.",
+        "whatTheAgentLoses": "You lose the reassurance of verifying that the automated system correctly recognizes your recent payment and won't double-charge you this month.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are the confirmed autopay details correct?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Reviewing the confirmation screen ensures the payment amount, funding source, and date were saved exactly as you wanted.",
+        "whatTheAgentLoses": "You lose the chance to personally verify that the correct account will be billed for the right amount on the right day.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you confirm the enrollment was received and the status is now active?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing the \"Enrollment Received\" message and the \"Enrolled - Active\" status on the main table ensures your automatic investments will execute as planned.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the confirmation screen and seeing the active status on your account.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Did the mandate submission succeed, and what are the details?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The user needs to confirm the mandate was submitted successfully and review its details, such as the start and end dates, to ensure accuracy.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the success of the mandate submission and its specific details before proceeding.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the confirmation screen warn you that your selected funding account currently lacks the funds to cover the first scheduled transfer?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Some platforms do a pre-check and warn you of an impending failure; ignoring this means the very first automated payment will bounce.",
+        "whatTheAgentLoses": "The prompt to immediately transfer funds into the source account to prevent the newly created autopay from bouncing.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Check the standing order status",
+      "questions": [
+       {
+        "question": "Has your mandate been successfully accepted?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays a 'Mandate Accepted' message with a countdown to redirect, confirming the standing order is active before returning to the merchant.",
+        "whatTheAgentLoses": "You lose the peace of mind that comes from personally seeing the official confirmation that your automated payment mandate was successfully established.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Has the Setup AutoPay prompt disappeared from the SIPs tab, and does the mandate now show against the active SIP?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The disappearance of the Auto SIP setup section and the presence of the active ₹100 SIP confirm that the standing order is armed.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the system registered the autopay and updated the active SIPs list.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you wait for bank approval before clicking the Setup AutoPay button?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a 'Setup AutoPay' button, but finalizing the setup requires waiting 2 to 7 days for the bank mandate to be approved.",
+        "whatTheAgentLoses": "The user loses the understanding that this automation cannot be completed in a single session and requires returning days later to finalize.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you confirm the AutoInvest status remains 'Off' on the pie overview screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the 'Off' status in the AutoInvest section confirms that the automated deposit schedule was successfully aborted and not applied to the pie.",
+        "whatTheAgentLoses": "The user loses the direct visual reassurance that the automated investment schedule was safely canceled and will not unexpectedly draw funds.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the mandate authorization succeed, and how do you return to the merchant site?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Confirming the \"Mandate Authorization Successful\" status ensures the autopay is active before you click the link to return to the merchant site.",
+        "whatTheAgentLoses": "Letting an agent handle this means you miss seeing the direct confirmation that your mandate was successfully authorized.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is my autopay active immediately, or is there a processing delay?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The confirmation screen explicitly states an expected completion time of 2-7 working days, meaning the setup is only submitted and not yet fully active.",
+        "whatTheAgentLoses": "You lose the direct awareness of the processing delay, which could result in a missed payment if a bill is due before the autopay fully activates.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you check why your previous mandate was rejected?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The active mandates list showed a 'Rejected' mandate with an info icon that explains the reason for the failure.",
+        "whatTheAgentLoses": "The user loses the historical context of why a past payment setup failed, which could be important for ensuring the new setup succeeds.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "What is the current status of your newly created AutoPay mandate?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "This matters because the screen indicates the mandate is currently \"Sent to bank\" and will take 4-5 days to be approved rather than being active immediately.",
+        "whatTheAgentLoses": "Delegating this means you miss seeing the specific approval timeline and the crucial reminder to maintain sufficient funds to avoid bank penalty charges.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Has the app verified your NACH details and what is the next step?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Waiting for the 'In progress' status to clear ensures your auto-debit mandate is successfully linked before you review and sign the final loan agreement.",
+        "whatTheAgentLoses": "You lose the assurance of personally seeing the auto-debit verification succeed before committing to the loan agreement.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the autopay mandate approved and displaying the correct maximum amount and expiration date?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Confirming the 'Autopay approved' message and the specific mandate details like the ₹100,000 limit ensures you have not authorized incorrect or excessive automatic deductions.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the exact financial limits and expiration dates authorized on your UPI account.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the mandate status showing as active with the correct daily limit?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Confirming the active status and the ₹1,00,000.00 daily limit ensures the autopay is correctly armed and won't fail due to incorrect caps.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the mandate was successfully activated with the exact daily limit you intended.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Reconcile the status contradictions",
+      "questions": [
+       {
+        "question": "Are the expected completion times consistent across the setup, success, and active mandate screens?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "Checking for discrepancies in the stated approval times across different screens ensures you know exactly when the autopay will actually take effect.",
+        "whatTheAgentLoses": "Delegating this means you might miss conflicting information about when your payment mandate becomes active, potentially leading to missed payments if it takes longer than expected.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do the final confirmation steps align with the initial prompt requiring a ₹1 deduction?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The initial setup screen stated that ₹1 would be deducted, but the video never shows this transaction happening before the final confirmation.",
+        "whatTheAgentLoses": "An agent might blindly accept the final success screen without realizing the required verification payment never processed, potentially resulting in a failed autopay setup.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you realize the 'Setup AutoPay' prompt remains visible even after the success message appears?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays a success message but retains the setup prompt because the mandate is still pending with the bank, creating a conflicting visual state.",
+        "whatTheAgentLoses": "An agent might misinterpret the lingering setup prompt as a failure and attempt to submit duplicate autopay requests.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the scheduled payment shown on the dashboard match the card and date you just configured, or does it reference a different card?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The dashboard shows a scheduled payment for October 20th under the [account] card, which contradicts the payment you just set up for the 24th on the [account] card.",
+        "whatTheAgentLoses": "You lose the chance to catch that the autopay might have been applied to the wrong account or failed to register correctly.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you notice that the mandate approval failed earlier despite showing as processing now?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen showed an error result immediately after clicking accept at 3:29, contradicting the later processing status in the other app.",
+        "whatTheAgentLoses": "The user loses the ability to catch a silent failure where an autopay setup appears pending but was actually rejected.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the mandate status immediately change to 'Rejected' or 'Failed' in the background after the initial success modal closed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sometimes a setup appears to save successfully in the frontend UI, but the backend instantly rejects it a second later due to a failed authorization hold or a bank-level block.",
+        "whatTheAgentLoses": "You lose the critical follow-up check to ensure the initial 'success' message wasn't immediately overridden by a silent backend rejection.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did a temporary success banner appear and vanish, and if so, does the permanent page state also reflect that the autopay is active?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Toast notifications confirming a save often disappear after a few seconds, leaving the interface looking identical to how it did before the action.",
+        "whatTheAgentLoses": "You lose the definitive proof that the system accepted the configuration, potentially leaving you uncertain if the autopay is active if the agent looked away when the transient message vanished.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Confirm by email",
+      "questions": [
+       {
+        "question": "Do you need to check your email to confirm the pending AutoPay registration?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The AutoPay status shows as 'Waiting on email confirmation', meaning the setup will not be active until verified through your inbox.",
+        "whatTheAgentLoses": "Delegating this means the agent would need access to your personal email account to complete the final verification step.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is this the legitimate confirmation email for your account, and how should you finalize the setup?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The email from InvoiceCloud for the City of Portland requires clicking the \"Complete Registration\" button to officially activate AutoPay for the specified account number.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the account number and review the AutoPay terms and conditions before finalizing the agreement.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you see the message confirming that your AutoPay registration was successful?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing the 'Thank you for confirming AutoPay' message ensures that the standing order is active and future bills will be paid automatically.",
+        "whatTheAgentLoses": "You lose the peace of mind that comes from personally seeing the final confirmation screen guaranteeing your bills will be paid on time.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the EMI end date in the summary match the date in the confirmation email?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The summary screen shows an EMI end date of May 18, 2031, while the email states May 17, 2031, creating uncertainty about the actual final payment date.",
+        "whatTheAgentLoses": "You lose the chance to notice the one-day discrepancy in the end date and clarify exactly when the final payment will occur.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Manage the standing order",
+    "note": "8.1 to know what exists; then whichever move the state offers - 8.2, 8.3, or 8.4; 8.5 for as long as the order lives",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Review the existing orders",
+      "questions": [
+       {
+        "question": "Which category of automatic payments do you want to view?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides 'Live', 'Pending', and 'Completed' tabs to filter your payment mandates.",
+        "whatTheAgentLoses": "You lose the ability to choose whether to review your active, pending, or past payment setups.",
+        "kind": "decision",
+        "verify_form": "The mandates screen splits into Live, Pending, and Completed - check which tab the agent read before acting; what it believed about your orders depends on which list it looked at.",
+        "speak": "never"
+       },
+       {
+        "question": "Which of the active Google Playstore automatic payments do you want to inspect?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays two identical Google Playstore autopay entries for up to ₹199, differing only by whether a payment has been completed or is still pending.",
+        "whatTheAgentLoses": "You lose the ability to specify whether to review the established autopay mandate or the newly pending one.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is there an existing, conflicting autopay rule that needs to be deleted so you aren't charged twice?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Setting up a new 'pay full balance' rule while an old 'pay minimum' rule is still active can result in double deductions and overdrafts.",
+        "whatTheAgentLoses": "The situational awareness to clean up old, conflicting payment schedules before layering new ones on top.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the Pending tab list the request that the Live tab does not show?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The Live tab is currently displaying a 'Loading your Autopay' message, so tapping the Pending tab allows you to check for unconfirmed requests.",
+        "whatTheAgentLoses": "You lose the reassurance of personally verifying which of your payment requests are still pending approval.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the Live tab now list the active mandates after the pending check?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen is currently loading the pending requests tab, requiring a switch to the live tab to verify your active standing orders.",
+        "whatTheAgentLoses": "Delegating this step means you lose direct visibility into which of your automatic payments are currently active.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure the pending autopay request is actually visible on this screen?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The home screen is currently displayed rather than the profile screen, meaning the pending autopay status cannot be confirmed here.",
+        "whatTheAgentLoses": "The user loses the assurance that their autopay was successfully set up if the agent falsely confirms its status on the wrong screen.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "What are the exact terms and frequency of this automatic payment?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen states the payment is 'as and when required' up to ₹199, meaning the charges are variable and on-demand rather than a fixed monthly deduction.",
+        "whatTheAgentLoses": "You lose the ability to personally read the mandate's exact conditions and ensure you correctly understand how and when you will be charged.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the newly configured payment appear in your list of active standing orders after navigating back?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the details for a specific Google Play payment, requiring you to use the top-left back arrow to view the full list of armed payments.",
+        "whatTheAgentLoses": "You lose the reassurance of personally seeing the newly configured payment listed among your active standing orders.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the on-screen payment frequency match your intended schedule?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator expects a monthly deduction, but the on-screen mandate specifies the frequency as 'As presented' and 'As and when required'.",
+        "whatTheAgentLoses": "An agent might blindly accept the on-screen terms without realizing they contradict the intended monthly schedule, exposing you to unpredictable deductions.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are the details of this active SIP correct, and what actions can you take?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the active SIP parameters like amount, frequency, and next installment date, along with options to modify, pause, or delete.",
+        "whatTheAgentLoses": "The user loses the ability to verify the exact parameters of the active standing order and understand how to manage it later.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Edit the payment settings",
+      "questions": [
+       {
+        "question": "Do you review the current fixed amount of $150.00 before clicking 'EDIT' to change it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The automatic payment details screen displays the current fixed amount of $150.00, which must be unlocked via the 'EDIT' button before it can be changed.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the existing payment parameters before deciding which specific field to modify.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which account is currently set to fund this autopay, and how do I change it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The details pane displays the current 'Pay from' account alongside an 'Edit' link, which you must use to update the funding source.",
+        "whatTheAgentLoses": "You lose the opportunity to review the currently active funding source before deciding to modify the payment settings.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Change the payment method",
+      "questions": [
+       {
+        "question": "Did the pencil icon open the payment-method editor rather than the one-time MAKE A PAYMENT flow?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the pencil icon next to the Payment Method box ensures you are updating your funding source rather than accidentally initiating a one-time transaction with the MAKE A PAYMENT button.",
+        "whatTheAgentLoses": "You lose the ability to personally decide which specific bank account or credit card to designate as your primary funding source.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Cancel the autopay",
+      "questions": [
+       {
+        "question": "Do you have any active mandates currently listed in the Live tab?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed an empty state for active autopays, confirming that no current mandates exist and prompting a review of past cancellations.",
+        "whatTheAgentLoses": "You lose the opportunity to review your history of cancelled mandates to better understand your past payment configurations.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to pause or cancel this automatic payment?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers both 'Pause Autopay' and 'Cancel Autopay' options for the Google Play mandate, which have different long-term effects on your billing.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to temporarily suspend the payment or permanently revoke the authorization.",
+        "kind": "decision",
+        "verify_form": "Pause and Cancel sat side by side - check which the agent tapped; pause suspends and cancel revokes, and they end differently.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure you want to cancel this autopay mandate, and which bank account is it linked to?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The confirmation modal warns that canceling will stop all scheduled payments for the State Bank of India account ending in [last4].",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify exactly which bank account's scheduled payments are being permanently stopped.",
+        "kind": "decision",
+        "verify_form": "The warning named the exact bank account whose scheduled payments stop - check that the agent read it and confirmed the right mandate; the two on this screen differed by one line.",
+        "speak": "gate"
+       },
+       {
+        "question": "Did the bank confirm that the autopay cancellation was successful?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Verifying the HDFC Bank SMS notification ensures that the UPI mandate to Google Play was officially revoked at the institutional level.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of seeing the official bank confirmation that no further funds will be automatically deducted.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are the cancelled mandates logged in the Completed tab?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking the Completed tab confirms that the autopay was successfully cancelled and logged by the bank.",
+        "whatTheAgentLoses": "Delegating this step means you miss the direct visual confirmation that your autopay mandate was successfully cancelled and logged.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do the final cancellations match your initial goal to stop the automatic payments?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Confirming that the final screens show the two mandates as successfully canceled ensures the original objective of the task was actually fulfilled.",
+        "whatTheAgentLoses": "The user loses the direct reassurance of personally verifying that the specific mandates they wanted to stop are no longer active.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Keep the funding stocked",
+      "questions": [
+       {
+        "question": "Do you want to set up an automatic cash transfer to ensure funds are available?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that if funds are unavailable on the scheduled date, no investment will be made for that period.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to automate cash transfers to guarantee your investments occur as planned.",
+        "kind": "decision",
+        "verify_form": "The page warned that no investment happens without funds on the date - check whether the agent set up the feeding transfer; skipping it leaves the automation armed but starved.",
+        "speak": "never"
+       },
+       {
+        "question": "Which accounts are you transferring between, and what type of assets are you moving?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The setup page requires you to specify whether you are moving cash or positions, as well as selecting the exact funding source like JPMorgan Chase and the destination Roth IRA.",
+        "whatTheAgentLoses": "Delegating this step means you lose direct control over which specific assets are moved and which accounts are used to fund your IRA.",
+        "kind": "decision",
+        "verify_form": "The transfer form chose cash versus positions and the two accounts - check what the agent set; moving the wrong asset between the wrong accounts is a real trade, not a setting.",
+        "speak": "never"
+       },
+       {
+        "question": "How should you configure the recurring transfer to fund your automatic investment?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The setup form requires selecting the funding source, destination account, transfer amount, frequency, and a start date that ensures funds are available before the investment triggers.",
+        "whatTheAgentLoses": "Delegating this step means losing control over the exact timing and amount of cash pulled from your external bank account to fund your investments.",
+        "kind": "decision",
+        "verify_form": "The recurring transfer took a source, destination, amount, and start date - check each against the investment it feeds; a transfer landing after the buy date funds nothing.",
+        "speak": "never"
+       },
+       {
+        "question": "Are the transfer details correct, and do you agree to the terms to finalize the setup?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "You are authorizing a recurring $100 monthly transfer from your Chase account to your Roth IRA and must agree to the withdrawal terms to finalize it.",
+        "whatTheAgentLoses": "You lose the opportunity to review the final transfer details and read the specific terms before legally committing to the recurring transaction.",
+        "kind": "decision",
+        "verify_form": "The transfer's terms had an I-Agree and a Submit the video never clicks - check whether the agent actually committed it; an unclicked Submit is a transfer that does not exist.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Set up the price alert",
+    "note": "9.1, then 9.2 as deep as the tracking should bind; then 9.3, and 9.4 to prove the alert took",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Set up the search",
+      "questions": [
+       {
+        "question": "Are your flight search parameters correctly set for the price alert?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the search fields for origin, destination, and dates, which must be accurate to ensure the price alert tracks the correct trip.",
+        "whatTheAgentLoses": "You lose the ability to personally confirm that the price alert is being created for your specific travel itinerary.",
+        "kind": "intent-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Pick the itinerary",
+      "questions": [
+       {
+        "question": "Which destination should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed multiple Japanese cities with varying flight prices, including Tokyo for $527 and a significantly cheaper option for Osaka at $305.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to prioritize a specific city or take advantage of a cheaper alternative.",
+        "kind": "decision",
+        "verify_form": "The map listed Tokyo at 527 dollars with Osaka at 305 right below - check which destination the agent locked the alert to; trading a cheaper city for the one you meant is a judgment only you can make.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you investigate the price warning before deciding to track prices?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sidebar indicates that the current $527 price is high, so expanding the insights helps confirm if setting up a price alert is the right move.",
+        "whatTheAgentLoses": "You lose the chance to personally review the price trends and make an informed decision on whether to wait and track the flight.",
+        "kind": "decision",
+        "verify_form": "A prices-are-currently-high notice sat beside the flights - check whether the agent expanded it before arming the alert; whether high prices mean track-and-wait or book-now is your read, not its.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you change your travel dates to the cheaper option suggested in the popup before tracking prices?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A popup explicitly suggests traveling from October 31 to November 7 to lower the price to $152, which is significantly cheaper than the currently displayed $241 flight.",
+        "whatTheAgentLoses": "The user loses the opportunity to save money by flexibly adjusting their travel dates to a known cheaper option.",
+        "kind": "decision",
+        "verify_form": "A popup offered the same trip 89 dollars cheaper on shifted dates - check whether the agent dismissed it; moving your travel dates to save money was an option it closed for you.",
+        "speak": "never"
+       },
+       {
+        "question": "Which departing flight option should you select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed multiple flight options varying by price, travel time, layovers, and carbon emissions, such as a $[address] Airlines flight versus a $[address] Pacific flight.",
+        "whatTheAgentLoses": "The user loses the ability to personally weigh trade-offs between cost, convenience, and environmental impact when choosing which specific flight itinerary to track.",
+        "kind": "decision",
+        "verify_form": "The departing list traded price against duration, stops, and airline - check which flight the agent bound the alert to; it froze those trade-offs on your behalf.",
+        "speak": "never"
+       },
+       {
+        "question": "Which returning flight option should you select to complete the itinerary for the price alert?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows multiple returning flight options with different times, airlines, and prices, which determines the specific itinerary the alert will track.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred return flight schedule and airline for the price alert.",
+        "kind": "decision",
+        "verify_form": "The returning flights differed the same way - check which one the agent picked; the alert tracks exactly the itinerary it fixed.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Choose the tracking scope",
+      "questions": [
+       {
+        "question": "Is this the correct itinerary to track, and do you accept the updated total price of $475?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The summary page displays a new lowest total price of $475 for the Davao City to Tokyo flights, which differs from the $531 shown on previous screens.",
+        "whatTheAgentLoses": "You lose the chance to review the updated price and confirm that this exact flight itinerary is the one you want to track.",
+        "kind": "decision",
+        "verify_form": "The summary re-priced the trip at 475 after screens that said 531 - check whether the agent accepted the new total and this exact itinerary; tracking the wrong pair is a quiet miss.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to track all available flights for this route or just this specific itinerary?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The confirmation screen includes a toggle to 'Add all available flights,' which determines whether you receive alerts for just the selected Philippine Airlines and Cathay Pacific itinerary or all options for those dates.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to keep your alerts narrowly focused on a preferred itinerary or broad enough to catch deals on alternative flights.",
+        "kind": "decision",
+        "verify_form": "A toggle offered alerts on every flight for the route, not just yours - check where the agent left it; broad alerts catch deals, narrow ones stay quiet, and that trade is yours.",
+        "speak": "never"
+       },
+       {
+        "question": "Do the prices shown on the final summary page match the amounts from your previous selections?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The final summary page displays a lowest total price of $475, despite the selected flights being listed as $531 round trip on the previous screens.",
+        "whatTheAgentLoses": "You lose the chance to notice and investigate a significant price discrepancy before completing the setup.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Confirm the subscription",
+      "questions": [
+       {
+        "question": "Does the contact method selected for the alert require verification before it can actually receive messages?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the email or phone number has an unverified status, the system will save the alert rule but silently fail to deliver the notification when the threshold is met.",
+        "whatTheAgentLoses": "The awareness to check the health of the delivery channel, ensuring the alert doesn't just fire into the void.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do the dates on the confirmation popup match the dates you originally entered?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The subscription confirmation popup listed a return date of December 4, which did not match the initial search parameter of December 3.",
+        "whatTheAgentLoses": "You lose the ability to catch a date discrepancy before finalizing the alert, potentially resulting in monitoring the wrong timeframe.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should you view the active tracked prices or just close the confirmation banner?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The screen displays a confirmation banner with a 'View' link to check the newly created alert and an 'x' button to simply dismiss it.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to immediately review the active tracked prices to ensure the alert parameters are exactly as intended.",
+        "kind": "decision",
+        "verify_form": "The banner offered View or dismiss - check which the agent did; closing it skipped the one screen that shows the alert as it was actually saved.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

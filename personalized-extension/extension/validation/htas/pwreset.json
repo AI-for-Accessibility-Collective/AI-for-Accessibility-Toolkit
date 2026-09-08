@@ -1,0 +1,2749 @@
+{
+ "task": "reset a password or recover access to an online account (Gmail, Amazon, Facebook, any web login): start from the sign-in page's forgot-password link, prove identity through a second channel — email link, SMS code, or backup codes — set a new password, sign in; complete when signed in, or a password-changed confirmation is on screen. Surface pinned: the web or in-app login flow of an online service — NOT a phone's device-unlock, factory-reset, or activation-lock flow. Variants: phone unlock or activation-lock bypass, changing a password you already know, and setting up 2FA do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Regain account access",
+  "note": "do 1, then 2, then 3; 4 picks the proof channel and 5 runs it; a lost channel at 4.3 or a dead one after 5.7 drops the flow into 6, and 6.3 can loop back into 4 with a fresh contact; 7 where the platform offers a new password - some code paths skip it entirely; finish with 8. 6 is tried one option at a time, in the order the platform offers them",
+  "children": [
+   {
+    "id": "1",
+    "label": "Assess the lockout",
+    "note": "1.1 first; 1.2 and 1.3 where a credential might still be at hand - a found password ends the task with no reset at all; 1.4 when the linked contact is in doubt",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Read the blocking screen",
+      "questions": [
+       {
+        "question": "Are you trying to unlock an Activation Lock instead of resetting an online account password?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'iPhone Locked to Owner' Activation Lock, which is explicitly excluded from the task's scope.",
+        "whatTheAgentLoses": "The user loses the ability to stop the agent from wasting time on an unauthorized or out-of-scope device unlock.",
+        "kind": "intent-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are you currently blocked by a prompt asking for your Apple ID password to turn off Find My and Activation Lock?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Identifying the specific prompt blocking your access determines whether you should use the immediate 'Forgot Password?' link or dismiss it to initiate a general reset through the settings menu.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to handle the specific Activation Lock prompt directly or bypass it to perform a standard account recovery.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did the system inform you that the account is suspended or disabled rather than just locked?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The login or recovery attempt returns a message that the account was disabled for policy violations, meaning a simple password reset won't work.",
+        "whatTheAgentLoses": "The agent might endlessly search for a reset flow that doesn't exist for banned accounts, instead of pivoting to an appeal process.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Try remembered credentials",
+      "questions": [
+       {
+        "question": "Do you try a second guess for the Apple ID?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "An 'Incorrect Apple ID or Password' alert appeared after you submitted the second guess, confirming that these credentials also failed to unlock the device.",
+        "whatTheAgentLoses": "You lose the opportunity to draw upon your personal memory to guess which alternative email addresses might be associated with the locked account.",
+        "kind": "decision",
+        "verify_form": "The agent burned another guess on the lock screen - check what it tried; your memory of likely addresses is the only source of good guesses, and failed tries can trigger lockouts.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you know the password for this account, or do you need to use the forgot password link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the username entered but an empty password field, marking the point where you must decide whether to attempt a login or start the reset process.",
+        "whatTheAgentLoses": "The user loses the chance to try a remembered password before committing to the account recovery flow.",
+        "kind": "decision",
+        "verify_form": "The agent went straight to the reset without a login attempt - check that; if you half-remember a password, one try costs nothing and skips the whole ceremony.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you proceed after a failed login attempt?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a failed login attempt, requiring a decision on whether to retry the password or initiate the recovery process.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to try another known password or immediately start the account recovery process.",
+        "kind": "decision",
+        "verify_form": "After the failed login the agent chose retry or recover - check which; another guess from your memory may beat a full reset.",
+        "speak": "never"
+       },
+       {
+        "question": "What password should you try entering before clicking the forgot password link?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sign-in screen displays a password input field alongside a 'Forgot your password?' link, allowing an attempt to log in before starting the reset process.",
+        "whatTheAgentLoses": "You lose the chance to test a potentially correct password from memory before committing to a full account recovery.",
+        "kind": "decision",
+        "verify_form": "The agent may have burned a login attempt first - check what it tried; candidate passwords live in your memory, and failed tries can lock the account harder.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Look up the saved password",
+      "questions": [
+       {
+        "question": "Should you open the Google Account settings for this specific profile?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile dialog displays the current user '[email]' alongside options to add or manage other accounts, making it necessary to select 'Google Account' to access the security settings for this specific profile.",
+        "whatTheAgentLoses": "The user loses the opportunity to visually verify which specific email address is currently active before proceeding to the account's security settings.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Where do you tap to access your saved passwords?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Password Manager' option under the 'Signing in to other sites' section that contains saved credentials.",
+        "whatTheAgentLoses": "The user loses the opportunity to retrieve an existing password from their account instead of going through a full reset process.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to use your device screen lock to view the saved passwords for Instagram?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The password manager lists two saved accounts for Instagram and requires device authentication to reveal them.",
+        "whatTheAgentLoses": "The user loses the privacy of their password vault and must share their device unlock credentials with the agent.",
+        "kind": "decision",
+        "verify_form": "The agent hit the device screen-lock gate on the password vault - that unlock is yours alone; confirm you performed it yourself rather than sharing the passcode.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Which account's password should I reveal or copy?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple saved accounts ('[handle]' and '[handle]') with options to reveal or copy their passwords.",
+        "whatTheAgentLoses": "The user loses control over which account's credentials are accessed or copied, risking privacy exposure or incorrect login attempts.",
+        "kind": "decision",
+        "verify_form": "Two saved accounts sit in the vault - check which one's password the agent revealed or copied; the wrong one leaks a credential and opens the wrong account.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do the different screens showing your saved passwords agree with each other?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Google Account Security page stated there was only one password saved, but the Password Manager displayed two distinct Instagram accounts.",
+        "whatTheAgentLoses": "You lose the chance to notice and investigate discrepancies in your account's security dashboard.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Check the linked contact",
+      "questions": [
+       {
+        "question": "Are you recovering the password for the same email address shown on the account profile?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Instagram profile displayed '[email]', but the saved passwords search was for a different address, '[email]'.",
+        "whatTheAgentLoses": "The user loses the certainty that the agent is recovering the intended account rather than an unrelated one.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which email address is associated with this account?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Personal information' screen displays the specific email address linked to the account, which dictates where the recovery code will be sent.",
+        "whatTheAgentLoses": "The user loses visibility into which of their personal email addresses is currently linked to the account.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you view the personal information associated with your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The profile page features an 'Edit Profile' button that serves as the entry point to verify the contact details linked to your recovered account.",
+        "whatTheAgentLoses": "You lose privacy over your sensitive account details, as the agent would gain visibility into your linked email address, phone number, and date of birth.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Reach the reset entry",
+    "note": "2.1, then 2.2 and 2.3 when starting outside the product; 2.4 for the login route; 2.5 then 2.6 for the signed-in route, with 2.7 when the wall or a live session blocks it; every route ends at 2.8",
+    "questions": [
+     {
+      "question": "Should you use the Facebook app to reset your password if it shows you are already logged in?",
+      "cluster": "approve",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen displays a logged-in state with 'What's on your mind?', meaning you cannot access the standard forgot-password link without logging out first.",
+      "whatTheAgentLoses": "The user loses the ability to choose whether to log out of their active app session or use a separate web browser to complete the reset.",
+      "kind": "decision",
+      "verify_form": "The agent had to choose - log the app out or run the reset in a separate browser; check which it did, because logging out throws away a live session.",
+      "speak": "on-event"
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Pick the browsing surface",
+      "questions": [
+       {
+        "question": "Should you use a second device to navigate to the Apple ID website and begin the recovery process?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen shows the Apple ID portal on a second iPhone, which offers an alternative way to initiate recovery if the primary device is unavailable.",
+        "whatTheAgentLoses": "The user loses the ability to decide which specific secondary device to use for securely initiating the account recovery.",
+        "kind": "decision",
+        "verify_form": "The agent chose to continue recovery on a second device - check which one; whether a helper device is available and safe to use is yours to say.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you continue the support process in the browser or open the Instagram app?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a pop-up suggesting that using the Instagram app provides a better support experience, offering buttons to either open the app or cancel.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to switch to the mobile app's interface or remain in the web browser for the account recovery process.",
+        "kind": "decision",
+        "verify_form": "The agent answered the continue-in-app popup - check whether it stayed in the browser or switched; the two surfaces expose different recovery options.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to use an incognito tab to avoid tracking previous data?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Chrome menu shows a 'New Incognito tab' option, which lets you start the password reset without relying on saved cookies or sessions.",
+        "whatTheAgentLoses": "You lose the choice to force the agent into a clean, untracked browsing environment for the recovery process.",
+        "kind": "decision",
+        "verify_form": "The agent decided whether to work in a private window - check; incognito drops saved sessions and autofill, which changes what every recovery page sees.",
+        "speak": "never"
+       },
+       {
+        "question": "Which app do you want to open to start the password reset?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple applications, so you must select the specific app for the account you want to recover.",
+        "whatTheAgentLoses": "The user loses the ability to specify which account's password needs to be reset if the agent chooses the wrong app.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you use the provided 'Recover your account' button on this screen or switch to a web browser?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Account Deleted' message with a direct recovery button, but starting from a web browser might better reflect a typical recovery scenario.",
+        "whatTheAgentLoses": "The user loses the choice to bypass the app's convenient recovery button in favor of a standard web-based approach.",
+        "kind": "decision",
+        "verify_form": "The agent picked where to run the recovery - the in-app button or a fresh browser; check which, since the button only exists on that one screen.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you completing the password reset process within an incognito window?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a 'You've gone Incognito' notice, indicating that browsing history, cookies, and form data will not be saved.",
+        "whatTheAgentLoses": "The user loses the ability to retain their login session and cookies after closing the browser.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Search for the service",
+      "questions": [
+       {
+        "question": "Which search result should you click to find the official recovery steps?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top result is from the official facebook.com domain and specifically addresses recovering an account without access to the original email or phone number.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the selected link leads to an official, safe domain rather than a third-party scam or phishing site.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What URL should you enter to reach the service's sign-in page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a new Incognito tab, requiring a specific web address to begin the recovery process.",
+        "whatTheAgentLoses": "The user loses the ability to specify exactly which online service or account they want to recover.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "How do you initiate the web-based part of the password reset process?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a generic Google search page, meaning you must actively navigate to or search for the specific service's sign-in page.",
+        "whatTheAgentLoses": "The user loses the ability to specify exactly which online service's account they are trying to recover.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which search result should you click to access the official Apple ID login page?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first result points directly to the Apple ID management portal, while the others lead to support articles that require extra clicks to find the actual login page.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the direct login portal rather than getting delayed or lost in support documentation.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which search result should you select to reach the official login page?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing the correct, official link from the search results ensures you avoid phishing sites and reach the actual service.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the authenticity of the search result before navigating to the site.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Work through the help articles",
+      "questions": [
+       {
+        "question": "Should you try the recommended 'hacked' recovery link first, or look at the alternative steps?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page explicitly suggests trying the facebook.com/hacked link first before attempting the alternative steps listed below it.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to use the primary recommended recovery tool or explore the alternative manual steps.",
+        "kind": "decision",
+        "verify_form": "The agent chose between the recommended hacked-account link and the alternative steps - check which door it took; the hacked route flags your account for stricter review.",
+        "speak": "never"
+       },
+       {
+        "question": "Should I report your account as compromised to proceed with the recovery?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a specific recovery path for accounts that may have been compromised by another person or a virus.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to officially flag your account as compromised, which could trigger stricter security measures.",
+        "kind": "decision",
+        "verify_form": "The agent clicked the my-account-is-compromised button - confirm you wanted the account formally flagged; that can trigger extra security measures on it.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to change the language of the help page?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The help page initially loaded with Hindi text like 'मैं लॉग इन नहीं कर सकता', so you must decide whether to switch the language to better understand the recovery instructions.",
+        "whatTheAgentLoses": "Delegating this means the agent might proceed in the default language or choose a translation you aren't comfortable with, making it harder for you to follow the recovery steps.",
+        "kind": "decision",
+        "verify_form": "The help page loaded in another language and the agent picked one - check the choice; you are the one who has to read the instructions it leads to.",
+        "speak": "never"
+       },
+       {
+        "question": "Which troubleshooting option do you select to recover your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple troubleshooting options, and selecting the 'hacked' option is the specific workaround needed to access the recovery flow even if the account wasn't actually hacked.",
+        "whatTheAgentLoses": "You lose the opportunity to learn the unintuitive workaround of selecting the hacked account option to recover an unhacked account.",
+        "kind": "decision",
+        "verify_form": "The agent picked a help-center article to enter recovery through - check which; the unintuitive hacked-account door is sometimes the only one that works even when nothing was hacked.",
+        "speak": "never"
+       },
+       {
+        "question": "Which link should you tap to start the account recovery process?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a help section for hacked accounts, and you must select the specific 'visit this page' link to actually begin the recovery flow.",
+        "whatTheAgentLoses": "You lose the knowledge of exactly where the platform locates its account recovery link within the security help text.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you follow the standard reset instructions or tap the alternative link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides standard numbered steps for resetting the password, but also offers a 'visit this page' link for alternative recovery options.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to attempt the standard recovery method or escalate immediately to the alternative recovery page.",
+        "kind": "decision",
+        "verify_form": "The agent either followed the numbered reset steps or escalated through the visit-this-page link - check which; escalation skips channels you may still hold.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you want to find account recovery information on this help page?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers both a 'Describe your issue' search box and a 'Browse Help topics' section, giving you different ways to locate the recovery steps.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to use specific search terms or browse the categorized topics to find the recovery instructions.",
+        "kind": "decision",
+        "verify_form": "The agent chose to search the help center rather than browse its topics - check the query it typed actually reached the recovery article and not a lookalike.",
+        "speak": "never"
+       },
+       {
+        "question": "Which help article should you select to recover your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct article from the list ensures you find the exact steps for account recovery rather than unrelated topics like deleting activity.",
+        "whatTheAgentLoses": "You lose the ability to review the available support topics and verify the agent selects the most appropriate guide for your specific situation.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Did you select the appropriate option from the Help Center to initiate the password reset?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented multiple troubleshooting options, and choosing the correct one is necessary to access the actual password reset flow.",
+        "whatTheAgentLoses": "The user loses the opportunity to specify their exact login problem and choose the most relevant recovery path.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which troubleshooting option do you select under the 'Password Help' section?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple specific recovery scenarios, such as hitting a reset limit or losing access to contact methods, which determine the correct recovery path.",
+        "whatTheAgentLoses": "The user loses the ability to specify their exact account constraint, potentially causing the agent to attempt an impossible recovery method.",
+        "kind": "decision",
+        "verify_form": "The agent picked the scenario article - reset limit, lost contacts, or plain trouble; check it matches the constraint you actually have.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Open the sign-in page",
+      "questions": [
+       {
+        "question": "How do you proceed to the login screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage prominently displays sign-up options and app downloads, so you must specifically locate and select the 'Log In' link to begin the recovery process.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent correctly navigates to the existing user login rather than accidentally starting a new account registration.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Open the account settings",
+      "questions": [
+       {
+        "question": "Which security option do you select to change your password?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the 'Password' option from the Security menu directs you to the password reset flow rather than other settings like two-factor authentication.",
+        "whatTheAgentLoses": "You lose the opportunity to audit your overall account security, such as checking recent login activity or active sessions, while navigating this menu.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you tap the profile banner for [name] to access the Apple ID settings?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the main Settings menu with the profile banner for '[name]', which serves as the entry point for managing Apple ID and password settings.",
+        "whatTheAgentLoses": "The user loses the ability to confirm that the password reset is being initiated for the correct Apple ID account.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which option do you tap to access your password settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must select 'Password & Security' from the Apple ID menu to reach the password reset flow rather than your personal or payment details.",
+        "whatTheAgentLoses": "You lose the opportunity to learn exactly where your account's security settings are located within the system menus.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Hit the password wall",
+      "questions": [
+       {
+        "question": "Does this screen require the current password to make a change?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly asks for the 'Current password', meaning you must back out and find a 'forgot password' link if you do not know it.",
+        "whatTheAgentLoses": "The user loses the chance to recover their account if the agent gets stuck trying to fill out this form instead of pivoting to the actual reset flow.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "How do you proceed if you don't know your current password?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The change password form requires the current password but includes a 'Forgot your password?' link for recovery.",
+        "whatTheAgentLoses": "The user loses the chance to try guessing their current password before initiating the recovery flow.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Sign out of the session",
+      "questions": [
+       {
+        "question": "How should you prepare this device before starting the reset process?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Signing out of the active Apple ID ensures the current account does not interfere with the recovery steps for the target account.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to disconnect your personal device from its primary account to use it as a helper.",
+        "kind": "decision",
+        "verify_form": "The agent signed a device out of its own account to use it as a helper - confirm you wanted that device disconnected; sign-out touches its synced data.",
+        "speak": "never"
+       },
+       {
+        "question": "How do you exit the current session to reach the sign-in page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Settings menu displays a 'Log out' option that must be selected to end the active session and access the forgotten password link.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to retrieve the existing password from a password manager or proceed with a full logout and reset.",
+        "kind": "decision",
+        "verify_form": "The agent logged the session out to reach the reset entry - confirm that trade; the live session was your last working way in if the reset goes wrong.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you remove the saved account to force a manual login?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog warns that removing the account means you must enter your credentials next time, which clears the saved state so you can access the forgot-password link.",
+        "whatTheAgentLoses": "You lose the choice of whether to permanently delete your saved login profile from the device to start the recovery process.",
+        "kind": "decision",
+        "verify_form": "The agent removed the saved login profile from the device - confirm you wanted that; the saved state was a working way in, and it is gone now.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to tap 'Sign Out' at the bottom of the Apple ID settings?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Apple ID settings with a 'Sign Out' button, which can be used to trigger a password prompt and access reset options.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to sign out of their Apple ID, potentially affecting their synced iCloud data.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Click the forgot link",
+      "questions": [
+       {
+        "question": "Which option should you select to reset your forgotten password?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen groups account creation and recovery under the 'Don't have an Apple ID or forgot it?' link, requiring a specific choice to start the reset flow.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent correctly navigates the menu to recover your existing account rather than attempting to create a new one.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which link should you tap to initiate the password reset?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Instagram login prompt with a 'Forgotten Password' link, which is the necessary starting point for the task.",
+        "whatTheAgentLoses": "The user loses the ability to confirm they are initiating a password reset for the correct service.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you enter your email address before clicking 'Forgot your password?'",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen may require the email field to be populated so the system knows which account to target when the forgot password link is clicked.",
+        "whatTheAgentLoses": "You lose the ability to verify exactly which email address is being submitted for the password recovery request.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Where do you find the verification code needed to proceed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen currently shows the 'Enter your password' step to verify your identity, meaning you must first decide how to authenticate before accessing any recovery codes.",
+        "whatTheAgentLoses": "You lose the ability to keep your secondary email inbox private and control which recovery method is utilized.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Identify the account",
+    "note": "3.1 then 3.2 for the normal case; 3.3 when the identifier itself is forgotten, looping back into 3.2 with each candidate; 3.4 after every failed search; 3.5 when the search returns more than one account; 3.6 when the searchable identifiers are exhausted",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Choose the identifier kind",
+      "questions": [
+       {
+        "question": "Which option should you choose to identify your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides multiple ways to locate your account, such as proceeding with the entered username, logging in with Facebook, or seeking additional help.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to search for your account using the entered username or a linked social media profile.",
+        "kind": "decision",
+        "verify_form": "The agent chose how to identify the account - username search, a linked login, or more help; check the route matches what you actually still control.",
+        "speak": "never"
+       },
+       {
+        "question": "Which identifier will you use to locate your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen allows you to look up your account using either a username, phone number, or email address.",
+        "whatTheAgentLoses": "You lose the choice of which specific piece of personal contact information is used to initiate the recovery process.",
+        "kind": "decision",
+        "verify_form": "The agent chose which identifier to search with - username, email, or phone; check it used one you still control, since the choice steers where the code goes.",
+        "speak": "gate"
+       },
+       {
+        "question": "Which contact method should you enter to receive the login link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires an email, phone number, or username to locate the account and send the recovery link.",
+        "whatTheAgentLoses": "You lose the ability to decide whether the recovery link is sent to your email or your phone.",
+        "kind": "decision",
+        "verify_form": "The agent's identifier choice decides where the login link lands - check whether it aimed at your email or your phone, and that you can open that one.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you use your phone number with its country code to locate your account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for a username, email, or mobile number, and including the exact country code ensures the system correctly identifies your specific account.",
+        "whatTheAgentLoses": "You lose the opportunity to choose which specific contact method or phone number is best to use for the account lookup.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which contact method should you use to search for your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to search by email, full name, or mobile number to locate the account.",
+        "whatTheAgentLoses": "The user loses the ability to choose which personal identifier is used to look up their account.",
+        "kind": "decision",
+        "verify_form": "The agent chose the identifier used to look you up - email, full name, or number; check it is one that actually finds YOUR account.",
+        "speak": "never"
+       },
+       {
+        "question": "Did tapping the alternative search link actually change the search method, or did the screen stay the same?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The visual evidence shows your finger merely resting on the screen, contradicting the claim that you clicked a link and triggered a new prompt to enter an email or full name.",
+        "whatTheAgentLoses": "The user loses an accurate record of the recovery steps taken, which could cause an automated agent to hallucinate progress and fail to complete the account lookup.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Should I identify my account using my email address or my mobile number?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides an email input field alongside a link to search by mobile number instead, requiring a choice of identifier.",
+        "whatTheAgentLoses": "The user loses control over which personal identifier is used to look up and initiate recovery for their account.",
+        "kind": "decision",
+        "verify_form": "The agent chose email or mobile to look the account up - check which; the lookup channel is also where the recovery message goes.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you consent to receiving future WhatsApp and SMS notifications by entering your mobile number?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen states that entering your mobile number to find your account means you may receive future notifications from the platform for security and login purposes.",
+        "whatTheAgentLoses": "The user loses the opportunity to opt out of or be aware of future automated messages sent to their personal phone number.",
+        "kind": "decision",
+        "verify_form": "Entering a number here consents to WhatsApp and SMS security notifications - check whether the agent used your number knowing that; the consent is yours to give.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Enter the identifier",
+      "questions": [
+       {
+        "question": "Which email address should you try as your Apple ID?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen requires an Apple ID, and testing known email addresses helps identify the correct account to recover.",
+        "whatTheAgentLoses": "The user loses the ability to test their personal email addresses to find the correct account.",
+        "kind": "decision",
+        "verify_form": "The agent tried an email as the Apple ID - check which one; the candidate list lives in your memory, not on the screen.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure you want to attempt a password reset for this specific email address?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires an Apple ID and a CAPTCHA to locate the account and determine if recovery is possible.",
+        "whatTheAgentLoses": "The user loses the ability to prevent the agent from guessing incorrect email addresses and potentially triggering security lockouts.",
+        "kind": "decision",
+        "verify_form": "The agent submitted a recovery attempt for a guessed address - check which; repeated wrong guesses can trip security lockouts you did not sign up for.",
+        "speak": "never"
+       },
+       {
+        "question": "Did the account search accept your username despite the instructions asking for an email or phone number?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen instructed you to enter a mobile number or email, but successfully returned account results when you entered a username instead.",
+        "whatTheAgentLoses": "An agent might get stuck if it strictly follows the on-screen instructions and doesn't realize a username is also accepted.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you enter the correct email or username for the account you want to recover?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the account identifier ensures the system pulls up the correct profile and sends recovery options to the right place.",
+        "whatTheAgentLoses": "The user loses the ability to catch a typo that might initiate a password reset for a stranger's account.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which email address or phone number should you enter to identify the account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sign-in page displays an empty input field, requiring you to specify exactly which account you are trying to access or recover.",
+        "whatTheAgentLoses": "Delegating this step means the agent might enter an incorrect or secondary email address, potentially recovering the wrong account.",
+        "kind": "decision",
+        "verify_form": "The agent typed an identifier into the empty field - check it is the address or number for the account you meant, not a secondary one.",
+        "speak": "never"
+       },
+       {
+        "question": "Which account identifiers should you provide to start the recovery process?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The recovery form requires at least one primary identifier, such as a username or Riot ID, and offers optional fields like date of birth to help locate the account.",
+        "whatTheAgentLoses": "Delegating this step means the agent decides which personal identifiers and optional gaming history details to submit to the recovery tool.",
+        "kind": "decision",
+        "verify_form": "The agent gave the recovery tool a set of identifiers - check which ones; optional extras like a birth date help only if they match what is registered.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you enter your mobile number before tapping Search?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for a mobile number to locate the account, so submitting an empty form will not work.",
+        "whatTheAgentLoses": "The user loses control over whether to search for their account using their phone number or their email address.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did you use a real email address when you originally created this account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that if a real email address was not provided during account creation, the system cannot send a password reset email.",
+        "whatTheAgentLoses": "The agent might get stuck waiting for a recovery email that will never arrive because the account was registered with a fake address.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the system warn you that it cannot send a recovery email if you originally registered with a fake address?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that the recovery email will only be sent if a real email address was provided during account creation, which might not be the case for gaming accounts.",
+        "whatTheAgentLoses": "The user loses the realization that their recovery attempt will silently fail because they never linked a valid email address to the account.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is the 'Send Recovery Link' button visually grayed out and disabled, indicating a formatting error in the input?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Forms often disable the submit button without showing an explicit error message until the input matches the expected format (like a valid email address).",
+        "whatTheAgentLoses": "The user loses the ability to realize why the agent is stuck on the form, as there is no explicit error text to read out, only a visual state change.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the page reload and clear your entered username without displaying any error or confirmation message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Web forms sometimes fail silently due to expired sessions or network drops, leaving no visual cue that the password reset request was completely ignored.",
+        "whatTheAgentLoses": "The user loses the ability to realize the request failed and retry, while the agent might falsely assume success and get stuck waiting for an email that will never arrive.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is the username or email field already pre-filled by the browser with a different account's credentials?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Browsers and password managers often auto-fill login fields on recovery pages, which could lead to resetting the wrong account if not explicitly cleared.",
+        "whatTheAgentLoses": "The agent might blindly submit the auto-filled credentials instead of the specific account the user requested, initiating recovery for the wrong account.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the partially masked username on the recovery screen match the one you entered?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming that the masked username matches the one you typed ensures you are resetting the password for the correct account.",
+        "whatTheAgentLoses": "You lose the chance to catch a typo in the username before sending a recovery code to the wrong person.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Recover the identifier",
+      "note": "whichever source the person still holds: 3.3.1 off the lock screen, 3.3.2 in an old inbox, 3.3.3 through a friend's account, 3.3.4 through the platform's lookup form; each candidate goes back into 3.2",
+      "children": [
+       {
+        "id": "3.3.1",
+        "label": "Read the masked hints",
+        "questions": [
+         {
+          "question": "Which Apple ID should you enter to attempt unlocking the device?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a specific hint ('•••••37') for the required Apple ID, and entering a different one results in an error.",
+          "whatTheAgentLoses": "The user loses the ability to ensure the agent uses the specific account tied to the device's activation lock.",
+          "kind": "decision",
+          "verify_form": "The agent picked an Apple ID to match the masked trailing-digits hint - check what it entered; only you know which of your emails or numbers ends that way.",
+          "speak": "never"
+         },
+         {
+          "question": "Which account do the masked hints indicate you need to recover?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The masked email addresses and phone numbers shown on the lock screen are the only clues to identifying which specific account needs a password reset.",
+          "whatTheAgentLoses": "An agent cannot recognize which of your personal email addresses or phone numbers matches the masked hints on the screen.",
+          "kind": "decision",
+          "verify_form": "The agent matched the masked hints to one of your accounts - check its pick; only you can recognize your own identifier under the mask.",
+          "speak": "never"
+         },
+         {
+          "question": "What phone number or email should you enter as your Apple ID to start the recovery process?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "You must determine which of your personal identifiers matches the previously seen masked hint ending in '37' to successfully proceed.",
+          "whatTheAgentLoses": "You lose the ability to use your personal memory to deduce which specific phone number or email was originally used to create the account.",
+          "kind": "decision",
+          "verify_form": "The agent entered an identifier deduced from the hint - check the exact number or address; a wrong deduction resets nothing, or the wrong account.",
+          "speak": "never"
+         },
+         {
+          "question": "Did you enter the complete phone number that matches the account hint?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The Apple ID field on the laptop displays an incomplete phone number that is missing the trailing digits required to match the hint.",
+          "whatTheAgentLoses": "The user loses the chance to recover their account because the agent attempts the reset using an incomplete and incorrect phone number.",
+          "kind": "state-check",
+          "speak": "if-wrong"
+         }
+        ]
+       },
+       {
+        "id": "3.3.2",
+        "label": "Search the old mail",
+        "questions": [
+         {
+          "question": "How should I determine which email address you used for this account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a search through an email inbox for past verification messages to confirm the correct account address.",
+          "whatTheAgentLoses": "The user loses the privacy of their email inbox and the ability to keep their account associations undisclosed.",
+          "kind": "decision",
+          "verify_form": "The agent went hunting through an inbox for old verification mail - check which inbox and what it opened; that is your private mail, and you know where old account mail lives.",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "3.3.3",
+        "label": "Ask the social graph",
+        "questions": [
+         {
+          "question": "How do you find your username when you don't remember the email or phone number associated with the account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Find your account' screen requires an exact identifier to proceed, halting the recovery process until you can look it up.",
+          "whatTheAgentLoses": "An agent confined to the primary device cannot access a secondary phone or a separate account to look up your forgotten username.",
+          "kind": "decision",
+          "verify_form": "The agent had to source your username from outside the flow - check where it looked; a friend's account or a second device is yours to offer, not the agent's to take.",
+          "speak": "never"
+         },
+         {
+          "question": "How do you find the profile of a friend who might be following the lost account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The second phone shows a screen headed '001ankitkr' with an account-switch confirmation, indicating a switch to another account to help locate the lost one.",
+          "whatTheAgentLoses": "The user loses the discretion to choose which friend's account to switch to in order to find the lost account.",
+          "kind": "decision",
+          "verify_form": "The agent used a particular friend's account to hunt for yours - check whose; only you know which friend follows the lost account.",
+          "speak": "never"
+         },
+         {
+          "question": "Where on the friend's profile should you look for the lost username?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen showed only the header '001ankitkr' over a blank, still-loading page, meaning you must wait for the profile to load before selecting a list to search.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to search through the friend's followers or following list to find their forgotten username.",
+          "kind": "decision",
+          "verify_form": "The agent searched one of the friend's lists - check whether followers or following actually contains the lost account; you know which way the relationship runs.",
+          "speak": "never"
+         },
+         {
+          "question": "What is your exact forgotten username?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "You must identify your specific username from the followers list on the second phone to enter it into the recovery screen.",
+          "whatTheAgentLoses": "You lose the ability to leverage a friend's device and social connections to look up forgotten account details out-of-band.",
+          "kind": "decision",
+          "verify_form": "The agent read a handle off the list as YOURS - verify it character by character; a lookalike handle recovers a stranger's account.",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "3.3.4",
+        "label": "Fill the lookup form",
+        "questions": [
+         {
+          "question": "What information should you enter to look up your Apple ID?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The recovery page requires your first name, last name, and a potential email address to locate your specific account.",
+          "whatTheAgentLoses": "Delegating this step requires sharing your exact registered name and potential email addresses with the agent.",
+          "kind": "decision",
+          "verify_form": "The agent filled the lookup form with a first name, last name and email - check the values; they must be the exact registered ones, and only you know them.",
+          "speak": "never"
+         },
+         {
+          "question": "Do you know your username, or should I click 'Forgot username?'",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The sign-in page requires a username, email, or mobile number to proceed, but provides a 'Forgot username?' link if those are unknown.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to try an alternate email or phone number versus initiating a dedicated username recovery process.",
+          "kind": "decision",
+          "verify_form": "The agent either supplied a username or opened the username-recovery detour - check which; the detour costs time you skip if any identifier is remembered.",
+          "speak": "never"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Handle the failed search",
+      "questions": [
+       {
+        "question": "What should you do next since the email is not a valid Apple ID?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed an error that the entered Apple ID is invalid or unsupported.",
+        "whatTheAgentLoses": "The user loses the ability to recover their account if the agent abandons the task instead of using the lookup tool.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did the account lookup succeed?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a 'No Apple ID found' error, meaning you cannot initiate the reset until you provide the correct account information.",
+        "whatTheAgentLoses": "You lose the ability to realize the provided information is wrong and brainstorm alternative emails or usernames to try.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are you aware that an error interrupted your password reset attempt, and do you know what it says before dismissing it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "An error pop-up is blocking the password reset form, requiring you to acknowledge it before you can try entering your username or email again.",
+        "whatTheAgentLoses": "The user loses the awareness that a system error occurred during their password reset attempt.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are you blocked by a 'Too many attempts' error that requires you to wait before trying again?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The system has temporarily locked the recovery feature due to multiple failed guesses, meaning you must pause the task.",
+        "whatTheAgentLoses": "The agent might continuously retry and trigger a permanent security lockout instead of waiting the required time.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did the automated recovery tool fail with an 'UNKNOWN_ERROR', forcing you to submit a manual support ticket?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly shows the automated tool failed and provides a 'SUBMIT A TICKET' button as the only way forward.",
+        "whatTheAgentLoses": "The user loses the ability to realize the automated path is broken and that they must pivot to a completely different manual ticket flow to recover the account.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did the account search fail with a generic 'something went wrong' error rather than a clear 'not found' message?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The system returns a vague error, leaving you unsure if the identifier you entered is actually wrong or if the server just experienced a temporary glitch.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to retry the exact same identifier or assume it is incorrect and try a different one.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Pick the right account",
+      "questions": [
+       {
+        "question": "Which of the found accounts is yours?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a 'Choose your account' dialog with multiple profiles, warning that hackers might have changed names and pictures.",
+        "whatTheAgentLoses": "The user loses the ability to recognize and select their actual account from a list of potentially altered profiles.",
+        "kind": "decision",
+        "verify_form": "The agent picked an account from the results - check the name and picture; hackers change both, and only you can recognize yours.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is this the correct account to recover?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a profile name and warns that hackers can change details, so you must confirm it is actually your account before proceeding.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the profile details to ensure the agent is recovering your actual account rather than a similarly named one.",
+        "kind": "decision",
+        "verify_form": "The agent confirmed the recover-this-account dialog - verify the profile shown is actually yours before anything gets changed on it.",
+        "speak": "never"
+       },
+       {
+        "question": "Is this the correct account, and should you choose to reset your own password or help someone else?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dialog asks you to confirm if you want to reset the password for the displayed Apple account or use the device to help someone else.",
+        "whatTheAgentLoses": "An agent might automatically proceed with resetting the displayed account's password without verifying if it is actually the one you intended to recover.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which of the accounts linked to this mobile number do you want to select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that the entered mobile number is linked to multiple accounts and requires selecting which ones to access.",
+        "whatTheAgentLoses": "You lose the ability to specify exactly which of your multiple accounts should be recovered.",
+        "kind": "decision",
+        "verify_form": "Several accounts hang off one number and the agent picked which to log into - check the selection; only you know which of them you wanted back.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Which account's password do you want to change?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple linked accounts, such as Facebook and Instagram, so you must specify which one needs a password reset.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might reset the password for the wrong account, causing unnecessary disruption to your other services.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to attempt to restore this recently deleted account?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows that the account '[email]' was recently deleted but may be recoverable, requiring you to choose whether to proceed with the restoration.",
+        "whatTheAgentLoses": "You lose the chance to verify if this is the correct deleted account you actually want to restore before proceeding.",
+        "kind": "decision",
+        "verify_form": "The agent moved to restore a recently deleted account - confirm the address shown is the account you meant to bring back.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Force the fallback search",
+      "questions": [
+       {
+        "question": "Should you enter your email for a login link or click 'Can't reset your password?'",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen allows you to either enter your email or username to receive a standard login link, or click 'Can't reset your password?' to explore alternative recovery options.",
+        "whatTheAgentLoses": "An agent might automatically enter your email to send a standard login link, missing your specific need to use the alternative recovery flow.",
+        "kind": "decision",
+        "verify_form": "The agent either sent the standard login link or took the can't-reset escape - check which; the standard link only helps if the listed inbox is still yours.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should I enter a fake email address to force the system to offer an alternative search method?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering a deliberately fake email address and completing the reCAPTCHA forces the system to provide alternative account recovery options when you forget your actual login details.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to learn this specific workaround for bypassing the initial email requirement during account recovery.",
+        "kind": "decision",
+        "verify_form": "The agent deliberately searched a fake email to unlock the account-name path - confirm you are okay with that trick; it files a bogus lookup on your behalf to reach the right form.",
+        "speak": "on-event"
+       },
+       {
+        "question": "How should you proceed after the intentional fake email search fails?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an error that the email wasn't found, but provides a 'Search with my account name' button to continue the recovery workaround.",
+        "whatTheAgentLoses": "An agent might interpret the email search error as a hard failure and stop, missing the alternative option to search by account name.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Choose the proof channel",
+    "note": "4.1 then 4.2; 4.3 when no listed channel is reachable - it drops the flow into 6; 4.4 where a bot check gates the send; finish with 4.5",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Review the offered channels",
+      "questions": [
+       {
+        "question": "Do you have access to any of the recovery contact methods listed on the screen?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "If you cannot access the partially obscured email addresses shown, you must back out and find an alternative account recovery method.",
+        "whatTheAgentLoses": "An agent might blindly select an inaccessible email address and get stuck waiting for a code, whereas you know immediately which contact methods you actually control.",
+        "kind": "intent-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Choose the delivery channel",
+      "questions": [
+       {
+        "question": "Which method do you want to use to reset your password?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists different recovery paths, such as using a new device or someone else's iOS device, so you must choose the one that fits your current situation.",
+        "whatTheAgentLoses": "If an agent makes this choice, it might select a recovery path requiring a device or person you do not currently have access to.",
+        "kind": "decision",
+        "verify_form": "The agent picked a recovery path from the menu - check it chose one whose device or channel you actually have; the wrong pick strands the flow.",
+        "speak": "gate"
+       },
+       {
+        "question": "Which recovery method did you select to receive your verification code?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offered multiple options, such as SMS, an alternate email, or backup codes, to verify your identity.",
+        "whatTheAgentLoses": "The user loses the ability to choose the most convenient or currently accessible channel for receiving the security code.",
+        "kind": "decision",
+        "verify_form": "The agent selected where the verification code goes - check the channel; pick one you can open right now, or the flow stalls at the next screen.",
+        "speak": "never"
+       },
+       {
+        "question": "Which method should you choose to receive your recovery code?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple options for receiving a login code, such as WhatsApp or email, along with an option to reveal more methods.",
+        "whatTheAgentLoses": "The user loses the ability to select their most accessible or preferred communication channel for identity verification.",
+        "kind": "decision",
+        "verify_form": "Four channels were on offer with masked destinations - check the one picked is a destination you can still open.",
+        "speak": "never"
+       },
+       {
+        "question": "Does completing this recovery actually require checking an email inbox, even though it was introduced as an email-free method?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The video's introductory text claims the recovery will be done without an email, but the screen later shows a verification code being sent to a Gmail address.",
+        "whatTheAgentLoses": "The user is misled into following a process that requires the exact verification method they were trying to avoid.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are you willing to incur potential carrier charges to receive the SMS recovery code?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns 'Carrier charges may apply' under the SMS option, which could affect your mobile phone bill.",
+        "whatTheAgentLoses": "The user loses the ability to avoid unexpected financial charges if the agent defaults to the SMS method without considering the cost.",
+        "kind": "decision",
+        "verify_form": "SMS delivery can cost carrier fees - check the agent did not commit your phone bill to it without you noticing the warning.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Declare the channels lost",
+      "questions": [
+       {
+        "question": "How do you proceed if you don't have access to the email or phone linked to the account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a \"Need more help?\" link specifically for users who cannot receive a standard recovery link or code.",
+        "whatTheAgentLoses": "The user loses the opportunity to recover their account through alternative support channels if the agent assumes standard recovery is the only path.",
+        "kind": "decision",
+        "verify_form": "The agent took the no-access escape hatch - confirm you really cannot reach the listed email or phone; if you can, the standard code is faster and safer.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Pass the bot check",
+      "questions": [
+       {
+        "question": "How do you pass the CAPTCHA security check to proceed?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires entering the letters and numbers shown in the image to prove you are human before it will send the recovery code.",
+        "whatTheAgentLoses": "The user loses the ability to manually solve the visual or audio CAPTCHA challenge required to continue the recovery process.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are you actually seeing the SMS confirmation screen, or is a CAPTCHA blocking the submission?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The claim that an SMS confirmation was sent is contradicted by the screen actually showing an unsolved CAPTCHA challenge.",
+        "whatTheAgentLoses": "The user loses the ability to recover their account if the agent hallucinates receiving a verification code while actually being stuck on a CAPTCHA.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Send the code",
+      "questions": [
+       {
+        "question": "Did you note the masked email address in the confirmation popup before tapping OK?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The 'Email sent' popup displays a masked address to confirm exactly which inbox you need to check for the recovery link.",
+        "whatTheAgentLoses": "You lose the immediate visibility into which specific email account the agent was instructed to check to continue the recovery process.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Did you acknowledge the confirmation that the reset link was sent?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displayed an 'Email Sent' dialog confirming that the system successfully dispatched the recovery link.",
+        "whatTheAgentLoses": "The user loses the immediate visual reassurance of knowing the reset request was successfully processed and sent to their email.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you tap 'Continue' to send the recovery code via SMS?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping 'Continue' triggers an SMS message to the selected phone number, which is necessary to verify your identity.",
+        "whatTheAgentLoses": "The user loses the ability to choose a different recovery method, such as email, if they do not currently have access to their phone.",
+        "kind": "decision",
+        "verify_form": "Continuing here fires a code at the selected phone - check the agent aimed it at a number you hold, not one long lost.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Run the code round-trip",
+    "note": "5.1 then 5.2 then 5.3; 5.4 when the message carries both a code and a link; 5.5 or 5.6 by what was chosen; 5.7 whenever the message is late, lost, or expired - a dead channel here drops into 6",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Open the right inbox",
+      "questions": [
+       {
+        "question": "Do you need to switch to your email app to continue the recovery process?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen confirms an email has been sent and explicitly instructs you to check your inbox to continue.",
+        "whatTheAgentLoses": "You lose the chance to verify which recovery method was activated and decide whether to actually proceed to your inbox.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the email address you are checking in the email app the same one you entered into the recovery form?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The email address '[email]' seen in the Gmail app must match the email entered into the Instagram recovery form to ensure the correct account is being recovered.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is checking the correct inbox for the recovery code.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which inbox folder contains the recovery email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The recovery email from Instagram was not in the Primary inbox and had to be found by checking All inboxes.",
+        "whatTheAgentLoses": "The user loses the ability to manually check different inbox categories if the email is filtered out of the main view.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the email inbox you checked match the masked address shown in the reset confirmation?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The masked email 'm*******[email]' shown in the popup must match the actual inbox '[email]' you open to ensure you are recovering the correct account.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the recovery link was sent to their own specific inbox rather than an unknown or compromised address.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Where do you retrieve the verification code?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Gmail inbox where you must locate and open the verification email to copy the required code.",
+        "whatTheAgentLoses": "You lose the privacy of your personal communications when an agent accesses your inbox to retrieve the code.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Find the right message",
+      "questions": [
+       {
+        "question": "Does the email in your inbox match the system's earlier promise to send you a security code?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Matching the system's promise to send a code with the actual arrival of the email containing the security code proves the recovery channel is working.",
+        "whatTheAgentLoses": "An agent might fail to notice if the code was sent to the wrong address or never arrived, leaving the account recovery stalled without your knowledge.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which email contains the OTP?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The inbox shows an email from Amazon.com with the subject \"Amazon password assistance\" that contains the required One Time Password in the preview.",
+        "whatTheAgentLoses": "Delegating this step requires granting an agent access to your personal email inbox, potentially exposing your private messages.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the email you received match the password reset confirmation you saw earlier?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The confirmation dialog stated an email was sent, so verifying that a Roblox reset email actually arrived ensures the steps connect properly.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the expected recovery email arrived from the correct service.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Is the sender's email address the official domain of the service you are trying to recover?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Phishing emails often mimic official password reset messages to steal credentials, so verifying the sender's actual address is a critical security check before clicking any links or copying codes.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent isn't handing over a new password or token to a malicious actor who sent a fake recovery email.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Read the code or link",
+      "questions": [
+       {
+        "question": "What is the verification code sent to your phone?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a six-digit verification code sent to [number] to verify your identity.",
+        "whatTheAgentLoses": "An agent lacks access to your physical phone to retrieve the SMS verification code sent to your personal number.",
+        "kind": "decision",
+        "verify_form": "A code went to your phone - the agent cannot read your SMS; check the digits entered came from your own messages and not a guess.",
+        "speak": "never"
+       },
+       {
+        "question": "What is the security code sent to your email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires the security code sent to your email address to confirm your identity and proceed with the recovery.",
+        "whatTheAgentLoses": "Delegating this step means granting an agent access to your personal email inbox to retrieve the security code.",
+        "kind": "decision",
+        "verify_form": "A security code went to the email - the agent needed your inbox to fetch it; check the code it entered came from that mail and nowhere else.",
+        "speak": "gate"
+       },
+       {
+        "question": "Do you see the SMS code arrive on your secondary device after the app states it was sent?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the code arrives on the secondary device proves that the recovery channel is active and accessible.",
+        "whatTheAgentLoses": "You lose the security of keeping your physical secondary device and its messages isolated from the automated agent.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "What is the 6-digit verification code sent to your recovery email?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a 6-digit code sent to your recovery email address to verify your identity before proceeding.",
+        "whatTheAgentLoses": "The user loses the security of personally handling the out-of-band verification code sent to their private email inbox.",
+        "kind": "decision",
+        "verify_form": "A 6-digit code went to the recovery inbox - check the one entered came from that mail; the agent has no other honest source for it.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Choose code or link",
+      "questions": [
+       {
+        "question": "Did you bypass the code entry screen by clicking the 'Change Password' link in the email instead?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The recovery screen prompted for a 6-digit code, but the email provided both the code and a direct link that skips the manual entry.",
+        "whatTheAgentLoses": "The user loses control over which specific verification method the agent chooses when the email offers multiple valid paths.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Enter the code",
+      "questions": [
+       {
+        "question": "Did you enter the exact confirmation code received in the email into the app?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the correct six-digit code from the email is necessary to prove your identity and proceed with the account recovery.",
+        "whatTheAgentLoses": "The user loses the certainty that the agent accurately transcribed the security code to successfully pass the identity verification check.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you want your device to automatically delete verification codes after use?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The iOS prompt offers to automatically delete verification codes from Mail and Messages after use, which affects your message history and device clutter.",
+        "whatTheAgentLoses": "You lose control over your personal device preferences regarding the retention or automatic deletion of one-time passcodes.",
+        "kind": "decision",
+        "verify_form": "iOS offered to auto-delete verification codes after use - check the answer given; it is a lasting device preference about your message history.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Follow the reset link",
+      "questions": [
+       {
+        "question": "Do you want to click the 'Reset password' link in this recovery email?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The email provides a single-use link that is required to proceed to the password reset screen.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the legitimacy of the recovery email and ensure no other accounts are logged in before proceeding.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Are you sure you are logged out of all other Facebook accounts on this device?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The recovery email explicitly instructs you to ensure you are not logged into any other accounts before clicking the reset link, to prevent the reset from applying to the wrong profile.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify their active sessions, which could lead the agent to accidentally overwrite the password of a different, currently logged-in account.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Handle the dead message",
+      "questions": [
+       {
+        "question": "Did you hit a password reset limit that forces you to wait 24 hours, or can you use the alternative recovery link?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The help page explains that reaching the reset limit requires a 24-hour wait, but provides a 'recover your account' link as a potential workaround.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to wait out the 24-hour security block or attempt the alternative recovery path provided in the text.",
+        "kind": "decision",
+        "verify_form": "The flow hit the daily reset limit - check whether the agent chose to wait or took the alternative recovery link; burning more attempts extends the lockout.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you check your spam folder or click 'Resend' because the verification code hasn't arrived?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows a countdown timer for resending the code, and your primary inbox is still empty after several minutes.",
+        "whatTheAgentLoses": "The agent might time out and fail the task instead of knowing to check the spam folder or trigger a new code.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does the recovery link show an 'Expired' error, requiring you to request a new one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The reset link in the email is time-sensitive and no longer valid, so clicking it leads to an error page rather than the new password form.",
+        "whatTheAgentLoses": "The agent might get stuck on the error page instead of knowing it needs to restart the recovery process from step one.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Is the countdown timer preventing you from immediately requesting a new verification code?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a countdown timer (e.g., 'Resend code in 55 seconds') that blocks you from requesting another code if the first one hasn't arrived.",
+        "whatTheAgentLoses": "The user loses the ability to know exactly how long they must wait before they can trigger a retry if the initial email silently fails to arrive.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Has the countdown timer expired, and should you click the 'Resend code' or 'Try another method' link?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Recovery codes can get delayed or lost in transit; waiting indefinitely stalls the task, while requesting a new one invalidates the old one.",
+        "whatTheAgentLoses": "The user loses the ability to manage the timing of code requests, potentially causing the agent to enter an expired code or get stuck waiting forever.",
+        "kind": "decision",
+        "verify_form": "The first code never landed and the timer ran out - check whether the agent resent or switched channels; a resend invalidates the old code, so entering a stale one fails.",
+        "speak": "on-event"
+       },
+       {
+        "question": "How long should you wait for the verification code before deciding the message is lost and clicking the 'Resend' link?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Emails and SMS messages can be silently delayed or swallowed by spam filters, forcing you to judge when the first attempt has failed and a retry is necessary.",
+        "whatTheAgentLoses": "The user loses control over the pacing of retries, risking the agent either waiting indefinitely for a lost code or spamming the resend button until the account is locked.",
+        "kind": "decision",
+        "verify_form": "The agent judged how long to wait before resending - check the pacing; spamming resend can lock the account, waiting forever stalls you.",
+        "speak": "never"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Prove identity another way",
+    "note": "entered from 4.3, or after 5.7 exhausts the channel; the options in the order the platform offers them - 6.1 on a trusted device, 6.2 from memory, 6.3 attaches a fresh contact and loops back into 4, 6.4 and 6.5 for document and face proof, 6.6 when only humans are left; 6.7 follows every option that does not finish right away",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Authenticate with the passcode",
+      "questions": [
+       {
+        "question": "Should you allow this iPhone to reset your password?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system popup asks for explicit permission to use this specific device to reset your Apple ID password.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether this specific device should be trusted to authorize the password reset.",
+        "kind": "decision",
+        "verify_form": "The device asked permission to reset the password and got an answer - confirm the Allow was yours; that popup is the whole security gate.",
+        "speak": "never"
+       },
+       {
+        "question": "Does the system popup on your device match the webpage's claim that reset instructions were sent?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the 'Reset Password' system popup appears ensures the recovery message successfully reached your secondary device as the webpage stated.",
+        "whatTheAgentLoses": "You lose the immediate, physical reassurance of seeing the security prompt arrive directly on your personal hardware.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Which passcode do you enter to authenticate?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen specifically requests the iPhone's lock screen passcode, not the forgotten account password, because the device is already signed into iCloud.",
+        "whatTheAgentLoses": "The user must share their physical device's unlock passcode with the agent, which compromises local device security.",
+        "kind": "decision",
+        "verify_form": "The screen wanted the device passcode, not the account password - the agent should never hold that; confirm you entered it yourself.",
+        "speak": "gate"
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Answer the knowledge challenge",
+      "questions": [
+       {
+        "question": "What personal information must you provide to pass the security challenge?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen prompts you to enter the full name associated with your account to protect against unauthorized access.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over sharing your personal account details, as the agent must know and enter your registered name to proceed.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Should you enter a previous password or select 'Try another way'?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The account recovery screen provides an 'Enter your password' field alongside a 'Try another way' link, requiring a choice on how to authenticate.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to decide whether to attempt an old password or use an alternative recovery method.",
+        "kind": "decision",
+        "verify_form": "The agent chose between typing an old password and Try-another-way - check which; the old password is yours to supply, and the other path changes what proof gets demanded.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does the screen prompt for the answer to a personal security question instead of sending a code?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If standard recovery channels fail, systems often fall back to historical security questions that require personal memory.",
+        "whatTheAgentLoses": "The agent cannot know your personal security answer, and without your direct intervention, the recovery process will fail.",
+        "kind": "decision",
+        "verify_form": "A personal security question came up - the answer is a memory only you hold; check what was submitted, because a wrong guess burns the fallback.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Replace the recovery contact",
+      "questions": [
+       {
+        "question": "What email address should I provide for support to contact me?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires a contact email so the support team can reach out to help you log back into your account.",
+        "whatTheAgentLoses": "Delegating this means you lose control over which inbox receives the sensitive recovery communications from the support team.",
+        "kind": "decision",
+        "verify_form": "The agent gave support a contact email - check it is an inbox you control and actually watch; every recovery message will land there.",
+        "speak": "never"
+       },
+       {
+        "question": "What new email address do you want to use to recover this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen warns that this new email will replace all existing contact methods and be used for future account notifications and recovery.",
+        "whatTheAgentLoses": "Letting an agent choose this means it might provide an email address you do not control, permanently locking you out of the account.",
+        "kind": "decision",
+        "verify_form": "The agent supplied a NEW login email that replaces every contact on the account - verify it is an address you own; a wrong one locks you out permanently.",
+        "speak": "gate"
+       },
+       {
+        "question": "Which section should you choose to manage your email addresses and phone numbers?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Contact info' option is the correct place to access the contact methods used for identity verification.",
+        "whatTheAgentLoses": "Delegating this step exposes your private phone numbers and email addresses to the agent.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Which email address should be added and linked to your accounts?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to enter an email address and select which accounts in your Accounts Centre it should be linked to for logins and notifications.",
+        "whatTheAgentLoses": "You lose the ability to decide which specific personal email address is connected to your account for future recovery and communications.",
+        "kind": "decision",
+        "verify_form": "The agent added a recovery email and linked it to accounts - verify the address is yours and the linked set is what you wanted; that address can now reset these accounts.",
+        "speak": "never"
+       },
+       {
+        "question": "Do the recovery email options shown here match the ones presented earlier in the flow?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The recovery options at 1:31 include a new email address that was not present in the initial list shown at 0:34.",
+        "whatTheAgentLoses": "The user loses the ability to catch inconsistencies in the recovery options that might indicate the agent is recovering the wrong account.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Upload the identity document",
+      "questions": [
+       {
+        "question": "Which type of official ID do you want to upload?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The service requires you to select a specific document, like a passport or national ID card, so they can review your name, photo, and date of birth.",
+        "whatTheAgentLoses": "You lose control over which piece of highly sensitive government identification is submitted to the platform.",
+        "kind": "decision",
+        "verify_form": "The agent chose which government document to upload - check the pick; that is your most sensitive paper and the choice is not the agent's to make.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the photo of your ID uploaded successfully and ready to be submitted?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a preview of the uploaded ID, which must be clearly visible to avoid having to submit it again.",
+        "whatTheAgentLoses": "You lose the opportunity to visually confirm that the correct, legible ID photo was selected before sending it to the platform.",
+        "kind": "decision",
+        "verify_form": "The agent had an ID photo staged for submission - check the preview yourself; you are handing a government document over, and it must be yours, legible, and intended.",
+        "speak": "gate"
+       },
+       {
+        "question": "Are you comfortable with the platform's privacy policy regarding the storage of your government ID?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen notes 'It won't be shared on your profile,' but submitting a government ID requires trusting the platform's internal data retention and security practices.",
+        "whatTheAgentLoses": "The user loses the right to make an informed privacy decision before handing over highly sensitive government identification to a tech company.",
+        "kind": "decision",
+        "verify_form": "Submitting the ID accepts the platform's retention terms - confirm you read and accepted them yourself; the agent cannot consent to storing your document.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Record the video selfie",
+      "questions": [
+       {
+        "question": "Which type of account are you trying to recover?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to categorize the account as a company, personal with photos, or personal without photos to determine the appropriate verification steps.",
+        "whatTheAgentLoses": "An agent would not know whether your personal account contains photos of you, potentially choosing the wrong option and failing the recovery process.",
+        "kind": "decision",
+        "verify_form": "The agent categorized the account - company, personal with photos, or without; check it, because the answer routes you toward or around the selfie check and only you know what is on the account.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you want to provide a video selfie to confirm your identity?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a short video of you turning your head to confirm you are a real person.",
+        "whatTheAgentLoses": "An AI agent cannot physically record a video selfie of your face to pass this verification step.",
+        "kind": "decision",
+        "verify_form": "The flow wants a video selfie - that is your face; confirm the recording decision was yours, because the agent neither can nor should make it.",
+        "speak": "gate"
+       },
+       {
+        "question": "Should you grant the app camera access to take a video selfie, and which permission level should you choose?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requests camera access to record a video selfie for identity verification, requiring you to decide how broadly to grant this system permission.",
+        "whatTheAgentLoses": "Delegating this step means you lose direct control over your device's privacy settings and the decision of whether to expose your camera to a third-party app.",
+        "kind": "decision",
+        "verify_form": "A camera permission was granted for the selfie - check the level chosen; while-using versus only-this-time is a lasting privacy setting on your device.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are you following the on-screen prompts to position and turn your head correctly for the video selfie?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a circle and specific instructions to turn your head left and right, which must be followed precisely to pass the liveness check.",
+        "whatTheAgentLoses": "An AI agent cannot physically perform a biometric video selfie to prove your identity.",
+        "kind": "decision",
+        "verify_form": "The liveness check needs you turning your head on camera - confirm you performed it; an agent cannot, and a failed take means resubmitting.",
+        "speak": "never"
+       },
+       {
+        "question": "Are you comfortable with the platform's 30-day retention policy for your video selfie?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly states that the video will be deleted within 30 days and won't use biometric data, which is a privacy agreement the user must accept to proceed.",
+        "whatTheAgentLoses": "The user loses the ability to evaluate the platform's privacy promises and decide if they are comfortable having their video stored on their servers for a month.",
+        "kind": "decision",
+        "verify_form": "Recording the selfie accepts a 30-day retention promise - confirm you weighed that before the video went in; consent to storing your face is yours alone.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "File the support request",
+      "note": "6.6.1 then 6.6.2, with 6.6.3 where purchases can prove ownership; 6.6.4 sends it; 6.6.5 is the same escalation by telephone",
+      "children": [
+       {
+        "id": "6.6.1",
+        "label": "State the loss reason",
+        "questions": [
+         {
+          "question": "Which reason should you select for needing support to recover your account?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen asks for the reason for your request, offering options like forgetting your email or being hacked, to help the support team process your recovery.",
+          "whatTheAgentLoses": "You lose the ability to accurately explain your specific login issue to the support team.",
+          "kind": "decision",
+          "verify_form": "The agent picked a loss reason on the support form - check it matches your real situation; the reason routes the ticket and a wrong one stalls or rejects it.",
+          "speak": "on-event"
+         },
+         {
+          "question": "Did you mean to select 'I forgot the email on my account' after having just entered your email address?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Entering a specific email address in the text field contradicts selecting the option that claims you forgot which email is associated with the account.",
+          "whatTheAgentLoses": "The user loses a successful account recovery because submitting contradictory information will likely cause the automated system to reject the request.",
+          "kind": "state-check",
+          "speak": "if-wrong"
+         },
+         {
+          "question": "What type of request are you submitting?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen required selecting a request type from a dropdown, and choosing \"Recover my Account\" ensures you are routed to the correct recovery flow.",
+          "whatTheAgentLoses": "You lose the ability to specify the exact nature of your support request, which could delay recovery if the agent selects the wrong category.",
+          "kind": "state-check",
+          "speak": "never"
+         },
+         {
+          "question": "Which issue do you select from the dropdown?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Selecting the correct issue from the dropdown ensures you are routed to the appropriate account recovery flow.",
+          "whatTheAgentLoses": "You lose the ability to specify the exact nature of your login problem to customer service.",
+          "kind": "decision",
+          "verify_form": "The agent picked an issue from the dropdown - check it names your real problem; the pick decides which help you get.",
+          "speak": "never"
+         }
+        ]
+       },
+       {
+        "id": "6.6.2",
+        "label": "Provide the account history",
+        "questions": [
+         {
+          "question": "What email address did you use to create this account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts for the original email address used during account creation in order to locate the account for recovery.",
+          "whatTheAgentLoses": "You lose privacy by having to reveal the specific email address associated with this account to the agent.",
+          "kind": "decision",
+          "verify_form": "The agent filled in a creation email for the account - check it; only you know which address the account was born on.",
+          "speak": "never"
+         },
+         {
+          "question": "Which email address should you enter in the 'YOUR EMAIL ADDRESS' field?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires an email address to identify the account, and providing the original email is necessary for the recovery ticket even if you no longer have access to it.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether to submit their original, inaccessible email address or an alternative contact address for the recovery process.",
+          "kind": "decision",
+          "verify_form": "The agent entered an email on the ticket - check it is the OLD account address, not your new contact one; this form wants the original even if it is dead.",
+          "speak": "never"
+         },
+         {
+          "question": "Which platform do you need assistance with?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires you to select the specific platform from a dropdown menu to route your account recovery request correctly.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong platform, leading to a misdirected or failed account recovery attempt.",
+          "kind": "intent-check",
+          "speak": "never"
+         },
+         {
+          "question": "Which region is your account in?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires selecting a specific geographic region from a dropdown to locate the correct account for recovery.",
+          "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the correct server region where their account is hosted.",
+          "kind": "intent-check",
+          "speak": "never"
+         },
+         {
+          "question": "What are your login name and summoner name?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The account recovery form requires both your login name and your summoner name or Riot ID to identify your account.",
+          "whatTheAgentLoses": "You lose the privacy of your specific gaming handles and account identifiers.",
+          "kind": "intent-check",
+          "speak": "never"
+         },
+         {
+          "question": "What date of birth is registered to this account?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The recovery form requires the exact date of birth associated with the account to verify your identity.",
+          "whatTheAgentLoses": "Delegating this step requires sharing your personal birth date or the specific fake date you used during account creation.",
+          "kind": "intent-check",
+          "speak": "never"
+         },
+         {
+          "question": "What additional account details should you provide?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The recovery form asks for specific historical information like associated emails, creation date, and location to verify account ownership.",
+          "whatTheAgentLoses": "The user loses the ability to keep their sensitive account history and personal gaming details private from the agent.",
+          "kind": "decision",
+          "verify_form": "The agent filled the ticket's history fields - emails, creation date, location; check them against your memory, since wrong history reads as a failed ownership proof.",
+          "speak": "gate"
+         },
+         {
+          "question": "Which of these games do you play on this account?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The recovery system requires you to select the specific games associated with your account to verify your identity.",
+          "whatTheAgentLoses": "An agent would not know your personal gaming history and could fail the security check by selecting the wrong titles.",
+          "kind": "intent-check",
+          "speak": "never"
+         },
+         {
+          "question": "Did you enter the same date of birth on the support ticket that you provided in the automated recovery tool?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Providing conflicting dates of birth across the recovery tool and the support ticket will cause the support team to reject your account recovery request.",
+          "whatTheAgentLoses": "The user loses the ability to recover their account because the agent submitted contradictory personal information that will cause the request to be denied.",
+          "kind": "state-check",
+          "speak": "if-wrong"
+         }
+        ]
+       },
+       {
+        "id": "6.6.3",
+        "label": "Offer the purchase proof",
+        "questions": [
+         {
+          "question": "Do you want to use your purchase history to verify your account?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Selecting 'YES' to having bought in-game currency requires providing specific details like PayPal transaction IDs and linked email addresses.",
+          "whatTheAgentLoses": "The user loses the choice of whether to disclose sensitive financial transaction details to facilitate account recovery.",
+          "kind": "decision",
+          "verify_form": "The agent answered whether to prove ownership with purchase records - check the choice; saying yes commits you to digging out PayPal transaction IDs and card details.",
+          "speak": "on-event"
+         }
+        ]
+       },
+       {
+        "id": "6.6.4",
+        "label": "Submit the request",
+        "questions": [
+         {
+          "question": "What subject should you enter for this support ticket?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a required 'SUBJECT *' text field that needs a clear summary of your issue.",
+          "whatTheAgentLoses": "The user loses the ability to phrase the support request in their own words.",
+          "kind": "decision",
+          "verify_form": "The agent wrote the ticket subject - read it; the request goes out in your name, and a vague subject slows the queue.",
+          "speak": "never"
+         },
+         {
+          "question": "What additional details or evidence should you provide in the recovery form?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a mandatory description field and an attachment section for submitting evidence to support your account recovery.",
+          "whatTheAgentLoses": "You lose the opportunity to personally articulate your situation and select which sensitive documents to share as proof of identity.",
+          "kind": "decision",
+          "verify_form": "The agent wrote the free-text description and chose what evidence to attach - read it; that text argues your ownership, in your name.",
+          "speak": "never"
+         },
+         {
+          "question": "Should you fill in the empty mandatory fields before clicking submit?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows that mandatory fields like 'DESCRIPTION *' are visibly empty, which typically prevents a form from submitting successfully.",
+          "whatTheAgentLoses": "The user loses the certainty of knowing whether the account recovery ticket was actually submitted or if it failed due to missing information.",
+          "kind": "state-check",
+          "speak": "never"
+         },
+         {
+          "question": "Was the recovery support form actually filled out and submitted, or does it end still empty and unsent?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The video shows you scrolling through an empty form without entering data or clicking send, contradicting the spoken instructions.",
+          "whatTheAgentLoses": "An agent relying on this video would miss the crucial step of actually entering the required data and submitting the recovery request.",
+          "kind": "state-check",
+          "speak": "if-wrong"
+         }
+        ]
+       },
+       {
+        "id": "6.6.5",
+        "label": "Call the support line",
+        "questions": [
+         {
+          "question": "Do you want to call customer service using the provided phone number?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a customer service phone number and operating hours as an alternative if the standard email reset fails.",
+          "whatTheAgentLoses": "The user loses the ability to bypass the automated flow by calling support, since an AI agent cannot make phone calls on their behalf.",
+          "kind": "decision",
+          "verify_form": "The fallback is a telephone call - check whether the agent expected you to make it; support lines are a human step it cannot take for you.",
+          "speak": "on-event"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Wait out the review",
+      "questions": [
+       {
+        "question": "Do you acknowledge that the recovery request will take 1-2 business days to process?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen confirms the request was received but explicitly states it will take 1-2 business days to contact your provided email.",
+        "whatTheAgentLoses": "The user loses direct visibility into the expected delay, potentially causing confusion when the task cannot be completed immediately.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "What is the status of your identity confirmation and what should you do next?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen states that the identity review is in progress and usually takes 48 hours, meaning you must acknowledge the delay and click Finish.",
+        "whatTheAgentLoses": "The user misses seeing the exact 48-hour timeframe for the review and the direct confirmation that their identity submission was successfully received.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Did you receive the promised email notification after submitting your ID for review?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen stated a notification would be sent once a decision was made on the ID upload, and receiving this email confirms your identity was successfully verified.",
+        "whatTheAgentLoses": "You lose the direct reassurance of seeing that your sensitive personal identification was successfully reviewed and accepted by the platform.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "What do you do if a security delay blocks your password reset?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a mandatory one-hour security delay is in progress before you are allowed to change your password.",
+        "whatTheAgentLoses": "The user loses immediate resolution because the agent must pause the task and wait for the hour-long security delay to expire.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Set the new password",
+    "note": "7.1 then 7.2 then 7.3; 7.4 wherever the form offers it; 7.5 is the platform-sanctioned exit that skips 7.2 through 7.4; end at 7.6",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Read the password rules",
+      "questions": [
+       {
+        "question": "What rules must your new password follow?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists specific complexity requirements, such as a minimum length and a mix of character types, which must be met to enable the 'Continue' button.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose a secure, memorable password that fits your personal system.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Compose the new password",
+      "questions": [
+       {
+        "question": "What do you want to set as your new password?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires entering and verifying a new password that meets specific length and character requirements to secure the account.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to select a memorable password or securely generate and store it in your own password manager.",
+        "kind": "decision",
+        "verify_form": "The agent set a new password - make sure you know what it is and where it is stored; a password only the agent knows locks you out all over again.",
+        "speak": "gate"
+       },
+       {
+        "question": "What should your new password be, and do you want to log out of all other sessions?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires entering a new password and offers a checkbox to log out of Facebook everywhere else to secure the account.",
+        "whatTheAgentLoses": "Delegating this means you lose control over choosing your own secure password and deciding whether to force a logout on your other devices.",
+        "kind": "decision",
+        "verify_form": "The agent both chose the password and answered the logout-everywhere box - check the two together; one is your secret to know, the other your security call.",
+        "speak": "never"
+       },
+       {
+        "question": "What new password do you want to set?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Change password' page with fields to create and confirm a strong password.",
+        "whatTheAgentLoses": "The user loses the ability to choose their own secure password and know what it is for future logins.",
+        "kind": "decision",
+        "verify_form": "A new password was created - verify you can retrieve it from wherever it was stored; you, not the agent, log in with it from now on.",
+        "speak": "never"
+       },
+       {
+        "question": "What should your new password be, and does it meet the security requirements?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen enforces a minimum length of six characters and displays a dynamic strength indicator to help you create a secure password.",
+        "whatTheAgentLoses": "You lose the ability to personally select a memorable password that you can easily recall later.",
+        "kind": "decision",
+        "verify_form": "The agent typed until the meter read Strong - check the final password is one you can actually keep, not just one the meter liked.",
+        "speak": "never"
+       },
+       {
+        "question": "Is the new password you are entering completely different from your previous ones?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The password reset screen explicitly warns 'Do not use your old password,' meaning a reused password will likely be rejected by the system.",
+        "whatTheAgentLoses": "The user loses the ability to check their personal memory or password vault to ensure they aren't reusing a historical password that violates the platform's rules.",
+        "kind": "intent-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "What visual password strength rating did the new password achieve before submission?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen often displays a color-coded strength meter (e.g., a bar turning from red to green) that isn't always announced by screen readers, indicating how secure the chosen password actually is.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent didn't just meet the bare minimum requirements but actually set a highly secure password.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Confirm the new password",
+      "questions": [
+       {
+        "question": "How do you confirm the new password?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires typing the exact same password into the 'Re-enter password' field to ensure there are no typos.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify that their new password was entered exactly as intended.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Does your confirmed password match the new password?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "A red warning text appeared indicating a mismatch, which prevents you from successfully saving the new password.",
+        "whatTheAgentLoses": "You lose the personal assurance that your new password was typed exactly as you intended without any hidden typos.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are both password fields filled and free of warning messages before you submit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows both the new and confirm password fields filled with ten dots and no error messages, indicating the entries match and are ready to submit.",
+        "whatTheAgentLoses": "The user loses the ability to choose their own memorable password and must rely on the agent to securely communicate the new credentials.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Is the new password masked, and should you toggle the visibility icon to verify it before submitting?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many modern reset forms only have a single password field and rely on an 'eye' icon to let the user visually check for typos before saving.",
+        "whatTheAgentLoses": "The user loses the ability to visually verify the exact string being submitted, risking a typo becoming their new permanent password if the agent doesn't unmask and check it.",
+        "kind": "state-check",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Decide the session logout",
+      "questions": [
+       {
+        "question": "Did you choose to log out of all other devices after changing your password?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The password reset screen often provides a checkbox or prompt to terminate existing sessions to secure the account against unauthorized access.",
+        "whatTheAgentLoses": "The user loses the choice to balance security and convenience, potentially leaving a compromised session active or unnecessarily forcing logouts on all their other personal devices.",
+        "kind": "decision",
+        "verify_form": "There was a choice to end every other session - check what the agent did; leaving sessions alive keeps a possible intruder inside, killing them logs out your own devices too.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to log out of all other active sessions after changing your password?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The password reset screen offered a choice to sign out everywhere else, which is a key security decision if the account was compromised.",
+        "whatTheAgentLoses": "The user loses the choice to balance security and convenience, as an agent might either leave a hacker logged in or annoyingly log the user out of all their safe devices.",
+        "kind": "decision",
+        "verify_form": "Sign-out-everywhere was offered - check the answer; it is the one control that evicts whoever else might be holding the account.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to log out of other devices when creating your new password?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes a checkbox to log out of other devices, which is an important security measure if you suspect someone else has been using your account.",
+        "whatTheAgentLoses": "You lose the opportunity to assess your personal security risk and decide whether to force a logout on all other devices.",
+        "kind": "decision",
+        "verify_form": "The reset form had a log-out-other-devices checkbox - check whether it got ticked; if someone else used the account, unticked leaves them in.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Skip the password change",
+      "questions": [
+       {
+        "question": "Do you want to set a new password now, or skip this step?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides options to either create a new password and optionally log out of other devices, or skip setting a new password entirely.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to enforce account security by setting a new password and logging out of other devices, or to simply skip the step.",
+        "kind": "decision",
+        "verify_form": "The flow allowed skipping the new password - check which way the agent went; skipping keeps you logged in today and locked out tomorrow.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Does a success message appear even though the new password field was left empty?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a success message immediately after clicking 'Continue' with an empty password field, which is an impossible sequence in a real password reset flow.",
+        "whatTheAgentLoses": "The delegator loses the assurance that their password was actually changed, as the sequence of events appears fabricated or broken.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Do you still want to change your password, or just continue to your account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen confirms you successfully recovered the account and offers an optional link to change your password before continuing.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to update your password for added security or keep your current one for convenience.",
+        "kind": "decision",
+        "verify_form": "After recovery the platform offered a password change - check whether the agent took it; keeping the old password keeps whatever risk got you locked out.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Submit the new password",
+      "questions": [
+       {
+        "question": "How do you submit your new password?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Save changes and Sign-In' button that must be clicked to finalize the reset process.",
+        "whatTheAgentLoses": "You lose the assurance of personally confirming the password change and immediately regaining access to your account.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Was a new password actually typed and submitted, or does the flow end at an empty Change Password form?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The video reaches the 'Change Password' form but abruptly cuts to the home screen without showing any text entered or the 'Change' button being pressed.",
+        "whatTheAgentLoses": "The agent misses the critical step of submitting the new credentials, leaving it unable to learn how to finalize the password change.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Does the reset actually get submitted, or does the flow stop at the 'Create a new password' screen without saving?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The video promises a full password reset but abandons the process at the 'Create a new password' screen without ever submitting the change.",
+        "whatTheAgentLoses": "The user remains locked out of their account because the agent stops working before the new password is saved.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the system reject the new password because you have used it before?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Submitting the new password returns an error stating it matches a previously used password, which violates the security policy.",
+        "whatTheAgentLoses": "The agent would fail to complete the reset if it doesn't know it needs to prompt the user for a completely different password.",
+        "kind": "state-check",
+        "speak": "on-event"
+       },
+       {
+        "question": "Do you submit the new password and reach a confirmation or sign-in screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The video ends on the 'Change Your Password' screen without showing the final submission or a success confirmation.",
+        "whatTheAgentLoses": "The user cannot verify if the password was successfully changed and access to the account was restored.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Confirm and secure access",
+    "note": "8.1, then 8.2 where the platform forces a fresh login - many flows land inside directly; 8.3 and 8.4 whenever a gate interrupts; 8.5 and 8.6 before trusting the account; 8.7 and 8.8 as the platform pushes them; 8.9 closes the task",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the success screen",
+      "questions": [
+       {
+        "question": "Did you receive confirmation that your password was successfully changed?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing the 'Your password has been changed' message with the 'Done' button confirms the reset process is complete and the new credentials are now active.",
+        "whatTheAgentLoses": "The user loses the immediate reassurance of seeing the success message and knowing they have regained access to their account.",
+        "kind": "state-check",
+        "speak": "always"
+       },
+       {
+        "question": "Does the date on the confirmation email match the date of the current reset attempt?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The recovery screen states the request takes several days, but the video immediately shows an older confirmation email from a previous month, proving the current attempt was left unresolved.",
+        "whatTheAgentLoses": "The user loses proof that the agent successfully completed the current password reset, as the agent is using outdated evidence to fake completion.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "How should you proceed past the success confirmation and the password manager advertisement?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen presents a 'Continue' button to access the account alongside an advertisement for LastPass Premium, requiring a choice on what to click.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to explore the advertised password management tool or simply proceed to their account.",
+        "kind": "state-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you see the final 'undeleted' confirmation matching the initial 'account deleted' warning?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The initial screen warned that the account was recently deleted, so the final screen must confirm it was successfully undeleted to prove the recovery worked.",
+        "whatTheAgentLoses": "The user loses the certainty that their deleted account was actually restored if the agent misses this specific confirmation.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Sign in again",
+      "questions": [
+       {
+        "question": "Does the reset flow end with you actually signed in using the new password, or does it stop at the locked device screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Although the password reset is confirmed at 5:31, the video ends at 5:54 on a locked device screen without showing the password being entered or the device unlocking.",
+        "whatTheAgentLoses": "You lose the final confirmation that the newly set password actually grants access to the account.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Are you ready to log in with the recovered credentials?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays a login form with pre-filled credentials and a forgotten password link, requiring a decision on whether to attempt signing in.",
+        "whatTheAgentLoses": "The user loses the opportunity to ensure the agent uses the newly updated credentials rather than outdated pre-filled ones.",
+        "kind": "decision",
+        "verify_form": "A login sat pre-filled and the agent decided to sign in - check it used the newly recovered credentials, not stale saved ones.",
+        "speak": "never"
+       },
+       {
+        "question": "Was the email verification step actually completed, or does the flow jump straight to a logged-in state without it?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen showed a notice that an email would be sent, but the video cut directly to a logged-in state without showing the email being received or opened.",
+        "whatTheAgentLoses": "The user loses the necessary instructions on how to retrieve and use the recovery email to actually regain access to their account.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the sign-in page reject your new credentials even though you just saw a 'password successfully changed' confirmation?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Backend database replication can lag, causing the login server to temporarily check against your old password and silently fail your valid login attempt.",
+        "whatTheAgentLoses": "The user loses the awareness that they just need to wait a minute and retry, whereas an automated agent might assume the reset failed and start the whole process over.",
+        "kind": "state-check",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Pass the re-entry gates",
+      "questions": [
+       {
+        "question": "Do you want to read the updated Terms of Service and Privacy Policy before agreeing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires agreeing to updated terms to continue, meaning you are accepting new privacy and service conditions.",
+        "whatTheAgentLoses": "You lose the opportunity to review how your data and rights are handled under the newly updated policies before accepting them.",
+        "kind": "decision",
+        "verify_form": "An updated-terms interstitial was accepted - check whether you wanted the terms read first; the agreement is in your name.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Pass the second factor",
+      "questions": [
+       {
+        "question": "Does the system require a code from an authenticator app even after you verified your email?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Some services require a second factor (like a TOTP code) to complete the login or reset process, even if you proved ownership of the email.",
+        "whatTheAgentLoses": "The agent cannot access the user's physical authenticator app and will get stuck if it doesn't hand over control for this specific prompt.",
+        "kind": "decision",
+        "verify_form": "A second factor was demanded mid-reset - the authenticator lives on your device; check the code came from you and not a stall or a guess.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Are you prompted for a two-factor authentication code after entering your new password?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Accounts with two-factor authentication enabled often still require a second factor to complete the login, even immediately after a successful password reset.",
+        "whatTheAgentLoses": "The user loses the awareness that the agent is stuck at a 2FA challenge and requires an authenticator code or SMS to actually finish signing in.",
+        "kind": "decision",
+        "verify_form": "A second factor blocked the final sign-in - the code generator is in your pocket; check the agent stopped and asked rather than guessing.",
+        "speak": "on-event"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Verify the right account",
+      "questions": [
+       {
+        "question": "Are you logged into the correct account?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays the Instagram profile page for 'UPCOMINGWORLD232', confirming that the recovery process successfully logged into this specific account.",
+        "whatTheAgentLoses": "You lose the ability to visually verify that the recovered account is actually yours by checking the profile details.",
+        "kind": "intent-check",
+        "speak": "always"
+       },
+       {
+        "question": "Are both of your recovered accounts available in the account switcher?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing both '[handle]' and '[handle]' in the account menu confirms that the recovery process successfully restored access to all your profiles.",
+        "whatTheAgentLoses": "Delegating this means you miss the immediate visual reassurance that all your desired accounts are actively linked and ready to use on your device.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       },
+       {
+        "question": "Did the top navigation bar change to display your profile avatar, silently confirming the login was successful?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many modern sites do not show a dedicated 'Password Changed' or 'Login Successful' screen, instead just redirecting to the homepage with the user's avatar appearing in the corner.",
+        "whatTheAgentLoses": "The user loses the ability to confirm the task succeeded if they are waiting for an explicit success message that the site's design doesn't provide.",
+        "kind": "state-check",
+        "speak": "if-wrong"
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Review the recent changes",
+      "questions": [
+       {
+        "question": "Should you review or skip the recent changes made to your account?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen prompts you to review recent actions, such as 14 people added or followed, which could be unauthorized changes made by someone else.",
+        "whatTheAgentLoses": "The user loses the opportunity to identify and revert potentially malicious actions taken while the account was compromised.",
+        "kind": "decision",
+        "verify_form": "The platform offered a review of changes made while you were locked out - a skip discards your one look at possible intruder activity; check whether that review happened.",
+        "speak": "on-event"
+       },
+       {
+        "question": "Should you review your saved login information while you are still in the security menu?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The security menu offers an option to manage saved login information, which is useful to update immediately after changing your password.",
+        "whatTheAgentLoses": "You lose the opportunity to personally decide if your new credentials should be automatically saved for future convenience.",
+        "kind": "decision",
+        "verify_form": "The security menu offered a saved-logins review - check whether the agent looked; stale saved credentials are how the next lockout starts.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Update the recovery settings",
+      "questions": [
+       {
+        "question": "Which country code should be selected for your mobile number?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a country code to ensure the SMS verification code is routed to the correct international phone number.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the recovery code is sent to their specific international number if the default is incorrect.",
+        "kind": "intent-check",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to stay signed in on this device?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The login screen included a 'Keep me signed in' checkbox that determines if your session persists after closing the browser.",
+        "whatTheAgentLoses": "Delegating this means losing control over the security tradeoff of leaving the account accessible on this device without a password.",
+        "kind": "decision",
+        "verify_form": "The keep-me-signed-in box was answered - check it matches how much you trust this device; a persistent session is convenience traded for exposure.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to add a mobile number for account security?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offers the option to add a mobile number to safeguard your account and receive automated security text messages.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over whether your personal phone number is shared with the service for automated security alerts.",
+        "kind": "decision",
+        "verify_form": "The add-a-mobile offer was answered - check the answer; declining leaves the account with the same thin recovery net that got you here.",
+        "speak": "never"
+       },
+       {
+        "question": "Should you save your login info on this device?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen asks if you want to save your login info so you won't need to enter it the next time you log in.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides whether to store your credentials on the device, which affects both your future convenience and account security.",
+        "kind": "decision",
+        "verify_form": "The save-login prompt got an answer - check it; storing the fresh credential on this device trades security for convenience, and the trade is yours.",
+        "speak": "never"
+       },
+       {
+        "question": "Did the browser's native password manager popup appear asking if you want to update your saved password?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Browsers display a native UI prompt (not part of the webpage DOM) offering to update the stored password after a successful reset.",
+        "whatTheAgentLoses": "The user loses the opportunity to automatically sync their new password to their browser's vault, risking locking themselves out again if they forget the newly generated password.",
+        "kind": "decision",
+        "verify_form": "The browser offered to update its stored password - check the answer; declining leaves the vault holding the OLD password and a future lockout.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.8",
+      "label": "Dismiss the follow-up prompts",
+      "questions": [
+       {
+        "question": "Do you want to add a shortcut for this site to your home screen?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The website displayed a prompt offering to add a quick-access icon to your device's home screen.",
+        "whatTheAgentLoses": "You lose the ability to decide whether you want this service pinned to your home screen for faster access.",
+        "kind": "decision",
+        "verify_form": "The home-screen shortcut prompt got an answer - check it; whether this site sits on your home screen is your call, not the agent's.",
+        "speak": "never"
+       },
+       {
+        "question": "Do you want to turn on notifications?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displayed a prompt asking to enable notifications after signing in, which controls how the app alerts you.",
+        "whatTheAgentLoses": "You lose the ability to decide whether this specific app is allowed to send you push notifications.",
+        "kind": "decision",
+        "verify_form": "The notifications prompt got an answer - check it; the agent should not sign you up for pings you never wanted.",
+        "speak": "never"
+       }
+      ]
+     },
+     {
+      "id": "8.9",
+      "label": "Return to the task"
+     }
+    ]
+   }
+  ]
+ }
+}

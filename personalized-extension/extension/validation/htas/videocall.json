@@ -88,11 +88,11 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "The screen asks to \"Choose an account\" and lists options like \"Sara Wanasek\" or \"Use another account\", which dictates the identity used to host or join the meeting.",
+        "why": "The screen asks to \"Choose an account\" and lists options like \"[name]\" or \"Use another account\", which dictates the identity used to host or join the meeting.",
         "whatTheAgentLoses": "The user loses the ability to control which of their personal or professional profiles is displayed to other participants on the call.",
         "speak": "gate",
         "check": "Which accounts does the 'Choose an account' list show?",
-        "say_example": "The site lists two accounts, <Sara Wanasek> and <sara@work.com>. Which one for this meeting?"
+        "say_example": "The site lists two accounts, <[name]> and <[email]>. Which one for this meeting?"
        },
        {
         "question": "Do you want to type the password yourself, rather than give it to me?",
@@ -324,11 +324,11 @@
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The 'Personal info' page shows your current name is set to 'Charlies Lessons' and notes that anyone can see this information when communicating with you.",
+        "why": "The 'Personal info' page shows your current name is set to '[name] Lessons' and notes that anyone can see this information when communicating with you.",
         "whatTheAgentLoses": "The user loses the opportunity to present themselves with a preferred professional or personal name to other meeting participants.",
         "speak": "if-wrong",
         "check": "What name does the profile or display-name field show, and does it match the person's name?",
-        "say_example": "The name others will see is <Charlies Lessons>. I'll change it to <your name> unless you say keep."
+        "say_example": "The name others will see is <[name] Lessons>. I'll change it to <your name> unless you say keep."
        }
       ]
      }
@@ -363,7 +363,7 @@
         "whatTheAgentLoses": "You lose the ability to personally select which specific contact or group chat to initiate the video room from.",
         "speak": "if-wrong",
         "check": "Which contact or group name does the open chat header show, and does it match the contact the person named?",
-        "say_example": "The chat I have open is with <Sam>. You said <Priya>. Switching to her chat before I start the room."
+        "say_example": "The chat I have open is with <[name]>. You said <[name]>. Switching to her chat before I start the room."
        }
       ]
      },
@@ -496,7 +496,7 @@
         "whatTheAgentLoses": "You lose the opportunity to set a specific, recognizable title that clearly communicates the meeting's purpose to your invitees.",
         "speak": "never",
         "check": "What does the title or topic field show?",
-        "say_example": "Named it <Private class with Sarah>, from your note."
+        "say_example": "Named it <Private class with [name]>, from your note."
        }
       ]
      },
@@ -754,7 +754,7 @@
         "whatTheAgentLoses": "Delegating this step means the agent decides the method of distributing the meeting invitation to your intended participants.",
         "speak": "never",
         "check": "Does the dialog show an 'Add guests' field and an 'Add video conferencing' button?",
-        "say_example": "Added <Sarah> as a guest, so the invite goes out from the calendar."
+        "say_example": "Added <[name]> as a guest, so the invite goes out from the calendar."
        },
        {
         "question": "Should you add guests to this calendar event before saving it?",
@@ -765,7 +765,7 @@
         "whatTheAgentLoses": "The user loses the convenience of having the calendar automatically email the meeting invitation to the intended participants.",
         "speak": "if-wrong",
         "check": "Does the guest list on the event show the people the person named?",
-        "say_example": "The guest list is empty, and you named <Sarah and Tom>. Adding them before I save."
+        "say_example": "The guest list is empty, and you named <[name] and [name]>. Adding them before I save."
        },
        {
         "question": "Who do you want to invite to this meeting?",
@@ -776,7 +776,7 @@
         "whatTheAgentLoses": "You lose the ability to personally verify and select the correct email addresses from your contact list for the invitation.",
         "speak": "never",
         "check": "Which names or emails does the guest field show?",
-        "say_example": "Added guests <Sarah> and <Tom>, from your note."
+        "say_example": "Added guests <[name]> and <[name]>, from your note."
        }
       ]
      },
@@ -810,7 +810,7 @@
         "whatTheAgentLoses": "You lose the final opportunity to review the date, time, and meeting settings before the event is officially created.",
         "speak": "always",
         "check": "What title, date, time, guests and video link does the event show before Save?",
-        "say_example": "Saving it. <Private class with Sarah>, <Thursday 3 to 4>, Meet link attached, guest <Sarah>. Nothing goes out until the send prompt."
+        "say_example": "Saving it. <Private class with [name]>, <Thursday 3 to 4>, Meet link attached, guest <[name]>. Nothing goes out until the send prompt."
        },
        {
         "question": "Do you want to throw away the unsaved meeting?",
@@ -968,7 +968,7 @@
         "whatTheAgentLoses": "Delegating this means the agent chooses the communication channel and recipient addresses, potentially sending the invitation to the wrong person or using an inappropriate method.",
         "speak": "gate",
         "check": "What recipients, subject and body does the message show before send?",
-        "say_example": "Ready to send the invitation to <sarah@mail.com>. Subject <Private class Thursday>. Link and passcode inside. Say send."
+        "say_example": "Ready to send the invitation to <[email]>. Subject <Private class Thursday>. Link and passcode inside. Say send."
        }
       ]
      },
@@ -985,7 +985,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to verify the recipient or add a personal greeting to the invitation.",
         "speak": "gate",
         "check": "Does the chat box show the meeting link, and which contact's chat is open?",
-        "say_example": "The link is typed into your chat with <Priya>. Say send, and it goes."
+        "say_example": "The link is typed into your chat with <[name]>. Say send, and it goes."
        }
       ]
      },
@@ -1002,7 +1002,7 @@
         "whatTheAgentLoses": "You lose the ability to evaluate whether the specific domain restriction on this meeting aligns with the people you actually need to invite.",
         "speak": "on-event",
         "check": "Does the 'Add people' dialog show a restriction, such as only people in a named domain can join?",
-        "say_example": "This meeting only lets in <acme.com> accounts. <Tom's> address is <gmail>, so he couldn't get in."
+        "say_example": "This meeting only lets in <acme.com> accounts. <[name]'s> address is <gmail>, so he couldn't get in."
        }
       ]
      },
@@ -1019,7 +1019,7 @@
         "whatTheAgentLoses": "The user loses control over whether their guests receive an immediate email notification about the newly scheduled meeting.",
         "speak": "gate",
         "check": "Does the page show a prompt asking whether to send invitation emails, and which guests are listed?",
-        "say_example": "The calendar wants to email the invite to <Sarah> and <Tom>. Say send, or say don't send and I'll save it quietly."
+        "say_example": "The calendar wants to email the invite to <[name]> and <[name]>. Say send, or say don't send and I'll save it quietly."
        },
        {
         "question": "Is the outside email address spelled exactly right before the invite goes out?",
@@ -1030,7 +1030,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to verify the exact spelling of the external email address before the invitation is sent.",
         "speak": "if-wrong",
         "check": "Does the typed address match the one the person gave, letter for letter, and does the page show 'No results found'?",
-        "say_example": "I typed <sarah@gmial.com>. You gave <sarah@gmail.com>. Fixing it before the invite goes out."
+        "say_example": "I typed <[email]>. You gave <[email]>. Fixing it before the invite goes out."
        }
       ]
      },
@@ -1125,7 +1125,7 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "The screen displays an email invitation for a 'Top secret meeting' from Kevin Stratvert, requiring you to verify the event details and confirm your attendance.",
+        "why": "The screen displays an email invitation for a 'Top secret meeting' from [name], requiring you to verify the event details and confirm your attendance.",
         "whatTheAgentLoses": "Delegating this step means an agent might accept an incorrect or unwanted meeting invitation without understanding your actual schedule and priorities.",
         "speak": "never",
         "check": "Does the invitation show Yes, No and Maybe buttons, and which is selected?",
@@ -1157,7 +1157,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the chance to verify the meeting details, like the time and organizer, before launching the call.",
         "speak": "if-wrong",
         "check": "What title, time and organizer does the opened event or meeting card show, and do they match the meeting the person named?",
-        "say_example": "The event I opened is <Demo class> from <Ms Lee> at <2:45>. You said the <3 o'clock with Dr Park>. Wrong one. Looking again."
+        "say_example": "The event I opened is <Demo class> from <[name]> at <2:45>. You said the <3 o'clock with Dr [name]>. Wrong one. Looking again."
        }
       ]
      },
@@ -1278,7 +1278,7 @@
         "whatTheAgentLoses": "You lose the ability to choose how your name appears to other attendees and to verify your own readiness before entering the waiting room.",
         "speak": "if-wrong",
         "check": "What does the name field on the pre-join screen show?",
-        "say_example": "The name box was filled in as <Charlies Lessons>. That's what everyone would see. Changing it to <your name>."
+        "say_example": "The name box was filled in as <[name] Lessons>. That's what everyone would see. Changing it to <your name>."
        },
        {
         "question": "Do you want the browser to remember your display name for future Zoom meetings?",
@@ -1330,7 +1330,7 @@
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen displays your upcoming 'Private class with Sarah' synced from Google Calendar, offering a convenient one-click shortcut to enter the call.",
+        "why": "The screen displays your upcoming 'Private class with [name]' synced from Google Calendar, offering a convenient one-click shortcut to enter the call.",
         "whatTheAgentLoses": "The user loses the contextual awareness of seeing their daily schedule and upcoming meetings laid out on the homepage before joining.",
         "speak": "never",
         "check": "Does the home screen show the scheduled meeting with a Join or Start button?",
@@ -1520,7 +1520,7 @@
         "whatTheAgentLoses": "You lose the chance to personally verify your camera feed, background, and audio setup before entering the shared meeting space.",
         "speak": "gate",
         "check": "What do the pre-join controls show for camera and microphone, what name is set, and which names does the page list as already in the meeting?",
-        "say_example": "Ready to join <Weekly check-in>. Camera off, mic off, name <your name>. <Kevin and Sara> are already in. Say join, or say camera on first."
+        "say_example": "Ready to join <Weekly check-in>. Camera off, mic off, name <your name>. <[name] and [name]> are already in. Say join, or say camera on first."
        },
        {
         "question": "Do you want to join normally, or join already presenting your screen?",
@@ -1624,7 +1624,7 @@
         "whatTheAgentLoses": "Delegating this step means losing the ability to personally verify the identity of unknown participants before granting them access to the call.",
         "speak": "gate",
         "check": "Does the page show someone waiting to be admitted, with their name and whether they are signed in?",
-        "say_example": "<Alex> wants in. Not signed in, so the site can't vouch for the name. Let them in?"
+        "say_example": "<[name]> wants in. Not signed in, so the site can't vouch for the name. Let them in?"
        }
       ]
      },
@@ -1669,7 +1669,7 @@
         "whatTheAgentLoses": "The user loses the situational awareness of knowing which specific colleagues are present and who might need a reminder to join.",
         "speak": "on-event",
         "check": "Which names does the participants panel list, and did the count change since the last look?",
-        "say_example": "<Tom> just joined. That makes <four> of you."
+        "say_example": "<[name]> just joined. That makes <four> of you."
        },
        {
         "question": "Do you want to open the people panel?",
@@ -1708,7 +1708,7 @@
         "whatTheAgentLoses": "The user loses the contextual judgment of whether forcibly silencing a specific participant is appropriate for the current meeting dynamics.",
         "speak": "never",
         "check": "Does the confirmation say the mute is for everyone and only they can unmute?",
-        "say_example": "Muted <Tom> for everyone. Only they can unmute themselves."
+        "say_example": "Muted <[name]> for everyone. Only they can unmute themselves."
        },
        {
         "question": "Do you want to mute all participants but allow them to unmute themselves?",
@@ -1736,29 +1736,29 @@
         "whatTheAgentLoses": "You lose the discretion to decide whether a participant should just be temporarily removed for technical reasons or permanently blocked for inappropriate behavior.",
         "speak": "on-event",
         "check": "Does the removal dialog show boxes for 'report' or 'block from rejoining', and are they checked?",
-        "say_example": "Removing <Tom>. There's a box to block them from rejoining. Leaving it unticked. Say block if you want that."
+        "say_example": "Removing <[name]>. There's a box to block them from rejoining. Leaving it unticked. Say block if you want that."
        },
        {
         "question": "What should this person's name show as?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "The Participants panel listed the user as 'David - Cozy Grammar', and renaming them ensures their display name fits the context of the current meeting.",
+        "why": "The Participants panel listed the user as '[name] - Cozy Grammar', and renaming them ensures their display name fits the context of the current meeting.",
         "whatTheAgentLoses": "The user loses the ability to decide exactly how participants are identified to others during the live call.",
         "speak": "never",
         "check": "What name does the participant entry show?",
-        "say_example": "Renamed <David - Cozy Grammar> to <David>, as you asked."
+        "say_example": "Renamed <[name] - Cozy Grammar> to <[name]>, as you asked."
        },
        {
         "question": "Do you want to do anything to this participant, like send them to the waiting room or remove them?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "The screen displays a participant management menu with options to remove David or place him in the waiting room.",
+        "why": "The screen displays a participant management menu with options to remove the owner or place him in the waiting room.",
         "whatTheAgentLoses": "You lose the ability to exercise your own judgment on whether a specific attendee should be allowed to remain in the live meeting.",
         "speak": "never",
         "check": "Which actions does the participant menu offer?",
-        "say_example": "Moved <David> to the waiting room, as you asked."
+        "say_example": "Moved <[name]> to the waiting room, as you asked."
        }
       ]
      },
@@ -1775,7 +1775,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide the appropriate permission level and role for their meeting guests.",
         "speak": "never",
         "check": "What role does the participant menu show for this person?",
-        "say_example": "Left <Tom> as co-host."
+        "say_example": "Left <[name]> as co-host."
        }
       ]
      },
@@ -1856,7 +1856,7 @@
       "whatTheAgentLoses": "An agent would be confused by the inconsistent state and fail to learn how to properly complete the action.",
       "speak": "if-wrong",
       "check": "After the mute, does the participant's entry show 'muted' or an unmute control?",
-      "say_example": "The mute didn't take. <Tom> still shows as live. Trying again."
+      "say_example": "The mute didn't take. <[name]> still shows as live. Trying again."
      }
     ],
     "children": [
@@ -2068,7 +2068,7 @@
         "whatTheAgentLoses": "The user loses the ability to express their personal emotional response to specific messages in the chat.",
         "speak": "never",
         "check": "Which reactions does the hover menu list?",
-        "say_example": "Reacted with <a heart> to <Tom's> message, as you asked."
+        "say_example": "Reacted with <a heart> to <[name]'s> message, as you asked."
        },
        {
         "question": "Do you want to open the chat panel to message everyone?",
@@ -2090,7 +2090,7 @@
         "whatTheAgentLoses": "You lose control over whether your communication is shared publicly with the entire room or kept private with a specific individual.",
         "speak": "if-wrong",
         "check": "What does the chat's To field show, and does it match who the person named?",
-        "say_example": "The chat is set to everyone. You wanted this just for <Priya>. Switching before I send."
+        "say_example": "The chat is set to everyone. You wanted this just for <[name]>. Switching before I send."
        },
        {
         "question": "Where should the file for the chat come from, your computer or a cloud drive?",
@@ -2112,7 +2112,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether and how to answer the participant's specific question.",
         "speak": "on-event",
         "check": "Does the chat panel show a new message, and from whom?",
-        "say_example": "<Tom> asked in chat, <When is this due?>. Want to answer?"
+        "say_example": "<[name]> asked in chat, <When is this due?>. Want to answer?"
        }
       ]
      },
@@ -2140,7 +2140,7 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to immediately acknowledge a participant's question or wait until a better time in the meeting.",
         "speak": "on-event",
         "check": "Does the page show a notice that a participant raised their hand, and who?",
-        "say_example": "<Tom> raised a hand."
+        "say_example": "<[name]> raised a hand."
        },
        {
         "question": "Is the raised hand actually showing beside your name in the participant list?",
@@ -2439,11 +2439,11 @@
           "cluster": "approve",
           "moment": "On demand",
           "moneyMoving": false,
-          "why": "The screen displays a prompt from Charlies Lessons inviting you to move the call to a Miro whiteboard in a new tab.",
+          "why": "The screen displays a prompt from [name] Lessons inviting you to move the call to a Miro whiteboard in a new tab.",
           "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether to participate in the external whiteboard activity or remain solely in the main meeting interface.",
           "speak": "on-event",
           "check": "Does the page show an invitation from another participant to open a whiteboard in a new tab?",
-          "say_example": "<Charlie> invited everyone to a Miro board in a new tab. I'm staying in the call. Say open it if you want it."
+          "say_example": "<[name]> invited everyone to a Miro board in a new tab. I'm staying in the call. Say open it if you want it."
          }
         ]
        }

@@ -23,7 +23,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to choose their preferred platform based on their personal priority between finding the best price deals or securing free vehicle history reports.",
         "speak": "always",
         "check": "Which car sites does the results page list, and which of them are marketplaces or pricing guides?",
-        "say_example": "Got it. Pricing a <2014 Mazda3> under <13,000> near <94025>. I'll check <CarGurus> and <Autotrader> for listings, and <KBB> for what it's worth."
+        "say_example": "Got it. Pricing a <2014 Mazda3> under <13,000> near <94110>. I'll check <CarGurus> and <Autotrader> for listings, and <KBB> for what it's worth."
        },
        {
         "question": "Is the site that opened the official appraisal site, and not a sponsored ad or lookalike from the search results?",
@@ -177,7 +177,7 @@
       "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally double-check your specific make, model, budget, and mileage preferences before generating the results.",
       "speak": "never",
       "check": "What year, make, model, price, radius and location does the search form show before submit?",
-      "say_example": "Searched <Autotrader> for a <2014 or newer Mazda3>, under <13,000>, within <50> miles of <94025>"
+      "say_example": "Searched <Autotrader> for a <2014 or newer Mazda3>, under <13,000>, within <50> miles of <94110>"
      },
      {
       "question": "Which filters still hold a leftover or default value that doesn't match the search?",
@@ -244,7 +244,7 @@
         "whatTheAgentLoses": "Delegating this means you lose the ability to decide whether local convenience or a broader understanding of national market value is more important for your purchase.",
         "speak": "never",
         "check": "What ZIP and radius does the search show?",
-        "say_example": "Searched within <50> miles of <94025>"
+        "say_example": "Searched within <50> miles of <94110>"
        },
        {
         "question": "What zip code should you use for your search area?",
@@ -1348,7 +1348,7 @@
         "whatTheAgentLoses": "You lose the guarantee that the final price estimate accurately reflects the specific local market where you plan to buy the car.",
         "speak": "if-wrong",
         "check": "What ZIP or postcode is entered on the pricing page, and does it match the listing's location or the person's?",
-        "say_example": "The price is set for <90210>. You're in <94025>. Prices differ by area, so I'm changing it."
+        "say_example": "The price is set for <90210>. You're in <94110>. Prices differ by area, so I'm changing it."
        }
       ]
      },

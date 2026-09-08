@@ -585,7 +585,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the chance to catch and correct any formatting errors made by the auto-fill tool.",
         "speak": "if-wrong",
         "check": "Do the street, unit, city, state and ZIP in the ship-to fields match the source address, whether pasted, on the order or on the invoice? Check once when filled and again after the site cleans it up.",
-        "say_example": "The ZIP came in as <94025>. The order says <94301>. Fixing it."
+        "say_example": "The ZIP came in as <94110>. The order says <94301>. Fixing it."
        },
        {
         "question": "Is the carrier flagging the address as a problem?",
