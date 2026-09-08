@@ -15243,6 +15243,1550 @@
    ]
   }
  },
+ "crafts": {
+  "task": "design a craft project in cutting-machine software (Cricut Design Space, Silhouette Studio): choose or upload a design, size and arrange it on the virtual mat, set the material, mirror where needed (iron-on), and send the project to the machine or reach the ready-to-cut confirmation; complete when the cut job is sent or the make-it/ready screen confirms the prepared job. Surface pinned: the design-software session — machine unboxings, material reviews, and finished-project showcases without the software arc are off-task.",
+  "tree": {
+   "id": "0",
+   "label": "Design and cut a craft project",
+   "note": "the user starts with 1, and does 1.5 and 1.6 only when the job needs them. for each element in the design the user goes through 2 - 2.7 for a bought or drawn file, 2.6 for text. then, for each piece, the user shapes it in 3 and sets what the machine will do with each layer in 4, in whatever order the design needs. 5 is needed when a real object or the machine's limit sets a size; this happens before 2 in some videos and after 3 in most. in 6 the canvas is arranged onto mats, and when the preview is wrong the user goes back to 3, 4 or 5. 7 only for a print then cut job. for each mat the user goes through 8 and 9 - five times in z3l5. the task ends at 9.3 on the last mat, or at 9.6 where the software closes the job; the shadow box in j3G1 ends on the canvas without ever reaching 6.",
+   "children": [
+    {
+     "id": "1",
+     "label": "Set up the session",
+     "note": "in most videos 1.1 covers the materials before the user opens any screen. 1.2 happens in every video. 1.3 where the user checks the dropdown - two videos skip it and one corrects it at Make It. 1.4 once per machine, and in the middle of the project in kND6. 1.5 is only needed for print then cut: two videos show it opened and cancelled, and one shows it run to the test cut. 1.6 before the project or from the Make screen's Material Settings, where no built-in profile fits the material.",
+     "children": [
+      {
+       "id": "1.1",
+       "label": "Pick the machine and materials",
+       "questions": [
+        {
+         "question": "Should you use vinyl or standard paper sticker paper for your project?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The split-screen demonstration shows that vinyl is tear-resistant and waterproof, whereas standard sticker paper rips easily and dissolves in water.",
+         "whatTheAgentLoses": "Delegating this choice means losing control over the physical durability and water resistance of your final stickers."
+        },
+        {
+         "question": "Do you want to use a glossy or matte finish for your project?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The split screen comparing glossy and matte options shows that while glossy paper looks great, it can cause sensor reading issues for the machine.",
+         "whatTheAgentLoses": "Delegating this material choice means you lose the opportunity to weigh the aesthetic benefits of a glossy finish against the technical risk of sensor errors."
+        }
+       ]
+      },
+      {
+       "id": "1.2",
+       "label": "Start a new project",
+       "questions": [
+        {
+         "question": "Should you start a new blank project or open an existing one?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The home screen displays a 'New Project' tile alongside recent projects like 'le bride custom', requiring a choice between starting fresh or continuing an existing design.",
+         "whatTheAgentLoses": "You lose the chance to decide whether to build a design entirely from scratch or modify one of your existing saved projects."
+        },
+        {
+         "question": "Are the necessary sliced and welded layers loaded correctly in your Layers panel?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The Layers panel must display the specific 'Weld Result' and 'Slice Result' items to confirm the pre-prepared project is properly set up for the cut.",
+         "whatTheAgentLoses": "Delegating this step means losing the visual confirmation that the specific layers required for this technique are properly configured before proceeding."
+        }
+       ]
+      },
+      {
+       "id": "1.3",
+       "label": "Select the machine",
+       "questions": [
+        {
+         "question": "Have you selected the correct machine before clicking Make It?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "Confirming the machine selection ensures the software prepares the correct mat layout and material options for your specific hardware.",
+         "whatTheAgentLoses": "You lose the ability to personally verify that the software is targeting the exact physical machine you intend to use for the project."
+        },
+        {
+         "question": "Have you selected the correct cutting machine model from the dropdown menu?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Choosing the correct machine ensures the software displays only compatible tools and features for your specific hardware.",
+         "whatTheAgentLoses": "You lose the assurance that the digital workspace is properly configured for the exact physical machine you intend to use."
+        }
+       ]
+      },
+      {
+       "id": "1.4",
+       "label": "Connect and register the machine",
+       "questions": [
+        {
+         "question": "Is the cutting machine actually registered and connected before the job is sent, rather than skipping straight to the cut?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The hamburger menu displays the 'New Machine Setup' option necessary to link the software to the physical cutting machine before a job can be sent.",
+         "whatTheAgentLoses": "You miss learning where the system settings are located to configure or troubleshoot hardware connections yourself."
+        },
+        {
+         "question": "Is the machine plugged in and found by the software?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The software displays a 'Connect machine' screen that requires the USB and power cables to be plugged in before it can find the device.",
+         "whatTheAgentLoses": "An agent cannot physically plug the USB and power cables into the machine or press the physical power button."
+        }
+       ]
+      },
+      {
+       "id": "1.5",
+       "label": "Calibrate print then cut",
+       "questions": [
+        {
+         "question": "Which calibration type should you select for your project?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen presents three specific calibration options—Rotary Blade, Knife Blade, and Print Then Cut—so you must choose the one that matches your intended cutting method.",
+         "whatTheAgentLoses": "You lose the opportunity to specify which physical tool or cutting method the machine needs to be calibrated for based on your real-world hardware."
+        },
+        {
+         "question": "Did you mean to cancel the Print Then Cut calibration after starting it?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displays the 'Calibrate for Print Then Cut' steps, but clicking 'Yes' on the cancellation prompt abandons the setup.",
+         "whatTheAgentLoses": "If the agent cancels a required calibration step without your approval, the machine may cut your design inaccurately and waste materials."
+        }
+       ]
+      },
+      {
+       "id": "1.6",
+       "label": "Edit a custom material",
+       "questions": [
+        {
+         "question": "Do the custom material settings match what this wood needs?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen provides specific dropdowns for blade type and passes, along with a pressure slider up to 350, which must be calibrated correctly to cut through the material.",
+         "whatTheAgentLoses": "Delegating this step means you lose the ability to fine-tune the exact pressure and pass count required for your specific piece of wood."
+        },
+        {
+         "question": "Are the custom material settings open for the profile you are cutting?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The 'Material Settings' link at the bottom left of the 'All Materials' modal allows you to view and adjust the specific pressure settings for different materials.",
+         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to manually fine-tune the exact pressure settings for your specific physical crafting materials."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "label": "Bring in the design",
+     "note": "the user goes through one or more of 2.1, 2.2, 2.3, 2.5 and 2.6 depending on where they get the design - a file made or bought elsewhere goes through 2.7, a hand-drawn design goes through 2.2 and then 2.7, library images and shapes can be added directly, and text goes through 2.6. the user goes through 2.4 whenever a price, a crown, a flag or a prompt for a trial appears, at any step. the user repeats these steps for each element the project needs - a sticker sheet is two uploads, a badge is a shape, two words and two images.",
+     "children": [
+      {
+       "id": "2.1",
+       "label": "Fetch a design file",
+       "questions": [
+        {
+         "question": "Is the design library open, with a password if it needs one?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The dropdown menu under 'LIBRARIES' requires choosing between getting a new password or entering the library with an existing one.",
+         "whatTheAgentLoses": "You lose control over managing your personal access credentials for third-party craft design libraries."
+        },
+        {
+         "question": "Is the template download page open?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays a specific URL where the narrator hosts the shape templates needed for this project.",
+         "whatTheAgentLoses": "Delegating this step means you miss the opportunity to visit the creator's website and discover other craft resources they might offer."
+        }
+       ]
+      },
+      {
+       "id": "2.2",
+       "label": "Draw the design elsewhere",
+       "questions": [
+        {
+         "question": "Is the sheet size set to the size shown on screen, not the one said earlier?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The video introduces settings for an A5 sticker sheet, but the subsequent text contradicts this by listing the size as A4.",
+         "whatTheAgentLoses": "The user loses clear guidance on which material size to actually use, risking a misaligned cut and wasted sticker paper."
+        },
+        {
+         "question": "Which device and application will you use to draw your custom design?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows Procreate on an iPad Pro, establishing the external tools needed to create the artwork before importing it into the cutting software.",
+         "whatTheAgentLoses": "The user loses the personal artistic touch and specific stylistic control that comes from hand-drawing their own designs."
+        }
+       ]
+      },
+      {
+       "id": "2.3",
+       "label": "Search the image library",
+       "questions": [
+        {
+         "question": "Which ribbon shape from the search results best fits your design?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search results display numerous ribbon styles, and selecting the right one determines the final shape of your fabric cutout.",
+         "whatTheAgentLoses": "Delegating this step means losing creative control over the specific style and proportions of the ribbon used in your project."
+        },
+        {
+         "question": "Which scalloped shape will you select from the search results for the badge background?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The image library displays multiple scalloped designs, and the specific shape chosen determines the layered structure and aesthetic of the final badge.",
+         "whatTheAgentLoses": "Delegating this selection means losing the creative control to pick the exact scallop style and layer complexity that fits your personal preference."
+        }
+       ]
+      },
+      {
+       "id": "2.4",
+       "label": "Weigh the paywall",
+       "questions": [
+        {
+         "question": "Do you want to sign up for a Cricut Access subscription or free trial?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The software frequently displays banners offering a free trial or discounted subscription to Cricut Access, which unlocks premium fonts and images.",
+         "whatTheAgentLoses": "The user loses the ability to decide whether to commit to a recurring subscription or utilize the free trial to access premium assets for their project."
+        },
+        {
+         "question": "Do you want to use Canva Pro to create your sticker designs?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The video displays a Canva logo overlay as the creator recommends a Canva Pro subscription for designing stickers, though it is not strictly required.",
+         "whatTheAgentLoses": "Delegating this choice means the agent might commit you to a paid Canva Pro subscription when a free alternative would have sufficed."
+        }
+       ]
+      },
+      {
+       "id": "2.5",
+       "label": "Add a shape",
+       "questions": [
+        {
+         "question": "Which basic shape should you add to the canvas as the foundation for your design?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Shapes menu displays various geometric options like squares, circles, and stars that serve as the base outline for your project.",
+         "whatTheAgentLoses": "Delegating this step means you lose creative control over the foundational shape and overall aesthetic of your custom badge."
+        },
+        {
+         "question": "Which basic shape should you select from the menu if the provided templates don't match your physical item?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Shapes menu displays free geometric options, like a heart, that can serve as a custom digital boundary for your specific physical blank.",
+         "whatTheAgentLoses": "You lose the opportunity to visually match the digital shape to the exact physical item you have in front of you."
+        }
+       ]
+      },
+      {
+       "id": "2.6",
+       "label": "Add the text",
+       "note": "the user does 2.6.1 and 2.6.2 on every text box, in either order - in several recordings they pick the font first. 2.6.3 wherever a script must cut as one piece, a word must sit tighter, or letters are rearranged. 2.6.4 for a decorative letter. 2.6.5 comes before 6, and no recording shows the user doing it.",
+       "questions": [
+        {
+         "question": "Does the added year match the design's existing font, colour and scale?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting the 'Amarillo' font, scaling the bounding box, and choosing the red material color ensures the added '14' visually integrates with the existing wine element.",
+         "whatTheAgentLoses": "Delegating this step means losing creative control over selecting the specific script font and visually balancing the text's size and color within the custom layout."
+        }
+       ],
+       "children": [
+        {
+         "id": "2.6.1",
+         "label": "Type the text",
+         "questions": [
+          {
+           "question": "What text do you want to add to the design?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The active text box on the canvas requires input to customize the design with specific words or numbers.",
+           "whatTheAgentLoses": "Delegating this step means you lose the ability to personalize the project with meaningful details like a specific anniversary year."
+          },
+          {
+           "question": "Should you put the words in one text box or separate them?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen shows 'gather' and 'together' in separate text boxes, which makes it possible to apply a different font to each word.",
+           "whatTheAgentLoses": "You lose the creative control of deciding which specific words should be separated to receive distinct font styles."
+          }
+         ]
+        },
+        {
+         "id": "2.6.2",
+         "label": "Pick the font",
+         "questions": [
+          {
+           "question": "Which variant of the Authentic font do you want to use for the primary text layer?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The search results display multiple options like Script, Extrude, Shadow, and Stencil, each offering a different visual style and layering effect for the cut.",
+           "whatTheAgentLoses": "Delegating this decision means you lose creative control over the exact typographic style and visual impact of your text."
+          },
+          {
+           "question": "Does the software warn you that a font used in the opened project is missing and will be substituted?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Opening a saved project that uses a system font no longer installed on the device causes the software to automatically replace it, ruining the design's layout.",
+           "whatTheAgentLoses": "The opportunity to cancel the load and install the missing font before the software permanently alters the text's aesthetic and spacing."
+          }
+         ]
+        },
+        {
+         "id": "2.6.3",
+         "label": "Space and join the letters",
+         "questions": [
+          {
+           "question": "How do you want to space the letters in your design?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The software provides a global letter spacing tool as well as the ability to ungroup and manually nudge specific letters like the V and E to fix awkward gaps.",
+           "whatTheAgentLoses": "You lose the opportunity to fine-tune the visual balance and kerning of specific letters to match your personal aesthetic preference."
+          },
+          {
+           "question": "Do you need to restore the overall dimensions after manually spacing the letters?",
+           "cluster": "facts",
+           "moment": "After",
+           "moneyMoving": false,
+           "why": "Manually moving the individual letters altered the total width and height shown in the size toolbar, which could cause the design to fit poorly on the final physical item.",
+           "whatTheAgentLoses": "You lose the ability to guarantee the final cut matches your exact physical measurements after making aesthetic tweaks to the layout."
+          }
+         ]
+        },
+        {
+         "id": "2.6.4",
+         "label": "Paste a glyph",
+         "questions": [
+          {
+           "question": "Which font and which decorative glyphs do you want on this text?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Selecting a specific font and pasting special characters from an external font manager determines the exact decorative look of the text on the canvas.",
+           "whatTheAgentLoses": "You lose the creative control of hand-picking the exact swirly characters and colors to personalize the design."
+          },
+          {
+           "question": "Is the decorative glyph on the canvas where the plain letter was?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen showed instructions for Font Book and Character Map because cutting software often requires using system tools to access and copy decorative glyphs for custom text.",
+           "whatTheAgentLoses": "Delegating this step means you lose the opportunity to browse the font manager and hand-pick the exact decorative flourishes that match your personal aesthetic."
+          }
+         ]
+        },
+        {
+         "id": "2.6.5",
+         "label": "Proofread the text"
+        }
+       ]
+      },
+      {
+       "id": "2.7",
+       "label": "Upload the file",
+       "note": "the file format picked in 2.7.1 decides the steps. for a PNG or JPG the user goes through 2.7.2, 2.7.3 and 2.7.4 in order. an SVG skips all three and arrives as layered cut paths; on Silhouette the file opens directly and 2.7.5 makes the cut line. the user finishes every upload in 2.7.6 and repeats these steps for each file - the print layer and the cut-lines layer of one sticker sheet are two uploads.",
+       "questions": [
+        {
+         "question": "How should the photo be set up before it goes in as a print then cut upload?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen requires selecting the image complexity, removing the background, and choosing between a cut image or a print then cut image to prepare the upload.",
+         "whatTheAgentLoses": "The user loses the ability to manually control the background removal and specify the exact upload type for their specific project needs."
+        },
+        {
+         "question": "Is the uploaded image set to the right complexity and upload type?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Choosing the correct image complexity and 'Print Then Cut' upload type ensures the detailed floral PNG is processed correctly for a sublimation project rather than just being cut as a solid shape.",
+         "whatTheAgentLoses": "You lose the ability to decide whether the design should be processed as a detailed printed image or a simple cut file based on your specific crafting materials."
+        }
+       ],
+       "children": [
+        {
+         "id": "2.7.1",
+         "label": "Pick the file format",
+         "questions": [
+          {
+           "question": "Which file format should you choose for a Print Then Cut project?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Choosing a PNG file preserves the transparent background, whereas selecting a JPG would require manually erasing the background in the software.",
+           "whatTheAgentLoses": "The user loses the ability to select the optimal file format that minimizes manual editing work in the design software."
+          },
+          {
+           "question": "Which file should you upload, and in what format?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen shows the user selecting a PNG file because its transparent background makes it ideal for print-then-cut projects.",
+           "whatTheAgentLoses": "The user loses the ability to select the optimal file format, which could result in extra work to remove backgrounds or flatten layers."
+          }
+         ]
+        },
+        {
+         "id": "2.7.2",
+         "label": "Set the image type",
+         "questions": [
+          {
+           "question": "Which image complexity setting should you select for your uploaded design?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Choosing the correct complexity level based on the image's colors and background ensures the software provides the best tools to process the design.",
+           "whatTheAgentLoses": "You lose the ability to ensure the software perfectly preserves the fine details and transparent background of your specific file."
+          }
+         ]
+        },
+        {
+         "id": "2.7.3",
+         "label": "Remove the background",
+         "questions": [
+          {
+           "question": "Do you need to erase any parts of the image to create a transparent background?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen provides a 'Select & erase' tool over a checkerboard pattern, allowing you to remove unwanted background areas before importing the design.",
+           "whatTheAgentLoses": "Delegating this step means you lose the opportunity to manually verify or adjust which specific parts of your uploaded image are erased for the final cut."
+          },
+          {
+           "question": "Does the cut image preview show that the background is completely and cleanly removed?",
+           "cluster": "facts",
+           "moment": "After",
+           "moneyMoving": false,
+           "why": "Checking the preview ensures that the automatic or manual tools successfully removed the background without leaving artifacts or erasing essential parts of the image.",
+           "whatTheAgentLoses": "You lose the opportunity to visually inspect the cut lines and manually touch up or restore accidentally erased details before finalizing the upload."
+          }
+         ]
+        },
+        {
+         "id": "2.7.4",
+         "label": "Choose cut or print",
+         "questions": [
+          {
+           "question": "Do you want to save this upload as a Cut Image or a Print Then Cut Image?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen requires you to choose between a standard cut or a print-then-cut format, which fundamentally changes how the machine processes the design.",
+           "whatTheAgentLoses": "Delegating this choice means you lose control over whether your final project will feature printed graphics or just be a solid cut shape."
+          },
+          {
+           "question": "How should you process and save the uploaded watercolor background?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Selecting the complex image type and saving it as a print-then-cut image preserves the intricate colors and details of the watercolor design instead of flattening it into a basic silhouette.",
+           "whatTheAgentLoses": "You lose the creative control over whether to preserve the full-color details for printing or simplify the design into a basic cut file."
+          }
+         ]
+        },
+        {
+         "id": "2.7.5",
+         "label": "Trace the image",
+         "questions": [
+          {
+           "question": "Does the trace cover the whole flower and none of the white?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Increasing the threshold slider until the yellow overlay covers the flower ensures the software creates accurate cut lines without picking up the background.",
+           "whatTheAgentLoses": "You lose the ability to visually fine-tune the threshold slider to ensure the trace perfectly captures your specific design."
+          },
+          {
+           "question": "Which trace method should you select to remove the background from the image?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The Trace Style menu offers multiple options, and selecting 'Trace and Detach' specifically separates the desired design from its background.",
+           "whatTheAgentLoses": "You lose the control to specify how the image is extracted, which could result in the machine cutting out unwanted background elements."
+          }
+         ]
+        },
+        {
+         "id": "2.7.6",
+         "label": "Add it to the canvas",
+         "questions": [
+          {
+           "question": "Which photo from your recent uploads do you want to use for the design?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The upload screen displays multiple recent images, requiring you to identify the specific one intended for this project.",
+           "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong image from your uploads, resulting in a project cut with an unintended design."
+          },
+          {
+           "question": "Do you want to upload another file or add the recently uploaded image to your canvas?",
+           "cluster": "approve",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen confirms the image upload was successful and displays the 'Upload Image' button, allowing you to gather multiple files before moving to the design canvas.",
+           "whatTheAgentLoses": "You lose the opportunity to decide whether to batch-upload all your necessary design files at once or proceed immediately to editing."
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "3",
+     "label": "Shape the pieces",
+     "note": "for each element and layer, the user repeats whichever of 3.1 to 3.9 the piece needs - the users repeat these actions between three and about forty times per video. on a downloaded group the user starts with 3.1. they use 3.2 and 3.3 on nearly every piece, and 3.4 for a mirror image or a second copy. 3.5 to join pieces, 3.6 to cut one shape with another, then 3.7 to keep the right result. 3.8 for a border or a shadow, 3.9 to split one image by its lines. what each piece will do on the machine is set in 4.",
+     "children": [
+      {
+       "id": "3.1",
+       "label": "Ungroup and prune the group",
+       "questions": [
+        {
+         "question": "What elements are included in your uploaded design?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The canvas displays a 'Cheers to Years' graphic and six reindeer faces grouped in the Layers panel, making it important to verify all imported components.",
+         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to visually confirm that all your desired custom graphics and text imported correctly before cutting."
+        },
+        {
+         "question": "Will you ungroup the imported design to customize its individual elements?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Layers panel shows the imported design is currently grouped, meaning you must use the active UnGroup button before you can edit the individual pieces.",
+         "whatTheAgentLoses": "You lose the creative control over deciding exactly which parts of the grouped design should be separated and customized for your specific project."
+        }
+       ]
+      },
+      {
+       "id": "3.2",
+       "label": "Position and align the pieces",
+       "questions": [
+        {
+         "question": "How do you want to align the text within the circle?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows an 'Align' dropdown menu with options like 'Center' and 'Align Left', which determines the exact geometric placement of the text relative to the shape.",
+         "whatTheAgentLoses": "Delegating this means you lose control over the precise visual balance and alignment of the design elements on your canvas."
+        },
+        {
+         "question": "Which part of the photo do you want the template to frame before slicing?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Layering the template over the photo determines exactly which part of the image will be sliced out for your final design.",
+         "whatTheAgentLoses": "You lose the creative control of deciding exactly which visual elements of the photo are captured inside the sliced shape."
+        }
+       ]
+      },
+      {
+       "id": "3.3",
+       "label": "Order the layers",
+       "questions": [
+        {
+         "question": "Should you send the photo to the back so the text can act as a mask?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The imported photo was obscuring the text on the canvas, which prevents the text from being used as a masking layer.",
+         "whatTheAgentLoses": "You lose the creative control to determine exactly how overlapping elements are layered to create specific masking effects."
+        },
+        {
+         "question": "How do you want to layer and position the text on the background shape?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The text layers are initially hidden behind the rectangle, requiring you to bring them to the front and manually adjust their size and placement to achieve a balanced look.",
+         "whatTheAgentLoses": "You lose the creative control to visually balance and size the text exactly how you want it on the background shape."
+        }
+       ]
+      },
+      {
+       "id": "3.4",
+       "label": "Duplicate or flip the piece",
+       "questions": [
+        {
+         "question": "Is there a second blank bookmark on the canvas?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The context menu displays multiple clipboard actions, and choosing 'Duplicate' directly clones the selected shape onto the canvas.",
+         "whatTheAgentLoses": "Delegating this step removes your control over deciding exactly how many identical items to produce in the final cut."
+        },
+        {
+         "question": "How should you create the background shadow layer?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The right-click menu provides a Duplicate option that allows you to create an identical shape to manually offset as a shadow.",
+         "whatTheAgentLoses": "You lose the creative control of manually dragging and positioning the duplicated layer to achieve the exact visual offset you want."
+        }
+       ]
+      },
+      {
+       "id": "3.5",
+       "label": "Weld the pieces",
+       "questions": [
+        {
+         "question": "Are the letters and the heart welded into one cut path?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Combining the individual text and heart layers into a single 'Weld Result' layer ensures the machine cuts the design as one continuous piece instead of slicing through overlapping shapes.",
+         "whatTheAgentLoses": "You lose the ability to decide exactly which overlapping elements should be permanently merged into a single silhouette."
+        },
+        {
+         "question": "Why do you weld the thin rectangle to the top edge of the brick wall?",
+         "cluster": "facts",
+         "moment": "On demand",
+         "moneyMoving": false,
+         "why": "The screen shows the rectangle being merged with the wall to create a thicker, sturdier base that can physically support the other design elements.",
+         "whatTheAgentLoses": "You lose the opportunity to structurally reinforce specific parts of the design based on the physical weight and assembly requirements of the final craft."
+        }
+       ]
+      },
+      {
+       "id": "3.6",
+       "label": "Slice one shape with another",
+       "questions": [
+        {
+         "question": "Which layers do you select to slice the first letter?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting the specific 'Text - Impact' layer and the 'Print Then Cut' photo layer ensures the slice tool cuts the image into the exact shape of that letter.",
+         "whatTheAgentLoses": "You lose the creative control of deciding exactly which part of the photo is sliced into which specific letter of your design."
+        },
+        {
+         "question": "Is the photo sliced into the second letter, with a Slice Result for it?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting both the photo and the specific text layer in the Layers panel enables the Slice tool to cut the image into that exact shape.",
+         "whatTheAgentLoses": "You lose the creative control of deciding exactly which letter shapes to slice the photo into and verifying the resulting layers."
+        }
+       ]
+      },
+      {
+       "id": "3.7",
+       "label": "Keep the right slice pieces",
+       "questions": [
+        {
+         "question": "Do the Slice Result layers show the letters cut out of the image?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Checking the 'Slice Result' layers in the panel and moving the top image ensures the software actually cut the desired shapes out of the photo.",
+         "whatTheAgentLoses": "You lose the visual confirmation and quality control of moving the original photo aside to ensure the sliced letters look exactly the way you want."
+        },
+        {
+         "question": "Which leftover layers from the slice operation should you delete?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The layers panel shows multiple slice results, and failing to delete the original text outlines and photo will cause the machine to cut or draw unwanted elements.",
+         "whatTheAgentLoses": "Delegating this means losing the ability to manually verify that only the correct photo-filled letters remain for the final project."
+        }
+       ]
+      },
+      {
+       "id": "3.8",
+       "label": "Add an offset",
+       "questions": [
+        {
+         "question": "Which elements of the design should you apply an offset to next?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The canvas displayed multiple letters, and selecting specific ones determines which parts of the design receive the offset effect.",
+         "whatTheAgentLoses": "The user loses creative control over which specific elements of their design are highlighted with an offset."
+        },
+        {
+         "question": "What size should the offset outline be?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Offset menu provides a distance slider and text box to precisely control the thickness of the border added around your design.",
+         "whatTheAgentLoses": "You lose the ability to visually balance the thickness of the outline against the rest of your specific design."
+        }
+       ]
+      },
+      {
+       "id": "3.9",
+       "label": "Contour the image",
+       "questions": [
+        {
+         "question": "Do you want to use the Contour tool to hide the small artifacts in the welded layer?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The canvas showed unwanted small spots in the green layer, and hiding them ensures a clean cut without tiny holes.",
+         "whatTheAgentLoses": "You lose the opportunity to manually inspect the design for tiny imperfections and decide exactly which artifacts to hide."
+        },
+        {
+         "question": "How do you want to create a solid base layer from the outline?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Contour panel displays a 'Hide All Contours' button that can be used to fill in the entire silhouette.",
+         "whatTheAgentLoses": "You lose the creative control to decide whether to completely fill the silhouette or leave specific internal cut lines visible for your base layer."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "4",
+     "label": "Assign layers to the machine",
+     "note": "4.1 where a layer should draw, print or cut differently from its default - and Pen so the image under a layer stays visible before 3.6. 4.2 on every layer that will cut from its own material; the colour decides which mat each layer lands on in 6. 4.3 on a print layer, 4.4 on a cut layer that must hold its place, and both on a kiss-cut sheet. 4.5 last, before 6 - a hidden layer does not cut, so any layer hidden during the design must be shown again if it needs to cut.",
+     "children": [
+      {
+       "id": "4.1",
+       "label": "Set the layer's operation",
+       "questions": [
+        {
+         "question": "Are your layers set to the correct operation types for cutting versus printing?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Selecting 'Basic Cut' or 'Print Then Cut' in the operation dropdown ensures the machine correctly distinguishes the artwork to be printed from the lines to be cut.",
+         "whatTheAgentLoses": "The user loses the direct oversight of assigning specific physical operations to each individual layer of their design."
+        },
+        {
+         "question": "Are the faces where you want them inside the letters before the slice?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Changing the text operation from a solid cut to a pen draw creates outlines, revealing the photo underneath so the text can be aligned perfectly around the faces.",
+         "whatTheAgentLoses": "You lose the personal visual judgment of exactly where the text outlines should fall across the faces in your specific photo."
+        }
+       ]
+      },
+      {
+       "id": "4.2",
+       "label": "Colour the layer's mat",
+       "questions": [
+        {
+         "question": "What color do you want the text to be?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The color palette dropdown includes a material colors section that lets you perfectly match the text to the red wine glass already on the canvas.",
+         "whatTheAgentLoses": "Delegating this step means you lose the creative choice to visually coordinate the text color with specific elements of your design."
+        },
+        {
+         "question": "Do the new text's size and colour match what this project needs?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows the text being resized with the bounding box and recolored via the Operation menu to match the project's scale and material needs.",
+         "whatTheAgentLoses": "The user loses creative control over the exact dimensions and color assignment of their custom text."
+        }
+       ]
+      },
+      {
+       "id": "4.3",
+       "label": "Flatten into a print image",
+       "questions": [
+        {
+         "question": "Are the pieces flattened into one print then cut image?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The layers panel shows multiple separate pieces, and you must select the correct tool from the bottom toolbar to ensure the machine prints them as one image rather than cutting them individually.",
+         "whatTheAgentLoses": "You lose the creative control to determine exactly which design elements are merged into the final printed image versus left as separate cut layers."
+        },
+        {
+         "question": "Is there a shape behind the design to flatten to when Offset is missing?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "This matters because manually adding, resizing, and flattening a light grey square behind the text provides a functional workaround when the preferred offset feature is missing.",
+         "whatTheAgentLoses": "Delegating this means you lose the opportunity to creatively problem-solve and choose the specific shape and color for your workaround background."
+        }
+       ]
+      },
+      {
+       "id": "4.4",
+       "label": "Attach the layers",
+       "questions": [
+        {
+         "question": "Will the machine cut the design exactly as you laid it out on the canvas?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The mat preview displayed scattered letters instead of a coherent sentence, indicating the design elements were not attached and would cut out of order.",
+         "whatTheAgentLoses": "You lose the ability to visually verify the cut layout and prevent wasting material on a scrambled design."
+        },
+        {
+         "question": "Are the draw and cut actions correctly combined on a single mat in the preview?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The preview screen showing both 'Draw' and 'Cut' on a single purple mat confirms that the attach function worked and the machine will perform both actions on the same piece of material.",
+         "whatTheAgentLoses": "You lose the visual reassurance of seeing your drawn text and cut shape properly aligned on the same virtual mat before committing to the job."
+        }
+       ]
+      },
+      {
+       "id": "4.5",
+       "label": "Hide the non-cutting layers",
+       "questions": [
+        {
+         "question": "Which template layers should you hide to reduce clutter before decorating?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Clicking the eye icons in the Layers panel to hide extra template layers prevents visual clutter and makes it easier to focus on the active design.",
+         "whatTheAgentLoses": "Delegating this step means you lose the ability to decide exactly which reference layers are helpful to keep visible and which are just distracting."
+        },
+        {
+         "question": "Which layers should you hide so they don't print or cut?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Toggling the eye icons in the layers panel ensures that only the intended parts of the design are sent to the machine.",
+         "whatTheAgentLoses": "You lose the creative control to decide exactly which elements of your workspace are included in the final physical project."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "5",
+     "label": "Size the design to fit",
+     "note": "the user measures the object in 5.1, before or after the design, whenever a real object sets the size - a blank, a garment, a mug, a board. 5.2 where a template or a stand-in shape shows how the design fits on the object. in 5.3 the user sets the final dimensions. then the machine's limits: 5.4 when a warning names a maximum, 5.5 when the design is bigger than any mat, 5.6 is for using the whole sheet, and 5.7 for making sure the pieces cut as separate pieces. 6.4 sends the user back here when a piece spills onto another mat.",
+     "children": [
+      {
+       "id": "5.1",
+       "label": "Measure the object",
+       "questions": [
+        {
+         "question": "What dimensions should you use for the design based on the physical item?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Measuring the physical shirt with a tape measure beforehand ensures the design will be scaled correctly in the software.",
+         "whatTheAgentLoses": "An agent cannot physically measure the real-world item, requiring the user to manually determine and provide the exact target dimensions."
+        },
+        {
+         "question": "What size is the physical garment you are designing for?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting the correct size from the template dropdown ensures the digital design is scaled accurately for the physical baby shirt.",
+         "whatTheAgentLoses": "Delegating this means the agent might select a default template size, resulting in a cut design that is improperly scaled for the actual garment."
+        }
+       ]
+      },
+      {
+       "id": "5.2",
+       "label": "Place a size template",
+       "questions": [
+        {
+         "question": "Do the imported template's size and layers match what the file should bring in?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The screen shows the template's bounding box dimensions of 10.72 by 2.75 inches and the layers panel lists the individual shapes to confirm the file imported correctly.",
+         "whatTheAgentLoses": "You lose the ability to visually confirm that the template imported with the correct shapes and original dimensions before making any edits."
+        },
+        {
+         "question": "How will you size the design to fit your physical material?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Adding a reference shape from the menu helps visualize the physical wood piece so you can scale the text design accurately on the canvas.",
+         "whatTheAgentLoses": "You lose the ability to use your own visual workarounds, like adding a temporary shape to represent the physical object you are crafting."
+        }
+       ]
+      },
+      {
+       "id": "5.3",
+       "label": "Set the design size",
+       "questions": [
+        {
+         "question": "What specific dimensions do you want to resize the text box to?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Setting the exact width and height in the top toolbar, including unlocking the aspect ratio, ensures the design fits the physical material perfectly.",
+         "whatTheAgentLoses": "You lose control over the exact physical dimensions and proportions of the final cut piece."
+        },
+        {
+         "question": "What size should you make the images on the canvas?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The inserted images initially appear huge on the canvas, so you must use the size toolbar to scale them down to fit your intended project dimensions.",
+         "whatTheAgentLoses": "You lose the ability to specify the exact physical dimensions of the cut design to perfectly fit your specific craft item."
+        }
+       ]
+      },
+      {
+       "id": "5.4",
+       "label": "Shrink to the cut limit",
+       "questions": [
+        {
+         "question": "Did the size set earlier already put this over the cutting limit?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The stencil width of 14.056 inches shown at 09:01 directly explains the software's warning at 11:25 that the image exceeds the standard 11.5-inch cutting area.",
+         "whatTheAgentLoses": "Delegating this means you lose the ability to verify that the software's size warnings accurately reflect your intended project dimensions."
+        },
+        {
+         "question": "What dimensions do you want to set for the new design?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen prompts for a custom width, height, and unit of measurement to establish the initial canvas size for your project.",
+         "whatTheAgentLoses": "You lose the ability to ensure the virtual canvas perfectly matches the specific physical mat or material size you have on hand."
+        }
+       ]
+      },
+      {
+       "id": "5.5",
+       "label": "Split the design across mats",
+       "questions": [
+        {
+         "question": "Should you click OK to use a larger mat or cancel to reduce the image size?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The warning banner requires you to either confirm using a 12\" x 24\" mat or return to the canvas to shrink the design.",
+         "whatTheAgentLoses": "You lose the ability to decide whether to commit to using a larger physical mat or adjust the design to fit standard materials."
+        },
+        {
+         "question": "How do you size the template shape to match the maximum printable area?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Unlocking the padlock icon and entering exact width and height values ensures the slicing template perfectly matches the software's print-then-cut limits.",
+         "whatTheAgentLoses": "You lose the hands-on control of defining the exact slicing boundaries to optimize how your specific design fits within the print-then-cut constraints."
+        }
+       ]
+      },
+      {
+       "id": "5.6",
+       "label": "Fill the sheet with copies",
+       "questions": [
+        {
+         "question": "Are you using the material efficiently?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The mat preview shows a large empty space within the restricted cutting area, indicating that material will be wasted if cut as-is.",
+         "whatTheAgentLoses": "An agent might proceed with the sparse layout, wasting your physical craft materials instead of maximizing the yield per sheet."
+        },
+        {
+         "question": "How many copies of this sticker sheet do you want to create?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Duplicating the attached group directly on the canvas maximizes material usage and lets you cut multiple identical sheets in a single machine run.",
+         "whatTheAgentLoses": "You lose the opportunity to specify exactly how many identical sticker sheets to produce based on your current material supply and project needs."
+        }
+       ]
+      },
+      {
+       "id": "5.7",
+       "label": "Keep the pieces apart",
+       "questions": [
+        {
+         "question": "Are the white borders of your stickers overlapping?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Placing a temporary dark grey square behind the images makes their white borders visible so you can ensure the cut lines do not intersect.",
+         "whatTheAgentLoses": "You lose the ability to visually verify the exact spacing of the white borders to guarantee a clean, separate cut for each sticker."
+        },
+        {
+         "question": "Were the stickers placed by hand where the replication tools would be safer?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "A physical printed sheet of stickers demonstrates that automated row and column replication ensures perfect alignment for the machine's sensors, except for very small stickers which require manual placement to avoid cutting errors.",
+         "whatTheAgentLoses": "You lose the opportunity to apply nuanced, experience-based judgment about when a design is small enough to require manual placement instead of automated alignment tools."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "6",
+     "label": "Prepare the mats",
+     "note": "6.1 where the user needs to save the project - in two recordings the user saves the project, and in one the user chooses not to. 6.2 covers what the user checks before clicking Make It. on newer versions the user goes through 6.3 first. the user goes through 6.4 on every run, and it sends the user back to 3, 4 or 5 whenever the preview is wrong - in seven of the recordings the user cancels here at least once. 6.5 where the paper or the mat is not the default. for an iron-on, infusible-ink or sublimation job the user goes through 6.6 on every mat, and skips it for a sticker, decal or stencil job. then 7 for a print job, else 8.",
+     "children": [
+      {
+       "id": "6.1",
+       "label": "Save the project",
+       "questions": [
+        {
+         "question": "Was the document closed without saving on purpose, with nothing you wanted lost?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Clicking the close 'x' on the document tab triggers a dialog box asking if you want to save your changes before closing.",
+         "whatTheAgentLoses": "You lose the ability to intentionally discard unwanted modifications to keep your files unaltered before clearing the workspace."
+        },
+        {
+         "question": "What do you want to name the project, and should it be saved as public?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The save dialog requires a project name and includes a checkbox that determines if the design is shared publicly.",
+         "whatTheAgentLoses": "Delegating this means you lose control over your project's organization and whether your personal design is shared with the public."
+        }
+       ]
+      },
+      {
+       "id": "6.2",
+       "label": "Confirm the design is ready",
+       "questions": [
+        {
+         "question": "Does the software block the cut and prompt for payment because a premium element was accidentally left in the design?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Cricut Design Space allows users to design with premium fonts and images but halts the process at the 'Make It' screen to demand payment or a subscription.",
+         "whatTheAgentLoses": "The ability to catch unexpected charges and choose to go back to the canvas to swap the premium element for a free alternative."
+        },
+        {
+         "question": "Are you ready to send the design to the machine?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Clicking the green 'Make It' button confirms your canvas arrangement and transitions the project to the mat preparation screen.",
+         "whatTheAgentLoses": "You lose the final opportunity to visually verify the design's layout and sizing on the canvas before committing to the cut preparation."
+        }
+       ]
+      },
+      {
+       "id": "6.3",
+       "label": "Choose the load type",
+       "questions": [
+        {
+         "question": "How will you load your materials for this project?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The software requires you to specify whether the materials will be loaded on a mat, without a mat, or in multiple ways to properly prepare the cut job.",
+         "whatTheAgentLoses": "You lose the ability to ensure the software's load method matches the physical materials and equipment you actually have on hand."
+        },
+        {
+         "question": "How should you set the material load type for the second layer?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting \"Without Mat\" from the dropdown triggers a warning that your material must be at least 15 cm in length, which dictates how you physically prepare the vinyl.",
+         "whatTheAgentLoses": "You lose the opportunity to verify that your physical piece of Smart Vinyl meets the specific length requirement displayed in the software's warning."
+        }
+       ]
+      },
+      {
+       "id": "6.4",
+       "label": "Review the mat preview",
+       "questions": [
+        {
+         "question": "Do the mat layout, material size, and mirror settings look correct before you continue?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Reviewing the layout, the 4.5\" x 6.5\" material size, and the mirror setting ensures the design will cut properly on your physical material.",
+         "whatTheAgentLoses": "You lose the opportunity to verify that the virtual mat layout perfectly matches the physical piece of material you plan to load into the machine."
+        },
+        {
+         "question": "Which layer do you want to cut first?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Prepare screen lists multiple colored layers, meaning you must specify which material color to load and cut first before continuing.",
+         "whatTheAgentLoses": "You lose control over the cutting sequence, which might disrupt your physical workflow if you have your materials prepared in a specific order."
+        }
+       ]
+      },
+      {
+       "id": "6.5",
+       "label": "Set the material size",
+       "questions": [
+        {
+         "question": "Are the material sizes set correctly for your print and cut mats?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The screen shows material size options for each mat, which must match your physical materials so the machine cuts within the correct boundaries.",
+         "whatTheAgentLoses": "Delegating this means you lose the ability to ensure the software's mat sizes perfectly match the specific physical materials you have on hand."
+        },
+        {
+         "question": "Is the Cameo 4 the machine you actually have connected?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Page Setup panel showed the media size set to A4 and the machine set to Cameo 4, which dictates the physical boundaries for your design.",
+         "whatTheAgentLoses": "You lose the opportunity to verify that the virtual canvas matches the exact physical material you plan to load into the machine."
+        }
+       ]
+      },
+      {
+       "id": "6.6",
+       "label": "Mirror the mats",
+       "questions": [
+        {
+         "question": "Do you need to mirror the design for this cut?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Toggling the mirror switch flips the text in the preview so that the physical cut does not turn out backwards.",
+         "whatTheAgentLoses": "You lose the manual check to ensure the design is properly mirrored for your specific transfer material."
+        },
+        {
+         "question": "Do you need to flip the design horizontally for application on the inside of a transparent surface?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The \"Flip Horizontal\" option in the top toolbar allows you to reverse the image so it appears correctly when viewed from the outside of a clear object.",
+         "whatTheAgentLoses": "Delegating this step means you lose the ability to determine if your specific physical application requires a mirrored cut to display correctly."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "7",
+     "label": "Print the sheet",
+     "note": "this goal applies only to a print then cut job, which is 13 of the recordings. on Silhouette 7.1 comes first, in Page Setup, and 7.3 is File then Print before 8. on Cricut the marks are automatic and 7.3 is Send to Printer on the Make screen after 6. the user goes through 7.2 whenever the layout gets close to the registration marks. the user goes through 7.4, then 7.5 only if the system-dialog switch in 7.4 is on. 7.6 happens before printing and 7.7 after the sheet is printed. if the sheet is already printed, the user picks I have already printed to skip this goal.",
+     "children": [
+      {
+       "id": "7.1",
+       "label": "Turn on the registration marks",
+       "questions": [
+        {
+         "question": "How small should you set the registration mark insets to maximize the usable area on the sticker paper?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Setting the insets to their minimum value of 0.394 inches pushes the registration marks to the very edges of the page setup screen, maximizing the space available for your designs.",
+         "whatTheAgentLoses": "You lose the opportunity to manually maximize the printable area to fit as many stickers as possible on a single sheet."
+        },
+        {
+         "question": "Do you want to turn on registration marks for your design?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Enabling registration marks in the panel adds alignment guides to the virtual mat, which dictates the safe printable and cuttable area for a print-and-cut project.",
+         "whatTheAgentLoses": "You lose the ability to decide whether the project should be formatted as a print-and-cut job with specific alignment boundaries."
+        }
+       ]
+      },
+      {
+       "id": "7.2",
+       "label": "Stay inside the marks",
+       "questions": [
+        {
+         "question": "Does the layout fit correctly within the registration marks on your chosen material size?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "Checking the preview ensures your designs fit properly inside the black registration rectangle on the 8.5\" x 11\" material so the machine can read the marks and cut accurately.",
+         "whatTheAgentLoses": "You lose the peace of mind of visually confirming that the virtual layout perfectly matches your physical paper before committing to the print and cut."
+        },
+        {
+         "question": "Does the outline box reach the sheet's corners?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows the shape tools and border style panel used to create a transparent box with a specific border weight.",
+         "whatTheAgentLoses": "Delegating this step means losing control over the exact thickness and style of the sticker sheet's outer boundary."
+        }
+       ]
+      },
+      {
+       "id": "7.3",
+       "label": "Send to the printer",
+       "questions": [
+        {
+         "question": "Do you need to print the sheet again for this second cut?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The print setup screen includes an 'I have already printed' link, which allows you to skip the printing step if the physical sheet is already prepared.",
+         "whatTheAgentLoses": "An agent might automatically send the job to the printer again, wasting ink and paper because it cannot see that the printed sheet is already on the physical mat."
+        },
+        {
+         "question": "Are the print preview and printer settings correct for your design?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "Reviewing the print preview ensures the photo inside the letters is positioned correctly and the right EPSON printer is selected before committing ink and materials to the job.",
+         "whatTheAgentLoses": "Delegating this step removes your ability to visually verify the final print layout and ensure your preferred local printer is selected."
+        }
+       ]
+      },
+      {
+       "id": "7.4",
+       "label": "Set bleed and dialog",
+       "questions": [
+        {
+         "question": "Are bleed and the system dialog set the way this print needs?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The print setup screen provides toggles for 'Add Bleed' and 'Use System Dialog' to control the print margins and access specific printer preferences.",
+         "whatTheAgentLoses": "Delegating this means you lose the ability to prevent unnecessary ink usage for bleeds or to apply custom quality settings specific to your physical printer."
+        },
+        {
+         "question": "Does the print preview show the edges of your design looking slightly expanded or fuzzy?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "When 'Add Bleed' is enabled, the software visually stretches the edges of the printed design in the preview to give the blade a margin of error, which is the only way to verify the setting applied correctly before printing.",
+         "whatTheAgentLoses": "The user loses the visual confirmation that the bleed was successfully applied to the print file, which is crucial for preventing unwanted white borders on the final physical cut."
+        }
+       ]
+      },
+      {
+       "id": "7.5",
+       "label": "Set paper type and quality",
+       "questions": [
+        {
+         "question": "Do you want to set the paper type and print quality for the sticker paper?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Toggling the system dialog on allows you to change the media type from plain paper to a photo setting and increase the print quality to high.",
+         "whatTheAgentLoses": "You lose the ability to manually ensure the printed design has the optimal ink saturation and resolution for your specific physical materials."
+        },
+        {
+         "question": "Should this second sheet print at High Quality, like the first one?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Although you stated you were using the same settings, the on-screen print dialog shows the quality is set lower than the previous job.",
+         "whatTheAgentLoses": "The user loses the assurance of consistent print quality across their project pieces when the agent fails to verify that the dialog settings match the intended ones."
+        }
+       ]
+      },
+      {
+       "id": "7.6",
+       "label": "Load the paper",
+       "questions": [
+        {
+         "question": "Does the print dialog's paper type match the transfer paper you're using?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The video shows 3G Jet-Opaque paper being placed in the tray to ensure the design prints on the proper medium for the physical transfer.",
+         "whatTheAgentLoses": "You lose the physical control of verifying and loading the exact specialty material required for your specific project."
+        }
+       ]
+      },
+      {
+       "id": "7.7",
+       "label": "Prepare the printed sheet"
+      }
+     ]
+    },
+    {
+     "id": "8",
+     "label": "Set the material and tool",
+     "note": "for each mat, after 7 for a print job, the user goes through 8.1 and 8.2. if every mat is the same material they also go through 8.3. the user goes through 8.4 whenever the prompt names a tool other than the one loaded. on a machine with a dial the user turns the dial in 8.5 instead of picking from the list in 8.1, and the software then shows Adjust dial. the loop runs once per mat: five times in z3l5, once in kND6, where the user changes the blade between cuts, and twice with a material change between the cuts in Ca7s.",
+     "questions": [
+      {
+       "question": "Are the material and pressure settings correct for this mat?",
+       "cluster": "facts",
+       "moment": "After",
+       "moneyMoving": true,
+       "why": "The screen shows the material set to Light Cardstock and prompts for the Fine-Point Blade, which must match the physical material you are using to ensure a successful cut.",
+       "whatTheAgentLoses": "You lose the ability to verify that the software's material and tool settings match the physical materials you are about to load into the machine."
+      }
+     ],
+     "children": [
+      {
+       "id": "8.1",
+       "label": "Pick the material profile",
+       "questions": [
+        {
+         "question": "Which material setting does the panel show selected, and does it match the material you're actually cutting?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Selecting the correct cardstock weight from the search results ensures the machine applies enough pressure to cut through both the vinyl and its backing.",
+         "whatTheAgentLoses": "You lose the opportunity to apply your personal experience regarding which specific material setting yields the best die-cut for your exact sticker paper."
+        },
+        {
+         "question": "Does the material selected in the software match what's actually loaded?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The software was set to Premium Vinyl - Permanent Glossy while the physical packaging showed Smart Vinyl Permanent Vinyl Shimmer, which could result in incorrect cut pressure.",
+         "whatTheAgentLoses": "The user loses the assurance that the machine is configured with the exact cut settings required to successfully cut their specific physical material."
+        }
+       ]
+      },
+      {
+       "id": "8.2",
+       "label": "Set the pressure",
+       "questions": [
+        {
+         "question": "Does the selected pressure match what this material needs - a full cut through, or only partway for a kiss cut?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Adjusting the pressure slider for the selected material determines whether the machine cuts completely through the paper and laminate or only cuts the top layer.",
+         "whatTheAgentLoses": "You lose the opportunity to calibrate the exact cut pressure required for your specific physical materials and desired sticker style."
+        },
+        {
+         "question": "Should you perform a test cut before committing to the final cut on this material?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Doing a test cut ensures the machine's pressure settings are correctly calibrated for a new or unfamiliar material, preventing you from ruining a full sheet.",
+         "whatTheAgentLoses": "The user loses the physical opportunity to verify the cut depth on a small scrap before committing the full sheet of material to the job."
+        }
+       ]
+      },
+      {
+       "id": "8.3",
+       "label": "Carry the setting forward",
+       "questions": [
+        {
+         "question": "Should this material and pressure setting be remembered and applied to the remaining mats?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting the correct base material ensures the machine uses the right pressure, and checking the remember settings box saves time when processing multiple mats.",
+         "whatTheAgentLoses": "Delegating this step means you lose the ability to specify the exact material type and decide whether to apply that setting universally to save time."
+        }
+       ]
+      },
+      {
+       "id": "8.4",
+       "label": "Load the tool",
+       "questions": [
+        {
+         "question": "Is the blade the panel asks for the same one as the box you have?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The software prompts you to load a 'Fine-Point Blade', which creates a confusing discrepancy with the 'Premium Fine-Point Blade' listed on the physical box.",
+         "whatTheAgentLoses": "You lose the human ability to deduce that the software's generic blade prompt safely corresponds to the premium blade included in the box."
+        },
+        {
+         "question": "Which cutting blade should you choose for a design with fine details?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen indicates the Knife Blade is best for moderate detail no smaller than three-quarters of an inch, meaning a different blade is required to successfully cut finer details.",
+         "whatTheAgentLoses": "You lose the opportunity to evaluate the physical intricacies of your specific design against the hardware capabilities of each blade type."
+        }
+       ]
+      },
+      {
+       "id": "8.5",
+       "label": "Set the machine dial",
+       "questions": [
+        {
+         "question": "What material setting should you select on the machine's dial?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Setting the physical dial to the correct material ensures the machine applies the appropriate blade pressure for the specific project.",
+         "whatTheAgentLoses": "The user loses the physical control of manually turning the machine's dial to match the exact material they are loading."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "9",
+     "label": "Load and cut",
+     "note": "for each mat the user goes through 9.1, 9.2 and 9.3 in order - to start the cut the user presses the machine's button, or SEND on Silhouette, or Go in the phone app. in 9.4 the user watches while the machine reads the marks and cuts. in three recordings the user goes through 9.5 before 9.6, and presses Go again if a corner has not cut. 9.6 closes the mat and moves the software to the next one or to Done; for a kiss-cut sheet the user goes through 6 again without printing again. in 25 of the 26 recordings the user goes through 9.7 outside the software after the last mat.",
+     "children": [
+      {
+       "id": "9.1",
+       "label": "Place material on the mat",
+       "questions": [
+        {
+         "question": "What minimum material size does the warning ask for?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The screen showed a warning that the material needed to be at least 5 inches long to complete the cut successfully.",
+         "whatTheAgentLoses": "The user wastes physical material and time if an agent ignores the software's size requirements and attempts a doomed cut."
+        }
+       ]
+      },
+      {
+       "id": "9.2",
+       "label": "Load the mat"
+      },
+      {
+       "id": "9.3",
+       "label": "Start the cut",
+       "questions": [
+        {
+         "question": "Do you press the flashing 'Go' button on the machine to start the cut?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The software indicates the machine is ready, and pressing the physical flashing button is required to execute the cut job.",
+         "whatTheAgentLoses": "An agent cannot physically interact with the cutting machine to press the button and start the actual cut."
+        },
+        {
+         "question": "Is your cutting machine connected and ready to receive the cut job?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "Seeing the green 'Ready' status next to your specific machine ensures the hardware is communicating properly before you click the blue 'SEND' button.",
+         "whatTheAgentLoses": "Delegating this step means you miss the final opportunity to verify the physical machine's connection status before committing your materials to the cut."
+        }
+       ]
+      },
+      {
+       "id": "9.4",
+       "label": "Watch the cut",
+       "questions": [
+        {
+         "question": "Do you wait for the cutting progress circle to reach 100%?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "Tracking the on-screen progress percentages ensures you know exactly when the machine has finished cutting the current mat.",
+         "whatTheAgentLoses": "You lose the ability to monitor the real-time cutting progress and intervene if the machine stalls."
+        },
+        {
+         "question": "Is the machine reading the registration marks?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "If the optical sensor fails to read the printed black square and corner lines, the machine cannot accurately align the cuts around your printed designs.",
+         "whatTheAgentLoses": "You lose the opportunity to visually verify that the machine's sensor correctly detects the physical registration marks before it begins cutting the material."
+        }
+       ]
+      },
+      {
+       "id": "9.5",
+       "label": "Check the cut before unloading"
+      },
+      {
+       "id": "9.6",
+       "label": "Unload and close the job",
+       "questions": [
+        {
+         "question": "Was Done clicked so the software is back on the canvas?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen shows the final steps of the 'Herstellen' process and a green 'Fertig' button to finalize the job.",
+         "whatTheAgentLoses": "You lose the final confirmation that the cut job is complete and the control over resetting your workspace."
+        },
+        {
+         "question": "Which color material should you load onto the mat next?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The app displays a coral square to indicate the specific color layer that the machine is ready to cut next.",
+         "whatTheAgentLoses": "Delegating this step means you lose the physical confirmation that the correct color material is loaded to match the software's current cut layer."
+        }
+       ]
+      },
+      {
+       "id": "9.7",
+       "label": "Finish the object",
+       "note": "these steps happen outside the software and on camera in 25 of the 26 recordings. the task in TASK.txt ends before them. for every cut the user goes through 9.7.1 and then 9.7.2. the next steps depend on the project: 9.7.3 and 9.7.4 for a decal or a stencil, 9.7.5 to 9.7.7 for iron-on, Infusible Ink and sublimation, 9.7.8 after a stencil is applied. 9.7.9 where pieces are glued, trimmed or fitted with hardware. 9.7.10 is the last step in every recording that shows the project completed.",
+       "children": [
+        {
+         "id": "9.7.1",
+         "label": "Peel the mat away"
+        },
+        {
+         "id": "9.7.2",
+         "label": "Weed the design"
+        },
+        {
+         "id": "9.7.3",
+         "label": "Apply transfer tape"
+        },
+        {
+         "id": "9.7.4",
+         "label": "Place and apply the decal"
+        },
+        {
+         "id": "9.7.5",
+         "label": "Look up the heat settings",
+         "questions": [
+          {
+           "question": "What heat settings and procedure does the guide show for this material?",
+           "cluster": "facts",
+           "moment": "After",
+           "moneyMoving": true,
+           "why": "The screen details critical application instructions like 'Medium 25 s' and 'Light pressure' needed to properly adhere the iron-on design to the cotton.",
+           "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the specific heating times, pressure, and peeling instructions required to successfully finish your physical craft."
+          }
+         ]
+        },
+        {
+         "id": "9.7.6",
+         "label": "Place the transfer"
+        },
+        {
+         "id": "9.7.7",
+         "label": "Press and peel"
+        },
+        {
+         "id": "9.7.8",
+         "label": "Paint through the stencil"
+        },
+        {
+         "id": "9.7.9",
+         "label": "Assemble and finish the piece"
+        },
+        {
+         "id": "9.7.10",
+         "label": "Check the finished object"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
  "creditcard": {
   "task": "apply for a credit card online as a consumer: open the card's apply page, fill the application (personal info, income, SSN-type identity fields), review disclosures and terms, submit, and see the decision or \"under review\" state; complete when the application-submitted or decision screen is on screen. Surface pinned: a bank or card issuer's website or app (Chase, Discover, Capital One, Amex, Citi, Bank of America). Variants: \"best credit cards\" rankings and reviews, credit-repair content, activating or using a card, and business payment-processing (merchant) content do not belong.",
   "tree": {
