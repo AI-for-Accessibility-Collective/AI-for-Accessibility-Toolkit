@@ -33,8 +33,23 @@ export const ENVELOPE_VERSION = 1;
 // A drain failure is TERMINAL (the entry can never succeed — drop it) vs
 // TRANSIENT (would succeed once the user unpauses / switches back — keep it to
 // retry). sharing-paused and partition-switched are transient.
+/** @type {Set<string|undefined>} */
 const TRANSIENT_REASONS = new Set(['sharing-paused', 'partition-switched']);
 
+/**
+ * The Librarian methods the transport drives. Structural on purpose: any
+ * object with these three methods (a real Librarian, a remote proxy, a test
+ * double) can sit on either side.
+ * @typedef {Object} TransportLibrarian
+ * @property {() => Promise<Array<{ appId: string }>>} listGrants
+ * @property {(appId: string) => Promise<{ ok: boolean, abilityModel?: any, reason?: string }>} exportAbilityModel
+ * @property {(sourceAppId: string, insight: any) => Promise<{ ok: boolean, reason?: string }>} importInsight
+ */
+
+/**
+ * @param {SharedStore} shared
+ * @param {string} key
+ */
 async function removeKey(shared, key) {
   if (typeof shared.remove === 'function') await shared.remove(key);
   else await shared.set(key, undefined);
@@ -59,6 +74,10 @@ export function createSharedTransport({ shared, clock }) {
     // retracted even if the caller doesn't name it (revoke=delete removes it
     // from listGrants, but its stale envelope must not linger). `appIds` is an
     // optional extra set to consider (e.g. apps requesting for the first time).
+    /**
+     * @param {TransportLibrarian} librarian
+     * @param {string[]|null} [appIds]
+     */
     async publishExports(librarian, appIds = null) {
       const grants = await librarian.listGrants();
       const prevIndex = (await shared.get(PUBLISHED_INDEX_KEY)) || [];
@@ -86,6 +105,7 @@ export function createSharedTransport({ shared, clock }) {
     // and succeeded entries are consumed; TRANSIENTLY-failed entries (sharing
     // paused, partition switched) are KEPT so the next drain retries them once
     // the user unpauses — a paused-window insight is deferred, not lost.
+    /** @param {TransportLibrarian} librarian */
     async drainInbox(librarian) {
       const raw = await shared.get(INBOX_KEY);
       const inbox = Array.isArray(raw) ? raw : [];
@@ -105,11 +125,16 @@ export function createSharedTransport({ shared, clock }) {
 
     // ---- consumer-app side (what XR / ArtInsight call) ----
 
+    /** @param {string} appId */
     async readExport(appId) {
       const env = await shared.get(EXPORT_PREFIX + appId);
       return env && env.v === ENVELOPE_VERSION ? env : null;
     },
 
+    /**
+     * @param {string} sourceAppId
+     * @param {any} insight
+     */
     async postInsight(sourceAppId, insight) {
       const inbox = (await shared.get(INBOX_KEY)) || [];
       inbox.push({ v: ENVELOPE_VERSION, sourceAppId, sentAt: clock.now(), insight });

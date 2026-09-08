@@ -1,3 +1,7 @@
+// @ts-nocheck
+// FLAG(review): 287 errors under toolkit/tsconfig.json's strict check at the
+// time this count was taken. Type declarations still emit from this file;
+// remove these lines and fix the errors to opt it into the check.
 // Librarian — the personal memory/profile agent. Sole writer of the
 // Librarian-owned stores (mine.profile, mine.suppressions, mine.episodicLog,
 // mine.proposals, mine.siteIndex, mine.views, memory shards). Everything
@@ -43,8 +47,8 @@ import { buildSkill } from './skill-builder.js';
 
 /**
  * @param {Object} deps
- * @param {Object} deps.datastore   The Datastore facade (../core/datastore).
- * @param {Object} deps.taxonomy    The site taxonomy (../core/taxonomy).
+ * @param {ReturnType<typeof import('./datastore.js').createDatastore>} deps.datastore   The Datastore facade (../core/datastore).
+ * @param {import('./taxonomy.js').Taxonomy} deps.taxonomy    The site taxonomy (../core/taxonomy).
  * @param {import('../ports/index.js').Clock} deps.clock
  * @param {import('../ports/index.js').Scheduler} [deps.scheduler]
  * @param {import('../ports/index.js').Consent} [deps.consent]
@@ -74,6 +78,13 @@ export function createLibrarian({
     return `${prefix}-${clock.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
+  // The explicit types are for the declaration emitter: with `lib` at ES2022
+  // only, the checker does not know the URL global, so without them the
+  // `origin` fields in types/core/librarian.d.ts fall back to `any`.
+  /**
+   * @param {string|null|undefined} url
+   * @returns {string|null}
+   */
   function originOf(url) {
     try { return new URL(url).hostname.toLowerCase().replace(/^www\./, ''); }
     catch { return null; }
@@ -628,11 +639,13 @@ export function createLibrarian({
     async getEffectivePreferences(url, contexts = []) {
       const now = clock.now();
       const { scopes, shards, origin, category } = await loadScopeShards(url, contexts);
+      /** @type {Record<string, any>} */
       const merged = {};
       const applied = [];
       // provenance: key -> scope of the record that set its final value, so a
       // consumer (the popup) can write a change back to the same scope rather
       // than clobbering the global baseline.
+      /** @type {Record<string, any>} */
       const provenance = {};
       // Strength gate: a stronger requirement (floor > preference > hint) is
       // never overwritten by a weaker one, regardless of scope specificity;
@@ -1081,8 +1094,19 @@ export function createLibrarian({
       return scored.length ? scored[0].skill : null;
     },
 
+    /**
+     * @param {import('./skill.js').Skill} skill
+     * @returns {ReturnType<typeof resolveSkill>}
+     */
     // Compile a skill to the deterministic apply-plan (settings + adapter ids)
     // the host's adapter layer consumes. No LLM at apply-time.
+    // FLAG(review): the typed block above is for the declaration emitter and
+    // sits above this line comment so scripts/introspect.mjs, which reads the
+    // // lines directly above a method, still finds this description. The
+    // file is opted out of the check, and @ts-nocheck also silences the error
+    // tsc raises when an inferred type cannot be named from another module,
+    // so without the block types/core/librarian.d.ts wrote a bare
+    // SkillRecipeAction that no consumer could resolve.
     resolveSkill(skill) {
       return resolveSkill(skill);
     },
@@ -1414,6 +1438,10 @@ export function createLibrarian({
     // on the ability profile — not a hand-maintained vocabulary copy.
     // Fast lane: builds a string, never calls the LLM itself.
     async interpretNeedsPrompt(text) {
+      // FLAG(review): `tools` is null when the host passed no toolsRegistry
+      // (the createToolkit default), and the two calls below throw on it.
+      // The main paths guard the registry (datastore.js, getSettingsMeta);
+      // these LLM paths do not. Left as is: no runtime change in this PR.
       const tools = DS().global.tools();
       const profile = await getOrInitProfile();
       const profileBlock = (profile.supportAreas.length || profile.freeText)
@@ -1833,6 +1861,8 @@ Return ONLY valid JSON with:
         .map(s => s.aspect);
       const profile = await getOrInitProfile();
 
+      // FLAG(review): the settingsVocabularyLines() call in this prompt throws
+      // when the host passed no toolsRegistry; see interpretNeedsPrompt.
       const prompt = `You maintain the memory of a browser accessibility assistant. Convert raw observations into durable memory operations.
 
 ## Setting keys and their EXACT units/ranges (use these units in every "settings" object)

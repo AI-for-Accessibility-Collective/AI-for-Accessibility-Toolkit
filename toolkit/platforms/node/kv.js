@@ -1,3 +1,7 @@
+// @ts-nocheck
+// FLAG(review): 27 errors under toolkit/tsconfig.json's strict check at the
+// time this count was taken. Type declarations still emit from this file;
+// remove these lines and fix the errors to opt it into the check.
 // Node platform adapters — KVStore. This is the TEMPLATE an XR / mobile
 // (any JS-runtime) host copies: swap `fileKV`'s disk backing for the real
 // platform store (a native file API, AsyncStorage, IndexedDB, …) and every
@@ -60,7 +64,7 @@ export function fileKV(dir) {
   };
 }
 
-/** A KVStore over a plain in-process object — no disk I/O, no persistence
+/** A KVStore over a plain in-process object: no disk I/O, no persistence
  *  across runs. Same contract as fileKV; useful for a script that only needs
  *  one process lifetime, or a test. */
 export function memoryKV() {

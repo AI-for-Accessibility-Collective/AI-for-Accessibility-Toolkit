@@ -1,3 +1,7 @@
+// @ts-nocheck
+// FLAG(review): 31 errors under toolkit/tsconfig.json's strict check at the
+// time this count was taken. Type declarations still emit from this file;
+// remove these lines and fix the errors to opt it into the check.
 // The web SurfaceAdapter — how the Chrome extension renders the merged
 // settings. The browser natively supports every key in the host's settings
 // registry (that's what `applyProfileSettings` in content.js already does), so
@@ -19,7 +23,13 @@ import { coerceSetting } from '../../core/units.js';
  * range-check so an out-of-range cross-app value is reported, not silently
  * clamped away.
  * @param {Record<string, {type:string, range?:[number,number]}>} settingsMeta
+ * @returns {ReturnType<typeof createSurfaceAdapter>}
  */
+// FLAG(review): the @returns above is for the declaration emitter. This file
+// is opted out of the check, and @ts-nocheck also silences the error tsc
+// raises when an inferred type cannot be named from another module, so
+// without it types/platforms/chrome/web-surface.d.ts wrote a bare
+// SurfaceApplyResult that no consumer could resolve.
 export function createWebSurface(settingsMeta = {}) {
   const supports = {};
   for (const [key, meta] of Object.entries(settingsMeta)) {
@@ -82,13 +92,15 @@ export const WEB_DERIVATION = {
 /**
  * Derive baseline web settings from an AbilityModel. Returns
  * `{ settings, strengthByKey, unmet }`. Empty `needs[]` (every current user)
- * returns the empty triple — the inertness short-circuit. On a collision the
+ * returns the empty triple, the inertness short-circuit. On a collision the
  * stronger need wins (ties: last need wins). `unmet` lists ability needs whose
- * dimension has NO web rendering (e.g. a cross-app dimension) — that is the
+ * dimension has NO web rendering (e.g. a cross-app dimension), that is the
  * genuine web cannot-satisfy signal. Values are left raw; the caller clamps.
  */
 export function deriveWebSettings(abilityModel) {
+  /** @type {Record<string, any>} */
   const settings = {};
+  /** @type {Record<string, string>} */
   const strengthByKey = {};
   const unmet = [];
   const needs = (abilityModel && abilityModel.needs) || [];
@@ -114,13 +126,13 @@ export function deriveWebSettings(abilityModel) {
  * SurfaceAdapter for an honest cannot-satisfy verdict.
  *
  * Identity by construction: the response starts from the authoritative merge
- * VERBATIM and never drops or alters a key the merge produced — so for today's
+ * VERBATIM and never drops or alters a key the merge produced, so for today's
  * empty-needs data, `settings === prefs.settings` exactly (same keys, values,
  * and order), regardless of whether a key is in the registry, a string-typed
  * numeric, etc. The derived baseline only FILLS keys the merge did NOT set (a
  * real record at any strength beats it; derived values are clamped to range).
- * `surface.unmet` reports ABILITY NEEDS the web can't render — NOT arbitrary
- * merge keys — so it is empty for every current user and the content.js
+ * `surface.unmet` reports ABILITY NEEDS the web can't render, NOT arbitrary
+ * merge keys, so it is empty for every current user and the content.js
  * cannot-satisfy branch stays silent. Full strength-aware composition (a derived
  * FLOOR tightening a soft pref) is deferred until structured needs exist.
  *

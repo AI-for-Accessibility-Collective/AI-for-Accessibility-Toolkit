@@ -18,8 +18,8 @@
 import { deriveWebSettings } from '../platforms/chrome/web-surface.js';
 
 /**
- * @param {ReturnType<import('../core/ability.js').toAbilityModel>} model - the needs AbilityModel (librarian.getAbilityModel() shape)
- * @returns {object} web settings (subset of the registry's settingsMeta keys)
+ * @param {import('../core/ability.js').AbilityModel} model - the needs AbilityModel (librarian.getAbilityModel() shape)
+ * @returns {Record<string, any>} web settings (subset of the registry's settingsMeta keys)
  */
 export function renderWebSettings(model) {
   return deriveWebSettings(model).settings;

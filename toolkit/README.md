@@ -80,6 +80,21 @@ and the audit writes live IN `core/librarian.js` itself (`requestGrant`'s
 accept path, `revokeGrant`, `exportAbilityModel`, the cross-app-insight accept
 path), so every host gets them for free — not just Chrome.
 
+## Type declarations
+
+The core is plain JavaScript with JSDoc types. `tsc` checks those types
+(`tsconfig.json`, strict) and emits declarations to `types/`, which are
+committed and shipped through the `exports` map, so a consumer's editor and
+typecheck see the real shapes:
+
+```bash
+cd toolkit && npm run types     # regenerate types/ after changing a signature
+```
+
+CI fails when `types/` is stale. A file that does not pass the check yet says
+so in a `// @ts-nocheck` header at its top, with its error count; remove the
+header and fix the errors to opt it in.
+
 ## Running the tests
 
 ```bash

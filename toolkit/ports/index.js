@@ -55,12 +55,12 @@
  * The accessible channel for surfacing pending consent items (proposals,
  * cross-app grant requests, cross-app insights) to the user.
  *
- * REQUIRED: `notifyPending` — the indicator that something awaits a decision.
+ * REQUIRED: `notifyPending`, the indicator that something awaits a decision.
  * The Chrome host is PULL-based: the badge notifies, and the popup lists and
  * resolves items through the librarian's own methods, so notifyPending is all
  * it needs (or implements).
  *
- * OPTIONAL (Phase 3): `present` / `capture` — for PUSH-based hosts whose
+ * OPTIONAL (Phase 3): `present` / `capture`, for PUSH-based hosts whose
  * reliable modality is not a visual list (XR TTS prompt, a screen-reader live
  * region, a large-target dialog). A host that implements them surfaces each
  * pending item itself and feeds the user's decision back through the SAME
@@ -92,11 +92,11 @@
  * OPTIONAL. A host that can MEASURE the user (XR field-of-view / gaze, a
  * device's own accessibility settings, a phone's Dynamic Type size) supplies
  * this so a measured signal can become a modality-neutral ability need. The
- * core never reads a sensor directly — a host reads it, maps it to a `need`,
+ * core never reads a sensor directly; a host reads it, maps it to a `need`,
  * and contributes it through the normal consent path (importInsight /
  * logObservation), so a measurement is a PROPOSAL like any other, never a
  * silent write. Purely a host concern; named here so every conformer speaks
- * the same shape. (Phase 4 — the XR FOV→text-size loop is the reference use.)
+ * the same shape. (Phase 4; the XR FOV→text-size loop is the reference use.)
  * @property {(kind: string) => Promise<any>} read
  *   Read a named sensor (e.g. 'fov.textSizeMultiplier', 'device.dynamicType').
  *   Resolves to the raw reading, or null if the host can't measure it.

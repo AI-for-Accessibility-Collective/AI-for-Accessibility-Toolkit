@@ -37,6 +37,8 @@ export const GRANT_SCOPES = [
 // the user's stored profile. (The Chrome backend serializes on read, but the
 // toolkit is platform-agnostic and the cross-app target is an in-process KV —
 // the export must isolate regardless of backend.)
+/** @typedef {import('../core/ability.js').AbilityModel} AbilityModel */
+/** @type {Record<string, (am: Partial<AbilityModel>) => Partial<AbilityModel>>} */
 const SCOPE_PROJECTION = {
   'ability.categories': (am) => ({ supportAreas: Array.isArray(am.supportAreas) ? am.supportAreas.map(String) : [] }),
   'reading.level':      (am) => ({ readingLevel: am.readingLevel ?? null }),
@@ -44,22 +46,37 @@ const SCOPE_PROJECTION = {
   'settings.text':      (am) => ({ needs: Array.isArray(am.needs) ? am.needs.map(n => ({ ...n })) : [] }),
 };
 
+/**
+ * @typedef {Object} Grant
+ * The durable, user-approved record that one app may read a scoped slice.
+ * @property {string|null} id
+ * @property {string} appId
+ * @property {string} appLabel
+ * @property {string[]} scopes        Only whitelisted GRANT_SCOPES survive normalization.
+ * @property {string} audience        One of AUDIENCES.
+ * @property {number} grantedAt       Epoch milliseconds, 0 when unknown.
+ */
+
 /** True iff `scopes` is a non-empty array of whitelisted scopes. Unknown or
- *  empty → false (default-deny: requestGrant rejects rather than over-granting). */
+ *  empty → false (default-deny: requestGrant rejects rather than over-granting).
+ *  @param {unknown} scopes
+ *  @returns {boolean} */
 export function validateScopes(scopes) {
   if (!Array.isArray(scopes) || scopes.length === 0) return false;
   return scopes.every(s => GRANT_SCOPES.includes(s));
 }
 
 /** Canonicalize a grant record. Drops any non-whitelisted scope defensively
- *  (validateScopes gates creation, but a stored grant is trusted loosely). */
+ *  (validateScopes gates creation, but a stored grant is trusted loosely).
+ *  @param {any} raw
+ *  @returns {Grant} */
 export function normalizeGrant(raw) {
   const g = raw || {};
   return {
     id: g.id || null,
     appId: String(g.appId || ''),
     appLabel: String(g.appLabel || g.appId || ''),
-    scopes: Array.isArray(g.scopes) ? g.scopes.filter(s => GRANT_SCOPES.includes(s)) : [],
+    scopes: Array.isArray(g.scopes) ? g.scopes.filter(/** @param {string} s */ s => GRANT_SCOPES.includes(s)) : [],
     // Who this grant's holder is to the person (broker.js's audience-ceiling
     // model, folded in — see AUDIENCES below). Defaults to the narrowest tier
     // so a grant minted before this field existed, or one with a missing/
@@ -79,20 +96,26 @@ export function normalizeGrant(raw) {
 // export, so lowering the level immediately cuts off out-of-level grants
 // without needing to revoke them. Ported from toolkit/core/broker.js.
 export const AUDIENCES = ['personal', 'friends', 'anyone'];
+/** @type {Readonly<Record<string, number | undefined>>} */
 const AUDIENCE_ORDER = { personal: 0, friends: 1, anyone: 2 };
 
 /** True iff `audience` is covered by the profile's current `sharing` level.
  *  Fail CLOSED on unrecognized values: an unknown/missing sharing level
  *  counts as 'personal' (the narrowest ceiling), and an unknown audience
- *  never passes — a corrupted field must narrow access, never widen it.
+ *  never passes: a corrupted field must narrow access, never widen it.
  *
  *  Pure by design (no I/O), so it composes wherever both operands are in
- *  scope: core/librarian.js's exportAbilityModel calls it directly — the
- *  portable enforcement point every host gets for free — and
+ *  scope: core/librarian.js's exportAbilityModel calls it directly, the
+ *  portable enforcement point every host gets for free, and
  *  background.js's grant routes are now thin pass-throughs to the Librarian
- *  rather than re-implementing the check. */
+ *  rather than re-implementing the check.
+ *  @param {string} audience  The grant holder's audience tier.
+ *  @param {string|undefined} sharing   The profile's current sharing level.
+ *    Pass the stored value as is: a missing or unknown label reads as
+ *    'personal' below.
+ *  @returns {boolean} */
 export function audienceAllowed(audience, sharing) {
-  const ceiling = AUDIENCE_ORDER[sharing] ?? 0;
+  const ceiling = AUDIENCE_ORDER[/** @type {string} */ (sharing)] ?? 0;
   const need = AUDIENCE_ORDER[audience] ?? Infinity;
   return need <= ceiling;
 }
@@ -112,26 +135,55 @@ export function audienceAllowed(audience, sharing) {
 const AUDIT_STORE = 'mine.shareAudit';
 const AUDIT_MAX = 500;
 
-/** Append one entry (stamping `ts`), capped to the most recent AUDIT_MAX. */
+/**
+ * @typedef {Object} ShareAuditEntry
+ * @property {number} ts
+ * @property {string} appId
+ * @property {'grant-created'|'grant-revoked'|'export'|'export-blocked'|'insight-import'} action
+ * @property {string[]} [scopes]
+ * @property {string} [audience]
+ * @property {string} [result]
+ */
+
+/**
+ * @typedef {Object} AuditStore
+ * The two datastore-facade methods the audit trail uses (core/datastore.js
+ * `mine`-tier `get` and `patch`).
+ * @property {(name: string) => Promise<any>} get
+ * @property {(name: string, fn: (current: any) => any) => Promise<any>} patch
+ */
+
+/**
+ * Append one entry (stamping `ts`), capped to the most recent AUDIT_MAX.
+ * @param {() => AuditStore} datastore  Lazy getter for the datastore facade.
+ * @param {Omit<ShareAuditEntry, 'ts'>} entry
+ */
 export async function recordShareAudit(datastore, entry) {
   const DS = datastore;
   await DS().patch(AUDIT_STORE, (log) => {
     log = Array.isArray(log) ? log : [];
+    // FLAG(review): the only direct Date.now() in the core; every other
+    // timestamp comes from the injected Clock. Left as is in this PR (no
+    // runtime change), so a fixed test clock still sees wall-clock audit times.
     log.push({ ts: Date.now(), ...entry });
     if (log.length > AUDIT_MAX) log.splice(0, log.length - AUDIT_MAX);
     return log;
   });
 }
 
-/** The full audit trail, oldest first (as stored). */
+/** The full audit trail, oldest first (as stored).
+ *  @param {() => AuditStore} datastore  Lazy getter for the datastore facade.
+ *  @returns {Promise<ShareAuditEntry[]>} */
 export async function getShareAudit(datastore) {
   const DS = datastore;
   return (await DS().get(AUDIT_STORE)) || [];
 }
 
 /** A grant is active iff it has an appId and at least one valid scope. Revoke
- *  is a DELETE, so there is no revoked/expired state to check — a stored grant
- *  that still exists is active. */
+ *  is a DELETE, so there is no revoked/expired state to check: a stored grant
+ *  that still exists is active.
+ *  @param {Partial<Grant>|null|undefined} grant
+ *  @returns {boolean} */
 export function isActive(grant) {
   return !!(grant && grant.appId && Array.isArray(grant.scopes) && grant.scopes.length > 0);
 }
@@ -139,9 +191,14 @@ export function isActive(grant) {
 /** Project an AbilityModel down to ONLY the fields the granted scopes unlock.
  *  READ-ONLY; always includes `schemaVersion` so a consumer can version-check.
  *  Unknown scopes are ignored. Never emits freeText / confidence or any
- *  SurfaceProfile value. */
+ *  SurfaceProfile value.
+ *  @param {Partial<AbilityModel>|null|undefined} abilityModel
+ *  @param {string[]|null|undefined} scopes
+ *  @returns {Partial<AbilityModel> & { schemaVersion: number }} */
 export function filterAbilityModelByScopes(abilityModel, scopes) {
+  /** @type {Partial<AbilityModel>} */
   const am = abilityModel || {};
+  /** @type {Partial<AbilityModel> & { schemaVersion: number }} */
   const out = { schemaVersion: am.schemaVersion ?? 1 };
   for (const s of (scopes || [])) {
     const project = SCOPE_PROJECTION[s];

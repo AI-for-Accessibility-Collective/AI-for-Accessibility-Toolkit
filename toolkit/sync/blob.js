@@ -26,10 +26,23 @@ export const BLOB_VERSION = 1;
 // mirrors and no unrelated `fields.*` legacy data can ride along.
 const EXPORTED_FIELD_KEYS = ['needs', 'readingLevel', 'confidence'];
 
-/** Build the portable blob from a stored profile + its AbilityModel view. */
+/**
+ * @typedef {import('../core/ability.js').ProfileRecord} ProfileRecord
+ * @typedef {import('../core/ability.js').AbilityModel} AbilityModel
+ */
+
+/**
+ * Build the portable blob from a stored profile + its AbilityModel view.
+ * @param {ProfileRecord|null|undefined} profile
+ * @param {AbilityModel|null|undefined} abilityModel
+ * @param {number} now  Epoch milliseconds, becomes `exportedAt`.
+ */
 export function buildProfileBlob(profile, abilityModel, now) {
+  /** @type {ProfileRecord} */
   const p = profile || {};
+  /** @type {Record<string, unknown>} */
   const srcFields = (p.fields && typeof p.fields === 'object') ? p.fields : {};
+  /** @type {Record<string, unknown>} */
   const fields = {};
   for (const k of EXPORTED_FIELD_KEYS) {
     if (k in srcFields) fields[k] = JSON.parse(JSON.stringify(srcFields[k]));
@@ -50,9 +63,11 @@ export function buildProfileBlob(profile, abilityModel, now) {
 }
 
 /** True iff `blob` is a structurally valid profile blob this version reads.
- *  `exportedAt` MUST be a finite positive number — a NaN/Infinity timestamp
+ *  `exportedAt` MUST be a finite positive number: a NaN/Infinity timestamp
  *  would defeat the last-write-wins guard (all comparisons against NaN are
- *  false; Infinity freezes the device), so it is rejected here. */
+ *  false; Infinity freezes the device), so it is rejected here.
+ *  @param {any} blob
+ *  @returns {boolean} */
 export function validateProfileBlob(blob) {
   return !!(blob
     && blob.kind === BLOB_KIND

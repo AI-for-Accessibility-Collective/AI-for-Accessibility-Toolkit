@@ -1,0 +1,1 @@
+{"version":3,"file":"datastore.d.ts","sourceRoot":"","sources":["../../core/datastore.js"],"names":[],"mappings":"AA8BA;;;;;;;;;;GAUG;AACH,uFATG;IAAkD,EAAE,EAA5C,OAAO,mBAAmB,EAAE,OAAO;IACK,KAAK,EAA7C,OAAO,mBAAmB,EAAE,KAAK;IACM,QAAQ,EAA/C,OAAO,eAAe,EAAE,QAAQ;IACe,aAAa;IACxB,aAAa;CAGzD;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EAoYF"}

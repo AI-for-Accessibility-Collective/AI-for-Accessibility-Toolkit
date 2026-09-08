@@ -1,0 +1,57 @@
+// Checks the core's JSDoc types and emits type declarations to types/, with
+// no build step change: the core stays plain ES modules and no bundler config
+// is edited.
+//
+// FLAG(review): esbuild does read this file. It looks up the nearest
+// tsconfig.json for every file it bundles and honors `strict`, so a bundle
+// built from a checkout of toolkit/ (not from the packed tarball, which does
+// not carry this file) starts with a "use strict" prologue. That is the only
+// line that changes, measured on the four platforms/chrome/*.entry.js IIFE
+// bundles and platforms/node/host.js. Every file here is an ES module, which
+// is strict already. A build that wants the old output byte for byte can
+// pass --tsconfig-raw={} to esbuild.
+//
+//   npm run types              (from toolkit/)
+//   npm run build:types        (from the repository root)
+//
+// Strict everywhere. A file that does not pass yet carries a `// @ts-nocheck`
+// header naming its error count; its declarations still emit, with `any`
+// where the checker could not infer more. Remove the header and fix the
+// errors to opt a file in. Because tsc follows imports, an exclude list here
+// could not scope the check per file; the header can, and a new file under
+// toolkit/ is checked by default.
+//
+// FLAG(review): `lib` is ES2022 only, on purpose. The core promises no DOM,
+// no Node API, and no host global, so a checked file that reaches for one
+// fails here. The platform adapters that do (platforms/chrome, platforms/node)
+// are the ones opted out, and will need @types/chrome or @types/node when
+// they opt in.
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": true,
+    "outDir": "types",
+    "rootDir": ".",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "strict": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": [
+    "index.js",
+    "core/**/*.js",
+    "ports/**/*.js",
+    "sync/**/*.js",
+    "surfaces/**/*.js",
+    "platforms/**/*.js",
+    "registry/**/*.js"
+  ],
+  "exclude": ["test", "hosts", "scripts", "types", "node_modules"]
+}
