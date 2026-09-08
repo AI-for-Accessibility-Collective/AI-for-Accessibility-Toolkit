@@ -83198,5 +83198,1895 @@
     }
    ]
   }
+ },
+ "webdesign": {
+  "task": "design and publish a simple website in a site builder (Wix, Squarespace, Webflow, WordPress.com, Google Sites, Carrd): choose a template, edit pages and content (text, images, sections), configure the essentials (site name, domain path), and publish; complete when the published site's live URL is shown or visited. Surface pinned: the builder session — not web-design-theory videos, not code-from-scratch HTML/CSS courses. AI site builders (Wix ADI, 10Web, one-prompt site generators) are off-task: the arc must be manual template editing and publishing.",
+  "tree": {
+   "id": "0",
+   "label": "Design and publish a website",
+   "note": "Start with 1 on every route that charges or offers a free tier, then 1.8 again whenever the user sees a payment or upgrade prompt later. 2 to get an account and reach the editor; the WordPress.org routes add 2.6 and 2.7. The user goes through 3 at different points depending on the route - at 1.7 for LMVE, WfqK and sx6l, at 2.1 for FFtR, at 9.6 for Gab9 and RAex, in settings for vBcs, after 9.7 for m9LG and S7S0, and after 9.4 for Tbal. then 4 to get a starting design; on the import routes 4.8 is the moment the site goes live. then the loop: for each page the user goes through 5 for its pages, menu and sections, and then 6 for the content of each section, with 7 whenever the change should show on every page and 9.2 or 9.3 whenever the user wants to see how the site looks - Tbal loops through five pages, Gab9 through four sections of one page. The user can go through 8 at any point, usually late in the task. 9 to publish, open the live site and check it, and 9.11 sends the user back into 5, 6 or 7. the task ends at 9.8.",
+   "children": [
+    {
+     "id": "1",
+     "label": "Choose the builder and plan",
+     "note": "Start with 1.1 in the recordings that show the user choosing a builder - in three of them the user follows an affiliate link or a recommendation, and in two the user searches. 1.2 wherever a free tier is on offer. then 1.3, and 1.4 to 1.7 only on the paid routes - LMVE, WfqK and sx6l at the start, Tbal at 9.4. 1.8 whenever the user sees a payment or upgrade prompt, at any point in the task. For example, the user meets two prompts in S7S0, leaves a checkout in vBcs, and closes a library prompt in LMVE.",
+     "children": [
+      {
+       "id": "1.1",
+       "label": "Pick the builder",
+       "questions": [
+        {
+         "question": "Do you want the plain WordPress editor, or a drag-and-drop builder?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "This choice dictates your editing experience, deciding between limitless customization with customizable code or a guided drag-and-drop interface tailored for beginners.",
+         "whatTheAgentLoses": "You lose the ability to choose the editing interface that best matches your personal technical comfort level and future customization needs."
+        },
+        {
+         "question": "Is the host's plan page open, before anything is bought?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Bluehost homepage displays a 'Get Started' button that initiates the foundational hosting and domain setup process.",
+         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally review the initial hosting offers and terms before starting the purchase."
+        }
+       ]
+      },
+      {
+       "id": "1.2",
+       "label": "Read the free tier's limits",
+       "questions": [
+        {
+         "question": "Do you want to look at the plans and prices before starting the site?",
+         "cluster": "facts",
+         "moment": "On demand",
+         "moneyMoving": false,
+         "why": "The homepage outlines the platform's core capabilities and the differences between the free and premium tiers, which determines the features available for your build.",
+         "whatTheAgentLoses": "You lose the opportunity to evaluate if the free tier meets your specific needs or if a premium plan is necessary for your project."
+        },
+        {
+         "question": "Do you want to stay on the free plan, knowing the extra features switch off after the trial?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen clarifies that while the basic site remains free indefinitely, the premium features are only available for a 7-day trial period.",
+         "whatTheAgentLoses": "You lose the ability to evaluate if the long-term limitations of the free tier align with your goals for the website."
+        }
+       ]
+      },
+      {
+       "id": "1.3",
+       "label": "Choose the plan tier",
+       "questions": [
+        {
+         "question": "Which shared hosting plan should I choose?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays multiple shared hosting tiers and duration toggles that determine the cost of connecting the site to the internet.",
+         "whatTheAgentLoses": "The user loses control over their financial commitment and the specific hosting features they pay for."
+        }
+       ]
+      },
+      {
+       "id": "1.4",
+       "label": "Choose the billing term",
+       "questions": [
+        {
+         "question": "Do you want the default billing term, or a shorter one?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen presented a default 12-month package at $2.95 per month, which requires an upfront commitment of $35.40.",
+         "whatTheAgentLoses": "You lose the opportunity to evaluate and select a different billing duration or tier that might better suit your budget."
+        },
+        {
+         "question": "Does the monthly price on the term screen match the price advertised earlier?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The initial screen advertised the plan at $2.99 per month, but the subsequent selection screen unexpectedly listed the 12, 24, and 48-month plans at a lower rate of $2.79 per month.",
+         "whatTheAgentLoses": "A person delegating to an agent loses the chance to catch this pricing discrepancy and evaluate the true cost of the available subscription terms."
+        }
+       ]
+      },
+      {
+       "id": "1.5",
+       "label": "Decline the add-ons",
+       "questions": [
+        {
+         "question": "Which paid extras do you want with the hosting plan?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Checking boxes for add-ons like Domain Privacy or Jetpack Backup adds recurring annual fees to your total checkout price.",
+         "whatTheAgentLoses": "You lose control over your final billing amount and the choice of which premium features are actually worth funding for your specific needs."
+        }
+       ]
+      },
+      {
+       "id": "1.6",
+       "label": "Apply a coupon",
+       "questions": [
+        {
+         "question": "Do you want to apply a discount code to lower the final price?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Applying the '[name]' coupon code updated the order summary to show an additional 10% discount, lowering the total to Rs.24,148.80.",
+         "whatTheAgentLoses": "Delegating this means you lose the chance to manually apply known promotional codes to minimize your out-of-pocket expenses."
+        }
+       ]
+      },
+      {
+       "id": "1.7",
+       "label": "Check the total and pay",
+       "questions": [
+        {
+         "question": "Is the checkout total what you want to pay, with no extras added?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Verifying the final total and ensuring the Google Workspace add-on remains unchecked prevents unexpected subscription charges before finalizing the purchase.",
+         "whatTheAgentLoses": "Delegating this step removes your direct control over financial approvals and the ability to personally decline upsells during checkout."
+        },
+        {
+         "question": "Does the checkout total include every add-on that was ticked?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The displayed total of $35.40 matches the base hosting price shown earlier, indicating a glitch where the selected SSL and SiteLock extras aren't actually being charged or applied.",
+         "whatTheAgentLoses": "The user loses the intended security protections for their website because the agent failed to verify that the selected add-ons were actually processed in the final total."
+        }
+       ]
+      },
+      {
+       "id": "1.8",
+       "label": "Decline the upgrade wall",
+       "questions": [
+        {
+         "question": "Does the checkout total match the discount that was advertised?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Comparing the advertised discount from an earlier screen to the final checkout total ensures the billing math correctly brings the price to $17.10 before paying.",
+         "whatTheAgentLoses": "The user loses the financial oversight required to catch billing discrepancies and confirm that promised savings are actually applied."
+        },
+        {
+         "question": "Is there a way to skip this upgrade screen and stay on the free plan?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The loading screen indicates the site is being prepared after selecting a paid plan, and waiting will likely lead to a mandatory checkout page.",
+         "whatTheAgentLoses": "You lose the chance to manually bypass the payment gateway by navigating away before the checkout loads."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "label": "Create the account and reach the editor",
+     "note": "2.1 in every recording except Gab9 and RAex, which start with the editor already open. The user goes through 2.2 where the host asks for it, and 2.3 wherever the user sets a password - twice in FFtR. 2.4 and 2.5 on the builder routes, with LMVE skipping six prompts in a row. 2.6 and 2.7 on the WordPress.org routes only, then 2.8; hosted builders go straight to 2.8. 2.9 before 2.8 or during the build, whenever the site needs a file the builder cannot make.",
+     "children": [
+      {
+       "id": "2.1",
+       "label": "Sign up or log in",
+       "questions": [
+        {
+         "question": "Did the builder start a new site, or log into an existing one?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen presents multiple 'GET STARTED' buttons alongside a 'LOG IN' option, making this the initial entry point into the site builder.",
+         "whatTheAgentLoses": "The user delegates the choice of how to enter the platform, missing the chance to log in or start a specific trial path."
+        },
+        {
+         "question": "Is the free host's sign-up form open, and does it say $0?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The homepage prominently displays a '$0.00 For Life' offer alongside a 'Register Now' button, which serves as the primary entry point to create your hosting account.",
+         "whatTheAgentLoses": "You lose the opportunity to personally evaluate the platform's free hosting claims and verify if this specific provider aligns with your project needs before committing to an account."
+        }
+       ]
+      },
+      {
+       "id": "2.2",
+       "label": "Activate the account by email",
+       "questions": [
+        {
+         "question": "After activation, did a new site actually get created on the account?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displayed an activation success message before redirecting to a dashboard where clicking '+ Create New Account' was required to continue.",
+         "whatTheAgentLoses": "You lose the ability to structure your workspace or manage the initial domain registration steps yourself."
+        },
+        {
+         "question": "Is the account active now, with the activation banner gone?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The client area displays a banner stating the account must be activated first, requiring you to find and click the activation link sent to your email.",
+         "whatTheAgentLoses": "The user loses the security of keeping their personal email inbox private when the agent needs access to click the verification link."
+        }
+       ]
+      },
+      {
+       "id": "2.3",
+       "label": "Set and save the credentials",
+       "questions": [
+        {
+         "question": "Is the host password set and saved somewhere you can find it?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen shows a successful payment receipt and prompts you to click the blue button to create your Bluehost password.",
+         "whatTheAgentLoses": "You lose the opportunity to securely define your own login credentials for the hosting platform."
+        },
+        {
+         "question": "What admin login and site title do you want for WordPress?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen requires setting an Admin Username and Password, which are essential for logging into the WordPress dashboard to build the site.",
+         "whatTheAgentLoses": "You lose the ability to set your own memorable login credentials and ensure they are securely saved for future access."
+        }
+       ]
+      },
+      {
+       "id": "2.4",
+       "label": "Answer the setup questions",
+       "questions": [
+        {
+         "question": "Do you want to say how much help you need building the site, or skip it?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen presents options like 'No help needed' and 'Built for you' that dictate whether the platform provides automated assistance or a manual building experience.",
+         "whatTheAgentLoses": "The user loses the opportunity to decide if they want guided assistance during the setup process or if they prefer to skip directly to manual editing."
+        },
+        {
+         "question": "What is the site for?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Selecting a category like Blog, Store, or Business helps the platform streamline and personalize your dashboard.",
+         "whatTheAgentLoses": "The user loses the opportunity to tailor the initial dashboard and template recommendations to their specific goals."
+        }
+       ]
+      },
+      {
+       "id": "2.5",
+       "label": "Skip the tour",
+       "questions": [
+        {
+         "question": "Do you want to pick a theme now, or skip it for later?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The setup screen offers a selection of free and premium themes but explicitly provides an option to skip the step and choose one later.",
+         "whatTheAgentLoses": "You lose the ability to decide whether to commit to an initial theme offered by the host or wait to browse a different selection of templates later."
+        },
+        {
+         "question": "Do you want to read the tour before closing it?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The pop-ups explained core functions like adding sections and managing pages, which are crucial for navigating the builder.",
+         "whatTheAgentLoses": "The user loses foundational knowledge of how to navigate and edit within this specific site builder's interface."
+        }
+       ]
+      },
+      {
+       "id": "2.6",
+       "label": "Install WordPress on the host",
+       "questions": [
+        {
+         "question": "Which hosting account do you want WordPress installed on?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen lists multiple existing hosting accounts, so you must select the correct one to ensure the site is built on the intended domain.",
+         "whatTheAgentLoses": "Delegating this choice means the agent might install the website on the wrong hosting account, potentially overwriting an existing project or using an unintended URL."
+        },
+        {
+         "question": "Do you want their service and marketing emails?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen presented a choice to either approve email alerts or risk losing the account by disapproving.",
+         "whatTheAgentLoses": "Delegating this choice means the agent decides whether your inbox receives promotional emails or if your account risks deletion."
+        }
+       ]
+      },
+      {
+       "id": "2.7",
+       "label": "Log in to the site's admin",
+       "questions": [
+        {
+         "question": "Is the WordPress dashboard open for the site you just bought?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The Bluehost dashboard displays a 'Log into WordPress' button that provides direct access to the site builder without needing separate credentials.",
+         "whatTheAgentLoses": "Delegating this login step means you lose visibility into your hosting environment and how to manually access your site's backend in the future."
+        }
+       ]
+      },
+      {
+       "id": "2.8",
+       "label": "Open the editor",
+       "questions": [
+        {
+         "question": "Is this the admin section that holds what you want to edit?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The WordPress dashboard separates site management into distinct categories like Pages, Media, and Appearance, requiring you to identify the correct menu for your current task.",
+         "whatTheAgentLoses": "You lose the mental map of the WordPress backend, making it harder to jump in and make quick updates to your own site later."
+        },
+        {
+         "question": "Is the page open in the visual drag-and-drop builder, not the plain editor?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The top WordPress admin bar displays an 'Edit with Elementor' link, which is necessary to transition from the standard view into the drag-and-drop editing interface.",
+         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to choose which specific visual editing tool or mode is used to construct your site's layout."
+        }
+       ]
+      },
+      {
+       "id": "2.9",
+       "label": "Prepare the site's assets",
+       "questions": [
+        {
+         "question": "How strictly should the site follow your layout sketch and color plan?",
+         "cluster": "compare",
+         "moment": "On demand",
+         "moneyMoving": false,
+         "why": "The planning document shows a specific layout sketch and a 'Color Economy' section that dictates the visual structure of the site.",
+         "whatTheAgentLoses": "You lose the creative satisfaction of personally translating your hand-drawn layout and color concepts into the digital workspace."
+        },
+        {
+         "question": "What assets and content should you gather before building the site?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Preparing specific materials upfront, like a high-resolution logo, a favicon, and pre-written blog posts, ensures your site is fully populated and professional upon launch.",
+         "whatTheAgentLoses": "Delegating this preparation means you lose the chance to personally curate the foundational brand assets and initial messaging that define your site's identity."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "3",
+     "label": "Decide the site's address",
+     "note": "At 3.1 the user decides the route, and this happens at five different points - at hosting checkout for LMVE, WfqK and sx6l, at a free host's signup for FFtR, in the publish panel for Gab9 and RAex, in settings after creation for vBcs, and after publishing as an upsell for m9LG and S7S0 - and Tbal buys one only after 9.4. The user goes through 3.2 and 3.3 on the search routes, then 3.4 or 3.5. 3.6 happens once, in vBcs. 3.7 wherever the site and the domain are separate objects, which is every WordPress route and sx6l.",
+     "children": [
+      {
+       "id": "3.1",
+       "label": "Pick the domain route",
+       "questions": [
+        {
+         "question": "Do you want to upgrade to connect your own domain, or keep the free subdomain?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The popup explicitly requires choosing a paid plan to connect a custom domain, forcing a choice between paying for a custom URL or keeping the free default.",
+         "whatTheAgentLoses": "If an agent dismisses this popup automatically, you lose the chance to decide whether the professional look of a custom domain is worth the financial cost."
+        },
+        {
+         "question": "Do you want to buy a custom domain, or keep the free address?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen prompts you to search for a custom domain to buy, but also provides a smaller text link to sign up for a completely free website without a credit card.",
+         "whatTheAgentLoses": "Delegating this choice means the agent might commit you to purchasing a custom domain instead of selecting the free option you prefer."
+        }
+       ]
+      },
+      {
+       "id": "3.2",
+       "label": "Search the name and check availability",
+       "questions": [
+        {
+         "question": "Is the domain name you want available?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The search interface indicates whether your entered domain is marked as unavailable or free to claim with a shopping cart icon.",
+         "whatTheAgentLoses": "You lose the opportunity to creatively brainstorm and select an acceptable alternative domain name when your first choice is taken."
+        },
+        {
+         "question": "What name will you use if your first choice is already taken?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Domain names are frequently unavailable, requiring a pivot to a different extension (like .co instead of .com) or a modified name.",
+         "whatTheAgentLoses": "The agent might automatically select a nonsensical, hyphenated, or off-brand domain name if the primary choice is taken, permanently attaching it to the brand."
+        }
+       ]
+      },
+      {
+       "id": "3.3",
+       "label": "Read the price and renewal terms",
+       "questions": [
+        {
+         "question": "Do you want to claim this free domain, knowing it renews at a price next year?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The modal explicitly states the domain is free for the first year but will automatically renew at $13.99 annually after that.",
+         "whatTheAgentLoses": "You lose the ability to decide whether to accept a future recurring financial commitment for this specific domain name."
+        },
+        {
+         "question": "Does the free domain show as $0 at checkout?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Confirming that the advertised 'Free domain for 1st year' appears as '$0.00' in the checkout summary and domain claiming modal prevents unexpected charges.",
+         "whatTheAgentLoses": "You lose the financial oversight to catch billing errors if the agent blindly accepts a charge for a domain that was supposed to be free."
+        }
+       ]
+      },
+      {
+       "id": "3.4",
+       "label": "Register or claim the domain",
+       "questions": [
+        {
+         "question": "What contact details go on the domain registration form?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen confirms your chosen domain is available but requires you to complete a form with personal and contact details to proceed.",
+         "whatTheAgentLoses": "You lose the ability to choose which personal or business contact information is officially registered to the website's account."
+        },
+        {
+         "question": "Is the domain registered and active yet?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Confirming the domain status shows as 'Active' and 'Verified' ensures your site will be accessible at the correct web address before you publish.",
+         "whatTheAgentLoses": "Delegating this step means you miss the peace of mind of personally verifying that your custom domain is active and correctly linked to your account."
+        }
+       ]
+      },
+      {
+       "id": "3.5",
+       "label": "Name the free subdomain",
+       "questions": [
+        {
+         "question": "What name and free extension do you want for your site's address?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen prompts you to enter a website name and select a free domain extension like unaux.com or ezyro.com to create the site's URL.",
+         "whatTheAgentLoses": "You lose the ability to pick a specific, brand-aligned web address and extension that represents your project."
+        }
+       ]
+      },
+      {
+       "id": "3.6",
+       "label": "Rename the site address",
+       "questions": [
+        {
+         "question": "Is the new address available, and are you OK with a change that can't be undone?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen confirms the new address is available but warns that changing the domain is a permanent action requiring confirmation.",
+         "whatTheAgentLoses": "You lose the opportunity to verify the exact spelling of your new domain before permanently committing to the change."
+        }
+       ]
+      },
+      {
+       "id": "3.7",
+       "label": "Assign the domain to the site",
+       "questions": [
+        {
+         "question": "Is the domain pre-filled on the login screen your site's domain?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The login screen pre-filled a temporary domain ('fvl.urg.mybluehost.me') instead of the chosen domain, requiring you to decide whether to proceed with the login.",
+         "whatTheAgentLoses": "You lose the opportunity to verify which domain account is actually being accessed and managed."
+        },
+        {
+         "question": "Is the site live at the domain that was chosen, not a different one?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The selected domain name changes from 'testsiteexample[account number].com' to 'testexamplesite123.com' and finally to a temporary Bluehost URL, revealing a disjointed recording.",
+         "whatTheAgentLoses": "The user loses the assurance that the final published website actually resides at the specific domain they originally selected."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "4",
+     "label": "Choose the starting design",
+     "note": "4.1 before the template in Tbal and Gab9 and as a slide in sx6l and WfqK. 4.2 on the WordPress routes before any template exists. then the user repeats 4.3, 4.4 and 4.5 until 4.6 - LMVE goes round twice. 4.7 and 4.8 on the import and generation routes - LMVE, FFtR, WfqK, S7S0 - then 4.9. 4.10 whenever the user changes the template after adding content - S7S0 with the content kept, WfqK to reach templates.",
+     "children": [
+      {
+       "id": "4.1",
+       "label": "Look at other sites for the style",
+       "questions": [
+        {
+         "question": "What design style do you want for the portfolio?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Reviewing external portfolio sites like [name] and [name] See helps establish a clear visual direction before selecting a template.",
+         "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally synthesize inspiration from other artists' portfolios into a design vision that reflects your own aesthetic."
+        },
+        {
+         "question": "Which layout and background do you want for the portfolio page?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows a template featuring a staggered photo gallery and minimalist navigation on an off-white background, which keeps the focus entirely on the images.",
+         "whatTheAgentLoses": "Delegating this choice means you lose the ability to personally determine if this specific gallery layout and color palette match your artistic style."
+        }
+       ]
+      },
+      {
+       "id": "4.2",
+       "label": "Install the theme and builder plugin",
+       "questions": [
+        {
+         "question": "Is the theme list open under Appearance, with the search box showing?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The WordPress dashboard side menu groups design templates under the Appearance tab, making it the necessary path to browse and apply new themes.",
+         "whatTheAgentLoses": "Delegating this step means you miss the opportunity to browse the full library of available themes and discover alternative design starting points for your site."
+        },
+        {
+         "question": "Which theme should you install for your site?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen presented a search bar and theme cards like Astra, and this choice dictates the foundational design and layout options available for the website.",
+         "whatTheAgentLoses": "Delegating this means you lose the opportunity to evaluate and select the specific aesthetic and functional starting point for your website."
+        }
+       ]
+      },
+      {
+       "id": "4.3",
+       "label": "Browse and search the templates",
+       "questions": [
+        {
+         "question": "Which template category or search word do you want to try?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen displays a search bar and category tabs like 'Personal Care' and 'Professionals', which determine the initial batch of layouts you can choose from.",
+         "whatTheAgentLoses": "Delegating this means you lose the chance to organically browse the visual options and discover a starting aesthetic that matches your personal taste."
+        },
+        {
+         "question": "Does the template search say no matches while a matching template still shows below?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": true,
+         "why": "The screen initially states there are no matches for the search term, but the template selected from the suggestions is later identified as the 'Mountain' template.",
+         "whatTheAgentLoses": "The user loses the ability to rely on the platform's search functionality to accurately surface relevant templates."
+        }
+       ]
+      },
+      {
+       "id": "4.4",
+       "label": "Preview the template",
+       "questions": [
+        {
+         "question": "Do you want this template, or close the preview and keep looking?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Reviewing the theme's default layout and text elements like 'Scott Stevens' helps you decide if its structure matches your vision before committing to it.",
+         "whatTheAgentLoses": "You lose the ability to personally evaluate the theme's aesthetic and layout to ensure it aligns with your specific brand and style preferences."
+        }
+       ]
+      },
+      {
+       "id": "4.5",
+       "label": "Check the template is free"
+      },
+      {
+       "id": "4.6",
+       "label": "Pick the template or start blank",
+       "questions": [
+        {
+         "question": "Which template design will you choose for your site?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen showed a mix of free and premium templates, requiring a choice that balances aesthetic fit with cost.",
+         "whatTheAgentLoses": "The user loses the opportunity to personally evaluate the design and cost trade-offs of the available templates."
+        },
+        {
+         "question": "What should the AI know about you before it writes the site's text?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen asks for a brief description of your business so its AI can fast-track your setup by generating starting text.",
+         "whatTheAgentLoses": "You lose the chance to seed the initial site copy with your own specific tone and subject matter."
+        }
+       ]
+      },
+      {
+       "id": "4.7",
+       "label": "Set the import options",
+       "questions": [
+        {
+         "question": "Should you upload a logo now or skip this step?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The setup screen offers an option to upload a logo with suggested dimensions of 180x60 pixels, but explicitly notes you can skip and add it later.",
+         "whatTheAgentLoses": "The user loses the opportunity to immediately integrate their brand identity into the template if they already have a logo file ready."
+        },
+        {
+         "question": "Which color palette and font pairing do you want to apply to the template?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The sidebar provides options to set the default color palette and typography, such as 'Poppins / Lato', before continuing to the editor.",
+         "whatTheAgentLoses": "You lose the opportunity to define the foundational visual style and typography for your website."
+        }
+       ]
+      },
+      {
+       "id": "4.8",
+       "label": "Import or generate the site",
+       "questions": [
+        {
+         "question": "Does the import confirmation warn that the template's images must be replaced?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The modal confirms the template is ready for customization and includes an important legal warning about replacing default images.",
+         "whatTheAgentLoses": "You lose the opportunity to read the legal disclaimer advising you to replace the default images before publishing."
+        }
+       ]
+      },
+      {
+       "id": "4.9",
+       "label": "Verify the imported pages",
+       "questions": [
+        {
+         "question": "Which pages do you want to open to check the import?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The top navigation menu displays links to the Home, Blog, and Contact pages, providing a clear path to inspect the structure of the newly imported site.",
+         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to personally verify the visual quality and layout of the imported pages before committing to editing them."
+        },
+        {
+         "question": "What items are currently in your main navigation menu?",
+         "cluster": "facts",
+         "moment": "On demand",
+         "moneyMoving": false,
+         "why": "Noting the existing links like 'Home', 'About', and the phone number button establishes the baseline navigation structure before you start editing.",
+         "whatTheAgentLoses": "You lose the chance to personally review the default navigation structure and decide which pages to keep, rename, or remove."
+        }
+       ]
+      },
+      {
+       "id": "4.10",
+       "label": "Swap the theme later",
+       "questions": [
+        {
+         "question": "Do you want to switch to a new template, or keep the current one?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen shows a preview of the 'Hope Counselling & Wellness Clinic' template with an orange 'Select this Template' button, offering a chance to change the site's foundational design.",
+         "whatTheAgentLoses": "You lose the ability to decide whether a different template's layout and style would better suit your specific vision for the website."
+        },
+        {
+         "question": "Does switching to a different template later erase all the content you have added so far?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "In many site builders, templates dictate the underlying structure, meaning you cannot change your theme later without losing your content and starting from scratch.",
+         "whatTheAgentLoses": "The user loses the crucial realization that template selection is a permanent structural commitment, preventing them from casually letting the agent pick a placeholder."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "5",
+     "label": "Structure the pages and sections",
+     "note": "for each page the site needs: 5.1 first on a template that came with pages, 5.2 for each new one, 5.3 once, 5.4 whenever the menu no longer matches the pages - vBcs after deletions leave Invalid items. 5.5 replaces 5.2 to 5.4 on a one-page site - Gab9, RAex, and S7S0 after the user is blocked from adding pages. inside a page: 5.6 for each section, 5.7 where the section has columns, 5.8 for what the template brought that the site does not need, 5.9 after seeing the page in 9.2 or 9.8, 5.10 when duplicating an element takes less work than building it again. then 6 for the section's content.",
+     "questions": [
+      {
+       "question": "Which part of the site is being built now, and is anything skipped from the list?",
+       "cluster": "select",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "The on-screen checklist showed that the template and navigation were complete, making the gallery the next logical task to tackle.",
+       "whatTheAgentLoses": "You lose the ability to decide the priority and order in which your website's content sections are developed."
+      },
+      {
+       "question": "Has every page that needs editing been opened, not just the homepage?",
+       "cluster": "hand over",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "Clicking the top navigation link to open the Services page and selecting the 'Basic Plan' text box confirms how to navigate and modify secondary pages within the site builder.",
+       "whatTheAgentLoses": "You lose the ability to manually explore the template's secondary pages and verify which specific text elements, like pricing or service details, need to be updated."
+      }
+     ],
+     "children": [
+      {
+       "id": "5.1",
+       "label": "Delete the default pages and posts",
+       "questions": [
+        {
+         "question": "Which of these existing pages do you want to keep, edit, or delete?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Reviewing the current list of six pages, including drafts and Elementor templates, allows you to audit the site's structure before diving into content editing.",
+         "whatTheAgentLoses": "You lose the opportunity to dictate the exact page structure and navigation of your website."
+        },
+        {
+         "question": "Should you keep, edit, or delete the default 'Hello world!' blog post?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen shows a default 'Hello world!' post in the posts list, which will appear on the live site if left untouched.",
+         "whatTheAgentLoses": "You lose the chance to ensure placeholder content is removed before the site goes live."
+        }
+       ]
+      },
+      {
+       "id": "5.2",
+       "label": "Add a page",
+       "questions": [
+        {
+         "question": "What do you want to make: a page, a post, or a template?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The '+ New' dropdown menu offers multiple options like 'Post', 'Page', and 'Template', so you must select the correct structural element to build out your site.",
+         "whatTheAgentLoses": "You lose the opportunity to decide whether the new addition to your site should be a standard page, a blog post, or a specialized landing page."
+        },
+        {
+         "question": "Is the Pages list open and ready for the new page to be added?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Accessing the dashboard sidebar via 'My Site' and selecting 'Pages' is necessary to add new content sections to your website.",
+         "whatTheAgentLoses": "You lose the opportunity to learn the layout of the WordPress dashboard and how to manually manage your site's pages."
+        }
+       ]
+      },
+      {
+       "id": "5.3",
+       "label": "Set the home page",
+       "questions": [
+        {
+         "question": "Should the homepage show your latest posts, or one fixed page?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Customizer 'Homepage Settings' panel requires you to choose between showing a dynamic feed of posts or a fixed page, as well as whether to hide the page title.",
+         "whatTheAgentLoses": "Delegating this means you lose control over the core content strategy and layout of your website's front page."
+        },
+        {
+         "question": "Which page should be the homepage?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The 'Pages and navigation' panel lists multiple pages like 'About' and 'Music', requiring you to explicitly define which one serves as the main entry point.",
+         "whatTheAgentLoses": "Delegating this means you lose control over which specific page visitors will see first when they land on your root domain."
+        }
+       ]
+      },
+      {
+       "id": "5.4",
+       "label": "Organize the navigation menu",
+       "questions": [
+        {
+         "question": "How do you want to order and label the menu items?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The menu structure interface lets you drag links like 'Company Profile' into your preferred order and customize their navigation labels.",
+         "whatTheAgentLoses": "Delegating this means you lose the ability to handpick the exact hierarchy and wording of your site's navigation."
+        },
+        {
+         "question": "How do you want the pages grouped now the menu is getting long?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The 'Pages' panel shows a long list of individual product pages that will clutter the site's header if not grouped into dropdown folders.",
+         "whatTheAgentLoses": "You lose the ability to decide the logical grouping and hierarchy of your site's navigation menu."
+        }
+       ]
+      },
+      {
+       "id": "5.5",
+       "label": "Add section links for a one-page site",
+       "questions": [
+        {
+         "question": "How do you want the menu to jump between sections on one page?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Linking buttons to specific section breaks using anchor tags like '#faq' allows visitors to navigate smoothly without loading entirely new pages.",
+         "whatTheAgentLoses": "You lose the opportunity to decide whether the user experience should feel like a single continuous scrolling page or separate distinct pages."
+        },
+        {
+         "question": "What should you name this section break?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The control settings panel shows a default name of '# section02', which can be customized to better organize your page layout or navigation.",
+         "whatTheAgentLoses": "You lose the opportunity to create meaningful, custom anchor names for your page sections."
+        }
+       ]
+      },
+      {
+       "id": "5.6",
+       "label": "Add a section or block",
+       "questions": [
+        {
+         "question": "Which pre-designed block should you add to the page?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The 'Blocks' tab in the Starter Templates modal offers various pre-designed layouts, so selecting one determines the structure and purpose of the new section being added to your page.",
+         "whatTheAgentLoses": "You lose the creative control over selecting the specific layout blocks, such as an FAQ section, that best present your information to visitors."
+        },
+        {
+         "question": "Does this block ask for a template-library account before it can be added?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Clicking 'INSERT' on the FAQ block triggered a 'Connect to Template Library' popup, meaning you must know how to handle the authentication requirement to add the element.",
+         "whatTheAgentLoses": "You lose the demonstration of how to actually create an account and authenticate the library connection because the video skips directly to the inserted block."
+        }
+       ]
+      },
+      {
+       "id": "5.7",
+       "label": "Choose the column structure",
+       "questions": [
+        {
+         "question": "Which column structure do you want for the new section?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The \"SELECT YOUR STRUCTURE\" modal requires you to choose from 12 different column layouts to define how content will be organized in this area.",
+         "whatTheAgentLoses": "Letting an AI decide means you lose direct control over the visual balance and side-by-side presentation of your content."
+        },
+        {
+         "question": "How do you want this layout container split and spaced?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The container settings menu requires specific choices for column splits, padding, gutters, and mobile layout behavior to ensure the section displays exactly as intended.",
+         "whatTheAgentLoses": "Delegating this means you lose the ability to fine-tune the exact spacing, alignment, and mobile responsiveness of your site's foundational layout elements."
+        }
+       ]
+      },
+      {
+       "id": "5.8",
+       "label": "Delete a section",
+       "questions": [
+        {
+         "question": "Which section of the layout do you want to delete?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Hovering over the four-column timeline section revealed an 'X' icon in the top handle, making it necessary to decide if this specific content block belongs in your final design.",
+         "whatTheAgentLoses": "Delegating this step means the agent decides which template sections to keep or discard, potentially removing a layout block you wanted to use for your own content."
+        }
+       ]
+      },
+      {
+       "id": "5.9",
+       "label": "Size and space the section",
+       "questions": [
+        {
+         "question": "How tall should this text section be?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Design settings panel provides height options like S, M, and L, which dictate how much empty space surrounds the text block.",
+         "whatTheAgentLoses": "You lose the ability to fine-tune the visual pacing of the page by deciding exactly how much breathing room your descriptions need."
+        },
+        {
+         "question": "Does the background color apply only to this section?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Adding header and footer markers in the Control panel isolates the FAQ area so the light cream background color only applies to that specific content.",
+         "whatTheAgentLoses": "You lose the creative control over defining the exact visual boundaries of the section and choosing the specific hex color that fits your design."
+        }
+       ]
+      },
+      {
+       "id": "5.10",
+       "label": "Duplicate an element or container",
+       "questions": [
+        {
+         "question": "Did the copied container land in the right place, with the same settings as the original?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The container settings panel displays a duplicate icon at the bottom left, offering a faster way to replicate elements than building them from scratch.",
+         "whatTheAgentLoses": "You lose the hands-on control of dragging the duplicated container to its exact intended position within your page layout."
+        },
+        {
+         "question": "How do you want the row of highlight images sized and linked?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The on-screen text overlays specified a width of 4 and distinct link URLs for each image, making it most efficient to configure the first image's dimensions before duplicating it.",
+         "whatTheAgentLoses": "You lose the hands-on practice of efficiently duplicating and modifying elements to build a uniform layout according to specific design constraints."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "6",
+     "label": "Edit the content in a section",
+     "note": "any of 6.1 to 6.12 as the section needs, in the order the tutorial reaches them. In nine of the recordings the user edits the text first, then the image, then a button. 6.1 and 6.2 on nearly every text element, and 6.3 when a word should link somewhere. 6.4 on every image, and 6.4.3 is skipped in the corpus more often than done. 6.5 on the template's buttons. 6.6, 6.7, 6.8 and 6.9 where the section is a form, a gallery, a video or social icons. 6.10 and 6.11 after an element is added to the page. 6.12 on a blog or a store. Go back to 5.6 for the next section, or to 9.2 to review the page.",
+     "questions": [
+      {
+       "question": "How do you want to arrange and style the text and buttons on the page?",
+       "cluster": "hand over",
+       "moment": "Now",
+       "moneyMoving": true,
+       "why": "The Elementor sidebar provides specific widgets, alignment options, and typography settings that determine the visual hierarchy and layout of your content.",
+       "whatTheAgentLoses": "You lose the ability to fine-tune the visual balance, typography, and specific placement of elements to match your desired aesthetic."
+      }
+     ],
+     "children": [
+      {
+       "id": "6.1",
+       "label": "Retype the text",
+       "questions": [
+        {
+         "question": "Does the text you typed show the same in the panel and in the preview?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Elementor interface offers two ways to update text, showing the content in both the left panel and the live preview.",
+         "whatTheAgentLoses": "You lose the opportunity to establish your preferred workflow for making content edits within the builder."
+        },
+        {
+         "question": "What should the intro text say?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Replacing the placeholder text with your actual details and styling it as a heading using the toolbar ensures visitors immediately understand what you do.",
+         "whatTheAgentLoses": "You lose the opportunity to personally craft the exact wording of your professional introduction and decide how boldly it is presented on the page."
+        }
+       ]
+      },
+      {
+       "id": "6.2",
+       "label": "Style the text",
+       "questions": [
+        {
+         "question": "Which text style do you want for the intro block?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The formatting toolbar offered multiple heading and paragraph options, requiring a choice to establish the right visual hierarchy for the text.",
+         "whatTheAgentLoses": "You lose the ability to dictate the specific visual emphasis and typographic hierarchy of your site's content."
+        },
+        {
+         "question": "Is the text block too wide to read comfortably?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The formatting toolbar provides heading size options that, along with block width adjustments, let you prevent lines of text from becoming too wide and difficult to track.",
+         "whatTheAgentLoses": "You lose the opportunity to visually evaluate the layout and fine-tune the typography for a comfortable reading experience."
+        }
+       ]
+      },
+      {
+       "id": "6.3",
+       "label": "Link or highlight the words",
+       "questions": [
+        {
+         "question": "Which words do you want highlighted, and in what color?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The text toolbar offers specific highlight styles, colors, and end caps that let you draw the reader's eye to key phrases like \"design and innovation\".",
+         "whatTheAgentLoses": "Delegating this means you lose the creative choice of exactly which words to emphasize and how the highlight visually aligns with your brand's custom palette."
+        },
+        {
+         "question": "Are the client names linked to their project pages?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The link insertion menu over the typed client list matters because hyperlinking recognizable brand names directly to their case studies builds immediate credibility and creates a seamless navigation path.",
+         "whatTheAgentLoses": "You lose the strategic choice of exactly which high-profile clients to name-drop and how to perfectly frame the conversational call-to-action."
+        }
+       ]
+      },
+      {
+       "id": "6.4",
+       "label": "Replace the image",
+       "note": "Start with 6.4.1 to choose where the image comes from: an upload in six recordings, the media library in two, a stock search that fails in one, a download from a search engine in one. 6.4.2 where the builder offers a crop or a shape. 6.4.3 is offered on every upload, and nobody in the videos fills it in.",
+       "children": [
+        {
+         "id": "6.4.1",
+         "label": "Pick the image source",
+         "questions": [
+          {
+           "question": "Which image should you choose for this section's background?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The Media Library presents multiple image options to replace the default background, directly impacting the visual tone of the section.",
+           "whatTheAgentLoses": "Delegating this means losing the creative control to select a background image that perfectly matches your specific aesthetic vision."
+          },
+          {
+           "question": "Which image should you upload for this element?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The image properties sidebar and cropping interface require you to select a specific file and frame it correctly to fit the page layout.",
+           "whatTheAgentLoses": "You lose creative control over which specific photo is featured and how the subject is framed within the layout."
+          }
+         ]
+        },
+        {
+         "id": "6.4.2",
+         "label": "Crop and fit the image",
+         "questions": [
+          {
+           "question": "Which shape should you apply to the profile image?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The image editing menu under the Design tab offered 11 different shape options to frame the picture.",
+           "whatTheAgentLoses": "Delegating this means you lose the opportunity to pick the specific stylistic crop that best matches your desired aesthetic."
+          },
+          {
+           "question": "How do you want to frame the uploaded logo?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The interface presents a crop box with adjustable handles and options to either crop or skip, which determines how the logo fits into its designated space.",
+           "whatTheAgentLoses": "You lose the ability to visually adjust the crop box to ensure your brand's logo is perfectly centered and proportioned."
+          }
+         ]
+        },
+        {
+         "id": "6.4.3",
+         "label": "Fill in the alt text",
+         "questions": [
+          {
+           "question": "Do you want to add alt text or a description to the image before inserting it?",
+           "cluster": "approve",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The attachment details panel provided empty fields for alt text and descriptions, which are important for accessibility and SEO.",
+           "whatTheAgentLoses": "You lose the opportunity to provide specific alt text that ensures your website's images are accessible to screen readers."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "6.5",
+       "label": "Edit the button",
+       "questions": [
+        {
+         "question": "Does the page end with something for a visitor to do next?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Adding a blank section with a text block lets you create a custom call to action that guides visitors on what to do after scrolling to the bottom.",
+         "whatTheAgentLoses": "You lose the opportunity to craft the specific tone and phrasing of the final message that prompts your audience to reach out or view your work."
+        },
+        {
+         "question": "How do you want the button styled?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows specific values for background, font, and layout that must be entered into the Appearance settings panel to match the intended design.",
+         "whatTheAgentLoses": "You lose creative control over fine-tuning exact visual details like font weight, spacing, and colors for the button's appearance."
+        }
+       ]
+      },
+      {
+       "id": "6.6",
+       "label": "Set up the contact form",
+       "note": "Start with 6.6.1. In every recording that has a form, the template already included one. 6.6.2 where the fields are wrong. 6.6.3 in one recording; it sets where the messages go, which the owner cannot see from the page.",
+       "children": [
+        {
+         "id": "6.6.1",
+         "label": "Pick or place the form",
+         "questions": [
+          {
+           "question": "Which form do you want to display in the WPForms widget?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The Elementor panel requires you to select a specific form, such as the 'Contact Form', from the dropdown menu to render it on the page.",
+           "whatTheAgentLoses": "You lose the ability to choose exactly which form is presented to your website visitors and whether its fields need further editing."
+          },
+          {
+           "question": "Do you want to change the ready-made contact form before publishing?",
+           "cluster": "approve",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The template provides a ready-made contact form with standard name, email, and message fields, prompting a choice on whether it needs tailoring for your specific use case.",
+           "whatTheAgentLoses": "You lose the ability to decide exactly what specific information or custom fields your business needs to collect from visitors."
+          }
+         ]
+        },
+        {
+         "id": "6.6.2",
+         "label": "Edit the form fields",
+         "questions": [
+          {
+           "question": "Which fields do you want to include and require on the contact form?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The WPForms builder interface provides options to add specific fields, toggle them as required, and adjust their display size to control how visitor information is collected.",
+           "whatTheAgentLoses": "You lose the ability to decide exactly which visitor details are mandatory and how the form fields are sized within your page layout."
+          },
+          {
+           "question": "Which fields are required, and what size are they?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The WPForms editor provides options to make the field required and adjust its size, which impacts both data collection and the form's layout.",
+           "whatTheAgentLoses": "You lose the ability to fine-tune the visual balance of the form and decide exactly which user information is strictly necessary."
+          }
+         ]
+        },
+        {
+         "id": "6.6.3",
+         "label": "Set the notifications and submissions",
+         "questions": [
+          {
+           "question": "Where should form submission notifications be sent?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The form settings modal includes a field to set the notification email address and a button to view the table of received messages.",
+           "whatTheAgentLoses": "You lose the opportunity to ensure leads are routed to your preferred inbox and to personally review the collected form data."
+          },
+          {
+           "question": "Is this the contact form's own message list, not the subscriber list?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The modal presents separate lists for subscriber and contact form submissions, requiring you to select the correct card to see visitor inquiries.",
+           "whatTheAgentLoses": "You lose direct visibility into visitor inquiries and the assurance that the contact form is capturing messages correctly."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "6.7",
+       "label": "Build the gallery",
+       "note": "6.7.1 then 6.7.2 in the section's settings, 6.7.3 in the gallery editor, 6.7.4 after a preview shows it missing. Tbal runs all four and previews between them; S7S0 runs 6.7.1 and 6.7.3.",
+       "children": [
+        {
+         "id": "6.7.1",
+         "label": "Choose the gallery layout",
+         "questions": [
+          {
+           "question": "Which pre-designed gallery layout do you want to add?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The menu displays various section categories like 'Images' alongside a grid of pre-designed gallery layouts to choose from.",
+           "whatTheAgentLoses": "You lose the opportunity to select the specific visual arrangement, such as a masonry style, for displaying your images."
+          }
+         ]
+        },
+        {
+         "id": "6.7.2",
+         "label": "Set the columns and spacing",
+         "questions": [
+          {
+           "question": "How many columns should the gallery have, and how much space between the images?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The gallery settings panel lets you adjust the width, number of columns, and spacing to control how the masonry grid displays your images.",
+           "whatTheAgentLoses": "You lose the ability to fine-tune the visual balance and density of your image gallery to match your specific aesthetic preferences."
+          }
+         ]
+        },
+        {
+         "id": "6.7.3",
+         "label": "Load and order the images",
+         "questions": [
+          {
+           "question": "In what order should these product images appear in the gallery?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The gallery edit modal displays a grid of Apple product thumbnails, and their arrangement dictates the visual flow of the page.",
+           "whatTheAgentLoses": "You lose the ability to curate the specific visual narrative and aesthetic balance of the displayed products."
+          },
+          {
+           "question": "Which images do you want in the homepage gallery?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The gallery popup and local file browser require you to choose specific files from the 'Apple' folder to ensure your portfolio accurately represents your best work.",
+           "whatTheAgentLoses": "Delegating this step means you lose the ability to personally curate exactly which pieces of your work are featured front and center on the site."
+          }
+         ]
+        },
+        {
+         "id": "6.7.4",
+         "label": "Turn on the lightbox",
+         "questions": [
+          {
+           "question": "Should gallery images open in a lightbox when clicked?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The gallery settings panel requires deciding whether to adjust the spacing slider from 150 and if the lightbox toggle should be turned on for focused viewing.",
+           "whatTheAgentLoses": "You lose the ability to fine-tune the visual density of your gallery and determine the interactive viewing experience for your site visitors."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "6.8",
+       "label": "Embed a video",
+       "questions": [
+        {
+         "question": "What URL, title and description do you want for the video section?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The settings panel requires a specific YouTube or Vimeo URL, title, and description to display the correct media on your site.",
+         "whatTheAgentLoses": "You lose creative control over which specific video is featured and how it is titled and described to your audience."
+        },
+        {
+         "question": "Should the video start on its own, loop, and show its controls?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The video settings panel provides specific toggles for autoplay, loop, and controls that determine how the pasted YouTube link behaves on the live site.",
+         "whatTheAgentLoses": "You lose the ability to tailor the visitor's multimedia experience, such as choosing whether the video acts as a silent background loop or a standard clickable player."
+        }
+       ]
+      },
+      {
+       "id": "6.9",
+       "label": "Add the social links",
+       "questions": [
+        {
+         "question": "Which social media accounts do you want to link to?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen presented an 'ADD SOCIAL LINK' button, prompting a decision on which external profiles to connect to the website.",
+         "whatTheAgentLoses": "Delegating this means the agent might omit important social profiles or link to incorrect accounts, disconnecting your audience from your broader online presence."
+        },
+        {
+         "question": "Which element do you want for the social links?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The 'Add elements' panel displays multiple widgets like text, images, and buttons, so you must specifically choose the 'Social icons' element to properly link your profiles.",
+         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to decide exactly where on the page your social media links should be placed for maximum visibility."
+        }
+       ]
+      },
+      {
+       "id": "6.10",
+       "label": "Set the element's colors and shape",
+       "questions": [
+        {
+         "question": "Does this element's color exactly match the hex from your palette?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen showed the extracted hex code was '#ffb8cc', but a slightly different shade ('#FFBBCC') was applied to the buttons in the editor.",
+         "whatTheAgentLoses": "You lose strict brand color accuracy when the agent applies a visually similar but mathematically incorrect hex code."
+        },
+        {
+         "question": "Which Advanced settings were changed on this element, if any?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Advanced tab provides granular controls like padding, motion effects, and custom CSS for highly specific design tweaks.",
+         "whatTheAgentLoses": "Delegating this means you lose the opportunity to experiment with the builder's deep customization features to achieve your exact visual preference."
+        }
+       ]
+      },
+      {
+       "id": "6.11",
+       "label": "Place and size the element",
+       "questions": [
+        {
+         "question": "How wide should I make this text block, and how should I align it?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The resize handles and background grid lines allow you to control line length and visually center the content for better readability.",
+         "whatTheAgentLoses": "You lose the opportunity to visually balance the text block's proportions and alignment against the rest of your page design."
+        },
+        {
+         "question": "How big should the logo be, and where does it sit next to the intro text?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The initial upload created a massive image block, so using the blue alignment guides to scale and center it ensures a balanced layout.",
+         "whatTheAgentLoses": "You lose the visual judgment required to scale the logo to an appropriate size and snap it perfectly to the center alignment guides."
+        }
+       ]
+      },
+      {
+       "id": "6.12",
+       "label": "Write and publish a post or product",
+       "questions": [
+        {
+         "question": "What content do you want on the new page?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The editor allows you to add text blocks and customize their color, typography, and dimensions in the sidebar to match your desired design.",
+         "whatTheAgentLoses": "Delegating this means you lose control over the specific messaging and the detailed visual styling of the page's content."
+        },
+        {
+         "question": "What details should you enter for this new product listing?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen provides specific fields for the product name, description, image, and pricing, which dictate how the item will appear to customers.",
+         "whatTheAgentLoses": "You lose control over the specific product details, pricing strategy, and marketing copy presented to your store's visitors."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "7",
+     "label": "Set the site-wide look",
+     "note": "7.1 and 7.2 through the header editor, the Customizer or a header marker, usually once. 7.3 near the end - the user edits the footer last in five of the videos. 7.4 and 7.5 before the first section in Tbal and RAex and after the content in S7S0 and vBcs. 7.6 where the builder offers it. all of it is site-wide: a change here shows on every page, so in sx6l the user sees a warning before deleting the footer.",
+     "questions": [
+      {
+       "question": "Should you customize the global colors and fonts, or stick with the template's defaults?",
+       "cluster": "select",
+       "moment": "Now",
+       "moneyMoving": true,
+       "why": "The Site Settings menu displayed options for Global Colors, Global Fonts, and Buttons, which control the overarching visual theme of the website.",
+       "whatTheAgentLoses": "You lose the ability to define a custom, cohesive brand identity that applies automatically across all pages."
+      },
+      {
+       "question": "Which part of the site's look changed here: header, footer, or the whole site?",
+       "cluster": "select",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "The customization sidebar presents multiple structural options like the header, footer, and global settings, dictating what part of the site you edit next.",
+       "whatTheAgentLoses": "You lose the ability to browse the available theme settings and prioritize which global design elements to tweak for your specific needs."
+      }
+     ],
+     "children": [
+      {
+       "id": "7.1",
+       "label": "Set the site title and logo",
+       "questions": [
+        {
+         "question": "Which image will you select for the site logo?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen prompts you to \"Select logo\" from the \"Media Library\", requiring a choice of which specific file, such as \"FS-02.png\", to use for the site's branding.",
+         "whatTheAgentLoses": "Delegating this step means surrendering control over the specific visual branding and identity of your website."
+        },
+        {
+         "question": "How wide should the logo be, and do you need a separate image for retina devices?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Testing different slider values before settling on 100 ensures the logo looks proportional in the live preview, while the unchecked box confirms a single image is sufficient for all screens.",
+         "whatTheAgentLoses": "You lose the ability to visually judge the aesthetic balance of the logo's size relative to the rest of your site's header."
+        }
+       ]
+      },
+      {
+       "id": "7.2",
+       "label": "Set the header elements and layout",
+       "questions": [
+        {
+         "question": "Which elements do you want displayed in the site header?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The 'Add Elements' menu controls the visibility of features like the 'Account' login link, which dictates how visitors navigate and interact with the top of your site.",
+         "whatTheAgentLoses": "Delegating this means the agent decides which interactive elements, like a login link or shopping cart, appear in the header, potentially misaligning with your intended site functionality."
+        },
+        {
+         "question": "How do you want the logo, menu and social icons arranged in the header?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Design panel provides five layout arrangements and spacing sliders that dictate the visual balance and navigation flow at the top of your site.",
+         "whatTheAgentLoses": "You lose the ability to visually experiment with different header layouts before deciding on the most balanced arrangement for your brand."
+        }
+       ]
+      },
+      {
+       "id": "7.3",
+       "label": "Edit the footer",
+       "questions": [
+        {
+         "question": "What do you want in the footer, and how is it laid out?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Footer Builder interface provides specific controls like pencil icons for text and column layout options to customize the bottom section of your site.",
+         "whatTheAgentLoses": "You lose the ability to manually arrange the specific widgets, copyright text, and column structure that appear at the bottom of your website."
+        },
+        {
+         "question": "How do you want to format and link the new footer text?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The formatting toolbar provides alignment, linking, and paragraph styles that determine how the footer text looks and functions for visitors.",
+         "whatTheAgentLoses": "You lose creative control over the visual hierarchy and specific internal routing of your footer's call to action."
+        }
+       ]
+      },
+      {
+       "id": "7.4",
+       "label": "Set the site colors and background",
+       "questions": [
+        {
+         "question": "Is the site's text color easy to read against the background?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Edit Palette menu allows you to define the site's core colors, which directly determines whether text will have enough contrast to remain legible.",
+         "whatTheAgentLoses": "You lose the opportunity to manually balance your aesthetic preferences with practical accessibility and contrast standards."
+        },
+        {
+         "question": "What background colors should you use for the site?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Customizer's color picker lets you test different background and header colors, which need to contrast properly with your logo so it remains visible.",
+         "whatTheAgentLoses": "You lose the chance to visually experiment with different color palettes to find the one that best complements your specific logo and brand aesthetic."
+        }
+       ]
+      },
+      {
+       "id": "7.5",
+       "label": "Set the site fonts",
+       "questions": [
+        {
+         "question": "Which fonts do you want for headings and body text?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Site Styles panel provides options to choose recommended font packs or manually set specific fonts for headings and paragraphs, which dictates the visual identity of your text.",
+         "whatTheAgentLoses": "Delegating this means you lose control over the exact typographic aesthetic and simplicity you want your site to convey."
+        }
+       ]
+      },
+      {
+       "id": "7.6",
+       "label": "Set the button style and animations",
+       "questions": [
+        {
+         "question": "What visual style should the primary buttons have?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The customization panel offers several button shapes and styles, such as square, rounded, or outlined, to match the site's aesthetic.",
+         "whatTheAgentLoses": "You lose the ability to choose the specific button shape and styling that best fits your brand's visual identity."
+        },
+        {
+         "question": "What animations do you want when a page loads, a section changes, or a link is hovered?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Page Animation settings panel lets you define specific transition effects like 'Blur In' and 'Fade In' to control the site's visual dynamics.",
+         "whatTheAgentLoses": "Delegating this means you lose the ability to fine-tune the subtle visual interactions and pacing of how your website's content appears to visitors."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "8",
+     "label": "Configure the site settings",
+     "note": "8.1 in the wizard or in General Settings, sometimes both. 8.2 in three recordings; in one of them the user opens the picker and closes it. For 8.3, the user reads the settings in WfqK, and three other builders offer them. 8.4 in the wizard or the footer. 8.5 as the toggles and widgets appear. 8.6 and 8.7 on the WordPress and GoDaddy routes. 8.8 in WfqK only, beyond the task as written. None of these actions publishes the site, but the choice at 8.3 decides whether people can find the site once it is published.",
+     "children": [
+      {
+       "id": "8.1",
+       "label": "Set the site name and tagline",
+       "questions": [
+        {
+         "question": "What should your site title be?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The 'Site Title & Logo' popup requires a specific name to replace the default 'Your Site Title' text in the header.",
+         "whatTheAgentLoses": "You lose the opportunity to choose the exact personal or brand name that will represent your website."
+        },
+        {
+         "question": "What basic details do you want in the site settings?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "This matters because the basic information section controls essential public-facing details like your site name, business category, and contact fields.",
+         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally ensure your website's core identity and contact details are accurate."
+        }
+       ]
+      },
+      {
+       "id": "8.2",
+       "label": "Set the favicon",
+       "questions": [
+        {
+         "question": "Which image do you want as the site icon?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The builder requires a square image of at least 512 by 512 pixels for the browser tab icon and forces a cropping step to ensure it fits.",
+         "whatTheAgentLoses": "You lose the ability to ensure the chosen image frames perfectly as a tiny browser favicon during the mandatory cropping step."
+        },
+        {
+         "question": "Can you still tell what the site icon is at browser-tab size?",
+         "cluster": "photos",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "A logo that looks clear in the 512x512 upload preview often turns into an illegible smudge when rendered at 16x16 pixels in the live browser tab.",
+         "whatTheAgentLoses": "The human visual judgment to realize that a complex image fails at a microscopic size and needs to be swapped for a simpler icon."
+        }
+       ]
+      },
+      {
+       "id": "8.3",
+       "label": "Set the search-engine and URL settings",
+       "questions": [
+        {
+         "question": "Do you want the site to show up in search results?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search engine visibility checkbox determines whether search engines can track and rank your site or if it remains private.",
+         "whatTheAgentLoses": "You lose the ability to intentionally keep a work-in-progress or private site hidden from public search results."
+        },
+        {
+         "question": "Which permalink structure should you use for your posts?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Permalink Settings page offers various URL formats like 'Plain', 'Numeric', or 'Post name', which directly impacts the readability and SEO performance of your links.",
+         "whatTheAgentLoses": "You lose the chance to align the site's URL structure with your specific SEO strategy and content organization preferences."
+        }
+       ]
+      },
+      {
+       "id": "8.4",
+       "label": "Fill in the contact details",
+       "questions": [
+        {
+         "question": "What contact details do you want shown on the site?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The setup wizard asks for an email, phone number, and physical address to automatically populate the contact areas of your new site.",
+         "whatTheAgentLoses": "You lose the opportunity to specify exactly which communication channels, like a business phone number or physical storefront, are presented to your visitors."
+        },
+        {
+         "question": "What contact address do you want to display in the site's footer?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The template currently displays a placeholder address of '[address] Way, Mainland ML [number]' that needs to be replaced with your actual location.",
+         "whatTheAgentLoses": "The agent might leave the placeholder text or invent a fake location, providing incorrect contact details to your site visitors."
+        }
+       ]
+      },
+      {
+       "id": "8.5",
+       "label": "Turn features on or off",
+       "questions": [
+        {
+         "question": "Which additional features do you want to install with the template?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The setup screen offers optional modules like eCommerce, donations, and live chat that determine the base functionality of your new site.",
+         "whatTheAgentLoses": "You lose the opportunity to automatically provision specific tools like a contact form or store right from the start."
+        },
+        {
+         "question": "Do you want any of the free extras, like the AI assistant or Pinterest?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The setup screen offers optional integrations to enhance your store, which you can either add now or skip to keep the initial installation lightweight.",
+         "whatTheAgentLoses": "You lose the ability to decide which specific marketing and AI integrations are added to your site's foundation."
+        }
+       ]
+      },
+      {
+       "id": "8.6",
+       "label": "Manage the plugins and users",
+       "questions": [
+        {
+         "question": "Which pre-installed plugins should you keep or delete?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen shows several default Hostinger plugins, and deciding which to remove helps declutter your workspace before building.",
+         "whatTheAgentLoses": "You lose the ability to choose whether to utilize the host's default onboarding tools or start with a completely clean slate."
+        },
+        {
+         "question": "Is there an unfinished user account left over in the Users list?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The browser displayed a warning dialog asking if you want to leave the page and lose your unsaved changes.",
+         "whatTheAgentLoses": "You lose control over whether to finish configuring the new user or abandon it to prioritize changing the site's theme."
+        }
+       ]
+      },
+      {
+       "id": "8.7",
+       "label": "Check the backups and history",
+       "questions": [
+        {
+         "question": "Is there a way to undo an accidental deletion or change right now?",
+         "cluster": "undo",
+         "moment": "On demand",
+         "moneyMoving": false,
+         "why": "Drag-and-drop editors can be finicky, and accidentally deleting a container or widget is a common mistake that needs immediate reversal before the session auto-saves.",
+         "whatTheAgentLoses": "The user loses the ability to restore their work if the agent makes a destructive edit, saves it, and doesn't know how to access the revision history."
+        },
+        {
+         "question": "Do you want to restore an earlier backup, losing the edits made since?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Site History panel displays recent automatic backups alongside options to reset or manually back up the website, providing a safety net for undoing changes.",
+         "whatTheAgentLoses": "Delegating this means you lose the opportunity to decide whether your current progress requires a manual save point or if recent edits should be rolled back."
+        }
+       ]
+      },
+      {
+       "id": "8.8",
+       "label": "Set up the online store",
+       "questions": [
+        {
+         "question": "What should I enter for the store's name, industry, and location?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The platform uses these details to recommend the best theme and set up essential features like payments, shipping, and taxes.",
+         "whatTheAgentLoses": "You lose the ability to ensure the site's initial theme recommendations and regional settings accurately reflect your specific business."
+        },
+        {
+         "question": "Which plugin do you want for the online store?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search results display multiple options, so identifying the official 'WooCommerce By Automattic' card with 8+ million installations ensures you are using the trusted standard.",
+         "whatTheAgentLoses": "Delegating this step means you lose the ability to verify the plugin's author, active installations, and compatibility status before adding it to your site."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "9",
+     "label": "Publish and check the site",
+     "note": "The user does 9.1 after every change on the WordPress routes, and the other builders save on their own - sx6l shows Saved. 9.2 and 9.3 during the build, whenever a section is done - Tbal previews four times. Next, 9.4 where the plan prevents publishing - Tbal, and vBcs at launch - and 9.5 on the builders where making the site public and publishing it are two different actions. 9.6 in every recording except LMVE and FFtR, whose sites went live at 4.8. 9.7 and 9.8 after it, then 9.9 and 9.10 on the live page. At 9.11 the user returns to 5, 6 or 7 and repeats 9.6; this happens three times in Gab9. 9.12 and 9.13 before the site is called done, and no recording shows either.",
+     "children": [
+      {
+       "id": "9.1",
+       "label": "Save or update the page",
+       "questions": [
+        {
+         "question": "Are the page edits saved, or does the Update button still show changes?",
+         "cluster": "receipts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The Elementor 'UPDATE' button remains bright green if a save action fails or is interrupted by a network issue, meaning your recent layout changes are not yet secured.",
+         "whatTheAgentLoses": "You lose the visual confirmation required to catch a silent save failure before you navigate away and permanently lose your work."
+        }
+       ]
+      },
+      {
+       "id": "9.2",
+       "label": "Preview the page",
+       "questions": [
+        {
+         "question": "Can you see the full-size layout before publishing?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Publishing to a carrd.co URL and clicking 'View Site' lets you check the actual full-screen layout to ensure the spacing and alignments translate correctly from the editor.",
+         "whatTheAgentLoses": "You lose the ability to personally evaluate the live, full-screen aesthetic and decide if the margins and padding feel right to your eye."
+        }
+       ]
+      },
+      {
+       "id": "9.3",
+       "label": "Check the tablet and mobile view",
+       "questions": [
+        {
+         "question": "Do you need to adjust the layout for tablet and mobile screens?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Checking the responsive mode preview ensures your design elements do not overlap or break when viewed on smaller device widths.",
+         "whatTheAgentLoses": "You lose the ability to visually verify and fine-tune how your specific content scales and stacks on mobile devices."
+        },
+        {
+         "question": "Does the layout hold together on mobile and tablet screens?",
+         "cluster": "approve",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Using the top bar device icons to preview tablet and mobile layouts ensures your content remains readable and properly aligned on smaller screens.",
+         "whatTheAgentLoses": "You lose the opportunity to visually verify and fine-tune the mobile viewing experience to match your personal aesthetic standards."
+        }
+       ]
+      },
+      {
+       "id": "9.4",
+       "label": "Unlock publishing with a plan"
+      },
+      {
+       "id": "9.5",
+       "label": "Set the site public or launch it",
+       "questions": [
+        {
+         "question": "Does the live address show the site, or a coming-soon page?",
+         "cluster": "facts",
+         "moment": "Completion",
+         "moneyMoving": false,
+         "why": "Platforms like Squarespace or WordPress often default new sites to a private state or display a 'coming soon' splash page until a specific setting is toggled, even after clicking publish.",
+         "whatTheAgentLoses": "The user might share their new URL thinking the site is live, only to have visitors hit a password prompt or generic landing page."
+        }
+       ]
+      },
+      {
+       "id": "9.6",
+       "label": "Publish the site",
+       "questions": [
+        {
+         "question": "Ready to publish the site and make it public?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Clicking the purple 'Go live' button commits your final edits and triggers the confirmation modal displaying your live URL.",
+         "whatTheAgentLoses": "You lose the final opportunity to preview your work before officially launching the site to the public."
+        }
+       ]
+      },
+      {
+       "id": "9.7",
+       "label": "Read the publish confirmation and the URL",
+       "questions": [
+        {
+         "question": "What is the live address of the published site?",
+         "cluster": "receipts",
+         "moment": "Completion",
+         "moneyMoving": false,
+         "why": "The popup reveals the actual web address generated for your site, which might include unexpected numbers if your preferred name was taken, along with a button to check the live page.",
+         "whatTheAgentLoses": "You lose the opportunity to catch unwanted modifications to your free domain name and to personally verify that the live website looks correct."
+        }
+       ]
+      },
+      {
+       "id": "9.8",
+       "label": "Open the live site",
+       "questions": [
+        {
+         "question": "Was the live site opened from the confirmation page?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen confirms the site is ready, making the view button the correct path to verify the published result.",
+         "whatTheAgentLoses": "The user misses the opportunity to personally verify the live website and confirm the final URL."
+        },
+        {
+         "question": "Does the live site reflect your latest edits, or is it displaying an older cached version?",
+         "cluster": "compare",
+         "moment": "Completion",
+         "moneyMoving": false,
+         "why": "Site builders and browsers often cache pages aggressively. You might need to open an incognito window to verify that the latest published changes actually went live.",
+         "whatTheAgentLoses": "The user loses the ability to confirm their final edits were successfully pushed to the public server, potentially leaving mistakes live."
+        }
+       ]
+      },
+      {
+       "id": "9.9",
+       "label": "Click through and read the live site",
+       "questions": [
+        {
+         "question": "Do the logo and menu buttons on the live site look like they did in the editor?",
+         "cluster": "approve",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Verifying the black outline on the [business name] logo and the pink navigation buttons ensures the site's visual branding matches your aesthetic vision before moving on.",
+         "whatTheAgentLoses": "You lose the opportunity to make subjective, fine-tuned aesthetic judgments like perfectly matching the navigation button colors to the logo's specific shade of pink."
+        },
+        {
+         "question": "Do the prices and terms on the live page match what you gave?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays specific pricing like $20 for a headshot and terms like extra characters costing 30%, which must be exact to set proper expectations with clients.",
+         "whatTheAgentLoses": "An agent might use generic placeholder text or incorrect rates, losing the specific pricing and conditions you require for your commission work."
+        }
+       ]
+      },
+      {
+       "id": "9.10",
+       "label": "Notice the free-plan marks",
+       "questions": [
+        {
+         "question": "What ads or 'made with' badges show on the live site?",
+         "cluster": "facts",
+         "moment": "Completion",
+         "moneyMoving": false,
+         "why": "Identifying the persistent GoDaddy banners at the top and bottom of the page helps you evaluate if the free plan's forced branding is acceptable for your site's image.",
+         "whatTheAgentLoses": "Delegating this means you lose the opportunity to visually assess whether the platform's forced advertisements compromise the professional look of your finished website."
+        }
+       ]
+      },
+      {
+       "id": "9.11",
+       "label": "Fix and republish",
+       "questions": [
+        {
+         "question": "Do the background or images need a last tweak after seeing the live site?",
+         "cluster": "select",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The background color settings and image crop tool on the screen allow you to fix minor visual imperfections noticed during the live site review.",
+         "whatTheAgentLoses": "You lose the ability to apply your personal aesthetic judgment to subtle details like the exact background tint and image framing."
+        }
+       ]
+      },
+      {
+       "id": "9.12",
+       "label": "Sweep for leftover template content",
+       "questions": [
+        {
+         "question": "Is any Lorem Ipsum or template placeholder text still on the live site?",
+         "cluster": "refine",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Templates are filled with dummy text to show layout. A sighted user scrolling the page will instantly spot Latin text or generic 'Write your description here' blocks, whereas an agent might only update the specific fields it was prompted to change.",
+         "whatTheAgentLoses": "The user publishes a site that looks unfinished and unprofessional because leftover placeholder content was not visually identified and removed."
+        }
+       ]
+      },
+      {
+       "id": "9.13",
+       "label": "Test the contact form on the live site"
+      }
+     ]
+    }
+   ]
+  }
  }
 }
