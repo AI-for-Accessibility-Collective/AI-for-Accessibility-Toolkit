@@ -24,10 +24,11 @@
 //       Check (b) cannot see this: it compares a file against a fresh render
 //       from the SAME generator, so a wrong literal in the generator matches
 //       itself and passes. That is how `@a11y-toolkit/core` survived.
-//   (f) the README's own Quick Start block runs from the repo root and
-//       produces the output its comments advertise. (c) covers API.md and
-//       SKILL.md only, which is why the README's version could promise a
-//       fontScale it never computed.
+//   (f) the Quick Start block in docs/QUICKSTART.md runs from the repo root
+//       and produces the output its comments advertise. (c) covers API.md and
+//       SKILL.md only, which is why the README's former copy of this block
+//       could promise a fontScale it never computed; the block now lives in
+//       docs/QUICKSTART.md and this check moved with it.
 //
 //   node toolkit/test/api-docs-test.js
 
@@ -50,7 +51,7 @@ const API_MD_PATH = path.join(TOOLKIT_ROOT, 'API.md');
 const SKILL_MD_PATH = path.join(REPO_ROOT, '.claude', 'skills', 'ai4a11y-toolkit', 'SKILL.md');
 const BACKGROUND_JS_PATH = path.join(REPO_ROOT, 'personalized-extension', 'extension', 'background.js');
 const INDEX_JS_PATH = path.join(TOOLKIT_ROOT, 'index.js');
-const README_PATH = path.join(REPO_ROOT, 'README.md');
+const QUICKSTART_MD_PATH = path.join(REPO_ROOT, 'docs', 'QUICKSTART.md');
 
 let pass = 0, fail = 0;
 function check(name, cond) { if (cond) { pass++; console.log('PASS:', name); } else { fail++; console.log('FAIL:', name); } }
@@ -220,14 +221,15 @@ if (!existsSync(BACKGROUND_JS_PATH)) {
 }
 
 // ============================================================================
-// (f) the README's Quick Start runs and produces what its comments claim
+// (f) the docs/QUICKSTART.md Quick Start runs and produces what its comments claim
 // ============================================================================
 // (c) does this for API.md and SKILL.md, which is why their Quick Start was
-// right. Nothing did it for the README, which is why the README's version
-// annotated renderWebSettings(model) with `{ fontScale: 140, ... }` while
-// writing no textSize need, so it actually returned {}. The assertions live
-// here rather than in the README so the front page stays readable: this
-// appends them to whatever the README currently shows.
+// right. Nothing did it for the user-facing walkthrough, which is why its
+// old README copy annotated renderWebSettings(model) with `{ fontScale:
+// 140, ... }` while writing no textSize need, so it actually returned {}.
+// The walkthrough lives in docs/QUICKSTART.md; the assertions live here
+// rather than in that page so it stays readable: this appends them to
+// whatever the page currently shows.
 //
 // What this does NOT catch: a surface renderer tolerant of the wrong argument.
 // renderXRSettings(null, ...) still returns a well-shaped object, so swapping
@@ -236,8 +238,8 @@ if (!existsSync(BACKGROUND_JS_PATH)) {
 // render call that goes missing.
 {
   let extracted = null;
-  if (existsSync(README_PATH)) {
-    const readme = readFileSync(README_PATH, 'utf8');
+  if (existsSync(QUICKSTART_MD_PATH)) {
+    const readme = readFileSync(QUICKSTART_MD_PATH, 'utf8');
     const startMarker = '<!-- QUICKSTART:START -->';
     const endMarker = '<!-- QUICKSTART:END -->';
     const startIdx = readme.indexOf(startMarker);
@@ -247,11 +249,11 @@ if (!existsSync(BACKGROUND_JS_PATH)) {
       extracted = fence ? fence[1] : null;
     }
   }
-  check('Quick Start code block was found between QUICKSTART markers in README.md', !!extracted);
+  check('Quick Start code block was found between QUICKSTART markers in docs/QUICKSTART.md', !!extracted);
 
   if (extracted) {
-    // Bind the README's OWN render calls rather than making fresh ones, so
-    // the assertions below are about the arguments the README actually shows.
+    // Bind the page's OWN render calls rather than making fresh ones, so
+    // the assertions below are about the arguments the page actually shows.
     // If either rewrite fails to match, the check fails instead of quietly
     // testing nothing.
     let bound = extracted.replace(
@@ -261,31 +263,31 @@ if (!existsSync(BACKGROUND_JS_PATH)) {
     const beforeXr = bound;
     bound = bound.replace(/^(\s*)renderXRSettings\(/m, '$1const __xr = renderXRSettings(');
     const boundXr = bound !== beforeXr;
-    check('the README Quick Start calls both surface renderers, so they can be checked', boundWeb && boundXr);
+    check('the Quick Start calls both surface renderers, so they can be checked', boundWeb && boundXr);
 
-    // The README's imports are written from the repository root
+    // The page's imports are written from the repository root
     // ('./toolkit/index.js'), so the snippet has to run from there.
     const probe = [
       bound,
       "if (__web.fontScale !== 140) {",
-      "  throw new Error('README Quick Start: renderWebSettings returned ' + JSON.stringify(__web)",
+      "  throw new Error('Quick Start: renderWebSettings returned ' + JSON.stringify(__web)",
       "    + ', but the block advertises { fontScale: 140, ... }');",
       "}",
       "if (typeof __xr?.text?.angularSizeDeg !== 'number') {",
-      "  throw new Error('README Quick Start: renderXRSettings returned ' + JSON.stringify(__xr)",
+      "  throw new Error('Quick Start: renderXRSettings returned ' + JSON.stringify(__xr)",
       "    + ', but the block advertises { text: { angularSizeDeg, ... }, ... }');",
       "}",
-      "console.log('README Quick Start OK');",
+      "console.log('Quick Start OK');",
       '',
     ].join('\n');
-    const tmpPath = path.join(REPO_ROOT, '.readme-quickstart-check.tmp.mjs');
+    const tmpPath = path.join(REPO_ROOT, '.quickstart-check.tmp.mjs');
     writeFileSync(tmpPath, probe, 'utf8');
     let ok = false;
     let detail = '';
     try {
       const out = execFileSync(process.execPath, [tmpPath], { cwd: REPO_ROOT, encoding: 'utf8' });
-      ok = out.includes('README Quick Start OK');
-      detail = ok ? '' : `ran but did not print "README Quick Start OK": ${out}`;
+      ok = out.includes('Quick Start OK');
+      detail = ok ? '' : `ran but did not print "Quick Start OK": ${out}`;
     } catch (e) {
       // Report the thrown message, not the last line of the stack (which is
       // the node version banner).
@@ -295,7 +297,7 @@ if (!existsSync(BACKGROUND_JS_PATH)) {
     } finally {
       try { unlinkSync(tmpPath); } catch { /* best-effort cleanup */ }
     }
-    check(`the README Quick Start runs and renders what it advertises${detail ? ` (${detail})` : ''}`, ok);
+    check(`the Quick Start runs and renders what it advertises${detail ? ` (${detail})` : ''}`, ok);
   }
 }
 
