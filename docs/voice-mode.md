@@ -3,10 +3,13 @@
 Voice mode is how a person drives an app by **speaking (or typing)** instead of
 pointing. In this repo it is the **Controller** ([`controller/`](../controller/))
 — a platform-neutral text/voice control surface — not a bundled browser-extension
-feature. The extension's old voice mode (Gemini Live over a raw WebSocket, an
+feature. The extension's voice mode (Gemini Live over a raw WebSocket, an
 offscreen document, `chrome.runtime.sendMessage` to a service worker) was retired
-in the re-architecture; the toolkit kept the **port** and rebuilt the **UI**
-host-agnostic. No `chrome.*`, no required cloud model, no API key.
+*from this repository* in the re-architecture; the toolkit kept the **port** and
+rebuilt the **UI** host-agnostic. No `chrome.*`, no required cloud model, no API
+key. (The personalized extension still ships its own Gemini-Live voice mode,
+documented in the
+[extension repository's docs/voice-mode.md](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension/blob/main/docs/voice-mode.md).)
 
 > Full design + wire contract: [`controller/DESIGN.md`](../controller/DESIGN.md)
 > and [`controller/PROTOCOL.md`](../controller/PROTOCOL.md). This page is the
@@ -26,12 +29,12 @@ Two surfaces run this same stack: the **floating widget**
 core, where the same utterance can also update the person's profile.
 
 - **Input** — the Web Speech `SpeechRecognition` API (feature-detected; the same
-  code `onboarding/` uses). A 🎤 Speak button dictates into the field and
-  auto-submits when recognition ends; **Ctrl+Space** toggles it from anywhere in
-  the chat's own document (and an **embedder** can reach the same action — see
+  code `onboarding/` uses). A Speak (microphone) button dictates into the field
+  and auto-submits when recognition ends; **Ctrl+Space** toggles it from anywhere
+  in the chat's own document (and an **embedder** can reach the same action — see
   below, for when the chat is framed beside a page under test); a
-  text field is always available too (speech-impaired users, noisy rooms,
-  deterministic tests). Starting dictation **silences playback first** — it
+  text field is always available too (people with non-standard speech, noisy
+  rooms, deterministic tests). Starting dictation **silences playback first** — it
   cancels any in-progress TTS and pauses local media, and asks a connected
   receiver to `muteAudio` so other tabs don't get transcribed (a page can't reach
   them itself).
@@ -118,8 +121,8 @@ screen reader (the failure mode for exactly the users it serves).
   task results and content reads are `polite`.
 - **Earcons** (ported from browser-harness): a repeating 440+620 Hz "thinking"
   pulse while a task runs, a 660+880 done chime, a 300+210 error chime.
-  Non-verbal, so they don't collide with a screen reader and play regardless of
-  the TTS toggle.
+  Non-speech sounds, so they don't collide with a screen reader and play
+  regardless of the TTS toggle.
 
 ## Consent & safety
 
@@ -155,7 +158,7 @@ grammar). Receiver spec: [`controller/PROTOCOL.md`](../controller/PROTOCOL.md).
 
 ## What changed from the extension voice mode
 
-| Then (retired) | Now (the Controller) |
+| Then (retired from this repository) | Now (the Controller) |
 |---|---|
 | Gemini Live over a raw WebSocket, offscreen doc, service worker | No required cloud model; deterministic grammar + optional host LLM lane |
 | `chrome.tabs` / `chrome.scripting` / `chrome.storage` via `chrome.runtime.sendMessage` | The neutral `ControlPort` (a local object or a remote proxy over a channel) |

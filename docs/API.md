@@ -100,7 +100,7 @@ const violations = await runAxeAnalysis();
 
 ## Adapters
 
-Adapters fix issues or apply visual presets. Located in `tools/adapters/`.
+Adapters apply adaptations or visual presets. Located in `tools/adapters/`.
 
 ### AI-Powered Adapters
 
@@ -131,7 +131,7 @@ await improveAmbiguousLinks(findAmbiguousLinks());
 
 ### Visual Adapters
 
-A sample — `tools/adapters/index.js` exports the full set (magnifier, reading
+A sample, `tools/adapters/index.js` exports the full set (magnifier, reading
 ruler, bionic reading, big targets, page outline, flash guard, and more). Run
 `ai4a11y list tools` for the current list with descriptions.
 
@@ -224,7 +224,7 @@ const settings = await loadSettings(storageGetter);
 {
   "profileId": {
     "name": "Display Name",
-    "description": "Who this helps",
+    "description": "What the preset does, e.g. \"Larger text (150%), spacing, enhanced focus, contrast fixes\"",
     "tools": {
       "autoDescribe": true,
       "fontScale": 150,
@@ -234,6 +234,9 @@ const settings = await loadSettings(storageGetter);
 }
 ```
 
+The `description` says what the preset does, never who its users are — see
+"Adding a profile" in [CONTRIBUTING.md](../CONTRIBUTING.md).
+
 ### Multi-Profile Merging
 
 When multiple profiles are selected, tools merge:
@@ -242,14 +245,14 @@ When multiple profiles are selected, tools merge:
 
 ## Skills
 
-A **skill** is a `SKILL.md` playbook that **composes adapters** — it names which adapters to apply, with what settings, for a need and page. Adapters are the executable code; a skill is the recipe over them. The skill layer lives in the platform-agnostic core, `toolkit/core/`.
+A **skill** is a `SKILL.md` playbook that **composes adapters**, it names which adapters to apply, with what settings, for a need and page. Adapters are the executable code; a skill is the recipe over them. The skill layer lives in the platform-agnostic core, `toolkit/core/`.
 
 ### SKILL.md format
 
 ```markdown
 ---
 name: reading-aid
-description: When to use it — what an agent matches on
+description: When to use it, what an agent matches on
 supportAreas: [vision, reading, cognitive]
 siteRelevance: [news, education, reference]
 ---
@@ -268,7 +271,7 @@ Plain-language instructions (what it does, when to use it).
 ```
 ```
 
-The frontmatter + body are **model-facing** (an agent reads them); the fenced JSON **recipe** is **machine-runnable** — it resolves deterministically to the same settings the adapter layer applies, so running a skill needs no LLM. A recipe can compose **adapters** (page-fixing settings, above) and **actions** (plain-language tasks the browser agent runs: `"actions": [{ "name": "...", "prompt": "..." }]`) — the latter is how a reusable task saved from the Assistant becomes a skill. Built-in skills ship in `toolkit/skills/builtin/`.
+The frontmatter + body are **model-facing** (an agent reads them); the fenced JSON **recipe** is **machine-runnable**, it resolves deterministically to the same settings the adapter layer applies, so running a skill needs no LLM. A recipe can compose **adapters** (page-fixing settings, above) and **actions** (plain-language tasks the browser agent runs: `"actions": [{ "name": "...", "prompt": "..." }]`): the latter is how a reusable task saved from the Assistant becomes a skill. Built-in skills ship in `toolkit/skills/builtin/`.
 
 ### Skill functions (`toolkit/core/skill.js`)
 
@@ -277,7 +280,7 @@ import { parseSkill, validateSkill, resolveSkill, matchSkill, matchSkillToNeed }
 
 const skill = parseSkill(markdown);              // → { name, description, supportAreas, siteRelevance, recipe, body }
 validateSkill(skill, { tools });                 // → { valid, errors[] } (checks adapter ids + setting keys vs the registry, supportAreas vs SUPPORT_AREAS, siteRelevance vs the taxonomy + 'all')
-resolveSkill(skill);                             // → { settings: {...}, adapterIds: [...], actions: [...] } — the apply-plan
+resolveSkill(skill);                             // → { settings: {...}, adapterIds: [...], actions: [...] }, the apply-plan
 matchSkill(skill, { supportAreas, category });   // → score, for page-based retrieval
 matchSkillToNeed(skill, need);                   // → score, for "does this need already have a skill?"
 ```
@@ -290,7 +293,7 @@ import { buildSkill } from './toolkit/core/skill-builder.js';
 // Prompts the injected LLM to author a skill grounded in the real adapter catalog.
 const { skill, valid, errors } = await buildSkill(need, { llm, tools, taxonomy, profile });
 
-// Evaluation loop: the person rejected an attempt — pass it back with their feedback.
+// Evaluation loop: the person rejected an attempt, pass it back with their feedback.
 await buildSkill(need, { llm, tools, taxonomy, profile, previous: skill, feedback: 'text still too small' });
 ```
 

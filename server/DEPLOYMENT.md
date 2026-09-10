@@ -4,8 +4,15 @@
 > The API reference is **generated**: see [API.md](./API.md) (`npm run docs`)
 > and `GET /v1/meta` on a live instance; the wire contract is
 > [CONTRACT.md](./CONTRACT.md). Team-internal notes for our shared instance
-> (real URL, token etiquette) are intentionally **not in this repo** — ask a
-> maintainer.
+> (real URL, token etiquette) are intentionally **not in this repo** — see
+> [MAINTAINERS.md](../MAINTAINERS.md) for the current contact route.
+
+> **Continuity note.** Any shared research instance is operated for the
+> duration of the research phase only and may be retired without this
+> repository changing. This runbook exists so that anyone can stand up
+> their own instance; treat self-hosting as the durable path. Long-term
+> operation of a shared instance (owner, budget, data retention) is to be
+> defined — see [MAINTAINERS.md](../MAINTAINERS.md).
 
 ## One-time setup
 
@@ -71,7 +78,10 @@ Every `/v1/*` call needs `Authorization: Bearer <token>`; each token maps to a
 A host that uses the toolkit in "remote mode" points its Librarian facade at
 the Server URL with an access token; clearing them returns to fully-local mode.
 When configured, all librarian wire routes — including the natural-language
-note methods — go to the server instead of an embedded core.
+note methods — go to the server instead of an embedded core. Remember what
+this means for the people whose profiles it holds: whoever operates the
+server can read them, and a host that ships remote mode owes its users that
+disclosure.
 
 ## Verification
 
@@ -84,4 +94,6 @@ note methods — go to the server instead of an embedded core.
 
 Small instance, scale-to-zero: idle cost ≈ storage + registry only. Teardown:
 `gcloud run services delete toolkit-service --region <region>`, delete the two
-secrets and the bucket.
+secrets and the bucket. If real people's profiles were on the instance,
+teardown includes deleting the bucket's contents — a profile is
+disability-related information, not just state.

@@ -1,11 +1,15 @@
 # AI for Accessibility Toolkit
 
 A general, platform-agnostic toolkit developers embed to add **agentic
-accessibility** to any app. It is a library, not an application: no browser
-extension, no bundled UI. Host apps (web, mobile, XR, server) wire in platform
+accessibility** to any app. It is a library, not an application, and it has no bundled UI. 
+
+Host apps (web, mobile, XR, server) wire in platform
 ports and consume the core, the catalog, or the hosted service.
 
 ## Architecture
+
+Terms are defined once, in `docs/GLOSSARY.md`; the shape and invariants are
+in `docs/architecture.md`. This section is the code map.
 
 - `toolkit/` — the platform-agnostic core. Sub-parts:
   - `core/`: Librarian (memory/profile agent), datastore, the ability model
@@ -16,7 +20,7 @@ ports and consume the core, the catalog, or the hosted service.
   - `ports/` — the interfaces a host implements (KVStore, Clock, Scheduler,
     Consent, actuation). The core reaches every platform capability through these.
   - `surfaces/` — pure renderers mapping an AbilityModel → per-platform settings
-    (`web.js`, `xr.js`).
+    (`web.js`, `mobile.js`, `xr.js`).
   - `platforms/node/`, `platforms/chrome/` — reference host implementations of the
     ports (the template a new host copies).
   - `registry/` — the canonical tools catalog + settings vocabulary.
@@ -24,10 +28,12 @@ ports and consume the core, the catalog, or the hosted service.
   - `sync/`, `protocol/` — profile-blob transport + JSON-schema wire contracts.
   - `hosts/` — runnable demos (`xr-demo`, `skill-demo`).
 - `tools/` — the developer **catalog**: `adapters/` (executable fixes),
-  `auditors/` (issue detectors), `profiles/` (ability presets), `utils/`.
+  `auditors/` (issue detectors), `validators/` (the verifier engine for agentic
+  flows), `profiles/` (ability presets), `insights/` (knowledge modules, e.g.
+  ArtInsight), `utils/`.
 - `server/` — hosted HTTP service exposing the Librarian methods to any
   language/runtime.
-- `cli/` — the Python CLI (`ai4a11y`) that drives a real page over the
+- `cli/` — an experimental Python CLI (`ai4a11y`) that drives a real page over the
   DevTools Protocol and bundles the catalog as `cli/cli-tools.bundle.js`.
   Rebuild the bundle with `npm run build:cli` and commit it; CI fails on drift.
 - `controller/` — an **optional** UI layer (a sibling of the toolkit, not part
@@ -59,8 +65,28 @@ skill for the full surface.
   The **Engineer** (`toolkit/core/skill-builder.js`) authors them; they resolve
   deterministically at apply-time (no LLM). Starter recipes: `toolkit/skills/builtin/`.
 - **Auditor** — code in `tools/auditors/` that finds issues for adapters to fix.
+- **Validators** — `tools/validators/`, the verifier engine for agentic flows.
+  Meeting notes may say "validation layer" or "verification agent"; in docs and
+  code the repository's own name, **validators**, is the one to use.
 - **Port / Surface / Host** — a host implements ports and (optionally) a surface;
   the core stays platform-free.
+
+## Documentation conventions
+
+- Status framing everywhere public: an active research project, pre-alpha, a
+  technology probe; adapters unvalidated; not a replacement for assistive
+  technology. Do not soften it, and pair it with a plain-language sentence
+  stating its consequences.
+- Language rules for public docs: social model (barriers in pages, not
+  deficits in people); "older adults", never "elderly" or "aging" as a
+  category; profiles are starting points, not characterizations of people;
+  credit the Collective, not individuals; "prior research", never "prior
+  art"; plain language for anything user-facing.
+- Canonical-vs-mirror: `docs/projects.md` and `docs/agent-card.md` are
+  canonical in this repository; the extension repository carries pointers.
+  CODE_OF_CONDUCT.md and the contact routes in MAINTAINERS.md are kept in
+  sync by hand across both repositories; this repository's MAINTAINERS.md
+  is canonical and also carries project governance.
 
 ## Known tradeoffs (context for reviewers)
 

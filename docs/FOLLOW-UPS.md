@@ -2,20 +2,20 @@
 
 Deferred work that's been scoped but not (fully) done. Two kinds:
 
-- **Receiver tasks** — the toolkit ships its half (protocol + a best-effort
+- **Receiver tasks**, the toolkit ships its half (protocol + a best-effort
   call); a receiving app (e.g. `browser-harness-a11y`) implements the other half.
-- **Toolkit tasks** — work inside this repo.
+- **Toolkit tasks**, work inside this repo.
 
 Keep this list short: add an item when you defer something with a clear plan,
 remove it when it's done.
 
 > This file is **pending work only**. The canonical list of everything a receiver
-> must implement is `controller/PROTOCOL.md` — start at its **§0 Conformance
+> must implement is `controller/PROTOCOL.md`, start at its **§0 Conformance
 > checklist**.
 
 ## Receiver tasks
 
-### `muteAudio` — silence other tabs during dictation
+### `muteAudio`, silence other tabs during dictation
 **Toolkit half: shipped** (`61aba96`). On voice-input start the Controller /
 `/chat` fires best-effort `performAction("muteAudio", …)` (only when driving a
 remote receiver) and pauses its own tab's media + TTS. A page can't reach other
@@ -27,7 +27,7 @@ Controller tab) via CDP. Full guidance + a ready-to-adapt snippet:
 `browser-harness-a11y/docs/receiver-issue-mute-audio.md`. Documented in
 `controller/PROTOCOL.md`.
 
-### `stop` — interrupt a running task
+### `stop`, interrupt a running task
 **Toolkit half: shipped** (`ed75dab`). Optional `stop()` in the ControlPort +
 `canStop` capability; the Controller calls it from a Stop control shown while a
 task runs. Documented in `controller/PROTOCOL.md`.
@@ -40,20 +40,20 @@ should implement `stop()` (abort the AbortSignal / kill the run) and set
 ## Toolkit tasks
 
 ### A task result is a CLAIM, and the Controller presents it as fact
-**Open design question — no fix specified yet.**
+**Open design question, no fix specified yet.**
 
 Anything the grammar doesn't claim goes to the receiver as a `task`, and an
 agent's answer comes back as an `aa-control-note` that the Controller shows and
 speaks verbatim. Observed (browser-harness-a11y
 `docs/toolkit-issue-caption-verb-forms.md`): "turn off live captioning" missed
-the grammar, reached the agent, and returned *"Live captioning turned off."* —
+the grammar, reached the agent, and returned *"Live captioning turned off."*,
 while Live Caption was still on.
 
 Why it matters more here than elsewhere: a model asked to turn something off
 tends to report that it did, and **the person on the other end may have no way to
 look.** That is precisely this toolkit's audience. A deterministic
-`applySettings` result is *verified* — the receiver reports the keys it actually
-wrote — but a task note is unverified prose, and today both are rendered
+`applySettings` result is *verified*, the receiver reports the keys it actually
+wrote, but a task note is unverified prose, and today both are rendered
 identically.
 
 Directions worth weighing (not yet chosen):
@@ -66,11 +66,11 @@ Directions worth weighing (not yet chosen):
    `activeSettings`; contradict the claim if it doesn't hold. Costs one round
    trip, only on those tasks.
 3. **Note provenance in the protocol.** Let a note say whether the receiver
-   *checked* — e.g. `{kind:"aa-control-note", text, verified:true}`. The receiver
+   *checked*, e.g. `{kind:"aa-control-note", text, verified:true}`. The receiver
    knows: its own floor (reading Chrome's toggle back) is verified; an agent's
    prose is not. Then (1) is driven by data instead of a guess.
 4. **Keep narrowing the gap.** Every phrasing the grammar handles is one the
-   agent can't misreport — the -ing widening (2b2356a) and the whole-utterance
+   agent can't misreport, the -ing widening (2b2356a) and the whole-utterance
    narrowing (29e2e50) are this. Necessary but not sufficient: the tail is
    endless.
 
@@ -79,7 +79,7 @@ applies. Decide before adding more agent-lane surface.
 
 ### `auto-transcriber` is catalog-unreachable
 `tools/adapters/auto-transcriber.js` is exported but no `settingsMeta` key maps
-to it in `adaptersForTools` (`tools/profiles/settings.js`) — the same
+to it in `adaptersForTools` (`tools/profiles/settings.js`): the same
 reachability gap `fix-landmarks` / `read-aloud` once had. It's AI-powered
 (`getYouTubeTranscript`). **Decide:** wire it to `autoCaptions` (the AI
 caption-generation key) or drop it from the catalog. Surfaced in

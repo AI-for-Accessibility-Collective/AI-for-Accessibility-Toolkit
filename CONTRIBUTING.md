@@ -11,6 +11,36 @@ This is a **toolkit**, not an app. Contributions extend one of three layers:
 Most contributions add an **adapter, auditor, profile, or skill** to the
 catalog, a **surface** renderer, or a **platform port**.
 
+Working on the browser extensions themselves (popup, onboarding, the
+builders, voice mode, the web apps)? That code lives in the
+[extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension)
+— see its CONTRIBUTING for the routing table.
+
+**Want to help without writing code?** You can: tell us what happened when
+you used the toolkit or the extensions ([SUPPORT.md](SUPPORT.md)), or
+improve these docs — typos and unclear sentences are real contributions.
+Neither requires programming, and if GitHub itself is a barrier, the email
+route in [MAINTAINERS.md](MAINTAINERS.md) works for both.
+
+## Contributions we're looking for
+
+Beyond whatever you are personally interested in building, these are wanted and unowned (see
+[ROADMAP.md](ROADMAP.md) for the full list):
+
+- **`SKILL.md` recipes** — the best first contribution: no code, and it
+  exercises the whole validation path. See "Adding a skill" below.
+- **Adapters and auditors** for capabilities the catalog lacks — including
+  translations of published accessibility review patterns (ARIA, contrast,
+  keyboard navigation, forms, tables) into adapters.
+- **Example applications** built on the toolkit — with or without the
+  personalization core. We invite you to build this in a separate repository to keep only core components in this repository.
+- **Per-audience documentation and walkthroughs** — non-code, high value.
+- **Accessibility fixes to this repository itself** — image alt text and
+  diagram descriptions first.
+- **Real-use reports**: what you tried to build, where the API fought you.
+
+Issues labeled `good first issue` are kept as on-ramps where they exist.
+
 ## Set up
 
 ```bash
@@ -37,7 +67,9 @@ Usually **one, not both**:
   already exist. No code. Lives in `toolkit/skills/builtin/`.
 
 Rule of thumb: **new primitive → adapter (code); new recipe → skill (no code).**
-A skill can only reference adapters that already exist.
+A skill can only reference adapters that already exist. Every other term
+(auditor, validator, preset, port, surface, grant) is defined once, in
+[docs/GLOSSARY.md](docs/GLOSSARY.md).
 
 ## Cheat sheet
 
@@ -117,6 +149,11 @@ The full settings vocabulary — every key, type, and range — is `settingsMeta
 [`toolkit/registry/tools.js`](toolkit/registry/tools.js); it's the same vocabulary
 `validateSkill` checks recipes against.
 
+Profiles are starting points assembled from published guidance, not
+characterizations of the people who pick them — say in the `description`
+what the preset does, not who its users are. See
+[docs/PROFILE-CARDS.md](docs/PROFILE-CARDS.md).
+
 ## Adding a skill
 
 A `SKILL.md` composing existing adapters — no code:
@@ -155,6 +192,9 @@ Strips clutter and boosts contrast so text is easy to focus on.
   or `all`. `validateSkill` rejects anything else, because retrieval matches on
   these two fields and a skill outside the vocabulary is never found again.
 - Keep it minimal (1–4 adapters). Verify with `node toolkit/test/skill-test.js`.
+- In the description, lead with the need the skill serves; name conditions
+  only as examples ("Use when motion or clutter cause overload — common with
+  migraine, vestibular disorders, or sensory sensitivity").
 
 A host's **Engineer** (`toolkit/core/skill-builder.js`) can also author skills
 from a plain-language need at runtime — the same validation applies.
@@ -204,6 +244,41 @@ fails when it is stale.
 - Regenerate `toolkit/API.md` / the skill if you changed the core surface,
   and `toolkit/types/` (`npm run build:types`) if you changed a signature.
 - Describe who benefits (which disability/need).
+
+## What to expect from review
+
+This is a time-boxed research project. During the active phase we review as
+capacity allows; afterwards, review may be slow or paused while longer-term
+maintainership is defined (see [ROADMAP.md](ROADMAP.md), Governance). An
+unreviewed PR is a statement about our capacity, not about your
+contribution.
+
+## Forks and spin-offs
+
+This project is a research probe with a deliberately small core. We do not
+expect — or want — every idea to land in this repository. If the toolkit is
+useful to you but you need it to go somewhere we aren't going, **fork it.
+We consider that as a success, not a defection.**
+
+What we ask in return is the learnings. If your fork or spin-off teaches
+you something — an adapter that worked, a design that didn't, a need the
+ability model can't express, results from testing with the people you built
+it for — open an issue or a short write-up telling us what you found. Code
+back is welcome; understanding back is the part we can't get any other way.
+
+Practical notes for forkers:
+
+- The Apache 2.0 license already permits all of this; this section is an
+  invitation, not a condition.
+- Please rename your fork enough that people don't mistake it for this
+  project, and keep the "research probe, not validated, not a replacement
+  for assistive technology" framing anywhere you inherit our claims.
+- If you want your project listed alongside the others building on the
+  toolkit, add it to [docs/projects.md](docs/projects.md) by pull request.
+
+How outside contributions and forks will be handled longer term
+(custodianship, reconciling forks) is still being defined; this section
+will be updated when it is.
 
 ## Code style
 
@@ -266,4 +341,5 @@ package does not carry the reach.
 
 ## Questions?
 
-Open an issue or ping [@chuanenlin](https://github.com/chuanenlin) (David).
+Open an issue on this repository (or the extension repository's, for
+extension work). Current contact routes: [MAINTAINERS.md](MAINTAINERS.md).
