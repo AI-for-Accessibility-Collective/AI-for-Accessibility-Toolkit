@@ -26,7 +26,7 @@ back in this repository under `cli/`.
 
 - [TLDR.md](TLDR.md): The toolkit in plain words, for readers who won't parse the developer README.
 - [QUICKSTART.md](QUICKSTART.md): Run the demos, then embed the core in twenty lines.
-- [GLOSSARY.md](GLOSSARY.md): The four public words, the code's own vocabulary, and the design principles.
+- [GLOSSARY.md](GLOSSARY.md): The four key terms, the code's own vocabulary, and the design principles.
 - [COMPONENTS.md](COMPONENTS.md): What a host implements, and the paragraph-length version of every component: skills library and registry, catalog, Controller, onboarding service, CLI.
 - [architecture.md](architecture.md): How the system is shaped: one need followed end to end, skill creation, the privacy and consent mechanics, and the invariants a change must not break.
 - [../.claude/skills/ai4a11y-toolkit/SKILL.md](../.claude/skills/ai4a11y-toolkit/SKILL.md): Embedding walkthrough: wire the ports, call the API, implement a host, or use the HTTP service.
