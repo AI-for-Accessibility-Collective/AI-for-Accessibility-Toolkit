@@ -20,6 +20,8 @@ not a model authoring a skill.
 
 ## Embed the core
 
+<!-- QUICKSTART:START -->
+
 ```javascript
 import { createToolkit } from './toolkit/index.js';
 import { memoryKV } from './toolkit/platforms/node/kv.js';
@@ -49,6 +51,8 @@ renderWebSettings(model);                        // { fontScale: 140, ... }
 renderMobileSettings(model);                     // { text: { scalePercent: 140, ... }, ... }
 renderXRSettings(model, { fovDegrees: 100 });    // { text: { angularSizeDeg, ... }, ... }
 ```
+
+<!-- QUICKSTART:END -->
 What each line does: `createToolkit` takes the ports your platform provides
 and returns the datastore and the Librarian; the two `setProfileField` calls
 stand in for onboarding; `getAbilityModel` is the profile as the surfaces
