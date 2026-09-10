@@ -1,6 +1,6 @@
 ---
 name: calm-browsing
-description: Reduces sensory load on any page — stops motion, dims the display, and removes clutter. Use for sensory-processing sensitivity, migraine, anxiety, or vestibular discomfort.
+description: Reduces sensory load on any page — stops motion, dims the display, and removes clutter. Use when motion, brightness, or clutter cause discomfort or overload (common with migraine, vestibular disorders, sensory sensitivity, or anxiety).
 supportAreas: [sensory, cognitive, vision]
 siteRelevance: [all]
 ---
@@ -10,7 +10,7 @@ siteRelevance: [all]
 Turns a busy, animated page into a still, low-stimulation one.
 
 ## What it does
-1. **motion-reducer** — stops animations, autoplaying video, GIFs, and parallax, which are common triggers for vestibular discomfort and migraine.
+1. **motion-reducer** — stops animations, autoplaying video, GIFs, and parallax — common triggers of vestibular discomfort and migraine.
 2. **dark-mode** — lowers overall brightness to reduce glare.
 3. **focus-mode** — hides ads and popups to cut visual clutter (no progress spinner, which can itself cause stress).
 

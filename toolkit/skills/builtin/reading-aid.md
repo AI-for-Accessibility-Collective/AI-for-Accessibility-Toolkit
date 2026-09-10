@@ -1,6 +1,6 @@
 ---
 name: reading-aid
-description: Makes long text easier to read on content-heavy pages. Use for low-vision, dyslexic, or cognitively-fatigued readers on articles, news, docs, and blogs.
+description: Makes long text easier to read on content-heavy pages. Use for readers who need larger type, more spacing, or fewer distractions — including low-vision and dyslexic readers, or anyone reading while fatigued.
 supportAreas: [vision, reading, cognitive]
 siteRelevance: [news, education, reference]
 ---

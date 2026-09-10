@@ -5,10 +5,16 @@ This policy covers this repository: the toolkit core, the tools catalog, the hos
 ## Reporting a Vulnerability
 
 1. **Do not** open a public issue
-2. Email the maintainers directly at [dcelin@stanford.edu](mailto:dcelin@stanford.edu)
+2. Use GitHub's **Report a vulnerability** button on this repository's
+   Security tab (private vulnerability reporting). If that is unavailable
+   to you, email the maintainer contact listed in
+   [MAINTAINERS.md](MAINTAINERS.md)
 3. Include: a description, steps to reproduce, potential impact, and a suggested fix if you have one
 
-We will respond within 48 hours and work with you to understand and address the issue. There are no tagged releases yet; until the first one, only the current state of the default branch is supported.
+We aim to acknowledge reports within a week; this is a research project and
+response capacity varies with the project phase. There are no tagged
+releases yet; until the first one, only the current state of the default
+branch is supported.
 
 ## Facts worth knowing
 

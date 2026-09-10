@@ -1,33 +1,61 @@
+# The toolkit in plain words
 
-8/24/26
+A short, plain explanation of what this project is. The
+[README](../README.md) is the full version for developers.
 
-# Rearch-Experiment Branch
+## The idea
 
-https://github.com/anoopsinha/AI-for-Accessibility-Toolkit-Draft/tree/rearch-experiment
+Most accessibility tools start from the thing being fixed: a website, an
+app, a document. They check it and report what is wrong with it. This
+project starts from the other end, the person.
 
-Turn the toolkit to be platform agnostic repository: "A general, platform-agnostic toolkit for adding agentic accessibility to any app." with a new [README.md](https://github.com/anoopsinha/AI-for-Accessibility-Toolkit-Draft/blob/rearch-experiment/README.md)
+It is a set of building blocks that developers put into their own apps.
+The blocks do four things. They learn what a person **needs** (larger
+text, described images, less motion, simpler language), from the person's
+own words. They keep that understanding in a **profile** that stays on the
+person's device and belongs to them. They turn a need into a **skill**: a
+small, reusable recipe saying which changes fit. And they hand the app the
+**adaptations** to make. The app decides how to make them, on whatever it
+is: a website, a phone app, a headset. The person describes their needs
+once, and every app built on the toolkit can read the same profile instead
+of asking again.
 
-What does the toolkit do and why is it useful?  The core value proposition of the toolkit is:
-	* Collect accessibility needs from users into ability profiles 
-	* The toolkit provides example surfaces (web, xr, mobile) that render needs per platform, example platform bindings, and a catalog of web adapters — all of which a developer can use or override
-	* Provides the model, recipes, and catalog that the developer's interface layer consumes
+Three rules hold it together:
 
-tl;dr: The toolkit understands the person and decides what should change; the developer's app renders and applies it
+- **The profile belongs to the person.** They see it, correct it, and
+  decide, app by app, who may read it. Nothing is shared without their
+  say-so, and they can take permission back.
+- **Suggest, never apply.** When the system thinks something would help,
+  it asks. The person approves, corrects or undoes it, and the profile
+  learns from that. Nothing changes silently.
+- **Take what fits.** An app can use the whole loop or one piece of it:
+  just the profile, just the skills, just the ready-made adaptations.
 
-Developer flow:
-* A developer implements a different repository with their application in it.
-* That repository links into the toolkit in a local directory ...  OR uses the toolkit in [server mode](https://github.com/anoopsinha/AI-for-Accessibility-Toolkit-Draft/tree/rearch-experiment/server).
-* The developer's task is to use the toolkit and create the interface layer that makes the application accessible for users across ability profiles
+## What exists today
 
-Disabled user's experience in an app that uses the toolkit
-* A user with any specific needs should be able to come to the app
-* They should request what type of support that they need.  The toolkit will capture that need.
-* The toolkit figures out what adaptations serve the need (learning + skill-building, with consent), and hands the host a deterministic settings plan; the host orchestrates applying that layer on top of the app.
+- The building blocks themselves, for developers to use in web, mobile or
+  XR apps, and an open library of skills any of them can draw from.
+- A catalog of ready-made adaptations and detectors.
+- Two Chrome extensions that put the ideas in a real browser. Those live
+  in the [extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension),
+  which has an install guide that needs no programming.
+- A hosted service and a command-line tool for developers.
 
-tldr:
-Capture a person's accessibility needs as a portable, consent-gated ability model; use an agent to turn plain-language needs into reusable skill recipes grounded in a catalog of fixes; and resolve those, deterministically, into a settings plan the developer's app applies — the same understanding rendering natively across web, XR, and mobile surfaces.
+## What this is not
 
-## Also on this branch
+Since this is a **research project** (a set of working experiments, shared so
+others can learn from and build on them), it is not finished software.
 
-- **Controller** ([`controller/`](https://github.com/anoopsinha/AI-for-Accessibility-Toolkit-Draft/tree/rearch-experiment/controller)) — an *optional*, platform-neutral text/voice control surface a person uses to drive any app through a neutral `ControlPort` (a sibling of the toolkit, not part of the core). It renders itself per the operator's ability profile, works local or over a remote channel, and hands anything it can't parse to a task-capable app.
-- **Onboarding** ([`onboarding/`](https://github.com/anoopsinha/AI-for-Accessibility-Toolkit-Draft/tree/rearch-experiment/onboarding)) — a tiny example web service that captures a profile (deriving a screen-reader-appropriate baseline for blind users, magnification for low vision) and serves the Controller demo from the same port.
+This means that the adaptations have not been formally tested with the communities they aim to serve yet. 
+
+This is also not an overlay a website installs for everyone, and not a
+replacement for a screen reader, magnifier, or any other assistive
+technology a person relies on. 
+
+The current research phase ends in November 2026; the plan for maintenance and development after that is still to be confirmed.
+
+## Who made it
+
+The AI for Accessibility Collective: university research labs and
+disability community organizations working together, with funder support
+from Google.org. More: [HOW-THIS-WAS-BUILT.md](HOW-THIS-WAS-BUILT.md).

@@ -1,162 +1,19 @@
 # Architecture
 
-> A toolkit of agents, tools, skills, and a personal ability profile that together adapt any interface — web today, mobile and XR next — to each person's abilities.
+How the system is shaped, and the rules a change must not break. For what
+the toolkit is and how to start, read the [README](../README.md); for what
+each component does and how to use it, [COMPONENTS.md](COMPONENTS.md); for
+the vocabulary, [GLOSSARY.md](GLOSSARY.md).
 
-## The Big Picture
+Contents: [The shape](#the-shape) · [One need, end to end](#one-need-end-to-end) ·
+[Skill creation](#skill-creation) · [Privacy and consent](#privacy-and-consent) ·
+[Invariants](#invariants) · [Channel agnostic](#channel-agnostic)
 
-<p align="center">
-  <img src="diagrams/architecture-overview.png" alt="Architecture overview — interactions between agents" width="760">
-</p>
+## The shape
 
-Three cooperating agents sit between the person and the toolkit's datastore:
-
-| Agent | Codename | Role | Where it lives |
-|-------|----------|------|----------------|
-| **Assistant** | Automation agent | Performs one-off tasks the user asks for ("turn on captions for this video") and detects when a task is *reusable*, handing it to the Engineer. | **Host-provided** — the toolkit exposes the skill/action machinery + actuation port; the host supplies the agent |
-| **Engineer** | Skill builder agent | Builds new **skills** (SKILL.md recipes composing adapters) from a need + the user's ability profile. Validated by the user before saving. | `toolkit/core/skill-builder.js` |
-| **Librarian** | Personal memory/profile agent | Owns the user's ability profile and memory. Learns from settings over time, retrieves/builds skills, drives adaptation, and gatekeeps what other apps may read (privacy layer). | `toolkit/core/librarian.js` |
-
-Around them:
-
-- **Toolkit Datastore ("Mine")** — the user's own data: Skill db, Tools db, Memory db, Ability Profile db. Implemented by the datastore in `toolkit/core/datastore.js`.
-- **Global tier** — read-only data shipped with the toolkit: built-in skills, the tools registry, site taxonomy. Same facade, `global.*`.
-- **New Applications** — university/institutional teams research and build apps on top of the toolkit; with the user's permission they *access* the Librarian's understanding instead of re-interviewing the user, and users can *share* skills and profiles with a community (family, org) under permission control.
-
-## Toolkit Layers
-
-<p align="center">
-  <img src="diagrams/toolkit-layers.png" alt="Toolkit layers — what is the toolkit" width="440">
-</p>
-
-The **end user** never sees "the toolkit" — they use a host app (a browser extension, a mobile app, an XR app, an assistant). Every interface is powered by the same **Toolkit** underneath:
-
-- the **Engineer** (skill builder agent) and **Librarian** (personal memory/profile agent),
-- a **traffic-control file** that routes skills ↔ tasks + abilities — implemented as the tools registry (`toolkit/registry/tools.js`), where every tool declares `supportAreas` (which abilities it helps) and `siteRelevance` (where it applies),
-- the four databases (below), and
-- **runnable examples** (`examples/`, `toolkit/hosts/`) plus host apps in their own repos that show what can be built.
-
-University teams and community contributors extend the toolkit by adding tools, skills, and applications — see [CONTRIBUTING.md](../CONTRIBUTING.md).
-
-## Terminology — skills vs adapters vs auditors
-
-Two layers do the work, and it matters which is which:
-
-| Term | What it is | Who uses it | Example |
-|------|-----------|-------------|---------|
-| **Adapter** | The **executable code** that actually adapts a page — the "hands." Developer-authored fixers live in `tools/adapters/`; a host may let users generate their own at runtime. | Runs in the page | `tools/adapters/dark-mode.js`, `generate-alt`, `fix-contrast` |
-| **Auditor** | Executable code that **finds** issues (pairs with adapters that fix them). | Runs in the page | `tools/auditors/missing-alt.js` |
-| **Skill** (`SKILL.md`) | Model-facing **instructions the LLM/agent reads** to decide *which adapters to call, with what settings, in what order* for a given need and page — the "brain." A recipe can also carry **action steps** (agent tasks saved from the Assistant). Aligns with the Claude Skills convention. | Read by an agent | "Reading aid skill.md → apply `visual-assist` (line spacing) + `focus-mode`" |
-
-**How they connect (the model):** a **skill orchestrates adapters.** The agent reads the skill to know *what to do*; the adapters are *what actually runs*. One skill can compose several adapters. That's why the Engineer is a **skill builder** — it authors the instructions; the adapters are the reusable code those instructions invoke.
-
-> **Implementation status.** The skill→adapter split is built end to end. [`toolkit/core/skill.js`](../toolkit/core/skill.js) parses `SKILL.md` playbooks (frontmatter + a JSON recipe), validates them against the tools registry, and **resolves them deterministically** (no LLM at apply-time). A recipe composes two step kinds: **adapters** (page-fixing settings) and **actions** (tasks the browser agent runs) — the latter is how a reusable task saved from the Assistant becomes a skill. [`toolkit/core/skill-builder.js`](../toolkit/core/skill-builder.js) is the Engineer — it prompts the injected LLM grounded in the real adapter catalog, and accepts a rejected attempt + feedback for revision. Four starter skills ship in [`toolkit/skills/builtin/`](../toolkit/skills/builtin/), and the Librarian exposes `listSkills` / `findSkillForNeed` / `retrieveSkill` / `resolveSkill` / `buildSkill` / `saveSkill` (called directly when embedding, or via the `librarian*` HTTP routes of `server/`; run `node toolkit/hosts/skill-demo/demo.js` to see the whole flow). A host drives the loop in its own UI: offer an existing skill before building a new one, let the person **try the built skill** and **send it back with feedback**, and save or apply only on explicit confirmation — adapter recipes resolve to settings the host applies, action recipes run through the host's actuation port.
-
-## The Toolkit Datastore
-
-Two tiers, exactly as the catalog facade (`datastore.js`) implements them:
-
-| Tier | Contents | Backing |
-|------|----------|---------|
-| **Global** (read-only, shipped) | Skill db (built-in skills, incl. ones distilled from applications), Tools db (registry + taxonomy) | Data shipped with the toolkit (`toolkit/registry`, `toolkit/skills/builtin`) |
-| **Mine** (the user's own) | Ability Profile db (`mine.profile`, roams via the host's sync storage), Memory db (episodic log, memory shards, proposals, views), Skill db (`mine.skills`), site index | host storage (KVStore port), single-writer (Librarian) |
-
-Memory is sharded by a **scope chain** — `general → context:* → category:* → origin:*` — merged by specificity so a "large text on news sites" preference beats a general default. A **privacy floor** (see `taxonomy.js`) marks finance/health/government as *no-memory zones by default*: profiles can still adapt those pages, but the Librarian records nothing there unless the user opts in.
-
-## Skill Creation Flows
-
-<p align="center">
-  <img src="diagrams/skill-creation-flow.png" alt="Skill creation flows" width="500">
-</p>
-
-Two paths produce new skills:
-
-**Explicit** — the user describes an access need to the **Librarian** ("Make text easier to read for me on news sites"):
-1. Librarian checks whether a matching skill already exists in the **skill db** (built-in or the user's own) → if yes, retrieve and use it. *Built:* `librarian.findSkillForNeed(need)` scores existing skills against the need (deterministic, no LLM), and the host offers the match — "Use it" or "Build a new one anyway" — before the Engineer is asked.
-2. If not, the **Engineer** builds one — a `SKILL.md` that composes existing **adapters** into a recipe for this need (e.g. `reading-aid`: `visual-assist` reading guide + `focus-mode`, tuned for news sites). *Built:* `toolkit/core/skill-builder.js` authors it, `toolkit/core/skill.js` validates + resolves it to adapter settings.
-3. The result goes through the **adaptive evaluation interface**, where the end user validates it. Fails → back to the Engineer. *Built:* the preview's **Try on this page** applies the unsaved skill to the live page, and a feedback box sends the rejected attempt + the person's words back to the Engineer for revision (`buildSkill(need, { previous, feedback })`).
-4. On success it is saved to the **Skills db** and the **Personal Ability Profile/Memory db** records the ability context (e.g., *low vision + anxiety*) and triggers (e.g., *news sites + videos*). *Built:* `saveSkill` logs the skill's `supportAreas` and `siteRelevance` as a high-weight observation the memory pipeline folds into the profile.
-
-Onboarding is the same door: needs it couldn't cover with a built-in adapter
-arrive in the Skill Builder as a queue, each one going through the reuse check
-and the Engineer above. Only a need no combination of adapters can cover is
-handed to a code-generation path that writes a new adapter — the rare case.
-
-**Implicit** — the user asks the **Assistant** for a one-off automation ("Turn on captions for this video"):
-1. Assistant asks: is this a common, reusable task? *Built:* a successful agent task on a categorized site triggers a consent-gated proposal (deterministic — works without an API key).
-2. No → just perform the one-off automation.
-3. Yes → propose a new skill ("auto-enable captions skill.md"), validate through the same adaptive evaluation interface, and save through the same path. *Built:* accepting the proposal saves both the auto-replay profile action **and** a real `SKILL.md` in the Skills db whose recipe carries the task as an **action step** — visible, applicable, and deletable like any other skill.
-
-Either way, **the user validates before anything is saved** — suggestions, never silent application.
-
-## Personal Ability Profile Flows
-
-<p align="center">
-  <img src="diagrams/ability-profile-flow.png" alt="Personal ability profile and memory flows" width="720">
-</p>
-
-- **Cold start** — the user selects from base ability profiles (see [Profiles](#profiles)) and/or gives a free-text self-description. The Librarian turns this into the initial Personal Ability Profile.
-- **Drives adaptation** — the profile is what the toolkit consults to adapt each page; the user experiences the result directly in the adapted webpage (the adaptive evaluation interface).
-- **Continual update** — the profile is living: the user builds new skills, edits old ones, gives feedback, and corrects adaptations; the Librarian folds all of it back into the profile and memory.
-- **Privacy layer** — the Ability Profile/Memory db sits behind access control: **personal, friends, or anyone**. Other apps read through the Librarian, never the raw store. *Built:* the host's "Who can see your profile" control sets the profile's sharing level, every broker grant carries an **audience** (personal / friends / anyone), and `exportUnderstanding` refuses any grant whose audience sits above the current level — lowering the level immediately cuts off out-of-level grants.
-
-## The Controller (optional control surface)
-
-An **optional** UI layer — a repo-root sibling ([`controller/`](../controller/)),
-not part of the platform-agnostic core — that gives a person a **text or voice**
-way to drive any app. It is the neutral, go-forward successor to the extension's
-old "voice mode": the toolkit kept the *port* and rebuilt the *UI* host-agnostic.
-
-- **`ControlPort`** ([`controller/control-port.js`](../controller/control-port.js))
-  — the platform-neutral interface a receiving app implements: `describeCapabilities`,
-  `getContext`, `applySettings`, `undoLast`, `resetUndo`, `getContent`,
-  `performAction`. A local DOM app, or a mobile / XR / desktop app — each implements
-  the same shape in its own terms. It supersedes the web-shaped
-  [`toolkit/ports/actuation.js`](../toolkit/ports/actuation.js) (tab/zoom/readPage);
-  crucially `getContent` **returns** text for the operator's own delivery channel
-  rather than presuming a second speaking voice.
-- **Hybrid intent engine.** A zero-dependency grammar over the registry settings
-  vocabulary handles "bigger text / dark mode / read this / undo"; an optional,
-  host-supplied LLM lane handles free-form phrasing; a `task` catch-all routes
-  anything else to a task-capable app (e.g. an agent). When driving a URL, a raw
-  mode sends *all* input to the app as tasks (no grammar).
-- **Renders itself per operator** ([`controller/presentation.js`](../controller/presentation.js))
-  — the widget's own input/output is derived from the operator's AbilityModel
-  (voice- vs text-primary, spoken vs live-region delivery, large targets,
-  one-step-at-a-time, confirmations). A screen-reader operator gets results in
-  their own voice via an ARIA live region, never a second TTS voice.
-- **Delivery** — three developer-configured mounts (page / floating element /
-  companion); a remote transport
-  ([`controller/transport/remote.js`](../controller/transport/remote.js)) runs the
-  `ControlPort` over any duplex channel (WebSocket / postMessage / …), so a web
-  controller can drive a receiver in another process or on another device. The
-  receiver wire contract is [`controller/PROTOCOL.md`](../controller/PROTOCOL.md).
-
-`createController({ control, operator }) → { handle, presentation }`. The core
-never imports the controller; the controller imports only the toolkit's settings
-vocabulary (`../toolkit/registry/tools.js`). Full design + staged milestones:
-[`controller/DESIGN.md`](../controller/DESIGN.md). The [`onboarding/`](../onboarding/)
-example service serves runnable demos of both shapes on one port: the floating
-widget at `/controller`, and at `/chat` (the front door) a chat window over the
-same `createController` core — one conversational input that both updates the
-person's profile and drives the app.
-
-## XR Agent (future direction)
-
-<p align="center">
-  <img src="diagrams/xr-agent-ideas.png" alt="XR agent ideas" width="760">
-</p>
-
-The same toolkit powers an **XR Agent**:
-
-1. **Onboarding** — identical to the web flow: personal abilities → Librarian → Ability Profile/Memory db. Onboard once, use everywhere.
-2. **Facilitation** — the XR agent *senses the environment* (the outdoor world), exchanges **needs and skills** with the toolkit (Librarian ⇄ Ability Profile db), and delivers **real-time adaptations** to the user.
-
-This is why the toolkit core must stay platform-agnostic. **The [extraction plan](design/toolkit-refactor-plan.md) is complete (Phases 0–4)**: the Librarian, Datastore, and taxonomy live in the top-level [`toolkit/`](../toolkit/README.md) as pure ES modules behind platform ports, with reference platform bindings (`toolkit/platforms/node`, `toolkit/platforms/chrome`) implementing those ports. `librarian.getAbilityModel()` returns the device-independent **AbilityModel**, and **SurfaceAdapters** render it per device — `toolkit/surfaces/web.js` produces web settings, `toolkit/surfaces/xr.js` produces FOV-aware angular text size, world-locked captions, and motion-comfort parameters. Cross-app **permission grants** (`toolkit/sync/grants.js`, resolved by the Librarian) share that understanding with other apps under default-deny grants — each grant carries an audience (personal / friends / anyone) capped by the profile's sharing level — and a runnable XR host (`node toolkit/hosts/xr-demo/demo.js`) proves the whole loop on in-memory ports. Future work is cross-device transport and native (Swift/C#) conformers.
-
-## How the Code Is Organized
-
-A **host** (a web app, mobile app, XR runtime, or the hosted service) embeds the
-toolkit. The host brings the platform; the toolkit brings the understanding.
+A **host** (a web app, mobile app, XR runtime, or the hosted service) embeds
+the toolkit. The host brings the platform; the toolkit brings the
+understanding of the person.
 
 ```mermaid
 flowchart TB
@@ -171,7 +28,7 @@ flowchart TB
         ENG[Engineer - skill engine]
         MODEL[(AbilityModel)]
         PORTS[ports/]
-        SURF[surfaces/ - web, xr, ...]
+        SURF[surfaces/ - web, mobile, xr]
     end
 
     subgraph Catalog[tools/ + registry - developer catalog]
@@ -193,155 +50,162 @@ flowchart TB
     Host -->|apply resolved settings| ADAPTERS
 ```
 
-**Embedding flow:**
-1. Host implements the ports (`storage`, `clock`, `scheduler`, `consent`) and calls `createToolkit(...)`.
-2. Onboarding + per-app settings feed the **Librarian**, which maintains the **AbilityModel**.
-3. A **surface** renders the model to platform settings; the host applies them (optionally using the **catalog** adapters).
-4. Plain-language needs go to the **Engineer**, which builds a `SKILL.md` recipe grounded in the registry; the user validates; it resolves deterministically at apply-time.
-5. Non-JS hosts do all of the above over HTTP against `server/`.
+Four parts, and the arrows only run one way between them:
 
-## Structural Notes
+1. **The core** (`toolkit/`): the Librarian and its datastore, the
+   AbilityModel, the skill engine, ports, surfaces, grants and sync. Pure
+   ES modules; imports nothing outside `toolkit/`.
+2. **The catalog** (`tools/` and `toolkit/registry/`): adapters, auditors,
+   validators, presets, and the registry that names them. The core never
+   imports it; a host does.
+3. **Hosts**: the browser extensions (extension repository), `server/`, the
+   `onboarding/` example service, the demo hosts under `toolkit/hosts/`.
+   They implement the ports and apply what the core resolves.
+4. **Optional siblings**: `controller/`. Consumes the toolkit's settings
+   vocabulary; the toolkit never depends on it.
 
-- **`tools/` vs `toolkit/`.** `tools/` is the browser-native catalog of
-  page-fixing code (auditors + adapters + profiles) that a web host draws from.
-  `toolkit/` is the platform-agnostic person-understanding core (Librarian,
-  memory, ability model, skill engine). Different layers, deliberately distinct
-  names — the core never imports the catalog.
-- **The core is host-free.** `toolkit/core` imports only `toolkit/ports` and
-  `toolkit/sync`; it never touches a surface, adapter, or platform API. Hosts
-  and surfaces bring the platform. Reference platform bindings live in
-  `toolkit/platforms/node/` (the template) and `toolkit/platforms/chrome/`.
-- **The Controller is optional.** `controller/` is a UI layer, not part of the
-  core — a repo-root sibling that *consumes* the toolkit (it imports only
-  `../toolkit/registry/tools.js` for the settings vocabulary). The toolkit never
-  depends on it; a host can embed the core with no controller, or drop the
-  controller in over a `ControlPort`. See *The Controller* above.
-- **Host apps live in their own repos.** This repository is the toolkit and its
-  catalog — not any particular application. A web extension, mobile app, or XR
-  runtime consumes it (by embedding the ES modules or calling the HTTP service).
-- **Validation is machinery, not a bundled UI.** When an agent acts on the
-  person's behalf, the toolkit can verify that the page actually matches what
-  was asked for and hold the agent before anything hard to undo. That layer's
-  *logic* ships in the catalog — the verifier engine (`tools/validators/`, incl.
-  its "how hard to insist" `policy.js`), the `contract-mismatch` auditor
-  (`tools/auditors/`, which asks "does this match what the person asked?", not
-  "is this accessible?"), and the `agent-watch` adapter (`tools/adapters/`, which
-  reports a delegate's progress on the page). There is **no bundled validation
-  panel or overlay** — that was host UI and lives with the host. A host that
-  wants a validation experience composes these pieces and renders its own.
-  (`docs/design/verifier-architecture.md` is a point-in-time snapshot and still
-  describes the retired extension wiring.)
+## One need, end to end
 
-## Principles
+The same path every host follows, with the files that carry each step.
 
-- **Adapt, don't just audit** — fix issues in real-time, not just report them
-- **Ability-based design** — adapt to what users *can* do, not what they can't
-- **Suggest, never diagnose** — proposals with user validation, no silent changes, no inferred diagnoses
-- **Human in the loop** — people with disabilities involved in design and evaluation
-- **Privacy by default** — no-memory zones, single-writer stores, permission-gated sharing
-- **Build on existing tools** — axe-core for detection, Gemini/Claude for AI, DarkReader for dark mode
-- **Easy to extend** — add auditors/adapters to the catalog, skills as `SKILL.md`, or a new surface/port
+1. **A need arrives.** Onboarding captures `supportAreas`, free text and a
+   note, or a person picks a preset from `tools/profiles/settings.json`, or
+   they change a setting in the host. Each becomes an observation the
+   Librarian (`toolkit/core/librarian.js`) logs.
+2. **The profile absorbs it.** The Librarian is the single writer to the
+   person's own tier of the datastore (`toolkit/core/datastore.js`): the
+   ability profile (`mine.profile`, which roams through the host's sync
+   storage), memory (episodic log, memory shards, proposals, views), the
+   person's skills (`mine.skills`) and a site index. A read-only global
+   tier ships with the toolkit: built-in skills and the tools registry.
+   Storage is reached only through the `KVStore` port.
+3. **The model is derived.** `librarian.getAbilityModel()` folds the
+   profile and memory into the **AbilityModel**: relative magnitudes,
+   need-named enums, per-dimension confidence, and no platform units. A
+   `needs[]` entry carries a dimension, a value, a strength (floor,
+   preference or hint, in that order of weight) and its source.
+4. **A surface renders it.** `toolkit/surfaces/web.js`, `mobile.js` and
+   `xr.js` are pure functions from the model to one platform's settings.
+   The host applies them, optionally through catalog adapters. A host with
+   a new surface writes a new renderer; it does not touch the core.
+5. **A skill resolves.** For a plain-language need, the Librarian first
+   looks for a matching skill (`findSkillForNeed`, deterministic scoring,
+   no model). A `SKILL.md` recipe resolves through `toolkit/core/skill.js`
+   into adapter settings, validated against the registry. No model runs at
+   apply time.
+6. **Feedback returns.** Every explicit change, correction, saved skill and
+   resolved proposal is logged as an observation the memory pipeline folds
+   back into the profile. This is the loop; step 1 again.
 
-## Profiles
+Non-JS hosts do all of this over HTTP against `server/`, which exposes the
+same Librarian methods behind a bearer token.
 
-Users select one or more base profiles that auto-enable the right tools (cold-start of the ability profile):
+## Skill creation
 
-| Profile | What it enables |
-|---------|-----------------|
-| `blind` | Auto alt text, form labels, WCAG fixes, landmark repair, announce updates, describe on demand, language tags, explore charts, SPA focus, skip links, accessible math (structure/labels/descriptions — deliberately no magnification, no on-page heading navigator or keyboard-nav overlay, which duplicate/collide with a screen reader) |
-| `lowVision` | Large text (150%), enhanced focus, high contrast, highlight links, unpin sticky bars, magnifier, reflow to column, focus locator, explore charts |
-| `colorBlind` | Color filters, enhanced contrast |
-| `deaf` | Auto captions, visual emphasis, sound visualizer |
-| `motor` | Large cursor, keyboard nav, hands-free (spatial voice) navigation, dismiss popups, bigger click targets, page outline, unpin sticky bars, stop auto-advance, focus locator, confirm actions, skip links |
-| `dyslexia` | Wider spacing, larger text, focus mode, highlight links, bionic reading, reading ruler |
-| `adhd` | Focus mode, reduced motion, reader mode, dismiss popups, bionic reading, reading ruler |
-| `cognitive` | Simplified text, summaries, dismiss popups, highlight links, define words, stop auto-advance, confirm actions, save reading spot, expand abbreviations |
-| `olderAdult` | Large text, enhanced focus, simplified text, bigger click targets, highlight links, stop auto-advance, save reading spot |
-| `anxiety` | Calm UI, reduced motion, dismiss popups, mute sounds |
-| `sensory` | Reduced motion, focus mode, dismiss popups, mute sounds, reduce brightness |
-| `photosensitive` (shown as **Light Sensitive**) | Dark mode, reduced motion, reduce brightness, flash guard |
+<p align="center">
+  <img src="diagrams/skill-creation-flow.png" alt="Skill creation flow diagram: the explicit and implicit paths, described step by step in the text below" width="500">
+</p>
 
-Profiles are defined in `tools/profiles/settings.json`. A host can also let users toggle individual tools, and every explicit change feeds the Librarian's continual-update loop.
+Two paths produce a new skill; both end with the person validating before
+anything is saved.
 
-## Directory Structure
+**Explicit.** A person describes a need to the Librarian ("make text
+easier to read for me on news sites"). The reuse check runs first: if a
+built-in or personal skill scores against the need, the host offers it
+("use it" or "build a new one anyway") before the Engineer is asked. If
+none fits, the Engineer (`toolkit/core/skill-builder.js`) composes existing
+adapters into a `SKILL.md` for this need; `skill.js` validates and resolves
+it. The host shows the result; a rejection goes back to the Engineer with
+the person's words (`buildSkill(need, { previous, feedback })`). On
+acceptance the skill is saved and its `supportAreas` and `siteRelevance`
+are logged as a high-weight observation. Onboarding needs that no built-in
+adapter covers enter this same path as a queue. Only a need no combination
+of adapters can meet is handed to a code-generation path that writes a new
+adapter, and that path is gated.
 
-```
-AI-for-Accessibility-Toolkit/
-├── toolkit/                     # Platform-agnostic core (the library)
-│   ├── core/                   # librarian, datastore, ability-model, broker, skill engine
-│   ├── ports/                  # host interfaces: KVStore, Clock, Scheduler, Consent, actuation
-│   ├── surfaces/               # AbilityModel → per-platform settings (web.js, xr.js)
-│   ├── platforms/node/          # reference host port impls (the template a new host copies)
-│   ├── platforms/chrome/        # Chrome host port impls (reference)
-│   ├── registry/               # canonical tools catalog + settings vocabulary
-│   ├── skills/builtin/         # starter SKILL.md recipes
-│   ├── sync/ · protocol/       # profile-blob transport + JSON-schema wire contracts
-│   ├── hosts/                  # runnable demos (xr-demo, skill-demo)
-│   ├── API.md                  # generated core API reference
-│   └── test/
-│
-├── tools/                       # Developer catalog (browser-native JS)
-│   ├── auditors/               # find issues (missing-alt, poor-contrast, ...)
-│   ├── adapters/               # fix issues (generate-alt, dark-mode, ...)
-│   ├── profiles/               # base ability profiles (settings.json)
-│   └── utils/                  # ai.js (provider abstraction), dom.js, color.js
-│
-├── controller/                  # Optional text/voice control surface (a sibling)
-│   ├── control-port.js         # the neutral ControlPort contract + honest noop
-│   ├── grammar.js · router.js · intent.js   # deterministic intent engine
-│   ├── presentation.js         # renders the widget per the operator's AbilityModel
-│   ├── llm-lane.js             # optional free-form NL lane
-│   ├── web/ · mount/ · transport/           # web UI, mounts, remote transport
-│   ├── demo/ · DESIGN.md · PROTOCOL.md
-│   └── test/
-│
-├── onboarding/                  # Example service: capture a profile + serve /controller
-├── server/                      # Hosted HTTP service over the core (Cloud Run)
-├── examples/                    # Runnable, dependency-free examples (cross-surface.mjs)
-└── docs/
-    ├── diagrams/               # Architecture diagrams
-    └── design/                 # Internal design docs (point-in-time snapshots)
-```
+**Implicit.** A person asks the Assistant (host-provided) for a one-off
+task ("turn on captions for this video"). A successful task on a
+categorized site triggers a consent-gated proposal, deterministically and
+without an API key: keep this as a skill? Accepting saves both the
+auto-replay profile action and a real `SKILL.md` whose recipe carries the
+task as an action step, visible and deletable like any other skill.
 
-Host applications (web extensions, mobile, XR runtimes) are **not** in this
-repository — they live in their own projects and consume the toolkit by
-embedding the ES modules or calling `server/`.
+The validation *surface* (preview, try-on-page, feedback box) is host UI.
+The toolkit ships the machinery: the verifier engine in `tools/validators/`
+with its "how hard to insist" policy, the `contract-mismatch` auditor (does
+this match what the person asked, not is this accessible) and the
+`agent-watch` adapter (reports a delegate's progress). A host that wants a
+validation experience composes those and renders its own.
 
-## Multi-Team Collaboration
+## Privacy and consent
 
-Teams across the collective contribute specialized capabilities. See [projects.md](projects.md) for detailed cards.
+<p align="center">
+  <img src="diagrams/ability-profile-flow.png" alt="Personal ability profile and memory flow diagram: cold start, adaptation, continual update, and the privacy layer, described in the text below" width="720">
+</p>
 
-| Project | Team | What it does | Status |
-|---------|------|--------------|--------|
-| **NAI** | Google | Multimodal AI agents that adapt UIs in real-time | Demo |
-| **Accessible Interactive Simulations** | Stanford | Sonification of STEM content for BLV learners | Prototype |
-| **Universal Memory Assistant** | MIT Media Lab | Wearable memory assistant for older adults | TBD |
-| **AI-Augmented Storytelling** | UW | Creative expression tools for BLV children | TBD |
-| **Non-Standard Speech** | UCL GDI Hub | Whisper fine-tunes for atypical speech (13 models) | Published |
-| **Founders Think** | UCL GDI Hub | AI tool for disability-innovation founders | TBD |
-| **Videoconferencing Agent** | RNID | Real-time accessibility nudges in video calls | Zoom app |
-| **AI-Powered Tutoring Agent** | NTID | English grammar tutor for DHH students | TBD |
-| **AI for Cognitive Accessibility** | The Arc | Text simplification for IDD users | TBD |
+The ability profile is the most sensitive thing the toolkit holds, so the
+mechanics are in the code rather than in policy text:
 
-### How projects plug in
+- **Single writer.** Only the Librarian writes the person's tier. Other
+  applications read through it, never the raw store.
+- **Local by default.** The profile lives in host storage through the
+  `KVStore` port. Sending it to a server ("remote mode") is a host's
+  choice, and a standard install cannot arrive with it preconfigured.
+- **No-memory zones.** On finance, health and government sites the toolkit
+  adapts but takes no notes, unless the person switches that on.
+- **Sharing level and audiences.** The person sets who may see their
+  profile: personal, friends or anyone. Every cross-application grant
+  (`toolkit/sync/grants.js`, resolved by the Librarian) carries an
+  audience, and `exportUnderstanding` refuses any grant whose audience sits
+  above the current level; lowering the level cuts off out-of-level grants
+  immediately.
+- **Grants are closed-scope, default-deny and revocable.** `freeText` and
+  `confidence` are never exportable. Revoking a grant deletes it.
+- **Proposals stay pending.** Any change the toolkit suggests to the profile
+  waits until the person resolves it. The `Consent` port is how a host
+  shows them; a host that leaves it as the no-op default gets a toolkit
+  whose proposals are never seen, and still never applied.
 
-| Contribution type | Example |
-|-------------------|---------|
-| **Auditor** | Stanford: detect inaccessible simulations |
-| **Adapter** | The Arc: simplify text for cognitive accessibility |
-| **Skill** | Distilled from an application into the global skill db (e.g., ArtInsight → `tools/insights/artinsight/`) |
-| **ASR integration** | UCL: non-standard speech recognition |
-| **Patterns** | Google NAI: orchestration architecture |
-| **Validation** | The Arc: PWD reviewer network |
+## Invariants
 
-## Build On, Don't Rebuild
+Rules a pull request must not break. Each has a test or a CI check where
+one is possible; the rest are reviewed.
 
-| Need | Use |
-|------|-----|
-| WCAG detection | [axe-core](https://github.com/dequelabs/axe-core) |
-| Dark mode | [darkreader](https://github.com/darkreader/darkreader) |
-| AI descriptions | [Gemini API](https://ai.google.dev/) / [Claude API](https://docs.anthropic.com/) |
-| Dyslexia-friendly font | [OpenDyslexic](https://opendyslexic.org/) |
-| Focus management | [focus-trap](https://github.com/focus-trap/focus-trap) |
-| Readability | [Mozilla Readability](https://github.com/mozilla/readability) |
-| Browser automation | [browser-harness](https://github.com/browser-use/browser-harness) / [Playwright](https://playwright.dev/) |
+1. **The core is host-free.** `toolkit/core` imports only `toolkit/ports`
+   and `toolkit/sync`. It never touches a surface, an adapter or a platform
+   API. Reference port implementations live in `toolkit/platforms/node/`
+   (the template) and `toolkit/platforms/chrome/`.
+2. **The core never imports the catalog.** `tools/` is browser-native
+   adaptation code a web host draws from; `toolkit/` is the person-
+   understanding core. Different layers, deliberately different names.
+3. **The Controller is optional in both directions.** `controller/` imports
+   only `toolkit/registry/tools.js`; the toolkit never imports the
+   controller.
+4. **Validation is machinery, not a bundled UI.** No validation panel or
+   overlay ships in this repository.
+5. **Host applications live in their own repositories.** This repository is
+   the toolkit and its catalog, not any application.
+6. **No model at apply time.** Skills resolve deterministically; a model may
+   author a skill, never apply one.
+7. **Nothing changes a profile silently.** Proposals require resolution;
+   the person validates a skill before it is saved.
+
+## Channel agnostic
+
+Nothing in a profile, a skill or the core assumes a specific channel; both a browser extension and an XR agent were in the concept from the start (onboard once, then an agent that senses
+the environment and delivers adaptations in the headset), which is why the
+core stayed platform-agnostic. The XR renderer produces field-of-view-aware angular text size, world-locked captions and motion-comfort parameters from the same model the web renderer
+reads, and `node toolkit/hosts/xr-demo/demo.js` runs the whole loop
+(onboard on web, grant, XR renders, insight flows back, accept) on
+in-memory ports. Open: cross-device transport, native (Swift, C#)
+conformers, and the check that an adaptation actually landed in its channel.
+Tracked in [ROADMAP.md](../ROADMAP.md).
+
+## See also
+
+- [GLOSSARY.md](GLOSSARY.md), the vocabulary and the principles
+- [COMPONENTS.md](COMPONENTS.md), what each piece does and how to use it
+- [PROFILE-CARDS.md](PROFILE-CARDS.md), the presets and their status
+- [projects.md](projects.md), how Collective projects connect to the toolkit
+- [../CLAUDE.md](../CLAUDE.md), the code map
+- [design/](design/), point-in-time plans and analyses

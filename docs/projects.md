@@ -1,10 +1,10 @@
 # Team Projects
 
-> Canonical list of collective projects. README and architecture.md summarize this file.
+> List of Collective projects as of Spring 2026. The READMEs and architecture.md
+> summarize this file. The master copy lives in the toolkit repository;
+> other repositories link here.
 
-Contributions from teams across the AI for Accessibility collective.
-
-> Canonical list of collective projects. README and architecture.md summarize this file.
+Contributions from teams across the AI for Accessibility Collective.
 
 ---
 
@@ -21,7 +21,7 @@ Embeds multimodal AI agents directly into the application stack so digital exper
 
 ### Who it helps
 
-All profiles — BLV, DHH, motor, cognitive, speech, aging.
+All profiles — BLV, DHH, motor, cognitive, speech, older adults.
 
 ### How it works
 
@@ -49,8 +49,8 @@ Generates interactive STEM simulations that BLV learners can explore through aud
 
 ### Who it helps
 
-- BLV (blind / low vision)
-- Cognitive (dyslexia / learning differences)
+- BLV (blind / low vision) learners
+- People with dyslexia and other learning differences
 - STEM educators
 
 ### How it works
@@ -84,8 +84,8 @@ A wearable memory assistant for older adults. Models the user's behavior from fi
 
 ### Who it helps
 
-- Aging
-- Cognitive
+- Older adults
+- People with memory-related cognitive needs
 
 ### How it works
 
@@ -112,7 +112,7 @@ AI-augmented storytelling and creative-artifact production with blind and low-vi
 
 ### Who it helps
 
-- BLV (blind / low vision)
+- BLV (blind / low vision) children
 - Mixed-ability families and classrooms
 
 ### How it works
@@ -137,11 +137,11 @@ BLV children, families, and teachers as co-designers
 
 ### What it does
 
-ArtInsight is an iOS app to support parents who are blind or have low-vision (BLV) to engage with their sighted children's artwork. Uses GPT to generate accessible descriptions of artwork, with a human-in-the-loop system for editing.
+ArtInsight is an iOS app to support parents who are blind or have low vision (BLV) to engage with their sighted children's artwork. Uses GPT to generate accessible descriptions of artwork, with a human-in-the-loop system for editing.
 
 ### Who it helps
 
-- BLV (blind / low vision)
+- BLV (blind / low vision) parents
 - Mixed-ability families and classrooms
 
 ### How it works
@@ -170,7 +170,7 @@ Makes AI speech systems work for people with non-standard speech by combining in
 
 ### Who it helps
 
-- Speech (nonverbal / atypical speech)
+- People with non-standard or atypical speech
 - Developers, researchers, clinicians building inclusive speech tech
 
 ### How it works
@@ -227,7 +227,7 @@ A real-time AI agent that advocates for DHH participants in videoconferencing me
 
 ### Who it helps
 
-- DHH (deaf / hard of hearing)
+- DHH (deaf / hard of hearing) participants
 - Hearing participants (behavior nudges)
 
 ### How it works
@@ -255,7 +255,7 @@ A course-driven tutoring system that lets instructors design personalized, AI-gu
 
 ### Who it helps
 
-- DHH (deaf / hard of hearing)
+- DHH (deaf / hard of hearing) learners
 - ASL-first learners
 
 ### How it works
@@ -280,12 +280,12 @@ Response latency can be several seconds. Current implementation focused on Engli
 
 ### What it does
 
-Uses AI to make content more cognitively accessible for people with intellectual and developmental disabilities. Goals: greater independence and autonomy through clearer, simpler content.
+Uses AI to make content more cognitively accessible for people with intellectual and developmental disabilities (IDD). Goals: greater independence and autonomy through clearer, simpler content.
 
 ### Who it helps
 
-- Cognitive (dyslexia / IDD / autism)
-- Broader population via curb-cut effect
+- People with IDD, dyslexia, and other cognitive disabilities
+- Broader population via the curb-cut effect
 
 ### How it works
 
@@ -295,24 +295,23 @@ Uses AI to make content more cognitively accessible for people with intellectual
 
 ---
 
-## How Projects Connect
+## How projects could connect to the toolkit
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Chrome Extension                             │
-│  (auditors, adapters, profiles)                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   Stanford ──────► Sonification adapters for STEM content       │
-│   The Arc ───────► Text simplification adapters                 │
-│   UCL Speech ────► ASR for non-standard speech input            │
-│   RNID ──────────► Meeting accessibility patterns               │
-│   MIT Memory ────► User context tracking                        │
-│   UW Stories ────► Creative expression for BLV kids             │
-│   NTID Tutoring ─► Grammar scaffolds for DHH                    │
-│   Google NAI ────► Orchestration patterns                       │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+Projects could contribute as auditors, adapters, skills, or profiles in this
+repository's catalog — or inform the design of those components through
+research. The table below provides suggestions for how each project's work could connect:
 
-Projects contribute as auditors, adapters, or profiles — or inform the design of these components through research.
+| Project | What it could contribute or inform |
+|---|---|
+| Stanford — Accessible Interactive Simulations | Sonification adapters for STEM content; validation-layer research |
+| The Arc — Cognitive Accessibility | Text-simplification adapters; reviewer network |
+| UCL — Non-Standard Speech AI | Speech recognition for voice input across the toolkit |
+| RNID — Videoconferencing Agent | Meeting-accessibility patterns |
+| MIT — Universal Memory Assistant | User-context tracking and memory-layer patterns |
+| UW — AI-Augmented Storytelling | Creative-expression patterns for BLV children |
+| UW — ArtInsight | The `tools/insights/artinsight/` knowledge module (shipped) |
+| NTID — GrammarLab | Learning scaffolds for DHH and ASL-first learners |
+| Google — NAI | Agent-orchestration patterns |
+
+The browser extensions that showcase the catalog live in the
+[extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension).

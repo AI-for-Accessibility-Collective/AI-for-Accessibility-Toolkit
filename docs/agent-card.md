@@ -13,7 +13,7 @@ Copy and fill in when proposing a new capability.
 
 **Code:** [repo URL or TBD]
 **Team:** [institution, names]
-**Contact:** [email]
+**Contact:** [a team mailbox or repository issues link]
 **Status:** Idea / Prototype / Ready
 
 ## What it does
@@ -25,12 +25,16 @@ Copy and fill in when proposing a new capability.
 - [ ] BLV (blind / low vision)
 - [ ] DHH (deaf / hard of hearing)
 - [ ] Motor (limited mobility / tremor)
-- [ ] Cognitive (dyslexia / IDD / autism)
-- [ ] Speech (atypical speech)
-- [ ] Aging
+- [ ] Cognitive and learning (e.g. IDD, dyslexia, brain injury)
+- [ ] Neurodivergent (e.g. autism, ADHD)
+- [ ] Speech (nonspeaking / non-standard speech)
+- [ ] Older adults
 - [ ] Light Sensitive
 - [ ] Anxiety
 - [ ] Other: ___
+
+Check what the current version actually serves; note aspirational coverage
+under Limitations instead.
 
 ## How it works
 
@@ -49,7 +53,7 @@ Copy and fill in when proposing a new capability.
 - [ ] Memory — tracks user context across sessions
 - [ ] Validation — human review of adaptations
 - [ ] Knowledge — contributes to the shared corpus
-- [ ] Other: ___ (e.g. Profile — tool configuration for a disability group)
+- [ ] Other: ___ (e.g. Profile — a starting-point bundle of settings for a cluster of needs, not a description of a group)
 
 ## Technical
 
@@ -71,7 +75,9 @@ Copy and fill in when proposing a new capability.
 
 ## Human involvement
 
-[Does the user control it? Does output need review? How are PWD involved?]
+[Does the user control it? Does output need review? How are people with
+disabilities involved — as designers, evaluators, both? If community data
+was collected: with what consent, and were contributors compensated?]
 
 ## Data & Privacy
 
@@ -79,7 +85,7 @@ Copy and fill in when proposing a new capability.
 
 ## Demo *(optional)*
 
-[Link to demo, video, or screenshot]
+[Link to demo, video, or screenshot — say whether videos are captioned]
 
 ## What the team needs
 
@@ -95,7 +101,7 @@ Copy and fill in when proposing a new capability.
 
 **Code:** TBD
 **Team:** Stanford (Sean Follmer, Hari Subramonyam, Lakshmi Balasubramanian, David Lin)
-**Contact:** dcelin@stanford.edu
+**Contact:** [team mailbox]
 **Status:** Prototype
 
 ## What it does
@@ -105,7 +111,7 @@ Generates interactive STEM simulations that BLV learners can explore through aud
 ## Who it helps
 
 - [x] BLV (blind / low vision)
-- [x] Cognitive (dyslexia / learning differences)
+- [x] Cognitive and learning (dyslexia / learning differences)
 - [x] Other: STEM educators
 
 ## How it works
@@ -130,7 +136,7 @@ Contributes a visual-to-audio adapter for dynamic STEM content that screen reade
 
 ## What it pairs with
 
-- UCL Non-Standard Speech — for BLV learners with atypical speech
+- UCL Non-Standard Speech — for BLV learners with non-standard speech
 - The Arc — for plain-language narration
 - Google NAI — as the orchestrator
 
@@ -157,4 +163,6 @@ Connecting with educators, learners, and accessibility researchers. Understandin
 
 ---
 
-Submit via PR or email dcelin@stanford.edu.
+Submit via pull request to this repository — or, if pull requests are a
+barrier, email the completed card to the contact route in
+[../MAINTAINERS.md](../MAINTAINERS.md).
