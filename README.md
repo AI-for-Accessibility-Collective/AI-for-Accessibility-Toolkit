@@ -1,5 +1,3 @@
-<div align="left">
-
 # AI for Accessibility Toolkit
 
 **An open toolkit for building solutions that adapt digital channels to the person, instead of asking the person to adapt.**
