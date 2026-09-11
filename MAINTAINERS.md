@@ -19,7 +19,8 @@ a multi-institution research initiative whose funded phase runs through
 November 2026. During this phase the repositories are maintained by the
 Collective's project team, which decides what merges, what gets released,
 and how disclosures are worded. Individual code contributions are recorded
-in the repository history and CITATION.cff.
+in the repository history; the citation entry (CITATION.cff) currently
+credits the Collective as a whole.
 
 ## Repositories
 

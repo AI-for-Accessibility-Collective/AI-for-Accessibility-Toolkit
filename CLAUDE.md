@@ -103,7 +103,9 @@ skill for the full surface.
 ## Build & Test
 
 Pure ES modules, no build step for the core. The one generated file is
-`cli/cli-tools.bundle.js` (`npm run build:cli`). Run the suites:
+`cli/cli-tools.bundle.js` (`npm run build:cli`). Run `npm ci` once first —
+the demos need nothing installed, but the tools suites need jsdom. Run the
+suites:
 
 ```bash
 npm test                       # tools, toolkit, controller, and onboarding suites

@@ -32,6 +32,45 @@ column is what a developer meets in the code.
 - **ControlPort.** The neutral interface a receiver implements so the Controller can drive it. See [`../controller/PROTOCOL.md`](../controller/PROTOCOL.md).
 - **Host.** Any application that embeds the toolkit or calls its hosted service: an extension, a mobile app, an XR app, an assistant, a server.
 
+## The needs vocabulary (dimensions)
+
+Each `needs[]` entry names a **dimension** — the modality-neutral name of
+the need, distinct from the setting keys a surface renders it into (the
+dimension `simplify` renders to the web setting `autoSimplify`). The
+authoritative web mapping is `WEB_DERIVATION` in
+[`toolkit/platforms/chrome/web-surface.js`](../toolkit/platforms/chrome/web-surface.js);
+this table summarizes it. A dimension with no rendering on a surface is
+reported in that surface's `unmet` list, not silently dropped — but note
+that the convenience wrapper `renderWebSettings()` returns settings only;
+use `deriveWebSettings()` when you need `unmet`. **A dimension outside this
+vocabulary is accepted into the profile but rendered by no surface**, so
+check spelling against this table.
+
+| Dimension | Value | Renders on web as |
+|---|---|---|
+| `textSize` | number, multiplier (1.5 = 150%) | `fontScale` (percent) |
+| `lineSpacing` | number | `lineHeight` |
+| `letterSpacing` | number | `letterSpacing` |
+| `reduceMotion` | boolean | `motionReducer` |
+| `darkTheme` | boolean | `darkMode` |
+| `captions` | boolean | `showCaptions` + `liveCaptions` + `autoCaptions` |
+| `simplify` | boolean | `autoSimplify` |
+| `contrast` | `true` or a mode string | `contrastMode` |
+| `dyslexiaFont` | boolean | `dyslexiaFont` |
+| `readAloud` | boolean | `readAloud` |
+| `readAloudRate` | number | `speechRate` |
+| `describeImages` | boolean | `autoDescribe` |
+| `labelControls` | boolean | `autoFixLabels` |
+| `repairLandmarks` | boolean | `fixLandmarks` |
+| `announceUpdates` | boolean | `announceUpdates` |
+| `spaAnnounce` | boolean | `spaFocus` |
+| `skipLinks` | boolean | `skipLinks` |
+| `pageStructure` | boolean | `pageOutline` |
+| `keyboardAccess` | boolean | `keyboardNav` |
+
+The mobile and XR renderers (`toolkit/surfaces/mobile.js`, `xr.js`) read
+the same dimensions into their own settings shapes.
+
 The three agent codenames, and how they relate:
 
 ```mermaid

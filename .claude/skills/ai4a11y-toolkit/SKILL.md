@@ -11,7 +11,7 @@ This file is **generated** by `toolkit/scripts/generate-skill.mjs` from the same
 
 ## Quick Start
 
-Paths below are relative to the `toolkit/` package root (run from there, or adjust the specifiers when importing as a published `@ai4a11y/toolkit` dependency).
+Paths below are relative to the `toolkit/` package root (run from there, or adjust the specifiers when importing `@ai4a11y/toolkit` as a dependency — the package is not on npm yet; vendor it as a packed tarball, see docs/using-in-your-project.md).
 
 ```javascript
 import { createToolkit } from './index.js';

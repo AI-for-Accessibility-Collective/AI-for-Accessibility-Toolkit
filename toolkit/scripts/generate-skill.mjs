@@ -145,7 +145,7 @@ This file is **generated** by \`toolkit/scripts/generate-skill.mjs\` from the sa
 
 ## Quick Start
 
-Paths below are relative to the \`toolkit/\` package root (run from there, or adjust the specifiers when importing as a published \`${PACKAGE_NAME}\` dependency).
+Paths below are relative to the \`toolkit/\` package root (run from there, or adjust the specifiers when importing \`${PACKAGE_NAME}\` as a dependency — the package is not on npm yet; vendor it as a packed tarball, see docs/using-in-your-project.md).
 
 \`\`\`javascript
 ${QUICK_START_CODE}\`\`\`

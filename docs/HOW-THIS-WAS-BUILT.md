@@ -10,8 +10,9 @@ one-year, multi-institution research initiative: university research labs
 in the United States and the United Kingdom, community-partner
 organizations of and for disabled people, and funder support from
 Google.org. Institutions are credited in the [README](../README.md);
-individual contributions are recorded in the repository history and
-[CITATION.cff](../CITATION.cff).
+individual contributions are recorded in the repository history, and the
+citation entry ([CITATION.cff](../CITATION.cff)) currently credits the
+Collective as a whole.
 
 The Collective's members did not set out to write one product together.
 Each institution ran its own research project — memory support for older
@@ -28,7 +29,7 @@ generalizable pieces those projects and their questions pointed at.
   memory stay private by default and still be useful? The code is the
   experiment, and "pre-alpha" in the README is a description, not
   modesty.
-- **With AI assistance, deliberately.** Much of this codebase was written
+- **With AI assistance.** Much of this codebase was written
   with AI coding tools, by researchers and engineers reviewing the output.
   That is part of the research posture: a project about AI agents for
   accessibility, built partly by AI agents, with the friction and failure
@@ -39,15 +40,14 @@ generalizable pieces those projects and their questions pointed at.
   a substantial mid-project re-architecture that separated the
   platform-agnostic core from the browser extensions — is preserved in
   full, in both repositories. We chose visible history over a tidy story.
-- **On existing shoulders.** Where mature open tools existed we built on
+- **On existing tools.** Where mature open tools existed we built on
   them rather than rebuilding: axe-core for WCAG detection, Dark Reader,
   Mozilla Readability, OpenDyslexic, and others recorded in the extension
   repository's VENDORED.md.
 
-## How disabled people were and are involved
+## How disabled communities were and are involved
 
-Honestly: less, so far, than the end state requires — and structurally, at
-the level the Collective could do well in a one-year research phase.
+Structurally, at the level the Collective could do well in a one-year research phase, but less than the end state requires.
 
 - The member institutions' research projects each work directly with their
   own communities — blind and low-vision learners and families, deaf and
@@ -57,9 +57,9 @@ the level the Collective could do well in a one-year research phase.
   it.
 - The ability profiles were assembled from published, evidence-based
   guidance (see [PROFILE-CARDS.md](PROFILE-CARDS.md)), not invented — and
-  also not yet validated by users of this toolkit. The cards say so.
-- Co-design sessions with community members are run by the member
-  institutions. Participation currently flows through those institutions;
+  also not yet validated by users of this toolkit. 
+- Co-design sessions with community members are still being planned by member
+  institutions. Participation will flow through those institutions;
   if you or your organization want to take part, use the contact route in
   [../MAINTAINERS.md](../MAINTAINERS.md) and your note will be passed to
   the right team.

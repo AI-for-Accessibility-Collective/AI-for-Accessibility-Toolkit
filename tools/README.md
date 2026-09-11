@@ -13,6 +13,7 @@ tools/
 │   ├── missing-labels.js
 │   ├── missing-landmarks.js
 │   ├── poor-contrast.js
+│   ├── contract-mismatch.js  # does the page match what the person asked an agent for
 │   └── wcag-issues.js    # axe-core wrapper
 ├── adapters/       # Fix issues or apply visual presets
 │   ├── index.js
@@ -28,7 +29,8 @@ tools/
 │   ├── reader-mode.js
 │   └── ...
 ├── profiles/       # User presets (blind, lowVision, etc.)
-│   └── settings.json
+│   ├── settings.json   # The preset data
+│   └── settings.js     # The API over it (applyProfile, adaptersForTools, ...)
 ├── insights/       # Model-facing knowledge modules distilled from applications
 │   └── artinsight/ # e.g. ArtInsight — accessible artwork descriptions
 ├── utils/          # Shared utilities
