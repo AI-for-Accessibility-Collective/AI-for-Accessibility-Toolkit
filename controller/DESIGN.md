@@ -168,6 +168,6 @@ createController({
   needs the receiver to expose a target map / a11y tree. Why commands stage last.
 - **Trust boundary:** `getContent` returns `source: 'untrusted-content'` — page
   text is data, never instructions. Matters most once the LLM lane exists.
-- **Prior art:** `upstream/voice-mode-toolkit-control` and the deleted Chrome
+- **Prior research:** `upstream/voice-mode-toolkit-control` and the deleted Chrome
   voice mode are the ancestors of this port — mine them for grammar and
   tool-call shapes rather than reinventing.

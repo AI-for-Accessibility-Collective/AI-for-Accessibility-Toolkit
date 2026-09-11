@@ -48,10 +48,11 @@ insights). Concretely open:
 
 ## Future (in coordination with the AI Collaborative: Accessibility)
 
-- Build an evaluation benchmark (test-sites arena). The mechanical half,
-  an execution-checking harness, is scoped as its own work item;
-  benchmark-based accessibility assessment stays deferred until an
-  external evaluation framework lands.
+- Build an evaluation benchmark (test-sites arena), with success measures
+  for different types of adaptation, including combined and intersecting
+  needs. The mechanical half, an execution-checking harness, is scoped as
+  its own work item; benchmark-based accessibility assessment stays
+  deferred until an external evaluation framework lands.
 
 ## Named gaps without an owner
 
@@ -75,7 +76,9 @@ rather than filled. Each is owner-TBD.
   GitHub issues are the only route today.
 - Borrowing external review agents (for example, published accessibility
   review agents for ARIA, contrast, keyboard navigation, forms, tables)
-  and translating some into adapters.
+  and translating some into adapters — with the Librarian potentially
+  acting as an orchestrator over borrowed agents rather than each being
+  rewritten.
 - A structured "why nothing happened" signal from adapters, so a host can
   tell a missing API key from a model refusal (see "When no AI provider is
   configured" in [docs/COMPONENTS.md](docs/COMPONENTS.md#when-no-ai-provider-is-configured)).
@@ -83,5 +86,3 @@ rather than filled. Each is owner-TBD.
 - Public release, and the distribution decisions that precede it
   (extension store listings, package registry publishing). Maintainer
   decisions, owner to be designated.
-
-Prepared with AI assistance; reviewed and edited by Josephine, who is responsible for its content.

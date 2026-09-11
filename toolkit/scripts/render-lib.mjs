@@ -86,13 +86,15 @@ export function renderSurfaces(surfaces) {
 /** Protocol table: File | kind | v | Required fields. */
 export function renderProtocol(protocol) {
   const rows = protocol.map((p) => [
-    `[\`${p.file}\`](../${p.file})`,
+    // p.file is "protocol/..." and API.md lives at toolkit/API.md, so the
+    // link must not climb out of toolkit/.
+    `[\`${p.file}\`](${p.file})`,
     p.kind ? `\`${p.kind}\`` : '_(version-only handshake)_',
     p.version != null ? String(p.version) : '',
     p.required.map((r) => `\`${r}\``).join(', '),
   ]);
   return `${mdTable(['Schema', 'kind', 'v', 'Required top-level fields'], rows)}\n\n`
-    + 'See [`protocol/README.md`](../protocol/README.md) for the full wire-format writeup, versioning rules, and fixtures.';
+    + 'See [`protocol/README.md`](protocol/README.md) for the full wire-format writeup, versioning rules, and fixtures.';
 }
 
 /** Barrel exports table: Export | Kind | From. */

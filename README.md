@@ -186,7 +186,7 @@ controller/  Optional text/voice control surface: ControlPort, grammar, mounts,
 server/      Hosted HTTP service exposing the core to any language/runtime
 cli/         Experimental Python CLI: try the catalog on a live page from a terminal
 onboarding/  Example web service: /chat, /onboarding, /controller on one port
-examples/    Runnable, dependency-free examples
+examples/    A runnable, dependency-free example
 docs/        Quick start, glossary, components, architecture, design docs
 scripts/     Repository checks (the packed-package fixture)
 ```

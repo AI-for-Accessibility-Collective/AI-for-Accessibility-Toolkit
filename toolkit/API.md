@@ -321,11 +321,11 @@ The versioned JSON Schemas in `toolkit/protocol/` describing the toolkit's cross
 
 | Schema | kind | v | Required top-level fields |
 | --- | --- | --- | --- |
-| [`protocol/insight-outbox.schema.json`](../protocol/insight-outbox.schema.json) | `aa-insight-outbox` | 1 | `kind`, `v`, `sourceAppId`, `exportedAt`, `insights` |
-| [`protocol/profile-blob.schema.json`](../protocol/profile-blob.schema.json) | `aa-profile-blob` | 1 | `kind`, `v`, `exportedAt`, `profile` |
-| [`protocol/transport-envelope.schema.json`](../protocol/transport-envelope.schema.json) | _(version-only handshake)_ | 1 | `v` |
+| [`protocol/insight-outbox.schema.json`](protocol/insight-outbox.schema.json) | `aa-insight-outbox` | 1 | `kind`, `v`, `sourceAppId`, `exportedAt`, `insights` |
+| [`protocol/profile-blob.schema.json`](protocol/profile-blob.schema.json) | `aa-profile-blob` | 1 | `kind`, `v`, `exportedAt`, `profile` |
+| [`protocol/transport-envelope.schema.json`](protocol/transport-envelope.schema.json) | _(version-only handshake)_ | 1 | `v` |
 
-See [`protocol/README.md`](../protocol/README.md) for the full wire-format writeup, versioning rules, and fixtures.
+See [`protocol/README.md`](protocol/README.md) for the full wire-format writeup, versioning rules, and fixtures.
 
 ## Barrel Exports (`toolkit/index.js`)
 

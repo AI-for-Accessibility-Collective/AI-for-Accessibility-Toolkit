@@ -41,6 +41,10 @@ Beyond whatever you are personally interested in building, these are wanted and 
 
 Issues labeled `good first issue` are kept as on-ramps where they exist.
 
+### Skills we'd love to see
+
+*This is a placeholder section which we will build out, based on feedback from community engagement.*
+
 ## Set up
 
 ```bash

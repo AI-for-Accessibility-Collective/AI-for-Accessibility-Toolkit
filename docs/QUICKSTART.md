@@ -20,6 +20,10 @@ not a model authoring a skill.
 
 ## Embed the core
 
+The snippet's relative imports assume your file sits at the repository
+root; adjust the specifiers if it lives elsewhere (or when consuming the
+packages — see [using-in-your-project.md](using-in-your-project.md)).
+
 <!-- QUICKSTART:START -->
 
 ```javascript
@@ -59,9 +63,38 @@ stand in for onboarding; `getAbilityModel` is the profile as the surfaces
 see it; each `render*` call is a pure function from that model to one
 surface's settings.
 
+## Enable the skill layer
+
+The snippet above leaves the skill layer empty: without a tools registry
+and the builtin skills, `retrieveSkill` finds nothing and skill validation
+has no vocabulary to check against. To wire them in, pass both to
+`createToolkit`:
+
+```javascript
+import { asAATools } from './toolkit/registry/tools.js';
+import { parseSkill } from './toolkit/core/skill.js';
+import { readdirSync, readFileSync } from 'node:fs';
+
+const builtinSkills = readdirSync('./toolkit/skills/builtin')
+  .filter((f) => f.endsWith('.md'))
+  .map((f) => parseSkill(readFileSync(`./toolkit/skills/builtin/${f}`, 'utf8')));
+
+const { datastore, librarian } = createToolkit({
+  kv: memoryKV(), clock: nodeClock(), scheduler: nodeScheduler(),
+  consent: consoleConsent({ silent: true }),
+  toolsRegistry: asAATools(),
+  builtinSkills,
+});
+```
+
+`toolkit/hosts/skill-demo/demo.js` is the full worked example of this
+wiring (retrieve → resolve → build → validate → save).
+
 ## Next
 
 - Wire it into a real host: [COMPONENTS.md, "What a host implements"](COMPONENTS.md#what-a-host-implements).
 - Method reference: [`toolkit/API.md`](../toolkit/API.md).
 - Embedding walkthrough for coding agents: the [`ai4a11y-toolkit` skill](../.claude/skills/ai4a11y-toolkit/SKILL.md).
+- A browser-extension host, step by step: [web-extension-getting-started.md](web-extension-getting-started.md).
 - A non-web host, step by step: [xr-getting-started.md](xr-getting-started.md).
+- Consuming the packages in your own project: [using-in-your-project.md](using-in-your-project.md).
