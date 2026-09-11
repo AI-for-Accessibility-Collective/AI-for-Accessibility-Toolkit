@@ -33,4 +33,9 @@ export function asAATools(): {
 export const skillRegistry: import("../core/skill.js").ToolEntry[];
 /** @type {import('../core/units.js').SettingsMeta} */
 export const settingsMeta: import("../core/units.js").SettingsMeta;
+export const toolRegistry: import("../core/skill.js").ToolEntry[];
+/** @param {string} id */
+export function getToolById(id: string): import("../core/skill.js").ToolEntry | undefined;
+/** @param {string} area */
+export function getToolsByArea(area: string): import("../core/skill.js").ToolEntry[];
 //# sourceMappingURL=tools.d.ts.map

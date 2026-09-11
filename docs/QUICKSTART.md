@@ -72,7 +72,7 @@ has no vocabulary to check against. To wire them in, pass both to
 
 ```javascript
 import { asAATools } from './toolkit/registry/tools.js';
-import { parseSkill } from './toolkit/core/skill.js';
+import { parseSkill } from './toolkit/index.js';
 import { readdirSync, readFileSync } from 'node:fs';
 
 const builtinSkills = readdirSync('./toolkit/skills/builtin')
