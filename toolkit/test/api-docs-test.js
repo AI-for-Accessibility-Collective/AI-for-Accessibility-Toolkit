@@ -29,6 +29,11 @@
 //       SKILL.md only, which is why the README's former copy of this block
 //       could promise a fontScale it never computed; the block now lives in
 //       docs/QUICKSTART.md and this check moved with it.
+//   (g) every relative link in API.md and SKILL.md points at a file that
+//       exists. Check (b) cannot see a bad link the generator itself emits:
+//       it compares disk against a fresh render of the SAME template, so a
+//       wrong prefix matches itself and passes. That is how the dead
+//       `../protocol/` links survived until the 2026-09 review round.
 //
 //   node toolkit/test/api-docs-test.js
 
@@ -299,6 +304,39 @@ if (!existsSync(BACKGROUND_JS_PATH)) {
     }
     check(`the Quick Start runs and renders what it advertises${detail ? ` (${detail})` : ''}`, ok);
   }
+}
+
+// ============================================================================
+// (g) every relative link in the generated docs resolves to an existing file
+// ============================================================================
+// Targets are resolved against the directory the doc lives in, exactly as a
+// markdown renderer would. External schemes and pure in-page anchors are
+// skipped; a `path#anchor` target is checked for the file half only.
+{
+  const LINK = /\]\(([^)\s]+)\)/g;
+  const dead = [];
+  let scanned = 0;
+  for (const [label, file] of [
+    ['toolkit/API.md', API_MD_PATH],
+    ['.claude/skills/ai4a11y-toolkit/SKILL.md', SKILL_MD_PATH],
+  ]) {
+    if (!existsSync(file)) { dead.push(`${label} is missing`); continue; }
+    const dir = path.dirname(file);
+    for (const m of readFileSync(file, 'utf8').matchAll(LINK)) {
+      const target = m[1];
+      if (/^([a-z][a-z0-9+.-]*:|#)/i.test(target)) continue; // http(s):, mailto:, in-page anchor
+      const filePart = target.split('#')[0];
+      if (!filePart) continue;
+      scanned++;
+      if (!existsSync(path.join(dir, decodeURIComponent(filePart)))) dead.push(`${label} -> ${target}`);
+    }
+  }
+  if (dead.length) console.log('  dead links:', dead.join('; '));
+  // scanned > 0 keeps this from passing vacuously if the docs lose their links.
+  check(
+    `every relative link in the generated docs points at an existing file (${scanned} checked)`,
+    scanned > 0 && dead.length === 0,
+  );
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
