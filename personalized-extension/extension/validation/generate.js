@@ -224,7 +224,7 @@ export function matchDomain(query, index) {
     }
     return false;
   };
-  let best = null; let bestScore = 0; let second = 0; let bestWords = 0;
+  let best = null; let bestScore = 0; let second = 0; let bestWords = 0; let secondWords = 0;
   entries.forEach(([domain], i) => {
     let score = 0; let words = 0;
     for (const w of q) {
@@ -232,14 +232,23 @@ export function matchDomain(query, index) {
       else if (stemHit(names[i], w)) { score += 2; words += 1; }
       else if (own[i].has(w)) { score += 1 / df.get(w); words += 1; }
     }
-    if (score > bestScore) { second = bestScore; bestScore = score; best = domain; bestWords = words; }
-    else if (score > second) { second = score; }
+    if (score > bestScore) {
+      second = bestScore; secondWords = bestWords;
+      bestScore = score; best = domain; bestWords = words;
+    } else if (score > second) { second = score; secondWords = words; }
   });
   // Two distinct words minimum: a task is never named by one word alone -
   // "hotel california lyrics" carries the word hotel and nothing else of the
   // task, and it must not load the hotel model.
+  //
+  // The lead rule only counts a runner-up that is itself a candidate. A
+  // runner-up on ONE word is the junk the two-word floor already rejects for
+  // the winner, and at 82 shipped models it vetoed real matches: "well
+  // reviewed ... on zocdoc" scored doctor 2.42 on three words against review
+  // 2.0 on the single stem hit "reviewed", and the 1.5 lead refused doctor.
+  // A one-word runner-up could never have won, so it cannot veto either.
   if (!best || bestWords < 2 || bestScore < MATCH_MIN_SCORE
-      || bestScore < second * MATCH_LEAD) return null;
+      || (secondWords >= 2 && bestScore < second * MATCH_LEAD)) return null;
   return best;
 }
 

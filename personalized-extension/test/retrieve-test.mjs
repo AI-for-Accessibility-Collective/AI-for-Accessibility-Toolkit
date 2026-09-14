@@ -49,16 +49,13 @@ ok(G.matchDomain('', INDEX) === null, 'an empty query matches nothing');
 // veto a genuine match carrying words that belong to one domain alone.
 {
   const real = JSON.parse(fs.readFileSync('extension/validation/htas/index.json', 'utf8'));
-  // Measured, not asserted, since the corpus reached 82 shipped models
-  // (2026-09-14): this line scores doctor 2.42 against a runner-up at 2.0, and
-  // the 1.5 lead rule returns null. The two-word minimum and the lead rule
-  // were tuned when three models shipped; at 82 they cost recall on natural
-  // queries. Printed here so the number is seen on every run, and left for a
-  // retuning pass rather than frozen into an assertion either way.
-  const derm = G.matchDomain('find a dermatologist in palo alto who takes new patients and is '
+  // At 82 shipped models this line scores doctor 2.42 on three words against
+  // review 2.0 on the single stem hit "reviewed"; a one-word runner-up no
+  // longer vetoes, so the real match holds (2026-09-14).
+  ok(G.matchDomain('find a dermatologist in palo alto who takes new patients and is '
     + 'well reviewed, and book the earliest appointment next week on zocdoc, but stop '
-    + 'before confirming anything', real);
-  console.log(`  (measured) dermatologist-on-zocdoc line retrieves: ${derm} at ${Object.keys(real).length} domains`);
+    + 'before confirming anything', real) === 'doctor',
+  'a one-word runner-up does not veto a real match');
   // flights shipped in 2026-09, so the long flights line now names it.
   ok(G.matchDomain('compare the cheapest nonstop and the cheapest one-stop flight '
     + 'from SFO to San Diego next Friday on google flights, pick whichever is cheaper '
