@@ -4831,6 +4831,27 @@
         "speak": "gate",
         "check": "Does the current screen show a pending prompt to record new audio, or an option to import an existing file?",
         "say_example": "This route needs a new recording from you. Should I wait for it or use an existing file you choose?"
+       },
+       {
+        "question": "Will recording now replace a take that is already in this slot?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Pressing record on a slot that already holds a take overwrites it, and the editors in the recordings offer no undo for a replaced recording. Nothing on the timeline marks the old take as gone.",
+        "whatTheAgentLoses": "A usable take is overwritten and has to be re-recorded, or is lost if the person recorded it.",
+        "costDims": {
+         "money": 0,
+         "privacy": 0,
+         "thirdParty": 0,
+         "safety": 0,
+         "reversibility": 3,
+         "time": 2
+        },
+        "kind": "decision",
+        "verify_form": "You are about to record into a slot that already holds a take. Recording replaces it. Keep the old take, or record over it?",
+        "speak": "on-event",
+        "check": "Does the recording slot already hold a take, and does the page say recording will replace it?",
+        "say_example": "This slot already has a take in it. Recording now replaces it. Keep the old one, or record over it?"
        }
       ]
      }
