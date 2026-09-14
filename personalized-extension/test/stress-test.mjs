@@ -2,7 +2,7 @@
  * Stress: the layer at sizes and rates the unit tests never reach.
  *
  * Nothing here is a toy. The pages are the real captured ones (the 8,901-word
- * Amazon results tree), the model is the shipped 352-question hotel HTA, and
+ * Amazon results tree), the model is the shipped hotel HTA at its full size, and
  * the failure modes are the ones scale actually produces: floods of findings,
  * a worker torn down mid-hold, garbage numbers reaching the router, fifty
  * publishes racing, and a query fuzz over the retrieval gate.
@@ -47,7 +47,7 @@ const R = await import('../extension/validation/reasoner.js');
 const G = await import('../extension/validation/generate.js');
 const RunMod = await import('../extension/validation/run.js');
 
-// ── 1. the shipped 352-question model against the real 8,901-word page ──────
+// ── 1. the shipped hotel model against the real 8,901-word page ─────────────
 {
   const hotel = JSON.parse(readFileSync('extension/validation/htas/hotel.json', 'utf8'));
   const pagePath = join(RESEARCH, 'assets/task-mapping/_obs/sandals-step1.txt');
@@ -55,7 +55,14 @@ const RunMod = await import('../extension/validation/run.js');
     : 'x '.repeat(30000);   // the machinery is still exercised if the capture moved
 
   const flat = R.flattenModel(hotel);
-  ok(flat.questions.length === 352, 'the full hotel model flattens to its 352 questions');
+  // The size is read off the file: the hotel model was 352 questions when this
+  // was written and 123 after the judged audits, and every one still has to flatten.
+  let bank = 0;
+  (function walk(n) {
+    for (const q of n.questions || []) if (String(q.speak || '').toUpperCase() !== 'DROP') bank += 1;
+    for (const c of n.children || []) walk(c);
+  })(hotel.tree);
+  ok(flat.questions.length === bank && bank > 0, `the full hotel model flattens to its ${bank} questions`);
 
   // The model answers a sparse handful, one with an id no question carries,
   // one with a quote the page does not contain - the shapes a real reply has.
@@ -75,11 +82,11 @@ const RunMod = await import('../extension/validation/run.js');
   const res = await R.readPage(flat, page, {});
   const ms = Date.now() - t0;
   ok(res.ok === true, 'a sparse reply against the full model parses');
-  ok(res.meta.asked === 352, 'all 352 questions were carried');
+  ok(res.meta.asked === bank, `all ${bank} questions were carried`);
   ok(res.meta.answered === 1 && res.meta.discarded === 1,
     'the verified answer lands and the unbacked one is discarded, not shipped');
   ok(res.meta.unmatched === 1, 'the ghost id is counted instead of vanishing');
-  ok(ms < 2000, `the non-model half of a 352-question read is cheap (${ms}ms)`);
+  ok(ms < 2000, `the non-model half of a full-size read is cheap (${ms}ms)`);
 }
 
 // ── 2. a flood of findings through one run ──────────────────────────────────
@@ -210,31 +217,60 @@ const RunMod = await import('../extension/validation/run.js');
 // ── 6. retrieval fuzz: sixty ways to not match ──────────────────────────────
 {
   const idx = JSON.parse(readFileSync('extension/validation/htas/index.json', 'utf8'));
+  // Written when three models shipped, when every one of these was off-domain.
+  // At 82 shipped models most of them name a real task, so the list is split:
+  // the genuinely off-domain ones must still retrieve nothing, and the ones a
+  // model now covers are measured for recall and printed, not asserted - the
+  // matcher's two-word minimum and 1.5 lead rule were tuned for three models
+  // and at 82 they return null on most short natural queries (2026-09-14:
+  // 2 of 16 retrieve). Retuning is a separate pass; this test says what is.
   const offDomain = [
-    'order a pepperoni pizza for delivery', 'buy sandals size 5 under $40 on amazon',
-    'find a nonstop flight to seattle', 'renew my passport by mail',
-    'when was the eiffel tower finished', 'transfer $200 to my savings account',
-    'cancel my gym membership', 'file a complaint about a late package',
-    'download my bank statement', 'reset my email password',
-    'what is the capital of mongolia', 'book club recommendations for october',
-    'reserve a table for four tonight', 'rent a car at the airport',
-    'schedule a haircut', 'get concert tickets for saturday',
-    'apply for a library card', 'return these shoes', 'track my order',
-    'set up a new phone', 'compare car insurance quotes', 'pay my electric bill',
-    'book something', 'book a room', 'i need an appointment', 'make it private',
+    'when was the eiffel tower finished', 'what is the capital of mongolia',
+    'book club recommendations for october', 'schedule a haircut',
+    'apply for a library card', 'renew my passport by mail',
+    'book something', 'i need an appointment', 'make it private',
     'find a doctor who', 'hotel california lyrics', 'doctor who episode guide',
     'appointment to the supreme court', 'privacy policy of this website',
   ];
   const falseHits = [];
   for (const q of offDomain) {
     const m = G.matchDomain(q, idx);
-    // "book a room" is the one honest borderline: it is a hotel query to most
-    // ears. Anything else matching is a false retrieval.
-    if (m && q !== 'book a room') falseHits.push(`"${q}" -> ${m}`);
+    if (m) falseHits.push(`"${q}" -> ${m}`);
   }
   ok(falseHits.length === 0,
     `no false retrievals across ${offDomain.length} off-domain queries`
     + (falseHits.length ? ` (${falseHits.join('; ')})` : ''));
+
+  const nowOnDomain = [
+    ['order a pepperoni pizza for delivery', 'takeout'],
+    ['buy sandals size 5 under $40 on amazon', 'amazon'],
+    ['find a nonstop flight to seattle', 'flights'],
+    ['transfer $200 to my savings account', 'banking'],
+    ['cancel my gym membership', 'cancelsub'],
+    ['file a complaint about a late package', 'support'],
+    ['download my bank statement', 'download'],
+    ['reset my email password', 'pwreset'],
+    ['reserve a table for four tonight', 'restaurant'],
+    ['rent a car at the airport', 'rentcar'],
+    ['get concert tickets for saturday', 'tickets'],
+    ['return these shoes', 'returns'],
+    ['track my order', 'tracking'],
+    ['set up a new phone', 'devicesetup'],
+    ['compare car insurance quotes', 'carinsurance'],
+    ['pay my electric bill', 'billpay'],
+    ['book a room', 'hotel'],
+  ];
+  let recall = 0; const wrong = [];
+  for (const [q, want] of nowOnDomain) {
+    const m = G.matchDomain(q, idx);
+    if (m === want) recall += 1;
+    else if (m) wrong.push(`"${q}" -> ${m} (wanted ${want})`);
+  }
+  console.log(`  (measured) short on-domain queries retrieved: ${recall}/${nowOnDomain.length}`
+    + ` at ${Object.keys(idx).length} domains`);
+  ok(wrong.length === 0,
+    'a short on-domain query never retrieves a different domain'
+    + (wrong.length ? ` (${wrong.join('; ')})` : ''));
 
   const onDomain = [
     ['book a hotel room in tokyo for two nights', 'hotel'],
