@@ -165,6 +165,7 @@
           const item = el("div", "va-asked");
           item.append(el("p", "va-text", f.say));
           if (f.from) item.append(el("p", "va-where", f.from));
+          if (f.surface) item.append(el("p", "va-surface", surfaceLine(f)));
           rev.append(item);
         }
         if (!outcome.length) {
@@ -190,6 +191,7 @@
             const item = el("div", "va-asked");
             item.append(el("p", "va-text", f.say));
             if (f.from) item.append(el("p", "va-where", f.from));
+            if (f.surface) item.append(el("p", "va-surface", surfaceLine(f)));
             d.append(item);
           }
           rev.append(d);
@@ -221,6 +223,7 @@
           const body = el("div", "va-body");
           body.append(el("p", "va-text", f.say));
           if (f.from) body.append(el("p", "va-where", f.from));
+          if (f.surface) body.append(el("p", "va-surface", surfaceLine(f)));
           if (done) {
             li.append(body);
             list.append(li);
@@ -335,6 +338,11 @@
       return s;
     }
     const tone = (f) => f.confirming ? "ok" : f.level === "stop" ? "stop" : f.level === "aside" ? "note" : "quiet";
+    const surfaceLine = (f) => [
+      f.surface,
+      f.speak ? `${f.speak}${f.fired === true ? ", fired" : f.fired === false ? ", not fired" : ""}` : null,
+      f.surfaceWhy || null
+    ].filter(Boolean).join(" \xB7 ");
     function gateChoices(s) {
       const w = ((s.gate.waitingOn || [])[0] || "").toLowerCase();
       if (/size/.test(w)) {
