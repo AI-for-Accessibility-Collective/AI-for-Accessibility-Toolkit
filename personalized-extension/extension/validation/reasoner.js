@@ -50,6 +50,8 @@
 // the extension is background.js's `callGemini` with the key it already
 // resolves — one provider, one key store.
 
+import { speakOf } from './policy.js';
+
 // ── tuning ───────────────────────────────────────────────────────────────────
 
 /** Head-truncate the page here. Set from the prototype's guard. */
@@ -111,6 +113,10 @@ export function hasCaller() {
  * @returns {{task: string, phases: string[], questions: Array<Object>,
  *            nodeIds: string[], labels: Object<string,string>}}
  */
+/** `DROP`: the audit found this question not modellable. It is never asked. */
+const isDropped = (q) =>
+  typeof q?.speak === 'string' && q.speak.trim().toUpperCase() === 'DROP';
+
 export function flattenModel(model) {
   const tree = model?.tree || model;
   if (!tree || !tree.id) throw new Error('task model has no tree');
@@ -133,7 +139,9 @@ export function flattenModel(model) {
     nodeIds.push(n.id);
     labels[n.id] = n.label;
     const here = path.concat(n.label).filter(Boolean);
-    const qs = Array.isArray(n.questions) ? n.questions : [];
+    // A dropped question is not a finding, so it is not a question either:
+    // out before the ids are numbered, so nothing downstream can meet it.
+    const qs = (Array.isArray(n.questions) ? n.questions : []).filter((q) => !isDropped(q));
     qs.forEach((q, i) => {
       questions.push({
         id: qs.length > 1 ? `${n.id}#${i + 1}` : String(n.id),
@@ -161,6 +169,10 @@ export function flattenModel(model) {
         // The six-dimension error-cost coding, when the model carries one.
         // cundOf() grades C_und from it; absent, the moneyMoving bit decides.
         costDims: q.costDims && typeof q.costDims === 'object' ? q.costDims : null,
+        // How loud the audit allowed this question to be. policy.js routes on
+        // it when present; null (a baseline, manual or generated model, or a
+        // value nobody recognises) takes the moment path instead.
+        speak: speakOf(q.speak),
       });
     });
     for (const c of n.children || []) walk(c, here);
@@ -803,7 +815,13 @@ async function callJsonStream(prompt, schema, opts, log, flat, pageText, onRow) 
       const r = rows[consumed];
       const q = r && r.id != null ? byId.get(String(r.id)) : null;
       if (!q) continue;
-      const stopClass = r.contradictsAsk === true || q.moneyMoving === true;
+      // What can stop the agent, and so is worth surfacing before the reply
+      // ends. On an audited question that is exactly `gate`: a contradicted
+      // if-wrong is a checkpoint and a money-moving `never` is a log entry,
+      // and neither holds anything. Without a speak value, the old rule.
+      const stopClass = q.speak != null
+        ? q.speak === 'gate'
+        : (r.contradictsAsk === true || q.moneyMoving === true);
       if (!stopClass) continue;
       const { verify, level } = verifyQuoteAt(
         typeof r.quote === 'string' ? r.quote : null, pageText, forms);
@@ -813,7 +831,7 @@ async function callJsonStream(prompt, schema, opts, log, flat, pageText, onRow) 
         await onRow({
           id: q.id, node: q.node, question: q.question, subtask: q.subtask,
           cluster: q.cluster, moment: q.moment, moneyMoving: q.moneyMoving,
-          costDims: q.costDims ?? null,
+          costDims: q.costDims ?? null, speak: q.speak ?? null,
           paradigm: q.paradigm, why: q.why ?? null,
           whatTheAgentLoses: q.whatTheAgentLoses ?? null,
           contradictsAsk: r.contradictsAsk === true,
@@ -905,7 +923,7 @@ export async function readPage(flat, pageText, opts = {}) {
     return {
       id: q.id, node: q.node, question: q.question, subtask: q.subtask,
       cluster: q.cluster, moment: q.moment, moneyMoving: q.moneyMoving,
-      costDims: q.costDims ?? null,
+      costDims: q.costDims ?? null, speak: q.speak ?? null,
       paradigm: q.paradigm,
       // The model wrote these when it wrote the question, and this join was
       // dropping them - so a spoken explanation of a pause had nothing to say
@@ -1296,7 +1314,14 @@ export function maskSensitive(text) {
 }
 
 export function toFindings(result, phase) {
-  const aligned = new Set(result.alignedNodes || []);
+  const alignedList = (result.alignedNodes || []).map(String);
+  const aligned = new Set(alignedList);
+  // The page is at this question's step when the reasoner listed the node
+  // itself or any step under it among what the page is serving. This is what
+  // the on-event trigger in policy.js reads: `aligned` stays the exact match
+  // it has always been, because ordering and the record are built on it.
+  const onPage = (node) => node != null && alignedList.some((n) =>
+    n === String(node) || n.startsWith(`${node}.`));
   const out = [];
 
   for (const a of result.answers || []) {
@@ -1351,6 +1376,11 @@ export function toFindings(result, phase) {
       confidence: a.confidence,
       verified: a.verify,
       aligned: aligned.has(a.node),
+      // The audited loudness, and whether this page is at the question's own
+      // step. policy.js decides the level from the first and, for on-event,
+      // the trigger from the second.
+      speak: a.speak ?? null,
+      onPage: onPage(a.node),
       source: 'reasoner',
     });
   }
@@ -1377,6 +1407,8 @@ export function toFindings(result, phase) {
       confidence: null,
       verified: n.verify,
       aligned: false,
+      speak: null,
+      onPage: false,
       source: 'noticed',
     });
   }

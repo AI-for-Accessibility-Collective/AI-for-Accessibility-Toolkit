@@ -75,6 +75,9 @@ export async function record(e = {}) {
         widget: String(f.widget || '').slice(0, 160),
         node: f.node ?? null,
         level: f.level ?? null,
+        // Which surface it took - widget, checkpoint or log - so a lookup can
+        // say not only that a finding pressed but how.
+        surface: f.surface ?? null,
       })),
       answered: (e.answered || []).map((w) => String(w).slice(0, 160)),
       holder: e.holder === 'person' ? 'person' : 'agent',

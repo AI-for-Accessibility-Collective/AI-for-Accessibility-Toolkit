@@ -728,13 +728,22 @@ async function observeByModel(snap, opts = {}) {
         confidence: f.confidence ?? null, aligned: false,
         why: f.why ?? null, whatTheAgentLoses: f.whatTheAgentLoses ?? null,
         route: null, eu: null, source: 'reasoner',
+        // A row comes through here only because it can stop the agent: an
+        // audited gate, or a contradiction / money step on a speak-less
+        // question. Either way the surface is the widget.
+        speak: f.speak ?? null, surface: 'widget',
+        surfaceWhy: f.speak === 'gate' ? 'the model gates here: held until you answer'
+          : f.contradicts ? 'contradicts something you said'
+          : 'continuing from here is hard to undo',
+        fired: f.speak ? true : null,
       }], phase });
       chrome.runtime.sendMessage({ type: 'validationSpeak', phase,
         lines: calmSpeech([{ say: f.say, level: 'stop', live: 'assertive', widget: f.widget }]) })
         .catch(() => {});
       await Trace.record({ nodeId: f.node ?? currentNode,
         label: labelFor(f.node ?? currentNode), phase, holder,
-        action: 'stopped mid-read', findings: [{ widget: f.widget, node: f.node, level: 'stop' }] });
+        action: 'stopped mid-read',
+        findings: [{ widget: f.widget, node: f.node, level: 'stop', surface: 'widget' }] });
     } catch { /* an early surface must never break the read itself */ }
   };
 
@@ -860,7 +869,8 @@ async function observeByModel(snap, opts = {}) {
   // With the levels on, because whether a finding stopped the run is part of
   // what happened at that node.
   await traceRead(rendered.map((f) => ({
-    widget: f.finding.widget, node: f.finding.node || null, level: f.level })));
+    widget: f.finding.widget, node: f.finding.node || null, level: f.level,
+    surface: f.finding.surface ?? null })));
 
   await publish({ append: rendered.map((f) => ({
     widget: f.finding.widget, level: f.level, say: f.finding.say,
@@ -889,6 +899,13 @@ async function observeByModel(snap, opts = {}) {
     // review orders by these.
     route: f.finding.route ?? null,
     eu: f.finding.eu ?? null,
+    // How loud the audit allowed this question to be (null on the moment
+    // path), which of the three surfaces the finding took, why, and whether
+    // an audited trigger fired. The panel and the end report show these.
+    speak: f.finding.speak ?? null,
+    surface: f.finding.surface ?? null,
+    surfaceWhy: f.finding.surfaceWhy ?? null,
+    fired: f.finding.fired ?? null,
     // The node's own name and the page's own choice values, so the panel can
     // group findings by the step they belong to and offer real options.
     nodeLabel: labelFor(f.finding.node) || null,

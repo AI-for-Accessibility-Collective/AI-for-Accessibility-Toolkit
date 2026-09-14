@@ -166,6 +166,15 @@
   white-space: nowrap;
 }
 
+/* Which surface the finding took and why - widget, checkpoint or log, the
+   model's speak value, the trigger's verdict. Prose, not the page's words. */
+.va-surface {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: normal;
+}
+
 /* The control is the point of this surface, so it is the only thing with
    affordance. Identical to .vp-btn. */
 .va-do {

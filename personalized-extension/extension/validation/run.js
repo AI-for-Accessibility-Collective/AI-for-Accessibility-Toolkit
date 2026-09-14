@@ -17,7 +17,7 @@
 
 import { read } from '../../../tools/validators/reader.js';
 import { checkPage } from './checks.js';
-import { decide, highest } from './policy.js';
+import { decide, highest, SURFACE_OF_LEVEL } from './policy.js';
 import { render } from './render.js';
 
 // What each phase needs read. Signals with no extractor are controls — actions
@@ -125,11 +125,21 @@ export function createRun(contract, opts = {}) {
       // and every one of them was being silenced after being escalated.
       // When the utility model routed this finding, the moment is already in
       // the computation - D(r) is derived from it - so the flag is not applied
-      // a second time on top.
-      if (f.quiet && level === 'aside' && !d.route) {
+      // a second time on top. An audited speak value has already decided
+      // the loudness outright, so the flag does not apply there either.
+      if (f.quiet && level === 'aside' && !d.route && !d.speak) {
         level = 'ambient';
         why = 'the task model asks for this on demand, not now';
       }
+      // Which of the three surfaces this finding took, and why. The level
+      // decides it - a stop is the widget, an aside the checkpoint, an
+      // ambient the log - so this is the level in the design's own names,
+      // with decide()'s reason beside it, which until now was rendered and
+      // never published. `fired` is the audited trigger's verdict; only a
+      // finding with a speak value has one.
+      f.surface = SURFACE_OF_LEVEL[level] || null;
+      f.surfaceWhy = why;
+      f.fired = d.speak ? d.fired === true : null;
       seen.add(`${f.widget}|${f.phase}`);
       // Also keyed by the answer, so policy.js can tell a contradiction that
       // CHANGED from one that is simply still true on the next page.

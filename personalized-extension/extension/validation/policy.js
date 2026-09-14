@@ -50,6 +50,96 @@ const ORDER = { ambient: 0, aside: 1, stop: 2 };
 // after the order is placed the only remedy is a cancellation window.
 const IRREVERSIBLE_AFTER = new Set(['Add to cart', 'Checkout', 'Review order']);
 
+// ── the task model's own loudness ───────────────────────────────────────────
+//
+// An audited task model carries `speak` on every question: how loud that
+// question is allowed to be, judged once per question with the whole model in
+// view. Five values, three surfaces:
+//
+//   gate      the interactive widget. Holds the run until the person answers.
+//   always    a cognitive checkpoint, spoken every time the page answers it.
+//   on-event  a checkpoint only when the page shows that situation.
+//   if-wrong  a checkpoint only when the page disagrees with what was asked.
+//   never     the agent log. Not spoken; the end report carries it.
+//
+// (`DROP` is a sixth value meaning "not modelled". flattenModel removes those
+// questions before anything is asked, so no finding ever carries it.)
+//
+// When a finding carries one of these it decides the level outright - before
+// the locked stops and instead of the utility model. Measured on the shipped
+// corpus (82 models, 15,338 questions), 1,490 of the 1,747 money-moving
+// questions were audited BELOW gate, so a money lock that outranked speak
+// would hold the run on every one of them and the audit would count for
+// nothing. The contradiction lock yields for the same reason: `if-wrong` is
+// defined as "speak when the page disagrees" and its surface is a checkpoint,
+// so if the lock outranked it every if-wrong that fired would become a hold.
+// A contradiction on a `never` question is therefore kept, not spoken - the
+// audit chose silence for that question, and silence is the default here.
+// The persona notch does not move an audited value either way: quieter would
+// silence what the model said to say, louder would turn a checkpoint into a
+// hold, and only `gate` holds.
+//
+// A finding with no speak value - the corpus path, a generated model, a
+// question the layer wrote for itself off a page - takes the moment path in
+// decide() exactly as it always has.
+export const SPEAK = ['gate', 'always', 'on-event', 'if-wrong', 'never'];
+
+/** The normalised speak value, or null for anything that is not one. */
+export function speakOf(v) {
+  const s = typeof v === 'string' ? v.trim().toLowerCase() : null;
+  return s && SPEAK.includes(s) ? s : null;
+}
+
+/** Which surface each level is, in the names the design uses. */
+export const SURFACE_OF_LEVEL = { stop: 'widget', aside: 'checkpoint', ambient: 'log' };
+
+/**
+ * The level an audited speak value gives a finding, and whether its trigger
+ * fired. The two conditional triggers read what the reasoner's read put on
+ * the finding, and nothing else:
+ *
+ *   on-event fires when the read ESTABLISHED that the situation is on the
+ *     page: the finding rests on a verified quote (every finding does) AND
+ *     the reasoner listed the question's own node, or a step under it, among
+ *     the subtasks this page is serving (`onPage`, derived from
+ *     `alignedNodes` in toFindings). An answer quoted off a page the reasoner
+ *     did not place at that step is a question answered in passing, not that
+ *     situation, and it stays silent with the reason written on it.
+ *   if-wrong fires when the read DISAGREES: the reasoner set `contradictsAsk`
+ *     on the answer (`contradicts` on the finding), the one field where it
+ *     says the page's value departs from what the person asked for. When the
+ *     page agrees, or the question is not about something the person
+ *     specified, it stays silent.
+ *
+ * Both default to silence. A trigger the read cannot decide did not fire.
+ *
+ * @returns {{level: string, why: string, speak: string, surface: string,
+ *            fired: boolean}}
+ */
+export function decideBySpeak(f, speak) {
+  const at = (level, why, fired) =>
+    ({ level, why, speak, surface: SURFACE_OF_LEVEL[level], fired });
+  switch (speak) {
+    case 'gate':
+      return at('stop', 'the model gates here: held until you answer', true);
+    case 'always':
+      return at('aside', 'the model says this every time', true);
+    case 'on-event':
+      return f?.onPage === true
+        ? at('aside', 'the model says this when the page shows it, and this page does', true)
+        : at('ambient', 'the model says this only when the page shows it, and this page '
+             + 'is not at that step; kept for the report', false);
+    case 'if-wrong':
+      return f?.contradicts === true
+        ? at('aside', 'the model says this when the page disagrees with what you asked, '
+             + 'and it does', true)
+        : at('ambient', 'the model says this only when the page disagrees with what you '
+             + 'asked; it agrees, so kept for the report', false);
+    default:
+      return at('ambient', 'the model keeps this for the report', false);
+  }
+}
+
 /**
  * @typedef {Object} Finding
  * @property {string} widget          which check produced it
@@ -101,6 +191,12 @@ export function decide(f, state = {}) {
       && seen.has(`q|${f.phase}|${state.evidenceKey(f.from)}`)) {
     return { level: 'ambient', why: 'the same evidence was already raised here' };
   }
+
+  // An audited model has already said how loud this question is. That
+  // decision replaces everything below - the locked stops, the utility route
+  // and the persona notch; the note above decideBySpeak says why each one.
+  const speak = speakOf(f.speak);
+  if (speak) return decideBySpeak(f, speak);
 
   let level, why;
   if (f.contradicts) {
