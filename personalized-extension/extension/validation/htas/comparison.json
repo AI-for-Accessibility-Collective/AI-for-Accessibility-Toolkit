@@ -1,0 +1,2257 @@
+{
+ "task": "# RE-SCOPED 2026-08-13 (superset of the original cross-site framing; existing gold remains valid). compare candidate products against explicit criteria and constraints before buying: state what matters (budget, must-have features, dietary/size/spec constraints, ratings), search or filter to the candidates that satisfy them, compare the shortlist side by side — on one site's compare/filter tools or across sites (retailers, review sites, price trackers) — and reach a justified pick; complete when a pick is settled with the comparing evidence on screen (the chosen option over the compared candidates or the applied filters). Surface pinned: shopping/review sites' search, filter, and compare features in a browser or app. Variants: reseller/arbitrage product research (sourcing to resell for profit), dropshipping content, B2B pricing-tool demos, and talking-head opinion videos without screen evidence do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Compare products and settle on a pick",
+  "note": "1 in every keeper, and 1.2 only in the two library runs. 2 is where the user says what the item needs to have; all of WdX2 sits in 2.4, and IW59 and TTzY start with 2.1. 3 brings up the candidates; WdX2 skips it because its form returns one result. 4 puts candidates side by side - compare slots in X8Wi, 64ZA, VxAE and 955p, a cart in TTzY and IW59, one page after another in wagd and -Cpg. 5 is the comparison, and in wagd and -Cpg 5.9 checks the price history on a tracker. 6 checks which numbers were compared; most keepers skip it, and the steps under 6 point to cases in the corpus of what went wrong when that check was skipped. 7 is where the task ends: the user says the pick out loud, sets a price watch, adds it to the cart, or stops. 3.8 sends the task back to 3.1 with a new query, and 4.5 back to 4.1 for the next candidate.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the comparison surface",
+    "note": "1.1 appears in every keeper. 1.2 comes before anything else in s88J and 955p, the two library runs. 1.3 in wagd, where the maker does not sell direct, and in -Cpg, which picks the retailer for its sale. 1.4 in every keeper once the site is up. 1.5 in the six tutorial keepers that tour the site before searching. 1.6 in IW59 and s88J only.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the site or app",
+      "questions": [
+       {
+        "question": "Which tab at the top takes you to textbooks?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The top navigation menu displays multiple categories like 'Wildcat Gear' and 'Textbook', requiring you to choose the correct section to start your search.",
+        "whatTheAgentLoses": "You lose the opportunity to see the store's full range of categories, which might include other relevant sections like 'General Books' or 'Wildcat Tech'.",
+        "kind": "decision",
+        "verify_form": "The agent went into one section of the store - check it is the textbook one; the other tabs are gear, tech and supplies.",
+        "speak": "never",
+        "check": "Which tabs does the top navigation bar show (e.g. Wildcat Gear, Textbook, Tech, Supplies), and which is labeled Textbook?",
+        "say_example": "Opened the <Textbook> tab; skipped Gear, Tech and Supplies"
+       },
+       {
+        "question": "Which kind of site did the search land on, a specs site, a retailer, or a review database?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering a specific URL directly into the Chrome address bar bypasses general search engines and takes you straight to a specialized database equipped for detailed comparisons.",
+        "whatTheAgentLoses": "You lose the ability to rely on your personal knowledge of which specialized websites offer the best tools and data for comparing these specific products.",
+        "kind": "decision",
+        "verify_form": "The agent went to one site to compare on - check it is the one you meant; a specs site, a retailer and a review database show different numbers for the same item.",
+        "speak": "never",
+        "check": "What site is currently open, and does its content read as a specs/spec-sheet page, a retailer's listing, or a review/ratings database?",
+        "say_example": "Opened <a specs site>, where prices are reference figures rather than store prices"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Get through the library gate",
+      "note": "Both library runs do 1.2.1, 1.2.2 and 1.2.3 in that order. s88J shows the route after the fact and never clicks the link; 955p's recording does not include the login, so the welcome badge is what confirms the session.",
+      "children": [
+       {
+        "id": "1.2.1",
+        "label": "Open the library's database list",
+        "questions": [
+         {
+          "question": "Which menu item leads to the library's research databases?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The left-hand menu lists several specific digital media types like eBooks and eMagazines, so you must identify 'Digital Resources' as the correct path to broader research databases.",
+          "whatTheAgentLoses": "You lose the chance to browse the library's other digital offerings that might be useful for future research or entertainment.",
+          "kind": "state-check",
+          "speak": "never",
+          "check": "Which options does the library's left-hand menu list (eBooks, eMagazines, Digital Resources, etc.), and which leads to research databases?",
+          "say_example": "Opened <Digital Resources> from the library's menu"
+         }
+        ]
+       },
+       {
+        "id": "1.2.2",
+        "label": "Find the database in the list",
+        "questions": [
+         {
+          "question": "Where in the library's database list is Consumer Reports?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays an alphabetical list of digital resource categories, requiring you to identify the correct grouping to locate the Consumer Reports database.",
+          "whatTheAgentLoses": "The user loses the opportunity to browse the full list of available digital resources and discover other potentially useful databases for their research.",
+          "kind": "state-check",
+          "speak": "never",
+          "check": "In the library's digital-resources list, which category or sort order was used to reach Consumer Reports, and which link was opened for it?",
+          "say_example": "Found Consumer Reports under <Shopping> in the library's database list"
+         }
+        ]
+       },
+       {
+        "id": "1.2.3",
+        "label": "Confirm the library session",
+        "questions": [
+         {
+          "question": "Is the library sign-in still active, or has the page dropped back to the public preview?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a 'Welcome back, Library+User' badge, confirming that full access to the review database is active before starting the search.",
+          "whatTheAgentLoses": "The user loses the assurance that the agent has successfully authenticated into a premium review database to gather reliable product information.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Does the page show a 'Welcome back' or similar badge confirming an active library/institutional session, or has it fallen back to a public-preview state with limited ratings?",
+          "say_example": "The library sign-in dropped. This is the public preview, so the full ratings are hidden. Signing back in through the library link."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Choose which site to compare on",
+      "questions": [
+       {
+        "question": "Does the maker's site sell directly, or only through retailers?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The website displays a notice stating that direct sales are currently suspended and directs customers to purchase through their retail partners instead.",
+        "whatTheAgentLoses": "The user loses the context of why direct purchasing is unavailable and the immediate visibility of the manufacturer's recommended retail partners.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the manufacturer's site show a notice that direct sales are suspended and buyers should go through retail partners?",
+        "say_example": "The maker's site doesn't sell direct. It sends you to retail partners, so I'm checking a retailer instead."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Choose the way in",
+      "questions": [
+       {
+        "question": "The price comparison banner, or the plain course search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers two distinct paths for finding textbooks: a traditional course search dropdown and a prominent banner advertising a real-time price comparison tool.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose their preferred method for finding and comparing textbook prices.",
+        "kind": "decision",
+        "verify_form": "The agent went in through the comparison banner or the course search under it - check which; only the banner compares other retailers' prices.",
+        "speak": "if-wrong",
+        "check": "Does the page show only one store's price, or a comparison across retailers?",
+        "say_example": "The plain course search only shows one store's price. Switching to the price comparison banner."
+       },
+       {
+        "question": "Which result opens the brand's store page?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking any of the displayed Augason Farms products, like the Butter Powder, provides a direct link to the brand's storefront from its product page.",
+        "whatTheAgentLoses": "You lose the opportunity to choose your preferred navigation workaround for finding a brand's complete catalog.",
+        "kind": "decision",
+        "verify_form": "The agent opened one product to reach the brand's store page - check it landed on the store and not in that product's cart.",
+        "speak": "if-wrong",
+        "check": "Did the click on the product land on the brand's storefront page, or did it add the item to a cart instead?",
+        "say_example": "That click put the item in the cart instead of opening the brand's store. Taking it out and using the store link."
+       },
+       {
+        "question": "Did the search start from the search box, a brand list, or the finder form?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage presents multiple starting points, including a search bar and a brand-specific phone finder.",
+        "whatTheAgentLoses": "The user loses the choice of whether to browse by a specific brand or use the search bar to find candidates.",
+        "kind": "decision",
+        "verify_form": "The agent started from the search box, a brand list or the finder form - check which; the form filters and the brand list does not.",
+        "speak": "never",
+        "check": "Did the search start from the plain search box, a brand list, or the finder form, and is the finder form the one that filters by spec?",
+        "say_example": "Started from the <Phone Finder> form, which filters by spec"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Survey what the site covers",
+      "questions": [
+       {
+        "question": "Open one of the tested categories, or keep scrolling?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple product categories along with the number of ratings available for each, offering a direct path to search for candidates.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to dive into a specific category's ratings or keep exploring the page.",
+        "kind": "decision",
+        "verify_form": "The agent opened a tested category or kept scrolling - check which; the counts say how many rated items each category holds.",
+        "speak": "never",
+        "check": "Which tested categories does the page list, and how many rated items does each carry?",
+        "say_example": "Opened <e-book readers>, <12> rated models"
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Check whether an account is needed",
+      "questions": [
+       {
+        "question": "What does the site ask for to look up an order or start a return?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Order Status & Returns' page explicitly requires an email address or phone number along with an order number to proceed.",
+        "whatTheAgentLoses": "The user loses direct awareness of the specific details they must keep track of for post-purchase support or returns.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the Order Status & Returns page ask for an email or phone number plus an order number?",
+        "say_example": "Read the order-lookup page; it needs an email or phone plus the order number"
+       },
+       {
+        "question": "Do you need to create an account to place your order?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The login screen reveals that guest checkout is an option, meaning you can avoid the hassle of registering if you prefer.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to decide whether to protect your privacy by checking out as a guest or to create an account for easier order tracking.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the login/checkout screen offer a guest-checkout option alongside account creation?",
+        "say_example": "Found guest checkout on the login screen, so no account needed"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "State what it must fit",
+    "note": "2.1 first in IW59 and TTzY, where no results show until the vehicle or the course is set, and in VxAE, where the owned phone is the baseline. 2.2 in every keeper that browses a catalog. 2.3 in the compare-tool runs and the brand searches. 2.4 fills all of WdX2 and is only shown in VxAE, s88J and IW59. 2.5 in WdX2, wagd and -Cpg. 2.6 in -Cpg three times and in IW59's dropdown. 2.7 in TTzY, IW59, WdX2 and wagd.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Fix what it must fit",
+      "questions": [
+       {
+        "question": "Is the second course set to the class you're in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen required selecting the specific department, course, and section to accurately identify the required materials.",
+        "whatTheAgentLoses": "The user loses the assurance that the exact course and section they are enrolled in is correctly entered to find the right books.",
+        "kind": "decision",
+        "verify_form": "The agent picked the second course's department, course and section - check them against the class you are actually in; a section under another instructor lists different books.",
+        "speak": "if-wrong",
+        "check": "Does the department, course and section shown in the selector match the second class in the list you gave?",
+        "say_example": "The section picked for your second class is under a different instructor, and it lists different books. Switching to yours."
+       },
+       {
+        "question": "Which academic term are you shopping for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct term ensures the search results only show materials required for that specific semester.",
+        "whatTheAgentLoses": "The user loses the ability to specify their current enrollment period, which could result in the agent buying books for the wrong semester.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the academic term selected on the page match the term you're shopping for?",
+        "say_example": "The term is set to <a different semester>. Switching it to yours."
+       },
+       {
+        "question": "Which classes do you need books for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the exact term, department, course, and section ensures the correct class is added to the comparison list.",
+        "whatTheAgentLoses": "The user loses the ability to manually pick the exact instructor and section they want to evaluate first.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Is the course picker still empty, with no department, course or section chosen yet?",
+        "say_example": "The course picker is empty. Which classes do you need books for? Give me the department, course number and section for each."
+       },
+       {
+        "question": "Is the third course set to the class you're in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the exact department, course, and section from the available lists ensures the correct class is added to your course list.",
+        "whatTheAgentLoses": "Delegating this step removes your direct control over verifying the specific section details before it gets added to your schedule.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the department, course and section selected match the third class in your list?",
+        "say_example": "The third course isn't set to the class you gave me. Fixing it."
+       },
+       {
+        "question": "What car are the parts for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct vehicle make from the alphabetical list ensures that the parts you browse will be compatible with your specific car.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to verify that the agent selected the exact make of your vehicle, which could lead to buying incompatible parts.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Is the vehicle picker still empty, with no make, year or model chosen, so the parts list shows nothing yet?",
+        "say_example": "The parts site needs your car first. What's the year, make, model and engine?"
+       },
+       {
+        "question": "Is the year set to your car's year?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of available years from 1996 to 2026 under the chosen make, requiring you to specify the exact year to filter for compatible products.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to ensure the search is accurately filtered to the exact year of your specific vehicle.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the vehicle year selected match your car's actual year?",
+        "say_example": "The year is set to <2012>, and you said <2015>. Fixing it."
+       },
+       {
+        "question": "Is the model set to your car's model?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the chosen make's models for the chosen year, requiring you to specify the exact vehicle to filter for the correct products.",
+        "whatTheAgentLoses": "You lose the ability to verify firsthand that your specific vehicle model is listed and supported by the catalog.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the vehicle model selected match your car's actual model?",
+        "say_example": "The model is set to <a different model> from the one you gave me. Fixing it."
+       },
+       {
+        "question": "Is the engine set to the one in your car?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct engine size from the dropdown, one engine option over the other, ensures the resulting products are compatible with your specific car.",
+        "whatTheAgentLoses": "You lose the ability to ensure the selected engine specification perfectly matches the actual vehicle you are shopping for.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the engine size selected match your car's actual engine, where the dropdown lists more than one option for this make/year/model?",
+        "say_example": "Two engines are listed for this car, and the one picked isn't yours. Switching to <the larger one>."
+       },
+       {
+        "question": "Are all your courses listed together before prices are compared?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the selected courses and a 'Compare Prices On These Course Materials' button that must be clicked instead of the individual items to advance.",
+        "whatTheAgentLoses": "The user loses the ability to visually verify their complete course list before moving on to compare prices.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the page display all the selected courses (department, course, section) together before the 'Compare Prices' button, rather than one at a time?",
+        "say_example": "Got it. Books for <three classes>, <Biology 101>, <Calculus 2> and <Intro Psych>. Comparing prices now."
+       },
+       {
+        "question": "Which phone goes in the second compare slot as the baseline?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an empty comparison slot next to the Note8, requiring you to choose a second device from the search dropdown to evaluate the differences.",
+        "whatTheAgentLoses": "You lose the opportunity to set your current phone as the baseline to see exactly how the new model improves upon what you already own.",
+        "kind": "decision",
+        "verify_form": "The agent put one phone in the second slot - check which; the recording used the phone already owned as the baseline.",
+        "speak": "gate",
+        "check": "Which phone, if any, is already filled into the second compare slot as the baseline, and is a slot still empty?",
+        "say_example": "The second slot is empty. What phone do you already have? I'll use it as the baseline."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Pick the category",
+      "questions": [
+       {
+        "question": "Which section of the site has the kind of item you're comparing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage offers distinct categories like emergency kits, foods, and container types, so selecting the right tab focuses your search on the relevant items.",
+        "whatTheAgentLoses": "You lose the opportunity to steer the initial search direction based on your specific interest in individual foods versus pre-made kits.",
+        "kind": "decision",
+        "verify_form": "The agent opened one store section - check which; foods, kits and containers list different items.",
+        "speak": "never",
+        "check": "Which sections or categories does the site's menu or category tree list, at each level down to the one opened, and which one matches the kind of item being compared?",
+        "say_example": "Opened <Foods>, then <Freeze-dried>, from the site's category menu"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Name the brand or model",
+      "questions": [
+       {
+        "question": "Which phone brand do you want to browse?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting a specific manufacturer from the Phone Finder list immediately filters the available candidates to match your brand preferences.",
+        "whatTheAgentLoses": "You lose the opportunity to spontaneously explore other brands on the list that might offer better value or features for your needs.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Which brand is currently selected in the Phone Finder's brand list?",
+        "say_example": "Selected <Samsung> from the brand list"
+       },
+       {
+        "question": "Which brand should you search for next within the sale?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a search for a specific brand within the Prime Day category, indicating a targeted search strategy for deals.",
+        "whatTheAgentLoses": "The user loses the ability to specify exactly which brands the agent should prioritize checking for discounts.",
+        "kind": "decision",
+        "verify_form": "The agent typed a brand into the sale search - check the brand, and check that the sale department was still set.",
+        "speak": "never",
+        "check": "What brand name is typed into the search box within the sale department?",
+        "say_example": "Searched <Store Brand> within the sale department"
+       },
+       {
+        "question": "Is the model in the slot the one you meant to type?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The user initially typed 'oppo a51' but corrected it to 'oppo f15', catching their own mistake before adding the wrong device to the comparison.",
+        "whatTheAgentLoses": "An agent might blindly accept its first input or the top autocomplete suggestion, resulting in comparing a device you didn't actually want.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the model name shown in the search/compare slot match the model that was meant to be typed?",
+        "say_example": "The slot shows <the A5>, and you asked for <the A9>. Correcting it."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Set the spec constraints",
+      "questions": [
+       {
+        "question": "How tall, heavy and thick can the phone be, at most?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Setting precise limits on the height, weight, and thickness sliders ensures the resulting candidates meet your exact physical requirements for portability.",
+        "whatTheAgentLoses": "You lose the ability to personally balance the trade-offs between a device's physical dimensions and how comfortable it will be to hold or carry.",
+        "kind": "decision",
+        "verify_form": "The agent set height, weight and thickness limits on the sliders - check the three values and which handle each label sits on; a limit set on the wrong end drops the phones you could carry.",
+        "speak": "if-wrong",
+        "check": "For the height, weight and thickness sliders, do the set values sit on the handle the label actually names (minimum vs maximum), matching the limits given?",
+        "say_example": "The thickness slider's label is on the minimum handle. What's set is a floor, and you wanted a ceiling. Fixing it."
+       },
+       {
+        "question": "Which colors do you want the phone in?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing your preferred colors into the input field ensures the search results only include phones that match your aesthetic preferences.",
+        "whatTheAgentLoses": "Letting an agent decide means you lose the ability to specify the exact shades you prefer, potentially resulting in a phone color you dislike.",
+        "kind": "decision",
+        "verify_form": "The agent typed colours into the free-text field - check the words and what separates them; a wrong separator matches no phone at all until it is corrected.",
+        "speak": "if-wrong",
+        "check": "Does the color free-text field's separator match the format the page expects, and does the result count stay above zero after it's typed?",
+        "say_example": "The colors went in with the wrong separator and the count dropped to zero. Fixing the format."
+       },
+       {
+        "question": "Which tier of brake pads do you want, cheapest, middle, or longest-lasting?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The retailer categorizes the available brake pads into distinct tiers like Economy, Daily Driver, and Premium, which immediately frames the trade-off between price and durability.",
+        "whatTheAgentLoses": "You lose the chance to personally weigh the cost against the expected performance and longevity of each tier based on your actual driving habits.",
+        "kind": "decision",
+        "verify_form": "The agent chose one price tier - check which; the tiers trade price against life and the site orders them cheapest first.",
+        "speak": "gate",
+        "check": "Which tiers does the page offer for this part (e.g. Economy, Daily Driver, Premium), and what price and life span does each state?",
+        "say_example": "Three tiers here. Economy is cheapest with the shortest life. Daily Driver is the middle. Premium costs the most and lasts longest. Which matters more, price or life span?"
+       },
+       {
+        "question": "Which release years should the search cover?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the minimum and maximum year handles ensures the search results only include products released within your acceptable timeframe.",
+        "whatTheAgentLoses": "You lose the chance to manually balance your preference for recent models against the potential cost savings of older releases.",
+        "kind": "decision",
+        "verify_form": "The agent set a year range - check both ends; the recording set both to one year.",
+        "speak": "if-wrong",
+        "check": "Do the year-range slider's minimum and maximum handles show two different years, or have they collapsed to the same year?",
+        "say_example": "Both ends of the year range are on <2022>, so it's one year rather than a range. Widening it to <2018 to 2022>."
+       },
+       {
+        "question": "What shape of phone, and what kind of keyboard?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Body' section with dropdowns for 'KEYBOARD' and 'FORM FACTOR' to filter the phone candidates.",
+        "whatTheAgentLoses": "The user loses the ability to specify their preferred physical design and input method for the device.",
+        "kind": "decision",
+        "verify_form": "The agent set the form factor and the keyboard - check both fields; the keyboard field was left empty in the recording.",
+        "speak": "if-wrong",
+        "check": "Are both the form-factor and keyboard dropdowns showing a selected value, or does one remain empty despite being claimed as set?",
+        "say_example": "The keyboard field is still empty. Setting it now."
+       },
+       {
+        "question": "How many SIM cards, and what size?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays dropdowns for SIM multiplicity and size, requiring you to specify exact hardware compatibility for your network.",
+        "whatTheAgentLoses": "You lose the guarantee that the chosen device will physically fit your current SIM card or support your need for multiple lines.",
+        "kind": "decision",
+        "verify_form": "The agent set the SIM count and size - check both; a wrong size will not fit your card.",
+        "speak": "never",
+        "check": "What SIM count and size are selected?",
+        "say_example": "Set SIM to <dual, nano>"
+       },
+       {
+        "question": "What water and dust rating does it need?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the correct IP certificate from the dropdown ensures the filtered candidates meet your specific durability needs for dust or water resistance.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly how rugged the device needs to be for your personal environment and use case.",
+        "kind": "decision",
+        "verify_form": "The agent set an IP rating - check the value; the list runs from splash-resistant to military standards.",
+        "speak": "never",
+        "check": "What IP certificate rating is selected?",
+        "say_example": "Set the IP rating to <IP67>"
+       },
+       {
+        "question": "Which OS version should it run?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown offers a wide range of Android versions from 14 down to 3.x, letting you filter devices based on your specific software compatibility needs.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact software generation you need for app compatibility or security preferences.",
+        "kind": "decision",
+        "verify_form": "The agent set an OS version - check it; the version field only fills after the OS is set.",
+        "speak": "never",
+        "check": "Is an OS version selected, and did the version sub-field only become choosable after the OS itself was set?",
+        "say_example": "Set OS to <Android 13>, then the version field unlocked"
+       },
+       {
+        "question": "How much RAM and storage does it need?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the RAM and storage sliders ensures the filtered candidates meet your specific performance and capacity needs.",
+        "whatTheAgentLoses": "You lose the opportunity to personally balance your exact performance needs against the available options and price points.",
+        "kind": "decision",
+        "verify_form": "The agent set RAM and storage - check both values; the sliders are minimums.",
+        "speak": "never",
+        "check": "What RAM and storage values are set on the sliders?",
+        "say_example": "Set RAM to at least <6 GB> and storage to at least <128 GB>"
+       },
+       {
+        "question": "What screen size are you filtering for?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the size slider under the display section ensures the search results only show devices that meet your specific screen size requirement.",
+        "whatTheAgentLoses": "You lose the ability to manually fine-tune the exact screen dimensions that feel most comfortable for your personal use.",
+        "kind": "decision",
+        "verify_form": "The agent set a display size - check the value; the digit after the point was unreadable in the recording and was read two ways.",
+        "speak": "on-event",
+        "check": "Is the display-size value shown on the slider fully legible, including the digit after the decimal point?",
+        "say_example": "The display size reads <6-point-something>. The digit after the point isn't legible, so I'm zooming in to read it."
+       },
+       {
+        "question": "What should the display have, notch, refresh rate and screen type?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Setting specific display preferences like a punch hole notch and a 120Hz refresh rate narrows the search to devices that meet your visual and performance standards.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to fine-tune the exact visual and performance trade-offs, such as prioritizing a high refresh rate over a specific screen technology.",
+        "kind": "decision",
+        "verify_form": "The agent set the notch and the refresh rate - check both, and check the technology dropdown; it was opened and left empty.",
+        "speak": "if-wrong",
+        "check": "Are the notch and refresh-rate values set, and does the technology dropdown show a selected value or remain at default despite being opened?",
+        "say_example": "The display technology dropdown is still on its default. Setting it now."
+       },
+       {
+        "question": "What's the lowest main camera resolution you'd accept?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The slider allows you to restrict the search to specific megapixel thresholds ranging from 12M up to 108M.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh how strictly you want to filter candidates based on ultra-high camera resolution.",
+        "kind": "decision",
+        "verify_form": "The agent set a main camera resolution - check the value; it is a minimum.",
+        "speak": "never",
+        "check": "What main camera resolution minimum is set?",
+        "say_example": "Set the main camera minimum to <64 MP>"
+       },
+       {
+        "question": "How many rear cameras, and do they need OIS or an ultrawide lens?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Filtering by the number of cameras and specific features like OIS or ultrawide ensures the shortlisted devices meet your specific photography standards.",
+        "whatTheAgentLoses": "You lose the chance to decide whether having four or more cameras is more important than specific functional features like optical image stabilization.",
+        "kind": "decision",
+        "verify_form": "The agent set a camera count - check it, and check the OIS and ultrawide boxes; both were touched and stayed unchecked.",
+        "speak": "if-wrong",
+        "check": "Is the camera count set, and do the OIS and ultrawide checkboxes show checked, or still unchecked despite being clicked?",
+        "say_example": "The OIS and ultrawide boxes are still unchecked. Ticking them again."
+       },
+       {
+        "question": "What's the lowest selfie camera resolution you'd accept?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a resolution slider for the selfie camera, allowing you to filter out devices that do not meet your specific megapixel needs.",
+        "whatTheAgentLoses": "The user loses the ability to personally weigh their desire for high-resolution selfies against how strictly it narrows down the available phone candidates.",
+        "kind": "decision",
+        "verify_form": "The agent set a selfie camera resolution - check the value against what you need.",
+        "speak": "never",
+        "check": "What minimum selfie camera resolution is set?",
+        "say_example": "Set the selfie camera minimum to <16 MP>"
+       },
+       {
+        "question": "What kind of fingerprint sensor do you want?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers specific fingerprint sensor placements like 'Under display' alongside other sensor options, which dictates how you will physically unlock and interact with the device.",
+        "whatTheAgentLoses": "Delegating this choice means losing the ability to select the specific sensor placement that feels most ergonomic and intuitive for your personal daily use.",
+        "kind": "decision",
+        "verify_form": "The agent set a fingerprint type - check it; the other sensor boxes were touched and stayed unchecked.",
+        "speak": "if-wrong",
+        "check": "Is the fingerprint type set, and do the other sensor checkboxes show unchecked despite being clicked?",
+        "say_example": "The other sensor boxes are still unchecked. Ticking them again."
+       },
+       {
+        "question": "Which USB and Bluetooth versions does it need?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides granular filters for hardware requirements like specific USB-C types and Bluetooth versions to narrow down compatible devices.",
+        "whatTheAgentLoses": "You lose the ability to prioritize specific ports and wireless standards based on your personal accessories and daily usage needs.",
+        "kind": "decision",
+        "verify_form": "The agent set a USB type - check it, and check Bluetooth; that dropdown was opened and left empty.",
+        "speak": "if-wrong",
+        "check": "Is the USB type set, and does the Bluetooth dropdown show a selected version or remain empty despite being opened?",
+        "say_example": "The Bluetooth version is still empty. Setting it now."
+       },
+       {
+        "question": "What's the smallest battery you'd accept?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the minimum capacity slider to 5000mAh ensures the filtered results only include devices that meet your specific battery life requirements.",
+        "whatTheAgentLoses": "You lose the ability to personally balance the exact battery capacity threshold against other potential trade-offs like device weight or price.",
+        "kind": "decision",
+        "verify_form": "The agent set a battery minimum - check the value; the slider passed several before it settled.",
+        "speak": "never",
+        "check": "What minimum battery capacity is set on the slider?",
+        "say_example": "Set the battery minimum to <4500 mAh>"
+       },
+       {
+        "question": "Should the battery be removable?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing between a removable or non-removable battery filters the available candidates to match your specific hardware preferences.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a product with a battery type that does not align with your maintenance or usage needs.",
+        "kind": "decision",
+        "verify_form": "The agent set the battery to removable or not - check which.",
+        "speak": "never",
+        "check": "Is the battery set to removable or non-removable?",
+        "say_example": "Set battery to <non-removable>"
+       },
+       {
+        "question": "What's the slowest wired charging you'd accept?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the minimum wired charging slider to 25W ensures the filtered results only include devices that charge fast enough for your needs.",
+        "whatTheAgentLoses": "You lose the ability to fine-tune the exact charging speed threshold that balances your daily convenience with the available product options.",
+        "kind": "decision",
+        "verify_form": "The agent set a wired charging minimum - check the value.",
+        "speak": "never",
+        "check": "What minimum wired charging speed is set?",
+        "say_example": "Set the wired charging minimum to <18 W>"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Set the price limit",
+      "questions": [
+       {
+        "question": "What's the most you want to spend?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Adjusting the price slider ensures you only spend time comparing products that fit within your strict budget.",
+        "whatTheAgentLoses": "You lose the opportunity to decide exactly where to draw the line on price or to see if a slightly higher budget offers much better value.",
+        "kind": "decision",
+        "verify_form": "The agent set a price on the slider - check the value and which handle it sits on; the label was on the minimum handle, so it may be a floor and not the ceiling you meant.",
+        "speak": "gate",
+        "check": "What value, if any, is currently set on the price slider, and which end does the on-screen label actually control - minimum or maximum?",
+        "say_example": "How much do you want to spend, at most? I'll set it on the price slider. Heads up, the label here sits on the minimum handle, so I'll check which end moves."
+       },
+       {
+        "question": "Are these SIM-free prices the way you're planning to buy?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The site explicitly states that its pricing filter is based on the lowest online SIM-free prices, which might not apply if you plan to buy through a carrier contract.",
+        "whatTheAgentLoses": "The agent might filter out phones that are actually within budget if bought through a carrier, because it relies on the site's specific SIM-free pricing assumption.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the page state its shown price is the lowest online SIM-free price, rather than a contract price?",
+        "say_example": "These are SIM-free prices. If you're buying on a plan, what you'd pay could be different."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Restrict to a sale or a deal"
+     },
+     {
+      "id": "2.7",
+      "label": "Set the condition and delivery limits",
+      "questions": [
+       {
+        "question": "Do you want to include discontinued or unreleased phones in your search?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Filtering the availability dropdown to only show currently available models ensures you don't waste time comparing phones you cannot easily buy.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether you are willing to wait for an upcoming release or hunt down a discounted older model.",
+        "kind": "decision",
+        "verify_form": "The agent kept only available phones, or included coming, discontinued and rumored - check which; a phone that cannot be bought is not a candidate.",
+        "speak": "never",
+        "check": "Is the availability filter set to available-only, or does it include coming-soon, discontinued and rumored models?",
+        "say_example": "Filtered to <available> phones only, leaving out discontinued and rumored ones"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Reach the candidates",
+    "note": "3.1 or 3.2 in every keeper except WdX2, whose form in 2.4 is the search. 3.3 where a list offers filters - applied in -Cpg and IW59, shown and skipped in s88J and 955p. 3.4 whenever a count is shown. 3.5 where the list is ranked or sortable. 3.6 on every list with badges. 3.7 on every list. 3.8 sends the task back to 3.1 with a new query - -Cpg three times, wagd across four category grids.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Type the search and take a suggestion",
+      "questions": [
+       {
+        "question": "Which suggestion in the dropdown runs a fresh search for the brand?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown presents both a general search for the entered text and unrelated past purchase suggestions, requiring a choice to proceed.",
+        "whatTheAgentLoses": "The user loses the chance to see and potentially reorder past purchases suggested by the platform.",
+        "kind": "decision",
+        "verify_form": "The agent took the plain search suggestion or one of the reorder rows - check which; a reorder row goes to something bought before, not to a search.",
+        "speak": "if-wrong",
+        "check": "Does the selected dropdown row lead to a new search, or does it lead to a past-purchase/reorder item instead?",
+        "say_example": "That row reorders something bought before. Using the plain search suggestion instead."
+       },
+       {
+        "question": "Which exact model from the dropdown goes into the comparison?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown shows multiple Vivo models like the Y19 and Y70s alongside the Y50, so you must select the exact match to ensure you are comparing the right device.",
+        "whatTheAgentLoses": "You lose the chance to see other related models suggested in the dropdown that might prompt you to adjust or expand your shortlist.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Which exact model was selected from the dropdown, among the similarly-named options shown?",
+        "say_example": "Added <the exact model you named>; two similar names sat beside it in the dropdown"
+       },
+       {
+        "question": "Search by brand, or by category?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing 'ca' reveals auto-suggestions for broad categories like 'Cameras' and 'Camcorders' rather than specific brands, indicating that the search tool is designed for navigating product types.",
+        "whatTheAgentLoses": "You lose the hands-on realization of the site's search limitations, which dictates how you must navigate its inventory to find what you want.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do the autocomplete suggestions for the typed text show product categories rather than brand names?",
+        "say_example": "Typing <the brand> only brings up categories like <Cameras>. This search box works by category, so I'm browsing by category instead."
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Browse the category tree"
+     },
+     {
+      "id": "3.3",
+      "label": "Apply or skip the filters",
+      "questions": [
+       {
+        "question": "Is the 'Choose for Me to Minimize Cost' box checked, so the parts get consolidated into one shipping hub?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the 'Choose for Me to Minimize Cost' box consolidates your items into a single shipping hub to prevent paying multiple shipping fees.",
+        "whatTheAgentLoses": "You lose the opportunity to strategically use site-specific tools that optimize shipping logistics and lower your overall cost.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the 'Choose for Me to Minimize Cost' checkbox checked?",
+        "say_example": "The 'Choose for Me to Minimize Cost' box isn't ticked. Left off, shipping could come from two warehouses. Ticking it."
+       },
+       {
+        "question": "Should a 'Rated Best For' filter narrow the list?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Deciding whether to use filters like 'Rated Best For' determines how you will manage and narrow down the 15 displayed e-book readers.",
+        "whatTheAgentLoses": "You lose the judgment call on whether to browse the 15 results as-is or restrict them further using specific performance categories.",
+        "kind": "decision",
+        "verify_form": "The agent applied a rated-best-for filter or left the list whole - check which; a filter narrows the 15 rows to the ones strong on one criterion.",
+        "speak": "on-event",
+        "check": "Does a 'Rated Best For' filter exist on this results page, and is any option currently selected within it?",
+        "say_example": "There's a 'Rated Best For' filter here. I'm leaving it off so all <18> stay in."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Read the result count",
+      "questions": [
+       {
+        "question": "Is only one phone left that fits everything you set?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing that the search returned exactly one result confirms that the Samsung Galaxy A73 5G is the only device meeting your strict requirements.",
+        "whatTheAgentLoses": "You lose the opportunity to see how restrictive your filters are and decide whether to relax them or proceed with the single matching device.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the results page show exactly one phone matching every filter applied, and what is its name?",
+        "say_example": "Only one phone fits everything you set, <a mid-range model>. That's the whole shortlist."
+       },
+       {
+        "question": "Has the result count settled before the first constraint is set?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Monitoring the results counter for spontaneous changes ensures the page has fully loaded and the baseline candidate pool is accurate before applying filters.",
+        "whatTheAgentLoses": "Delegating this means losing the visual confirmation that the site's search index is stable, risking reliance on an agent that might proceed with incomplete or glitchy baseline data.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the results counter show a stable, settled number, whether that's before the first filter or after any later one?",
+        "say_example": "Count settled at <9,842> before filtering"
+       },
+       {
+        "question": "If nothing fits all the filters, which one should be loosened?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Applying strict filters for budget, size, and features simultaneously often results in an empty page, requiring a strategic decision on which requirement is a 'nice-to-have' rather than a 'must-have'.",
+        "whatTheAgentLoses": "The user loses the ability to consciously trade off their criteria, potentially resulting in the agent abandoning the search or making an arbitrary compromise.",
+        "kind": "decision",
+        "verify_form": "The agent relaxed one constraint when the count hit zero - check which one; the one it dropped may be your must-have.",
+        "speak": "gate",
+        "check": "Does the filtered results page show zero candidates after the constraints applied so far?",
+        "say_example": "Nothing fits price, size and the must-have feature together. Which one should I loosen?"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Sort or rank the list",
+      "questions": [
+       {
+        "question": "What does the Buying Guide tab actually say once it's opened?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator claims the Buying Guide tab contains pricing expectations and technical jargon, but never opens it on screen to prove this is true.",
+        "whatTheAgentLoses": "The user loses the actual baseline pricing and technical context that the guide would have provided to help them make an informed decision.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What does the Buying Guide tab show once it's opened, such as price ranges and terms explained?",
+        "say_example": "Opened the Buying Guide; it lists <price ranges> and <the terms used>"
+       },
+       {
+        "question": "Which tab first, Ratings, Recommended, or the Buying Guide?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page organizes information into distinct tabs like 'Ratings', 'Recommended', and 'Buying Guide', offering different starting points for your research.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to learn about the category first through a buying guide or jump straight into comparing product ratings.",
+        "kind": "decision",
+        "verify_form": "The agent opened one tab on the category page - check which; ratings, recommended and the buying guide show different things.",
+        "speak": "never",
+        "check": "Which tabs does the category page offer (Ratings, Recommended, Buying Guide), and which was opened?",
+        "say_example": "Opened the <Ratings> tab; skipped Recommended and the Buying Guide"
+       },
+       {
+        "question": "Is the full ratings list open, or just the summary article?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page mentions that 53 sunscreens were rated, but you must click the \"Access Ratings\" button to reveal the specific products and their scores for comparison.",
+        "whatTheAgentLoses": "You lose the opportunity to browse the comprehensive list of tested products and evaluate the review site's testing criteria firsthand.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Was the 'Access Ratings' button clicked to reach the full list of scored products, or does the page still show only the summary article mentioning a count?",
+        "say_example": "This is still the summary article. It says <41> were rated, without listing them. Clicking Access Ratings for the full list."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Read the badges and ranks",
+      "questions": [
+       {
+        "question": "Is the cheaper price on the organic listing or on the sponsored copy beside it?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first result clearly displayed a Prime Day deal dropping the price from $21.59 to $9.27, making it a better choice to click than the identical sponsored listing.",
+        "whatTheAgentLoses": "You lose the satisfaction of spotting a significant Prime Day discount and actively choosing an organic deal over a sponsored ad.",
+        "kind": "decision",
+        "verify_form": "The agent opened one of the results - check it is the organic listing and not the sponsored copy of the same item directly under it.",
+        "speak": "on-event",
+        "check": "Is there a sponsored copy of the same listing directly above or below the organic result, and does the organic result show a lower price?",
+        "say_example": "There's a sponsored copy of this listing right under the real one. The deal price, <$8.50>, is on the organic result. Opening that one."
+       },
+       {
+        "question": "Do the results respect your filters, or is a sponsored item slipping past them?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Retailers often inject sponsored products into filtered results that do not meet the applied criteria, such as being over budget or lacking a required feature.",
+        "whatTheAgentLoses": "The user loses the ability to catch and ignore irrelevant sponsored items, potentially leading the agent to shortlist a product that violates a hard constraint.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the results shown fall within the applied filters (price, brand, etc.), or does a sponsored item sit outside them?",
+        "say_example": "One result is sponsored and sits over your price limit. Skipping it."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Scan the cards",
+      "questions": [
+       {
+        "question": "Which parts are in the 'Daily Driver' tier, and what do they cost?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the base price and clicking for more info on specific items like the CENTRIC ceramic brake pads ensures the product fits your budget and driving needs.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the price against the detailed specifications of a specific category item before adding it to your shortlist.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What products and base prices does the 'Daily Driver' tier list?",
+        "say_example": "Scanned the Daily Driver tier, <3> pad sets from <$39> to <$59>"
+       },
+       {
+        "question": "Is there a low-stock or slow-shipping note in small print on any result?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "E-commerce sites often use subtle visual cues like red text to indicate 'Only 1 left in stock' or 'Ships in 3-4 weeks', which might not be caught by standard filter parameters.",
+        "whatTheAgentLoses": "The user loses the ability to quickly spot these visual availability warnings, potentially leading the agent to shortlist an item that won't arrive when needed.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the results page show any low-stock warning or delayed-shipping text, such as in small or colored font, near any listed candidate?",
+        "say_example": "One of these says <only 1 left> in small red text. Easy to miss, so I'm flagging it now."
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Revise the search",
+      "questions": [
+       {
+        "question": "Did the dropdown offer the product you meant, or a different one with matching letters?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing the abbreviation 'PS 4' only brought up unrelated Philips products, requiring the full name 'Play Station 4' to surface the correct Sony console.",
+        "whatTheAgentLoses": "The user loses the ability to intuitively troubleshoot and rephrase search queries when a site's specific search index fails to recognize common abbreviations.",
+        "kind": "decision",
+        "verify_form": "The agent retyped the search after the dropdown missed - check the row it finally took; the site matches full names, and the previous generation sits under the right one.",
+        "speak": "if-wrong",
+        "check": "Does the dropdown's suggestion list include the exact product typed, or only unrelated items that share some letters with it?",
+        "say_example": "Typing <the short name> only brings up <another brand's> products, and none of them is the console. Typing the full name instead."
+       },
+       {
+        "question": "Are these results actually the thing you searched for?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial search results display loosely related items like wooden tracks and duvet covers, prompting a decision on whether refining the search will yield better model train deals.",
+        "whatTheAgentLoses": "You lose the personal judgment of deciding when a batch of search results is too irrelevant to your specific hobby to bother scrolling through.",
+        "kind": "decision",
+        "verify_form": "The agent kept the first results or changed the search - check which; the first results were toddler toys with deal badges.",
+        "speak": "on-event",
+        "check": "Do the search results' item names and categories match what was searched for, or are most of them unrelated?",
+        "say_example": "Most of these results are <wooden tracks and a duvet cover>, so the search missed. Narrowing it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Build the shortlist",
+    "note": "4.1 in every keeper that opens a page. 4.2 in the four compare-tool runs, capped at three in 955p and seven in X8Wi. 4.3 wherever the site offers an alternative or a variant list. 4.4 in X8Wi, 64ZA, TTzY, IW59 and s88J. 4.5 sends a dropped candidate back to 4.1 for the next. 4.6 is the cart in TTzY and IW59 and the second tab in wagd and -Cpg.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Open a candidate's page",
+      "questions": [
+       {
+        "question": "Which product do you open next?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple Augason Farms products with varying prices, ratings, and availability, requiring you to decide which item merits a closer look.",
+        "whatTheAgentLoses": "Delegating this choice means losing the opportunity to intuitively select a product based on your personal preferences for specific food types and price points.",
+        "kind": "decision",
+        "verify_form": "The agent opened one product from the grid - check which and why; the grid shows price, discount and rating count for each.",
+        "speak": "never",
+        "check": "Which products does the grid show, and what price, discount and rating count does each carry?",
+        "say_example": "Opened <the powdered milk>, <$14>, <15%> off, <1,842> ratings"
+       },
+       {
+        "question": "Open the top-ranked product to see its scores?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the top product's overall score of 85 and its specific performance breakdowns, which helps decide if it warrants further investigation.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally evaluate how specific metrics like readability and responsiveness align with their own preferences.",
+        "kind": "decision",
+        "verify_form": "The agent opened the top recommended product - check whether it was the first row or a chosen one; the list is ranked by score.",
+        "speak": "never",
+        "check": "Does the top-ranked product show an overall score and a sub-score breakdown?",
+        "say_example": "Opened the top-ranked item, overall <85> with sub-scores shown"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Add to the compare slots",
+      "questions": [
+       {
+        "question": "Which device goes into the comparison next?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an active comparison of two devices and an '+ Add to comparison' button that allows including up to seven items.",
+        "whatTheAgentLoses": "The user loses the ability to decide which specific additional products to include in the evaluation.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "How many devices are currently in the comparison, and which one is being added next?",
+        "say_example": "Added a third device, <3> of <7> compare slots now used"
+       },
+       {
+        "question": "Before Compare is pressed, are these the devices you meant?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interface requires clicking the specific compare button below the input fields to generate the side-by-side evaluation.",
+        "whatTheAgentLoses": "You lose the hands-on confirmation of exactly which two products are being submitted for the side-by-side evaluation.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Which device names are currently filled into the compare input fields right before the Compare button is used?",
+        "say_example": "Pressed Compare with <the two phones you named> in the slots"
+       },
+       {
+        "question": "Which models go into the side-by-side comparison?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists 47 rated models, so you must choose a small, manageable shortlist of top contenders to evaluate together.",
+        "whatTheAgentLoses": "You lose the ability to personally decide which specific top-rated models make it into the final side-by-side evaluation.",
+        "kind": "decision",
+        "verify_form": "The agent picked which models go into the comparison - check them; the recording took the top three by rank.",
+        "speak": "always",
+        "check": "How many items does the ranked list show in total, which sit at the top by the site's score, and what price does each carry?",
+        "say_example": "I'm comparing the top three by the site's score. Say if you want a different set."
+       },
+       {
+        "question": "Which one comes out when the compare tool is full?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Most retailer comparison tools cap at a small number of items, forcing you to actively decide which candidate to drop before adding a new one to the side-by-side view.",
+        "whatTheAgentLoses": "The user loses the strategic choice of which baseline product to keep on screen when the agent arbitrarily removes an item to make room.",
+        "kind": "decision",
+        "verify_form": "The agent hit the compare cap and dropped a candidate - check which one it removed; the cap is three on one site and seven on another.",
+        "speak": "gate",
+        "check": "Is the comparison tool at its slot limit, and which candidates currently occupy the slots?",
+        "say_example": "The compare tool is full with <the first three you named>. To add <the fourth>, one has to come out. Which one?"
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Take or refuse the suggested rival"
+     },
+     {
+      "id": "4.4",
+      "label": "Pick the exact variant",
+      "questions": [
+       {
+        "question": "Closeout price or regular stock for this part?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown reveals a wholesaler closeout option for $10.21 versus regular inventory for $16.15, presenting a direct choice between cost savings and standard stock.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether the cost savings of a closeout deal are worth potential trade-offs like private label packaging or limited warranties.",
+        "kind": "decision",
+        "verify_form": "The agent picked the closeout package or regular inventory in the row's dropdown - check which; the closeout is cheaper and carries a 30-day warranty.",
+        "speak": "on-event",
+        "check": "Does the row's dropdown offer both a closeout/wholesaler price and regular inventory, and what price and warranty terms differ between them?",
+        "say_example": "This row has a closeout option at <$18.40> with a <30-day> warranty, and regular stock at <$24.99> with the full warranty. I'm taking the regular one unless you say closeout."
+       },
+       {
+        "question": "Which version of this phone goes into the comparison, the plain model or a regional or dual-SIM one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown presents multiple variants of the Samsung Galaxy Note 4, requiring a choice of the exact model to compare.",
+        "whatTheAgentLoses": "The user loses the ability to specify exactly which regional or dual-SIM variant of the phone they want to include in the comparison.",
+        "kind": "decision",
+        "verify_form": "The agent picked one variant of the third phone - check which; the dropdown listed a regional and a dual-SIM version beside it.",
+        "speak": "if-wrong",
+        "check": "Does the dropdown list multiple variants of this model, such as a regional or dual-SIM version, and does the one selected match the plain model intended?",
+        "say_example": "The slot has <the dual-SIM version>, and the other columns are the plain model. Switching to the plain one."
+       },
+       {
+        "question": "How much more does the version without 'Special Offers' cost, and what are Special Offers?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the 'w/ Special Offers' model at $270 and the 'w/o Special Offers' model at $290, requiring you to deduce the $20 premium to remove ads.",
+        "whatTheAgentLoses": "You lose the chance to weigh whether paying an extra $20 is personally worth it to avoid seeing advertisements on the device.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What price does the page show for the version 'with Special Offers' and the version 'without Special Offers', and does the page say that Special Offers means lock-screen advertisements?",
+        "say_example": "The cheaper one, <$255>, shows ads on the lock screen. Without the ads it's <$270>, <$15> more."
+       },
+       {
+        "question": "Which generation of the console goes in the second slot?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown displays multiple Xbox generations and storage variants, requiring you to pinpoint the exact version you want to evaluate.",
+        "whatTheAgentLoses": "You lose the chance to apply your own preferences, such as prioritizing the newest generation, when choosing the exact model to compare.",
+        "kind": "decision",
+        "verify_form": "The agent put one console in the second slot - check the generation; the dropdown mixed the newest with the previous generation's storage sizes.",
+        "speak": "if-wrong",
+        "check": "Does the dropdown mix the current console generation with the previous generation's storage variants, and does the selected one match the current generation intended?",
+        "say_example": "The second slot has <last generation's> console. The current one is what's being compared. Switching it."
+       },
+       {
+        "question": "What does this seller mean by 'good' or 'very good' condition?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator points out a pop-up box that explains exactly what Amazon means by 'good' or 'very good,' which is necessary to understand what you are actually buying.",
+        "whatTheAgentLoses": "The user loses the ability to personally read the retailer's specific definitions of item conditions to ensure they meet their personal standards.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page provide a definition (such as a pop-up) of what 'good' or 'very good' condition means for this listing?",
+        "say_example": "This seller's <very good> means <light shelf wear, fully working>. That's their definition, on the page."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Drop a candidate",
+      "questions": [
+       {
+        "question": "Is the cheapest one's flimsy build worth the price?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The speaker points out that the cheap Hogwarts set is not great quality and is very plasticky, highlighting a trade-off between price and material quality.",
+        "whatTheAgentLoses": "The user loses the personal judgment of whether a heavily discounted item is too poorly made to be worth buying, even on sale.",
+        "kind": "decision",
+        "verify_form": "The agent took or left the cheap set the narrator called plasticky - check which; price and build pull opposite ways here.",
+        "speak": "on-event",
+        "check": "Does a review or description call the item's build quality cheap or 'plasticky', and what price does it carry?",
+        "say_example": "The cheapest one is described as <plasticky and cheap-feeling>. I'm keeping it in for now, but that counts against it."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Hold the candidates somewhere"
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Compare the candidates",
+    "note": "5.1 in the four compare-tool runs and TTzY's table. 5.2 wherever the site shows a score or a ranking. 5.3 on every product page. 5.4 where images carry the label or the quality. 5.5 on every card or page with a rating. 5.6 in VxAE alone (-Cpg and 955p skip the reviews on purpose). 5.7 in IW59 and TTzY, where shipping is a column or a calculation. 5.8 where a per-unit price prints. 5.9 in wagd and -Cpg, the two tracker runs. 5.10 in wagd and TTzY.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the compare table row by row",
+      "questions": [
+       {
+        "question": "Where do the two phones' specs actually differ?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The side-by-side table breaks down categories like display, camera, and battery, showing exactly what changed between the models.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate whether the specific upgrades in the newer model justify its selection.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "What differences does the page's spec table show between the two products across categories like display, camera and battery?",
+        "say_example": "The two phones differ on <3 specs>, <display size>, <camera resolution> and <battery capacity>."
+       },
+       {
+        "question": "Expand the specs list to see the hidden rows?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the physical dimensions of the two phones and a button to reveal additional specifications.",
+        "whatTheAgentLoses": "The user loses the chance to review and compare the full list of specifications, such as display details, before making a decision.",
+        "kind": "decision",
+        "verify_form": "The agent expanded the specs list or read only the top rows - check which; the rest is behind Show more specs.",
+        "speak": "on-event",
+        "check": "Does the page show a collapsed specs section behind a 'Show more specs' control, with additional rows not yet visible?",
+        "say_example": "<6 more rows> are hidden behind Show more specs. Expanding it."
+       },
+       {
+        "question": "Do these two phones have the connectivity you asked for?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the side-by-side differences in download speeds, Wi-Fi, and NFC between the Oppo F15 and Vivo Y50 determines if either phone is a strong enough candidate on its own.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate whether the specific feature trade-offs between these two models warrant adding a third option to your comparison.",
+        "kind": "decision",
+        "verify_form": "The agent judged the connectivity rows enough or added a third phone - check which; NFC and Wi-Fi 5 were split between the two.",
+        "speak": "if-wrong",
+        "check": "For each phone's connectivity row (download speed, Wi-Fi version, NFC), does the phone about to be recommended actually carry every connectivity feature the person named as a need?",
+        "say_example": "<The first phone> has NFC but only Wi-Fi 4. <The second> has Wi-Fi 5 but no NFC. Neither has both of the things you asked for."
+       },
+       {
+        "question": "Do the third phone's weight and size really differ from the first, or are they copied to the decimal?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the exact weight, thickness, and volume metrics shown on the screen helps you determine which phone will be the most comfortable to hold and carry.",
+        "whatTheAgentLoses": "An agent might just pick the lightest or thinnest device without knowing your personal preference for a phone's physical footprint and feel.",
+        "kind": "decision",
+        "verify_form": "The agent picked a phone on weight and size - check which numbers it read; two columns showed the same weight and thickness to the decimal.",
+        "speak": "if-wrong",
+        "check": "Does one candidate's weight/thickness/dimensions row exactly match another candidate's row to the decimal, suggesting the same specs got duplicated rather than being a genuinely different product?",
+        "say_example": "<The third phone>'s weight and thickness match <the first>'s to the decimal. That looks copied, so I'm checking it before I use it."
+       },
+       {
+        "question": "Do the display rows trade off, bigger screen against tougher glass?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Evaluating the specific differences in pixel density, resolution, and damage-resistant glass helps determine which phone provides the best visual experience and durability.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh whether a slightly larger screen size is worth sacrificing damage-resistant glass based on your own daily usage habits.",
+        "kind": "decision",
+        "verify_form": "The agent picked a phone on display - check what it weighed; screen size and damage-resistant glass pull opposite ways in the table.",
+        "speak": "on-event",
+        "check": "What do the display rows (screen size, resolution, glass protection) show for each phone, and do they trade off against each other (e.g., bigger screen but weaker glass)?",
+        "say_example": "<The first phone> has the bigger screen. <The second> has the tougher glass. Those two pull opposite ways."
+       },
+       {
+        "question": "Do the CPU and RAM rows actually differ, or match across all three?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Comparing the specific MediaTek, Exynos, and Snapdragon processors alongside the 8GB RAM helps you evaluate which device offers the best performance.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate if the differences in processor brands and clock speeds matter for your specific usage habits.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What CPU model and RAM figure does the page show for each shortlisted phone, and is any of those specs (e.g., RAM) actually identical across all candidates rather than a real point of difference?",
+        "say_example": "All three have <8 GB> of RAM, so that row doesn't separate them. The chips are where they differ, <a Snapdragon>, <an Exynos> and <a Dimensity>."
+       },
+       {
+        "question": "What advantages does the page list for one console over the other?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the side-by-side comparison of features like memory bandwidth, floating-point performance, and exclusive games helps you evaluate which console offers better value.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh whether specific technical advantages like a 3.5 mm audio jack or higher floating-point performance actually matter for your own gaming setup.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What specific advantages does the page's comparison list show for this console over the other (e.g., memory bandwidth, exclusive games, processing power)?",
+        "say_example": "Read the site's <3> reasons for <the first console>, <memory bandwidth>, <exclusive games> and <clock speed>"
+       },
+       {
+        "question": "When the page calls one CPU faster, how big is the gap really?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays three specific reasons to choose the Xbox One, such as exclusive games and a faster CPU, which help differentiate the shortlisted consoles.",
+        "whatTheAgentLoses": "You lose the chance to personally decide if these specific technical and software advantages actually matter for your gaming preferences.",
+        "kind": "decision",
+        "verify_form": "The agent weighed the three listed advantages or counted them - check which; one of the three is a nine percent clock difference.",
+        "speak": "if-wrong",
+        "check": "For each numeric advantage the page lists, what is the actual difference, and does the page's word for it, like 'faster', overstate that gap?",
+        "say_example": "One of the reasons is a faster CPU. The actual gap is about <9 percent>."
+       },
+       {
+        "question": "Does the higher overall score lead in every category, or only some?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing detailed metrics like overall score and rear camera quality side-by-side helps identify which phone actually excels in the areas that matter most to you.",
+        "whatTheAgentLoses": "An agent might just pick the highest overall score or lowest price without understanding your personal preference for specific sub-metrics like camera quality.",
+        "kind": "decision",
+        "verify_form": "The agent weighed some rows of the compare chart - check which; the overall score hides the per-criterion differences.",
+        "speak": "on-event",
+        "check": "What are the separate rated categories (e.g., camera, battery, display, reliability) shown in the ratings table, and does the higher overall score actually lead on every one of them, or only some?",
+        "say_example": "The higher overall score only wins on <2 of the 4> categories. <The other one> is ahead on <camera>."
+       },
+       {
+        "question": "Is anything you care about, like warranty or returns, missing from the compare table?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Built-in comparison tools often only pull standard technical specs and leave out policy details or specific niche features that might be dealbreakers.",
+        "whatTheAgentLoses": "The user loses the complete picture of the trade-offs, potentially choosing a product with a terrible warranty because the comparison tool didn't surface it.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the person's stated criteria include something (e.g., warranty length, return window) that the compare table has no row for at all?",
+        "say_example": "The table has no row for <warranty length>. I'll read that off each product page."
+       },
+       {
+        "question": "Are the rows in the same units for every product?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Automated comparison tables often pull unstructured data, resulting in mismatched rows where one product lists battery capacity in mAh and another lists it in hours.",
+        "whatTheAgentLoses": "The user loses the human intuition required to translate and normalize mismatched data points to make a fair side-by-side judgment.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "For each row in the compare table, is the same unit or format used across every product's column, or does one product's value use a different unit or scale than the others (e.g., mAh vs hours)?",
+        "say_example": "<One phone>'s battery is listed in <mAh> and <the other>'s in <hours>. Those two can't be compared as they stand."
+       },
+       {
+        "question": "Do the X marks mean both lack the feature?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The comparison table lists features like DLNA certification but displays an 'x' for both candidates, meaning the interface presents a comparison row where neither product actually meets the spec.",
+        "whatTheAgentLoses": "An agent might scrape the list of features and assume the phones support them, failing to recognize that the 'x' means the feature is absent from both options.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "For a feature row marked with an 'x' for the candidate under consideration, does the other candidate's column for that same row also show an 'x', meaning neither actually has the feature?",
+        "say_example": "Both columns show an X for <DLNA>. Neither has it, so that row favors nobody."
+       },
+       {
+        "question": "Is any cell blank for something you need?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Automated comparison tables often lack data for certain models, leaving blank spaces that a sighted user immediately recognizes as missing information rather than a negative feature.",
+        "whatTheAgentLoses": "The user loses the nuance of knowing whether a product actually lacks a required feature or if the database is simply incomplete, potentially resulting in the disqualification of a valid candidate.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the compare table have a blank or 'N/A' cell in a row that matches one of the person's stated must-have constraints?",
+        "say_example": "<The second product>'s cell for <battery life> is blank. The table doesn't say either way, and you said that one matters."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Read the site's score and reasons",
+      "questions": [
+       {
+        "question": "How do the site's overall scores compare for the two phones?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing that both phones scored 59 points but have specific advantages like higher pixel density or CPU speed helps you understand the high-level tradeoffs before diving into detailed specs.",
+        "whatTheAgentLoses": "You lose the chance to personally weigh which specific summary advantages, like a faster CPU or better camera, matter most to you when the overall scores are tied.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What overall score does the page show for each phone, and what specific advantages does it list under each (e.g., pixel density, CPU speed) even when the totals tie?",
+        "say_example": "Read the site's scores, <62> for each phone, a tie"
+       },
+       {
+        "question": "How does the added phone score, and does the site badge it the winner?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the comparison page shows the newly added Samsung Galaxy A51 significantly outscoring the Oppo F15 and Vivo Y50 with a 'COMPARISON WINNER' badge.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally review the side-by-side scores and visually confirm the clear winner among your chosen candidates.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What overall score does the newly added third phone get in the updated comparison table, and does the page apply a 'Comparison Winner' or similar badge to it?",
+        "say_example": "The site marks <the phone you just added> as Comparison Winner, <81> against <62> for the other two. That badge is the site's scoring."
+       },
+       {
+        "question": "Are the banner's reasons for one console real differences, or padding like being a bit shorter?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The summary banner explicitly contrasts the number of reasons to choose each console, providing a quick metric to justify a selection.",
+        "whatTheAgentLoses": "The user loses the ability to personally weigh the overall summary of advantages before diving into the specific reasons.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "How many advantages does the banner list for each console, and do any of those specific listed reasons amount to trivial differences (e.g., dimensions) rather than functional ones?",
+        "say_example": "The banner gives <one console> <8> reasons and <the other> <3>. Two of the eight are just being shorter and narrower."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Read the specs and details",
+      "questions": [
+       {
+        "question": "Do this part's specs and included pieces match what you need?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing details like the ceramic composition, pad dimensions, and included mounting hardware ensures the product fits your vehicle and performance criteria.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the technical specifications and included hardware to decide if this product belongs on your shortlist.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does what the page lists for this product, specs, included parts, rated categories and eligibility lines, match every requirement the person named?",
+        "say_example": "This one is <semi-metallic>, and you asked for ceramic. Leaving it out."
+       },
+       {
+        "question": "Does the page say another part is needed with this one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The product information for the Bosch brake pads explicitly states 'Replace your rotors', suggesting that buying just the pads might not be sufficient for a proper repair.",
+        "whatTheAgentLoses": "The agent might just buy the requested brake pads and ignore the mechanical advice, leaving the user with an incomplete repair job.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the product page include a warning like 'Replace your rotors' or similar text implying an additional required part beyond the one selected?",
+        "say_example": "The page says 'Replace your rotors' alongside these pads. On their own they may not be the whole repair."
+       },
+       {
+        "question": "Is it really in stock on its own page, as the list said?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search indexes often lag, showing items as available in the list view that are actually out of stock or backordered when you click through to the product page.",
+        "whatTheAgentLoses": "The user loses the time wasted evaluating and shortlisting a candidate that cannot actually be purchased right now.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the product's detail page show it out of stock or backordered, even though the filtered list view showed it as available?",
+        "say_example": "The list said in stock. The product page says <backordered, ships in 3 weeks>."
+       },
+       {
+        "question": "How many servings, and how long does it keep?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the product images for details like the 49 servings and 10-year shelf life ensures the item meets your specific quantity and storage constraints.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to visually verify crucial product specifications directly from the manufacturer's packaging images.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What serving count and shelf-life figure does the product's image or description show?",
+        "say_example": "Read the product images, <30 servings> and a <25-year> shelf life"
+       },
+       {
+        "question": "Right before you decide, do the specs still show everything you need?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the specifications tab lets you re-verify the technical details you previously reviewed to ensure they meet your strict constraints.",
+        "whatTheAgentLoses": "You lose the ability to personally double-check the exact hardware specifications before making a final decision.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Re-reading the specs tab now, right before the pick, does every stated must-have constraint still show as met on the page?",
+        "say_example": "Before you decide, I read the specs again. Still a match on <the RAM> and <the battery size>."
+       },
+       {
+        "question": "Does the page say you've bought this before?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The banner explicitly states \"Purchased 3 times. Last purchased [date]\", which might change your decision to buy more if you are looking for new items or already have enough.",
+        "whatTheAgentLoses": "The agent might ignore the purchase history banner and buy redundant items that you already have plenty of in your pantry.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the product page show a 'Purchased before' or reorder banner indicating the person has bought this item previously?",
+        "say_example": "The page says you've bought this <twice> before, most recently <last spring>."
+       },
+       {
+        "question": "Can this be returned if you change your mind?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Grocery and emergency food items are often strictly non-returnable, making the purchase a final commitment with no reversal option.",
+        "whatTheAgentLoses": "The user loses the chance to verify the return policy on a large, expensive consumable item before making a non-reversible payment.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the product or policy page state that this item is non-returnable or final-sale?",
+        "say_example": "This one is marked <non-returnable>. No refund if you change your mind."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Inspect the photos and label",
+      "questions": [
+       {
+        "question": "Does the label photo show anything added that you didn't want?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The product images reveal that the powder contains added cane sugar and fructose, meaning it is not pure honey.",
+        "whatTheAgentLoses": "You lose the chance to personally inspect the ingredient label to catch unwanted additives before making a purchase.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Do the product's photos of the ingredient label show any additive (e.g., added sugar) that would make the product not meet a stated purity requirement (e.g., 'pure honey')?",
+        "say_example": "The label photo lists <added cane sugar>. The title says pure honey, and the label says otherwise."
+       },
+       {
+        "question": "Do the height and price on the page fit the scale and budget you gave?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the 3.54-inch height, the $9.27 price for 20 pieces, and the product images ensures the item actually fits your N scale layout and quality standards.",
+        "whatTheAgentLoses": "An agent might rely solely on the text specifications and miss the subjective visual inspection of the product images to determine if the off-brand quality is visually acceptable.",
+        "kind": "decision",
+        "verify_form": "The agent judged the trees fit on scale, price and looks - check what it read; the height in centimetres is what says the scale, and the photos are what say the quality.",
+        "speak": "if-wrong",
+        "check": "What height and price does the page show for this item, and do both fit the scale and price limit the person asked for?",
+        "say_example": "This one is <4 cm> tall. Your scale needs <about 2 cm>, so it's too big."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Weigh rating against review count",
+      "questions": [
+       {
+        "question": "Who is the seller behind the lowest price, and what's their rating and return policy?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The cheapest option in a comparison might be from a newly launched third-party seller with no reviews or a restrictive return policy, which is a common risk on major retail platforms.",
+        "whatTheAgentLoses": "The user loses the protection of evaluating the seller's trustworthiness, risking counterfeit goods or a difficult return process.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "For the third-party seller offering the lowest price, what star rating and return policy does their seller page show?",
+        "say_example": "The seller with the lowest price is rated <3.2 stars> with a <no-returns> policy."
+       },
+       {
+        "question": "Is this rating for this exact version, or pooled across colors and sizes?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Retailers often lump reviews for all colors, sizes, or previous generations of a product together, inflating the rating of a potentially flawed specific variant.",
+        "whatTheAgentLoses": "The user loses the critical context needed to realize the high rating doesn't apply to the exact model they shortlisted.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the product page include text disclosing that its rating or review count is combined across colors, sizes, or other variants rather than being specific to this one?",
+        "say_example": "This rating is pooled across <every color and size>. The page says so in small print under the stars."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Read the reviews and opinions",
+      "questions": [
+       {
+        "question": "Do owners' reviews mention a problem the spec table doesn't?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reading comments from users like \"[handle]\" and \"[handle]\" provides real-world context to the technical specs shown at the top of the screen.",
+        "whatTheAgentLoses": "You lose the chance to personally weigh the subjective experiences and specific nuances shared by actual users.",
+        "kind": "decision",
+        "verify_form": "The agent read the owner opinions or skipped them - check which; the specs table says nothing about glass backs breaking.",
+        "speak": "on-event",
+        "check": "Do the owner reviews or comments on the page mention a real-world issue (e.g., a durability or reliability problem) that the specs table doesn't cover?",
+        "say_example": "Owners say <the glass back cracks easily>. The spec table says nothing about that."
+       },
+       {
+        "question": "Is there a full review and video beyond the key-features list?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents both a quick list of hardware specs and an in-depth video review, meaning you must choose how much detail is necessary for your comparison.",
+        "whatTheAgentLoses": "The user loses the personal judgment of whether a quick glance at the specs is sufficient to evaluate the phone or if a deeper qualitative review is required.",
+        "kind": "decision",
+        "verify_form": "The agent scanned the key features or read the full review - check which; the video and the long text were skipped in the recording.",
+        "speak": "never",
+        "check": "Does the page offer a longer video or full written review beyond the quick key-features list?",
+        "say_example": "Read the key-features list; skipped the <video review> and the long write-up"
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Total the price with shipping and fees",
+      "questions": [
+       {
+        "question": "Does the truck icon confirm this part ships from the same warehouse as what's already in your cart, so you're not paying an extra shipping fee?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Hovering over the small truck icon next to the item reveals a tooltip confirming it could ship from the same location as your cart items, which saves money on shipping fees.",
+        "whatTheAgentLoses": "You lose the ability to strategically select parts that ship from the same location to minimize your overall shipping costs.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does hovering the truck icon next to this item show a tooltip confirming it ships from the same warehouse as an item already in the cart?",
+        "say_example": "The truck icon says this ships from the same warehouse as what's in your cart. No second shipping fee."
+       },
+       {
+        "question": "Is the delivery location set to where you want this shipped?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Amazon navigation bar explicitly shows 'Deliver to [name] [number]', which dictates the stock availability, shipping costs, and delivery estimates shown in the search results.",
+        "whatTheAgentLoses": "An agent might search using a default or outdated zip code, resulting in a shortlist of products that are out of stock or delayed for the user's actual location.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the page's delivery-location indicator (e.g., 'Deliver to...') show the correct address or ZIP for where the person actually wants this shipped?",
+        "say_example": "The delivery location is set to <somewhere else>, and prices and stock follow it. Setting it to yours."
+       },
+       {
+        "question": "What's the price up front once the core charge is added?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a base price, a separate core charge, and a combined total, indicating that the initial out-of-pocket cost is higher than the base price alone.",
+        "whatTheAgentLoses": "The user loses visibility into the true upfront cost and the mechanics of core charge refunds when comparing part prices.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What base price and core charge does the page show separately, and what combined total do they add up to?",
+        "say_example": "There's a <$34.50> core charge on top of the <$52.99> price, so it's <$87.49> up front."
+       },
+       {
+        "question": "Who pays to ship the old part back, and by when?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The core charge refund depends on returning the old part, so the cost of return shipping and the deadline dictate whether the refund is actually worth pursuing.",
+        "whatTheAgentLoses": "The user loses the ability to factor the return shipping logistics and costs into their comparison between a new part and a remanufactured one.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page's core-charge policy text state who pays return shipping for the old part and what the deadline is to send it back?",
+        "say_example": "The core policy says <you pay return shipping> and you have <45 days> to send the old part back."
+       },
+       {
+        "question": "With the pickup fee added, is this still the better buy than the one you passed on?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The summary of charges reveals a $3.00 fee for store pickup that brings the total to $100.95, which you must review before selecting a payment method from the dropdown.",
+        "whatTheAgentLoses": "Delegating this step removes your visibility into final added costs like the pickup fee and your control over which payment method is used.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Once the pickup fee shown in the payment summary is added, does the total still come out lower (or otherwise still winning) than the alternative(s) the person passed on?",
+        "say_example": "With the <$4> pickup fee, this comes to <$118.40>. That's now <$2> more than the one you passed on."
+       },
+       {
+        "question": "Does the tax-free banner actually appear on the homepage, or is that promotion missing?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Relying on a promotion requires it to actually exist, but the right column of the homepage only shows a green area instead of the asserted tax-free banner.",
+        "whatTheAgentLoses": "The user loses the visual verification needed to ensure they aren't basing their purchase on a hallucinated or missing promotion.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the homepage's promotional area actually display the tax-free (or other advertised) banner, or is that space empty or showing something else?",
+        "say_example": "The tax-free banner isn't on the homepage. That spot is <empty>, so I'm not counting on the promotion."
+       },
+       {
+        "question": "Once shipping is calculated, does the total still fit your budget?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Filling out the address information fields and clicking the 'Calculate Shipping' button allows you to see the exact delivery fees added to the subtotal.",
+        "whatTheAgentLoses": "Delegating this means you lose the chance to personally review the shipping fees and confirm that the final total still fits your budget.",
+        "kind": "state-check",
+        "speak": "gate",
+        "check": "After the shipping calculation runs, does the subtotal-plus-shipping total exceed the budget figure the person stated?",
+        "say_example": "With shipping, the total is <$214>. That's <$14> over your <$200>. OK to go over, or should I find a cheaper one?"
+       },
+       {
+        "question": "Can this one actually ship to you?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A product might win the comparison on price and specs, but fail at the last mile if the retailer cannot ship it to your specific zip code or requires a distant in-store pickup.",
+        "whatTheAgentLoses": "The user loses the chance to verify logistical feasibility before committing to a choice, potentially forcing a restart of the entire task if the agent picks an undeliverable item.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "At checkout or on the shipping-options section, does the page show a shipping restriction or unavailability message for the person's location for this specific product?",
+        "say_example": "This one won't ship to you. The page says <in-store pickup only>, and the nearest store is <50 miles> away."
+       }
+      ]
+     },
+     {
+      "id": "5.8",
+      "label": "Compare the unit price",
+      "questions": [
+       {
+        "question": "How does the combo pack's price compare with the single items on the grid?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Dairy and Egg Combo priced at $195.99 among other Augason Farms products, letting you weigh its cost against the alternatives.",
+        "whatTheAgentLoses": "You lose the chance to rely on your own memory of past price drops to realize this is a rare deal worth grabbing.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What price does the page show for the multi-pack or combo, and how does that compare with the single items still on the same grid?",
+        "say_example": "Priced the combo at <$142.50> against <$40 to $95> for the single items"
+       }
+      ]
+     },
+     {
+      "id": "5.9",
+      "label": "Check the price history",
+      "note": "Both tracker runs do 5.9.1 then 5.9.2. wagd does 5.9.3, which narrows to three months and the seller line, and -Cpg does it for the seller line only. Both do 5.9.4, and in wagd 7.2 follows it.",
+      "children": [
+       {
+        "id": "5.9.1",
+        "label": "Open the tracker on the product",
+        "questions": [
+         {
+          "question": "Is a price tracker open, or is the page's own discount claim all we have?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows camelcamelcamel, which provides free Amazon price history charts and drop alerts to help you save money.",
+          "whatTheAgentLoses": "You lose the opportunity to discover and learn how to use third-party price tracking tools for your own future purchases.",
+          "kind": "decision",
+          "verify_form": "The agent opened a price tracker or trusted the discount on the page - check which; the tracker is a second tab or an extension icon.",
+          "speak": "on-event",
+          "check": "Is a price-tracking tool (a browser extension or a separate tab) open for this item, rather than the page's own discount claim standing alone?",
+          "say_example": "Before trusting that discount, I'm opening a price tracker to see the real history."
+         },
+         {
+          "question": "Is the tracker showing the exact item, not a keyword match?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The camelcamelcamel search bar explicitly accepts an Amazon URL, which guarantees you are pulling the price history for the exact item you are viewing.",
+          "whatTheAgentLoses": "You lose the certainty that the exact product variant was checked rather than a potentially mismatched keyword search.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Did the tracker load history by taking the exact product URL, or did it search by keyword or title, which could return a different but similar item?",
+          "say_example": "The tracker found this by keyword, so it may be a similar item. Pasting the exact product link instead."
+         }
+        ]
+       },
+       {
+        "id": "5.9.2",
+        "label": "Read the low, high and current",
+        "questions": [
+         {
+          "question": "How does the current price compare to the item's historical highs and lows?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Reviewing the price history chart and table reveals whether the current price is a good deal compared to the all-time lowest and highest prices.",
+          "whatTheAgentLoses": "You lose the opportunity to personally assess the price volatility and decide if you should buy now or wait for a price drop.",
+          "kind": "state-check",
+          "speak": "never",
+          "check": "What low, high, and current price figures does the price-history chart or table show for this item?",
+          "say_example": "Read the price history, low <$95>, high <$180>, now <$160>"
+         }
+        ]
+       },
+       {
+        "id": "5.9.3",
+        "label": "Narrow the window and the seller line",
+        "questions": [
+         {
+          "question": "Which time window is the price chart showing?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Viewing the 'All Time' price history chart provides essential context on whether the current price is genuinely a good deal or just a normal fluctuation.",
+          "whatTheAgentLoses": "Delegating this means you lose the personal reassurance of seeing the long-term pricing trends that justify buying the product right now.",
+          "kind": "decision",
+          "verify_form": "The agent set the history window - check which; all time shows the extremes and three months shows the recent band.",
+          "speak": "on-event",
+          "check": "Which timeframe is the price-history chart currently set to (e.g., All Time vs 3 Months), and does that window show the extremes or just a recent band?",
+          "say_example": "The chart was on <3 months>. I switched it to all time to show the real highs and lows."
+         },
+         {
+          "question": "Which seller's price line is being read?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The chart displays distinct price lines for Amazon, third-party new, and third-party used sellers, allowing you to evaluate the deal based on who is actually selling the item.",
+          "whatTheAgentLoses": "You lose the ability to prioritize the specific seller type you trust most, as an agent might just evaluate the lowest overall price regardless of whether it is new, used, or from a third party.",
+          "kind": "decision",
+          "verify_form": "The agent read one seller's line - check which; the site's own line and the third-party lines have different lows.",
+          "speak": "on-event",
+          "check": "Does the price-history chart show separate lines for different sellers (e.g., the retailer's own vs. third-party new or used), and do those lines have meaningfully different lows or highs?",
+          "say_example": "The chart has one line for <the store itself> and one for <other sellers>. The other sellers' low is <$20> lower."
+         },
+         {
+          "question": "Tick 'Remove Extreme Values' so one spike doesn't skew the chart?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The price tracker includes a 'Remove Extreme Values' toggle, which filters out anomalous price spikes that could distort your perception of the item's average cost.",
+          "whatTheAgentLoses": "The agent might evaluate the current discount against an artificially inflated historical high, falsely concluding that the current deal is better than it actually is.",
+          "kind": "decision",
+          "verify_form": "The agent left or ticked the remove-extreme-values box - check which; the all-time high may be an outlier.",
+          "speak": "on-event",
+          "check": "Does the tracker offer a 'Remove Extreme Values' toggle, and is the all-time high or low currently being driven by a single outlier spike?",
+          "say_example": "The all-time high looks like <a one-off spike>. Ticking Remove Extreme Values so it doesn't skew the picture."
+         }
+        ]
+       },
+       {
+        "id": "5.9.4",
+        "label": "Judge the deal against the history",
+        "questions": [
+         {
+          "question": "How does today's price compare with what you paid before?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows the combo pack currently priced at $195.99, making it important to verify if this is a fair price or a massive markup compared to what you paid before.",
+          "whatTheAgentLoses": "An agent lacks your personal memory of past orders and might accept a heavily inflated price without checking your historical purchase data.",
+          "kind": "state-check",
+          "speak": "on-event",
+          "check": "Does the page or a separate order-history view show what the person paid for this same or similar item before, and how does that compare to the current price?",
+          "say_example": "You paid <$52> for this last time. Today it's <$89>."
+         },
+         {
+          "question": "Does the tracker's current price include the member-only deal?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The speaker notes that the price tracker shows a current price of $208 for non-Prime members, while the actual Prime Day deal they are evaluating is $146.99.",
+          "whatTheAgentLoses": "An agent might look at the tracker's higher non-Prime price and incorrectly conclude the current Prime deal is an all-time low, missing the context of membership-gated pricing.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Does the price-history chart's 'current price' match the actual deal price on the retailer's page, or does the tracker show a higher non-member price while the real page shows a lower member-exclusive price?",
+          "say_example": "The tracker says <$175>. The store page has a <member-only> price of <$129>, which the tracker doesn't count."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "5.10",
+      "label": "Compare the same item across sites",
+      "questions": [
+       {
+        "question": "Is the other store cheaper for the same item?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Seeing specific prices like $10.06 for the Black Bean Burger helps you decide if the cost difference is worth switching away from your primary store.",
+        "whatTheAgentLoses": "You lose the chance to weigh your personal retailer preferences against the actual price differences shown in the search results.",
+        "kind": "decision",
+        "verify_form": "The agent judged the other retailer's prices not worth switching for - check the cards; one item there was cheaper than on the main site.",
+        "speak": "if-wrong",
+        "check": "What price does the other retailer show for the same item, and is it lower than the main store's price, whatever the run has concluded so far?",
+        "say_example": "<The other store> has this cheaper, <$8> against <$11> at your usual store."
+       },
+       {
+        "question": "Take the only option the tool found, or look on another site?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The price comparison tool only returned one new copy from the campus store for $67.60, with no used or alternative retailer options, prompting a decision on whether to accept this price or hunt elsewhere.",
+        "whatTheAgentLoses": "You lose the opportunity to decide if a single, potentially expensive option is worth buying immediately or if it warrants expanding your search to other platforms.",
+        "kind": "decision",
+        "verify_form": "The agent took the only row for this book or went to another site - check which; the tool showed one new copy and nothing to compare it with.",
+        "speak": "on-event",
+        "check": "Does the price-comparison tool return exactly one option with no other new or used alternatives listed?",
+        "say_example": "Only one option came up, <a new copy at $54>, with nothing to compare it to. I'm checking another site."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Check what you compared",
+    "note": "These are checks on numbers the user has already read, and most keepers make none of them. Below is where each one applies in the corpus. 6.1 applies wherever a table has more than one row or column that could be the item the user asked for. 6.2 applies wherever the same number shows up on two different screens. 6.3 applies wherever a discount is stated. 6.4 applies after any filter, department or form field. 6.5 applies wherever the site's score or badge is the reason. 6.6 applies wherever two rows could be different products.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Check the row and column you read"
+     },
+     {
+      "id": "6.2",
+      "label": "Check the figure agrees across screens",
+      "questions": [
+       {
+        "question": "Does the number of items on the category card match the number shown in the ratings table?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The category card indicated 48 items, but the ratings table only displayed 47, meaning one product is missing from the comparison.",
+        "whatTheAgentLoses": "An agent might overlook this discrepancy and miss out on evaluating a potentially suitable product.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the item count shown on the category summary card match the count of rows actually listed in the ratings table below it?",
+        "say_example": "The card says <36> items and the table lists <35>. One is missing."
+       },
+       {
+        "question": "Does the product page price match the ratings table?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The ratings table lists a flat price of $8.00, but the detail page shows a range from $7.97 to $13.98, which could affect your budget constraints.",
+        "whatTheAgentLoses": "You lose the opportunity to catch pricing inconsistencies that might lead to paying more than expected at checkout.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the flat price shown in the ratings table match the price (or price range) shown on the product's own detail page?",
+        "say_example": "The table says <$14>. The product page says <$13.50 to $19.25>, so it could ring up higher."
+       },
+       {
+        "question": "Is the price the same in every table on the page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Apple iPhone 11 Pro Max is listed as $1,100 in the ratings table but $1099.00 in the comparison chart, revealing a slight discrepancy in the displayed data.",
+        "whatTheAgentLoses": "You lose the ability to notice minor data inconsistencies across different views and judge whether they impact the reliability of the comparison.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the price shown in one comparison table for this product match the price shown in another table or chart on the same page, beyond simple rounding?",
+        "say_example": "The ratings table says <$430> and the comparison chart says <$399>. Those don't agree, so I'm reading the product page."
+       },
+       {
+        "question": "Does this checkout cover everything in the cart, or just one retailer's items?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The global cart displayed four items totaling $121.78, but the checkout page summary only shows two items for $97.95 because it excludes items from other vendors.",
+        "whatTheAgentLoses": "You lose the opportunity to catch that the checkout process has split your order by vendor, which could result in accidentally leaving some of your chosen items unpurchased.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the retailer-specific checkout screen show fewer items or a lower total than the person's global cart, because other vendors' items are handled in separate per-retailer checkouts?",
+        "say_example": "This checkout covers <2 of the 5> items, <$61.40>. The other <3> go through a different store's checkout."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Check the discount against the real price",
+      "questions": [
+       {
+        "question": "Is the saving real, or measured against a price nobody actually charges?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple price points and a countdown timer, making it important to check historical data to see if the $146.99 price is actually a rare discount.",
+        "whatTheAgentLoses": "An agent might take the advertised 36 percent discount at face value and select the item without verifying its true historical value.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What list price is the saving measured against, what does the 'You save' line state, and where price history is open, has the item ever actually sold at that list price?",
+        "say_example": "The <$19.99> it's marked down from isn't a price this has sold at. Its history tops out at <$14>. So the saving is about <$2>, and the badge says <$8>."
+       },
+       {
+        "question": "Is the discount only for paid members?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The product page explicitly states the savings are \"as a Prime member,\" meaning the deal is contingent on having that specific paid subscription active on your account.",
+        "whatTheAgentLoses": "An agent might shortlist or select the candidate based on the low price without realizing the user cannot actually get that price without the required membership.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the product page's savings text specify the discount is contingent on an active paid membership (e.g., 'as a Prime member')?",
+        "say_example": "That price is for <paid members> only. It says so beside the saving."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Check the constraint is still applied",
+      "questions": [
+       {
+        "question": "Is a filter on that you never asked for?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The speaker realizes they mistakenly started filtering by resolution and has to back out, stating they don't need it.",
+        "whatTheAgentLoses": "The user loses the ability to catch and correct overly restrictive filters that might accidentally exclude perfectly good candidates.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Is a filter currently active on the results (e.g., display resolution) that doesn't correspond to anything the person actually asked for?",
+        "say_example": "A <display resolution> filter is on, and you never asked for it. Clearing it."
+       },
+       {
+        "question": "Did the sale filter reset when the search ran again?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Navigating back to the search bar reveals that the department dropdown reset to 'All Departments', requiring the user to catch this and manually reselect 'Prime Day' before searching again.",
+        "whatTheAgentLoses": "An agent might assume the promotional filter is persistent and execute the next search without it, resulting in a shortlist of full-priced items rather than the intended deals.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Was the department dropdown set to the sale event (or another department the person chose), and does it now read a default such as 'All Departments', whether before the first search runs or after any later one?",
+        "say_example": "The <sale> department reset to All Departments when the search ran again. Putting it back."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Check what the score or badge rests on",
+      "questions": [
+       {
+        "question": "Is a banner saying the site no longer tests this category, while scores still show?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interface shows detailed ratings and overall scores for 15 models while simultaneously displaying a banner that says they are not currently testing e-book readers, creating a contradiction in the data's reliability.",
+        "whatTheAgentLoses": "The user loses the human intuition to spot contradictory site warnings and question the validity of the comparison data before making a purchase decision.",
+        "kind": "decision",
+        "verify_form": "The agent relied on the ratings under a not-currently-testing banner - check whether it saw the banner; the scores are from an earlier test cycle.",
+        "speak": "if-wrong",
+        "check": "Does a banner on this category page say the site is no longer testing this product type, even though ratings or scores are still displayed for it?",
+        "say_example": "A banner says the site no longer tests <this category>. The scores still showing are from an earlier round."
+       },
+       {
+        "question": "Do the comparison facts carry 'report as wrong' links?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The presence of \"report as wrong\" buttons next to the comparison points indicates that the data is crowdsourced and potentially inaccurate.",
+        "whatTheAgentLoses": "The agent might treat crowdsourced, unverified data as absolute fact, leading to a decision based on incorrect specifications.",
+        "kind": "decision",
+        "verify_form": "The agent trusted the comparison facts - check whether it noticed the report-as-wrong links; the data is crowd-edited.",
+        "speak": "on-event",
+        "check": "Does the comparison page show 'report as wrong' or similar edit/flag links next to its stated facts, indicating the data is crowd-edited rather than site-verified?",
+        "say_example": "These facts carry 'report as wrong' links. Anyone can edit them, so I'm treating them as unverified."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Check the rows are the same product",
+      "questions": [
+       {
+        "question": "Are the columns the exact versions you meant to compare, same storage, color and condition?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Automated comparison tools sometimes pull in the base model or a different configuration than the one selected, skewing the side-by-side evaluation.",
+        "whatTheAgentLoses": "The user cannot easily glance at the table headers to ensure the agent is comparing the correct configurations, risking a decision based on mismatched data.",
+        "kind": "state-check",
+        "speak": "gate",
+        "check": "Do the comparison table's column headers specify the exact variant (storage, color, condition, generation) the person meant to compare, or could a different configuration have been substituted?",
+        "say_example": "I can't tell if these two columns are the same product. One may be a different <storage size>. Which version did you mean?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Settle on the pick",
+    "note": "7.1 shows up in the seven keepers that say a verdict. 7.2 shows up in wagd, where the run ends without picking an item. 7.3 and 7.4 in TTzY and IW59, the two cart runs. 7.5 in TTzY alone, where everything past the payment summary happens after the task is done. 7.6 in the keepers that leave the comparison page without picking an item.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "State the pick and its reason",
+      "questions": [
+       {
+        "question": "Is this row really the lowest price for the first book, or is a cheaper one right above it?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The price comparison table shows that the new copy from Weber at $30.35 is significantly cheaper than the alternatives from Half and Amazon.",
+        "whatTheAgentLoses": "You lose the satisfaction of personally reviewing the comparison table to ensure you are getting the best possible deal on your course materials.",
+        "kind": "decision",
+        "verify_form": "The agent picked a vendor row for the first book - check the row above it; the recording called the new copy the best price with the used copy cheaper directly above.",
+        "speak": "if-wrong",
+        "check": "Among the vendor rows for this book, is the row about to be called 'best price' actually the lowest price, or does a cheaper same-condition row sit elsewhere in the table?",
+        "say_example": "The row right above is <75 cents> cheaper for the same condition. That's the better price."
+       },
+       {
+        "question": "For the second book, cheaper and slower, or pricier and faster?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The price comparison block presents multiple options varying by price, condition, retailer, and delivery time, requiring a specific tradeoff.",
+        "whatTheAgentLoses": "You lose the opportunity to personally balance your budget against your tolerance for used conditions and longer shipping times.",
+        "kind": "decision",
+        "verify_form": "The agent picked a row for the second book on price, condition and delivery time - check the three; the cheapest row ships in three weeks.",
+        "speak": "gate",
+        "check": "Do the candidate rows for this book differ in a way that trades price against shipping time (e.g., the cheapest option ships slowest), such that no single row wins on both?",
+        "say_example": "The cheapest one ships in <2 weeks>. A pricier one arrives in <3 days>. Which matters more, price or speed?"
+       },
+       {
+        "question": "Is this row really cheaper for the third book than the store's own used copy?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The price comparison block displays multiple offers requiring a trade-off between price, condition, and delivery speed, such as cheap used copies taking 21 days versus a new Amazon copy arriving in 5 days.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh your urgency for the book against your willingness to buy a used copy to save money.",
+        "kind": "decision",
+        "verify_form": "The agent picked a row for the third book - check it against the store's used row; the recording called an Amazon row cheaper when it was not.",
+        "speak": "if-wrong",
+        "check": "Is the retailer row about to be called cheaper for this book actually cheaper than the alternative rows shown, or does another row (e.g., the store's own used copy) beat it?",
+        "say_example": "That row isn't the cheapest. The store's own used copy beside it is priced lower."
+       },
+       {
+        "question": "Is the part with the popularity heart really the better buy, or just the one people order most?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The red heart icon indicating it is a popular part provides social proof that might justify the $22.99 price over cheaper options.",
+        "whatTheAgentLoses": "You lose the opportunity to weigh whether a popularity indicator justifies paying a higher price than the cheaper alternatives.",
+        "kind": "decision",
+        "verify_form": "The agent picked the pad with the popularity heart over cheaper rows - check its reason; the heart is the site's count, not a spec.",
+        "speak": "if-wrong",
+        "check": "Is the item marked with a popularity badge or heart actually the cheapest and fullest-featured option, or do other rows offer a lower price and more listed specs?",
+        "say_example": "The heart is on the pricier one, and a cheaper row lists more specs. The heart only means people order it a lot."
+       },
+       {
+        "question": "Is there a single-unit option to try before buying the case?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator suggests buying just one can to try it out as a hedge against expected price increases, rather than committing to a bulk purchase immediately.",
+        "whatTheAgentLoses": "The user loses the strategic advice to sample a small quantity of a product to verify quality before committing more money in a volatile market.",
+        "kind": "decision",
+        "verify_form": "The agent bought one unit or more - check the quantity; the narrator's advice was one can to test before buying more.",
+        "speak": "on-event",
+        "check": "Does the product page or listing offer both a single-unit and a bulk or case purchase option, with prices for each?",
+        "say_example": "There's a single can at <$4> as well as the case at <$22>. You could try one before the whole case."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Set a price alert instead",
+      "questions": [
+       {
+        "question": "What target price should you set for the price drop alert?",
+        "cluster": "watch",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering a realistic desired price below the current $10.66 ensures you only receive an email notification when a meaningful discount occurs.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh how much of a discount is worth delaying the purchase for.",
+        "kind": "decision",
+        "verify_form": "The agent set a target price for the alert - check the figure; the presets were percentages off the current price and the recording typed its own.",
+        "speak": "gate",
+        "check": "What percentage-off presets does the price-alert form offer, and what is the current price they're calculated from?",
+        "say_example": "The alert wants a target price. The presets are <5, 10 or 15 percent> off today's <$14.20>. What price should I set?"
+       },
+       {
+        "question": "Did the price watch save?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the green checkmark and success message ensures the tracker is active, meaning you won't have to manually check the retailer's site every day for a price drop.",
+        "whatTheAgentLoses": "You lose the immediate peace of mind that comes from personally verifying the price alert was successfully registered.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the page show a success confirmation (e.g., a checkmark or 'Success' message) after submitting the price watch?",
+        "say_example": "Saved the price watch; the page showed <a green checkmark and Success>"
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Add the pick to the cart",
+      "questions": [
+       {
+        "question": "Should the small add-on the site offers go in the order too?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows an info popup detailing a 5-pack of random collector magnets for $1.25, presenting an optional novelty add-on.",
+        "whatTheAgentLoses": "The user loses the chance to make a spontaneous, personal choice about purchasing a fun, low-cost novelty item.",
+        "kind": "decision",
+        "verify_form": "The agent added or skipped the magnet pack - check which; it is an add-on to the order, not one of the candidates.",
+        "speak": "on-event",
+        "check": "Does a popup or info panel offer an optional add-on item (e.g., a small novelty pack) unrelated to the compared candidates?",
+        "say_example": "The site is offering an add-on, <a small novelty pack> for <$2>. It's not one of the things you were comparing, so I'm skipping it."
+       },
+       {
+        "question": "Is it set to a subscription instead of a one-time purchase?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Retailers frequently pre-select options like 'Subscribe & Save' to advertise a lower upfront price, hiding the commitment of recurring deliveries in a small, easily overlooked radio button.",
+        "whatTheAgentLoses": "The user risks being enrolled in an unwanted ongoing subscription because they cannot visually catch that the lowest price is tied to a recurring order.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the 'Subscribe & Save' or recurring-delivery option pre-selected by default, rather than the one-time purchase option?",
+        "say_example": "It's defaulted to <Subscribe & Save>, which is a repeat order. Switching it to one-time."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Verify the cart matches the pick",
+      "questions": [
+       {
+        "question": "Check out with just this in the cart, or keep browsing?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The cart shows the Bosch brake pads for $22.99, requiring a decision to either finalize the order or return to the catalog.",
+        "whatTheAgentLoses": "You lose the control to decide whether to finalize the current selection or continue browsing for additional items.",
+        "kind": "decision",
+        "verify_form": "The agent went to checkout or kept shopping with one item in the cart - check which; more items may change the shipping.",
+        "speak": "never",
+        "check": "How many items does the cart hold, and what subtotal does it show, before checkout?",
+        "say_example": "Checked the cart, <1 item> at <$31.40>, before checkout"
+       },
+       {
+        "question": "Does the cart hold only what was added just now?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "An unexplained jump in the cart's item count and subtotal between moments indicates that products were added off-screen, breaking the continuity of the selection process.",
+        "whatTheAgentLoses": "The user loses oversight of their final purchase and budget if the agent adds unapproved items to the cart without showing the comparison and selection process.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the cart's item count or subtotal include anything beyond what was explicitly added during this comparison session, e.g., an unexplained jump in count or total?",
+        "say_example": "The cart went from <2 items, $45> to <3 items, $68> without anything added on screen. The extra one isn't from this session."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Hand off to checkout",
+      "questions": [
+       {
+        "question": "Do you want to take over at the sign-in or payment form?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows a payment-method dropdown and empty credit card fields, requiring a decision on whether to expose sensitive financial data to finalize the purchase.",
+        "whatTheAgentLoses": "The delegator loses control over their sensitive financial information and the final authorization of the actual purchase.",
+        "kind": "decision",
+        "verify_form": "The agent entered payment details or stopped - check which; the recording stops on the empty card form.",
+        "speak": "gate",
+        "check": "Is a sign-in form asking for the person's password, or a payment form asking for card details, now on screen, so that going further means entering the person's own details?",
+        "say_example": "This screen wants your <password or card details> to finish the order. That's yours to type. Take it from here, or should I stop?"
+       },
+       {
+        "question": "Do you have the Student ID the tax-free deal needs?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout screen displays a banner stating 'TAX FREE* Shopping... *Student ID required', making the discount conditional on having specific identification.",
+        "whatTheAgentLoses": "The agent might calculate the budget assuming the tax-free discount applies, only for the user to be charged tax because they cannot produce the required Student ID.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the checkout page's tax-free promotion banner require a Student ID or other credential the person may not have on hand?",
+        "say_example": "The tax-free saving needs a <Student ID> at checkout. If you don't have one, count on the full price."
+       },
+       {
+        "question": "Does the final screen show a backorder or delay that wasn't there before?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search results and comparison tables often show items as available, but the final selection step reveals a months-long lead time that violates the buyer's timeline.",
+        "whatTheAgentLoses": "The user loses the ability to catch a delayed delivery schedule before finalizing the purchase, potentially missing a deadline.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the final checkout or selection screen show a backorder notice or delayed ship date that wasn't shown earlier in the comparison?",
+        "say_example": "This screen says <backordered, 6 to 8 weeks>. The comparison page didn't show that."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Stop without a pick"
+     }
+    ]
+   }
+  ]
+ }
+}

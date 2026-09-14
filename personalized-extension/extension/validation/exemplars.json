@@ -18855,6 +18855,943 @@
    ]
   }
  },
+ "comparison": {
+  "task": "# RE-SCOPED 2026-08-13 (superset of the original cross-site framing; existing gold remains valid). compare candidate products against explicit criteria and constraints before buying: state what matters (budget, must-have features, dietary/size/spec constraints, ratings), search or filter to the candidates that satisfy them, compare the shortlist side by side — on one site's compare/filter tools or across sites (retailers, review sites, price trackers) — and reach a justified pick; complete when a pick is settled with the comparing evidence on screen (the chosen option over the compared candidates or the applied filters). Surface pinned: shopping/review sites' search, filter, and compare features in a browser or app. Variants: reseller/arbitrage product research (sourcing to resell for profit), dropshipping content, B2B pricing-tool demos, and talking-head opinion videos without screen evidence do not belong.",
+  "tree": {
+   "id": "0",
+   "label": "Compare products and settle on a pick",
+   "note": "1 in every keeper, and 1.2 only in the two library runs. 2 is where the user says what the item needs to have; all of WdX2 sits in 2.4, and IW59 and TTzY start with 2.1. 3 brings up the candidates; WdX2 skips it because its form returns one result. 4 puts candidates side by side - compare slots in X8Wi, 64ZA, VxAE and 955p, a cart in TTzY and IW59, one page after another in wagd and -Cpg. 5 is the comparison, and in wagd and -Cpg 5.9 checks the price history on a tracker. 6 checks which numbers were compared; most keepers skip it, and the steps under 6 point to cases in the corpus of what went wrong when that check was skipped. 7 is where the task ends: the user says the pick out loud, sets a price watch, adds it to the cart, or stops. 3.8 sends the task back to 3.1 with a new query, and 4.5 back to 4.1 for the next candidate.",
+   "children": [
+    {
+     "id": "1",
+     "label": "Reach the comparison surface",
+     "note": "1.1 appears in every keeper. 1.2 comes before anything else in s88J and 955p, the two library runs. 1.3 in wagd, where the maker does not sell direct, and in -Cpg, which picks the retailer for its sale. 1.4 in every keeper once the site is up. 1.5 in the six tutorial keepers that tour the site before searching. 1.6 in IW59 and s88J only.",
+     "children": [
+      {
+       "id": "1.1",
+       "label": "Open the site or app",
+       "questions": [
+        {
+         "question": "Which tab at the top takes you to textbooks?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The top navigation menu displays multiple categories like 'Wildcat Gear' and 'Textbook', requiring you to choose the correct section to start your search.",
+         "whatTheAgentLoses": "You lose the opportunity to see the store's full range of categories, which might include other relevant sections like 'General Books' or 'Wildcat Tech'."
+        },
+        {
+         "question": "Which kind of site did the search land on, a specs site, a retailer, or a review database?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Entering a specific URL directly into the Chrome address bar bypasses general search engines and takes you straight to a specialized database equipped for detailed comparisons.",
+         "whatTheAgentLoses": "You lose the ability to rely on your personal knowledge of which specialized websites offer the best tools and data for comparing these specific products."
+        }
+       ]
+      },
+      {
+       "id": "1.2",
+       "label": "Get through the library gate",
+       "note": "Both library runs do 1.2.1, 1.2.2 and 1.2.3 in that order. s88J shows the route after the fact and never clicks the link; 955p's recording does not include the login, so the welcome badge is what confirms the session.",
+       "children": [
+        {
+         "id": "1.2.1",
+         "label": "Open the library's database list",
+         "questions": [
+          {
+           "question": "Which menu item leads to the library's research databases?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The left-hand menu lists several specific digital media types like eBooks and eMagazines, so you must identify 'Digital Resources' as the correct path to broader research databases.",
+           "whatTheAgentLoses": "You lose the chance to browse the library's other digital offerings that might be useful for future research or entertainment."
+          }
+         ]
+        },
+        {
+         "id": "1.2.2",
+         "label": "Find the database in the list",
+         "questions": [
+          {
+           "question": "Where in the library's database list is Consumer Reports?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen displays an alphabetical list of digital resource categories, requiring you to identify the correct grouping to locate the Consumer Reports database.",
+           "whatTheAgentLoses": "The user loses the opportunity to browse the full list of available digital resources and discover other potentially useful databases for their research."
+          }
+         ]
+        },
+        {
+         "id": "1.2.3",
+         "label": "Confirm the library session",
+         "questions": [
+          {
+           "question": "Is the library sign-in still active, or has the page dropped back to the public preview?",
+           "cluster": "facts",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen shows a 'Welcome back, Library+User' badge, confirming that full access to the review database is active before starting the search.",
+           "whatTheAgentLoses": "The user loses the assurance that the agent has successfully authenticated into a premium review database to gather reliable product information."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "1.3",
+       "label": "Choose which site to compare on",
+       "questions": [
+        {
+         "question": "Does the maker's site sell directly, or only through retailers?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The website displays a notice stating that direct sales are currently suspended and directs customers to purchase through their retail partners instead.",
+         "whatTheAgentLoses": "The user loses the context of why direct purchasing is unavailable and the immediate visibility of the manufacturer's recommended retail partners."
+        }
+       ]
+      },
+      {
+       "id": "1.4",
+       "label": "Choose the way in",
+       "questions": [
+        {
+         "question": "The price comparison banner, or the plain course search?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen offers two distinct paths for finding textbooks: a traditional course search dropdown and a prominent banner advertising a real-time price comparison tool.",
+         "whatTheAgentLoses": "The user loses the opportunity to choose their preferred method for finding and comparing textbook prices."
+        },
+        {
+         "question": "Which result opens the brand's store page?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Clicking any of the displayed Augason Farms products, like the Butter Powder, provides a direct link to the brand's storefront from its product page.",
+         "whatTheAgentLoses": "You lose the opportunity to choose your preferred navigation workaround for finding a brand's complete catalog."
+        }
+       ]
+      },
+      {
+       "id": "1.5",
+       "label": "Survey what the site covers",
+       "questions": [
+        {
+         "question": "Open one of the tested categories, or keep scrolling?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays multiple product categories along with the number of ratings available for each, offering a direct path to search for candidates.",
+         "whatTheAgentLoses": "The user loses the ability to decide whether to dive into a specific category's ratings or keep exploring the page."
+        }
+       ]
+      },
+      {
+       "id": "1.6",
+       "label": "Check whether an account is needed",
+       "questions": [
+        {
+         "question": "Do you need to create an account to place your order?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The login screen reveals that guest checkout is an option, meaning you can avoid the hassle of registering if you prefer.",
+         "whatTheAgentLoses": "Delegating this means you lose the opportunity to decide whether to protect your privacy by checking out as a guest or to create an account for easier order tracking."
+        },
+        {
+         "question": "What does the site ask for to look up an order or start a return?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The 'Order Status & Returns' page explicitly requires an email address or phone number along with an order number to proceed.",
+         "whatTheAgentLoses": "The user loses direct awareness of the specific details they must keep track of for post-purchase support or returns."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "label": "State what it must fit",
+     "note": "2.1 first in IW59 and TTzY, where no results show until the vehicle or the course is set, and in VxAE, where the owned phone is the baseline. 2.2 in every keeper that browses a catalog. 2.3 in the compare-tool runs and the brand searches. 2.4 fills all of WdX2 and is only shown in VxAE, s88J and IW59. 2.5 in WdX2, wagd and -Cpg. 2.6 in -Cpg three times and in IW59's dropdown. 2.7 in TTzY, IW59, WdX2 and wagd.",
+     "children": [
+      {
+       "id": "2.1",
+       "label": "Fix what it must fit",
+       "questions": [
+        {
+         "question": "Is the second course set to the class you're in?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen required selecting the specific department, course, and section to accurately identify the required materials.",
+         "whatTheAgentLoses": "The user loses the assurance that the exact course and section they are enrolled in is correctly entered to find the right books."
+        },
+        {
+         "question": "Which academic term are you shopping for?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting the correct term ensures the search results only show materials required for that specific semester.",
+         "whatTheAgentLoses": "The user loses the ability to specify their current enrollment period, which could result in the agent buying books for the wrong semester."
+        }
+       ]
+      },
+      {
+       "id": "2.2",
+       "label": "Pick the category",
+       "questions": [
+        {
+         "question": "Which section of the site has the kind of item you're comparing?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The homepage offers distinct categories like emergency kits, foods, and container types, so selecting the right tab focuses your search on the relevant items.",
+         "whatTheAgentLoses": "You lose the opportunity to steer the initial search direction based on your specific interest in individual foods versus pre-made kits."
+        }
+       ]
+      },
+      {
+       "id": "2.3",
+       "label": "Name the brand or model",
+       "questions": [
+        {
+         "question": "Which phone brand do you want to browse?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting a specific manufacturer from the Phone Finder list immediately filters the available candidates to match your brand preferences.",
+         "whatTheAgentLoses": "You lose the opportunity to spontaneously explore other brands on the list that might offer better value or features for your needs."
+        },
+        {
+         "question": "Which brand should you search for next within the sale?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows a search for a specific brand within the Prime Day category, indicating a targeted search strategy for deals.",
+         "whatTheAgentLoses": "The user loses the ability to specify exactly which brands the agent should prioritize checking for discounts."
+        }
+       ]
+      },
+      {
+       "id": "2.4",
+       "label": "Set the spec constraints",
+       "questions": [
+        {
+         "question": "How tall, heavy and thick can the phone be, at most?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Setting precise limits on the height, weight, and thickness sliders ensures the resulting candidates meet your exact physical requirements for portability.",
+         "whatTheAgentLoses": "You lose the ability to personally balance the trade-offs between a device's physical dimensions and how comfortable it will be to hold or carry."
+        },
+        {
+         "question": "Which colors do you want the phone in?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Typing your preferred colors into the input field ensures the search results only include phones that match your aesthetic preferences.",
+         "whatTheAgentLoses": "Letting an agent decide means you lose the ability to specify the exact shades you prefer, potentially resulting in a phone color you dislike."
+        }
+       ]
+      },
+      {
+       "id": "2.5",
+       "label": "Set the price limit",
+       "questions": [
+        {
+         "question": "What's the most you want to spend?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Adjusting the price slider ensures you only spend time comparing products that fit within your strict budget.",
+         "whatTheAgentLoses": "You lose the opportunity to decide exactly where to draw the line on price or to see if a slightly higher budget offers much better value."
+        }
+       ]
+      },
+      {
+       "id": "2.6",
+       "label": "Restrict to a sale or a deal"
+      },
+      {
+       "id": "2.7",
+       "label": "Set the condition and delivery limits",
+       "questions": [
+        {
+         "question": "Do you want to include discontinued or unreleased phones in your search?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Filtering the availability dropdown to only show currently available models ensures you don't waste time comparing phones you cannot easily buy.",
+         "whatTheAgentLoses": "You lose the opportunity to decide whether you are willing to wait for an upcoming release or hunt down a discounted older model."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "3",
+     "label": "Reach the candidates",
+     "note": "3.1 or 3.2 in every keeper except WdX2, whose form in 2.4 is the search. 3.3 where a list offers filters - applied in -Cpg and IW59, shown and skipped in s88J and 955p. 3.4 whenever a count is shown. 3.5 where the list is ranked or sortable. 3.6 on every list with badges. 3.7 on every list. 3.8 sends the task back to 3.1 with a new query - -Cpg three times, wagd across four category grids.",
+     "children": [
+      {
+       "id": "3.1",
+       "label": "Type the search and take a suggestion",
+       "questions": [
+        {
+         "question": "Which suggestion in the dropdown runs a fresh search for the brand?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search dropdown presents both a general search for the entered text and unrelated past purchase suggestions, requiring a choice to proceed.",
+         "whatTheAgentLoses": "The user loses the chance to see and potentially reorder past purchases suggested by the platform."
+        },
+        {
+         "question": "Which exact model from the dropdown goes into the comparison?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The dropdown shows multiple Vivo models like the Y19 and Y70s alongside the Y50, so you must select the exact match to ensure you are comparing the right device.",
+         "whatTheAgentLoses": "You lose the chance to see other related models suggested in the dropdown that might prompt you to adjust or expand your shortlist."
+        }
+       ]
+      },
+      {
+       "id": "3.2",
+       "label": "Browse the category tree"
+      },
+      {
+       "id": "3.3",
+       "label": "Apply or skip the filters",
+       "questions": [
+        {
+         "question": "Is the 'Choose for Me to Minimize Cost' box checked, so the parts get consolidated into one shipping hub?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Checking the 'Choose for Me to Minimize Cost' box consolidates your items into a single shipping hub to prevent paying multiple shipping fees.",
+         "whatTheAgentLoses": "You lose the opportunity to strategically use site-specific tools that optimize shipping logistics and lower your overall cost."
+        },
+        {
+         "question": "Should a 'Rated Best For' filter narrow the list?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Deciding whether to use filters like 'Rated Best For' determines how you will manage and narrow down the 15 displayed e-book readers.",
+         "whatTheAgentLoses": "You lose the judgment call on whether to browse the 15 results as-is or restrict them further using specific performance categories."
+        }
+       ]
+      },
+      {
+       "id": "3.4",
+       "label": "Read the result count",
+       "questions": [
+        {
+         "question": "Is only one phone left that fits everything you set?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Seeing that the search returned exactly one result confirms that the Samsung Galaxy A73 5G is the only device meeting your strict requirements.",
+         "whatTheAgentLoses": "You lose the opportunity to see how restrictive your filters are and decide whether to relax them or proceed with the single matching device."
+        },
+        {
+         "question": "Has the result count settled before the first constraint is set?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Monitoring the results counter for spontaneous changes ensures the page has fully loaded and the baseline candidate pool is accurate before applying filters.",
+         "whatTheAgentLoses": "Delegating this means losing the visual confirmation that the site's search index is stable, risking reliance on an agent that might proceed with incomplete or glitchy baseline data."
+        }
+       ]
+      },
+      {
+       "id": "3.5",
+       "label": "Sort or rank the list",
+       "questions": [
+        {
+         "question": "What does the Buying Guide tab actually say once it's opened?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The narrator claims the Buying Guide tab contains pricing expectations and technical jargon, but never opens it on screen to prove this is true.",
+         "whatTheAgentLoses": "The user loses the actual baseline pricing and technical context that the guide would have provided to help them make an informed decision."
+        },
+        {
+         "question": "Which tab first, Ratings, Recommended, or the Buying Guide?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The page organizes information into distinct tabs like 'Ratings', 'Recommended', and 'Buying Guide', offering different starting points for your research.",
+         "whatTheAgentLoses": "The user loses the chance to decide whether to learn about the category first through a buying guide or jump straight into comparing product ratings."
+        }
+       ]
+      },
+      {
+       "id": "3.6",
+       "label": "Read the badges and ranks",
+       "questions": [
+        {
+         "question": "Is the cheaper price on the organic listing or on the sponsored copy beside it?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The first result clearly displayed a Prime Day deal dropping the price from $21.59 to $9.27, making it a better choice to click than the identical sponsored listing.",
+         "whatTheAgentLoses": "You lose the satisfaction of spotting a significant Prime Day discount and actively choosing an organic deal over a sponsored ad."
+        }
+       ]
+      },
+      {
+       "id": "3.7",
+       "label": "Scan the cards",
+       "questions": [
+        {
+         "question": "Which parts are in the 'Daily Driver' tier, and what do they cost?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Checking the base price and clicking for more info on specific items like the CENTRIC ceramic brake pads ensures the product fits your budget and driving needs.",
+         "whatTheAgentLoses": "You lose the ability to personally weigh the price against the detailed specifications of a specific category item before adding it to your shortlist."
+        }
+       ]
+      },
+      {
+       "id": "3.8",
+       "label": "Revise the search",
+       "questions": [
+        {
+         "question": "Did the dropdown offer the product you meant, or a different one with matching letters?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Typing the abbreviation 'PS 4' only brought up unrelated Philips products, requiring the full name 'Play Station 4' to surface the correct Sony console.",
+         "whatTheAgentLoses": "The user loses the ability to intuitively troubleshoot and rephrase search queries when a site's specific search index fails to recognize common abbreviations."
+        },
+        {
+         "question": "Are these results actually the thing you searched for?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The initial search results display loosely related items like wooden tracks and duvet covers, prompting a decision on whether refining the search will yield better model train deals.",
+         "whatTheAgentLoses": "You lose the personal judgment of deciding when a batch of search results is too irrelevant to your specific hobby to bother scrolling through."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "4",
+     "label": "Build the shortlist",
+     "note": "4.1 in every keeper that opens a page. 4.2 in the four compare-tool runs, capped at three in 955p and seven in X8Wi. 4.3 wherever the site offers an alternative or a variant list. 4.4 in X8Wi, 64ZA, TTzY, IW59 and s88J. 4.5 sends a dropped candidate back to 4.1 for the next. 4.6 is the cart in TTzY and IW59 and the second tab in wagd and -Cpg.",
+     "children": [
+      {
+       "id": "4.1",
+       "label": "Open a candidate's page",
+       "questions": [
+        {
+         "question": "Which product do you open next?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays multiple Augason Farms products with varying prices, ratings, and availability, requiring you to decide which item merits a closer look.",
+         "whatTheAgentLoses": "Delegating this choice means losing the opportunity to intuitively select a product based on your personal preferences for specific food types and price points."
+        },
+        {
+         "question": "Open the top-ranked product to see its scores?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays the top product's overall score of 85 and its specific performance breakdowns, which helps decide if it warrants further investigation.",
+         "whatTheAgentLoses": "The user loses the opportunity to personally evaluate how specific metrics like readability and responsiveness align with their own preferences."
+        }
+       ]
+      },
+      {
+       "id": "4.2",
+       "label": "Add to the compare slots",
+       "questions": [
+        {
+         "question": "Which device goes into the comparison next?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows an active comparison of two devices and an '+ Add to comparison' button that allows including up to seven items.",
+         "whatTheAgentLoses": "The user loses the ability to decide which specific additional products to include in the evaluation."
+        },
+        {
+         "question": "Before Compare is pressed, are these the devices you meant?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The interface requires clicking the specific compare button below the input fields to generate the side-by-side evaluation.",
+         "whatTheAgentLoses": "You lose the hands-on confirmation of exactly which two products are being submitted for the side-by-side evaluation."
+        }
+       ]
+      },
+      {
+       "id": "4.3",
+       "label": "Take or refuse the suggested rival"
+      },
+      {
+       "id": "4.4",
+       "label": "Pick the exact variant",
+       "questions": [
+        {
+         "question": "Closeout price or regular stock for this part?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The dropdown reveals a wholesaler closeout option for $10.21 versus regular inventory for $16.15, presenting a direct choice between cost savings and standard stock.",
+         "whatTheAgentLoses": "You lose the opportunity to decide whether the cost savings of a closeout deal are worth potential trade-offs like private label packaging or limited warranties."
+        },
+        {
+         "question": "Which version of this phone goes into the comparison, the plain model or a regional or dual-SIM one?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search dropdown presents multiple variants of the Samsung Galaxy Note 4, requiring a choice of the exact model to compare.",
+         "whatTheAgentLoses": "The user loses the ability to specify exactly which regional or dual-SIM variant of the phone they want to include in the comparison."
+        }
+       ]
+      },
+      {
+       "id": "4.5",
+       "label": "Drop a candidate"
+      },
+      {
+       "id": "4.6",
+       "label": "Hold the candidates somewhere"
+      }
+     ]
+    },
+    {
+     "id": "5",
+     "label": "Compare the candidates",
+     "note": "5.1 in the four compare-tool runs and TTzY's table. 5.2 wherever the site shows a score or a ranking. 5.3 on every product page. 5.4 where images carry the label or the quality. 5.5 on every card or page with a rating. 5.6 in VxAE alone (-Cpg and 955p skip the reviews on purpose). 5.7 in IW59 and TTzY, where shipping is a column or a calculation. 5.8 where a per-unit price prints. 5.9 in wagd and -Cpg, the two tracker runs. 5.10 in wagd and TTzY.",
+     "children": [
+      {
+       "id": "5.1",
+       "label": "Read the compare table row by row",
+       "questions": [
+        {
+         "question": "Where do the two phones' specs actually differ?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The side-by-side table breaks down categories like display, camera, and battery, showing exactly what changed between the models.",
+         "whatTheAgentLoses": "You lose the chance to personally evaluate whether the specific upgrades in the newer model justify its selection."
+        },
+        {
+         "question": "Expand the specs list to see the hidden rows?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen showed the physical dimensions of the two phones and a button to reveal additional specifications.",
+         "whatTheAgentLoses": "The user loses the chance to review and compare the full list of specifications, such as display details, before making a decision."
+        }
+       ]
+      },
+      {
+       "id": "5.2",
+       "label": "Read the site's score and reasons",
+       "questions": [
+        {
+         "question": "How do the site's overall scores compare for the two phones?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Seeing that both phones scored 59 points but have specific advantages like higher pixel density or CPU speed helps you understand the high-level tradeoffs before diving into detailed specs.",
+         "whatTheAgentLoses": "You lose the chance to personally weigh which specific summary advantages, like a faster CPU or better camera, matter most to you when the overall scores are tied."
+        },
+        {
+         "question": "How does the added phone score, and does the site badge it the winner?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "This matters because the comparison page shows the newly added Samsung Galaxy A51 significantly outscoring the Oppo F15 and Vivo Y50 with a 'COMPARISON WINNER' badge.",
+         "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally review the side-by-side scores and visually confirm the clear winner among your chosen candidates."
+        }
+       ]
+      },
+      {
+       "id": "5.3",
+       "label": "Read the specs and details",
+       "questions": [
+        {
+         "question": "Do this part's specs and included pieces match what you need?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Reviewing details like the ceramic composition, pad dimensions, and included mounting hardware ensures the product fits your vehicle and performance criteria.",
+         "whatTheAgentLoses": "You lose the ability to personally verify the technical specifications and included hardware to decide if this product belongs on your shortlist."
+        },
+        {
+         "question": "How many servings, and how long does it keep?",
+         "cluster": "photos",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Checking the product images for details like the 49 servings and 10-year shelf life ensures the item meets your specific quantity and storage constraints.",
+         "whatTheAgentLoses": "Delegating this step means you lose the ability to visually verify crucial product specifications directly from the manufacturer's packaging images."
+        }
+       ]
+      },
+      {
+       "id": "5.4",
+       "label": "Inspect the photos and label",
+       "questions": [
+        {
+         "question": "Does the label photo show anything added that you didn't want?",
+         "cluster": "photos",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The product images reveal that the powder contains added cane sugar and fructose, meaning it is not pure honey.",
+         "whatTheAgentLoses": "You lose the chance to personally inspect the ingredient label to catch unwanted additives before making a purchase."
+        },
+        {
+         "question": "Do the height and price on the page fit the scale and budget you gave?",
+         "cluster": "photos",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Verifying the 3.54-inch height, the $9.27 price for 20 pieces, and the product images ensures the item actually fits your N scale layout and quality standards.",
+         "whatTheAgentLoses": "An agent might rely solely on the text specifications and miss the subjective visual inspection of the product images to determine if the off-brand quality is visually acceptable."
+        }
+       ]
+      },
+      {
+       "id": "5.5",
+       "label": "Weigh rating against review count"
+      },
+      {
+       "id": "5.6",
+       "label": "Read the reviews and opinions",
+       "questions": [
+        {
+         "question": "Do owners' reviews mention a problem the spec table doesn't?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Reading comments from users like \"[handle]\" and \"[handle]\" provides real-world context to the technical specs shown at the top of the screen.",
+         "whatTheAgentLoses": "You lose the chance to personally weigh the subjective experiences and specific nuances shared by actual users."
+        },
+        {
+         "question": "Is there a full review and video beyond the key-features list?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen presents both a quick list of hardware specs and an in-depth video review, meaning you must choose how much detail is necessary for your comparison.",
+         "whatTheAgentLoses": "The user loses the personal judgment of whether a quick glance at the specs is sufficient to evaluate the phone or if a deeper qualitative review is required."
+        }
+       ]
+      },
+      {
+       "id": "5.7",
+       "label": "Total the price with shipping and fees",
+       "questions": [
+        {
+         "question": "Does the truck icon confirm this part ships from the same warehouse as what's already in your cart, so you're not paying an extra shipping fee?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Hovering over the small truck icon next to the item reveals a tooltip confirming it could ship from the same location as your cart items, which saves money on shipping fees.",
+         "whatTheAgentLoses": "You lose the ability to strategically select parts that ship from the same location to minimize your overall shipping costs."
+        },
+        {
+         "question": "With the pickup fee added, is this still the better buy than the one you passed on?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The summary of charges reveals a $3.00 fee for store pickup that brings the total to $100.95, which you must review before selecting a payment method from the dropdown.",
+         "whatTheAgentLoses": "Delegating this step removes your visibility into final added costs like the pickup fee and your control over which payment method is used."
+        }
+       ]
+      },
+      {
+       "id": "5.8",
+       "label": "Compare the unit price",
+       "questions": [
+        {
+         "question": "How does the combo pack's price compare with the single items on the grid?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows the Dairy and Egg Combo priced at $195.99 among other Augason Farms products, letting you weigh its cost against the alternatives.",
+         "whatTheAgentLoses": "You lose the chance to rely on your own memory of past price drops to realize this is a rare deal worth grabbing."
+        }
+       ]
+      },
+      {
+       "id": "5.9",
+       "label": "Check the price history",
+       "note": "Both tracker runs do 5.9.1 then 5.9.2. wagd does 5.9.3, which narrows to three months and the seller line, and -Cpg does it for the seller line only. Both do 5.9.4, and in wagd 7.2 follows it.",
+       "children": [
+        {
+         "id": "5.9.1",
+         "label": "Open the tracker on the product",
+         "questions": [
+          {
+           "question": "Is a price tracker open, or is the page's own discount claim all we have?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen shows camelcamelcamel, which provides free Amazon price history charts and drop alerts to help you save money.",
+           "whatTheAgentLoses": "You lose the opportunity to discover and learn how to use third-party price tracking tools for your own future purchases."
+          },
+          {
+           "question": "Is the tracker showing the exact item, not a keyword match?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The camelcamelcamel search bar explicitly accepts an Amazon URL, which guarantees you are pulling the price history for the exact item you are viewing.",
+           "whatTheAgentLoses": "You lose the certainty that the exact product variant was checked rather than a potentially mismatched keyword search."
+          }
+         ]
+        },
+        {
+         "id": "5.9.2",
+         "label": "Read the low, high and current",
+         "questions": [
+          {
+           "question": "How does the current price compare to the item's historical highs and lows?",
+           "cluster": "facts",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Reviewing the price history chart and table reveals whether the current price is a good deal compared to the all-time lowest and highest prices.",
+           "whatTheAgentLoses": "You lose the opportunity to personally assess the price volatility and decide if you should buy now or wait for a price drop."
+          }
+         ]
+        },
+        {
+         "id": "5.9.3",
+         "label": "Narrow the window and the seller line",
+         "questions": [
+          {
+           "question": "Which time window is the price chart showing?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Viewing the 'All Time' price history chart provides essential context on whether the current price is genuinely a good deal or just a normal fluctuation.",
+           "whatTheAgentLoses": "Delegating this means you lose the personal reassurance of seeing the long-term pricing trends that justify buying the product right now."
+          },
+          {
+           "question": "Which seller's price line is being read?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The chart displays distinct price lines for Amazon, third-party new, and third-party used sellers, allowing you to evaluate the deal based on who is actually selling the item.",
+           "whatTheAgentLoses": "You lose the ability to prioritize the specific seller type you trust most, as an agent might just evaluate the lowest overall price regardless of whether it is new, used, or from a third party."
+          }
+         ]
+        },
+        {
+         "id": "5.9.4",
+         "label": "Judge the deal against the history",
+         "questions": [
+          {
+           "question": "How does today's price compare with what you paid before?",
+           "cluster": "facts",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen shows the combo pack currently priced at $195.99, making it important to verify if this is a fair price or a massive markup compared to what you paid before.",
+           "whatTheAgentLoses": "An agent lacks your personal memory of past orders and might accept a heavily inflated price without checking your historical purchase data."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "5.10",
+       "label": "Compare the same item across sites",
+       "questions": [
+        {
+         "question": "Is the other store cheaper for the same item?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Seeing specific prices like $10.06 for the Black Bean Burger helps you decide if the cost difference is worth switching away from your primary store.",
+         "whatTheAgentLoses": "You lose the chance to weigh your personal retailer preferences against the actual price differences shown in the search results."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "6",
+     "label": "Check what you compared",
+     "note": "These are checks on numbers the user has already read, and most keepers make none of them. Below is where each one applies in the corpus. 6.1 applies wherever a table has more than one row or column that could be the item the user asked for. 6.2 applies wherever the same number shows up on two different screens. 6.3 applies wherever a discount is stated. 6.4 applies after any filter, department or form field. 6.5 applies wherever the site's score or badge is the reason. 6.6 applies wherever two rows could be different products.",
+     "children": [
+      {
+       "id": "6.1",
+       "label": "Check the row and column you read"
+      },
+      {
+       "id": "6.2",
+       "label": "Check the figure agrees across screens",
+       "questions": [
+        {
+         "question": "Does this checkout cover everything in the cart, or just one retailer's items?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The global cart displayed four items totaling $121.78, but the checkout page summary only shows two items for $97.95 because it excludes items from other vendors.",
+         "whatTheAgentLoses": "You lose the opportunity to catch that the checkout process has split your order by vendor, which could result in accidentally leaving some of your chosen items unpurchased."
+        },
+        {
+         "question": "Does the number of items on the category card match the number shown in the ratings table?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The category card indicated 48 items, but the ratings table only displayed 47, meaning one product is missing from the comparison.",
+         "whatTheAgentLoses": "An agent might overlook this discrepancy and miss out on evaluating a potentially suitable product."
+        }
+       ]
+      },
+      {
+       "id": "6.3",
+       "label": "Check the discount against the real price",
+       "questions": [
+        {
+         "question": "Is the saving real, or measured against a price nobody actually charges?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays multiple price points and a countdown timer, making it important to check historical data to see if the $146.99 price is actually a rare discount.",
+         "whatTheAgentLoses": "An agent might take the advertised 36 percent discount at face value and select the item without verifying its true historical value."
+        }
+       ]
+      },
+      {
+       "id": "6.4",
+       "label": "Check the constraint is still applied"
+      },
+      {
+       "id": "6.5",
+       "label": "Check what the score or badge rests on",
+       "questions": [
+        {
+         "question": "Is a banner saying the site no longer tests this category, while scores still show?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The interface shows detailed ratings and overall scores for 15 models while simultaneously displaying a banner that says they are not currently testing e-book readers, creating a contradiction in the data's reliability.",
+         "whatTheAgentLoses": "The user loses the human intuition to spot contradictory site warnings and question the validity of the comparison data before making a purchase decision."
+        }
+       ]
+      },
+      {
+       "id": "6.6",
+       "label": "Check the rows are the same product"
+      }
+     ]
+    },
+    {
+     "id": "7",
+     "label": "Settle on the pick",
+     "note": "7.1 shows up in the seven keepers that say a verdict. 7.2 shows up in wagd, where the run ends without picking an item. 7.3 and 7.4 in TTzY and IW59, the two cart runs. 7.5 in TTzY alone, where everything past the payment summary happens after the task is done. 7.6 in the keepers that leave the comparison page without picking an item.",
+     "children": [
+      {
+       "id": "7.1",
+       "label": "State the pick and its reason",
+       "questions": [
+        {
+         "question": "Is this row really the lowest price for the first book, or is a cheaper one right above it?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The price comparison table shows that the new copy from Weber at $30.35 is significantly cheaper than the alternatives from Half and Amazon.",
+         "whatTheAgentLoses": "You lose the satisfaction of personally reviewing the comparison table to ensure you are getting the best possible deal on your course materials."
+        },
+        {
+         "question": "For the second book, cheaper and slower, or pricier and faster?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The price comparison block presents multiple options varying by price, condition, retailer, and delivery time, requiring a specific tradeoff.",
+         "whatTheAgentLoses": "You lose the opportunity to personally balance your budget against your tolerance for used conditions and longer shipping times."
+        }
+       ]
+      },
+      {
+       "id": "7.2",
+       "label": "Set a price alert instead",
+       "questions": [
+        {
+         "question": "What target price should you set for the price drop alert?",
+         "cluster": "watch",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Entering a realistic desired price below the current $10.66 ensures you only receive an email notification when a meaningful discount occurs.",
+         "whatTheAgentLoses": "You lose the ability to personally weigh how much of a discount is worth delaying the purchase for."
+        },
+        {
+         "question": "Did the price watch save?",
+         "cluster": "receipts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Confirming the green checkmark and success message ensures the tracker is active, meaning you won't have to manually check the retailer's site every day for a price drop.",
+         "whatTheAgentLoses": "You lose the immediate peace of mind that comes from personally verifying the price alert was successfully registered."
+        }
+       ]
+      },
+      {
+       "id": "7.3",
+       "label": "Add the pick to the cart",
+       "questions": [
+        {
+         "question": "Should the small add-on the site offers go in the order too?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen shows an info popup detailing a 5-pack of random collector magnets for $1.25, presenting an optional novelty add-on.",
+         "whatTheAgentLoses": "The user loses the chance to make a spontaneous, personal choice about purchasing a fun, low-cost novelty item."
+        }
+       ]
+      },
+      {
+       "id": "7.4",
+       "label": "Verify the cart matches the pick",
+       "questions": [
+        {
+         "question": "Check out with just this in the cart, or keep browsing?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The cart shows the Bosch brake pads for $22.99, requiring a decision to either finalize the order or return to the catalog.",
+         "whatTheAgentLoses": "You lose the control to decide whether to finalize the current selection or continue browsing for additional items."
+        },
+        {
+         "question": "Does the cart hold only what was added just now?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "An unexplained jump in the cart's item count and subtotal between moments indicates that products were added off-screen, breaking the continuity of the selection process.",
+         "whatTheAgentLoses": "The user loses oversight of their final purchase and budget if the agent adds unapproved items to the cart without showing the comparison and selection process."
+        }
+       ]
+      },
+      {
+       "id": "7.5",
+       "label": "Hand off to checkout",
+       "questions": [
+        {
+         "question": "Do you want to take over at the sign-in or payment form?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen shows a payment-method dropdown and empty credit card fields, requiring a decision on whether to expose sensitive financial data to finalize the purchase.",
+         "whatTheAgentLoses": "The delegator loses control over their sensitive financial information and the final authorization of the actual purchase."
+        }
+       ]
+      },
+      {
+       "id": "7.6",
+       "label": "Stop without a pick"
+      }
+     ]
+    }
+   ]
+  }
+ },
  "contentpublish": {
   "task": "upload and publish a video on a video platform's creator flow (YouTube Studio primarily; Vimeo): select or drag in the file, fill the details — title, description, thumbnail choice or upload, playlist, audience/made-for-kids declaration — set visibility (public, unlisted, scheduled), publish, and see the video live or scheduled; complete when the published/scheduled confirmation or the live watch page is on screen. Surface pinned: the creator upload flow — quick Shorts/feed-style posting belongs to socialpost, channel-growth advice and monetization talk without an upload session are off-task.",
   "tree": {
