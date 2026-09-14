@@ -49110,6 +49110,1040 @@
    ]
   }
  },
+ "localsearch": {
+  "task": "find a local provider or place by criteria (Yelp, Google Maps): set the criteria — service, area, rating, price — search, compare candidates through ratings, reviews, photos, and details, cross-check between them, and settle on one; complete when the chosen place's details or contact page is on screen as the verdict. Surface pinned: a maps or local-reviews site/app. Variants: booking the appointment or reservation afterwards, and turn-by-turn navigation, do not belong.",
+  "tree": {
+   "id": "0",
+   "label": "Find a local place by criteria",
+   "note": "1 runs in every keeper. 2 fixes the area (e.g., the map's own view, a centered location, a typed city, an anchored place, or a route in 2.5). 3 names the service. 4 runs only where a filter or a sort is touched, which is four keepers. 5 reads what came back and 5.7 loops to 3 for a new word or category - three keepers run it three times. 6 compares the candidates, mostly from the results list. 7 opens one and reads it, and 8 checks what it says. 9 is where the choice is made, though nine keepers stop at 9.7 instead. 6.4 can send the task back to 7 for the next candidate. WECH, hJNv and CC-h each do this once.",
+   "children": [
+    {
+     "id": "1",
+     "label": "Reach the search surface",
+     "note": "1.1 in every keeper. 1.2 where the app or its version is checked first (QE7Z and hJNv). 1.3 only in the three keepers that touch an account. 1.4 whenever the app opens somewhere other than the map. 1.5 in the six keepers that choose between a search bar, a chip row, a Nearby button or a tab before typing anything.",
+     "children": [
+      {
+       "id": "1.1",
+       "label": "Open the map or directory",
+       "questions": [
+        {
+         "question": "Is the address typed in the bar the right one for Google Maps?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The address bar displays 'google.com/maps' alongside a matching autocomplete suggestion, confirming the destination is accurate without needing to click.",
+         "whatTheAgentLoses": "You lose the chance to verify the exact URL being accessed before the search platform loads."
+        },
+        {
+         "question": "Has the map loaded, with its search box showing?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Verifying the presence of the 'Search Google Maps' box and location settings ensures you are ready to input your specific search parameters.",
+         "whatTheAgentLoses": "You lose the ability to visually confirm the starting map context and verify that the correct search interface has successfully loaded."
+        }
+       ]
+      },
+      {
+       "id": "1.2",
+       "label": "Check the app and version fit",
+       "questions": [
+        {
+         "question": "Should you open this app to find local professionals?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows the App Store page for Thumbtack, making it important to confirm it is the right tool for the task before proceeding.",
+         "whatTheAgentLoses": "The user loses the chance to verify the app's relevance and trustworthiness before using it to find a provider."
+        },
+        {
+         "question": "Do you want to install the app, or keep using the website?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The Google Play and App Store tabs show the Tripadvisor app is highly rated and available to install, offering a dedicated mobile platform for your search.",
+         "whatTheAgentLoses": "You lose the choice of whether to use a potentially more optimized mobile application or stick to the web browser for finding a provider."
+        }
+       ]
+      },
+      {
+       "id": "1.3",
+       "label": "Sign in or stay signed out",
+       "questions": [
+        {
+         "question": "Do you want to sign in, or stay signed out?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The modal presents multiple options like Google or email, which determines how your account is accessed and linked to the platform.",
+         "whatTheAgentLoses": "The user loses the ability to choose which of their personal accounts or email addresses is linked to the service."
+        },
+        {
+         "question": "Do you need anything in the profile menu, or should we go back to the search bar?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows the profile menu open with options like 'My Collections' and 'Account Settings', presenting a choice between managing your account and starting a search.",
+         "whatTheAgentLoses": "The user loses the opportunity to consult their previously saved collections or adjust account preferences before initiating the search."
+        }
+       ]
+      },
+      {
+       "id": "1.4",
+       "label": "Get past the opening screen"
+      },
+      {
+       "id": "1.5",
+       "label": "Choose where to start the search",
+       "questions": [
+        {
+         "question": "Do you want to start from a recent search, a trending category, or a past project?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays recent searches like appliance repair alongside trending categories, offering multiple ways to initiate your search.",
+         "whatTheAgentLoses": "The user loses the ability to organically browse available service categories or conveniently resume a past search from their history."
+        },
+        {
+         "question": "Do you want the city's overview page, or the listings themselves?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search results mixed a general 'DESTINATION' page with specific 'HOTEL' listings, making it necessary to choose the right entry point for a broad city overview.",
+         "whatTheAgentLoses": "You lose the opportunity to dictate whether the search should start with a broad overview of the city or jump directly into specific accommodations."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "label": "Fix the search area",
+     "note": "one of 2.1 to 2.5 sets it - 2.1 in the map keepers who never touch the area, 2.2 where the map is recentered, 2.3 where a city or postcode is typed or already filled, 2.4 in Ie8R alone, 2.5 in the two route runs and OUD6's stop. 2.6 whenever the map is moved after a search - BCrE twice, and QE7Z where the chip is never tapped. 2.7 wherever a distance or a walking time is on screen, because it is measured from the map's center, an anchor, or the phone, and the interface never says which one.",
+     "questions": [
+      {
+       "question": "What area should we focus the search on?",
+       "cluster": "hand over",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "The map is currently centered on Salt Lake City, establishing the geographic boundary for the upcoming search.",
+       "whatTheAgentLoses": "You lose the ability to specify the exact city or neighborhood you want to explore for local providers."
+      },
+      {
+       "question": "Do you set the area by typing it, or by moving the map?",
+       "cluster": "hand over",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "The screen offers a search bar, recent locations, and an interactive map, requiring a choice between text-based searching or visual navigation.",
+       "whatTheAgentLoses": "You lose the intuitive, visual control of manually defining the exact neighborhood boundaries by pinching and zooming on the map."
+      }
+     ],
+     "children": [
+      {
+       "id": "2.1",
+       "label": "Let the map's view stand"
+      },
+      {
+       "id": "2.2",
+       "label": "Centre the map on your location",
+       "questions": [
+        {
+         "question": "Is the map centred on your current location before the search runs, rather than on wherever it was left?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Ensuring the map is centered on your actual location prevents searching in the wrong region, like the currently displayed area around Kolkata and Khulna.",
+         "whatTheAgentLoses": "You lose the assurance that the search results will be conveniently located near you rather than in a default or previously viewed region."
+        },
+        {
+         "question": "Is the map centred on your current location again after it was moved?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The map interface allows free panning and zooming, making the top-right arrow icon essential for quickly snapping the view back to the blue dot representing where you are.",
+         "whatTheAgentLoses": "You lose the intuitive spatial awareness of manually exploring the surrounding streets and physically orienting the search around your exact location."
+        }
+       ]
+      },
+      {
+       "id": "2.3",
+       "label": "Type the city or postcode"
+      },
+      {
+       "id": "2.4",
+       "label": "Anchor a place and search around it",
+       "questions": [
+        {
+         "question": "Do you want to search around this place, or read more about the place itself?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The information panel presents action buttons like 'Nearby' alongside the palace's description and admission fee, prompting a choice on how to proceed.",
+         "whatTheAgentLoses": "You lose the spontaneous ability to decide whether exploring the surrounding area is more valuable than reading further details about this specific place."
+        }
+       ]
+      },
+      {
+       "id": "2.5",
+       "label": "Set the route to search along",
+       "note": "These run in order: 2.5.1, 2.5.2 (XJxr's start is the phone's own location, so nothing is typed there), 2.5.3, and 2.5.4. ZSip and XJxr run all four before any restaurant or station exists; OUD6 runs 2.5.4 from inside directions it already has.",
+       "children": [
+        {
+         "id": "2.5.1",
+         "label": "Enter the destination",
+         "questions": [
+          {
+           "question": "Do you want one of the suggested places, or a search for exactly what you typed?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen displays specific autocomplete options like 'Manchester Airport' and 'Manchester Piccadilly', which might format or narrow the search differently than the raw typed text.",
+           "whatTheAgentLoses": "You lose the opportunity to choose whether to rely on the app's predefined location entities or execute a custom keyword search."
+          },
+          {
+           "question": "Which terminal at the airport are you going to?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen displayed a list of specific destinations within Manchester Airport, such as Terminal 1, Terminal 2, and Terminal 3.",
+           "whatTheAgentLoses": "The user loses the ability to specify their exact terminal, which could result in the agent selecting the wrong location."
+          }
+         ]
+        },
+        {
+         "id": "2.5.2",
+         "label": "Enter the starting point"
+        },
+        {
+         "id": "2.5.3",
+         "label": "Read the route before searching",
+         "questions": [
+          {
+           "question": "How long is the route, and is there traffic on it?",
+           "cluster": "facts",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen shows a 2 hour 48 minute travel time over 142 miles and warns of current congestion on the M6 causing delays.",
+           "whatTheAgentLoses": "You lose the ability to personally review the travel time, distance, and specific traffic warnings to decide if the journey is feasible for your schedule."
+          }
+         ]
+        },
+        {
+         "id": "2.5.4",
+         "label": "Open the search along the route",
+         "questions": [
+          {
+           "question": "Is the search scoped to your route rather than the whole map?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Clicking the 'Search along the route...' field ensures you find providers without deviating from your planned 1 hour 27 minute path.",
+           "whatTheAgentLoses": "You lose the ability to personally verify that the search is strictly constrained to your preferred driving route."
+          },
+          {
+           "question": "Is the stop added inside the route rather than as a new destination?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The dropdown menu lists several route modifications, making it the correct place to select 'Add stop' to include another destination.",
+           "whatTheAgentLoses": "Delegating this means you lose the chance to personally customize your travel route with specific errands along the way."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "2.6",
+       "label": "Pan and search this area",
+       "questions": [
+        {
+         "question": "Do you want to run the search again in this new area?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The map has been moved to show Brentwood and Ingatestone, but the visible red pins are still from the previous search area.",
+         "whatTheAgentLoses": "You lose the ability to manually define the exact geographic boundaries to focus your search on."
+        }
+       ]
+      },
+      {
+       "id": "2.7",
+       "label": "Check where the distances are measured from"
+      }
+     ]
+    },
+    {
+     "id": "3",
+     "label": "Name the service",
+     "note": "3.1 or 3.2 in every keeper, and 3.3 whenever the suggestion list mixes category rows with business rows - which is every phone keeper. 3.4 where a recent search is offered; hJNv uses it, jHrC does not. 3.5 only in the directory and the two hotel runs, where the site asks for a detail before it will list anyone. 3.6 in OUD6 alone.",
+     "children": [
+      {
+       "id": "3.1",
+       "label": "Type the service and take a suggestion",
+       "questions": [
+        {
+         "question": "Which of the suggested categories is the one you need?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting the most accurate category from the dropdown, such as 'Appliance Repair or Maintenance' instead of 'Appliance Installation', ensures the search results yield providers equipped for your specific problem.",
+         "whatTheAgentLoses": "You lose the opportunity to precisely define the scope of your problem using the platform's specific service categories."
+        },
+        {
+         "question": "Should you use quotes around your search terms to force an exact match?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Enclosing the search terms in quotes ensures the results specifically match a 24-hour dentist instead of showing general dental clinics.",
+         "whatTheAgentLoses": "You lose the chance to manually apply search operators like quotes to strictly filter out irrelevant general providers."
+        }
+       ]
+      },
+      {
+       "id": "3.2",
+       "label": "Pick a category chip or tile",
+       "questions": [
+        {
+         "question": "What type of place do you want to search for along the route?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The 'Search along this route' panel offers categories like 'Accommodations', 'Food & drink', 'Services', and 'Attractions' to filter the results.",
+         "whatTheAgentLoses": "The user loses the opportunity to specify the exact category of stops they need during their trip."
+        }
+       ]
+      },
+      {
+       "id": "3.3",
+       "label": "Tell a category row from a business row",
+       "questions": [
+        {
+         "question": "Do you want the category search, or one of the named stores?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays a mix of specific places and category searches like \"Comic Book Stores Search Nearby\" as you type.",
+         "whatTheAgentLoses": "The user loses the ability to quickly pivot their search using the app's real-time category suggestions."
+        },
+        {
+         "question": "Which of these suggestions do you want?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search dropdown presents multiple nearby options like 'Album', 'Pulp's Comics', and 'Declik Comics', requiring a decision on which store to evaluate.",
+         "whatTheAgentLoses": "The user surrenders the choice of which specific comic book store to investigate first from the initial search results."
+        }
+       ]
+      },
+      {
+       "id": "3.4",
+       "label": "Reuse a recent search",
+       "questions": [
+        {
+         "question": "Do you want to reuse a recent search, or type a new one?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays recent searches like 'Boriyakhurd Chhattisgarh', offering a quick shortcut if your current goal matches a past one.",
+         "whatTheAgentLoses": "An agent might select a similar-looking recent search to save time instead of crafting the precise query you know is needed to get the right results."
+        },
+        {
+         "question": "Do you want one of your saved places, or a new search?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays your saved lists and recently added locations like Dolphin Mall and Wynwood, providing an opportunity to revisit previous candidates.",
+         "whatTheAgentLoses": "An agent might ignore your saved library entirely or pick a past location at random, missing your specific intent to either reuse a saved place or search from scratch."
+        }
+       ]
+      },
+      {
+       "id": "3.5",
+       "label": "Answer the site's detail prompts",
+       "questions": [
+        {
+         "question": "Which appliance brand needs repair?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen prompts for the appliance brand to match with the right pros, marking it as important.",
+         "whatTheAgentLoses": "The user loses the ability to specify their exact appliance brand, potentially leading to matches with pros who cannot service it."
+        },
+        {
+         "question": "What dates and how many guests should the hotel search use?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Setting the exact check-in and check-out dates on the calendar and adjusting the guest dropdown ensures the search results only show hotels with availability for your specific group.",
+         "whatTheAgentLoses": "You lose the ability to flexibly adjust your travel dates to find better prices or ensure the room configuration perfectly matches your group's preferences."
+        }
+       ]
+      },
+      {
+       "id": "3.6",
+       "label": "Ask by voice",
+       "questions": [
+        {
+         "question": "Did the voice search actually give this place's opening hours?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen only displays generic web links and an FAQ about dining rooms rather than the actual operating hours for a specific nearby location.",
+         "whatTheAgentLoses": "The user is misled into believing the exact hours were found when the agent only provided generic, unclicked search links."
+        },
+        {
+         "question": "Did the voice search apply the modifier you asked for - nearest, best or cheapest?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Using specific voice commands like 'nearest' or 'best' allows the system to instantly generate a filtered list of Italian restaurants with their distances, ratings, and operating hours.",
+         "whatTheAgentLoses": "Delegating this search means you lose the convenience of quickly adjusting your criteria through natural voice commands to instantly see different filtered results."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "4",
+     "label": "Narrow the results",
+     "note": "4.1 to 4.4 in WECH, which applies two and drops one; qQGM opens the panel and applies nothing; BCrE and OUD6 read the chip bar aloud and leave it. 4.5 in _7Q_ alone. 4.6 after any filter is touched, and also in the runs where no filter is touched at all, because the chips under the search bar are the only record of what is active. 4.7 never appears in any of the recordings. thirteen keepers skip this goal.",
+     "questions": [
+      {
+       "question": "Which filters do you want on?",
+       "cluster": "hand over",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "The filters modal offers options like price ranges, deals, and cancellation policies to help narrow the list to what fits your needs and budget.",
+       "whatTheAgentLoses": "You lose the ability to personally balance trade-offs between price, ratings, and specific perks like free cancellation."
+      }
+     ],
+     "children": [
+      {
+       "id": "4.1",
+       "label": "Set a rating floor",
+       "questions": [
+        {
+         "question": "What minimum rating do you want to require?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen offers minimum rating thresholds from 2.0 to 4.5 stars, letting you filter out lower-quality options from the search results.",
+         "whatTheAgentLoses": "You lose the ability to decide how strictly to filter for quality, potentially missing out on good places if the threshold is set too high."
+        }
+       ]
+      },
+      {
+       "id": "4.2",
+       "label": "Set a price band"
+      },
+      {
+       "id": "4.3",
+       "label": "Filter to open now",
+       "questions": [
+        {
+         "question": "Do you need the provider to be open right now?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The filters panel offers options like 'Open now' and 'Any time', which determines if the search should be restricted to places available immediately.",
+         "whatTheAgentLoses": "You lose the ability to decide whether immediate availability is strictly necessary or if you are willing to wait for a place that opens later."
+        }
+       ]
+      },
+      {
+       "id": "4.4",
+       "label": "Filter by cuisine or feature"
+      },
+      {
+       "id": "4.5",
+       "label": "Change the sort order",
+       "questions": [
+        {
+         "question": "Is the list sorted by distance rather than by relevance?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen defaults to sorting by 'Relevance', but finding the nearest gas station requires changing this filter to sort by distance.",
+         "whatTheAgentLoses": "You lose the chance to prioritize immediate proximity over the default relevance algorithm based on your current urgency."
+        }
+       ]
+      },
+      {
+       "id": "4.6",
+       "label": "Confirm which filters are active"
+      },
+      {
+       "id": "4.7",
+       "label": "Set the distance radius"
+      }
+     ]
+    },
+    {
+     "id": "5",
+     "label": "Read the result set",
+     "note": "5.1 where a count or a Top-N header is printed. 5.2 wherever an ad sits above the list - fK2k on both surfaces, mW9- on the hotel list. 5.3 in every keeper that gets a list; 5.4 on every card that carries hours or a distance; 5.5 in the phone keepers, who read the map more than the list. 5.6 is where the user decides to go on to 6 or back to 3 through 5.7. Ie8R, BCrE and jHrC run 5.7 three, three and two times.",
+     "children": [
+      {
+       "id": "5.1",
+       "label": "Read the result count"
+      },
+      {
+       "id": "5.2",
+       "label": "Tell sponsored from organic"
+      },
+      {
+       "id": "5.3",
+       "label": "Read rating and count on each card",
+       "questions": [
+        {
+         "question": "Has the results list loaded, so the rating and count you are reporting are from it and not from before?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen still shows the Mysore Palace overview and no search results for malls, making the claimed rating and review count for Garuda Mall a complete hallucination.",
+         "whatTheAgentLoses": "The user is given fabricated data about a potential destination, completely undermining the reliability of the search and comparison process."
+        },
+        {
+         "question": "Are the rating and review count you are reporting the ones on the card?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Confirming the exact rating and review count ensures the details for this specific restaurant remain consistent across different views.",
+         "whatTheAgentLoses": "The user loses the confidence of personally verifying the exact reputation metrics of the candidate they are considering."
+        }
+       ]
+      },
+      {
+       "id": "5.4",
+       "label": "Read hours and distance on the card"
+      },
+      {
+       "id": "5.5",
+       "label": "Read the pins on the map",
+       "questions": [
+        {
+         "question": "Which pin on the map do you open first?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The map displays multiple nearby options with varying ratings, such as Zippyfeed Cafe at 4.8 and Banana Leaf at 3.9, so choosing one is necessary to evaluate its specific details.",
+         "whatTheAgentLoses": "You lose the opportunity to visually balance the geographic convenience of the restaurants against their overall ratings."
+        },
+        {
+         "question": "Were the pins read for hours and distance, not just the one card the map highlighted?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The map displays multiple gas station pins and highlights one, offering a spatial overview of the available options.",
+         "whatTheAgentLoses": "The user loses the ability to visually gauge the geographic spread of the gas stations and intuitively pick one based on location."
+        }
+       ]
+      },
+      {
+       "id": "5.6",
+       "label": "Judge whether the set is good enough",
+       "questions": [
+        {
+         "question": "Are these results good enough to compare, or do you want more filters first?",
+         "cluster": "refine",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Seeing broad results like Jeeva's Greek Café and The Other Place Restaurant prompts the decision of whether to browse them as-is or narrow the list down using specific filters.",
+         "whatTheAgentLoses": "You lose the personal judgment of knowing when to browse a broad list of highly-rated restaurants versus when to strictly filter for more specific criteria."
+        },
+        {
+         "question": "Do you want to open these web results, or switch to the map?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays several sponsored and organic web results for 24-hour dentists, presenting a choice between browsing websites directly or using a localized map tool.",
+         "whatTheAgentLoses": "You lose the opportunity to bypass sponsored web listings in favor of a dedicated local map search."
+        }
+       ]
+      },
+      {
+       "id": "5.7",
+       "label": "Clear and search again",
+       "questions": [
+        {
+         "question": "What do you search for next?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search bar provided suggestions like 'petrol pumps nearby' as you typed, requiring a decision on which specific term to execute.",
+         "whatTheAgentLoses": "You lose the ability to spontaneously pivot your search criteria to a completely different need based on your current situation."
+        },
+        {
+         "question": "Was the last search cleared before the next one ran, so its pins are not still on the map?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search bar displays the active query with an 'x' icon, which must be tapped to clear the text and reset the map.",
+         "whatTheAgentLoses": "You lose the peace of mind of manually verifying that the previous search is fully cleared before starting a new one."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "6",
+     "label": "Compare the candidates",
+     "note": "6.1 in every keeper that says why it picked, and in Xm7w, which reads the numbers and then picks the other place. 6.2 in the three keepers where a price is on the card. 6.3 in the route and anchor keepers, where hours and detour decide. 6.4 wherever a candidate is dropped or the next one is opened - it sends the task back to 7 for the next page.",
+     "children": [
+      {
+       "id": "6.1",
+       "label": "Weigh rating against review count",
+       "questions": [
+        {
+         "question": "Which rating has more reviews behind it?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Both restaurants show a 4.6-star rating, but the second option has significantly more reviews, making its score statistically more reliable and less likely to be skewed by paid reviews.",
+         "whatTheAgentLoses": "You lose the ability to apply your personal skepticism and intuition regarding how many reviews are needed to truly trust a high rating."
+        }
+       ]
+      },
+      {
+       "id": "6.2",
+       "label": "Weigh the price"
+      },
+      {
+       "id": "6.3",
+       "label": "Weigh distance, detour and hours",
+       "questions": [
+        {
+         "question": "Which of the places that still fit do you want to go with?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays several highly-rated Italian restaurants like Dolce Italian and Cecconi's with varying distances and operating hours, requiring a choice based on your specific preferences.",
+         "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-offs between distance, operating hours, and ratings when selecting a candidate from the search results."
+        }
+       ]
+      },
+      {
+       "id": "6.4",
+       "label": "Move to the next candidate",
+       "questions": [
+        {
+         "question": "Do you want to look at the similar places suggested below, or go back to your results?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The page suggests alternatives like Vdara and ARIA with lower starting prices and high review counts, which might offer better value.",
+         "whatTheAgentLoses": "You lose the chance to personally decide whether these algorithmically suggested alternatives are worth exploring over your original search results."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "7",
+     "label": "Read the candidate's page",
+     "note": "7.1 appears in the nine keepers that open anything, 7.2 on every opened page, and 7.3 wherever the hours are read by day. 7.4 in only three keepers, 7.5 and 7.6 in WECH alone with hJNv beside it. 7.7 where photos are opened, 7.8 where an About or amenities block is read. 7.9 whenever the page carries the business's own words. 7.10 appears in the directory and the reservation runs, where the page states whether the business accepts a booking. Xm7w runs 7.1 and 7.2 and leaves within nine seconds.",
+     "children": [
+      {
+       "id": "7.1",
+       "label": "Open the candidate's page",
+       "questions": [
+        {
+         "question": "Is the result about to be opened an ad rather than a real result?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays a mix of sponsored and organic results alongside a map of markers, requiring you to choose a specific listing to access its contact details and directions.",
+         "whatTheAgentLoses": "You lose the opportunity to visually evaluate the map locations yourself to decide which dentist's details are most convenient to investigate further."
+        }
+       ]
+      },
+      {
+       "id": "7.2",
+       "label": "Read the details panel",
+       "questions": [
+        {
+         "question": "Do this pro's fee, experience and past hires look right to you?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Checking details like the $89 consulting fee, 30 years of combined experience, and 113 past hires helps you gauge the provider's reliability and affordability.",
+         "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between their specific experience level, hiring history, and upfront consulting fee."
+        },
+        {
+         "question": "Do this hotel's rating, award badge and prices look right to you?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays a 4.0 rating, a Travelers' Choice badge, and price comparisons from various booking sites, which are crucial factors in evaluating the hotel's value.",
+         "whatTheAgentLoses": "You lose the ability to personally weigh the significance of specific awards and price differences against your own comfort and budget preferences."
+        }
+       ]
+      },
+      {
+       "id": "7.3",
+       "label": "Read the hours by day",
+       "questions": [
+        {
+         "question": "Are today's hours on screen, not just a general open-until line?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Scrolling down to the ordinary page content reveals the full weekly schedule without needing to click the \"See hours\" button in the header.",
+         "whatTheAgentLoses": "You lose the personal reassurance of visually verifying the exact daily schedule directly within the restaurant's detailed information."
+        }
+       ]
+      },
+      {
+       "id": "7.4",
+       "label": "Read the reviews",
+       "questions": [
+        {
+         "question": "Should the reviews be read, or is the rating enough?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Although the overview shows a high 4.6-star rating from over 2,000 people, clicking the 'Reviews' tab lets you read actual customer feedback to confirm the quality.",
+         "whatTheAgentLoses": "You lose the opportunity to personally weigh the nuances of customer praises and complaints to decide if the restaurant meets your specific standards."
+        },
+        {
+         "question": "Are the sub-scores, like cleanliness and value, as good as the overall rating?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Reviewing the category-specific scores for cleanliness, location, and value reveals if the hotel's strengths align with what you care about most.",
+         "whatTheAgentLoses": "You lose the chance to decide if a lower score in a specific category like value or service is a dealbreaker for your stay."
+        }
+       ]
+      },
+      {
+       "id": "7.5",
+       "label": "Sort or filter the reviews",
+       "questions": [
+        {
+         "question": "Should the reviews be sorted by newest instead of the site's pick?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The detail panel offers multiple tabs, and choosing how to sort the reviews determines which customer experiences shape your evaluation.",
+         "whatTheAgentLoses": "You lose the chance to personally filter the reviews and interpret the nuances of past customer experiences according to your own standards."
+        }
+       ]
+      },
+      {
+       "id": "7.6",
+       "label": "Check the reviewers' history",
+       "questions": [
+        {
+         "question": "Are the recent reviews from reviewers with a history, or one-off accounts?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Checking recent dates and reviewer stats like review counts and Local Guide badges helps verify that the high ratings are authentic and current.",
+         "whatTheAgentLoses": "You lose the ability to personally judge the authenticity of the reviewers based on their profile stats and recent activity patterns."
+        }
+       ]
+      },
+      {
+       "id": "7.7",
+       "label": "Look at the photos"
+      },
+      {
+       "id": "7.8",
+       "label": "Read the amenities and specialties",
+       "questions": [
+        {
+         "question": "Do you want to open the About tab for more on this place?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "While the overview shows basic details like the $10-20 price range and hours, the 'About' tab might reveal specific amenities or a vibe that better matches your preferences.",
+         "whatTheAgentLoses": "You lose the chance to personally evaluate the restaurant's detailed description and specific offerings beyond its basic ratings and hours."
+        },
+        {
+         "question": "Does the amenities list cover what you need?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Reviewing the detailed list of accessibility features, service options, and offerings ensures the restaurant can accommodate your specific requirements.",
+         "whatTheAgentLoses": "You lose the ability to personally weigh whether specific features like wheelchair accessibility or comfort food offerings align with your unique preferences for the outing."
+        }
+       ]
+      },
+      {
+       "id": "7.9",
+       "label": "Read the provider's own claims"
+      },
+      {
+       "id": "7.10",
+       "label": "Check the availability",
+       "questions": [
+        {
+         "question": "Does opening the availability check start a request in your name?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displayed a calendar modal asking to pick a few days for the pro to start and an option to let them suggest other dates.",
+         "whatTheAgentLoses": "You lose the ability to decide whether to initiate contact with this specific provider or close the calendar to keep looking."
+        },
+        {
+         "question": "Do you want to check prices for specific dates?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays a date picker and default prices from various booking sites, allowing you to see accurate rates for your intended stay.",
+         "whatTheAgentLoses": "The agent might skip entering specific dates, leaving you with inaccurate price estimates that do not reflect your actual travel period."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "8",
+     "label": "Cross-check the candidate",
+     "note": "these are judgment calls, and most keepers make none of them. 8.1 to 8.3 wherever the same figure appears on two screens (e.g., the list and the page, the map and the card, the site and its partner site). 8.4 whenever the suggestion list or the search offered more than one thing under one name. 8.5 on every page that carries a closed, unclaimed or matched label. 8.6 appears where a second site's figure is on screen. OUD6 and qQGM show one by design, and WECH shows one by leaving for the website. 8.7 does not appear in any of the recordings.",
+     "children": [
+      {
+       "id": "8.1",
+       "label": "Check the rating agrees across screens",
+       "questions": [
+        {
+         "question": "Do the rating and review count match between the list and the page?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Verifying that Centro Mall Mysore consistently shows a 4.0 rating across 522 reviews ensures the information is accurate.",
+         "whatTheAgentLoses": "The user loses the confidence of personally confirming the reliability of the candidate's reputation."
+        }
+       ]
+      },
+      {
+       "id": "8.2",
+       "label": "Check the distance agrees",
+       "questions": [
+        {
+         "question": "How much time and distance does this stop add to the route?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Comparing the route before and after adding the BP station shows a 7-minute and 1-mile detour, which is crucial for deciding if the stop is convenient.",
+         "whatTheAgentLoses": "You lose the ability to personally weigh whether a 7-minute detour is an acceptable trade-off for your specific travel schedule."
+        },
+        {
+         "question": "Does the distance on the list match the distance on the place's own card?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search results listed the distance as 218 miles while the detail card showed 252 miles, presenting a significant inconsistency that could affect travel plans.",
+         "whatTheAgentLoses": "The user loses the ability to spot this conflicting information and might end up committing to a destination that is much further away than initially expected."
+        }
+       ]
+      },
+      {
+       "id": "8.3",
+       "label": "Check the price agrees",
+       "questions": [
+        {
+         "question": "Does the final checkout price match the originally advertised deal?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Tripadvisor advertised a nightly rate of $91, but the Agoda checkout page showed a much higher base price of $159.40 before discounts.",
+         "whatTheAgentLoses": "An agent might proceed with the booking without noticing the price discrepancy, causing you to overpay due to a bait-and-switch."
+        },
+        {
+         "question": "Is the discount taken off the same as the coupon promised?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The coupon graphic promises USD27 off, but the itemized breakdown only applies a discount of USD 26.86.",
+         "whatTheAgentLoses": "You lose the opportunity to catch minor pricing discrepancies between promised promotions and the actual applied discount before finalizing the transaction."
+        }
+       ]
+      },
+      {
+       "id": "8.4",
+       "label": "Confirm it is the place you meant",
+       "questions": [
+        {
+         "question": "Which entry for this place do you mean?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The dropdown offered specific sub-locations like the museum or paid parking alongside the general Mysore Palace, which changes the exact focal point of the search.",
+         "whatTheAgentLoses": "You lose the chance to decide whether to target the general landmark or a specific facility like the parking area."
+        },
+        {
+         "question": "Did the suggestion open one business instead of a list of them?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The subtext for the 'Nearby hotel' suggestion changes from '17 km Janta Colony' to different variations involving 'Holy Hearts school' across moments 01:24, 02:02, and 02:04.",
+         "whatTheAgentLoses": "The user loses the ability to spot inconsistencies in the app's location data that might affect the reliability of the search results."
+        }
+       ]
+      },
+      {
+       "id": "8.5",
+       "label": "Check it is still open"
+      },
+      {
+       "id": "8.6",
+       "label": "Check it on a second site"
+      },
+      {
+       "id": "8.7",
+       "label": "Check the branch matches"
+      }
+     ]
+    },
+    {
+     "id": "9",
+     "label": "Settle on one",
+     "note": "One of 9.1 to 9.6 appears in the eight keepers that reach an answer. 9.1 is the verdict the task asks for, and WECH, 3u69, QE7Z and CC-h reach it. 9.2 to 9.6 are what the page offers once open, and each one goes beyond what the user asked for (9.4 and 9.5 into booking, 9.6 into navigation), so the tree stops once the user moves into booking or navigation, past what they asked for. 9.7 in the nine keepers that never open anything, and in hJNv after it cancels.",
+     "children": [
+      {
+       "id": "9.1",
+       "label": "Leave the details page as the verdict",
+       "questions": [
+        {
+         "question": "Is this the place to stop on?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Closing the information panel for 'The Other Place Restaurant' indicates you have extracted all the necessary details to compare it against other options.",
+         "whatTheAgentLoses": "You lose the opportunity to personally deliberate over the restaurant's information at your own pace before deciding to dismiss it."
+        }
+       ]
+      },
+      {
+       "id": "9.2",
+       "label": "Save, copy or share it",
+       "questions": [
+        {
+         "question": "Do you want to open the More menu for other ways to save this?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays a 'More' button that reveals organizational options like adding the store to your guides, pinning it, or downloading the map.",
+         "whatTheAgentLoses": "You lose the ability to personally organize the location into your own guides or save it for offline access."
+        },
+        {
+         "question": "Should you add this guide to your library?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays an '+ Add to Library' button that lets you save the entire curated list of locations for easy access later.",
+         "whatTheAgentLoses": "You lose the ability to personally curate and save specific collections of places to your own account for future reference."
+        }
+       ]
+      },
+      {
+       "id": "9.3",
+       "label": "Call or message the place",
+       "questions": [
+        {
+         "question": "Do you want to go back to a pro you already contacted, or start fresh?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows a completed project with an active message snippet from 'Pool and Spa LLC', offering a chance to rehire a known provider instead of starting from scratch.",
+         "whatTheAgentLoses": "You lose the choice of whether to re-engage a previously used pro or start a fresh search for someone new."
+        },
+        {
+         "question": "Which of the pros you contacted do you want to message?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays multiple contacted pros with different ratings, estimates, and message previews, requiring a decision on who to engage with next.",
+         "whatTheAgentLoses": "You lose the opportunity to personally evaluate the contractors' estimates and message previews to decide who to communicate with."
+        }
+       ]
+      },
+      {
+       "id": "9.4",
+       "label": "Start the request",
+       "questions": [
+        {
+         "question": "Does the appliance selected in this form match what you originally searched for?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen prompts you to select the exact appliance type from a list to ensure the service criteria is accurate.",
+         "whatTheAgentLoses": "You lose the guarantee that the repair request correctly identifies your broken appliance, potentially wasting time with incompatible technicians."
+        },
+        {
+         "question": "Do you want to add the model number?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The site prompts for an optional appliance model number, which could help filter for providers who service your exact machine.",
+         "whatTheAgentLoses": "Delegating this means you lose the choice of whether to share your exact appliance details upfront to get more accurate service matches."
+        }
+       ]
+      },
+      {
+       "id": "9.5",
+       "label": "Hand off to a booking partner",
+       "questions": [
+        {
+         "question": "When does free cancellation end, and what does it cost after?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "Checking the detailed cancellation policy ensures you know the exact deadline for free cancellation and any penalties for late changes.",
+         "whatTheAgentLoses": "You lose the peace of mind of personally verifying the exact cancellation deadlines and knowing how much flexibility you have."
+        },
+        {
+         "question": "Can you order straight from this restaurant's page?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Checking the pickup tab reveals whether the restaurant accepts direct orders or restricts you to third-party services like UberEats.",
+         "whatTheAgentLoses": "The user loses the ability to personally decide if they are willing to use a third-party app or if they prefer finding a restaurant with direct ordering."
+        }
+       ]
+      },
+      {
+       "id": "9.6",
+       "label": "Hand off to directions or a stop",
+       "questions": [
+        {
+         "question": "Should you get directions to this destination?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The information panel features a 'Directions' button that allows you to verify the route and travel time.",
+         "whatTheAgentLoses": "The user loses the opportunity to personally evaluate the convenience of the commute and preferred travel routes."
+        },
+        {
+         "question": "Was this restaurant's card read before it was added to your route?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The cursor is hovering over the Imperial Pizzeria row with the link previewed, presenting the choice to open its details and confirm it as your stop.",
+         "whatTheAgentLoses": "You lose the opportunity to personally review the restaurant's specific details and ratings before committing to it as a stop on your route."
+        }
+       ]
+      },
+      {
+       "id": "9.7",
+       "label": "Stop without choosing",
+       "questions": [
+        {
+         "question": "Is the place on screen your pick, or just the one the map highlighted?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays Dong Gas Station in the bottom sheet alongside other map results, making this the final moment to verify the choice before ending the task.",
+         "whatTheAgentLoses": "You lose the ability to personally verify if this specific gas station is the best option among the nearby alternatives shown on the map."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
  "lookup": {
   "task": "look up a specific parameterized public fact and read off the right value: enter the identifying parameters (a place and day for a weather forecast on weather.com or accuweather, a flight number on flightaware or the airline's site, a route and time on a transit-schedule site, a team for a sports score, a channel for a TV listing), get the result for those parameters, and read the needed value; complete when the queried value for the RIGHT parameters (right city, right flight number, right date, right route) is on screen. Surface pinned: a public information site or app (weather, flight-status, transit-schedule, sports scores, TV listings). Variants: news commentary or analysis videos, storm-chasing/weather-event footage, sports highlight reels, and app \"review\" content do not belong.",
   "tree": {

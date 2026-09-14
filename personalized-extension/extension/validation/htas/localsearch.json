@@ -1,0 +1,2138 @@
+{
+ "task": "find a local provider or place by criteria (Yelp, Google Maps): set the criteria — service, area, rating, price — search, compare candidates through ratings, reviews, photos, and details, cross-check between them, and settle on one; complete when the chosen place's details or contact page is on screen as the verdict. Surface pinned: a maps or local-reviews site/app. Variants: booking the appointment or reservation afterwards, and turn-by-turn navigation, do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Find a local place by criteria",
+  "note": "1 runs in every keeper. 2 fixes the area (e.g., the map's own view, a centered location, a typed city, an anchored place, or a route in 2.5). 3 names the service. 4 runs only where a filter or a sort is touched, which is four keepers. 5 reads what came back and 5.7 loops to 3 for a new word or category - three keepers run it three times. 6 compares the candidates, mostly from the results list. 7 opens one and reads it, and 8 checks what it says. 9 is where the choice is made, though nine keepers stop at 9.7 instead. 6.4 can send the task back to 7 for the next candidate. WECH, hJNv and CC-h each do this once.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the search surface",
+    "note": "1.1 in every keeper. 1.2 where the app or its version is checked first (QE7Z and hJNv). 1.3 only in the three keepers that touch an account. 1.4 whenever the app opens somewhere other than the map. 1.5 in the six keepers that choose between a search bar, a chip row, a Nearby button or a tab before typing anything.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Open the map or directory",
+      "questions": [
+       {
+        "question": "Is the address typed in the bar the right one for Google Maps?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The address bar displays 'google.com/maps' alongside a matching autocomplete suggestion, confirming the destination is accurate without needing to click.",
+        "whatTheAgentLoses": "You lose the chance to verify the exact URL being accessed before the search platform loads.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the address bar show google.com/maps, with a matching suggestion under it, before Enter is pressed?",
+        "say_example": "Typed <google.com/maps>, autocomplete matched"
+       },
+       {
+        "question": "Has the map loaded, with its search box showing?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the presence of the 'Search Google Maps' box and location settings ensures you are ready to input your specific search parameters.",
+        "whatTheAgentLoses": "You lose the ability to visually confirm the starting map context and verify that the correct search interface has successfully loaded.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Has the map loaded, and does it show a search box rather than a blank or unrelated screen?",
+        "say_example": "Loaded the map, search box ready"
+       },
+       {
+        "question": "Is the app that opened the one you meant to search with?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a folder of various Google apps, so you must identify the correct 'Maps' icon to begin your local search.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose their preferred local-reviews app, such as Yelp or a web browser, instead of defaulting to Google Maps.",
+        "kind": "decision",
+        "verify_form": "The agent opened a map app from the folder - check that it is the one you use; the icons sit next to each other and a different app carries different reviews and saved places.",
+        "speak": "if-wrong",
+        "check": "Does the app that just opened say Maps, or whichever app the search was meant to run in, rather than another app from the same folder?",
+        "say_example": "The app that opened is <Photos>. Going back to the folder to open <Maps>."
+       },
+       {
+        "question": "Which app do you open to start the search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays multiple applications, requiring you to select a suitable maps or reviews app to start the task.",
+        "whatTheAgentLoses": "You lose the opportunity to choose your preferred platform, such as Yelp or Google Maps, for finding local businesses.",
+        "kind": "decision",
+        "verify_form": "The agent launched one app from the home screen - check which; a maps app and a reviews app rank the same places differently.",
+        "speak": "never",
+        "check": "Does the home screen show more than one app that could plausibly serve as the maps or reviews app for this search?",
+        "say_example": "Opened <Maps> to start the search"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Check the app and version fit",
+      "questions": [
+       {
+        "question": "Should you open this app to find local professionals?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the App Store page for Thumbtack, making it important to confirm it is the right tool for the task before proceeding.",
+        "whatTheAgentLoses": "The user loses the chance to verify the app's relevance and trustworthiness before using it to find a provider.",
+        "kind": "decision",
+        "verify_form": "The agent opened the directory app off its store page - check that this is the app you wanted to search with; a different app lists different pros, and the store page's rating says nothing about whether it covers your area.",
+        "speak": "never",
+        "check": "Is the app on this store page one for finding local pros, such as a home-services or reviews app?",
+        "say_example": "Confirmed <Thumbtack> is an app for finding local pros"
+       },
+       {
+        "question": "Do you want to install the app, or keep using the website?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Google Play and App Store tabs show the Tripadvisor app is highly rated and available to install, offering a dedicated mobile platform for your search.",
+        "whatTheAgentLoses": "You lose the choice of whether to use a potentially more optimized mobile application or stick to the web browser for finding a provider.",
+        "kind": "decision",
+        "verify_form": "The agent either stayed on the website or went to install the app - check which; the app carries your location and the website carries your logged-in account.",
+        "speak": "on-event",
+        "check": "Does the page offer both a mobile-app install prompt and a way to keep using the website version?",
+        "say_example": "<Tripadvisor> is offering its app. Staying on the website. That's enough for the search."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Sign in or stay signed out",
+      "questions": [
+       {
+        "question": "Do you want to sign in, or stay signed out?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The modal presents multiple options like Google or email, which determines how your account is accessed and linked to the platform.",
+        "whatTheAgentLoses": "The user loses the ability to choose which of their personal accounts or email addresses is linked to the service.",
+        "kind": "decision",
+        "verify_form": "The agent has picked a sign-in method - check which account it is linking; the choice decides which of your accounts the site ties this search to.",
+        "speak": "on-event",
+        "check": "Is a sign-in box on the page, offering Google or email, before the search can go on?",
+        "say_example": "Found a sign-in prompt. Staying signed out. Searching doesn't need an account."
+       },
+       {
+        "question": "Do you need anything in the profile menu, or should we go back to the search bar?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the profile menu open with options like 'My Collections' and 'Account Settings', presenting a choice between managing your account and starting a search.",
+        "whatTheAgentLoses": "The user loses the opportunity to consult their previously saved collections or adjust account preferences before initiating the search.",
+        "kind": "decision",
+        "verify_form": "The agent either took a profile menu option or clicked away to the search - check which; the collections and settings in that menu are yours, and the search does not need them.",
+        "speak": "never",
+        "check": "Is a profile menu open showing account-management options (e.g. 'My Collections', 'Account Settings') rather than the search bar?",
+        "say_example": "Closed the profile menu, back to the search bar"
+       },
+       {
+        "question": "Which option in the profile menu do you need, if any?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays account options like Library, Offline Maps, and Preferences, requiring you to choose the right section to proceed with your search.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to consult your personal library of saved places or adjust specific driving preferences for the search.",
+        "kind": "decision",
+        "verify_form": "The agent picked a profile menu option - check which; library, offline maps and preferences are settings, and only the library holds places.",
+        "speak": "never",
+        "check": "Does the profile menu list only sections like Library, Offline Maps and Preferences, with no way to search from it?",
+        "say_example": "Skipped the profile menu, none of it was the search"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Get past the opening screen"
+     },
+     {
+      "id": "1.5",
+      "label": "Choose where to start the search",
+      "questions": [
+       {
+        "question": "Do you want to start from a recent search, a trending category, or a past project?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays recent searches like appliance repair alongside trending categories, offering multiple ways to initiate your search.",
+        "whatTheAgentLoses": "The user loses the ability to organically browse available service categories or conveniently resume a past search from their history.",
+        "kind": "decision",
+        "verify_form": "The agent took one of the ways in - a recent search, a trending row, or your past projects - check which; a recent search carries its old category and area with it, and a past project reopens pros you already dealt with.",
+        "speak": "never",
+        "check": "Does the home/start screen offer more than one way in - a recent-searches list, a trending-categories list, a saved-projects list, or a way to start a new search?",
+        "say_example": "Started from <a new search> rather than a recent one"
+       },
+       {
+        "question": "Do you want the city's overview page, or the listings themselves?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results mixed a general 'DESTINATION' page with specific 'HOTEL' listings, making it necessary to choose the right entry point for a broad city overview.",
+        "whatTheAgentLoses": "You lose the opportunity to dictate whether the search should start with a broad overview of the city or jump directly into specific accommodations.",
+        "kind": "decision",
+        "verify_form": "The agent took the destination result rather than a specific hotel result - check which page it landed on; the destination page is an overview and the hotel result is one property.",
+        "speak": "on-event",
+        "check": "Does the suggestion list mix a city overview entry with individual hotel listings for the same typed words?",
+        "say_example": "The results mix a city guide with <hotel> listings. Going with the listings."
+       },
+       {
+        "question": "Do you want to read the city's travel tips first, or go straight to the hotels?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The overview page offers general travel tips and popular attractions like the Fountains of Bellagio, but using the top navigation bar to select 'Hotels' immediately narrows your focus to lodging.",
+        "whatTheAgentLoses": "You lose the chance to organically discover highly-rated local attractions or travel tips that might influence your trip plans before locking in your accommodation search.",
+        "kind": "decision",
+        "verify_form": "The agent either read the destination page's advice and attractions or went straight to the hotels tab - check which; the overview page is where the area's top-rated places are listed before any search.",
+        "speak": "never",
+        "check": "Does the city overview page have a Hotels link at the top, next to the general travel tips?",
+        "say_example": "Skipped the general travel tips, went straight to <Hotels>"
+       },
+       {
+        "question": "Which category tab do you want to search under?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Exploring the available category tabs like 'Hotels' or 'Restaurants' reveals how the search prompt adapts to help you find specific types of places.",
+        "whatTheAgentLoses": "You lose the ability to browse the different search categories to discover which tailored search prompt best fits your current goal.",
+        "kind": "decision",
+        "verify_form": "The agent picked one search category tab - check which; each tab changes what the search box will look for, and search-all mixes them.",
+        "speak": "never",
+        "check": "Does the page show more than one category tab (e.g. Hotels, Restaurants, Flights) that changes what the search bar searches for?",
+        "say_example": "Selected the <Hotels> tab to match the task"
+       },
+       {
+        "question": "Do you want one of the ready-made suggestions, like Nearby, or your own search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown presents options like nearby places, sponsored content, and popular destinations that can quickly guide your search.",
+        "whatTheAgentLoses": "The user loses the chance to serendipitously discover popular destinations or conveniently use their current location for nearby suggestions.",
+        "kind": "decision",
+        "verify_form": "The agent either took a default suggestion - Nearby, a sponsored entry, a popular destination - or typed its own - check which; Nearby uses the device's location and the sponsored entry is an ad.",
+        "speak": "never",
+        "check": "Does the search bar's dropdown show default suggestions (e.g. 'Nearby', 'Popular Destinations') before any text is typed?",
+        "say_example": "Took the <Nearby> default suggestion"
+       },
+       {
+        "question": "Do you want to search from the Hotels tab?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dedicated Hotels tab provides a specialized search interface with a 'Hotel name or destination' search bar and dropdown suggestions tailored specifically for finding lodging.",
+        "whatTheAgentLoses": "You miss the opportunity to browse the platform's default hotel suggestions and discover popular lodging options in the area before committing to a specific search.",
+        "kind": "decision",
+        "verify_form": "The agent either used the hotels tab and its default suggestions or searched from the main box - check which; the tab's suggestions are the site's picks for the area.",
+        "speak": "never",
+        "check": "Once a category tab (e.g. Hotels) is selected, does it show its own default suggestions under a dedicated search bar (e.g. 'Hotel name or destination')?",
+        "say_example": "Browsed the Hotels tab's own suggestions"
+       },
+       {
+        "question": "Do you tap a visible shortcut chip or swipe to find the full list of categories?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays quick category chips like 'Gas' alongside a 'More' button, offering a choice between immediate shortcuts and browsing a full directory.",
+        "whatTheAgentLoses": "You lose the chance to explore the full directory of available services if the agent immediately clicks a quick shortcut instead of browsing.",
+        "kind": "decision",
+        "verify_form": "The agent either tapped a visible chip or swiped to the full category list - check which; the list holds categories the chip row does not show.",
+        "speak": "never",
+        "check": "Does the page show a row of quick category chips (e.g. 'Gas', 'Restaurants') alongside a 'More' control for the full category list?",
+        "say_example": "Tapped the <Gas> quick chip instead of typing"
+       },
+       {
+        "question": "Is the search box still empty, with the pins on the map just left over from before?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You must use the \"Search Apple Maps\" bar to input your criteria rather than just browsing the currently visible map pins like Bank of America or Cacique Restaurant.",
+        "whatTheAgentLoses": "The user loses the opportunity to see and select from immediate autocomplete suggestions or recent searches that appear when manually interacting with the search bar.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Is the search box still empty while pins from before are already showing on the map?",
+        "say_example": "Those pins on the map, like <Riverside Grill>, are left over. The search box is still empty."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Fix the search area",
+    "note": "one of 2.1 to 2.5 sets it - 2.1 in the map keepers who never touch the area, 2.2 where the map is recentered, 2.3 where a city or postcode is typed or already filled, 2.4 in Ie8R alone, 2.5 in the two route runs and OUD6's stop. 2.6 whenever the map is moved after a search - BCrE twice, and QE7Z where the chip is never tapped. 2.7 wherever a distance or a walking time is on screen, because it is measured from the map's center, an anchor, or the phone, and the interface never says which one.",
+    "questions": [
+     {
+      "question": "What area should we focus the search on?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The map is currently centered on Salt Lake City, establishing the geographic boundary for the upcoming search.",
+      "whatTheAgentLoses": "You lose the ability to specify the exact city or neighborhood you want to explore for local providers.",
+      "kind": "intent-check",
+      "speak": "gate",
+      "check": "Before any search runs, what place is the map centred on, or is the location field still empty?",
+      "say_example": "The map is sitting on <Fairview>. Search there, or a different area?"
+     },
+     {
+      "question": "Do you set the area by typing it, or by moving the map?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen offers a search bar, recent locations, and an interactive map, requiring a choice between text-based searching or visual navigation.",
+      "whatTheAgentLoses": "You lose the intuitive, visual control of manually defining the exact neighborhood boundaries by pinching and zooming on the map.",
+      "kind": "decision",
+      "verify_form": "The agent either typed the criteria or set the area by pinching the map - check which; a typed search runs from where the map sits, and pinching changes where that is.",
+      "speak": "never",
+      "check": "Does the page offer both a text search bar and an interactive map as ways to set the search area?",
+      "say_example": "Used the search bar to set the area"
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Let the map's view stand",
+      "questions": [
+       {
+        "question": "Is the map zoomed in enough to show the small local places, or only chains and ads?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Map platforms declutter their interfaces at higher zoom levels by hiding smaller, organic local businesses and only showing sponsored pins or major landmarks.",
+        "whatTheAgentLoses": "The user misses out on highly-rated local providers because the agent failed to zoom in far enough to force the map to render the organic search results.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "At the current zoom level, does the map show individual local businesses, or only a small number of major chains and sponsored pins?",
+        "say_example": "The map's zoomed out, so it's only showing <2> chain and sponsored pins. Zooming in to see the smaller places."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Centre the map on your location",
+      "questions": [
+       {
+        "question": "Is the map centred on your current location before the search runs, rather than on wherever it was left?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Ensuring the map is centered on your actual location prevents searching in the wrong region, like the currently displayed area around Kolkata and Khulna.",
+        "whatTheAgentLoses": "You lose the assurance that the search results will be conveniently located near you rather than in a default or previously viewed region.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the map centred on the device's current-location marker before the search runs, or is it still showing wherever it was last left (e.g. a different city)?",
+        "say_example": "The map's still centred on <Millbrook>, away from the location dot. Recentring before we search."
+       },
+       {
+        "question": "Is the map centred on your current location again after it was moved?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map interface allows free panning and zooming, making the top-right arrow icon essential for quickly snapping the view back to the blue dot representing where you are.",
+        "whatTheAgentLoses": "You lose the intuitive spatial awareness of manually exploring the surrounding streets and physically orienting the search around your exact location.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "After the map was panned or zoomed, did tapping the recentre control move the view back to the current-location marker?",
+        "say_example": "Recentred the map on the location dot"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Type the city or postcode",
+      "questions": [
+       {
+        "question": "Is the site loaded on another country's version instead of yours?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The address bar shows 'tripadvisor.com.ph', which could affect the default currency, language, or relevance of the search results.",
+        "whatTheAgentLoses": "You lose the chance to verify and correct the site's localization settings, potentially leading to prices displayed in a foreign currency.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the address bar end in another country's version of the site rather than the main one?",
+        "say_example": "This is loaded on a <different country's> version of the site. Switching to yours so prices and results match."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Anchor a place and search around it",
+      "questions": [
+       {
+        "question": "Do you want to search around this place, or read more about the place itself?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The information panel presents action buttons like 'Nearby' alongside the palace's description and admission fee, prompting a choice on how to proceed.",
+        "whatTheAgentLoses": "You lose the spontaneous ability to decide whether exploring the surrounding area is more valuable than reading further details about this specific place.",
+        "kind": "decision",
+        "verify_form": "The agent either searched nearby the anchored place or read more about the place itself - check which; nearby runs the search from that spot, and every distance after it is measured from there.",
+        "speak": "never",
+        "check": "Does the place's info panel offer both a 'Nearby' action and further details about the place itself (e.g. description, admission fee)?",
+        "say_example": "Tapped <Nearby> instead of reading more about the landmark"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Set the route to search along",
+      "note": "These run in order: 2.5.1, 2.5.2 (XJxr's start is the phone's own location, so nothing is typed there), 2.5.3, and 2.5.4. ZSip and XJxr run all four before any restaurant or station exists; OUD6 runs 2.5.4 from inside directions it already has.",
+      "children": [
+       {
+        "id": "2.5.1",
+        "label": "Enter the destination",
+        "questions": [
+         {
+          "question": "Do you want one of the suggested places, or a search for exactly what you typed?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays specific autocomplete options like 'Manchester Airport' and 'Manchester Piccadilly', which might format or narrow the search differently than the raw typed text.",
+          "whatTheAgentLoses": "You lose the opportunity to choose whether to rely on the app's predefined location entities or execute a custom keyword search.",
+          "kind": "decision",
+          "verify_form": "The agent either took an autocomplete row or searched the raw typed text - check which; a row is one specific place and the raw text is a keyword search over everything.",
+          "speak": "gate",
+          "check": "Does the destination search return more than one distinct place matching the typed text (e.g. an airport and a separate train station, both near the same city)?",
+          "say_example": "The destination search found more than one <Weston>, an airport and a train station. I'll use the airport. OK, or the station?"
+         },
+         {
+          "question": "Which terminal at the airport are you going to?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displayed a list of specific destinations within Manchester Airport, such as Terminal 1, Terminal 2, and Terminal 3.",
+          "whatTheAgentLoses": "The user loses the ability to specify their exact terminal, which could result in the agent selecting the wrong location.",
+          "kind": "intent-check",
+          "speak": "on-event",
+          "check": "Once an airport is chosen as the destination, does the page require picking a specific terminal (e.g. Terminal 1, 2, 3) rather than offering a general airport entry?",
+          "say_example": "The airport lists three terminals and no general entry. Using <Terminal 2> for now. Say if it's a different one."
+         }
+        ]
+       },
+       {
+        "id": "2.5.2",
+        "label": "Enter the starting point"
+       },
+       {
+        "id": "2.5.3",
+        "label": "Read the route before searching",
+        "questions": [
+         {
+          "question": "How long is the route, and is there traffic on it?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a 2 hour 48 minute travel time over 142 miles and warns of current congestion on the M6 causing delays.",
+          "whatTheAgentLoses": "You lose the ability to personally review the travel time, distance, and specific traffic warnings to decide if the journey is feasible for your schedule.",
+          "kind": "state-check",
+          "speak": "always",
+          "check": "What time, distance and traffic warning does the route panel show?",
+          "say_example": "The route is about <1 hour 40> over <95 miles>, with delays on <the highway>. Searching along the way."
+         }
+        ]
+       },
+       {
+        "id": "2.5.4",
+        "label": "Open the search along the route",
+        "questions": [
+         {
+          "question": "Is the search scoped to your route rather than the whole map?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Clicking the 'Search along the route...' field ensures you find providers without deviating from your planned 1 hour 27 minute path.",
+          "whatTheAgentLoses": "You lose the ability to personally verify that the search is strictly constrained to your preferred driving route.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Was the query entered into a 'Search along the route' field, rather than the general map search box?",
+          "say_example": "This searched the whole map instead of along the route. Running it again along the route only."
+         },
+         {
+          "question": "Is the stop added inside the route rather than as a new destination?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dropdown menu lists several route modifications, making it the correct place to select 'Add stop' to include another destination.",
+          "whatTheAgentLoses": "Delegating this means you lose the chance to personally customize your travel route with specific errands along the way.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "From the route-options dropdown, was 'Add stop' selected, rather than an option that would replace the destination?",
+          "say_example": "This replaced the destination instead of adding a stop. Undoing that and adding it as a stop."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Pan and search this area",
+      "questions": [
+       {
+        "question": "Do you want to run the search again in this new area?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map has been moved to show Brentwood and Ingatestone, but the visible red pins are still from the previous search area.",
+        "whatTheAgentLoses": "You lose the ability to manually define the exact geographic boundaries to focus your search on.",
+        "kind": "decision",
+        "verify_form": "The agent tapped Search this area over the new view, or did not - check which; until it is tapped the pins on screen are for the old area.",
+        "speak": "on-event",
+        "check": "After the map moved, are the pins on screen still from the old area, with a Search this area button showing?",
+        "say_example": "The map moved to <Millbrook>, but these pins are still for the old area. Refreshing the search here."
+       },
+       {
+        "question": "Did the map move or zoom out on its own when the filter went on?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Map interfaces frequently auto-adjust their bounding box when new filters are applied, which is instantly noticeable to a sighted user but easily missed if relying solely on the text list of results.",
+        "whatTheAgentLoses": "The user loses the geographic constraint they intended, potentially ending up with a provider that matches the criteria perfectly but is located in the wrong part of the city.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After a filter was applied, does the map's visible area (its centre or zoom level) differ from what it was immediately before the filter, without the person choosing to move it?",
+        "say_example": "Applying that filter also zoomed the map out, away from <the neighborhood searched>. Resetting the view before continuing."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Check where the distances are measured from"
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Name the service",
+    "note": "3.1 or 3.2 in every keeper, and 3.3 whenever the suggestion list mixes category rows with business rows - which is every phone keeper. 3.4 where a recent search is offered; hJNv uses it, jHrC does not. 3.5 only in the directory and the two hotel runs, where the site asks for a detail before it will list anyone. 3.6 in OUD6 alone.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Type the service and take a suggestion",
+      "questions": [
+       {
+        "question": "Which of the suggested categories is the one you need?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the most accurate category from the dropdown, such as 'Appliance Repair or Maintenance' instead of 'Appliance Installation', ensures the search results yield providers equipped for your specific problem.",
+        "whatTheAgentLoses": "You lose the opportunity to precisely define the scope of your problem using the platform's specific service categories.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the suggestion list offer two closely named categories for the service, such as Appliance Repair next to Appliance Installation?",
+        "say_example": "The dropdown offers <Appliance Repair> and <Appliance Installation> separately. Taking <Repair>. That's the one that matches the job."
+       },
+       {
+        "question": "Should you use quotes around your search terms to force an exact match?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Enclosing the search terms in quotes ensures the results specifically match a 24-hour dentist instead of showing general dental clinics.",
+        "whatTheAgentLoses": "You lose the chance to manually apply search operators like quotes to strictly filter out irrelevant general providers.",
+        "kind": "decision",
+        "verify_form": "The agent either put the search words in quotes or searched them loose - check which; quoted words bind together and loose ones return every dentist.",
+        "speak": "never",
+        "check": "Was the search term entered inside quotation marks to force an exact-phrase match?",
+        "say_example": "Searched with quotes around <'24-hour dentist'> for an exact match"
+       },
+       {
+        "question": "What do you want to search for?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The active search bar and keyboard require you to define your criteria so the app can populate the map with relevant local options.",
+        "whatTheAgentLoses": "You lose the ability to translate your specific current mood or nuanced needs into the exact search terms used.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Is the search bar active and empty, waiting for a typed query, with no suggestion list yet shown?",
+        "say_example": "Typed <24-hour dentist> into the open search bar"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Pick a category chip or tile",
+      "questions": [
+       {
+        "question": "What type of place do you want to search for along the route?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Search along this route' panel offers categories like 'Accommodations', 'Food & drink', 'Services', and 'Attractions' to filter the results.",
+        "whatTheAgentLoses": "The user loses the opportunity to specify the exact category of stops they need during their trip.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Within a 'Search along this route' panel, does the page offer distinct categories (e.g. Accommodations, Food & drink, Services, Attractions)?",
+        "say_example": "Picked <Food & drink> from the route's category list"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Tell a category row from a business row",
+      "questions": [
+       {
+        "question": "Do you want the category search, or one of the named stores?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a mix of specific places and category searches like \"Comic Book Stores Search Nearby\" as you type.",
+        "whatTheAgentLoses": "The user loses the ability to quickly pivot their search using the app's real-time category suggestions.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the search-suggestion dropdown mix a generic category-search entry (e.g. 'Comic Book Stores Search Nearby') together with specific named businesses?",
+        "say_example": "One suggestion searches the whole category, the rest are single stores. Taking the category search to see them all."
+       },
+       {
+        "question": "Which of these suggestions do you want?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown presents multiple nearby options like 'Album', 'Pulp's Comics', and 'Declik Comics', requiring a decision on which store to evaluate.",
+        "whatTheAgentLoses": "The user surrenders the choice of which specific comic book store to investigate first from the initial search results.",
+        "kind": "decision",
+        "verify_form": "The agent picked one result from the dropdown - check which; the rows mix a category search, two shops already in a guide, and a burger place with a matching name.",
+        "speak": "on-event",
+        "check": "Does the suggestion dropdown list several specific businesses by name (e.g. <three named stores>) without a general category-search option, and without any rating or review information shown yet?",
+        "say_example": "These suggestions are single stores, and none show a rating yet. Running the general <comic shop> search so they can be compared."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Reuse a recent search",
+      "questions": [
+       {
+        "question": "Do you want to reuse a recent search, or type a new one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays recent searches like 'Boriyakhurd Chhattisgarh', offering a quick shortcut if your current goal matches a past one.",
+        "whatTheAgentLoses": "An agent might select a similar-looking recent search to save time instead of crafting the precise query you know is needed to get the right results.",
+        "kind": "decision",
+        "verify_form": "The agent either reused a recent search or typed a new one - check which; a recent entry carries the old area and category, and a look-alike is easy to take by mistake.",
+        "speak": "never",
+        "check": "Does the page show a list of recent searches that could be reused instead of typing a new one?",
+        "say_example": "Started a new search instead of reusing the recent <Lakeside> one"
+       },
+       {
+        "question": "Do you want one of your saved places, or a new search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your saved lists and recently added locations like Dolphin Mall and Wynwood, providing an opportunity to revisit previous candidates.",
+        "whatTheAgentLoses": "An agent might ignore your saved library entirely or pick a past location at random, missing your specific intent to either reuse a saved place or search from scratch.",
+        "kind": "decision",
+        "verify_form": "The agent either took a saved place from the library or started a new search - check which; a saved place skips the comparison entirely.",
+        "speak": "never",
+        "check": "Does the page show your saved places, and does any saved guide match what you are looking for now?",
+        "say_example": "Checked the saved library, then started a new search"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Answer the site's detail prompts",
+      "questions": [
+       {
+        "question": "Which appliance brand needs repair?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts for the appliance brand to match with the right pros, marking it as important.",
+        "whatTheAgentLoses": "The user loses the ability to specify their exact appliance brand, potentially leading to matches with pros who cannot service it.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the site's form require a specific appliance brand before it will match a professional, and is that field currently empty?",
+        "say_example": "The form needs the appliance brand to match a pro. What brand is it?"
+       },
+       {
+        "question": "What dates and how many guests should the hotel search use?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Setting the exact check-in and check-out dates on the calendar and adjusting the guest dropdown ensures the search results only show hotels with availability for your specific group.",
+        "whatTheAgentLoses": "You lose the ability to flexibly adjust your travel dates to find better prices or ensure the room configuration perfectly matches your group's preferences.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the hotel search need dates and a guest count before it shows rooms, and are those still blank?",
+        "say_example": "The search needs dates and how many guests before it can show real availability. What dates, and for how many?"
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Ask by voice",
+      "questions": [
+       {
+        "question": "Did the voice search actually give this place's opening hours?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen only displays generic web links and an FAQ about dining rooms rather than the actual operating hours for a specific nearby location.",
+        "whatTheAgentLoses": "The user is misled into believing the exact hours were found when the agent only provided generic, unclicked search links.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the voice-assistant results show the actual opening hours for the specific nearby location, or only generic web links and FAQ text?",
+        "say_example": "The voice search only gave general web links. Opening the map to read this place's real hours."
+       },
+       {
+        "question": "Did the voice search apply the modifier you asked for - nearest, best or cheapest?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Using specific voice commands like 'nearest' or 'best' allows the system to instantly generate a filtered list of Italian restaurants with their distances, ratings, and operating hours.",
+        "whatTheAgentLoses": "Delegating this search means you lose the convenience of quickly adjusting your criteria through natural voice commands to instantly see different filtered results.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the list sorted or filtered the way the voice command asked, such as nearest first?",
+        "say_example": "Asked for the <nearest> one, but the list isn't sorted by distance. Re-sorting before picking."
+       },
+       {
+        "question": "Do you want to ask the assistant, or run a normal search?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search bar contains an 'Ask Gemini' prompt, offering an AI-driven alternative to standard keyword searching.",
+        "whatTheAgentLoses": "You lose the choice to utilize the platform's integrated AI assistant for potentially more conversational or tailored search results.",
+        "kind": "decision",
+        "verify_form": "The agent either used the assistant prompt in the search bar or searched normally - check which; the assistant answers in its own words and the search returns listings.",
+        "speak": "never",
+        "check": "Does the search bar show an 'Ask Gemini' (or similar AI-assistant) prompt as an alternative to typing a normal keyword search?",
+        "say_example": "Used a normal keyword search instead of <Ask Gemini>"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Narrow the results",
+    "note": "4.1 to 4.4 in WECH, which applies two and drops one; qQGM opens the panel and applies nothing; BCrE and OUD6 read the chip bar aloud and leave it. 4.5 in _7Q_ alone. 4.6 after any filter is touched, and also in the runs where no filter is touched at all, because the chips under the search bar are the only record of what is active. 4.7 never appears in any of the recordings. thirteen keepers skip this goal.",
+    "questions": [
+     {
+      "question": "Which filters do you want on?",
+      "cluster": "hand over",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The filters modal offers options like price ranges, deals, and cancellation policies to help narrow the list to what fits your needs and budget.",
+      "whatTheAgentLoses": "You lose the ability to personally balance trade-offs between price, ratings, and specific perks like free cancellation.",
+      "kind": "decision",
+      "verify_form": "The agent applied some filters and not others - check which chips are on; price, deals and cancellation terms each drop candidates, and one you did not ask for drops the wrong ones.",
+      "speak": "never",
+      "check": "Does the filters panel offer more than one filter type (e.g. price range, deals, cancellation policy)?",
+      "say_example": "Applied <price> and <rating> filters, matching the criteria already set"
+     }
+    ],
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Set a rating floor",
+      "questions": [
+       {
+        "question": "What minimum rating do you want to require?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers minimum rating thresholds from 2.0 to 4.5 stars, letting you filter out lower-quality options from the search results.",
+        "whatTheAgentLoses": "You lose the ability to decide how strictly to filter for quality, potentially missing out on good places if the threshold is set too high.",
+        "kind": "decision",
+        "verify_form": "The agent set a minimum rating from the dropdown - check the number; a floor set too high drops good places with one bad month, and none at all lets everything through.",
+        "speak": "never",
+        "check": "Does the filters panel offer a minimum-rating control (e.g. a range from 2.0 to 4.5 stars)?",
+        "say_example": "Set the minimum rating to <4.0>, matching the criteria already set"
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Set a price band"
+     },
+     {
+      "id": "4.3",
+      "label": "Filter to open now",
+      "questions": [
+       {
+        "question": "Do you need the provider to be open right now?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The filters panel offers options like 'Open now' and 'Any time', which determines if the search should be restricted to places available immediately.",
+        "whatTheAgentLoses": "You lose the ability to decide whether immediate availability is strictly necessary or if you are willing to wait for a place that opens later.",
+        "kind": "decision",
+        "verify_form": "The agent either restricted the search to places open now or left it on any time - check which; open now drops anything that opens later today, which may be exactly the place you wanted.",
+        "speak": "never",
+        "check": "Does the filters panel offer an 'Open now' option alongside 'Any time'?",
+        "say_example": "Left <Open now> off, to keep the fuller list of options"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Filter by cuisine or feature"
+     },
+     {
+      "id": "4.5",
+      "label": "Change the sort order",
+      "questions": [
+       {
+        "question": "Is the list sorted by distance rather than by relevance?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to sorting by 'Relevance', but finding the nearest gas station requires changing this filter to sort by distance.",
+        "whatTheAgentLoses": "You lose the chance to prioritize immediate proximity over the default relevance algorithm based on your current urgency.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the results list currently sorted by 'Relevance' rather than by distance, when finding the nearest option is the goal?",
+        "say_example": "The list is sorted by <Relevance>. Switching it to distance to find the nearest."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Confirm which filters are active",
+      "questions": [
+       {
+        "question": "Did the price filter button actually toggle off when you tapped it a second time?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Tapping an already-selected filter like '$$$$' is meant to deselect it, so you must visually confirm the button's highlight disappears to ensure the filter is removed.",
+        "whatTheAgentLoses": "The user loses the ability to catch a sticky filter button that fails to deselect, which would incorrectly restrict their search results to the wrong price tier.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After the second tap on the filter, does it stop showing as selected?",
+        "say_example": "The <most expensive> price filter still shows as selected after the second tap. It's still filtering the list."
+       },
+       {
+        "question": "Did the site quietly drop a filter or widen the area because there were few matches?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When local options are limited, map and review apps often quietly ignore strict filters like 'Open Now' or expand the geographic boundary to ensure they show you some results.",
+        "whatTheAgentLoses": "The user wastes time evaluating candidates that fundamentally violate their mandatory criteria or are located unreasonably far away.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the filter chips on the page still match what was set, or has the area widened or a filter dropped without saying so?",
+        "say_example": "The page widened the search area on its own, past what was set. Results now include places <outside the original area>."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Set the distance radius"
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Read the result set",
+    "note": "5.1 where a count or a Top-N header is printed. 5.2 wherever an ad sits above the list - fK2k on both surfaces, mW9- on the hotel list. 5.3 in every keeper that gets a list; 5.4 on every card that carries hours or a distance; 5.5 in the phone keepers, who read the map more than the list. 5.6 is where the user decides to go on to 6 or back to 3 through 5.7. Ie8R, BCrE and jHrC run 5.7 three, three and two times.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the result count"
+     },
+     {
+      "id": "5.2",
+      "label": "Tell sponsored from organic",
+      "questions": [
+       {
+        "question": "Do you want to skip the sponsored results at the top?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sponsored listings often prioritize paid placement over strict relevance to your search criteria.",
+        "whatTheAgentLoses": "The user loses the ability to consciously bypass ads that might be inferior matches to the organic results just below them.",
+        "kind": "decision",
+        "verify_form": "The agent either skipped the sponsored rows or read them as results - check which it opened; the sponsored rows sit above the organic ones and look the same.",
+        "speak": "on-event",
+        "check": "Is the top result labelled Sponsored or Ad, above the first unlabelled one?",
+        "say_example": "The top result is marked <Sponsored>. Skipping to the first organic one below it."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Read rating and count on each card",
+      "questions": [
+       {
+        "question": "Has the results list loaded, so the rating and count you are reporting are from it and not from before?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen still shows the Mysore Palace overview and no search results for malls, making the claimed rating and review count for Garuda Mall a complete hallucination.",
+        "whatTheAgentLoses": "The user is given fabricated data about a potential destination, completely undermining the reliability of the search and comparison process.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the results list for this search loaded and on screen, or is the rating about to be read still from an earlier screen?",
+        "say_example": "The screen is still on <the previous place's overview>. The results list hasn't loaded, so there's no rating to read yet."
+       },
+       {
+        "question": "Are the rating and review count you are reporting the ones on the card?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Confirming the exact rating and review count ensures the details for this specific restaurant remain consistent across different views.",
+        "whatTheAgentLoses": "The user loses the confidence of personally verifying the exact reputation metrics of the candidate they are considering.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the exact rating and review-count numbers about to be reported match the numbers printed on the card currently on screen?",
+        "say_example": "The card on screen says <4.4 over 612 reviews>. Correcting the figure to match."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Read hours and distance on the card"
+     },
+     {
+      "id": "5.5",
+      "label": "Read the pins on the map",
+      "questions": [
+       {
+        "question": "Which pin on the map do you open first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map displays multiple nearby options with varying ratings, such as Zippyfeed Cafe at 4.8 and Banana Leaf at 3.9, so choosing one is necessary to evaluate its specific details.",
+        "whatTheAgentLoses": "You lose the opportunity to visually balance the geographic convenience of the restaurants against their overall ratings.",
+        "kind": "decision",
+        "verify_form": "The agent picked a restaurant from the map pins - check which; the pins show ratings and the list shows hours and distance, and it read only the pins.",
+        "speak": "never",
+        "check": "Does the map show more than one pin matching the searched category, with ratings or review counts visible on their cards or popups?",
+        "say_example": "Opened <Blue Door Cafe> first, the higher-rated of the two shown"
+       },
+       {
+        "question": "Were the pins read for hours and distance, not just the one card the map highlighted?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map displays multiple gas station pins and highlights one, offering a spatial overview of the available options.",
+        "whatTheAgentLoses": "The user loses the ability to visually gauge the geographic spread of the gas stations and intuitively pick one based on location.",
+        "kind": "decision",
+        "verify_form": "The agent read the gas stations from the map rather than the list - check which one it settled on; the map highlights one card, and that is not the nearest.",
+        "speak": "on-event",
+        "check": "Besides the one card the map auto-highlighted, do the other visible pins also show hours and distance that haven't been read yet?",
+        "say_example": "Only <the highlighted station> has been checked so far. The other pins on screen also show hours and distance worth reading."
+       },
+       {
+        "question": "Do you want one of the places in this cluster, or a place with its own pin?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a bottom sheet with three clustered places like 'Mountains-To-Sea Trail', requiring a choice of which overlapping option to evaluate.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to dig into a dense cluster of options or pan the map for a more isolated location.",
+        "kind": "decision",
+        "verify_form": "The agent either opened one of the clustered places or looked for a single pin - check which; the cluster holds three places and the single pin was chosen for being alone.",
+        "speak": "on-event",
+        "check": "Is the marker a cluster that opens into several places at one spot, rather than a single pin?",
+        "say_example": "That marker is a cluster of <3> places, not one. Opening it to see them individually."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Judge whether the set is good enough",
+      "questions": [
+       {
+        "question": "Are these results good enough to compare, or do you want more filters first?",
+        "cluster": "refine",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing broad results like Jeeva's Greek Café and The Other Place Restaurant prompts the decision of whether to browse them as-is or narrow the list down using specific filters.",
+        "whatTheAgentLoses": "You lose the personal judgment of knowing when to browse a broad list of highly-rated restaurants versus when to strictly filter for more specific criteria.",
+        "kind": "decision",
+        "verify_form": "The agent either started comparing the first results or opened the filters first - check which; an unfiltered list is ranked by the site, and a filtered one by what you asked for.",
+        "speak": "never",
+        "check": "Does the current results list contain more than a couple of candidates, enough to start comparing, or is it thin enough that applying more filters first would help?",
+        "say_example": "Found <14> results, moving on to compare them"
+       },
+       {
+        "question": "Do you want to open these web results, or switch to the map?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several sponsored and organic web results for 24-hour dentists, presenting a choice between browsing websites directly or using a localized map tool.",
+        "whatTheAgentLoses": "You lose the opportunity to bypass sponsored web listings in favor of a dedicated local map search.",
+        "kind": "decision",
+        "verify_form": "The agent either opened one of the web results or switched to the map search - check which; the web results open with sponsored listings and the map lists places with hours and markers.",
+        "speak": "on-event",
+        "check": "Are these results a general web search page rather than a map or reviews app?",
+        "say_example": "This is a general web search page. Switching to the map app to search properly."
+       },
+       {
+        "question": "Are there too few good results here to work with?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a search yields only one or two mediocre results, you must decide whether to compromise on quality or expand your search radius.",
+        "whatTheAgentLoses": "The user loses the judgment call of knowing when to abandon strict criteria to find a better provider slightly further away.",
+        "kind": "decision",
+        "verify_form": "The agent judged whether the area had enough results and either widened the search or settled for what was there - check which; widening brings places further away, settling brings weaker ones.",
+        "speak": "on-event",
+        "check": "Does the current results list show only one or two candidates, all below the rating or quality bar set for the search?",
+        "say_example": "Only <2> results turned up, both under the rating you set. Widening the area to find more."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Clear and search again",
+      "questions": [
+       {
+        "question": "What do you search for next?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar provided suggestions like 'petrol pumps nearby' as you typed, requiring a decision on which specific term to execute.",
+        "whatTheAgentLoses": "You lose the ability to spontaneously pivot your search criteria to a completely different need based on your current situation.",
+        "kind": "decision",
+        "verify_form": "The agent typed a new search after the last one - check the words; the suggestions offered a nearby variant and a plain one, and they return different sets.",
+        "speak": "never",
+        "check": "Does the search bar suggest a different next query (e.g. 'petrol pumps nearby') as it's typed, distinct from the previous search's category?",
+        "say_example": "Searched next for <petrol pumps nearby>"
+       },
+       {
+        "question": "Was the last search cleared before the next one ran, so its pins are not still on the map?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search bar displays the active query with an 'x' icon, which must be tapped to clear the text and reset the map.",
+        "whatTheAgentLoses": "You lose the peace of mind of manually verifying that the previous search is fully cleared before starting a new one.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Before the next search ran, was the previous query actually cleared from the search bar (e.g. by tapping its 'x'), or are the previous search's pins still mixed in with the new results?",
+        "say_example": "The old search for <malls> was never cleared. Its pins are still mixed in with these results."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Compare the candidates",
+    "note": "6.1 in every keeper that says why it picked, and in Xm7w, which reads the numbers and then picks the other place. 6.2 in the three keepers where a price is on the card. 6.3 in the route and anchor keepers, where hours and detour decide. 6.4 wherever a candidate is dropped or the next one is opened - it sends the task back to 7 for the next page.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Weigh rating against review count",
+      "questions": [
+       {
+        "question": "Which rating has more reviews behind it?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Both restaurants show a 4.6-star rating, but the second option has significantly more reviews, making its score statistically more reliable and less likely to be skewed by paid reviews.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal skepticism and intuition regarding how many reviews are needed to truly trust a high rating.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do two or more candidates share the same (or a very close) star rating while differing sharply in review count?",
+        "say_example": "Both show <4.5> stars, but one has <1,840> reviews and the other <198>. Going with the larger count as the more reliable score."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Weigh the price",
+      "questions": [
+       {
+        "question": "Is the fee shown for the repair itself, or only for the visit to diagnose it?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The profile lists an '$89/consult estimated cost,' which likely only covers the visit and diagnosis, meaning the actual repair parts and labor will be an additional, unknown expense.",
+        "whatTheAgentLoses": "The user loses the critical distinction between the cost of getting an estimate and the total cost of fixing their appliance, potentially leading to budget surprises.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page describe the shown price as a consultation, estimate, or diagnosis fee rather than a firm total for the full job?",
+        "say_example": "The <$75> shown is a consultation fee. The repair itself isn't priced on the page."
+       },
+       {
+        "question": "Does this pro only give a price once you contact them?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator notes that some professionals require direct contact before giving a price quote, which changes how you evaluate their cost upfront.",
+        "whatTheAgentLoses": "The user loses the awareness that a lack of an upfront price isn't a glitch, but a requirement to initiate contact first.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the candidate's page withhold a price and instead require contacting the provider directly to get a quote?",
+        "say_example": "<This provider> posts no price. A quote means contacting them first. No cost to compare yet."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Weigh distance, detour and hours",
+      "questions": [
+       {
+        "question": "Which of the places that still fit do you want to go with?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays several highly-rated Italian restaurants like Dolce Italian and Cecconi's with varying distances and operating hours, requiring a choice based on your specific preferences.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the trade-offs between distance, operating hours, and ratings when selecting a candidate from the search results.",
+        "kind": "decision",
+        "verify_form": "The agent picked a restaurant from the voice results - check which; the rows show distance, hours and a rating, and two of the three are closed or far.",
+        "speak": "gate",
+        "check": "What rating, price, distance and hours does each remaining candidate show, and do they point to different places?",
+        "say_example": "Two still fit. <Harbor Grill>: <4.7> stars, <0.4 miles> away, closes in <20 minutes>. <Casa Luna>: <4.4> stars, <1.2 miles>, open till <10>. Which one? Say Harbor Grill or Casa Luna."
+       },
+       {
+        "question": "Will the place close before you could get there?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A place might pass the 'Open Now' filter but close in 10 minutes, making it a wasted trip if selected.",
+        "whatTheAgentLoses": "The user loses the practical foresight to check the exact closing time against their estimated travel time.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the page show a closing time and a drive time that together land after closing, or a closing-soon warning?",
+        "say_example": "<Casa Luna> closes at <9>. The page puts the drive at <45 minutes>, which lands after closing."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Move to the next candidate",
+      "questions": [
+       {
+        "question": "Do you want to look at the similar places suggested below, or go back to your results?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page suggests alternatives like Vdara and ARIA with lower starting prices and high review counts, which might offer better value.",
+        "whatTheAgentLoses": "You lose the chance to personally decide whether these algorithmically suggested alternatives are worth exploring over your original search results.",
+        "kind": "decision",
+        "verify_form": "The agent either opened one of the similar properties or went back to the results - check which; the similar ones are suggested by the site and some are sponsored.",
+        "speak": "on-event",
+        "check": "Does the page show a 'similar' or 'you may also like' panel of alternative properties, and is any of them labeled Sponsored?",
+        "say_example": "There's a list of similar places below. <One of them> is marked Sponsored. That one paid to be there."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Read the candidate's page",
+    "note": "7.1 appears in the nine keepers that open anything, 7.2 on every opened page, and 7.3 wherever the hours are read by day. 7.4 in only three keepers, 7.5 and 7.6 in WECH alone with hJNv beside it. 7.7 where photos are opened, 7.8 where an About or amenities block is read. 7.9 whenever the page carries the business's own words. 7.10 appears in the directory and the reservation runs, where the page states whether the business accepts a booking. Xm7w runs 7.1 and 7.2 and leaves within nine seconds.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Open the candidate's page",
+      "questions": [
+       {
+        "question": "Is the result about to be opened an ad rather than a real result?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a mix of sponsored and organic results alongside a map of markers, requiring you to choose a specific listing to access its contact details and directions.",
+        "whatTheAgentLoses": "You lose the opportunity to visually evaluate the map locations yourself to decide which dentist's details are most convenient to investigate further.",
+        "kind": "decision",
+        "verify_form": "The agent opened one of the dentist listings - check whether it was a sponsored one; the ads sit above the organic results and neither says whether the practice is actually open all night.",
+        "speak": "if-wrong",
+        "check": "Is the listing about to be opened marked Sponsored/Ad, distinct from the organic results shown with it?",
+        "say_example": "That one's an ad. The organic results are below it."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Read the details panel",
+      "questions": [
+       {
+        "question": "Do this pro's fee, experience and past hires look right to you?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking details like the $89 consulting fee, 30 years of combined experience, and 113 past hires helps you gauge the provider's reliability and affordability.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the trade-offs between their specific experience level, hiring history, and upfront consulting fee.",
+        "kind": "decision",
+        "verify_form": "The agent judged this pro's experience, fee and past hires as good enough - check the figures it read; the fee is a consult estimate, and the experience line is the pro's own text.",
+        "speak": "always",
+        "check": "What fee estimate, self-described experience claim, and hire/track-record count does the page show for this professional?",
+        "say_example": "The estimate is <$95>. The <20 years, licensed> line is their own description. The page shows <86> past hires."
+       },
+       {
+        "question": "Do this hotel's rating, award badge and prices look right to you?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 4.0 rating, a Travelers' Choice badge, and price comparisons from various booking sites, which are crucial factors in evaluating the hotel's value.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh the significance of specific awards and price differences against your own comfort and budget preferences.",
+        "kind": "decision",
+        "verify_form": "The agent judged this hotel's rating, award badge and site prices as acceptable - check what it read; the badge is the site's own award and the prices come from three different booking sites.",
+        "speak": "always",
+        "check": "What rating, award badge, and per-site prices does the page show for this hotel?",
+        "say_example": "Rated <4.0>. The <Travelers' Choice> badge is an award the site gives out, separate from the reviews. It's <$210> here, and <$198> and <$225> on two other booking sites."
+       },
+       {
+        "question": "Is there more on this card below the rating and distance?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed ratings, distance, photos, and specific features like being good for kids, which are essential for evaluating if the trail is a good fit.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally evaluate the photos and specific features to see if they match their own preferences.",
+        "kind": "decision",
+        "verify_form": "The agent read some of the trail card and not all - check what it read; ratings, distance, photos and good-for-kids sit at different scroll depths.",
+        "speak": "on-event",
+        "check": "Does the trail's card require scrolling to reach photos and feature tags (like good-for-kids), beyond the rating and distance shown up top?",
+        "say_example": "Rating and distance are at the top. Photos and <good for kids> sit further down. Scrolling to them now."
+       },
+       {
+        "question": "What payment methods does this professional accept?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The narrator explicitly points out checking the payment methods the professional uses, which is crucial if you only want to pay via credit card or cash.",
+        "whatTheAgentLoses": "The user might end up hiring a professional who doesn't accept their preferred payment method.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "What payment methods does the professional's page list?",
+        "say_example": "Accepts <cash, card, Venmo>"
+       },
+       {
+        "question": "Is this page the landmark you searched around, rather than one of the results?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the information panel for details like the ₹1,000.00 admission fee and operating hours ensures the destination fits your itinerary and budget.",
+        "whatTheAgentLoses": "You lose the ability to personally decide if the specific entry cost and opening hours are acceptable for your visit.",
+        "kind": "decision",
+        "verify_form": "The agent judged the anchor place's admission and hours as acceptable - check what it read; this is the landmark it searched around, not a candidate.",
+        "speak": "on-event",
+        "check": "Does the opened page belong to the anchor place the search was centered on, rather than a discovered candidate, and does it show an admission price and hours?",
+        "say_example": "This is the landmark itself, the one you searched around. Admission is <$14>, open <10 to 6>."
+       },
+       {
+        "question": "Are the chosen place's hours and contact details on screen?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the restaurant's detail page with its rating, categories, hours, and contact information.",
+        "whatTheAgentLoses": "The user loses the ability to confirm the restaurant's availability and contact methods before settling on it.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the opened details panel show hours and contact information (phone, address, or website) for the chosen place?",
+        "say_example": "Hours and contact are both here. Closes <9pm>, phone number listed."
+       },
+       {
+        "question": "Do this destination's distance and rating look acceptable?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the 8.9-mile distance and 71% rating ensures you are navigating to the right place before committing to the trip.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate if the travel distance and specific ratings meet your standards before getting directions.",
+        "kind": "intent-check",
+        "speak": "always",
+        "check": "What distance and rating does this destination's own panel show?",
+        "say_example": "This one is <6.2 miles> away with an <84%> rating."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Read the hours by day",
+      "questions": [
+       {
+        "question": "Are today's hours on screen, not just a general open-until line?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Scrolling down to the ordinary page content reveals the full weekly schedule without needing to click the \"See hours\" button in the header.",
+        "whatTheAgentLoses": "You lose the personal reassurance of visually verifying the exact daily schedule directly within the restaurant's detailed information.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the header show only a general 'open until' line, with the full day-by-day hours table sitting further down the page rather than behind the header's hours link?",
+        "say_example": "The header just says open until <9>. The full week's hours are further down the page. Checking those now."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Read the reviews",
+      "questions": [
+       {
+        "question": "Should the reviews be read, or is the rating enough?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Although the overview shows a high 4.6-star rating from over 2,000 people, clicking the 'Reviews' tab lets you read actual customer feedback to confirm the quality.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the nuances of customer praises and complaints to decide if the restaurant meets your specific standards.",
+        "kind": "decision",
+        "verify_form": "The agent either opened the reviews tab or judged the place from its rating and count - check which; the rating is a number and the reviews say what people liked and did not.",
+        "speak": "on-event",
+        "check": "Is the review tab still unopened while the candidate is being judged only by its overall rating and count?",
+        "say_example": "Rated <4.5> over <1,930> reviews. The reviews say what people actually liked. Opening them now."
+       },
+       {
+        "question": "Are the sub-scores, like cleanliness and value, as good as the overall rating?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the category-specific scores for cleanliness, location, and value reveals if the hotel's strengths align with what you care about most.",
+        "whatTheAgentLoses": "You lose the chance to decide if a lower score in a specific category like value or service is a dealbreaker for your stay.",
+        "kind": "decision",
+        "verify_form": "The agent read the sub-ratings - location, cleanliness, service, value - and judged them fine - check the lowest one; a weak score in the one you care about is a dealbreaker the overall rating hides.",
+        "speak": "on-event",
+        "check": "What do the sub-ratings (cleanliness, location, service, value) show individually, and is the lowest one notably weaker than the overall score?",
+        "say_example": "Overall's <4.5>, but <cleanliness> alone is <3.2>. That's hidden under the headline number."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Sort or filter the reviews",
+      "questions": [
+       {
+        "question": "Should the reviews be sorted by newest instead of the site's pick?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The detail panel offers multiple tabs, and choosing how to sort the reviews determines which customer experiences shape your evaluation.",
+        "whatTheAgentLoses": "You lose the chance to personally filter the reviews and interpret the nuances of past customer experiences according to your own standards.",
+        "kind": "decision",
+        "verify_form": "The agent sorted the reviews one way - check which; newest shows what the place is like now, most relevant shows what the site picked.",
+        "speak": "on-event",
+        "check": "What sort order are the reviews currently shown in (e.g. most relevant vs newest), and which reviews does that surface?",
+        "say_example": "Reviews are sorted by <most relevant>, the site's own pick. Switching to <newest> to see what it's like lately."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Check the reviewers' history",
+      "questions": [
+       {
+        "question": "Are the recent reviews from reviewers with a history, or one-off accounts?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking recent dates and reviewer stats like review counts and Local Guide badges helps verify that the high ratings are authentic and current.",
+        "whatTheAgentLoses": "You lose the ability to personally judge the authenticity of the reviewers based on their profile stats and recent activity patterns.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Are the newest reviews recent, and do the reviewers have a review count or a local-guide badge rather than just one review?",
+        "say_example": "The newest review is from <last week>, by someone with <481> reviews. Another one here is that account's only review, and it gave <1 star>."
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Look at the photos",
+      "questions": [
+       {
+        "question": "Are there any photos from customers, or only the business's own?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Scammers, lead-generation networks, and ghost kitchens often create fake map pins using residential addresses, empty lots, or shared industrial spaces.",
+        "whatTheAgentLoses": "The user risks driving to a non-existent location or hiring an unverified, potentially fraudulent contractor.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the listing carry any user-submitted photos or a Street View link, or does it show zero photos beyond the business's own uploaded images?",
+        "say_example": "No customer photos here. Only the business's own pictures."
+       }
+      ]
+     },
+     {
+      "id": "7.8",
+      "label": "Read the amenities and specialties",
+      "questions": [
+       {
+        "question": "Do you want to open the About tab for more on this place?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "While the overview shows basic details like the $10-20 price range and hours, the 'About' tab might reveal specific amenities or a vibe that better matches your preferences.",
+        "whatTheAgentLoses": "You lose the chance to personally evaluate the restaurant's detailed description and specific offerings beyond its basic ratings and hours.",
+        "kind": "decision",
+        "verify_form": "The agent either opened the About tab or stopped at the overview - check which; the About tab holds accessibility, service options and offerings the overview does not.",
+        "speak": "on-event",
+        "check": "Is there an About tab or section not yet opened, while the visible overview only shows price range and hours?",
+        "say_example": "Overview just shows price and hours. There's an About tab with more. Opening it."
+       },
+       {
+        "question": "Does the amenities list cover what you need?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the detailed list of accessibility features, service options, and offerings ensures the restaurant can accommodate your specific requirements.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh whether specific features like wheelchair accessibility or comfort food offerings align with your unique preferences for the outing.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "What accessibility features, service options and offerings does the amenities section list?",
+        "say_example": "Lists <wheelchair access, delivery, takeout>"
+       },
+       {
+        "question": "Were the amenities and reviews further down the page read before it was judged?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Scrolling through the page reveals the detailed amenities and recommended reviews sections needed to properly evaluate the candidate.",
+        "whatTheAgentLoses": "You lose the chance to personally interpret the nuances in customer reviews and verify if the listed amenities match your specific needs.",
+        "kind": "decision",
+        "verify_form": "The agent either scrolled to the amenities and reviews or judged the page from its header - check which; the header shows a rating over seven reviews and the sections below say what they were about.",
+        "speak": "on-event",
+        "check": "Does reaching the amenities and reviews sections require scrolling past the header, and were those sections actually reached before the page was judged?",
+        "say_example": "Header shows <4.0> over <9> reviews. Amenities and the fuller reviews are further down. Scrolling there now."
+       },
+       {
+        "question": "Is there an icon on the page, like cash only, that the text never spells out?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Local review apps frequently use small icons or badges to denote deal-breaking constraints (like payment methods or accessibility) without spelling them out in the text.",
+        "whatTheAgentLoses": "The user might arrive without the proper payment method or find the building physically inaccessible because the agent failed to parse the visual-only pictograms.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Is there an icon on the page, such as cash only or wheelchair access, that the written description never mentions?",
+        "say_example": "There's a <cash-only> icon here that isn't mentioned in the text."
+       }
+      ]
+     },
+     {
+      "id": "7.9",
+      "label": "Read the provider's own claims",
+      "questions": [
+       {
+        "question": "Does the provider say which areas they cover?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Local service providers often appear in search results for a city but state in their bio that they do not service certain zip codes.",
+        "whatTheAgentLoses": "The user loses the chance to verify the provider's actual service boundaries before wasting time contacting them.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the provider's own description state which neighborhoods or radius they serve, or is that left unstated?",
+        "say_example": "Their page says they only cover <the north side of town>. Make sure that includes your address."
+       },
+       {
+        "question": "Do the reviews or fine print mention a minimum charge, a call-out fee, or a limit on where they go?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A provider might appear cheap based on their platform price tier ($$), but the actual cost or willingness to travel to your specific zip code is often buried in the text of user reviews or the 'About' section.",
+        "whatTheAgentLoses": "The user selects a candidate based on misleading baseline pricing, only to be hit with unexpected fees or a refusal of service later.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do any reviews or fine-print text mention a minimum charge, call-out fee, or service-area restriction not reflected in the listed price band?",
+        "say_example": "A few reviews mention a <$40 call-out fee> that isn't in the price band shown."
+       }
+      ]
+     },
+     {
+      "id": "7.10",
+      "label": "Check the availability",
+      "questions": [
+       {
+        "question": "Does opening the availability check start a request in your name?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a calendar modal asking to pick a few days for the pro to start and an option to let them suggest other dates.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to initiate contact with this specific provider or close the calendar to keep looking.",
+        "kind": "decision",
+        "verify_form": "The agent opened this pro's availability calendar - check whether it went on to pick dates or closed it; the calendar is the first screen of a request in your name.",
+        "speak": "on-event",
+        "check": "Does opening 'check availability' load a calendar that starts a request flow, rather than a read-only hours display?",
+        "say_example": "Opening this starts a request in your name. Just looking for now. Nothing gets sent yet."
+       },
+       {
+        "question": "Do you want to check prices for specific dates?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a date picker and default prices from various booking sites, allowing you to see accurate rates for your intended stay.",
+        "whatTheAgentLoses": "The agent might skip entering specific dates, leaving you with inaccurate price estimates that do not reflect your actual travel period.",
+        "kind": "decision",
+        "verify_form": "The agent either entered your dates before reading prices or read the default prices - check which; the defaults are for no dates at all.",
+        "speak": "on-event",
+        "check": "Are the prices on screen the site's default (no dates chosen), or the rate for specific dates that were actually entered?",
+        "say_example": "These are the default prices, with no dates picked yet. They'll likely change once dates go in."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Cross-check the candidate",
+    "note": "these are judgment calls, and most keepers make none of them. 8.1 to 8.3 wherever the same figure appears on two screens (e.g., the list and the page, the map and the card, the site and its partner site). 8.4 whenever the suggestion list or the search offered more than one thing under one name. 8.5 on every page that carries a closed, unclaimed or matched label. 8.6 appears where a second site's figure is on screen. OUD6 and qQGM show one by design, and WECH shows one by leaving for the website. 8.7 does not appear in any of the recordings.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Check the rating agrees across screens",
+      "questions": [
+       {
+        "question": "Do the rating and review count match between the list and the page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that Centro Mall Mysore consistently shows a 4.0 rating across 522 reviews ensures the information is accurate.",
+        "whatTheAgentLoses": "The user loses the confidence of personally confirming the reliability of the candidate's reputation.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the rating and review count on the opened page match what the same candidate showed on the results list?",
+        "say_example": "List said <4.2> over <9> reviews. This page says <3.9> on the same <9> reviews."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Check the distance agrees",
+      "questions": [
+       {
+        "question": "How much time and distance does this stop add to the route?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Comparing the route before and after adding the BP station shows a 7-minute and 1-mile detour, which is crucial for deciding if the stop is convenient.",
+        "whatTheAgentLoses": "You lose the ability to personally weigh whether a 7-minute detour is an acceptable trade-off for your specific travel schedule.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "After a stop or a more specific detail (a terminal, an address) is added to the route, what updated total time and distance does the panel show, and how much do they differ from the figures before the change?",
+        "say_example": "Adding that stop took the route from <1 hr 20 min> to <1 hr 27 min>, and from <52> to <53 miles>. About <7 minutes> and <a mile> extra."
+       },
+       {
+        "question": "Does the distance on the list match the distance on the place's own card?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results listed the distance as 218 miles while the detail card showed 252 miles, presenting a significant inconsistency that could affect travel plans.",
+        "whatTheAgentLoses": "The user loses the ability to spot this conflicting information and might end up committing to a destination that is much further away than initially expected.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does this candidate's distance shown on the results list match what its own detail card shows?",
+        "say_example": "List said <131 miles>. The card for the same place says <158 miles>."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Check the price agrees",
+      "questions": [
+       {
+        "question": "Does the cost on the list match the price comparison on the provider's page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Cross-checking the estimated cost of $89 against the area average of $59 confirms that the '$30 above avg' label on the provider's profile is mathematically accurate.",
+        "whatTheAgentLoses": "You lose the ability to personally verify the platform's pricing math to ensure the cost comparisons are trustworthy.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the estimate shown add up with the above-average label printed next to it?",
+        "say_example": "The estimate is <$95>. The label beside it says <$20 above average>, but the average shown is <$59>. Those don't add up."
+       },
+       {
+        "question": "Did the prices change at all after the dates went in?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The prices displayed for the booking platforms appeared identical before and after the dates were entered, which requires verification to ensure the page updated.",
+        "whatTheAgentLoses": "The user loses the assurance of accurate pricing for their specific dates if the agent relies on unrefreshed search results.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Are the prices shown identical before and after specific dates were entered, which would mean the page never actually reloaded for those dates?",
+        "say_example": "Prices look the same before and after the dates went in. The page may not have updated."
+       },
+       {
+        "question": "Is the admission price the same every time it shows on the page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the admission price across different moments ensures the information is accurate before making a decision.",
+        "whatTheAgentLoses": "The user loses the confidence that the pricing information is accurate and consistent.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the admission price for the anchor place shown consistently across the moments the page was viewed?",
+        "say_example": "Admission showed <$14> earlier. It now shows <$16> on the same page."
+       },
+       {
+        "question": "Does the final checkout price match the originally advertised deal?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Tripadvisor advertised a nightly rate of $91, but the Agoda checkout page showed a much higher base price of $159.40 before discounts.",
+        "whatTheAgentLoses": "An agent might proceed with the booking without noticing the price discrepancy, causing you to overpay due to a bait-and-switch.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the price on the booking partner's checkout page match the price originally advertised for this stay?",
+        "say_example": "Advertised at <$104> a night. The checkout page shows <$171.20> before any discount."
+       },
+       {
+        "question": "Is the discount taken off the same as the coupon promised?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The coupon graphic promises USD27 off, but the itemized breakdown only applies a discount of USD 26.86.",
+        "whatTheAgentLoses": "You lose the opportunity to catch minor pricing discrepancies between promised promotions and the actual applied discount before finalizing the transaction.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the discount actually applied in the price breakdown match the coupon amount advertised?",
+        "say_example": "Coupon says <$30> off. The breakdown only takes off <$29.75>."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Confirm it is the place you meant",
+      "questions": [
+       {
+        "question": "Which entry for this place do you mean?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown offered specific sub-locations like the museum or paid parking alongside the general Mysore Palace, which changes the exact focal point of the search.",
+        "whatTheAgentLoses": "You lose the chance to decide whether to target the general landmark or a specific facility like the parking area.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the suggestion dropdown offer more than one distinct sub-location for the searched place (e.g. the site itself, a specific facility inside it, or its parking)?",
+        "say_example": "The dropdown has three entries for the same place. <The main entrance>, <the museum inside it>, and <its parking lot>. Going with the main one unless you say otherwise."
+       },
+       {
+        "question": "Did the suggestion open one business instead of a list of them?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The subtext for the 'Nearby hotel' suggestion changes from '17 km Janta Colony' to different variations involving 'Holy Hearts school' across moments 01:24, 02:02, and 02:04.",
+        "whatTheAgentLoses": "The user loses the ability to spot inconsistencies in the app's location data that might affect the reliability of the search results.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Did the tapped suggestion open one business's page, with one address and one set of hours, rather than a list of results?",
+        "say_example": "That suggestion opened one business, a place actually named <Best Hotels Nearby>. It isn't a list of the hotels around you."
+       },
+       {
+        "question": "Did the suggestion pick the city in the right state or country?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Map platforms frequently suggest cities with identical names in completely different states or countries, which can instantly derail your search if you accept the first autocomplete result without verifying the broader region.",
+        "whatTheAgentLoses": "The user receives search results for local providers that are hundreds or thousands of miles away because the agent blindly accepted an ambiguous autocomplete suggestion.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "What state or country does the selected city's full address (search bar or breadcrumb) show, and did the suggestions offer another city of the same name elsewhere?",
+        "say_example": "That went to <Springfield, Ohio>. There's also a <Springfield, Illinois>. Is Ohio the one you meant?"
+       },
+       {
+        "question": "Which ATM do you want added as the stop?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple nearby options, including different bank networks like Capital One and Bank of America, as well as unrelated matches like Atma Beauty, requiring you to pick the right one.",
+        "whatTheAgentLoses": "You lose the ability to choose an ATM from your preferred banking network to avoid out-of-network withdrawal fees.",
+        "kind": "decision",
+        "verify_form": "The agent added one ATM as a stop - check which; the results mixed bank ATMs with a beauty shop matched to the word, and the bank decides the fee.",
+        "speak": "gate",
+        "check": "What distinct options does the search return for the requested category (e.g. different bank networks), and does any result only match the search term by coincidence rather than actually being in that category?",
+        "say_example": "There's a mix here, <two bank ATMs> and one result that's actually a shop with ATM in its name. Which bank is yours? I'll pick that one."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Check it is still open",
+      "questions": [
+       {
+        "question": "Is there a notice saying the place has closed or moved, even though the hours say open?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search platforms sometimes have outdated main hours, but display a red warning banner or recent reviews stating the place is actually closed.",
+        "whatTheAgentLoses": "The user loses the ability to spot crucial warning signs that the business is not currently operating, preventing a wasted trip or call.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is there a banner or recent user update on the page saying the location is temporarily closed or has moved, even while the main hours field shows it as open?",
+        "say_example": "Hours say open, but there's a note from someone saying this location has actually moved."
+       },
+       {
+        "question": "Is this listing unclaimed by its owner?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The details page includes a 'Claim This Place' link, which indicates that the business owner has not verified or taken control of this map profile.",
+        "whatTheAgentLoses": "You lose the ability to factor in the listing's unverified status, which increases the risk that its operating hours or contact details are outdated.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show a 'Claim this business' or 'Unclaimed' label?",
+        "say_example": "This listing is unclaimed. The owner hasn't verified any of it."
+       },
+       {
+        "question": "Is this place actually open now, even though it came up under the Open now filter?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search platforms often prioritize relevance or sponsored status over hard filters, meaning closed businesses can still appear in the list even after you explicitly applied an 'Open Now' filter.",
+        "whatTheAgentLoses": "The user wastes a trip to a closed provider because the agent blindly trusted that the filter worked perfectly instead of verifying the actual operating status on the candidate's card.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does this candidate's own hours field actually say open right now, even though it appeared in a list that was filtered to Open Now?",
+        "say_example": "Hours here actually say closed, even though it showed up in your Open Now filtered list."
+       },
+       {
+        "question": "Is there a phone number or website on this listing at all?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Some directory listings are auto-generated and lack actual contact methods, meaning you cannot actually hire or reach the provider.",
+        "whatTheAgentLoses": "The user loses the ability to quickly abandon a dead-end profile and move on to a provider who can actually be contacted.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the page show a working phone number or website, or is this an unclaimed profile with no functional contact method?",
+        "say_example": "No phone number or website on this listing. There's no way to reach them from here."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Check it on a second site"
+     },
+     {
+      "id": "8.7",
+      "label": "Check the branch matches"
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Settle on one",
+    "note": "One of 9.1 to 9.6 appears in the eight keepers that reach an answer. 9.1 is the verdict the task asks for, and WECH, 3u69, QE7Z and CC-h reach it. 9.2 to 9.6 are what the page offers once open, and each one goes beyond what the user asked for (9.4 and 9.5 into booking, 9.6 into navigation), so the tree stops once the user moves into booking or navigation, past what they asked for. 9.7 in the nine keepers that never open anything, and in hJNv after it cancels.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Leave the details page as the verdict",
+      "questions": [
+       {
+        "question": "Is this the place to stop on?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Closing the information panel for 'The Other Place Restaurant' indicates you have extracted all the necessary details to compare it against other options.",
+        "whatTheAgentLoses": "You lose the opportunity to personally deliberate over the restaurant's information at your own pace before deciding to dismiss it.",
+        "kind": "decision",
+        "verify_form": "The agent closed this candidate's panel - check that it had read what you needed first; once closed, the next candidate replaces it.",
+        "speak": "gate",
+        "check": "Does the open details panel show the hours, rating and contact details that were read, before it is closed?",
+        "say_example": "Ready to stop on <Casa Luna>. Rated <4.6>, closes at <9>, phone listed. Stop here, or keep looking?"
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Save, copy or share it",
+      "questions": [
+       {
+        "question": "Do you want to open the More menu for other ways to save this?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'More' button that reveals organizational options like adding the store to your guides, pinning it, or downloading the map.",
+        "whatTheAgentLoses": "You lose the ability to personally organize the location into your own guides or save it for offline access.",
+        "kind": "decision",
+        "verify_form": "The agent either opened the More menu or left it - check which; that menu is where saving to a guide, pinning and downloading live.",
+        "speak": "on-event",
+        "check": "Is there a More menu on this listing with other ways to save it, such as a guide, a pin or a download?",
+        "say_example": "There's a More menu here with other ways to save this. A guide, a pin, or a download."
+       },
+       {
+        "question": "Should you add this guide to your library?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an '+ Add to Library' button that lets you save the entire curated list of locations for easy access later.",
+        "whatTheAgentLoses": "You lose the ability to personally curate and save specific collections of places to your own account for future reference.",
+        "kind": "decision",
+        "verify_form": "The agent added the whole guide to your library - check that you wanted it saved; it is someone else's list of places, stored in your account.",
+        "speak": "on-event",
+        "check": "Is what is being added someone else's whole guide rather than one place, going into your library?",
+        "say_example": "This adds a whole guide someone else made into your library, with every place in it."
+       },
+       {
+        "question": "Is the guide now in your library?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the 'Recently Added' list in the Library screen confirms that the guide, such as 'Phoenix's Best Photo Spots', is securely stored for future access.",
+        "whatTheAgentLoses": "The user loses the reassurance of visually confirming that their selected guide is safely stored in their personal library.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the library's 'Recently Added' section now list the guide that was just saved?",
+        "say_example": "Saved the <Weekend Photo Spots> guide, listed under Recently Added"
+       },
+       {
+        "question": "Was the chosen place's address copied or saved exactly as shown?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Hovering over the address reveals a 'Copy address' tooltip, offering a quick way to save the location to your clipboard.",
+        "whatTheAgentLoses": "You lose the ability to manually copy and paste the exact address into your own notes or navigation app.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the copied text match the address exactly as shown on the page?",
+        "say_example": "Copied the address exactly as shown on the page"
+       },
+       {
+        "question": "What do you want to call the new guide?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'More' menu on the location's details page offers an 'Add to Guides' option that lets you create and name a new collection.",
+        "whatTheAgentLoses": "You lose the ability to organize your saved locations into custom-named collections that fit your personal preferences.",
+        "kind": "decision",
+        "verify_form": "The agent named a new list to save the place into - check the name; it is your library and the name is what you will search for later.",
+        "speak": "on-event",
+        "check": "Is a name being entered for a new custom guide, and does one by that name already exist in the account?",
+        "say_example": "Naming the new guide <Weekend spots>. No existing guide has that name."
+       },
+       {
+        "question": "Which guide do you want this saved to?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Add to Guides' menu displays multiple custom lists like 'Comics' and 'Miami', requiring a choice of how to categorize the saved place.",
+        "whatTheAgentLoses": "The user loses the ability to personally organize the location into their own preferred custom list for future reference.",
+        "kind": "decision",
+        "verify_form": "The agent saved the place into one of your lists - check which; the wrong list is where you will not find it.",
+        "speak": "on-event",
+        "check": "Which named guides already exist to save this location into?",
+        "say_example": "There are two guides already, <Cafes> and <Road trip>. Saving into <Cafes> unless you say otherwise."
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Call or message the place",
+      "questions": [
+       {
+        "question": "Do you want to go back to a pro you already contacted, or start fresh?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a completed project with an active message snippet from 'Pool and Spa LLC', offering a chance to rehire a known provider instead of starting from scratch.",
+        "whatTheAgentLoses": "You lose the choice of whether to re-engage a previously used pro or start a fresh search for someone new.",
+        "kind": "decision",
+        "verify_form": "The agent either messaged a pro you had already contacted or started a fresh search - check which; the old thread carries an estimate and a conversation, and a fresh search starts from nothing.",
+        "speak": "on-event",
+        "check": "Does the page show an existing thread with a previously contacted pro (an estimate, an ongoing conversation), as an alternative to a new search?",
+        "say_example": "There's already a thread with <a pro you contacted before>, with an estimate on file."
+       },
+       {
+        "question": "Does the page show you've reviewed this pro before?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen notes 'You left a review' for a previously hired pro, meaning your past public feedback is tied to your identity and might influence their willingness to work with you again.",
+        "whatTheAgentLoses": "The user loses the contextual awareness that their past public actions on the platform are visible to the counterparty and could impact the current transaction.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show 'You left a review' or similar next to this professional's name?",
+        "say_example": "The page says you left this pro a review before. They can see it."
+       },
+       {
+        "question": "Do you want to call the place, or open its website?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The details panel provides quick buttons to call or visit the website, which might be necessary if you have specific questions not answered on the map.",
+        "whatTheAgentLoses": "The user loses the opportunity to directly contact the business to confirm inventory or ask specific questions before traveling there.",
+        "kind": "decision",
+        "verify_form": "The agent either called the place or opened its website - check which; a call reaches a person and the website shows what the business says about itself.",
+        "speak": "on-event",
+        "check": "Does the details panel offer both a call button and a website link?",
+        "say_example": "There's a call button and a website link here. Calling is yours to do. I can open the website."
+       },
+       {
+        "question": "Which of the pros you contacted do you want to message?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple contacted pros with different ratings, estimates, and message previews, requiring a decision on who to engage with next.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate the contractors' estimates and message previews to decide who to communicate with.",
+        "kind": "decision",
+        "verify_form": "The agent chose which contacted pro to message - check which; the two carry different estimates and different ratings, and one already has a reply waiting.",
+        "speak": "on-event",
+        "check": "What ratings, estimates, reply status, and message preview does the inbox show for each contacted pro, without opening a thread?",
+        "say_example": "<Pro A>: <$70>, replied already. <Pro B>: <$85>, no reply yet."
+       },
+       {
+        "question": "What are you handing the pro - photos, your address, your phone number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chat interface features attachment and call icons, giving you the option to send photos of the issue for a quote without revealing your personal phone number.",
+        "whatTheAgentLoses": "You lose the ability to protect your privacy by choosing exactly what contact information and visual context to share with the provider.",
+        "kind": "decision",
+        "verify_form": "The agent chose what to send the pro - check what it attached and typed; photos and an address are enough for a quote, and a phone number is more than the thread needs.",
+        "speak": "gate",
+        "check": "What is being sent in this message - photos, an address, or a phone number - and is a phone number more than the thread actually asks for?",
+        "say_example": "About to send <2 photos> and your address. The thread doesn't ask for a phone number. Include one anyway, or leave it out?"
+       },
+       {
+        "question": "Is the status you are reporting on screen, or is the page still loading?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen at this moment only shows grey placeholder bars, meaning any perceived text like a status badge is a hallucination.",
+        "whatTheAgentLoses": "The user receives completely fabricated information about their provider's status because the agent invents details from a page that hasn't loaded.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Are the fields being reported actual loaded text, or still showing grey placeholder/skeleton bars?",
+        "say_example": "That's still loading. Grey placeholder bars, no real text yet."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Start the request",
+      "questions": [
+       {
+        "question": "Does the appliance selected in this form match what you originally searched for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen prompts you to select the exact appliance type from a list to ensure the service criteria is accurate.",
+        "whatTheAgentLoses": "You lose the guarantee that the repair request correctly identifies your broken appliance, potentially wasting time with incompatible technicians.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the appliance type selected in this form match the service category that was originally searched for?",
+        "say_example": "You searched <washing machine repair>, but <dishwasher> is selected here."
+       },
+       {
+        "question": "Do you want to add the model number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The site prompts for an optional appliance model number, which could help filter for providers who service your exact machine.",
+        "whatTheAgentLoses": "Delegating this means you lose the choice of whether to share your exact appliance details upfront to get more accurate service matches.",
+        "kind": "decision",
+        "verify_form": "The agent either typed a model number or skipped the optional field - check which; the number narrows the match to pros who service your exact machine, and skipping it is quicker but vaguer.",
+        "speak": "on-event",
+        "check": "Is the model number field marked optional, and is it filled in or left blank?",
+        "say_example": "The model number is optional, and it's blank. Leaving it blank is quicker. Filling it narrows the match."
+       },
+       {
+        "question": "Do the details on this review screen match what was entered earlier?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Reviewing the $59 estimated cost, zip code, and appliance brand ensures the provider receives accurate information for your specific job.",
+        "whatTheAgentLoses": "You lose the chance to verify the consultation fee and job specifics before officially initiating a service request.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Do the zip code, appliance and estimate on this review screen match what was entered earlier?",
+        "say_example": "The review screen shows <your zip code>, <washing machine>, and a <$65> estimate. All match what was entered."
+       },
+       {
+        "question": "Does sending this request commit you to paying anything?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly states 'It's free, with no obligation to book' right above the button, clarifying that initiating contact does not yet trigger the $89 fee.",
+        "whatTheAgentLoses": "The user loses the peace of mind of knowing exactly where the boundary between a free inquiry and a binding financial commitment lies.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page state that sending this availability request carries no obligation to book or pay?",
+        "say_example": "Page says it's free, no obligation to book yet."
+       },
+       {
+        "question": "Is there a trip charge or minimum fee on this page that the search results never showed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Providers often hide their base call-out fees or minimums until the final step of initiating contact or booking.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch hidden fees and back out before officially requesting the service.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the contact or booking page state a mandatory trip charge or minimum service fee that wasn't shown in the search results or price band?",
+        "say_example": "There's a <$35 trip charge> here that wasn't on the search results."
+       },
+       {
+        "question": "Is the form set to send your request to other providers too?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When settling on a provider and using the platform's 'Request a Quote' or messaging feature, the app often pre-checks a box to blast your details to similar businesses to generate more leads.",
+        "whatTheAgentLoses": "The user loses control over their personal contact information and gets bombarded with calls and messages from providers they deliberately chose not to select.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is there a box already ticked on the form that sends the request to other providers too, or lets the pro pick other dates?",
+        "say_example": "This form is set to send your request to <3 other providers> too. That box came pre-checked. Unticking it unless you want the extra quotes."
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Hand off to a booking partner",
+      "questions": [
+       {
+        "question": "Can you order straight from this restaurant's page?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking the pickup tab reveals whether the restaurant accepts direct orders or restricts you to third-party services like UberEats.",
+        "whatTheAgentLoses": "The user loses the ability to personally decide if they are willing to use a third-party app or if they prefer finding a restaurant with direct ordering.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does this restaurant's own page support ordering directly, or does it only route to a third-party delivery app?",
+        "say_example": "No direct ordering here. It only sends you to <a delivery app>."
+       },
+       {
+        "question": "Do you want to order through the delivery app, or look for the restaurant's own site?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The ordering panel defaulted to UberEats with a warning about potential fees, making it worth considering if a direct option exists.",
+        "whatTheAgentLoses": "You lose the chance to avoid extra third-party fees by seeking out the restaurant's direct ordering system.",
+        "kind": "decision",
+        "verify_form": "The agent either went through the third-party ordering panel or looked for the restaurant's own site - check which; the panel warns of fees and the site may take orders direct.",
+        "speak": "on-event",
+        "check": "Does the ordering panel default to a third-party app with a fee warning, while the restaurant's own site is not shown as an option?",
+        "say_example": "It defaults to <a delivery app> and warns of extra fees. The restaurant's own site isn't offered here. Worth checking that separately."
+       },
+       {
+        "question": "Is the panel set to pickup or delivery, the way you wanted?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen showed delivery options in the ordering panel, which needs to match your actual choice between pickup and delivery.",
+        "whatTheAgentLoses": "You lose the ability to visually confirm that the platform has registered the correct fulfillment method before proceeding.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the ordering panel show pickup or delivery, and does that match what the task asked for?",
+        "say_example": "The panel is set to <delivery>. You asked for <pickup>."
+       },
+       {
+        "question": "Which booking site do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents multiple booking options with varying prices, refund deadlines, and payment terms that need to be evaluated.",
+        "whatTheAgentLoses": "The user loses the ability to prioritize booking flexibility, such as a later refund deadline and no prepayment, over the absolute lowest price.",
+        "kind": "decision",
+        "verify_form": "The agent picked one booking partner - check which and on what; the cheapest row carries an urgency line and the dearer ones carry free cancellation and no prepayment.",
+        "speak": "on-event",
+        "check": "What price, cancellation terms, and any urgency wording ('Only 1 left', a countdown) does each booking partner's row show?",
+        "say_example": "Cheapest at <$104> carries an 'Only 1 left' line. The other two, <$109> and <$112>, offer free cancellation."
+       },
+       {
+        "question": "Did the booking site actually load after View deal?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The cursor interacts with the Booking.com deal button, but the recording ends before the navigation completes, leaving the Bellagio details page on screen.",
+        "whatTheAgentLoses": "The user loses confirmation that the selected deal was successfully accessed and is actually available on the booking site.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After clicking 'View deal', does the current page actually show the booking provider's own site, or is the original details page still on screen?",
+        "say_example": "Still on the original page. The booking site hasn't loaded yet."
+       },
+       {
+        "question": "Are you OK sending your name, email and country to this booking site?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The booking form requires a first name, last name, email, and country of residence to proceed.",
+        "whatTheAgentLoses": "You lose the opportunity to choose exactly whose name and contact details are attached to the reservation.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "What personal information (name, email, country) does the lead-guest form on this booking partner's page ask for?",
+        "say_example": "This partner site wants a first name, last name, email, and country to continue. OK to send those, or hold here?"
+       },
+       {
+        "question": "When does free cancellation end, and what does it cost after?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the detailed cancellation policy ensures you know the exact deadline for free cancellation and any penalties for late changes.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the exact cancellation deadlines and knowing how much flexibility you have.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What cancellation deadline and penalty does the page state for this booking?",
+        "say_example": "Noted free cancellation until <Sep 14>, <$50> penalty after"
+       },
+       {
+        "question": "Are the party size and date on the reservation your real ones?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The OpenTable pop-up defaults to a table for two today, requiring you to tap 'Change' to input your specific party size and preferred date.",
+        "whatTheAgentLoses": "You lose the ability to personally browse the calendar and available time slots to find the one that best fits your schedule.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the reservation still show its generic default (e.g. today, a standard party size), or has it been changed to the actual request?",
+        "say_example": "Still on the default, <today> for a party of <2>. Change it to your real date and size before this goes further."
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Hand off to directions or a stop",
+      "questions": [
+       {
+        "question": "Should you get directions to this destination?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The information panel features a 'Directions' button that allows you to verify the route and travel time.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally evaluate the convenience of the commute and preferred travel routes.",
+        "kind": "decision",
+        "verify_form": "The agent either pressed Directions or stayed on the details - check which; directions leave the page that was the verdict.",
+        "speak": "on-event",
+        "check": "Does pressing Directions leave the details page that was serving as the verdict?",
+        "say_example": "Directions takes you off the page that was your verdict. It'll still be in your recents."
+       },
+       {
+        "question": "Was this restaurant's card read before it was added to your route?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The cursor is hovering over the Imperial Pizzeria row with the link previewed, presenting the choice to open its details and confirm it as your stop.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the restaurant's specific details and ratings before committing to it as a stop on your route.",
+        "kind": "decision",
+        "verify_form": "The agent opened this restaurant and added it as a stop - check that it read the card first; the card carries hours, price and a phone number and it went straight to Add stop.",
+        "speak": "on-event",
+        "check": "Was the candidate's card (hours, price, phone) actually read before it was added as a route stop, or did the flow go straight to Add stop?",
+        "say_example": "Went straight to Add stop without the card's hours or price being read first."
+       },
+       {
+        "question": "Is the new stop in the right place on the route?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed the new stop added after the final destination, requiring manual reordering to make the route efficient.",
+        "whatTheAgentLoses": "You lose the chance to notice and fix an illogical stop sequence before starting the navigation.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the added stop positioned before the final destination in the route's stop order, or does it sit after the destination?",
+        "say_example": "The stop landed after your destination in the list. The route would visit it last unless it's moved."
+       }
+      ]
+     },
+     {
+      "id": "9.7",
+      "label": "Stop without choosing",
+      "questions": [
+       {
+        "question": "Is the place on screen your pick, or just the one the map highlighted?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays Dong Gas Station in the bottom sheet alongside other map results, making this the final moment to verify the choice before ending the task.",
+        "whatTheAgentLoses": "You lose the ability to personally verify if this specific gas station is the best option among the nearby alternatives shown on the map.",
+        "kind": "decision",
+        "verify_form": "The agent ended the search with the highlighted station on the card - check whether that station was chosen or merely the one the map happened to highlight; nothing sorted the pins by distance.",
+        "speak": "gate",
+        "check": "Was the candidate on screen actually selected by a deliberate action, or is it just the one the map happened to highlight, with the pins otherwise unsorted?",
+        "say_example": "<Main Street Fuel> is the one on screen. Nothing sorted these by distance, and the map just happened to highlight it. Is this your pick, or keep looking?"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
