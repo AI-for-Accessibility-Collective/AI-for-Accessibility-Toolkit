@@ -2090,7 +2090,7 @@
         },
         "speak": "gate",
         "check": "What experience, rating, distance, and fee does the page list for each provider?",
-        "say_example": "Two good fits. <Dr. [name]>: <12 years> in, <4.8> stars, <1 mile> away, <500>. <Dr. Shah>: newer, <4.9> stars, <5 miles>, <350>. Which one?"
+        "say_example": "Two good fits. <Dr. [name]>: <12 years> in, <4.8> stars, <1 mile> away, <500>. <Dr. [name]>: newer, <4.9> stars, <5 miles>, <350>. Which one?"
        },
        {
         "question": "Do you want to select a sponsored provider or scroll down to the organic search results?",
@@ -2204,7 +2204,7 @@
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The dashboard listed Elisabeth B [name] as your Primary Care Provider, but you selected Carlos A [name].",
+        "why": "The dashboard listed [name] [name] as your Primary Care Provider, but you selected [name] [name].",
         "whatTheAgentLoses": "The user loses the continuity of care and familiarity that comes from seeing their established primary doctor.",
         "costDims": {
          "money": 2,
@@ -2254,14 +2254,14 @@
         },
         "speak": "never",
         "check": "Which connected providers does the page list?",
-        "say_example": "Picked <Dr. Chen> - the one you named"
+        "say_example": "Picked <Dr. [name]> - the one you named"
        },
        {
         "question": "Does the doctor the site allocated to you match what you asked for?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen shows Dr. Brice [name] as your allocated General Practitioner, offering options to view his profile, call him, or return to the previous screen.",
+        "why": "The screen shows [name] [name] as your allocated General Practitioner, offering options to view his profile, call him, or return to the previous screen.",
         "whatTheAgentLoses": "You lose the ability to personally review your allocated doctor's details or decide if you want to contact them directly.",
         "costDims": {
          "money": 0,
@@ -2570,7 +2570,7 @@
         },
         "speak": "if-wrong",
         "check": "Does the page list another scheduled appointment at the same time?",
-        "say_example": "That slot bumps into <Emma's dentist visit at 3>. It's on your list here. Pick a different time?"
+        "say_example": "That slot bumps into <[name]'s dentist visit at 3>. It's on your list here. Pick a different time?"
        },
        {
         "question": "Does the page say the booked time is not guaranteed, or that the visit runs long?",
@@ -3105,7 +3105,7 @@
           },
           "speak": "if-wrong",
           "check": "Which patient names does the Scheduled Patients list show?",
-          "say_example": "The visit list shows <Steven> and <Angela>. You only asked for <Steven>. Taking <Angela> off before booking."
+          "say_example": "The visit list shows <[name]> and <[name]>. You only asked for <[name]>. Taking <[name]> off before booking."
          },
          {
           "question": "How many family members are you booking this appointment for?",

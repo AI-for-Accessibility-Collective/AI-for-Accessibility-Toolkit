@@ -495,7 +495,7 @@
         "whatTheAgentLoses": "You lose the reassurance of personally verifying that the system has loaded the correct account details for your payee.",
         "speak": "if-wrong",
         "check": "Which fields on the payment form are prefilled, and does the account number match the saved payee?",
-        "say_example": "The form filled in the account ending <[account number]>. Your bill says <1553>. I'm fixing it."
+        "say_example": "The form filled in the account ending <[account number]>. Your bill says <[account number]>. I'm fixing it."
        }
       ]
      },
@@ -1105,7 +1105,7 @@
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The available balance for the checking account ending in *2000 inexplicably jumps from $152.00 to $27,700.17 and back again without any intervening deposits.",
+        "why": "The available balance for the checking account ending in *[other account number] inexplicably jumps from $152.00 to $27,700.17 and back again without any intervening deposits.",
         "whatTheAgentLoses": "An agent might proceed with scheduling a payment based on a falsely inflated account balance, resulting in a failed transaction or overdraft fees.",
         "speak": "if-wrong",
         "check": "Does the available balance shown for the funding account match the figure on the previous screen?",
@@ -1181,7 +1181,7 @@
           "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct bank account details are being added to the portal.",
           "speak": "if-wrong",
           "check": "Do the routing and account numbers on the verify screen match what was entered?",
-          "say_example": "The verify screen shows an account ending <1553>. The field I filled was ending <2000>. Going back."
+          "say_example": "The verify screen shows an account ending <[account number]>. The field I filled was ending <[other account number]>. Going back."
          }
         ]
        },
@@ -1437,7 +1437,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to catch a potentially critical system glitch where the wrong bank account might be charged.",
         "speak": "if-wrong",
         "check": "Do the funding account's last digits stay the same from selection through confirmation?",
-        "say_example": "The account picked ended <[account number]>. The confirmation shows <[account number]>. I don't know which one gets charged. Holding."
+        "say_example": "The account picked ended <[account number]>. The confirmation shows <[other account number]>. I don't know which one gets charged. Holding."
        },
        {
         "question": "Is the total exactly the bill amount plus the fee shown?",

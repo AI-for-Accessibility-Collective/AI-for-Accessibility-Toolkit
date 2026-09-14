@@ -776,7 +776,7 @@
      {
       "id": "5.4",
       "label": "Prepare the file elsewhere",
-      "note": "5.4.1 names what stopped it. then whichever of 5.4.2 to 5.4.5 the block calls for: a folder gets compressed, an oversized file gets uploaded, a cloud file gets its sharing set, a cloud file that has to travel as bytes gets downloaded first. 5.4.6 where the client is not connected to the storage service at all. 5.4.3 after any compression. then back into 5.2 or 5.5 - UehN is the one keeper that never gets back.",
+      "note": "5.4.1 names what stopped it. then whichever of 5.4.2, 5.4.4, 5.4.5 or 5.4.7 the block calls for: a folder gets compressed, an oversized file gets uploaded, a cloud file gets its sharing set, a cloud file that has to travel as bytes gets downloaded first. 5.4.6 where the client is not connected to the storage service at all. 5.4.3 after any compression. then back into 5.2 or 5.5 - UehN is the one keeper that never gets back.",
       "children": [
        {
         "id": "5.4.1",

@@ -888,11 +888,11 @@
         "cluster": "compare",
         "moment": "Completion",
         "moneyMoving": true,
-        "why": "The confirmation screen showed the refund going to a Visa ending in 1506, contradicting the earlier selection of a Visa ending in 1306.",
+        "why": "The confirmation screen showed the refund going to a Visa ending in [account number], contradicting the earlier selection of a Visa ending in [other account number].",
         "whatTheAgentLoses": "The user loses the ability to ensure their money is returned to the correct account if the agent ignores the payment method discrepancy.",
         "speak": "if-wrong",
         "check": "What card or destination does the confirmation name for the refund, and which was selected?",
-        "say_example": "The refund is going to a card ending <1506>. You picked the one ending <1306>. Want me to change it, or ask support?"
+        "say_example": "The refund is going to a card ending <[account number]>. You picked the one ending <[other account number]>. Want me to change it, or ask support?"
        }
       ]
      },

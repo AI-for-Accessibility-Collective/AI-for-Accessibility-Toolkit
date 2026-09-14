@@ -255,11 +255,11 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen asks what you would like to insure and provides a pre-filled [address] Avalon Sedan alongside an option to quote a different vehicle.",
+        "why": "The screen asks what you would like to insure and provides a pre-filled 2013 Honda Accord Sedan alongside an option to quote a different vehicle.",
         "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to confirm that the system correctly identified the exact vehicle you want to insure.",
         "speak": "if-wrong",
         "check": "What vehicle does the page show pre-filled or found at the address, and does it match the year, make and model in the task?",
-        "say_example": "The site already had a <2007 Toyota Avalon> on file for you. You asked about the <2019 Nissan Rogue>, so I'm choosing quote a different vehicle."
+        "say_example": "The site already had a <2013 Honda Accord> on file for you. You asked about the <2019 Nissan Rogue>, so I'm choosing quote a different vehicle."
        },
        {
         "question": "Should any other cars the site found at your address go on the quote?",
@@ -520,7 +520,7 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The screen asks for the annual mileage of the [address] Avalon, showing a default selection of 14,[number],000 miles.",
+        "why": "The screen asks for the annual mileage of the 2013 Honda Accord, showing a default selection of 14,[number],000 miles.",
         "whatTheAgentLoses": "The user loses the chance to specify their actual driving distance, which could result in an inaccurate insurance premium if they drive more or less than the default amount.",
         "speak": "never",
         "check": "What annual mileage is selected, and what did the page default it to?",

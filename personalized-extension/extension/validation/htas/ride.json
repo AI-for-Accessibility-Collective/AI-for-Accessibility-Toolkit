@@ -1159,11 +1159,11 @@
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
-        "why": "The confirmation screen displays 'Bedale Street' instead of 'Kaplan International College London', indicating the app may have altered the requested pickup spot.",
+        "why": "The confirmation screen displays '[street]' instead of 'Kaplan International College London', indicating the app may have altered the requested pickup spot.",
         "whatTheAgentLoses": "The user loses the opportunity to catch an incorrect pickup address before the driver is dispatched to the wrong location.",
         "speak": "if-wrong",
         "check": "What pickup address does the confirmation screen show?",
-        "say_example": "The app quietly moved your pickup to <Bedale Street>. You asked for <Kaplan College>, a block away."
+        "say_example": "The app quietly moved your pickup to <[street]>. You asked for <Kaplan College>, a block away."
        }
       ]
      },
@@ -1368,7 +1368,7 @@
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": true,
-        "why": "Checking the physical vehicle against the app's display of a Jeep Cherokee with license plate 201KJJ ensures you are getting into the correct ride.",
+        "why": "Checking the physical vehicle against the app's display of a Jeep Cherokee with license plate [plate] ensures you are getting into the correct ride.",
         "whatTheAgentLoses": "An agent cannot physically look at the approaching car in the real world to verify its license plate and make before you board.",
         "speak": "on-event",
         "check": "Does the app say the driver has arrived, and what car model, color, and plate does it list?",

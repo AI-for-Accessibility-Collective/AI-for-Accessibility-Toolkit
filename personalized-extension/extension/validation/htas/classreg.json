@@ -1188,7 +1188,7 @@
         "whatTheAgentLoses": "You lose the ability to personally balance your preferred instructors, campus locations, and time slots against actual seat availability.",
         "speak": "gate",
         "check": "Which sections are listed, with days, times, instructor, mode, and seats?",
-        "say_example": "Three open sections. <Tuesday and Thursday 9 am with Patel>. <Online with Cho>. <Friday evenings with Lee>. Which one?"
+        "say_example": "Three open sections. <Tuesday and Thursday 9 am with [name]>. <Online with [name]>. <Friday evenings with [name]>. Which one?"
        },
        {
         "question": "Which filters does the section list offer?",

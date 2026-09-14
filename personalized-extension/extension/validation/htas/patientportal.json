@@ -729,11 +729,11 @@
         "cluster": "facts",
         "moment": "On demand",
         "moneyMoving": false,
-        "why": "The dashboard explicitly shows 'dbase2 Test' and a birth date of 'October 2, 1977', confirming whose medical information is currently active.",
+        "why": "The dashboard explicitly shows 'dbase2 Test' and a birth date of '[date of birth]', confirming whose medical information is currently active.",
         "whatTheAgentLoses": "The user loses the ability to personally verify that the agent is accessing the correct individual's sensitive health records.",
         "speak": "always",
         "check": "What patient name and birth date does the page show as active?",
-        "say_example": "I'm in <name>'s record, born <October 2, 1977>. That's the right chart, yes?"
+        "say_example": "I'm in <name>'s record, born <[date of birth]>. That's the right chart, yes?"
        }
       ]
      },
@@ -829,7 +829,7 @@
       "whatTheAgentLoses": "Delegating this step requires sharing sensitive personal identifying information with a third-party agent.",
       "speak": "on-event",
       "check": "Does the page ask for the patient's date of birth to verify identity?",
-      "say_example": "It wants your date of birth to confirm it's you. I have <March 4, 1962>, so I'm using that."
+      "say_example": "It wants your date of birth to confirm it's you. I have <[date of birth]>, so I'm using that."
      },
      {
       "question": "Are you checking in as the patient or as a guardian?",
@@ -2812,7 +2812,7 @@
       "whatTheAgentLoses": "Delegating this choice means an agent might alter the wrong person's access to your sensitive medical information.",
       "speak": "on-event",
       "check": "Which people does the access list show?",
-      "say_example": "Two people have access, <Maya> and <Dr Lee>. Whose are we changing?"
+      "say_example": "Two people have access, <[name]> and <Dr [name]>. Whose are we changing?"
      },
      {
       "question": "What access level should you grant, and should you restrict the information types or set an expiration date?",
@@ -2823,7 +2823,7 @@
       "whatTheAgentLoses": "You lose the ability to personally decide the exact boundaries and duration of access someone else has to your sensitive health information.",
       "speak": "on-event",
       "check": "What access options does the edit screen offer?",
-      "say_example": "Changing <Maya> to read and modify means she can edit your record, not just see it. Sure about that?"
+      "say_example": "Changing <[name]> to read and modify means she can edit your record, not just see it. Sure about that?"
      }
     ],
     "children": [
@@ -2840,7 +2840,7 @@
         "whatTheAgentLoses": "Delegating this choice means the agent might access or act upon the wrong family member's medical record.",
         "speak": "on-event",
         "check": "Which linked records does the profile menu list?",
-        "say_example": "There are two records here, yours and <Maya>'s. Which one are we in today?"
+        "say_example": "There are two records here, yours and <[name]>'s. Which one are we in today?"
        },
        {
         "question": "Is the dependent's profile missing or grayed out due to automatically expired proxy access?",
@@ -2851,7 +2851,7 @@
         "whatTheAgentLoses": "The agent might silently fail to find the child's record or access the wrong profile, leaving the user unaware that their legal access rights have lapsed.",
         "speak": "on-event",
         "check": "Is the dependent's profile missing or restricted, and does the page say why?",
-        "say_example": "<Maya>'s record isn't showing anymore. Proxy access often ends at <12> by law. The office can set up new access if you need it."
+        "say_example": "<[name]>'s record isn't showing anymore. Proxy access often ends at <12> by law. The office can set up new access if you need it."
        }
       ]
      },
@@ -2868,7 +2868,7 @@
         "whatTheAgentLoses": "Delegating this step requires sharing sensitive login credentials for a secondary health account with the agent.",
         "speak": "on-event",
         "check": "Does the linking form require the other account's username and password?",
-        "say_example": "Linking <Maya>'s account needs her own portal username and password. Do you have those?"
+        "say_example": "Linking <[name]>'s account needs her own portal username and password. Do you have those?"
        },
        {
         "question": "Which family or dependent accounts are already linked to this profile before another one is added?",
@@ -2890,7 +2890,7 @@
         "whatTheAgentLoses": "You lose the opportunity to read and personally consent to the specific legal terms regarding access to your dependent's medical records.",
         "speak": "always",
         "check": "Does the page require accepting proxy access terms?",
-        "say_example": "There's a proxy terms page. It covers what you can see of <Maya>'s record. Accepting so we can continue. Say stop if you want it read out."
+        "say_example": "There's a proxy terms page. It covers what you can see of <[name]>'s record. Accepting so we can continue. Say stop if you want it read out."
        }
       ]
      },

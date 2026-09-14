@@ -46,7 +46,7 @@
       "label": "Pick the official link",
       "questions": [
        {
-        "question": "Which search result should you click to reach the official Booking.com website?",
+        "question": "Which result leads to the site itself rather than to an ad?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -330,29 +330,7 @@
      },
      {
       "id": "3.2",
-      "label": "Enter the destination",
-      "questions": [
-       {
-        "question": "Does the search box show the destination you asked for, or a leftover default?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The search bar defaulted to your current location of Yelahanka, which might not be where you actually want to book a stay.",
-        "whatTheAgentLoses": "You lose the chance to correct the default location to ensure the hotel search matches your actual travel plans.",
-        "costDims": {
-         "money": 0,
-         "privacy": 0,
-         "thirdParty": 0,
-         "safety": 0,
-         "reversibility": 0,
-         "recovery": 1
-        },
-        "kind": "intent-check",
-        "speak": "if-wrong",
-        "check": "What destination text is in the search box right now?",
-        "say_example": "The search box still says <the old city>, so I'm fixing it to <your destination> before I search."
-       }
-      ]
+      "label": "Enter the destination"
      },
      {
       "id": "3.3",
@@ -527,7 +505,7 @@
       "label": "Set guests and rooms",
       "questions": [
        {
-        "question": "Are the default settings of one adult and one room correct for your trip?",
+        "question": "Does the party the search is set to match the party you gave?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
@@ -568,7 +546,7 @@
         "say_example": "The page is set for <1 adult, 1 room>. Who's going? How many adults, and any kids with their ages? The ages change the price."
        },
        {
-        "question": "Did the site automatically assign a default age to the child you added that needs to be corrected?",
+        "question": "What age is set for the child, and is it the age you gave?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -663,7 +641,7 @@
       "label": "Review the results page",
       "questions": [
        {
-        "question": "If the platform automatically shifts your requested dates because the hotel is sold out, do you want to accept the new dates or search for a different property?",
+        "question": "The hotel is sold out on your dates and the site has shifted them. Take the new dates, or look elsewhere?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -871,7 +849,7 @@
         "label": "Filter by amenities",
         "questions": [
          {
-          "question": "Which filters should you apply to weed out undesirable property types?",
+          "question": "Which property types should the results leave out?",
           "cluster": "refine",
           "moment": "Now",
           "moneyMoving": false,
@@ -925,7 +903,7 @@
         "label": "Review commission filters",
         "questions": [
          {
-          "question": "How should I handle the property commission tier filters?",
+          "question": "Are any filters sorting by what the desk earns rather than by the stay?",
           "cluster": "refine",
           "moment": "Now",
           "moneyMoving": false,
@@ -943,7 +921,7 @@
           "verify_form": "The agent handled the commission-tier filters - check what it set; commission serves the agent desk's earnings, not your stay.",
           "speak": "never",
           "check": "How are the commission-tier filters set?",
-          "say_example": "Left the commission filters alone - they rank by the desk's cut, not your stay"
+          "say_example": "Left the commission filters alone. They sort by what the desk earns."
          }
         ]
        },
@@ -981,7 +959,7 @@
       "label": "Scan the map view",
       "questions": [
        {
-        "question": "Do any of the other nearby hotels on the map offer a better location or price?",
+        "question": "Is any hotel shown on the map cheaper than the pick?",
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
@@ -998,8 +976,8 @@
         "kind": "decision",
         "verify_form": "The agent judged the map alternatives - check whether a nearby pin offered a better location or price than its pick.",
         "speak": "never",
-        "check": "Did any map pin show a better price or location than the pick?",
-        "say_example": "Checked the map - nothing beat the pick on price or distance"
+        "check": "How many map pins sit near the pick, and does any of them state a price lower than the pick's?",
+        "say_example": "Checked <8> map pins near the pick. None came in under the pick's <price>."
        }
       ]
      },
@@ -1048,7 +1026,7 @@
         "say_example": "Breakdown - <base>, minus <discount>, plus <taxes>, total <total>"
        },
        {
-        "question": "Do you want to factor in the $3.37 OneKeyCash reward when evaluating this property?",
+        "question": "Should the loyalty credit shown here count when comparing this property?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -1220,7 +1198,7 @@
     "note": "5.1 on arrival; 5.2 to 5.5 in any order as doubts demand; 5.6 whenever dates or guests may have drifted. Passing hands off to 6; failing returns to 4.",
     "questions": [
      {
-      "question": "Do the photos and guest reviews confirm this property meets your standards for quality and location?",
+      "question": "What do the reviews repeat about this property?",
       "cluster": "photos",
       "moment": "Now",
       "moneyMoving": false,
@@ -1237,7 +1215,7 @@
       "kind": "decision",
       "verify_form": "The agent decided the photos and reviews clear your bar - spot-check both; its bar is not yours.",
       "speak": "never",
-      "check": "What rating, review count, and repeated review themes does the page show?",
+      "check": "What rating and review count does the page show, and what do the written reviews repeat?",
       "say_example": "Rating <8.7> over <864> reviews - guests repeat <great location, thin walls>"
      }
     ],
@@ -1254,27 +1232,6 @@
       "id": "5.3",
       "label": "Read guest reviews",
       "questions": [
-       {
-        "question": "Do you want to read the written guest reviews in addition to checking the photos and scores?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Reading the actual review text provides specific insights into the guest's experience that the overall scores and photo gallery do not convey.",
-        "whatTheAgentLoses": "You lose the detailed, qualitative insights about the hostel's actual conditions that are only found in the written guest reviews.",
-        "costDims": {
-         "money": 1,
-         "privacy": 0,
-         "thirdParty": 2,
-         "safety": 0,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "kind": "decision",
-        "verify_form": "The agent judged the property without reading the review text, or read it - check what the written reviews say that the scores do not.",
-        "speak": "never",
-        "check": "Do the written reviews raise problems the scores don't show?",
-        "say_example": "Read the reviews behind the score - guests flag <street noise>"
-       },
        {
         "question": "Does this property have too few reviews to trust its score?",
         "cluster": "facts",
@@ -1376,7 +1333,7 @@
         "say_example": "This page quietly reset to <different dates>, so I'm putting your dates back before the prices fool us."
        },
        {
-        "question": "Did you verify how adding a second guest changed both the base price and the taxes?",
+        "question": "How did adding the second guest change the base price and the taxes?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -1406,7 +1363,29 @@
     "children": [
      {
       "id": "6.1",
-      "label": "Survey the room options"
+      "label": "Survey the room options",
+      "questions": [
+       {
+        "question": "Does the nightly rate on the hotel details page match the price shown in the search results?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search results quoted a nightly rate of $84 for The Mirage, but the hotel details page indicated the lowest rate was actually $101.",
+        "whatTheAgentLoses": "The user loses the ability to reconsider their choice when the actual room rate turns out to be higher than the initially advertised price.",
+        "costDims": {
+         "money": 2,
+         "privacy": 0,
+         "thirdParty": 2,
+         "safety": 0,
+         "reversibility": 2,
+         "recovery": 2
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What total does this property page show for the stay, and what did the results listing show for the same room?",
+        "say_example": "The results list had this at <638>. The property page says <680>. Same room, same dates."
+       }
+      ]
      },
      {
       "id": "6.2",
@@ -1452,6 +1431,26 @@
         "speak": "never",
         "check": "What smoking designation does the room listing state?",
         "say_example": "Room is listed non-smoking"
+       },
+       {
+        "question": "Does the photo of the 'double bed' show a true single mattress, or is it visibly two twin beds pushed together?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many hotels list a 'double bed' in the text, but the photos reveal it is actually two smaller beds pushed together with a visible seam down the middle, which affects sleep comfort.",
+        "whatTheAgentLoses": "The delegator expects a seamless mattress for couples but arrives to find two separate beds pushed together, a detail only apparent in the visual layout.",
+        "costDims": {
+         "money": 1,
+         "privacy": 0,
+         "thirdParty": 2,
+         "safety": 0,
+         "reversibility": 2,
+         "recovery": 2
+        },
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the room's bed list match what the room title calls the bed?",
+        "say_example": "The room is called a double. The bed list says <two twins>. You'd get two beds pushed together."
        }
       ]
      },
@@ -1638,7 +1637,7 @@
       "label": "Hunt award-rate dates",
       "questions": [
        {
-        "question": "Do you want to use the 'Shop by Price' calendar to find dates with standard point rates?",
+        "question": "Does the site offer a calendar showing which dates cost standard points?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -1753,7 +1752,7 @@
         "say_example": "I'm reserving the <room> at <total>. Nothing is booked yet. The form comes next."
        },
        {
-        "question": "Did the site return an 'inventory unavailable' error and default to a more expensive room type when you clicked reserve?",
+        "question": "The room you picked is gone and the site has swapped in a more expensive one. Take it, or pick again?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -1856,7 +1855,7 @@
           "verify_form": "The agent proceeded past the split payment and the 2-Queens-versus-2-king contradiction - check which beds you will really get and what is due at the property.",
           "speak": "if-wrong",
           "check": "What beds does each section of this page say the room has?",
-          "say_example": "The page disagrees with itself. One line says <two queens>, another says <one king>. I'll ask the hotel which is real."
+          "say_example": "The page disagrees with itself. One line says <two queens>, another says <one king>. I don't know which room you'd get."
          },
          {
           "question": "Do the hotel, dates, and price at checkout match what you selected earlier?",
@@ -1908,7 +1907,7 @@
         "say_example": "I'm filling in your name, email, and phone number now. They use the phone to confirm the booking."
        },
        {
-        "question": "Did you spell the guest's first name exactly as it appears on their ID?",
+        "question": "Does the guest name on the form match the ID it will be checked against?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
@@ -1925,7 +1924,7 @@
         "kind": "intent-check",
         "speak": "if-wrong",
         "check": "What name is in the guest field, and does it match the name on the profile or the one given?",
-        "say_example": "The form autofilled the name as <Jon>, but the ID says <John>. I'm fixing it. The desk checks the name against ID."
+        "say_example": "The form autofilled the name as <[misspelled name]>, but the ID says <[name]>. I'm fixing it. The desk checks the name against ID."
        }
       ]
      },
@@ -2012,7 +2011,7 @@
         "kind": "state-check",
         "speak": "if-wrong",
         "check": "What arrival time is selected, and what check-in window does the property state?",
-        "say_example": "You said you'd arrive around <11>, but check-in ends at <10>. I'm asking the desk about late arrival before we book."
+        "say_example": "You said you'd arrive around <11>. Check-in ends at <10>, so the desk may be closed."
        }
       ]
      },
@@ -2138,7 +2137,7 @@
          "recovery": 2
         },
         "kind": "state-check",
-        "speak": "always",
+        "speak": "on-event",
         "check": "What does the advance button say it does - continue to a next step, or complete the booking?",
         "say_example": "This press just opens the final page. Nothing is booked until you say so there."
        }
@@ -2271,7 +2270,7 @@
         "say_example": "Did not save your card on the site"
        },
        {
-        "question": "If the payment is declined by your bank for suspected fraud, which alternative credit card should be used to secure the reservation?",
+        "question": "The card was declined. Which of the saved cards should I try instead?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -2288,8 +2287,8 @@
         "kind": "decision",
         "verify_form": "The payment bounced on a fraud check and the agent reached for a fallback card - check which card; that choice is not its to make alone.",
         "speak": "on-event",
-        "check": "Does the page say the payment was declined, and are other saved cards offered?",
-        "say_example": "Your bank declined the <Mastercard>. There's a <Visa> saved too. Try that one, or stop here?"
+        "check": "Does the page say the payment was declined, what reason does it give, and are other saved cards offered?",
+        "say_example": "Your bank declined the <Mastercard>. The page says <the reason>. Nothing was charged. There's a <Visa> saved. Try that, or stop?"
        }
       ]
      },
@@ -2346,7 +2345,7 @@
       "label": "Complete a wallet flow",
       "questions": [
        {
-        "question": "Do you want to sign in to complete the Google Pay transaction, or use a different payment method?",
+        "question": "The wallet wants a sign-in before it will pay. Sign in, or use a card instead?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": true,
@@ -2389,9 +2388,9 @@
         },
         "kind": "decision",
         "verify_form": "The agent chose whether to pay now to use the OneKeyCash - check whether the $15 credit was applied or silently forfeited.",
-        "speak": "if-wrong",
-        "check": "Does the account show a credit balance, and is it applied to this total?",
-        "say_example": "You have <$15> of credit sitting here and the total isn't using it. I'm applying it. The new total is <amount>."
+        "speak": "on-event",
+        "check": "Does the account show a credit balance, and what payment timing does the page say using it requires?",
+        "say_example": "You have <$15> of credit here. Using it means paying the whole <total> now instead of at the hotel. Credit, or pay later?"
        },
        {
         "question": "How do you want to split the cost between reward points and cash?",
@@ -2421,7 +2420,7 @@
       "label": "Add an agency fee",
       "questions": [
        {
-        "question": "Do you want to add an optional agency service charge to this booking?",
+        "question": "Is an agency service charge being added to this booking?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": true,
@@ -2470,7 +2469,7 @@
           "kind": "state-check",
           "speak": "never",
           "check": "What taxes, fees, and deposits does the breakdown itemize?",
-          "say_example": "Fees - <tax $98.89> + <tourism fee $1.28>, itemized in full"
+          "say_example": "Broke out the fees. <Tax $98.89> and <tourism fee $1.28>."
          },
          {
           "question": "Are there any additional taxes or resort fees that must be paid directly at the property?",
@@ -2489,7 +2488,7 @@
           },
           "kind": "state-check",
           "speak": "on-event",
-          "check": "Does the breakdown list fees to be paid at the property, and how much?",
+          "check": "Does the breakdown list a fee due at the property that the listing page did not name?",
           "say_example": "Heads up, a <resort fee> of <amount> gets collected at the hotel desk. So the real total is <sum>."
          },
          {
@@ -2637,7 +2636,7 @@
       "label": "Check the commission",
       "questions": [
        {
-        "question": "How much commission will you earn from this specific booking?",
+        "question": "What commission does the page state for this booking?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": true,
@@ -2654,7 +2653,7 @@
         "kind": "state-check",
         "speak": "never",
         "check": "What commission does the page state for this booking?",
-        "say_example": "Desk commission on this booking - <amount>"
+        "say_example": "Desk earns <amount> on this booking."
        }
       ]
      },
@@ -2663,7 +2662,7 @@
       "label": "Review cancellation terms",
       "questions": [
        {
-        "question": "Did you verify the exact cutoff date and conditions for the 'free cancellation' policy?",
+        "question": "What is the exact cutoff date for free cancellation, and what does it cost after that?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -2736,7 +2735,7 @@
       "label": "Commit the booking",
       "questions": [
        {
-        "question": "If the booking session times out and the price increases when you refresh, do you want to accept the new higher rate or abandon the booking?",
+        "question": "The hold expired and the price went up. Take the new price, or stop?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -2796,26 +2795,6 @@
         "speak": "gate",
         "check": "What does the final page say it is committing to - property, room, dates, guests, total, and cancellation terms?",
         "say_example": "Ready to book. <The hotel>, <the room>, <the dates>, for <the party>. <Total> total with everything in. Free to cancel until <date>. Press to book, or say change."
-       },
-       {
-        "question": "What reason did the platform give for declining the payment transaction?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "If a credit card is rejected, the error message indicates whether it was a simple typo (like a wrong CVV), insufficient funds, or a bank fraud block requiring a phone call.",
-        "whatTheAgentLoses": "The user loses the diagnostic information needed to decide whether to retry the same card, use a backup card, or contact their bank to clear a block.",
-        "costDims": {
-         "money": 1,
-         "privacy": 1,
-         "thirdParty": 1,
-         "safety": 0,
-         "reversibility": 1,
-         "recovery": 2
-        },
-        "kind": "state-check",
-        "speak": "on-event",
-        "check": "What reason does the page give for the declined payment?",
-        "say_example": "The payment didn't go through. The page says <the bank declined it>. Nothing was charged."
        }
       ]
      }
@@ -2868,7 +2847,7 @@
         "kind": "state-check",
         "speak": "always",
         "check": "Does the confirmation page say Confirmed, or Pending, or is it still loading?",
-        "say_example": "Booked, and the page says Confirmed. Not pending approval. The email is in your inbox and matches."
+        "say_example": "Booked, and the page says Confirmed. Nothing is waiting on the host to approve it."
        }
       ]
      },
@@ -2894,11 +2873,11 @@
         "kind": "decision",
         "verify_form": "The agent picked a way to save the confirmation - check where the copy lives and that it opens offline.",
         "speak": "never",
-        "check": "Did the confirmation email arrive, and what number does it carry?",
-        "say_example": "Confirmation <number> - email in your inbox, matches the page"
+        "check": "What confirmation number does the page show, and where does it say the confirmation was sent?",
+        "say_example": "Confirmation <number>. The page says it emailed <address>."
        },
        {
-        "question": "Since the SMS confirmation failed, how would you like to save your booking details?",
+        "question": "The text message did not arrive. How else should I save the booking?",
         "cluster": "select",
         "moment": "Completion",
         "moneyMoving": true,
@@ -2919,7 +2898,7 @@
         "say_example": "The confirmation text didn't send. The email did arrive, so you're covered."
        },
        {
-        "question": "Did you securely record the PIN code alongside your confirmation number?",
+        "question": "Does this booking need a PIN as well as a confirmation number?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -2988,9 +2967,9 @@
         },
         "kind": "decision",
         "verify_form": "The agent decided about messaging the property - check what it sent; the chat itself warns never to share account or payment details.",
-        "speak": "on-event",
+        "speak": "gate",
         "check": "What is about to be sent in the property chat, and what warnings sit on that chat?",
-        "say_example": "I'm about to send the hotel your note. It says <the text>. Nothing personal beyond that goes in the chat."
+        "say_example": "The hotel's chat is open. I'd send them <the note>. Nothing about your card or account goes in there. Send it?"
        }
       ]
      },
@@ -3016,7 +2995,7 @@
         "kind": "state-check",
         "speak": "never",
         "check": "What address does the confirmation show for the property?",
-        "say_example": "Hotel address on the confirmation - <address>"
+        "say_example": "The confirmation gives the address as <address>."
        }
       ]
      },

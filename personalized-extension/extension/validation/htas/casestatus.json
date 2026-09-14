@@ -1,0 +1,1833 @@
+{
+ "task": "check the status of a case or application (passport application status, USCIS case status, job-application portals): locate the status-check page, enter the case or application identifiers, read the returned status, and interpret what it means and what happens next; complete when the status result is on screen and read. Surface pinned: the agency's or employer's web status portal. Variants: filing the application itself, and contacting the agency about the case, do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Check a case or application status",
+  "note": "the user goes through 1 and then 2 on every lookup. the user goes through 3 if the status only shows inside an account or they want alerts - on the employer portal and on Passport Seva's account route the login in 3.3 replaces 4.5, and on USCIS the user also adds the case in 3.4. the user then goes through 4 and 5; after 5.3 and 5.4 the user goes back to 1.6, 4.3 or 4.6 until a result loads, or decides to wait. once a status is on screen the user goes through 6. after reading the status the user goes on to 7, and to 7.6 only when the status says dispatched or the agency names a courier.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the status portal",
+    "note": "the user reaches a site through one of 1.1, 1.2 or 1.3. after any search the user goes through 1.4, then 1.5 if they choose to. on a provider that serves several countries or agencies the user goes through 1.6, before or after 1.4. the user goes through 1.7 whenever a popup or a banner appears - when first opening the site, and again inside an account.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Search for the portal",
+      "questions": [
+       {
+        "question": "Does the search need the country name to reach the right page?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The browser's autocomplete suggestions indicate that including the specific destination country alongside the agency name is necessary to find the exact tracking portal.",
+        "whatTheAgentLoses": "You lose the assurance that the agent will search for the correct country-specific portal rather than getting lost on a generic agency page.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Do the search suggestions or results show a separate tracking page per country, so the country name has to be in the query?",
+        "say_example": "This agency has a page for each country. Putting <the destination country> in the search to reach the right one."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Type the portal address",
+      "questions": [
+       {
+        "question": "Is the address in the bar the agency's own site, not a look-alike?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the exact official URL in the address bar ensures you navigate directly to the legitimate government site rather than relying on potentially deceptive search results.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that your sensitive case information is being entered into the official government domain rather than a third-party phishing site.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the address bar show the agency's genuine domain, not a look-alike or unofficial one?",
+        "say_example": "That address isn't <agency.gov>. It's <agency-status.com>, a different site. Going to the real one."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Follow the link in the notice"
+     },
+     {
+      "id": "1.4",
+      "label": "Pick the official result",
+      "questions": [
+       {
+        "question": "Is the result being clicked the agency's own tracking page, not a paid listing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display multiple options and suggestions for 'vfs tracking', requiring you to identify the official VFS Global link.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the official tracking portal rather than a third-party or phishing site.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the clicked result's address belong to the agency's own domain, rather than a sponsored or third-party listing?",
+        "say_example": "That result is a paid listing, not the agency's own site. Going to the official one."
+       },
+       {
+        "question": "Is the top result the tracker, or is the right one further down the list?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The first result is the official government site, but the second result specifically mentions tracking a passport via US Travel Docs, which is the required regional portal.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the specific regional tracking service rather than defaulting to the first official government link.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Is the correct tracking portal the top government result, or an official regional portal lower down the list?",
+        "say_example": "The top result is the general government site. The tracker for your region is further down. Using that one."
+       },
+       {
+        "question": "Is this site charging a fee to check the status?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search engines often feature sponsored results for commercial services that charge unnecessary fees to check or 'expedite' statuses that official government sites provide for free.",
+        "whatTheAgentLoses": "You lose the ability to avoid unnecessary charges and protect your payment information from predatory third-party services masquerading as official channels.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page ask for a payment or fee to check the status, rather than offering it for free?",
+        "say_example": "This site wants <a fee> just to check the status. The agency's own site does it for free. Going back to that one."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Verify the site is official",
+      "questions": [
+       {
+        "question": "Is this the agency's own site, on a secure connection?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying the Department of Homeland Security header and the secure uscis.gov URL ensures you are not entering sensitive immigration details into a fraudulent phishing site.",
+        "whatTheAgentLoses": "You lose the peace of mind that comes from personally verifying the site's security indicators before handing over your private case numbers.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the page show the official domain, a secure connection, and the agency's own header or seal?",
+        "say_example": "This is the agency's own site, <agency>.gov. The connection is secure and the page carries the government header."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Choose the country portal",
+      "questions": [
+       {
+        "question": "Is this portal for the country the application was filed for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen specifies this portal is specifically for the Embassy of Ireland in the Philippines, meaning you must ensure this matches your actual application destination to retrieve the correct status.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to verify that the agent is checking your status on the exact country-specific portal where your application was submitted.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the country named on this portal match the country the application was filed for, including when a lookup has just been rejected?",
+        "say_example": "This portal covers <a different country> from your application. Switching to the right one."
+       },
+       {
+        "question": "Which of this site's trackers covers your application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu requires selecting the destination country to ensure the status query retrieves the correct application.",
+        "whatTheAgentLoses": "The user loses the ability to verify that the agent is checking the application status for the correct destination country.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the site have a separate tracker for each country, office or filing date, and is it not yet known which one covers this application?",
+        "say_example": "This site has a separate tracker for each country. Which country's visa are you checking?"
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Clear the site's notices",
+      "questions": [
+       {
+        "question": "Does the page show a notice about delays, reduced hours, or a closed office?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The orange banner highlights recent updates and center re-openings for Atlanta, San Francisco, and New York that might affect application processing.",
+        "whatTheAgentLoses": "You lose the opportunity to proactively learn about regional service disruptions that could explain delays in your application's status.",
+        "kind": "decision",
+        "verify_form": "The agent skipped or opened the orange banner about the centres - check which; a closed centre is the reason a status has not moved.",
+        "speak": "on-event",
+        "check": "Does the page show a notice about service disruptions, reduced capacity, a centre re-opening, or the office being closed with processing suspended?",
+        "say_example": "There's a notice about <the office handling your file>. It's running at reduced hours. That could be why the status hasn't moved."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Find the status tool",
+    "note": "the user goes through 2.1 on every lookup, and 2.2 wherever two services sit side by side. if the portal asks questions before it shows a form, the user answers them in 2.3. if a notice blocks the form, the user accepts it in 2.4. before the first lookup the user checks in 2.5 when a status becomes available, where the page says so - on jQSk that check is the third question.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Open the status tool",
+      "questions": [
+       {
+        "question": "Is this the status tool itself, or a neighbouring service like processing times or appointments?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage offers multiple services and tools, such as scheduling appointments or finding offices, so you must identify the specific icon for tracking an application.",
+        "whatTheAgentLoses": "The user misses the chance to see other available immigration services and tools that might be relevant to their broader situation.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the page the agent opened actually the status-check tool, rather than a neighbouring service like processing times or appointments?",
+        "say_example": "This is the <Processing Times> page, not the status tool. Going back to the right one."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Choose the right service",
+      "questions": [
+       {
+        "question": "Is this the login for applicants, not the one for employees?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents distinct login options for employees, recruiting candidates, and contractors, so you must choose the correct path to find your application.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent categorizes your account correctly to access the appropriate portal.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Is the selected login the one for applicants, rather than for employees or contractors?",
+        "say_example": "That's the employee login. You're checking your own application, so switching to the candidate one."
+       },
+       {
+        "question": "Is the selected tab the one for a pending application, not a visa already issued?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The text overlay promises to track a visa application, but clicking the 'File Validity' tab checks an already issued visa instead of a pending application.",
+        "whatTheAgentLoses": "The user loses accurate tracking of their pending application if the agent checks the wrong system tab.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the selected tab track a pending application, rather than looking up an already-issued visa?",
+        "say_example": "That tab looks up visas already issued. Yours is still pending, so switching to the tracking tab."
+       },
+       {
+        "question": "What does this tool say it can show about the visa?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The overview text explains exactly what visa details, such as expiry date and period of stay, the VEVO system can verify.",
+        "whatTheAgentLoses": "The user loses the context of what specific visa conditions and details the system is capable of showing them.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the page's overview state which visa details it can show, such as expiry date or period of stay?",
+        "say_example": "Read the overview - this tool shows <visa class, grant date and expiry date>"
+       },
+       {
+        "question": "Is the individual portal selected, rather than the organisation one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents options for both individuals and organizations, so you must choose the correct path to access your personal visa details.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent correctly navigates to the individual portal rather than an organizational one.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Is the individual portal selected, rather than the organisation portal, when checking a personal visa?",
+        "say_example": "That's the organisation portal. This is your own visa, so switching to the individual one."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Answer the routing questions",
+      "questions": [
+       {
+        "question": "What does this tracker need to know about how you filed the application?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The status portal requires you to select whether you applied inside or outside of Canada or the US to retrieve your application.",
+        "whatTheAgentLoses": "You lose the ability to ensure the correct geographical region is selected for your specific application.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the tracker ask where the application was filed, or how it was sent, before it will search, and are those answers not already known?",
+        "say_example": "This tracker needs to know how you filed it before it can search. In person or by mail, and roughly when?"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Accept the disclaimer",
+      "questions": [
+       {
+        "question": "Does the disclaimer say how long results take to appear?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to confirm you understand the 5 to 10 business day waiting period and daily update schedule before checking your status.",
+        "whatTheAgentLoses": "You lose the awareness of the specific processing timelines and privacy terms applied to your application data.",
+        "kind": "decision",
+        "verify_form": "The agent clicked I have read and understand - check that it also read the waiting rule on that page (5 business days in person, 10 by mail) before expecting a status.",
+        "speak": "never",
+        "check": "Does the page state a waiting period (such as 5 to 10 business days) before results appear, alongside the terms it asks you to accept?",
+        "say_example": "Accepted the terms - results take <5 to 10 business days> to appear"
+       },
+       {
+        "question": "Was the agreement box ticked without the notices being read first?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen at 01:30 explicitly instructed you to read the Privacy and Computer Fraud and Abuse Acts Notices before checking the box to proceed.",
+        "whatTheAgentLoses": "You lose the assurance of knowing exactly what legal terms and data privacy conditions are being accepted on your behalf.",
+        "kind": "decision",
+        "verify_form": "The agent ticked the box saying it read the privacy and fraud notices - check whether the notices were ever opened.",
+        "speak": "if-wrong",
+        "check": "Was the agreement box checked without the Privacy and Computer Fraud and Abuse Acts notices ever being opened, even though the page instructed reading them first?",
+        "say_example": "The page asks you to read the notices first. They weren't. Reading them now before ticking the box."
+       },
+       {
+        "question": "Does this disclaimer page carry any of your details yet, or is the real form next?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents 'SUBMIT' and 'CANCEL' buttons, requiring a choice to finalize and send the status query.",
+        "whatTheAgentLoses": "The user loses the final opportunity to review their entered identifiers and cancel the request before submitting it to the agency.",
+        "kind": "decision",
+        "verify_form": "The agent clicked SUBMIT on the disclaimer page - check that this page carried no personal data yet and that the next page is the form itself.",
+        "speak": "never",
+        "check": "Does this page carry any personal data yet, or is it only the disclaimer before the actual form?",
+        "say_example": "Submitted the disclaimer page - no personal details sent yet"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Check the availability window",
+      "questions": [
+       {
+        "question": "How long after the package arrives before the tracker shows anything?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The email from VFS confirms receipt of your package and explains that you must wait two to three business days before the online tracking system will reflect your status.",
+        "whatTheAgentLoses": "You lose the direct reassurance of reading the email confirmation that your physical documents safely arrived and understanding the specific timeline for when online tracking becomes active.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the confirmation email shown on screen state the package was received, and give a waiting period before online tracking shows anything?",
+        "say_example": "The email says your package arrived. The tracker won't show anything for <two to three business days> yet."
+       },
+       {
+        "question": "Does the portal say how long before a new application appears online?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Mailed or recently submitted applications often take weeks to be ingested into the tracking database, meaning a 'Not Found' result requires checking the agency's stated timeline rather than assuming the package was lost.",
+        "whatTheAgentLoses": "You lose the context that your application is simply in the standard pre-ingestion waiting period, leading to unnecessary panic or duplicate submissions.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the portal state a minimum time before a new application appears online, which would explain a 'Not Found' result?",
+        "say_example": "The portal says applications take <a few weeks> to appear online. So <Not Found> may just mean it's too soon."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Use the account route",
+    "note": "the user goes through 3.1 if they choose to use an account or the portal offers nothing else. for a new account the user also goes through 3.2, once. the user goes through 3.3 each time they use the account. on USCIS the user then adds the case by its number in 3.4; on portals that already list the application - Passport Seva's account and the employer portal - the user goes through 3.5 instead. from 3.4 or 3.5 the user goes straight to 6.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Choose the account route",
+      "questions": [
+       {
+        "question": "Do you want me to set up an account in your name to track this case?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page displays a 'SIGN UP' button and recommends creating an account to easily track cases and receive text or email alerts.",
+        "whatTheAgentLoses": "You lose the choice of whether to share the additional personal information required to create a permanent tracking account.",
+        "kind": "decision",
+        "verify_form": "The agent started a sign-up for a tracking account or stayed on the public tool - check which; the sign-up asks for your name, address, email and phone.",
+        "speak": "gate",
+        "check": "Does the page offer creating a new account in the person's name to track the case and receive alerts, whether before the lookup or alongside the status once it is shown?",
+        "say_example": "I can sign up for an account under your name to track this and send alerts, or just check the status now as a guest. Which do you want?"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Create the account",
+      "note": "the user goes through 3.2.1, 3.2.2, 3.2.3 and 3.2.4 in the form's own order, then 3.2.5 before 3.3 - the username in the email is the one the user needs to log in.",
+      "children": [
+       {
+        "id": "3.2.1",
+        "label": "Accept the terms",
+        "questions": [
+         {
+          "question": "Were the site's terms read before they were accepted?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays legally binding terms covering your liability, security, and text message notifications that you are agreeing to by clicking 'ACCEPT'.",
+          "whatTheAgentLoses": "You lose the opportunity to review and make an informed decision about the legal obligations and privacy terms being accepted on your behalf.",
+          "kind": "decision",
+          "verify_form": "The agent clicked ACCEPT on the myUSCIS terms - check whether it scrolled through them or straight past; those terms cover your liability and the text-message alerts, and nobody read them on your behalf.",
+          "speak": "never",
+          "check": "Were the terms and conditions scrolled or read before Accept was clicked?",
+          "say_example": "Accepted the site's terms without reading them first. They cover liability and text alerts."
+         }
+        ]
+       },
+       {
+        "id": "3.2.2",
+        "label": "Choose the account type",
+        "questions": [
+         {
+          "question": "Does the account type selected match checking your own case?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The portal requires you to choose between an Applicant/Petitioner or Representative role to proceed with account creation.",
+          "whatTheAgentLoses": "You lose the ability to ensure the account is legally registered under the correct role for your specific relationship to the application.",
+          "kind": "intent-check",
+          "speak": "if-wrong",
+          "check": "Is the selected account type Applicant/Petitioner, matching checking your own case, rather than Representative?",
+          "say_example": "That's the Representative account type. You're checking your own case, so Applicant/Petitioner is the right one."
+         }
+        ]
+       },
+       {
+        "id": "3.2.3",
+        "label": "Fill in the profile",
+        "questions": [
+         {
+          "question": "Which fields does the profile form mark as required?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires specific personal information like name and city but marks others as optional, forcing a choice about what data to invent and what to omit.",
+          "whatTheAgentLoses": "The user loses control over the specific alias and contact details used to represent their identity in the portal.",
+          "kind": "decision",
+          "verify_form": "The agent filled the profile form - check every required value against your real details and which optional fields it skipped; the tutorial typed fake ones and yours must not be.",
+          "speak": "never",
+          "check": "Does the form mark some fields, such as name and city, as required and others as optional?",
+          "say_example": "Filled in <name and city> - the form marks those required. Left <middle name> blank"
+         }
+        ]
+       },
+       {
+        "id": "3.2.4",
+        "label": "Set the credentials",
+        "questions": [
+         {
+          "question": "Does the password being set meet the site's stated rules?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays a 'Security Information' form with a tooltip detailing strict password restrictions that must be met to proceed.",
+          "whatTheAgentLoses": "You lose the ability to choose memorable login credentials and manage them according to your own personal security habits.",
+          "kind": "decision",
+          "verify_form": "The agent set a username and a password for the new account - check that you know both and that the password meets the popup's rules (8 to 14 characters, no dollar sign, expires after 30 days); if the agent invented them, you cannot log in later.",
+          "speak": "always",
+          "check": "Does the password entered meet the page's stated rules for length and allowed characters?",
+          "say_example": "Setting a password you'll be able to remember, since you're the one signing in later. It fits the site's rule of <8 to 14 characters, no dollar sign>."
+         },
+         {
+          "question": "Which security questions does the account use for recovery?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires selecting four password hint questions and typing answers to verify your identity in case of password loss.",
+          "whatTheAgentLoses": "You lose the ability to choose personal security questions and answers that only you would easily remember for future account recovery.",
+          "kind": "decision",
+          "verify_form": "The agent picked four security questions and typed answers - check that you would give the same answers; they are the recovery route for this account.",
+          "speak": "never",
+          "check": "Does the account form require security questions and answers used for password recovery?",
+          "say_example": "Answered the four recovery questions with your own answers, not made-up ones."
+         }
+        ]
+       },
+       {
+        "id": "3.2.5",
+        "label": "Confirm from the email",
+        "questions": [
+         {
+          "question": "Did the account actually get created?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen confirms the myUSCIS account was created, making it important to verify the notification email arrived so you can reliably track your receipt numbers.",
+          "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your email is correctly linked to your new immigration case tracking account.",
+          "kind": "state-check",
+          "speak": "on-event",
+          "check": "Does the page confirm the account was created, and does a confirmation email appear on screen?",
+          "say_example": "The page confirms your account is created. Watch your inbox for the confirmation email."
+         },
+         {
+          "question": "What username does the confirmation email give?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The email explicitly displays your assigned username, which is required to log in and check your case status.",
+          "whatTheAgentLoses": "You lose direct knowledge of your assigned login credentials and the personal confirmation that your account was successfully created.",
+          "kind": "state-check",
+          "speak": "never",
+          "check": "Does the confirmation email state the username that was assigned?",
+          "say_example": "Read the username <ab[account number]5> from the confirmation email."
+         },
+         {
+          "question": "Does the username being typed match the one in the confirmation email exactly?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows a longer username being typed than the truncated version provided in the confirmation email, which will likely result in a login error.",
+          "whatTheAgentLoses": "The user loses the opportunity to catch system-truncated credentials and adjust their login attempts accordingly.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Does the username being typed at login match the exact one shown in the confirmation email, without truncation?",
+          "say_example": "The email shows <ab[account number]5>. A longer version is being typed. That mismatch would fail the sign-in."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Log in",
+      "questions": [
+       {
+        "question": "Which sign-in details should I use for this portal?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires the specific personal email address and password used during the recruiting process to access the dashboard.",
+        "whatTheAgentLoses": "You lose the ability to keep your personal login credentials private when authenticating to view your application status.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the portal require an email address and password to sign in, and are those not already known?",
+        "say_example": "This needs the email and password you used when you applied. What should I use?"
+       },
+       {
+        "question": "Which sign-in method does the page offer?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The login screen requires choosing between a password or an OTP to verify your identity and access the portal.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred authentication method and handle the secure OTP themselves.",
+        "kind": "decision",
+        "verify_form": "The agent chose the password or the one-time code to log in - check which; the code goes to your registered email and only you can read it.",
+        "speak": "never",
+        "check": "Does the login screen offer both a password option and a one-time-code option?",
+        "say_example": "Signed in with a password rather than a one-time code."
+       },
+       {
+        "question": "What is the one-time code the site just sent you?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The portal requires a time-sensitive OTP sent to your registered email address to authenticate your session, meaning you must have active access to that inbox to proceed.",
+        "whatTheAgentLoses": "Delegating this step means you must either give the agent access to your personal email or coordinate in real-time to hand over the OTP before it expires.",
+        "kind": "decision",
+        "verify_form": "The agent asked for a one-time code - check how it got the code out of your inbox and that the code was used before it expired.",
+        "speak": "gate",
+        "check": "Does the page say a one-time code was sent, and show a field for entering it?",
+        "say_example": "The site just sent a one-time code to your <email>. What does it say?"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Add the case",
+      "questions": [
+       {
+        "question": "Does the action being clicked show the existing case, rather than start a new filing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard presents multiple options like filing a new form or adding a paper-filed case, so you must choose the correct path to access your case history.",
+        "whatTheAgentLoses": "Delegating this step means you lose the awareness of other available account features, such as filing a new form online or entering a representative passcode.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the selected dashboard action open the existing case's status, rather than starting a new filing?",
+        "say_example": "That starts a new application. Your existing case is under <View Case Status>. Going there instead."
+       },
+       {
+        "question": "Which receipt number should I use to link your existing case to the account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal requires a specific receipt number to successfully link and track your immigration petition.",
+        "whatTheAgentLoses": "You lose the ability to verify that the exact receipt number for your application is the one being linked to your profile.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does linking the existing case to the account require a receipt number, and is that number not already known?",
+        "say_example": "To pull up your existing case I need its receipt number. It usually starts with three letters, like <WAC>. What is it?"
+       },
+       {
+        "question": "Is the page still on adding the case, rather than the notification settings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'My Cases' page allows you to either manually add a specific application using its receipt number or manage mobile and email alerts for updates.",
+        "whatTheAgentLoses": "You lose the ability to decide exactly how you want to track your case and receive future status updates.",
+        "kind": "decision",
+        "verify_form": "The agent entered a receipt number to add a case, or went to the notification settings instead - check which happened; the page offers both and only one links your case.",
+        "speak": "if-wrong",
+        "check": "Did the agent stay on adding the case by receipt number, rather than switching to notification settings?",
+        "say_example": "That's the notification settings page. Going back to add the case by its receipt number."
+       },
+       {
+        "question": "Which method does the dashboard offer for linking an existing case?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard displays different methods for linking an application, such as adding a paper-filed case, which determines how the system retrieves your status.",
+        "whatTheAgentLoses": "You lose the ability to specify how your application was originally filed, which might be necessary to successfully link the case to your account.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Which method did the dashboard offer for adding the case, such as paper-filed versus standard entry?",
+        "say_example": "Linked the case using the <paper-filed> option, matching how it was actually submitted."
+       },
+       {
+        "question": "Should the case stay linked to the account after the status is read?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dashboard provides a 'Remove' link next to the case, allowing you to unlink the receipt number from this specific account if you only wanted to perform a one-time check.",
+        "whatTheAgentLoses": "You lose the ability to keep your case history disconnected from the agent's account if they fail to remove the case after checking it.",
+        "kind": "decision",
+        "verify_form": "The agent left the case in the account or clicked Remove - check which; removing it ends the alerts.",
+        "speak": "always",
+        "check": "Does the dashboard offer a Remove link that would unlink the case and stop its alerts?",
+        "say_example": "Leaving the case linked so the alerts keep coming. Say the word if you'd rather I remove it."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Open the application"
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Enter the identifiers",
+    "note": "the user goes through 4.1 first on every form. 4.2 and 4.3 where the form asks the kind before the value. the user goes through 4.4 when they do not have the number - in most videos they leave the portal to find it. then 4.5 and 4.6 together, 4.7 and 4.8 as the form asks, 4.9 where a captcha sits on the form, and 4.10 before 5. on the account route 4.5 and 4.6 happen inside 3.4, and on the employer portal the user skips this goal.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Read what the form needs",
+      "questions": [
+       {
+        "question": "What does this site need from you before it can look up the status?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen explicitly lists the required personal details, such as your date of birth and the last four digits of your Social Security Number, needed to use the online system.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review exactly what sensitive personal information is required to access your application status.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the page state which details are needed before searching - such as a reference or token number, a date of birth, or the last four digits of a Social Security Number?",
+        "say_example": "This site needs your <date of birth> and the last four digits of your <Social Security Number> to look this up."
+       },
+       {
+        "question": "Does the form ask for different details than the site's instructions said?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tracking instructions stated to use your last name, but the actual form required a Date of Birth instead.",
+        "whatTheAgentLoses": "The user loses the opportunity to troubleshoot the discrepancy and provide the alternative personal information needed to check the status.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the form's actual required field differ from what the earlier instructions said to use?",
+        "say_example": "The instructions said last name. The form is actually asking for date of birth. Going with what the form asks for."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Choose the application type",
+      "questions": [
+       {
+        "question": "Does the application type selected match the kind of application actually filed?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires selecting the specific passport service type, such as reissuance or new passport, to proceed.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact passport service they applied for, which might be necessary to retrieve the correct application status.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the application type on the form, including the page's own default, match the kind of application actually filed, such as new versus reissue?",
+        "say_example": "This is set to <reissue>, but yours was a <new passport>. Changing it before searching."
+       },
+       {
+        "question": "Does the interview location selected match where the interview happened?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The status portal requires selecting the specific interview location from a dropdown menu to locate the correct application record.",
+        "whatTheAgentLoses": "You lose the assurance that the correct interview city is selected, which is required to successfully retrieve your specific case status.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the selected interview location match where the actual interview took place?",
+        "say_example": "This is set to <a different city> from where the interview was. Correcting it."
+       },
+       {
+        "question": "Do the search method and document type match how this application should be looked up?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'File Validity' form requires you to choose a search method, such as 'Passport Information', and a document type, such as 'Visa', to determine what identifiers you must provide next.",
+        "whatTheAgentLoses": "You lose the ability to decide which of your personal identifiers, such as your passport details versus a file number, are used to retrieve your immigration status.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Do the selected search method and document type match how the actual application should be looked up?",
+        "say_example": "This is set to search by <file number>, but the number on hand is a <passport number>. Switching the search method."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Choose which number to use",
+      "questions": [
+       {
+        "question": "Does the identifier type selected match the number actually on hand?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown menu requires you to specify the type of identifier you are providing so the system can correctly locate your record.",
+        "whatTheAgentLoses": "You lose the ability to decide which piece of personal identification is used to retrieve your application status.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the selected identifier type match the kind of number actually available (such as a receipt number versus a token)?",
+        "say_example": "This is set to <token number>, but the number on hand is a <receipt number>. Switching it."
+       },
+       {
+        "question": "Are the reference-number options under the dropdown being searched, or a different one?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the 'Document type' dropdown open while discussing options like TRN and Visa Grant Number, which actually belong in the 'Reference type' dropdown.",
+        "whatTheAgentLoses": "The user loses the assurance that their application identifiers will be entered correctly if the agent gets stuck searching for options in the wrong dropdown menu.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Are the reference-number options (such as TRN or Visa Grant Number) being looked for in the Reference type dropdown, not the Document type dropdown?",
+        "say_example": "Those options sit under 'Reference type', not 'Document type'. Looking there instead."
+       },
+       {
+        "question": "Does the letter mark any of its numbers as the wrong one to use?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows red crosses over the Group URN and Reference Number on the appointment letter, indicating these specific numbers will cause an error if used for tracking.",
+        "whatTheAgentLoses": "You lose the ability to prevent the agent from mistakenly using the invalid reference numbers printed on the appointment letter.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the appointment letter mark certain numbers, such as a Group URN, as not the one to use?",
+        "say_example": "The appointment letter crosses out the <Group URN>. That's not the number this form wants."
+       },
+       {
+        "question": "Does the document type selected match the document on hand?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires you to choose a specific identification document, such as a Passport or ImmiCard, from the dropdown menu to proceed.",
+        "whatTheAgentLoses": "You lose the opportunity to decide which of your valid identification documents is used to look up your visa status.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the selected identity document type (such as Passport versus ImmiCard) match the document actually on hand?",
+        "say_example": "This is set to <ImmiCard>, but the document on hand is a <passport>. Switching it."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Find the number in the notice",
+      "questions": [
+       {
+        "question": "Where does the token number for this lookup live?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The status portal requires a specific token number that was previously emailed to you, prompting you to open the Gmail app from your home screen to find it.",
+        "whatTheAgentLoses": "Delegating this step requires giving an agent access to your personal email inbox, which exposes your private correspondence.",
+        "kind": "decision",
+        "verify_form": "The agent went into your email to find the token - check that it opened only the application email and that you are fine with it reading the inbox.",
+        "speak": "always",
+        "check": "Does the page say the token number was sent by email, so it has to come from the person's own mail?",
+        "say_example": "This lookup needs the token number from the agency's email. That's in your inbox, not on this page."
+       },
+       {
+        "question": "Which email contains your passport tracking ID?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The inbox shows multiple automated emails, so you must identify the specific one with the 'E-Passport Application' subject to retrieve the correct tracking number.",
+        "whatTheAgentLoses": "You lose the privacy of your inbox because the agent must scan through your personal emails to locate the correct application ID.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the email selected match the one with the passport tracking ID, such as one with an 'E-Passport Application' subject, rather than a different automated email?",
+        "say_example": "That's a different automated email. The one with the tracking ID has the subject <E-Passport Application>."
+       },
+       {
+        "question": "Does the email show a tracking ID to copy?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The approval notification email displays the exact tracking ID needed to query the e-Services Portal.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct tracking ID from your official correspondence is being used.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the selected email display a tracking ID to copy?",
+        "say_example": "Copied the tracking ID <[case-no]> from the email"
+       },
+       {
+        "question": "Which number on the appointment letter is the correct reference number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The appointment letter displays multiple details like a passport number and a barcode, so you must identify the specific alphanumeric string starting with '[case-no]' to track your application.",
+        "whatTheAgentLoses": "You lose the knowledge of how to locate this specific tracking identifier on your official appointment documents for future use.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Is the reference number being used the actual reference number on the appointment letter, rather than the passport number or barcode also printed there?",
+        "say_example": "That's the passport number, not the reference number. The one this form wants starts with <a case prefix>."
+       },
+       {
+        "question": "Is the copied reference exactly what the letter shows, character for character?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You need to accurately capture the 'PEX [number]X' number using the pop-up menu so you can paste it into the status portal.",
+        "whatTheAgentLoses": "You lose the chance to verify that the exact and complete reference number was copied without any missing characters or extra spaces.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the copied reference number match the letter exactly, character for character, with no spaces missing or added?",
+        "say_example": "The copied number is a character short of what the letter shows. Copying it again."
+       },
+       {
+        "question": "Where do you find the receipt number needed to check your case status?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows an I-797 Notice of Action document, which contains the specific receipt number required to query the USCIS system.",
+        "whatTheAgentLoses": "Delegating this step means you lose the knowledge of how to locate your official receipt number on physical USCIS correspondence for future reference.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the I-797 Notice of Action show the receipt number needed for the status check?",
+        "say_example": "Read the receipt number <[case-no]> off the I-797 notice."
+       },
+       {
+        "question": "Does the page offer help finding the file number?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The page requires you to confirm if you have your file or reference number and offers a section to help you find it if you are unsure.",
+        "whatTheAgentLoses": "You lose the chance to learn how to identify your reference number from the provided receipt examples for future use.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the page ask whether the file number is already on hand, offering a section to help locate it if not?",
+        "say_example": "The page has a section for finding your file number if you don't have it to hand. Going there first."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Enter the case number",
+      "questions": [
+       {
+        "question": "What prefix does the reference number field expect?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires an application reference starting with PEX or POD to retrieve your specific passport status.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent enters the exact reference number associated with your specific application.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the reference number field expect a specific prefix, such as PEX or POD, and does the number entered carry it?",
+        "say_example": "Entered the reference number, starting with <PEX>, into the field"
+       },
+       {
+        "question": "What file number should you enter?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a mandatory 'File Number' to retrieve the status, which must be retrieved from your personal confirmation messages.",
+        "whatTheAgentLoses": "The user loses the privacy of their specific application file number and must share personal tracking details with the agent.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the file number field require the number from the personal confirmation message?",
+        "say_example": "Entered the file number from the confirmation message."
+       },
+       {
+        "question": "Does the browser's autocomplete suggestion match this application's file number?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The browser suggests previously entered file numbers, but if multiple people use the device or you have multiple applications, selecting the wrong suggestion will retrieve someone else's status.",
+        "whatTheAgentLoses": "You lose the ability to verify that the agent is manually entering the exact file number for your current application rather than blindly clicking a cached suggestion.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the autocomplete suggestion offered for the file number field actually match the number found for this application?",
+        "say_example": "The browser is offering a saved file number. Checking it matches this application before using it."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Match the number's format",
+      "questions": [
+       {
+        "question": "Does the number in your email match the format a search result claims?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search snippet claims the tracking number should start with 5010, but the official email shows an ID starting with 9999.",
+        "whatTheAgentLoses": "You lose the ability to apply human judgment to trust your official correspondence over a potentially inaccurate search result.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the number actually shown in the confirmation email match the format a search-result snippet claimed, and if not, which one is authoritative?",
+        "say_example": "A search result says the number starts with <5010>. Your email shows one starting with <9999>. Going with the email, since that's the agency's own."
+       },
+       {
+        "question": "How does the page say the receipt number should be formatted?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The instructions explicitly state that the receipt number must be a 13-character identifier with three letters and 10 numbers, omitting dashes.",
+        "whatTheAgentLoses": "The delegator loses control over ensuring their specific, sensitive receipt number is entered accurately according to the portal's formatting rules.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What format do the page's instructions give for the receipt or reference number, such as its length and whether it takes dashes?",
+        "say_example": "Entered as <[case-no]>, with no dashes, matching the page's instructions."
+       },
+       {
+        "question": "Is the number in the field the length the instructions ask for?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Submitting an incomplete number triggers an error message instead of displaying the case status.",
+        "whatTheAgentLoses": "The user loses the assurance that their specific application details were accurately entered and successfully queried without triggering validation errors.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the number in the field match the required length/character format shown in the instructions?",
+        "say_example": "The number in the box is <9> characters. The instructions ask for <13>. Fixing that before submitting."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Enter the date of birth",
+      "questions": [
+       {
+        "question": "Is the date of birth in the order this form wants, day and month the right way round?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a calendar widget to select the date, ensuring it matches the system's required format.",
+        "whatTheAgentLoses": "You lose the ability to directly handle and verify the input of your sensitive personal information.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the date shown in the date-of-birth field match day/month/year in the calendar widget's own order and format?",
+        "say_example": "The date reads <month then day> where this form wants <day then month>. Fixing the order before searching."
+       },
+       {
+        "question": "Are the application type, the file number and the date of birth all filled in before the search runs?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tracking portal requires specific identifiers, such as your application type, file number, and date of birth, to locate your record.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that your sensitive identification details are entered accurately.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Are the application type, file number, and date-of-birth fields all showing values (none blank) on the form?",
+        "say_example": "The <date of birth> field is still empty. Filling that in before searching."
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Enter the name and identity details",
+      "questions": [
+       {
+        "question": "Does the page show an example of how the name should be written?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The portal provides a specific visual example showing how to format the English name exactly as it appears in the passport's machine-readable zone.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your name is transcribed exactly according to the portal's specific formatting rules.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show a visual example (e.g., an image of the passport's machine-readable zone) of how the name should be formatted?",
+        "say_example": "The page shows an example of the name format. It follows the passport's machine-readable line, not the usual spelling. Using that."
+       },
+       {
+        "question": "What details does this form need from you to find the case?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed mandatory fields for passport number and expiry date with red 'Field is required' error messages.",
+        "whatTheAgentLoses": "The person loses the ability to successfully query their application status because mandatory fields were left blank.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Which fields does the lookup form mark as required, and which of those were not given in the ask?",
+        "say_example": "The form needs your passport number and its expiry date to search. What are they?"
+       },
+       {
+        "question": "Could the name on file be spelled differently from the one entered?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Status portals rigidly match the agency's database, meaning if the intake officer misspelled your name on the original receipt, you must enter that exact wrong spelling into the tracking form to successfully retrieve your record.",
+        "whatTheAgentLoses": "The user loses the ability to creatively troubleshoot a 'Not Found' error by noticing and mimicking the specific data-entry mistakes printed on their physical documents.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the page return a 'no record found' (or similar) result after the name was entered as given?",
+        "say_example": "No record found for that spelling. If your receipt has a typo in the name, try entering it exactly as printed there, even if it's wrong."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Solve the captcha",
+      "questions": [
+       {
+        "question": "Is the code box filled in before the form is submitted?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Retype the Code' field was left empty despite the CAPTCHA image clearly displaying 'RVM6SH'.",
+        "whatTheAgentLoses": "You lose the ability to retrieve your application status because the system will reject the query without the required CAPTCHA verification.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Is the CAPTCHA/'retype the code' field showing a value before the form is submitted?",
+        "say_example": "The code box was still empty. Filling in <the code shown> before submitting."
+       }
+      ]
+     },
+     {
+      "id": "4.10",
+      "label": "Check the entries",
+      "questions": [
+       {
+        "question": "Are the details already in the form from an earlier lookup, rather than this case?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The tracking form may load with pre-filled reference numbers and dates of birth from previous sessions, which must be cleared and replaced if you are checking a different application.",
+        "whatTheAgentLoses": "You lose the opportunity to catch and correct stale, pre-filled data before the system queries the wrong application record.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Do the fields on the tracking form already show values pre-filled from a previous session, rather than blank?",
+        "say_example": "The form is still showing details from an earlier lookup. Clearing those and entering this case's instead."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Submit the lookup",
+    "note": "the user goes through 5.1 and then 5.2 on every lookup. 5.3 when the page comes back with an error or an empty result. 5.4 after 5.3 - the user goes back to 1.6 for the wrong portal, 4.3 for the wrong number, 4.6 for the wrong format, or waits. 5.5 only when the error persists and the provider has a form for it.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Submit the query",
+      "questions": [
+       {
+        "question": "Is the receipt number in the field the one you meant, right before the agent clicks Check Status?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the 'CHECK STATUS' button after filling the receipt number field is the exact action needed to query the system for your case.",
+        "whatTheAgentLoses": "You lose the opportunity to double-check your receipt number for typos right before the status query is submitted.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the receipt number currently in the field match the number that was intended?",
+        "say_example": "The box shows <a different number> from the one meant. Fixing that before searching."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Confirm the result loaded",
+      "questions": [
+       {
+        "question": "Is this result from the search just run, or left over from an earlier attempt?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video cuts directly from an unsuccessful search attempt showing empty required fields and error messages to a populated result screen.",
+        "whatTheAgentLoses": "You lose confidence in the reliability of the status check because the results appear fabricated or disconnected from the actual inputs.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the result on screen come from this submission, or could it be left over from the attempt that errored earlier?",
+        "say_example": "Making sure this came from the search just run, not from the attempt that failed."
+       },
+       {
+        "question": "Did the page come back blank, with no status and no error?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Status portals frequently fail silently when a session times out or a background CAPTCHA expires, dumping you back at a blank form instead of explaining that the submission was rejected.",
+        "whatTheAgentLoses": "The user loses the immediate realization that a technical glitch occurred, potentially mistaking the silently cleared form for a sign that their application record does not exist.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "After submitting, does the page show a status result, an error message, or neither (a blank reloaded form)?",
+        "say_example": "The page came back blank. No status, no error. Trying again."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Read the error",
+      "questions": [
+       {
+        "question": "What does the 'Invalid Inputs' error say about the reference number field?",
+        "cluster": "hand over",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows a red error message under the Reference Number field, indicating that the system rejected the entered tracking information as incorrect or unrecognized.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the reference number against your physical application receipts to see if it was simply mistyped.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show an 'Invalid Inputs' error under the reference number field?",
+        "say_example": "The page rejects the reference number with <Invalid Inputs>. Checking the format before trying again."
+       },
+       {
+        "question": "What does the page say when there is no status to show?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The system returns a generic 'no status update available' message, which requires you to decide if the passport simply hasn't been dispatched yet or if you need to verify the passport number you entered.",
+        "whatTheAgentLoses": "You lose the opportunity to personally troubleshoot whether the lack of a passport status is a normal processing delay or a sign that the query failed.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page display the literal text 'no status update available' (or an equivalent no-status message) as the result?",
+        "say_example": "The page says only <no status update available>. It doesn't say why."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Fix the lookup and retry",
+      "questions": [
+       {
+        "question": "Does the page say how to correct the reference number after the error?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a red 'Invalid Inputs.Reference Number' error, indicating that the tracking number was entered in an unacceptable format.",
+        "whatTheAgentLoses": "You lose the chance to learn the exact formatting requirements needed to successfully track your application.",
+        "kind": "decision",
+        "verify_form": "The agent tried a fix for Invalid Inputs - check which: a different reference number, typing it by hand, or another browser; the appointment letter's numbers are the wrong ones.",
+        "speak": "on-event",
+        "check": "After the error, does the page or its instructions show guidance for correcting the reference number's format?",
+        "say_example": "The portal wants the reference number from <the appointment letter>, not the one on <the payment receipt>. Trying that instead."
+       },
+       {
+        "question": "Has the site locked you out after too many tries?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Status portals often employ strict rate limits and will lock your receipt number or IP address for a period of time if identifiers are entered incorrectly multiple times.",
+        "whatTheAgentLoses": "You lose access to your own application status because the agent triggered a security lockout by repeatedly guessing incorrect formats.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show a message that access has been locked or blocked due to repeated attempts?",
+        "say_example": "The page says access is locked after too many tries. It won't take another attempt right now."
+       },
+       {
+        "question": "Did the error clear the code box?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When a tracking query fails, the page often reloads and clears the CAPTCHA field, requiring you to solve a new challenge before you can try submitting your corrected inputs again.",
+        "whatTheAgentLoses": "You lose the awareness that you must actively re-verify the CAPTCHA on every failed attempt, rather than just fixing your reference number and clicking submit.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "After the error, does the CAPTCHA field show as empty, requiring it to be solved again?",
+        "say_example": "The code box was cleared by that error. Solving a new one before trying again."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Raise an enquiry"
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Read the status",
+    "note": "the user goes through 6.1 first on every result. 6.2 and 6.3 where the page has them. 6.4 whenever the number came from somewhere else or two people share the browser. the user finishes every status check with 6.5 and 6.6. 6.7 wherever a message, a letter or another page also states the status. 6.8 where the page offers a certificate or a file.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Read the status line",
+      "questions": [
+       {
+        "question": "What status does the page show for the case?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen lists your application under the active tab with a status of 'Not Submitted', indicating it has not yet been fully sent to the employer.",
+        "whatTheAgentLoses": "You lose the immediate realization that your application is incomplete and requires further action to actually submit it.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "What status text does the page display for the case, in the page's own words?",
+        "say_example": "The page shows <Case Was Received>, dated <a date>."
+       },
+       {
+        "question": "Where on the progress bar is the case now?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many status portals use a visual timeline with colored dots to show progress, which conveys immediate context about upcoming steps that might not be explicitly written in the text summary.",
+        "whatTheAgentLoses": "You lose the ability to quickly glance at the visual timeline to intuitively understand how far along your application is in the overall process.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Which step is visually highlighted or marked current on the progress tracker, and how many steps does the tracker show after it?",
+        "say_example": "On the progress bar you're at step <3 of 5>, the one marked <Under review>. Two steps left."
+       },
+       {
+        "question": "Is the status shown in a warning colour?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Portals often use red text or alert icons to indicate a denial, missing document, or required action, even if the text itself uses mild bureaucratic language.",
+        "whatTheAgentLoses": "You lose the immediate, intuitive warning provided by the color coding, relying entirely on the agent to interpret the urgency of the bureaucratic text.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Is the status text or its icon shown in a warning color such as red or yellow, rather than a neutral or positive color?",
+        "say_example": "The status is in red. That's the colour this site uses for a problem, not for a normal update."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Read the case details",
+      "questions": [
+       {
+        "question": "Does the approval date come after the application date?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Verifying that the approval date follows the application date confirms the status update is valid and not a system error.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the timeline's consistency and catch potential errors in the agency's records.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the approval date shown come after the application date shown?",
+        "say_example": "The approval date falls before the application date. One of those two dates is wrong, so I wouldn't go by either yet."
+       },
+       {
+        "question": "Does the visa's validity start on or after its issue date?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking that the issue date of 2023.07.03 and the validity period ending in 2028.07.03 align confirms the visa was granted for the expected duration.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that your official visa dates are accurate and consistent.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the visa's validity period begin on or after the issue date shown?",
+        "say_example": "The notice says it was issued <a date>, but valid from <an earlier date>. A visa can't start before it's issued."
+       },
+       {
+        "question": "Which police station is handling the verification?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The status update explicitly names the local police station handling your physical verification, which is the entity you will likely need to contact or visit to move the process forward.",
+        "whatTheAgentLoses": "You lose the actionable knowledge of exactly which local authority currently holds your file, potentially delaying your ability to follow up on the physical verification.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the status page name a specific police station or verification office handling the request?",
+        "say_example": "It's gone to <the local station named on the page> for verification."
+       },
+       {
+        "question": "What does the page's 'Last Updated' date show, and how long ago was that?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A status of 'Processing' might look reassuring, but a last-updated date from several months ago indicates the application is actually stuck or the web tracking system has silently stopped receiving data from the processing center.",
+        "whatTheAgentLoses": "The user loses the ability to spot a stale tracking record, which is the critical trigger for abandoning the web portal and calling the agency to find the real status.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "What date does the page show next to 'Last Updated' (or equivalent), and how does that compare to today?",
+        "say_example": "The page says it was last updated <a date>. That's <several months> ago."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Read the history",
+      "questions": [
+       {
+        "question": "Is there a separate case-history tab with more detail than the status line?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The portal separates the current status from the case history, which contains the detailed timeline of past updates.",
+        "whatTheAgentLoses": "You lose the opportunity to review the step-by-step progression of your case to see exactly when previous actions occurred.",
+        "kind": "decision",
+        "verify_form": "The agent opened the Case history tab or stayed on Case status - check which; the history shows every past action and the status only the latest.",
+        "speak": "on-event",
+        "check": "Does the page have a separate 'Case History' (or similarly named) tab distinct from the main status view?",
+        "say_example": "There's a separate 'Case history' tab with more detail than the main status. Checking that too."
+       },
+       {
+        "question": "Was the history read oldest to newest, so the current status is the last event and not the first?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays a list of past events, and reading them chronologically helps you understand the full progression of the application.",
+        "whatTheAgentLoses": "You lose the opportunity to personally trace the exact timeline of your application's processing history and understand the context behind its current status.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Is the most recent history entry positioned first (at the top) or last (at the bottom) of the list?",
+        "say_example": "This list runs newest to oldest. The top entry, <a status and date>, is the most recent one."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Confirm it is the right case",
+      "questions": [
+       {
+        "question": "Does the reference number on the result match the one you entered?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking that the reference prefix remains identical across cuts ensures you are tracking the exact same application throughout the process.",
+        "whatTheAgentLoses": "You lose the certainty that the agent is consistently tracking your specific application rather than mixing it up with another one.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the reference or case number shown on the results page match the number that was entered?",
+        "say_example": "The reference number on this result isn't the one that was entered. It may not be your case."
+       },
+       {
+        "question": "Does the visa shown match the application that was searched for?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Confirming the multiple-entry visa type and 2028 expiry date ensures the system returned the correct application.",
+        "whatTheAgentLoses": "You lose the reassurance of personally verifying that the approved visa parameters match your expected travel timeline.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the visa type and expiry date on the results page match what was entered or expected for this application?",
+        "say_example": "The visa type and expiry don't match what was searched for. Checking this is the right record."
+       },
+       {
+        "question": "Does the issuing authority on the notice match where the application was filed?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking the issuing authority on the Visa Grant Notice PDF confirms that the document corresponds to your specific application.",
+        "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally verify the visa's origin and catch any potential processing errors.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the issuing authority named on the Visa Grant Notice match where the application was submitted?",
+        "say_example": "The issuing authority on the notice isn't where this was filed. Worth a second look."
+       },
+       {
+        "question": "Do the dates on your notice match the submission dates in the online history?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Verifying that the dates on the I-797 form match the 'Submitted on' dates in the dashboard confirms the system is tracking the correct case timeline.",
+        "whatTheAgentLoses": "Delegating this step means losing the personal reassurance of verifying that the government's digital record perfectly matches your physical receipt notice.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the dates on the physical notice match the 'submitted on' dates shown in the online history?",
+        "say_example": "The dates on your notice and the online history don't line up. Checking this is the same case."
+       },
+       {
+        "question": "Do the file number, name, and date of birth shown match the application you're checking?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Confirming the file number, name, and date of birth ensures the 'under review' status actually applies to your specific passport application.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of seeing your personal details correctly tied to the application status.",
+        "kind": "intent-check",
+        "speak": "always",
+        "check": "Do the file number, name, and date of birth on the results page match what was entered for this application?",
+        "say_example": "File number, name, and date of birth all match what was entered. This is the right case."
+       },
+       {
+        "question": "Do the masked details shown fit the person this lookup is for?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "To protect privacy, portals often return results with asterisk-masked names or dates of birth (e.g., J*** D***), serving as the only visual proof that the correct record was retrieved.",
+        "whatTheAgentLoses": "You lose the ability to visually verify that the status result actually belongs to you, leaving you vulnerable to trusting a result pulled for a typoed receipt number.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Do the masked initials shown match the name on the case being checked?",
+        "say_example": "The masked name reads <A*** B***>. That fits the person this lookup is for."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Say what the status means"
+     },
+     {
+      "id": "6.6",
+      "label": "Read the next step",
+      "questions": [
+       {
+        "question": "What is the deadline to collect your passport before it is returned to the Embassy?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The tracking page explicitly warns that passports not collected within 14 calendar days from the selected location will be sent back, establishing a strict deadline for pickup.",
+        "whatTheAgentLoses": "You lose the awareness of the strict 14-day collection window, risking your passport being returned to the Embassy if the agent fails to relay this condition.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the page state a deadline (a number of days) for collecting the passport before it's returned?",
+        "say_example": "You have <a set number of days> to collect it, or it goes back to the Embassy."
+       },
+       {
+        "question": "What does the status description say to expect next?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows a 'Document Was Mailed' status along with specific instructions on what to do if the document does not arrive, which is essential for tracking your petition.",
+        "whatTheAgentLoses": "Delegating this means you miss seeing the exact mailing date and the specific instructions for handling a potentially lost document.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What does the page's status description say the applicant should expect or watch for next?",
+        "say_example": "The description says <a mailed notice with instructions is on the way>."
+       },
+       {
+        "question": "Which actions does the page offer for this application?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The 'Action' dropdown reveals critical options like continuing, viewing, or deleting the application, which dictate your next steps.",
+        "whatTheAgentLoses": "You lose the opportunity to review the available options and understand what can be done with your application before an action is taken.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show an actions menu (e.g., Continue, View, Delete) for this application?",
+        "say_example": "This page has an actions menu. Using <View> only. <Continue> would start filling in the application again."
+       },
+       {
+        "question": "Has the case moved past what this tracker can show?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The VFS status indicates the application has reached the Embassy, meaning the third-party agency's tracking is complete and further processing updates will only appear on the government's own portal.",
+        "whatTheAgentLoses": "You lose the awareness that tracking responsibility has handed off to a different system, potentially leaving you waiting for updates on a portal that will no longer change.",
+        "kind": "decision",
+        "verify_form": "The agent kept checking the VFS tracker or moved to the government portal - check which; once the application has reached the embassy, the VFS page stops changing.",
+        "speak": "on-event",
+        "check": "Does the page's status indicate the application has left this portal's tracking (e.g., 'reached the Embassy') with no further updates expected here?",
+        "say_example": "This tracker says it reached the Embassy. It won't show more here. Later updates appear on the government's own portal."
+       },
+       {
+        "question": "Does the page give a timeframe for dispatch after police verification?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The tracking portal displays a persistent notice stating that passports are usually dispatched within one week after police verification, setting a specific timeline for the next step.",
+        "whatTheAgentLoses": "You lose the specific timeline expectation set by the agency for the final dispatch step of your passport.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page state a typical timeframe for dispatch after police verification?",
+        "say_example": "It usually goes out <around a week> after police verification finishes."
+       },
+       {
+        "question": "What does the page say to do if the details shown are wrong?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The VEVO results page explicitly instructs you to contact the Department if you believe the displayed visa details or entitlements are not correct.",
+        "whatTheAgentLoses": "You lose the direct instruction on who to contact to resolve errors in your official visa record.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page instruct what to do if the visa entitlements or details shown are believed to be incorrect?",
+        "say_example": "If any of this looks wrong, the page says to <contact the Department>. It names <a specific form> for that."
+       },
+       {
+        "question": "Does the status come with a deadline you have to meet?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Certain statuses are not just informational but require you to upload missing documents or pay additional fees by a specific date to keep the application alive.",
+        "whatTheAgentLoses": "You lose the critical awareness of a ticking clock, risking the complete cancellation of your application if the agent fails to flag the deadline.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show a 'Request for Evidence' or 'Action Required' status along with a response deadline?",
+        "say_example": "This status needs a response. <The document they asked for> is due by <a date>, or the case can be denied."
+       },
+       {
+        "question": "Has the deadline on the page already passed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Agencies sometimes backdate status updates or delay posting them, meaning a 'Request for Evidence' or interview notice might finally appear online with a response deadline that is already perilously close or completely expired.",
+        "whatTheAgentLoses": "The user loses the immediate realization that they must urgently contact the agency to salvage their application due to a delayed system notification.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the deadline stated on the page fall before today's date?",
+        "say_example": "That deadline, <a date>, has already passed. This needs attention right away."
+       }
+      ]
+     },
+     {
+      "id": "6.7",
+      "label": "Compare the status across sources",
+      "questions": [
+       {
+        "question": "Does the delivery page already show enough, or is the detailed proof needed?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen confirms the package was delivered and signed for by [name], but getting the detailed proof of delivery requires entering a 9-digit account number.",
+        "whatTheAgentLoses": "You lose the ability to personally recognize the signature name and decide if a formal proof of delivery document is necessary for your records.",
+        "kind": "decision",
+        "verify_form": "The agent asked for the detailed proof of delivery or not - check which; the request needs the shipper's account number, and the page already shows who signed.",
+        "speak": "never",
+        "check": "Does the delivery page already show a delivery confirmation and who signed for it?",
+        "say_example": "Skipped the extra proof-of-delivery lookup - the page already shows delivered and signed for"
+       },
+       {
+        "question": "Which timeframe holds when the two emails disagree?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The initial email promised an update in 2-3 business days, but the later response extended this to 5-6 days, significantly changing when you should expect a status change.",
+        "whatTheAgentLoses": "You lose the opportunity to personally read the updated correspondence and adjust your own expectations for when the application will actually be processed.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do the messages shown on screen give different timeframes for the update?",
+        "say_example": "One message said <a shorter window>. The follow-up said <a longer one>. Going with the newer one."
+       },
+       {
+        "question": "Does the tracker's error fit the email saying your package arrived?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The VFS website displays an error for your tracking details even though an email confirms receipt, creating conflicting information about your actual application status.",
+        "whatTheAgentLoses": "You lose the ability to personally investigate and resolve conflicting status updates between the agency's email and their web portal.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the website show an error for the tracking details while a separate email confirms the item was received?",
+        "say_example": "The tracker says <Invalid Inputs>. The email says it was received. Those don't agree, so flagging it rather than trusting either."
+       },
+       {
+        "question": "Does the delivery date fall after the dispatch date?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking that the March 2nd dispatch date and the March 4th delivery date reflect a realistic two-day transit time confirms the status details are consistent.",
+        "whatTheAgentLoses": "The user loses the ability to personally sanity-check the timeline and catch any logical discrepancies in the processing dates.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the dispatch date and delivery date shown reflect a plausible transit gap, rather than delivery before dispatch?",
+        "say_example": "The tracker shows it delivered before it was dispatched. Those two dates can't both be right."
+       },
+       {
+        "question": "Does the tracker's status match what the text message said?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The SMS message claims the application was granted without police verification, but the tracker page contradicts this by showing it is pending physical police verification.",
+        "whatTheAgentLoses": "The user loses the opportunity to spot a critical contradiction in the agency's communications that likely requires manual follow-up.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the tracker page's status agree with the text message shown on screen?",
+        "say_example": "The text message says <granted>. The tracker still shows <a step pending>. Going with the tracker, since it's the live record."
+       }
+      ]
+     },
+     {
+      "id": "6.8",
+      "label": "Save the result",
+      "questions": [
+       {
+        "question": "Does the page offer a certificate you can download?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays the search-result page with the cursor resting on the 'Certificate' button, presenting the option to download the official status document.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to download the official certificate file to their device or simply read the status on the screen.",
+        "kind": "decision",
+        "verify_form": "The agent clicked Certificate or only read the status - check whether a file was downloaded; the certificate is the document you carry.",
+        "speak": "on-event",
+        "check": "Does the page offer a 'Certificate' (or similarly named) button to download the official status document?",
+        "say_example": "There's a 'Certificate' button here for the official document. Downloading it now so there's proof on hand."
+       },
+       {
+        "question": "Do the details on the visa grant notice look complete and match the applicant?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking the applicant details, validity period, and barcode ensures the issued visa is accurate and can be authenticated for travel.",
+        "whatTheAgentLoses": "You lose the direct visual confirmation of the official document's details and the barcode used to prove its legitimacy at the border.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the applicant details, validity period, and barcode on the visa grant notice look complete and match the applicant?",
+        "say_example": "The <validity period> is missing from this notice. A real grant notice carries one."
+       },
+       {
+        "question": "Do you want to save or print this PDF of your visa conditions before moving on?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays a 3-page PDF with specific work entitlements and mandatory visa conditions that you will likely need to reference later.",
+        "whatTheAgentLoses": "You lose the opportunity to securely save a personal copy of your official visa entitlements and conditions for your own offline records.",
+        "kind": "decision",
+        "verify_form": "The agent saved or printed the entitlements PDF, or closed it - check that a copy exists somewhere you can find.",
+        "speak": "on-event",
+        "check": "Does the page offer a PDF of the visa conditions that has not been saved yet?",
+        "say_example": "This PDF has the visa conditions on it. Saving it now, since it won't be easy to get back to."
+       },
+       {
+        "question": "Did the status report save straight to the default downloads folder, without asking where to put it?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The VEVO results page automatically sends the generated file to the browser's download bar, bypassing any prompt to choose a specific destination.",
+        "whatTheAgentLoses": "You lose the opportunity to immediately organize and rename the sensitive status document into a specific, secure folder on your device.",
+        "kind": "decision",
+        "verify_form": "The agent let the PDF land in the default download folder - check where it went; the file holds your visa details.",
+        "speak": "always",
+        "check": "Does the downloaded file land in the browser's default download folder without asking where to save it?",
+        "say_example": "This saved straight to the default downloads folder. It holds your case details, so move it somewhere private."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Keep checking afterwards",
+    "note": "the user goes through 7.1 after every status that is not final. 7.2 and 7.3 if they want them - on USCIS, 7.3 is also why the user goes through 3.1. 7.4 whenever a message arrives, with 7.5 before trusting it. 7.6 only when 6.1 says dispatched or the agency names a courier. 7.7 last, on any account route or a shared computer.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Decide when to check again",
+      "questions": [
+       {
+        "question": "Does the page say what happens if the status doesn't change online?",
+        "cluster": "watch",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The tracking page explains that you will receive email or SMS updates, which is important to know if the online portal fails to reflect the current status.",
+        "whatTheAgentLoses": "You lose the reassurance of knowing to monitor your email or phone for SMS updates if the online portal remains unchanged.",
+        "kind": "decision",
+        "verify_form": "The agent kept refreshing the portal or turned to email and SMS - check which; the tracking page says the decision arrives by email when the portal does not update.",
+        "speak": "on-event",
+        "check": "Does the page state what will happen if the status doesn't change online (e.g., an email or SMS will be sent instead)?",
+        "say_example": "The page says you'll get an email or text if nothing changes here. No need to keep refreshing."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Bookmark the status page"
+     },
+     {
+      "id": "7.3",
+      "label": "Sign up for alerts",
+      "questions": [
+       {
+        "question": "Do you want text alerts, knowing your carrier may charge for them?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The text message alert explicitly states 'Msg and Data Rates May Apply,' meaning you could be charged by your mobile carrier for receiving these automated updates.",
+        "whatTheAgentLoses": "You lose the chance to opt out of SMS notifications if you want to avoid potential messaging and data charges from your mobile carrier.",
+        "kind": "decision",
+        "verify_form": "The agent turned on text alerts - check that you accept the carrier's message and data charges the alert itself warns about.",
+        "speak": "gate",
+        "check": "Does the alert signup page warn that message and data rates may apply?",
+        "say_example": "The page warns that message and data rates may apply for text alerts. Want me to sign you up anyway?"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Read the alert message",
+      "questions": [
+       {
+        "question": "How does the page say updates will reach you?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows a text message alert from USCIS, demonstrating that users can receive automated SMS notifications when their case status changes.",
+        "whatTheAgentLoses": "Delegating this means you might not receive real-time text alerts on your personal device, potentially delaying your awareness of important case updates.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show an example of how notifications will be delivered, such as a sample text message?",
+        "say_example": "Updates come by text message from the agency, like the example shown here."
+       },
+       {
+        "question": "Does this email's receipt number match the case being tracked?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Selecting the correct email from USCIS-CaseStatus ensures you are reading the update associated with your specific receipt number.",
+        "whatTheAgentLoses": "You lose the direct reassurance of seeing the official USCIS sender address and verifying firsthand that the update matches your exact receipt number.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the email's subject or body show the receipt number that matches the one being tracked?",
+        "say_example": "This email is for receipt <[case-no]>, the one being checked. Reading it now."
+       },
+       {
+        "question": "Is there an email from the agency about the application in the inbox on screen?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The inbox shows unrelated emails from MyAccount and Meta Support, confirming no proactive passport updates have been sent.",
+        "whatTheAgentLoses": "You lose the opportunity to manually verify your inbox and decide whether to sign up for future email notifications.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the inbox show an email from the passport/visa agency about the application, among the visible messages?",
+        "say_example": "No email from the agency in the inbox yet. Just other, unrelated messages."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Verify the alert's sender",
+      "questions": [
+       {
+        "question": "Is this email from the agency's own address?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking the sender address for the official '.gov' domain confirms the interview notification is a legitimate government communication.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying the email's authenticity and directly reading your interview details.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the sender's email address use an official government domain matching the agency?",
+        "say_example": "The sender's address ends in <.gov>. That matches a real government address, not a look-alike."
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Follow the dispatched passport",
+      "note": "the user goes through 7.6.1, then 7.6.2, then 7.6.3. 7.6.2 is 4.5 and 4.6 again on the courier's form, with a postcode or a passport number as the key. 7.6.3 can come back empty, as it does for BZC1.",
+      "children": [
+       {
+        "id": "7.6.1",
+        "label": "Open the courier's tracker",
+        "questions": [
+         {
+          "question": "Does the email say where the delivery can be tracked?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The email provides a specific TNT tracking URL and reference number to monitor the secure delivery of the passport.",
+          "whatTheAgentLoses": "The user loses the reassurance of personally reading the official communication that confirms exactly which courier service is handling their sensitive document.",
+          "kind": "state-check",
+          "speak": "on-event",
+          "check": "Does the email provide a specific tracking website and reference number for the delivery?",
+          "say_example": "The email points to <the courier's tracking site>, with reference <a tracking number>. Going there next."
+         }
+        ]
+       },
+       {
+        "id": "7.6.2",
+        "label": "Enter the delivery reference",
+        "questions": [
+         {
+          "question": "What formatting does the tracking form ask for?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The tracking form requires specific formatting, such as including a space in the postcode and removing the 'PEX' prefix and spaces from the PAN number, to successfully locate the item.",
+          "whatTheAgentLoses": "You lose the ability to manually adjust your reference numbers to meet the specific formatting quirks required by the tracking system.",
+          "kind": "state-check",
+          "speak": "never",
+          "check": "Does the tracking form's instructions specify a formatting rule, such as a space in the postcode or removing a prefix from the reference number?",
+          "say_example": "Entered the postcode with a space and the reference number without its prefix, matching the form's own example."
+         },
+         {
+          "question": "Which of the two references does the tracking form take?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The tracking portal requires your postcode and a choice between your PAN number or consignment number to locate the correct item.",
+          "whatTheAgentLoses": "You lose the ability to decide which of your specific tracking identifiers to use for the query.",
+          "kind": "intent-check",
+          "speak": "never",
+          "check": "Does the tracking form ask for either of two identifiers (e.g., a PAN number or a consignment number)?",
+          "say_example": "Used the reference number already on hand for this lookup."
+         }
+        ]
+       },
+       {
+        "id": "7.6.3",
+        "label": "Read the delivery status",
+        "questions": [
+         {
+          "question": "When does the tracker say the documents will arrive?",
+          "cluster": "facts",
+          "moment": "Completion",
+          "moneyMoving": false,
+          "why": "Checking the delivery date for the supporting documents freight type tells you exactly when your original materials will be returned.",
+          "whatTheAgentLoses": "You lose the immediate reassurance of knowing the specific date your sensitive personal documents will arrive at your address.",
+          "kind": "state-check",
+          "speak": "always",
+          "check": "Does the courier tracker show a scheduled delivery date for the supporting-documents shipment?",
+          "say_example": "The supporting documents are due <a date>, according to the tracker."
+         },
+         {
+          "question": "Does the tracker show more than one shipment under this reference?",
+          "cluster": "select",
+          "moment": "Completion",
+          "moneyMoving": false,
+          "why": "The screen displayed two different consignments (Supporting Documents and Passport) under the same PAN number, requiring a choice of which item to track.",
+          "whatTheAgentLoses": "The user loses the opportunity to decide whether to check the status of their supporting documents or the passport itself.",
+          "kind": "decision",
+          "verify_form": "The agent opened the passport consignment or the supporting documents one - check which; they have different delivery dates.",
+          "speak": "never",
+          "check": "Does the tracker show more than one consignment (e.g., 'Supporting Documents' and 'Passport') under the same reference?",
+          "say_example": "Checking both shipments under this reference - the passport and the supporting documents"
+         },
+         {
+          "question": "Do the passport and document delivery dates differ, as the email said they would?",
+          "cluster": "facts",
+          "moment": "Completion",
+          "moneyMoving": false,
+          "why": "Checking that the tracking shows different delivery dates for the passport and supporting documents confirms the email's statement that they will arrive in separate mailings.",
+          "whatTheAgentLoses": "You lose the reassurance of personally cross-referencing the tracking dates to confirm your sensitive supporting documents are safely accounted for.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Do the tracker's delivery dates for the passport and the supporting documents differ, matching the email's statement that they arrive separately?",
+          "say_example": "Passport due <a date>, documents due <a different date>. That matches the email saying they'd come separately."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Log out of the portal",
+      "questions": [
+       {
+        "question": "If the portal required signing in, was the account logged out when finished?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The video uses a stock animation to advise logging out for security on shared computers rather than showing the actual portal's interface.",
+        "whatTheAgentLoses": "An agent misses the exact visual steps to locate and click the logout button on the actual portal.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "If an account was signed into for this lookup, does the final page show it was signed out rather than left open?",
+        "say_example": "Signed out when finished, since this was on a shared computer."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

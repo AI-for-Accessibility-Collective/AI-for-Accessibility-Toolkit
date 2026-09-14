@@ -16,53 +16,35 @@
      },
      {
       "id": "1.2",
-      "label": "Search or type the address",
-      "questions": [
-       {
-        "question": "What search query should you select to find the official USPS change-of-address service?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Choosing an accurate search suggestion like 'usps mail forwarding' ensures you navigate to the official government site rather than a deceptive third-party service.",
-        "whatTheAgentLoses": "The user loses the ability to personally verify that the search terms used will lead directly to the secure and official USPS website.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Which website should you visit to start your change of address?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Typing the official usps.com URL directly into the address bar ensures you avoid deceptive third-party sites that charge unnecessary fees.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that the browser is securely connected to the authentic USPS website.",
-        "kind": "state-check",
-        "speak": "never"
-       }
-      ]
+      "label": "Search or type the address"
      },
      {
       "id": "1.3",
       "label": "Pick the official result",
       "questions": [
        {
-        "question": "Which search result should you click to access the official USPS website?",
+        "question": "Which search result actually goes to the real USPS site?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Selecting the official 'USPS: Welcome' link from the search results ensures you avoid deceptive third-party sites that charge unnecessary fees.",
         "whatTheAgentLoses": "The user loses the peace of mind of personally verifying they are navigating to the legitimate government domain.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the search result about to be clicked show usps.com, with no 'Sponsored' or 'Ad' label on it?",
+        "say_example": "The top result is marked Sponsored and points to <a look-alike domain>, not usps.com. I'm skipping it for the real one further down."
        },
        {
-        "question": "Are you on the official USPS webpage to begin your mail forwarding request?",
+        "question": "Is this actually the official USPS website?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Confirming the usps.com URL and the 'Standard Forward Mail & Change of Address' heading ensures you are using the legitimate postal service rather than a deceptive third-party site.",
         "whatTheAgentLoses": "You lose the ability to personally verify that your sensitive address information is being submitted to the authentic postal service website.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the address bar show usps.com, and does the page heading say change of address or mail forwarding?",
+        "say_example": "The address bar shows <a different domain>, so this isn't the real USPS site. I'm heading back to search instead of typing anything here."
        }
       ]
      },
@@ -75,34 +57,16 @@
       "label": "Navigate to the change-of-address tool",
       "questions": [
        {
-        "question": "Which option should you select from the menu to initiate the address change process?",
+        "question": "Which menu option actually leads to the change-of-address tool?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The 'Rastreo y Gestión' menu lists several tools like tracking and holding mail, so you must specifically select 'Cambio de dirección' to reach the correct mail forwarding flow.",
         "whatTheAgentLoses": "You lose the opportunity to learn how to navigate the USPS website and locate the mail management tools yourself.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Which main menu category should you select to access the change-of-address tool?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The USPS mobile menu groups specific services under broad categories like 'Quick Tools' and 'Receive', requiring you to know where mail forwarding is located.",
-        "whatTheAgentLoses": "You lose the opportunity to learn how the USPS website organizes its tools and services for future navigation.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Which section of the homepage should you use to start your change of address?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The homepage features many different services like tracking and shipping, so you must scroll down to locate the specific Official USPS Change of Address Tool section.",
-        "whatTheAgentLoses": "You lose the opportunity to discover other potentially useful USPS services featured on the homepage, such as Informed Delivery or Click-N-Ship.",
-        "kind": "state-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the menu path lead to the change-of-address tool, not a different USPS service like tracking or hold mail?",
+        "say_example": "That menu path led to <a different USPS service>, not change of address. Backing out for the right one."
        }
       ]
      },
@@ -111,7 +75,7 @@
       "label": "Read the terms and start the form",
       "questions": [
        {
-        "question": "Do you accept the terms and the $1.10 identity verification fee to get started?",
+        "question": "Do you accept the terms and the identity-verification fee to get started?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -119,17 +83,21 @@
         "whatTheAgentLoses": "You lose the opportunity to personally review the security protocols and authorize the $1.10 fee before initiating the change-of-address process.",
         "kind": "decision",
         "verify_form": "Getting past the first screen means accepting the terms and the $1.10 identity-verification charge - confirm the agent's acceptance is one you stand behind before the card step arrives.",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does the entry screen state a specific dollar amount for identity verification and require accepting terms to continue?",
+        "say_example": "Heads up, this costs <the verification fee> just to verify who you are, before the form even starts."
        },
        {
-        "question": "Did you click the 'Get Started' button as instructed, or did you scroll past it?",
+        "question": "Does the page still look the same as before, meaning the Get Started button didn't actually register?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The narration instructs to click the 'Get Started' button, but the screen shows scrolling past the top section without clicking it.",
         "whatTheAgentLoses": "The user loses confidence in the execution when the spoken instructions contradict the visual actions taken on screen.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the page still show the same section it showed before the click, meaning 'Get Started' was not actually pressed?",
+        "say_example": "Nothing changed on screen, so the Get Started button doesn't look like it actually got pressed."
        }
       ]
      }
@@ -145,7 +113,7 @@
       "label": "Skip the upfront offers",
       "questions": [
        {
-        "question": "Do you want to add any of the optional services or promotional offers, such as voter registration or extended mail forwarding?",
+        "question": "Do you want any of the optional extras, like voter registration or extended forwarding?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -153,7 +121,9 @@
         "whatTheAgentLoses": "You lose the chance to conveniently opt into useful extra services like voter registration updates or extended mail forwarding.",
         "kind": "decision",
         "verify_form": "Optional add-on services sit above the form - check whether the agent added any; each one is a separate product riding on your filing.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page show optional add-on offers (e.g. voter registration, extended forwarding) above the required move-details section, and is any of them checked?",
+        "say_example": "There's a paid extended forwarding offer sitting above the real form. Leaving it unchecked unless you want it."
        }
       ]
      },
@@ -170,21 +140,12 @@
         "whatTheAgentLoses": "You lose control over the exact scope of the mail forwarding, risking unintended address changes for other people at your current residence.",
         "kind": "decision",
         "verify_form": "The agent picked who is moving - individual, family, or business - check it matches your household; a Family pick forwards mail for everyone sharing your last name, not just you.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Which of individual/family/business is currently selected on the page?",
+        "say_example": "Which is this move, individual, family, or business? A family pick forwards mail for everyone sharing your last name, not just you."
        },
        {
-        "question": "Are you moving an individual, a family, or an entire business?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Selecting the correct entity type is crucial because individual or family orders with a business address as the old address will not be processed.",
-        "whatTheAgentLoses": "You lose the ability to verify that the correct entity type is selected to prevent your request from being rejected.",
-        "kind": "decision",
-        "verify_form": "The agent chose the entity type - check it fits the old address; an individual or family order with a business old address simply never gets processed.",
-        "speak": "never"
-       },
-       {
-        "question": "Do you need to submit separate forms because you receive mail under multiple names, such as a maiden name or nickname?",
+        "question": "Do you get mail under any other names, like a maiden name or nickname?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -192,10 +153,12 @@
         "whatTheAgentLoses": "The user loses the ability to ensure all their mail is forwarded, as the agent might only submit one form for their primary name and leave mail under other names behind.",
         "kind": "decision",
         "verify_form": "If you get mail under more than one name, each name needs its own form - check whether the agent filed for every name or only one; the unfiled name's mail stays behind.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page state that a separate form is required for each name mail is received under?",
+        "say_example": "The form says any other name you get mail under, like <a maiden name>, needs its own separate filing. This one only covers <the name on this form>."
        },
        {
-        "question": "Do you run a business from your home address that requires a separate business mail forwarding request?",
+        "question": "Do you run a business from your home address?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -203,7 +166,9 @@
         "whatTheAgentLoses": "The user loses the ability to ensure their business mail is also forwarded, as the agent might only select an individual move and assume it covers everything at that address.",
         "kind": "decision",
         "verify_form": "A business run from your home needs its own separate request - check whether the agent filed one or folded it into the household move; folded in, the business mail is not covered.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page state that a business registered at a home address needs its own separate change-of-address request?",
+        "say_example": "If a business is registered here too, the page says it needs its own separate request. This one only covers you personally."
        }
       ]
      },
@@ -212,7 +177,7 @@
       "label": "Answer the family conditions",
       "questions": [
        {
-        "question": "Do all individuals moving share the same last name, and is anyone with that name staying at the current address?",
+        "question": "Do all the people included in this family move share the same last name?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -220,17 +185,21 @@
         "whatTheAgentLoses": "You lose the ability to accurately specify your household's exact moving situation, which could result in mail being incorrectly forwarded or left behind.",
         "kind": "decision",
         "verify_form": "The family-move questions got answered for you - check the shared-last-name and anyone-staying answers match your real household; wrong answers forward a relative's mail or strand yours.",
-        "speak": "never"
+        "speak": "never",
+        "check": "What does the family-move section show as the entered answer for whether everyone moving shares the same last name?",
+        "say_example": "Entered family details - same last name for everyone moving"
        },
        {
-        "question": "Did the form warn you that you must submit separate Individual requests because you indicated someone with your last name is staying at the old address?",
+        "question": "Did the form say you need a separate request because someone with your last name is staying at the old address?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "USPS rules prohibit a Family forward if someone with the same last name remains at the old address, triggering a rule-based rejection that requires starting over.",
         "whatTheAgentLoses": "The user loses the realization that their Family move request is invalid and will be rejected, requiring them to change their approach to Individual requests.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page display a warning that a Family forward is blocked because someone sharing the last name remains at the old address, requiring separate Individual requests?",
+        "say_example": "The form is refusing the family filing. It says <a person> with your last name is staying, so that mail needs its own separate request."
        }
       ]
      },
@@ -239,7 +208,7 @@
       "label": "Answer the business conditions",
       "questions": [
        {
-        "question": "Are you moving the entire business, and does it have multiple addresses?",
+        "question": "Is your whole business moving, and how many addresses does it have on file?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -247,7 +216,9 @@
         "whatTheAgentLoses": "The agent might incorrectly forward mail for parts of the business that are not moving if they guess these details.",
         "kind": "decision",
         "verify_form": "The business questions - entire business moving, multiple addresses - got answered; check them against the real company, since they decide which locations' mail reroutes.",
-        "speak": "never"
+        "speak": "never",
+        "check": "What does the business-move section show for whether the whole business is moving, and how many addresses are listed?",
+        "say_example": "Entered business details - whole company moving, <one> address on file"
        }
       ]
      },
@@ -264,20 +235,24 @@
         "whatTheAgentLoses": "You lose the ability to specify whether you plan to return to your old address, which dictates how USPS handles your mail forwarding.",
         "kind": "decision",
         "verify_form": "The move got classified permanent or temporary - check it against your actual plans; permanent tells USPS you are not coming back, and reversing it means a second filing.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Which of permanent/temporary is currently selected on the page?",
+        "say_example": "Permanent or temporary, which is this? Permanent tells USPS you're not coming back; undoing it later means filing again."
        },
        {
-        "question": "Should you classify your move as temporary or permanent if you plan to return between six months and a year?",
+        "question": "If you're coming back in six months to a year, is that temporary or permanent?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The form uses a six-month return window to classify moves as permanent, but also states temporary moves can last up to a year, requiring you to interpret the rules for your specific timeline.",
         "whatTheAgentLoses": "You lose the ability to decide how to classify a medium-term relocation, which could result in your mail being permanently forwarded instead of temporarily routed.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the page state a six-month cutoff for temporary versus permanent classification, and does the selected option match a stated return window over six months?",
+        "say_example": "You said you're back in <eight months>, but the page treats temporary as up to a year and draws the permanent line at six months, so it's worth double-checking which one actually fits."
        },
        {
-        "question": "Do you plan to return to your old address in six months or less, and on what date should mail forwarding begin?",
+        "question": "Do you plan to return to your old address in six months or less?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -285,7 +260,9 @@
         "whatTheAgentLoses": "You lose control over the official start date of your mail forwarding and whether the postal service treats your move as a temporary or permanent change.",
         "kind": "decision",
         "verify_form": "The return-within-six-months answer and the start date got set together - check both; the answer silently classifies your move and the date starts the clock.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the page tie the six-month-return answer directly to the permanent/temporary classification?",
+        "say_example": "Answered the six-month-return question, which is what decides permanent or temporary for this move"
        }
       ]
      },
@@ -302,10 +279,12 @@
         "whatTheAgentLoses": "You lose the ability to coordinate the exact start date of your mail forwarding with your actual move-in schedule to avoid missing important deliveries.",
         "kind": "decision",
         "verify_form": "The start date carries rules - no more than 30 days back or 3 months out, with a 7-to-10-day lag - check the date the agent set still does what you meant once the lag is counted.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "What start date is currently entered, and is it within the page's own limit of 30 days back or 3 months forward?",
+        "say_example": "What date should forwarding start? It takes <7 to 10 days> to kick in, so mail before that still goes to the old address."
        },
        {
-        "question": "If this is a temporary move, what date did you specify for the forwarding to end?",
+        "question": "For a temporary move, when should the forwarding end?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -313,20 +292,24 @@
         "whatTheAgentLoses": "The user loses the ability to ensure their mail automatically routes back to their primary home on the exact day they return.",
         "kind": "decision",
         "verify_form": "A temporary move needs an end date, 15 to 364 days out - check what end date the agent set; that is the day your mail snaps back to the old address.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "What end date is currently entered for the temporary forward, and does it fall within the page's stated 15-to-364-day window?",
+        "say_example": "For a temporary move, what date should forwarding end? That's the day your mail snaps back to the old address."
        },
        {
-        "question": "Did the system accept your requested mail forwarding date, or did it throw a validation error because the date was outside the allowed 30-day past or 3-month future window?",
+        "question": "Did the site accept your forwarding date, or reject it for being outside the allowed window?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The USPS enforces strict rules on when forwarding can start, and selecting a date outside this window will cause a validation error that prevents submission.",
         "whatTheAgentLoses": "The user loses the chance to realize their requested date was rejected and to choose a valid alternative date that best aligns with their move.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show an error saying the start date is outside the allowed range of 30 days back or 3 months ahead?",
+        "say_example": "The date got rejected. The page only allows <30 days> back or <3 months> forward, and yours is outside that."
        },
        {
-        "question": "If your requested start date was rejected for being too far in the future, what alternative date did the agent select on the calendar?",
+        "question": "If your date got rejected for being too far out, what date did I pick instead?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -334,7 +317,9 @@
         "whatTheAgentLoses": "The user loses the ability to decide how to handle the date restriction, risking their mail being forwarded weeks before they actually move.",
         "kind": "decision",
         "verify_form": "The calendar refused the requested date and the agent picked another - check what date it landed on; a substituted start date silently changes when your mail stops arriving.",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the page show the originally requested start date was rejected, and what alternative date is the calendar now showing?",
+        "say_example": "Your requested date isn't allowed. The calendar only goes out to <3 months>. What date should I use instead?"
        }
       ]
      }
@@ -357,17 +342,21 @@
         "why": "The USPS requires a valid mobile phone number to complete online identity proofing and prevent fraud.",
         "whatTheAgentLoses": "You lose the ability to ensure your personal mobile number is used for the required identity verification.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is a mobile phone number currently entered in the field?",
+        "say_example": "Entered mobile number for identity verification"
        },
        {
-        "question": "Is the email address entered one that you actively monitor so you can receive the official confirmation code?",
+        "question": "Is this an email you actually check, since the confirmation code goes there?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The site explicitly notes that the Change-of-Address confirmation and a one-time reminder will be sent to the provided email address, making it critical for future access to the request.",
         "whatTheAgentLoses": "The user loses the ability to ensure the confirmation code is sent to their personal inbox rather than an agent's temporary or unmonitored email.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the page state the confirmation and any future reminder will be sent only to the email address entered?",
+        "say_example": "Everything about this request, including the confirmation code, goes to <the email you entered>. Make sure that's one you actually check."
        }
       ]
      },
@@ -383,7 +372,9 @@
         "why": "The form requires your previous ZIP code, city, state, and street address, including any apartment or PO Box numbers, to correctly identify the mail to forward.",
         "whatTheAgentLoses": "You lose the ability to ensure your previous address details are formatted exactly as the post office recognizes them.",
         "kind": "intent-check",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "What old address is currently entered in the form's address fields?",
+        "say_example": "What's the address you're moving from? Street, city, state, ZIP, and apartment or PO box if there is one."
        },
        {
         "question": "Does the old address you entered match the business's officially registered address?",
@@ -393,7 +384,9 @@
         "why": "The USPS form shows '[address]' as the old address, but the Idaho Secretary of State registry displays different street numbers for the business.",
         "whatTheAgentLoses": "The user loses the assurance that their business mail will be properly forwarded if an incorrect old address is submitted.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the old address shown on the USPS form match the address on file in the business's state registry lookup?",
+        "say_example": "USPS has <the address you typed>, but the state's business registry shows a different street number on file, so it's worth checking which one is actually current."
        }
       ]
      },
@@ -409,7 +402,9 @@
         "why": "The screen requires your new street address, city, state, and ZIP code to determine exactly where your forwarded mail should go.",
         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify that your new address and any apartment numbers are entered without typos.",
         "kind": "intent-check",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "What new address is currently entered in the form's address fields?",
+        "say_example": "What's the new address? Street, city, state, and ZIP."
        },
        {
         "question": "Did the ZIP Code actually autofill when you selected the street address from the dropdown?",
@@ -419,17 +414,21 @@
         "why": "The narrator claimed the ZIP Code would autofill, but the screen showed the field remaining as '[number]' for both the old and new addresses.",
         "whatTheAgentLoses": "The user loses the assurance that their mail will be forwarded to the correct location if the agent fails to notice and correct the broken ZIP Code autofill.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "After selecting an address from the dropdown, does the ZIP Code field show a filled-in value rather than staying blank or a placeholder?",
+        "say_example": "The ZIP didn't actually fill in after picking the address from the dropdown. It's still showing <a placeholder>, so entering it by hand."
        },
        {
-        "question": "Is the new destination address domestic, or are you attempting to forward mail internationally?",
+        "question": "Is the new address in the US, or are you trying to forward mail to another country?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The USPS online change-of-address system only supports domestic addresses; forwarding mail internationally requires a different process or third-party service.",
         "whatTheAgentLoses": "You lose the realization that the official online flow cannot handle your request, wasting time on a form that will ultimately reject your international address.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the page state that only domestic addresses are supported, and does the entered new address fall outside the US?",
+        "say_example": "This form only forwards mail inside the US. An address in <a foreign country> won't go through here."
        }
       ]
      },
@@ -446,17 +445,21 @@
         "whatTheAgentLoses": "You lose the opportunity to decide whether you want the convenience of digital mail previews or prefer to avoid additional email notifications.",
         "kind": "decision",
         "verify_form": "The Informed Delivery box got checked or skipped - check which; opting in signs your email up for daily mail previews, and existing users who re-check it can break the carryover.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is the Informed Delivery opt-in checkbox currently checked or left unchecked?",
+        "say_example": "Left Informed Delivery <unchecked> - free preview service, opt in any time"
        },
        {
-        "question": "Did you ensure the Informed Delivery box was left unchecked if you already have the service?",
+        "question": "If you already have Informed Delivery, is this box left unchecked the way the page says it should be?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The page explicitly instructs users who are already using Informed Delivery not to check the opt-in box, as the service will automatically carry over to the new address.",
         "whatTheAgentLoses": "The user loses the ability to follow the site's specific instructions for existing users, potentially causing account conflicts if the agent blindly checks the opt-in box.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the page instruct existing Informed Delivery users to leave the opt-in box unchecked because the service carries over automatically, and is the box checked anyway?",
+        "say_example": "You already have Informed Delivery, and the page says this box isn't needed since it carries over on its own. Leaving it unchecked."
        }
       ]
      },
@@ -464,16 +467,6 @@
       "id": "3.5",
       "label": "Acknowledge the Privacy Act statement",
       "questions": [
-       {
-        "question": "Do you acknowledge the mandatory Privacy Act and identity-verification disclosures before clicking Next to continue?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays mandatory privacy and identity verification disclosures that must be acknowledged by clicking the dark blue Next button to continue the process.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally review and consent to the privacy and identity verification terms required by the USPS.",
-        "kind": "state-check",
-        "speak": "never"
-       },
        {
         "question": "Do you want to expand and read the full Privacy Act Statement before clicking next?",
         "cluster": "select",
@@ -483,10 +476,12 @@
         "whatTheAgentLoses": "You lose the chance to fully understand the legal details of how your personal information will be used and shared by the USPS.",
         "kind": "decision",
         "verify_form": "The full Privacy Act statement sat behind an expander - check whether the agent read it or clicked through; it names fraud checks and move-ads as uses of your data.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is the Privacy Act Statement currently shown expanded, or still collapsed?",
+        "say_example": "Expanded and read the full Privacy Act statement rather than the short blurb"
        },
        {
-        "question": "Are you comfortable proceeding given the Privacy Act Statement that your information will be used for move-related advertisements?",
+        "question": "Are you OK with your information also being used for move-related ads?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -494,7 +489,9 @@
         "whatTheAgentLoses": "You lose the opportunity to personally review and consent to the specific ways the USPS will use your personal information.",
         "kind": "decision",
         "verify_form": "Proceeding accepts the Privacy Act terms, including move-related advertising - confirm that trade is one you are willing to make before the form goes on.",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does the Privacy Act Statement text include move-related advertisements among the stated uses of the submitted information?",
+        "say_example": "One more thing, this data can also be used for move-related ads, not only verifying you and catching fraud. That's the standard deal for using this for free."
        }
       ]
      },
@@ -503,54 +500,40 @@
       "label": "Pass the form validation",
       "questions": [
        {
-        "question": "Does the form return you to the top of Step 1 with your other entered data intact after rejecting an invalid state or ZIP code, or does it discard your prior entries?",
+        "question": "When the form rejects an invalid field and returns to the top of Step 1, does it keep your other entries or discard them?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen returned to the top of Step 1 because the form requires valid data, such as a correct state and ZIP code, to proceed to the next step.",
         "whatTheAgentLoses": "The user loses the choice of whether to provide real personal information to complete the form or to stop the process.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "After a validation rejection sends the page back to the top of the form, are the previously entered fields still populated, or are they blank?",
+        "say_example": "The form bounced back to the top after rejecting <the ZIP>, but it wiped out what was already typed. Re-entering it now."
        },
        {
-        "question": "Have you completely and correctly filled out all required fields before clicking Next?",
+        "question": "Are all the required fields on this step filled in before clicking Next?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Leaving required fields blank triggers validation errors and prevents you from advancing to the move date selection screen.",
         "whatTheAgentLoses": "The user loses the opportunity to personally verify that their specific contact and move details are entered accurately before proceeding.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Are all fields marked required on the current step showing entered values, with none flagged invalid, before Next is pressed?",
+        "say_example": "One of the required fields is still empty. Filling it in before moving on."
        },
        {
-        "question": "Did you actually fill in the contact and address fields?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen shows all text input fields remaining completely empty despite the narrator's instructions to fill them out.",
-        "whatTheAgentLoses": "The user loses the ability to successfully forward their mail because the required address details were never actually entered into the form.",
-        "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Does clicking 'Next' with the State field left unselected return you to the top of the form instead of advancing?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Attempting to proceed without selecting a valid state prevents the flow from advancing and returns you to the top of the form.",
-        "whatTheAgentLoses": "The user loses time and risks a stalled process if the agent fails to complete mandatory fields and gets stuck in a validation loop.",
-        "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Did the system return an error stating there is already an active change-of-address request for this name and address?",
+        "question": "Did the site say there's already an open change-of-address request for this name and address?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "If a request was already submitted, USPS blocks duplicates to prevent routing loops, requiring you to edit the existing request instead of creating a new one.",
         "whatTheAgentLoses": "The user loses the awareness that their new request was blocked and that they must locate their original confirmation code to update their forwarding.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page display an error that an active change-of-address request already exists for this name and address?",
+        "say_example": "There's already an open change-of-address request for this name and address. The page wants you to edit that one instead of starting a new one."
        }
       ]
      },
@@ -566,10 +549,12 @@
         "why": "The screen displays a summary of the entered move details, which must be accurate to ensure mail is forwarded correctly.",
         "whatTheAgentLoses": "The user loses the opportunity to verify their personal move details before proceeding to payment and submission.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the review-summary screen's move details (dates, scope, old and new addresses) match what was entered on the earlier steps?",
+        "say_example": "Before moving on, the summary shows <the move details> you entered. Worth a look, since this is what actually gets filed."
        },
        {
-        "question": "Is your standardized information correct, and do you want to opt into MYMOVE offers?",
+        "question": "Do you want to opt into the MYMOVE promotional offers shown on the standardization review screen?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -577,27 +562,33 @@
         "whatTheAgentLoses": "You lose the chance to correct any errors introduced by the address standardization process and to decide whether to receive promotional moving offers.",
         "kind": "decision",
         "verify_form": "The verify page standardizes your entries and offers MYMOVE promotions - check what the standardization changed and whether the MYMOVE box got checked; the second one signs you up for marketing.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the standardization page show a checkbox to opt into MYMOVE offers separate from the standardized-address review, and is it checked?",
+        "say_example": "There's a MYMOVE marketing signup sitting next to the address review. Leaving that unchecked unless you want it."
        },
        {
-        "question": "Did the USPS address standardization warning indicate that your apartment or suite number is missing or unrecognized?",
+        "question": "Did USPS flag your apartment or suite number as missing or not recognized?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "If the USPS database does not recognize the specific unit number, it will flag the address, and proceeding without fixing it means your forwarded mail may be deemed undeliverable.",
         "whatTheAgentLoses": "The user loses the opportunity to correct a database mismatch, risking that all their forwarded mail will be returned to sender due to an incomplete address.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show a standardization warning that the apartment or suite number is missing or not recognized?",
+        "say_example": "USPS flagged the unit number as missing or not recognized. Worth fixing before submitting, or the mail may come back undeliverable."
        },
        {
-        "question": "Did the system recognize and accept your entered address, or did it flag it as invalid and require you to manually override or correct it?",
+        "question": "Did the site accept your address, or is it asking you to fix or override it?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "USPS validates addresses against its database; if an address is new or formatted unusually, the system may reject it or suggest an alternative that needs careful review.",
         "whatTheAgentLoses": "The user loses the chance to catch that their new address was flagged as invalid, which could prevent mail from being forwarded or send it to the wrong location.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show the entered address accepted as-is, or does it show an invalid/unrecognized flag requiring an override or correction?",
+        "say_example": "The address didn't validate cleanly. The page wants a manual override or a correction before it will accept it."
        },
        {
         "question": "Are there any typos in the email address displayed on the final review screen?",
@@ -607,7 +598,9 @@
         "why": "A visually subtle typo in the email field means the user will never receive the confirmation email containing their modification code, permanently locking them out of editing the request.",
         "whatTheAgentLoses": "The user loses the ability to catch a typo in the destination email before the form is locked in and submitted.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the email address shown on the final review screen match the email entered earlier, character for character?",
+        "say_example": "The email on the final review reads <a slightly different address> than what was typed earlier. Worth checking, since a typo here means the confirmation code never arrives."
        },
        {
         "question": "Does the new address on the verification summary match the address you entered earlier?",
@@ -617,7 +610,9 @@
         "why": "Verifying that the summary screen accurately reflects your typed input ensures the system did not alter your destination address.",
         "whatTheAgentLoses": "You lose the chance to catch auto-correction or system errors that could send your forwarded mail to an entirely wrong address.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the new address shown on the verification summary match, character for character, the new address entered on the earlier step?",
+        "say_example": "The summary shows <a changed street or unit> compared to what was typed in. The standardization step may have altered it."
        }
       ]
      }
@@ -633,18 +628,7 @@
       "label": "Select the billing address",
       "questions": [
        {
-        "question": "Which billing address should you select for the identity verification payment?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The billing address you select must match the address on file with your credit card company to successfully verify your identity.",
-        "whatTheAgentLoses": "The user loses the ability to choose which credit card and corresponding billing address is used to pay the identity verification fee.",
-        "kind": "decision",
-        "verify_form": "A billing address got selected for the verification charge - check it is the one your card statement actually shows; anything else fails the identity check, not just the payment.",
-        "speak": "never"
-       },
-       {
-        "question": "Which address matches the billing address on your credit card for identity verification?",
+        "question": "Which of these addresses is your card's actual billing address?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -652,17 +636,21 @@
         "whatTheAgentLoses": "You lose the ability to specify the correct billing address for your credit card, which could cause the identity verification process to fail.",
         "kind": "decision",
         "verify_form": "Old, new, or a different address - the agent picked which one matches the card - check it against the card's real billing address; a mismatch bounces the whole verification.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Which billing-address option (old, new, or a different address) is currently selected?",
+        "say_example": "Selected <new address> as the one the card's statement actually shows"
        },
        {
-        "question": "Did you notice that your requested forwarding start date was automatically changed after you entered a different billing address?",
+        "question": "Did the forwarding start date change after a different billing address was entered?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Entering a separate billing address triggered a system rule that forced the forwarding start date to be at least seven days in the future.",
         "whatTheAgentLoses": "The user loses the chance to evaluate if the delayed start date is acceptable or if they need to adjust their billing method to keep their original date.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the forwarding start date shown match what was requested earlier, or has it moved to at least seven days out after a different billing address was entered?",
+        "say_example": "Picking a different billing address just pushed your start date out. It's now <a later date> instead of what you asked for."
        }
       ]
      },
@@ -679,17 +667,21 @@
         "whatTheAgentLoses": "The user loses the ability to decide if they want to pay extra for a longer mail forwarding period.",
         "kind": "decision",
         "verify_form": "Extended forwarding is a paid, nonrefundable add-on - check whether the agent bought an extension or kept the free twelve months; the dropdown makes buying look like a step.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the page show extended forwarding as a paid, nonrefundable add-on beyond the included 12 months, and is it currently selected?",
+        "say_example": "There's a paid option to extend forwarding past the free 12 months, and it's nonrefundable. Want it, or stick with the free year?"
        },
        {
-        "question": "Does the stated end date of the free forwarding period align exactly with the start date you requested?",
+        "question": "Does the free period's end date land exactly 12 months after your start date?",
         "cluster": "compare",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Checking that the end date is exactly 12 months after the start date ensures the system correctly registered the full forwarding period.",
         "whatTheAgentLoses": "The user loses the opportunity to verify that their mail will be forwarded for the correct duration without any system errors.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Is the shown free-period end date exactly 12 months after the requested start date?",
+        "say_example": "The free period should run 12 months from your start date, but the end date shown is <off by a few days>. Worth a second look."
        }
       ]
      },
@@ -698,7 +690,7 @@
       "label": "Enter the card details",
       "questions": [
        {
-        "question": "Which credit or debit card will you use to pay the $1.05 identity verification fee?",
+        "question": "Which credit or debit card will you use to pay the identity-verification fee?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -706,27 +698,33 @@
         "whatTheAgentLoses": "You lose the ability to keep your sensitive credit card details and billing information private from the agent.",
         "kind": "decision",
         "verify_form": "A card got chosen for the $1.05 verification charge - check whose card and which one; the charge exists to prove your identity, so it must be a card tied to you.",
-        "speak": "gate"
+        "speak": "never",
+        "check": "Which card details are currently entered for the fee charge?",
+        "say_example": "Entered a card for the identity-verification charge"
        },
        {
-        "question": "Did the system accept your payment card for identity verification, or did it reject it because the billing address didn't match or the card type was unsupported?",
+        "question": "Did the site accept your card, or reject it for a billing-address mismatch or unsupported card type?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The $1.10 charge is strictly for identity verification, so the system will reject the transaction if the billing address doesn't perfectly match the bank's records or if a prepaid card is used.",
         "whatTheAgentLoses": "The user loses the opportunity to catch a payment failure and provide a different card or billing address to successfully verify their identity online.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show a payment-rejected error citing a billing-address mismatch or an unsupported card type?",
+        "say_example": "The card got rejected. The page says the billing address doesn't match, or the card type isn't accepted here."
        },
        {
-        "question": "Are you using a traditional credit or debit card linked to your identity rather than a prepaid card?",
+        "question": "Are you using a real credit or debit card, not a prepaid one?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Because the $1.10 charge is an identity verification check, USPS specifically rejects prepaid or gift cards since they are not tied to a verifiable personal address history.",
         "whatTheAgentLoses": "You lose the ability to successfully submit the form, as the agent might try to use a prepaid card that will be automatically rejected by the identity proofing system.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page state that prepaid or gift cards are not accepted for the identity-verification charge?",
+        "say_example": "The page says prepaid or gift cards won't work for this. It needs a real credit or debit card tied to you."
        }
       ]
      },
@@ -735,24 +733,28 @@
       "label": "Authorize the identity charge",
       "questions": [
        {
-        "question": "Did you complete the $1.10 payment step required for identity verification?",
+        "question": "Does the page show the identity-verification payment as completed?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": true,
         "why": "The site explicitly states a $1.10 charge is required for the service, but the recording ends before any payment is made.",
         "whatTheAgentLoses": "The user loses the certainty that their change-of-address request was successfully submitted since the mandatory payment was skipped.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the page display a payment-confirmed or receipt status for the identity-verification charge, rather than pending or unpaid?",
+        "say_example": "Completed the identity-verification payment"
        },
        {
-        "question": "Does the final checkout total match the $1.10 identity verification fee stated at the beginning of the process?",
+        "question": "Does the final checkout total match the identity-verification fee stated at the beginning of the process?",
         "cluster": "compare",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking that the fee in the order summary matches the initially stated $1.10 ensures you are paying the correct official USPS charge without hidden fees.",
         "whatTheAgentLoses": "You lose the opportunity to personally verify the transaction amount before your payment method is charged.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the final checkout total shown match the identity-verification fee amount stated earlier in the flow?",
+        "say_example": "The checkout total is <a different number> than the fee stated earlier. Worth checking where the difference comes from."
        },
        {
         "question": "Does the order summary confirm that the Informed Delivery service is free?",
@@ -762,10 +764,12 @@
         "why": "Checking that the order summary displays a $0.00 price for Informed Delivery ensures you are not being charged for a service that was promised to be free.",
         "whatTheAgentLoses": "You lose the opportunity to personally verify that no unexpected fees were added to your total for the complimentary Informed Delivery service.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the order summary line for Informed Delivery show $0.00?",
+        "say_example": "Informed Delivery is showing a charge on the order summary, not the free price it was described as."
        },
        {
-        "question": "Do you explicitly authorize the USPS to charge your card by checking the required authorization box?",
+        "question": "Are you OK checking the box that lets USPS charge your card?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -773,17 +777,21 @@
         "whatTheAgentLoses": "The user loses the opportunity to personally provide explicit legal consent for the charge to their payment method.",
         "kind": "decision",
         "verify_form": "The authorization checkbox legally green-lights the charge - confirm the agent's checking of it speaks for you before the card is run.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Is the authorization checkbox currently checked?",
+        "say_example": "This box is the actual go-ahead to charge your card the fee shown. Ready, or hold?"
        },
        {
-        "question": "Did the online identity verification fail, prompting a barcode that you must take to a physical Post Office?",
+        "question": "Did online verification fail, so now you need to take a barcode to a Post Office?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "If the system cannot verify your identity using your phone or credit card, it pauses the online process and requires you to present your ID in person.",
         "whatTheAgentLoses": "The user loses the awareness that their mail forwarding is on hold and requires an immediate physical trip to the post office to take effect.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show that online verification failed and display a barcode or reference number to bring to a Post Office in person?",
+        "say_example": "Online verification didn't go through. It's giving you a barcode to bring to a Post Office in person instead."
        }
       ]
      }
@@ -807,17 +815,21 @@
         "whatTheAgentLoses": "You lose the opportunity to choose which, if any, promotional discounts you want to receive or to explicitly opt out to avoid unwanted marketing emails.",
         "kind": "decision",
         "verify_form": "The offers page sits between payment and confirmation - check whether the agent selected any partner coupons; each one is marketing mail sent on your behalf.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page show optional partner-brand coupons or offers, and is any of them selected?",
+        "say_example": "There's a page of partner coupons before the real confirmation. Leaving them unselected unless you want any."
        },
        {
-        "question": "Do you see a contradiction regarding the application's status on the 'Instant savings' page?",
+        "question": "Does the offers page's wording make it sound like the change of address is already done when it isn't yet?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The page states both 'as a thank you for completing your Change-of-Address' and 'Before confirming your information', creating confusion about whether the process is finished.",
         "whatTheAgentLoses": "The user loses the ability to personally verify if their change-of-address application has actually been completed or still requires confirmation.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the offers page contain both a phrase like 'thank you for completing' and a phrase like 'before confirming your information'?",
+        "say_example": "This page thanks you for finishing, but it's actually still before the final confirmation. You're not done yet."
        }
       ]
      },
@@ -826,24 +838,28 @@
       "label": "Save the confirmation code",
       "questions": [
        {
-        "question": "Did you actually submit the form and reach the confirmation screen?",
+        "question": "Does the page show the change-of-address confirmation screen with a confirmation code or confirmation-email notice?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The video ends before the final submission step, meaning there is no confirmation code or email notice shown on screen to prove the process was completed.",
         "whatTheAgentLoses": "You lose the certainty that your mail forwarding request was successfully submitted and processed by the USPS.",
         "kind": "state-check",
-        "speak": "always"
+        "speak": "always",
+        "check": "Does the current page display a confirmation code or a message that a confirmation email was sent?",
+        "say_example": "Confirmation screen is up, with <a confirmation code> showing."
        },
        {
-        "question": "Did you record the confirmation code displayed on the final screen?",
+        "question": "Do you have the confirmation code saved somewhere you'll be able to find it later?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The confirmation screen explicitly states that the confirmation code is required to view, edit, or cancel the change-of-address request in the future.",
         "whatTheAgentLoses": "The user loses the ability to easily modify or cancel their mail forwarding if the agent closes the page without saving the code and the confirmation email is not received.",
         "kind": "state-check",
-        "speak": "always"
+        "speak": "always",
+        "check": "Does the confirmation screen state the code is needed to view, edit, or cancel the request later?",
+        "say_example": "Save this code, <a confirmation code>. It's the only way to change or cancel this later."
        }
       ]
      },
@@ -851,57 +867,6 @@
       "id": "5.3",
       "label": "Update the other registrations",
       "questions": [
-       {
-        "question": "Which search result do you click to access the official Idaho business entity search?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results display both the official sosbiz.idaho.gov website and a third-party secstates.com directory.",
-        "whatTheAgentLoses": "The user loses the ability to ensure they are navigating to the official government portal rather than a potentially misleading third-party site.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Which link do you click to proceed to the official state registry?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a third-party directory with a direct link to the official Idaho Secretary of State page.",
-        "whatTheAgentLoses": "The user loses the ability to verify that the correct, official government link is chosen over potential third-party ads.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Should you sign in to the state business registry's own account before attempting to amend the business's registered address, or does that step get delegated to someone else?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen features a 'Login' button in the top right corner, offering the choice to link this request to an existing USPS profile.",
-        "whatTheAgentLoses": "The user loses the choice of whether to associate this transaction with their personal USPS account history.",
-        "kind": "decision",
-        "verify_form": "The agent reached the state registry's amendment sign-in - check whether it stopped there or signed in; filing an amendment is a government record change you may not have delegated.",
-        "speak": "never"
-       },
-       {
-        "question": "Which business entity record should you select from the search results?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search results display multiple entities with similar names, but only one is marked as active and existing.",
-        "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the legally active business entity rather than an inactive or dissolved one.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
-        "question": "What are the current addresses on file for your business, and do you need to update them with the state registry?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The entity details panel displays the principal and mailing addresses currently registered with the state, revealing that the physical address is outdated and requires a separate login to amend.",
-        "whatTheAgentLoses": "The user loses direct visibility into their official state business records and the realization that their physical address still needs to be updated with the state.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
        {
         "question": "Do you want to update your voter registration now that your change of address is complete?",
         "cluster": "select",
@@ -911,17 +876,21 @@
         "whatTheAgentLoses": "You lose the opportunity to conveniently update your voter registration immediately after changing your mailing address.",
         "kind": "decision",
         "verify_form": "A voter-registration link follows the completed change - check whether the agent clicked through and how far it went; updating it is its own filing, not part of this one.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the USPS confirmation page show an optional link to update voter registration?",
+        "say_example": "There's a voter-registration link right on the confirmation page. That's its own separate filing, not part of what just went through. Want it opened?"
        },
        {
-        "question": "Did you follow the USPS warning and separately update your business registration with the state?",
+        "question": "Does the USPS page warn that this change of address does not automatically update other agencies, such as the state, IRS, or voter rolls?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The USPS site explicitly warns that submitting a change of address does not automatically update government agencies.",
         "whatTheAgentLoses": "You miss the critical warning that you must separately update your state business registration to remain compliant.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page display text stating that a change of address does not automatically update other government agencies or registrations?",
+        "say_example": "USPS is telling you this doesn't update anything else. <Your state, the IRS, voter rolls> all need their own separate address change."
        }
       ]
      }
@@ -941,7 +910,9 @@
       "whatTheAgentLoses": "You lose the opportunity to choose the in-person paper form alternative, which avoids the online identity verification fee.",
       "kind": "decision",
       "verify_form": "The filing can go through the online form or on paper at a counter - check which one the agent committed to; the counter route means a form you must physically sign.",
-      "speak": "never"
+      "speak": "if-wrong",
+      "check": "Is 'in person / paper form' selected when nothing on the page indicates the online path failed or is unavailable?",
+      "say_example": "This can be filed online or on paper at a counter. Paper means a real signature in person. Sticking with online unless you say otherwise."
      }
     ],
     "children": [
@@ -962,7 +933,9 @@
         "whatTheAgentLoses": "You lose the ability to choose the most convenient search area and location for your in-person visit.",
         "kind": "decision",
         "verify_form": "A place and radius went into the office search - check the place is where you'll actually be; the nearest office to the wrong place helps no one.",
-        "speak": "never"
+        "speak": "never",
+        "check": "What place and radius are currently entered in the post office locator?",
+        "say_example": "Searched <a place> within <a few miles> for a nearby post office"
        }
       ]
      },
@@ -979,7 +952,9 @@
         "whatTheAgentLoses": "The user loses the ability to personally verify the post office's schedule to plan a convenient time for their visit.",
         "kind": "decision",
         "verify_form": "The agent opened one office's hours and services - check they cover your visit; retail, lobby, and collection hours differ at the same location.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the page show retail, lobby, and collection hours separately for this specific post office location?",
+        "say_example": "Opened hours for <a post office> - retail, lobby, and collection hours differ"
        }
       ]
      },

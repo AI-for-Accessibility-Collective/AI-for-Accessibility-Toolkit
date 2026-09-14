@@ -1643,7 +1643,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to verify the final shipping cost and chosen service before their payment method is permanently charged.",
         "speak": "gate",
         "check": "What does the summary show for service, weight, recipient city, number of labels, total, and payment method?",
-        "say_example": "Ready to buy. <Priority Mail>, <4> pounds, to <buyer> in <Fresno>. <9.00> on your <Visa> ending <8685>. Press to buy, or say change."
+        "say_example": "Ready to buy. <Priority Mail>, <4> pounds, to <buyer> in <Fresno>. <9.00> on your <Visa> ending <[account number]>. Press to buy, or say change."
        }
       ]
      },

@@ -186,7 +186,7 @@
       "whatTheAgentLoses": "You lose the opportunity to choose a memorable PIN that you alone know for future access to your banking app.",
       "speak": "gate",
       "check": "What PIN does the page ask to be set, and what rules does it list for it?",
-      "say_example": "The app wants a new 4-digit PIN. No runs like [account number], no repeats. Tell me the digits you want, or say make one up and I'll read it back."
+      "say_example": "The app wants a new 4-digit PIN. No runs like 1234, no repeats. Tell me the digits you want, or say make one up and I'll read it back."
      },
      {
       "question": "Did the app confirm the new mPIN was actually registered before the 'Awesome! mPIN Set' prompt was cleared?",

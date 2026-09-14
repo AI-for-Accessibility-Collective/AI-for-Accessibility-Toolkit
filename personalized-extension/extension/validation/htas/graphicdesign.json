@@ -5098,7 +5098,7 @@
         "whatTheAgentLoses": "Delegating this step means losing the personal visual intuition required to perfectly balance and group the final text and shapes at the bottom of the flyer.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "zoomed out, do the shape, the phone number and the website line up along the same edge",
+        "check": "Zoomed out, do the shape, the phone number and the website line up along the same edge?",
         "say_example": "<The bottom row> isn't lining up evenly once you zoom out. One piece sits higher than the rest."
        },
        {
@@ -6304,7 +6304,7 @@
         "whatTheAgentLoses": "You lose the choice of whether to keep the current canvas open for further tweaks or return to your main dashboard.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "after publishing, did the popup route back to the design or to the home page",
+        "check": "After publishing, did the popup route back to the design or to the home page?",
         "say_example": "Stayed on the design after publishing"
        },
        {
@@ -6548,7 +6548,7 @@
           "kind": "decision",
           "verify_form": "The agent resized in the cutter - check the lock was closed and the width typed; the height then followed to 9.396.",
           "speak": "if-wrong",
-          "check": "after resizing in the cutter, do the width and height shown match the design's original dimensions, or did one of them drift",
+          "check": "After resizing in the cutter, do the width and height shown match the design's original dimensions, or did one of them drift?",
           "say_example": "<The height> drifted to <9.4> inches instead of <9> after resizing. The lock wasn't keeping the ratio."
          },
          {

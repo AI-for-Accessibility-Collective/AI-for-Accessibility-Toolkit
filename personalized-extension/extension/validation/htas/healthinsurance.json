@@ -716,7 +716,7 @@
         "whatTheAgentLoses": "Letting an agent handle this means you lose the chance to personally verify that your family members' sensitive details, like SSNs and dates of birth, are entered correctly.",
         "speak": "if-wrong",
         "check": "Which people does the page list as covered, and does that match who the person named?",
-        "say_example": "The site only lists <you and Maria>. <Ben> is missing, so I'm adding him."
+        "say_example": "The site only lists <you and [name]>. <[name]> is missing, so I'm adding him."
        },
        {
         "question": "Who needs coverage and how old are they?",

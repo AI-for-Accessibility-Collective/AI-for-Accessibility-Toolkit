@@ -966,7 +966,7 @@
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
-        "why": "The selected domain name changes from 'testsiteexample[account number].com' to 'testexamplesite123.com' and finally to a temporary Bluehost URL, revealing a disjointed recording.",
+        "why": "The selected domain name changes from 'testsiteexample1234.com' to 'testexamplesite123.com' and finally to a temporary Bluehost URL, revealing a disjointed recording.",
         "whatTheAgentLoses": "The user loses the assurance that the final published website actually resides at the specific domain they originally selected.",
         "kind": "state-check",
         "speak": "if-wrong",
@@ -2536,7 +2536,7 @@
           "whatTheAgentLoses": "You lose the ability to curate the specific visual narrative and aesthetic balance of the displayed products.",
           "kind": "intent-check",
           "speak": "never",
-          "check": "in what order are the product images arranged in the gallery",
+          "check": "In what order are the product images arranged in the gallery?",
           "say_example": "Ordered the gallery images <newest first>"
          },
          {
@@ -3793,7 +3793,7 @@
         "whatTheAgentLoses": "The user might share their new URL thinking the site is live, only to have visitors hit a password prompt or generic landing page.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "after publishing, does the live address show the real site, or a coming-soon page, a password wall, or the editor's 'only visible to you' banner",
+        "check": "After publishing, does the live address show the real site, or a coming-soon page, a password wall, or the editor's 'only visible to you' banner?",
         "say_example": "The live address is still showing <a coming-soon page>, not the actual site, even though it says published."
        }
       ]

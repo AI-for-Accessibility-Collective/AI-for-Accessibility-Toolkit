@@ -174,7 +174,7 @@
         "whatTheAgentLoses": "Delegating this choice means losing the personal judgment of whether all participants in the thread need to be aware of your response.",
         "speak": "on-event",
         "check": "Does the original message list more than one address in To or Cc besides yours? Which ones?",
-        "say_example": "<name> also copied <Ravi> and <Mei>. Reply just to <name>, or reply all?"
+        "say_example": "<name> also copied <[name]> and <[name]>. Reply just to <name>, or reply all?"
        }
       ]
      },
@@ -325,7 +325,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide which specific colleagues or stakeholders need to be kept in the loop based on nuanced professional context.",
         "speak": "if-wrong",
         "check": "What addresses are in Cc and Bcc, and do they match the copy recipients in the ask?",
-        "say_example": "You asked to copy <Mei>. Cc is empty. Adding her."
+        "say_example": "You asked to copy <[name]>. Cc is empty. Adding her."
        }
       ]
      },
@@ -523,7 +523,7 @@
         "whatTheAgentLoses": "The user loses control over who receives the event invitation and what permissions they are granted.",
         "speak": "if-wrong",
         "check": "What names are in the guest list, and do they match the people named in the ask?",
-        "say_example": "The guest list has <Ana> but not <Ravi>. Adding him."
+        "say_example": "The guest list has <[name]> but not <[name]>. Adding him."
        }
       ]
      },
@@ -1446,7 +1446,7 @@
         "whatTheAgentLoses": "You lose the ability to personally verify that the system correctly translated the original email's context into the meeting invitation.",
         "speak": "if-wrong",
         "check": "Do the title and required attendees match the original message's subject and sender?",
-        "say_example": "The meeting filled in as <Re: budget> to <Ana>. The original was from <Ravi>. Fixing the attendee."
+        "say_example": "The meeting filled in as <Re: budget> to <[name]>. The original was from <[name]>. Fixing the attendee."
        },
        {
         "question": "Are the meeting details correct before you send the invitation?",
@@ -1457,7 +1457,7 @@
         "whatTheAgentLoses": "A person delegating to an agent loses the opportunity to ensure the meeting details are accurate before committing to them.",
         "speak": "gate",
         "check": "What title, date, time, and guests does the invite show, and is the Send button visible?",
-        "say_example": "Ready to send the invite. <Design review>, <Tuesday Sep 9, 2 to 3>, to <Ana and Ravi>. They'll get an email. Press to send, or say change."
+        "say_example": "Ready to send the invite. <Design review>, <Tuesday Sep 9, 2 to 3>, to <[name] and [name]>. They'll get an email. Press to send, or say change."
        },
        {
         "question": "Did the event save with the guests and details you asked for?",
@@ -1468,7 +1468,7 @@
         "whatTheAgentLoses": "The user loses the immediate reassurance of visually confirming that their meeting invitation was successfully created with the correct participants.",
         "speak": "if-wrong",
         "check": "Does the saved event card show the guests, date and time as asked?",
-        "say_example": "The event saved without <Ravi>. Adding him back."
+        "say_example": "The event saved without <[name]>. Adding him back."
        }
       ]
      },

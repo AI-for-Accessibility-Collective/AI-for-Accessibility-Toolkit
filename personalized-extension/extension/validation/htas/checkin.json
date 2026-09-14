@@ -1,0 +1,1707 @@
+{
+ "task": "check in for a flight online and pick a seat (airline websites and apps): pull up the booking with confirmation number or login, complete the check-in steps, select or confirm a seat, get the boarding pass; complete when the boarding pass is on screen. Surface pinned: an airline website or app — not an airport kiosk or counter. Variants: booking the flight itself, tracking flight status, and airport-kiosk check-in do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Check in for a flight online",
+  "note": "1 when the user has to find the check-in page or app; in the app videos the trip is already on screen. next the user goes through 2, and the task stops there for 9Hsb, _WyT, xQwv and GVgY. then the user goes through 3 to 7 in the order the airline sets, and each of those can be skipped or left on its defaults - in 4FdD the user fills three document sections before it will go on, in AX6A every one of them has a price beside it, and in m20_ the user only goes through the baggage and declaration steps. 5 wherever the seat is settled, which in PuZe is before check-in starts. at 8 the user presses one button and the pass is issued, then goes on to 9. in PirI the user does 2 and 5 and never reaches 8; in PuZe the user reaches 8 and stops at 9.6.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Reach the airline's check-in",
+    "note": "1.1 and 1.2 for the browser videos that start from a search. 1.3 where the user has to find the app first. 1.4 where the airline asks who you are before it asks what the booking is. 1.5 in every video that reaches the airline's own page. 1.6 lets the user skip all of that, and in 2XN7 the user takes it and then goes back through those steps anyway. 1.7 only in PirI, where the seat tool sits on another domain.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Search for the airline's site",
+      "questions": [
+       {
+        "question": "Which suggestion actually names the airline?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple search suggestions like 'Cebu Pacific Air' and 'cebu pacific check in', requiring you to choose the correct path to the official site.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the official airline website rather than a third-party or phishing link.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does one of the autocomplete suggestions name the airline itself, rather than a generic check-in phrase?",
+        "say_example": "Picked the suggestion naming <the airline> over <a generic check-in phrase>"
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Pick the airline's own result",
+      "questions": [
+       {
+        "question": "Which search result is the official airline website?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You need to ensure you select the legitimate Cebu Pacific Air website from the search results to safely access your booking.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the agent selected the official airline website rather than a deceptive or third-party link.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the search results page include sponsored links, third-party travel or check-in aggregator sites, or lookalike domains alongside the official airline domain?",
+        "say_example": "Skipping the ad for <faketravelsite.com>, picked <airline.com>"
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Install or launch the app",
+      "questions": [
+       {
+        "question": "Which of these search results is the official airline app, and is it already installed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Identifying the official United Airlines app among ads like momondo and noting the 'Åbn' button ensures you launch the correct, already-installed application to begin check-in.",
+        "whatTheAgentLoses": "Delegating this step means you lose the peace of mind of verifying that the official airline app, rather than a third-party ad, is installed and being used on your device.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do the app-store results include sponsored or unofficial apps alongside the airline's own, and does the airline's listing show 'Open' or 'Get'?",
+        "say_example": "Skipping the sponsored listing for <momondo>, opening the already-installed <United> app"
+       },
+       {
+        "question": "Should you download the mobile app instead of using the website?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a banner prompting you to get the Emirates app, offering an alternative platform for managing your check-in.",
+        "whatTheAgentLoses": "You lose the ability to decide whether you want to install a new application on your device or simply proceed via the web browser.",
+        "kind": "decision",
+        "verify_form": "The agent used the website or installed the airline's app - check which; the app keeps the pass and sends gate changes, and installing it means another account on your phone.",
+        "speak": "on-event",
+        "check": "Does the page show a banner or prompt urging app installation, and does a way to continue on the website remain available (e.g. a 'continue in browser' link)?",
+        "say_example": "Skipping the app-install prompt, continuing on the website"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Sign in or continue as guest",
+      "questions": [
+       {
+        "question": "Is there a way into the booking without signing in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen presents multiple overlapping paths like a 'Check in' button, an 'Add a trip' button, and a 'Trips' tab, making the best route for a guest ambiguous.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to proceed as a guest or sign into an account to manage their itinerary.",
+        "kind": "decision",
+        "verify_form": "The agent went in as a guest or signed in - check which; a guest lookup needs the reference every time, and signing in puts the trip and your status on the account.",
+        "speak": "never",
+        "check": "Does the home screen offer a path (e.g. 'Check-in' or 'Add a trip') that retrieves the booking without requiring sign-in, distinct from a 'Trips'/sign-in path?",
+        "say_example": "Continued as a guest, so the confirmation number gets asked for again next time"
+       },
+       {
+        "question": "Do you want to save this trip locally to your device?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Add a trip' form includes a toggle switch to 'Add to my device', allowing you to access the trip details later without needing to sign in to an account.",
+        "whatTheAgentLoses": "You lose the choice of whether to save the trip locally on your device for quick access, which is helpful if you don't have a frequent flyer account.",
+        "kind": "decision",
+        "verify_form": "The agent turned the save-to-this-device toggle on or left it off - check the switch; on, the trip stays on this phone with no account, and off, it is gone the moment you close the app.",
+        "speak": "never",
+        "check": "Is a toggle offered to save the trip to this device, and is it on or off?",
+        "say_example": "Left save-to-device toggle <off>"
+       },
+       {
+        "question": "Which third-party account do you want to use to log in, or do you prefer using an email and password?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The login screen offers multiple authentication methods, including Apple, Google, and PayPal, requiring you to choose how you want to verify your identity.",
+        "whatTheAgentLoses": "You lose the ability to choose which of your personal accounts is linked and used to authenticate with the airline app.",
+        "kind": "decision",
+        "verify_form": "The agent signed in through a linked account or with an email and password - check which one it used; a linked account ties the airline to whichever provider you picked.",
+        "speak": "never",
+        "check": "Which sign-in method did the page offer and use - a linked account (e.g. Apple, Google, PayPal) or email and password?",
+        "say_example": "Signed in with <email and password>"
+       },
+       {
+        "question": "Do you want to enable Face ID for future logins?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The login screen includes a toggle to enable Face ID, requiring a decision on whether to allow the app to use biometric authentication for quicker access.",
+        "whatTheAgentLoses": "You lose the choice of whether to grant the airline app access to your device's biometric security features.",
+        "kind": "decision",
+        "verify_form": "The agent was offered face or fingerprint login and answered it - check the toggle; turning it on lets the app into your phone's biometrics for every future sign-in.",
+        "speak": "never",
+        "check": "Does the page offer to enable Face ID or biometric login, and is it turned on or off?",
+        "say_example": "Said no to Face ID"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Find the check-in entry point",
+      "questions": [
+       {
+        "question": "Are you retrieving an existing booking rather than searching for a new flight?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows flight search results for a new flight from Singapore to Fukuoka instead of a check-in page for an existing booking.",
+        "whatTheAgentLoses": "The user fails to get their boarding pass because the agent is booking a new flight instead of checking in for the existing one.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show flight search results for a new itinerary (a fare or date grid to book a flight) rather than a check-in or manage-booking screen for an existing reservation?",
+        "say_example": "This page is searching new flights, not the existing booking - backing up"
+       },
+       {
+        "question": "Is check-in the tool that was picked, rather than a reservation lookup or flight status?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows you have no saved trips but offers options like 'Check-in' and 'Look up a reservation' to proceed.",
+        "whatTheAgentLoses": "You lose the ability to choose how to initiate the check-in process when your trips aren't automatically displayed.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Did the agent select 'Check-in' specifically, rather than 'Look up a reservation' or 'Flight status'?",
+        "say_example": "Picked <Flight status> instead of Check-in - correcting"
+       },
+       {
+        "question": "Is the existing booking reached through the manage menu rather than the booking form?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents distinct 'BOOK' and 'MANAGE' menus, requiring you to correctly identify where existing reservations are handled to begin the check-in process.",
+        "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the airline's site navigation and menu structure for managing future flights.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Was the reservation reached through a 'Manage'/'My Trips' section rather than the 'Book'/'Search flights' section?",
+        "say_example": "Used Manage Booking, not Book a flight - correcting"
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Start from the airline's reminder",
+      "questions": [
+       {
+        "question": "Is the confirmation number from the airline's mail kept, in case the link stops working?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The email displays the confirmation number '[ref]', which you will need to retrieve your booking after clicking the 'CHECK IN ONLINE' button.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the email notification and record your confirmation number for your own reference.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the reminder email show a confirmation number (a short alphanumeric code) that can be used to retrieve the booking directly if the check-in link fails?",
+        "say_example": "Noted confirmation number <[confirmation number]> from the email"
+       }
+      ]
+     },
+     {
+      "id": "1.7",
+      "label": "Pass the external site warning",
+      "questions": [
+       {
+        "question": "Does the address after the redirect still belong to the airline?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen warned about visiting an external website, so checking the new URL ensures you are still on a legitimate airline domain.",
+        "whatTheAgentLoses": "The user loses the chance to personally verify the security and authenticity of the redirected website before entering their booking details.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After the redirect, does the browser's address bar show a domain that still belongs to the airline, rather than a different, unrelated, or suspicious domain?",
+        "say_example": "The redirect landed on <flightchecknow.net>, not the airline's own domain"
+       },
+       {
+        "question": "Does this warning say the next site may not meet the airline's accessibility standards?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The booking management page displays a disclaimer about being redirected to an external site with different accessibility standards, requiring a button click to continue.",
+        "whatTheAgentLoses": "The user loses the awareness that their check-in process is being redirected to a third-party site that may not follow the same accessibility policies.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the redirect page show a disclaimer stating that the destination site may not meet the airline's own accessibility standards?",
+        "say_example": "Continued past the accessibility disclaimer for the linked site"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Retrieve the booking",
+    "note": "2.1 where the form offers a choice of identifier; most take a reference and a surname. then 2.2 and 2.3. 2.4 when the airline shows the check-in window, and in 6GL4 the user is refused before entering anything. 2.5 when the lookup is refused - the task ends there for 9Hsb, _WyT and xQwv. 2.6 replaces 2.1 to 2.3 in the app videos, where the trip is already listed. 2.7 last, when the booking holds more than one flight.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Choose the booking identifier",
+      "questions": [
+       {
+        "question": "Do the extra digits on the e-ticket number match the flight you're checking in for?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an e-ticket number with a dash and two extra digits that specify the exact leg of your inter-Asia trip.",
+        "whatTheAgentLoses": "An agent might just copy the base ticket number without realizing the final digits are necessary to identify this specific flight leg.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the displayed e-ticket number include extra digits after a dash indicating a specific flight leg, and does that leg match the one intended for check-in?",
+        "say_example": "The e-ticket number's suffix marks it for <the outbound> leg"
+       },
+       {
+        "question": "Should you use your booking reference or e-ticket number to retrieve your booking?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The check-in form provides radio buttons to search by either your booking reference or your e-ticket number.",
+        "whatTheAgentLoses": "The user loses the ability to choose which of their available travel documents to use for retrieving the flight details.",
+        "kind": "decision",
+        "verify_form": "The agent looked the booking up by reference or by ticket number - check which field it used; the reference is on the confirmation mail and the ticket number is on the receipt, and only one of them may be to hand on the day.",
+        "speak": "never",
+        "check": "Does the retrieval form offer a choice between booking reference and e-ticket number, and which one was selected?",
+        "say_example": "Looked the booking up by <booking reference>"
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Enter the reference and name",
+      "questions": [
+       {
+        "question": "What does the form ask for to find the booking?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The check-in page specifically requires your Booking Reference Number and Surname to locate the correct flight reservation.",
+        "whatTheAgentLoses": "The user gives up direct control over entering their personal booking reference and surname, which securely identify their travel plans.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What fields does the retrieval form require (e.g. Booking Reference Number and Surname)?",
+        "say_example": "The form asks for <booking reference> and <surname>"
+       },
+       {
+        "question": "What is your booking confirmation number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You need the confirmation number, shown as '[ref]' on the trip details page, to retrieve your reservation for check-in.",
+        "whatTheAgentLoses": "You lose the awareness of your specific booking reference number, which you might need later if you have to speak with airline staff.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the retrieval form have a field for the confirmation/booking number, and has that value already been supplied by the task or a reminder email?",
+        "say_example": "Filled in confirmation number <[confirmation number]> from the booking email"
+       },
+       {
+        "question": "Are your confirmation number and name entered correctly?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Entering the exact confirmation number and name matching the reservation is required to locate the flight details.",
+        "whatTheAgentLoses": "Delegating this step means trusting the agent to accurately input your personal booking credentials without typos.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the confirmation number and surname entered in the form exactly match the reference and traveler name given for this trip?",
+        "say_example": "Entered surname reads <Smth> instead of <Smith> - fixing before submitting"
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Submit the lookup",
+      "questions": [
+       {
+        "question": "Does the origin airport on the lookup form match where this trip starts?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking the red arrow button submits the origin airport and other details to locate the booking.",
+        "whatTheAgentLoses": "The user loses the chance to verify that the correct origin airport was entered before submitting the search.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the origin airport and other pre-submission fields shown on the lookup form match the traveler's actual departure city for this booking?",
+        "say_example": "Origin airport shows <JFK> but the trip departs from <LGA>. Fixing it before submitting."
+       },
+       {
+        "question": "Are there any important travel notices displayed while my booking loads?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed an important TSA REAL ID requirement notice while the trip details were loading.",
+        "whatTheAgentLoses": "You miss the opportunity to be informed about upcoming identification requirements for future flights.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does a travel notice or advisory (e.g. an ID requirement or document reminder) appear while the booking loads?",
+        "say_example": "The page shows a note: <REAL ID required at the airport starting May>"
+       },
+       {
+        "question": "Is there a visual CAPTCHA or security puzzle blocking the booking retrieval?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Airline websites frequently use visual challenges to prevent bots from scraping flight details, which must be solved to access the reservation.",
+        "whatTheAgentLoses": "The user loses the ability to progress if their automated agent cannot see or solve the visual security puzzle.",
+        "kind": "state-check",
+        "speak": "gate",
+        "check": "Does the page present a CAPTCHA or other visual-only verification challenge before it will proceed, with no accessible (audio or text) alternative offered?",
+        "say_example": "There's a picture puzzle here I can't read for you. Can you help me get past it, or is there a sound version?"
+       },
+       {
+        "question": "Did the ID field actually go through, or was it only filled in?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video cuts from an empty 'ID number' field directly to the next step without showing the form being successfully submitted.",
+        "whatTheAgentLoses": "The user loses the assurance that their required identification details were accurately entered and accepted by the airline.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After submitting, does the page move past the identification field, or is it still sitting on the same blank field?",
+        "say_example": "The ID field looks empty on the next screen - checking the submission went through"
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Read the check-in window",
+      "questions": [
+       {
+        "question": "Does the page limit check-in to a window before departure, and are you inside it now?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The warning banner on the check-in tab explicitly states that online check-in for Scoot-operated flights using an SQ reference is only available during this specific timeframe.",
+        "whatTheAgentLoses": "The user loses the awareness of the exact time window required to successfully check in for their partner-operated flight.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "does the page state a check-in window for the operating carrier (e.g. opens 48 hours and closes 90 minutes before departure), and does the current time fall inside it",
+        "say_example": "Check-in for this flight opens <48 hours> before departure and closes <90 minutes> before. Right now it's outside that window."
+       },
+       {
+        "question": "Why does the dashboard say there are no available flights for check-in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a red warning box stating 'There are no available flights for Check-In,' indicating you are attempting the task before the airline's check-in window has opened.",
+        "whatTheAgentLoses": "The user loses the explanation for why their confirmed booking cannot be checked into yet, potentially causing unnecessary panic about their flight status.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the dashboard show a 'no flights available for check-in' message, and does the page indicate this is because the check-in window has not yet opened?",
+        "say_example": "The dashboard says no flights are available to check in yet - the window opens <24 hours> before departure"
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Fix a refused lookup",
+      "questions": [
+       {
+        "question": "Why does the page say it can't find the booking?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen lists specific requirements for a successful check-in, such as having the correct confirmation number and being within 24 hours of departure, which explain why the retrieval failed.",
+        "whatTheAgentLoses": "Delegating this means you miss seeing the exact error reasons and guidelines required to successfully access your flight reservation.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "When retrieval fails, does the page list the requirements for a successful lookup (e.g. reference format, a time-before-departure window), and which one isn't met?",
+        "say_example": "Lookup failed. The page says check-in opens <24 hours> before departure, and it's <36 hours> out."
+       },
+       {
+        "question": "Which support option does the page offer after the lookup fails?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The footer presents multiple links like 'Contact Us' and 'Help Center', requiring a choice on how to find assistance.",
+        "whatTheAgentLoses": "The user loses the ability to choose their preferred channel for troubleshooting check-in issues.",
+        "kind": "decision",
+        "verify_form": "The agent picked a support route after the lookup failed - check whether it went to the help pages or to a phone number; a wrong name on the booking needs a person, and a mistyped reference does not.",
+        "speak": "on-event",
+        "check": "After the lookup fails, does the page offer both a self-service help page and a way to contact the airline, and does it say why the lookup failed?",
+        "say_example": "Lookup failed - trying the Help Center first since this looks like a typo, not a name mismatch"
+       },
+       {
+        "question": "Did your form submission succeed?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Red error messages below the confirmation number and last name fields indicate that the required information is missing.",
+        "whatTheAgentLoses": "The user loses the opportunity to correct the missing information and proceed with the flight check-in.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the page show error messages under the confirmation number or surname fields indicating the submission was rejected?",
+        "say_example": "Submission failed - the page flags <the confirmation number> field as missing"
+       },
+       {
+        "question": "What format does the form want for the booking reference and the name?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form highlights specific formatting rules, such as needing a 6-digit alphanumeric confirmation number and names without special characters or numbers.",
+        "whatTheAgentLoses": "You lose visibility into the exact formatting rules the airline requires for entering your personal details and booking reference.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the form specify formatting rules (e.g. a 6-character alphanumeric reference, no special characters or digits in the name field) for fixing a validation error?",
+        "say_example": "Fixing the format - the page wants a <6-character alphanumeric> reference"
+       },
+       {
+        "question": "Does the page say a schedule change or an unpaid balance has to be settled before check-in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Airlines often lock the check-in process if there has been a recent change to the flight times or an unpaid fee on the reservation that must be resolved first.",
+        "whatTheAgentLoses": "The user loses the opportunity to evaluate whether the new flight schedule still works for their plans before blindly accepting it to proceed.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page state that a schedule change must be accepted or an outstanding balance paid before check-in can proceed?",
+        "say_example": "Check-in is blocked - the page wants a <schedule change> accepted first"
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Select the saved trip",
+      "questions": [
+       {
+        "question": "Which of these confirmed bookings do you want to check in for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple confirmed bookings, such as [ref] for GES-MNL, so you must ensure you select the correct flight for check-in.",
+        "whatTheAgentLoses": "The user loses the ability to personally verify their upcoming itineraries and choose the correct flight to check in for.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the account show more than one confirmed booking, and does the ask specify which one to check in for?",
+        "say_example": "There are two bookings here: <[confirmation number]> to <Manila> on <Sep 12>, and <XYZ789> to <Cebu> on <Sep 20>. Which one?"
+       },
+       {
+        "question": "Do you want to check in for the trip already listed, or add a different trip?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed a saved trip with a 'Check in' button alongside an 'Add a trip' option.",
+        "whatTheAgentLoses": "The user loses the chance to decide whether to proceed with the pre-loaded trip or manually retrieve another one.",
+        "kind": "decision",
+        "verify_form": "The agent checked in for the trip the app already had, or added a trip by hand - check which one came up; a saved trip can be an old leg, and adding one needs the reference you may not have to hand.",
+        "speak": "if-wrong",
+        "check": "Does the trip already shown (route, date) match the flight the person intends to check in for, rather than being an old or different saved trip?",
+        "say_example": "The saved trip shows <Sep 2> to <Chicago>, but check-in is due for <Sep 15> to <Denver> - adding the right trip instead"
+       },
+       {
+        "question": "Does the dashboard show your trip directly, or only a general bookings link?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a specific upcoming trip block for Milan Bergamo alongside general links like 'Bookings', requiring you to choose the most direct path to your flight.",
+        "whatTheAgentLoses": "You lose the opportunity to verify at a glance that the app is displaying the correct upcoming trip to Milan before initiating the check-in process.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the dashboard show a direct trip block for the intended destination, in addition to a general 'Bookings' link?",
+        "say_example": "Opened the trip block for <the destination> instead of the general bookings list"
+       },
+       {
+        "question": "Which booking are you checking in for?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays specific itinerary details like booking reference [ref] for a flight from General Santos to Manila, which you must verify to ensure you are checking in for the correct trip.",
+        "whatTheAgentLoses": "You lose the opportunity to personally confirm that the agent selected the correct upcoming flight and passengers before initiating the check-in process.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the itinerary shown (booking reference, route, date) match the specific trip intended for check-in?",
+        "say_example": "This booking reads <XYZ999> to <Cebu>, not the intended <[confirmation number]> to <Manila> - stopping to double check"
+       },
+       {
+        "question": "Is the seat picked where this airline keeps it, under additional services rather than check-in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard displays several action buttons, and the seat selection feature is specifically located in the 'Additional Services' section rather than the main check-in button.",
+        "whatTheAgentLoses": "You lose the awareness of how the airline organizes its booking management tools and where ancillary services are located.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Is seat selection reached through an 'Additional Services' section rather than directly from the main check-in flow?",
+        "say_example": "Seat selection is under Additional Services here, not on the check-in screen itself"
+       },
+       {
+        "question": "Which flight does the page show as ready for check-in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays flight [ref] from BXU to MNL as ready for check-in and instructs you to click the down arrow to proceed.",
+        "whatTheAgentLoses": "You lose the chance to verify that the correct flight itinerary is being selected before initiating the check-in steps.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the page show a specific flight (route, date) that is ready for check-in, with a clear next-step control (e.g. a down arrow) to proceed?",
+        "say_example": "Picked the <origin to destination> flight the page marked ready for check-in"
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Pick the flight to check in",
+      "questions": [
+       {
+        "question": "Is the journey shown the one you meant to check in for?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the specific flight route from Mumbai to Reggio di Calabria and asks you to confirm before officially starting the check-in process.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the correct reservation and flight details were retrieved before committing to the check-in.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the journey shown (route, possibly multi-leg) match the flight the person intends to check in for?",
+        "say_example": "This journey reads <Mumbai to Reggio di Calabria>, not what was asked for - stopping to check"
+       },
+       {
+        "question": "Which flights do you want to check in for, and do you want to pay to check in early for the return flight?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers free check-in for the outbound flight but requires buying a reserved seat to check in early for the return flight.",
+        "whatTheAgentLoses": "You lose the chance to decide whether the convenience of checking in for the return flight now is worth the extra cost of a reserved seat.",
+        "kind": "decision",
+        "verify_form": "The agent checked in for one leg or paid to check in early for the return as well - check which legs are now checked in; the return usually opens on its own a day before, and buying a seat is the only way to do it sooner.",
+        "speak": "gate",
+        "check": "Does the booking hold more than one flight leg, with only the outbound available for free check-in now and the return requiring a paid reserved-seat purchase to check in early?",
+        "say_example": "The outbound checks in free now. To check in early for the return, they want a paid seat, <45 USD>. Otherwise it opens on its own later. Pay for it, or wait?"
+       },
+       {
+        "question": "Is the check-in tab the one that was opened?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The booking management page offers multiple options like changing the flight or adding services, so you must specifically select the check-in tab to proceed.",
+        "whatTheAgentLoses": "You lose the opportunity to review or purchase additional services or make flight changes before committing to the check-in process.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Was the 'Check-in' tab specifically opened, rather than 'Change flight', 'Add services', or another management option?",
+        "say_example": "Opened <Change flight> instead of Check-in - switching tabs"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Confirm the trip and the travellers",
+    "note": "3.1 in every video that reaches this step. 3.2 where the booking holds more than one person, or where the airline makes it a screen of its own. 3.3 to 3.6 where the airline asks, and the user can skip all four: the assistance toggle is off to begin with, the loyalty field is blank, and the contact screen has its own opt-out button.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Check the flight details",
+      "questions": [
+       {
+        "question": "What is the policy for making changes to this booking?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "This matters because the screen displays your exact departure times, passenger name, and a reminder that changes are allowed up to two hours before the flight.",
+        "whatTheAgentLoses": "Delegating this means you miss the chance to personally verify your flight times and note the specific deadline for making last-minute changes.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the page state a policy or deadline for making changes to the booking (e.g. 'changes allowed up to 2 hours before departure')?",
+        "say_example": "Changes allowed up to <2 hours> before departure"
+       },
+       {
+        "question": "Do the flight, seat and baggage on the review screen match what was booked?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your flight schedule, current seat assignments like 35E, and baggage allowance, which all need to be verified before proceeding.",
+        "whatTheAgentLoses": "You lose the opportunity to catch errors in your itinerary or change your seat and baggage preferences before the boarding pass is issued.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Do the flight schedule, currently assigned seat, and checked-baggage allowance shown on this review screen match what the traveler booked?",
+        "say_example": "The review screen shows <no checked bag>, but <one> was included when you booked."
+       },
+       {
+        "question": "Does the layover time match the gap between the two flights?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that the 43-minute connection time in ORD matches the scheduled 8:22 PM arrival and 9:05 PM departure ensures your itinerary details are mathematically consistent.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally double-check the math on your tight connection and mentally prepare for the layover.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the stated connection time equal the difference between the first flight's arrival time and the second flight's departure time, both as shown on the page?",
+        "say_example": "The layover shows <43 minutes>, but flights land at <8:22 PM> and leave at <9:05 PM> - that's only <25 minutes>"
+       },
+       {
+        "question": "Is there a prominent alert indicating your flight has been significantly delayed or cancelled?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a flight is disrupted, the airline often surfaces this right at the start of check-in, sometimes offering alternative flights or compensation instead of a boarding pass.",
+        "whatTheAgentLoses": "The user might unknowingly head to the airport for a cancelled flight or miss the critical window to select the best alternative rebooking option.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page display a prominent alert that this flight has been significantly delayed or cancelled?",
+        "say_example": "The page flags this flight as <delayed 2 hours>"
+       },
+       {
+        "question": "Is a different airline actually flying this leg?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displays a warning that the flight is a codeshare operated by Indigo Airlines, meaning you might need to follow Indigo's specific baggage rules or find their check-in counter at the airport.",
+        "whatTheAgentLoses": "The user misses a crucial alert that their flight is operated by a different airline, which changes where they need to go and what rules apply on the day of travel.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show a codeshare notice naming an operating carrier different from the one the booking was made with?",
+        "say_example": "This flight is operated by <Indigo>, not <the airline booked with>, so its rules apply at the airport"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Select the passengers to check in",
+      "questions": [
+       {
+        "question": "Which passengers do you want to check in for this flight?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The check-in page asks \"WHO'S CHECKING IN?\" and requires selecting at least one passenger from the booking to proceed.",
+        "whatTheAgentLoses": "You lose control over which specific passengers on the itinerary are checked in at this time.",
+        "kind": "decision",
+        "verify_form": "The agent chose which passengers to check in - check the ticks against who is actually travelling; anyone left unticked stays unchecked in, and on a full flight that seat can go to somebody else.",
+        "speak": "gate",
+        "check": "Does the booking list more than one passenger, and does the ask specify which of them to check in?",
+        "say_example": "This booking has <2> passengers: <A. Smith> and <B. Smith>. Check in both, or just one?"
+       },
+       {
+        "question": "Is every passenger on the booking checked in, or only one of them?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial trip details page indicates two passengers, but the subsequent passport entry and review screens only display information for one.",
+        "whatTheAgentLoses": "The user loses the assurance that their travel companion has been successfully checked in and seated with them.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the number of passengers shown on the passport-entry or review screen match the number shown at the start of check-in?",
+        "say_example": "Started with <2> passengers, but only <1> shows on this screen - the other may not be getting checked in"
+       },
+       {
+        "question": "Are the name and booking reference still the same after moving into check-in?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed the booking reference and passenger name abruptly changing from PNR:[ref] for [name] to PNR:[ref] for Mr. [name] after clicking the check-in tab.",
+        "whatTheAgentLoses": "The user loses the certainty that the correct passenger is being checked in for the intended flight.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the passenger name and booking reference shown after entering the check-in tab match exactly what was shown before, allowing only for a title like Mr./Ms. being added?",
+        "say_example": "Before: <PNR [confirmation number]> for <J Tan>. After: <PNR XYZ999> for <R Lee> - a different booking entirely"
+       },
+       {
+        "question": "Does the passenger name on the booking match the traveller's name letter for letter?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A missing middle name, a maiden name, or a typo in the reservation can result in being denied boarding by airport security.",
+        "whatTheAgentLoses": "You lose the opportunity to catch a name mismatch early enough to contact the airline and correct it before arriving at the airport.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the passenger name on the retrieved reservation match, letter for letter, the traveler's name as given for this trip?",
+        "say_example": "Reservation shows <Jon Tan>, but the traveler's given name is <Jonathan Tan> - flagging the mismatch"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Declare special assistance",
+      "questions": [
+       {
+        "question": "Do you need to request special assistance for this flight?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The check-in form includes a toggle to declare if the passenger requires special assistance, which dictates whether the airline prepares accommodations like a wheelchair.",
+        "whatTheAgentLoses": "Delegating this step means the agent might leave the toggle set to 'No' by default, potentially leaving you without necessary accessibility support at the airport.",
+        "kind": "decision",
+        "verify_form": "The agent answered the special-assistance question - check which way it is set; the default is No, and a wheelchair or an escort has to be asked for here to be waiting at the airport.",
+        "speak": "always",
+        "check": "Does the check-in form include a toggle or question about needing special assistance (e.g. wheelchair, escort), and what is it currently set to?",
+        "say_example": "The form asks about special assistance, like a wheelchair or help to the gate. Nothing was mentioned, so I'm leaving it off."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Give a contact number",
+      "questions": [
+       {
+        "question": "Do you want to give a phone number for flight alerts?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asks for a phone number to send notifications about flight cancellations, delays, or schedule changes, and includes an option to decline.",
+        "whatTheAgentLoses": "Delegating this choice means the agent decides whether your personal phone number is registered to receive real-time flight updates.",
+        "kind": "decision",
+        "verify_form": "The agent gave a phone number for flight notices or used the decline button - check which; with a number you get the delay and cancellation messages, and without one the first you hear of a change is at the airport.",
+        "speak": "never",
+        "check": "Does the form ask for a phone number for flight notifications with an option to decline, and is a phone number already available to enter?",
+        "say_example": "Entered <your mobile number> for flight alerts"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Enter the emergency contact",
+      "questions": [
+       {
+        "question": "Should the same emergency contact go on every passenger?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays multiple passenger blocks, requiring a choice on whether to share one emergency contact or provide individual ones.",
+        "whatTheAgentLoses": "The user loses the ability to specify different emergency contacts for each person on the itinerary.",
+        "kind": "decision",
+        "verify_form": "The agent ticked or left the apply-to-all-passengers box - check it; ticked, one person is the emergency contact for everybody on the booking, which is wrong if two of you are each other's contact.",
+        "speak": "never",
+        "check": "Does the emergency-contact form offer an 'apply to all passengers' option, and does the booking have more than one passenger?",
+        "say_example": "Applied the same emergency contact to all <2> passengers"
+       },
+       {
+        "question": "Who do you want to list as your emergency contact?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The airline asks for the name, relationship, email, and phone number of someone not on the flight to contact in case of an emergency.",
+        "whatTheAgentLoses": "The user loses the ability to decide which specific trusted person the airline should reach out to if an emergency occurs.",
+        "kind": "decision",
+        "verify_form": "The agent named an emergency contact - check who it is and whether they are on this flight; the airline calls this person if something happens, and it will not accept somebody travelling with you.",
+        "speak": "if-wrong",
+        "check": "Is the person entered as the emergency contact also one of the passengers traveling on this same flight?",
+        "say_example": "The emergency contact given is also a passenger on this flight - picking someone not travelling instead"
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Add the frequent-flyer number",
+      "questions": [
+       {
+        "question": "Do you want to enter a frequent-flyer or membership ID before continuing?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents an optional field for a Go Rewards Membership ID and requires agreement to the privacy policy to proceed with check-in.",
+        "whatTheAgentLoses": "The user loses the opportunity to earn loyalty points for this flight if the agent skips entering their rewards membership ID.",
+        "kind": "decision",
+        "verify_form": "The agent left the loyalty number blank or typed one in - check the field; miles are not credited retrospectively without a claim, and status benefits like a free bag only apply if the number is on the booking before departure.",
+        "speak": "never",
+        "check": "Is there an optional loyalty or membership ID field, and does the traveler have a known number to enter, or should it be left blank?",
+        "say_example": "Entered <your frequent-flyer number> so the flight earns miles"
+       },
+       {
+        "question": "Is the frequent-flyer number showing on the booking now?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the number is missing, you won't get your free checked bags, priority boarding, or mileage credit for the flight.",
+        "whatTheAgentLoses": "You lose the financial and comfort benefits of your airline status because the agent didn't ensure your loyalty account was linked during check-in.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "If a frequent-flyer number was entered, does it now show as attached to this reservation rather than being dropped or left blank after proceeding?",
+        "say_example": "Entered <a program number>, but the reservation still shows none attached - checking again"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Clear the airline's checks",
+    "note": "4.1 for an international itinerary, and in AX6A on a short hop as well; 4.2 only where the destination needs a visa. 4.3 when the terms are shown in a box or as a sentence above a button. 4.4 in every video where the user finishes check-in, and in 6GL4 the user answers it in two separate modals. 4.5 where the airline asks who packed the bag.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Enter the travel document",
+      "questions": [
+       {
+        "question": "Which travel document should be used, and which of its details does the form still need?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a warning that passport information is required and presents two mandatory checkboxes for accepting the terms before you can proceed.",
+        "whatTheAgentLoses": "Letting an agent handle this means you lose the chance to personally verify your sensitive passport details and review the terms you are agreeing to.",
+        "kind": "decision",
+        "verify_form": "The agent filled the passenger details and ticked both required boxes - check the gender, the nationality and the two boxes; the boxes are the terms and the baggage rules, and the form will not move until both are ticked.",
+        "speak": "gate",
+        "check": "does the form require an ID-type choice or travel-document values - passport or national ID number, expiry, issuing country, visa type and number - that were not already supplied",
+        "say_example": "The form wants a travel document. It needs the number and the expiry, and a visa if the destination asks for one. Which document should I use, and what are its details?"
+       },
+       {
+        "question": "Are your pre-filled travel document details accurate?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays your passport number and expiry date, which must be perfectly accurate to avoid being denied boarding at the airport.",
+        "whatTheAgentLoses": "You lose the chance to personally verify your passport number and expiry date against your physical document before submitting the form.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Do the pre-filled passport number and expiry date shown match the traveler's actual passport, digit for digit?",
+        "say_example": "Pre-filled passport number reads <A[account number]567> vs the given <A[account number]577> - fixing it before it's saved for good"
+       },
+       {
+        "question": "Are the required passport fields filled in, even though the form lets you continue without them?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen marks the passport fields with asterisks to indicate they are required, so leaving them blank could cause issues at the airport even if the website fails to enforce it.",
+        "whatTheAgentLoses": "The user loses the assurance of a fully valid check-in, as an automated agent might skip providing vital travel documents if the website's validation is broken.",
+        "kind": "decision",
+        "verify_form": "The agent left the required document fields blank or filled them - check them; the form let it through either way, and a blank passport line means a stop at the counter.",
+        "speak": "if-wrong",
+        "check": "Are all asterisk-marked (required) passport fields filled in, even though the form technically allows proceeding with them left blank?",
+        "say_example": "Fields marked required (<passport number>) were left blank - filling them in even though the form allowed skipping"
+       },
+       {
+        "question": "Does the page reject the passport for not having enough validity for the destination?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many countries require at least six months of passport validity, and the check-in form will throw a hard error if your expiration date does not meet the destination's entry rules.",
+        "whatTheAgentLoses": "The user loses the immediate, clear warning that their travel documents are legally invalid for the trip, which they need to know immediately to attempt an emergency renewal.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "does the page display an error rejecting the passport as not valid enough for the destination",
+        "say_example": "The passport was rejected. The page says there isn't enough validity left for <the destination>, so this document won't get you through."
+       },
+       {
+        "question": "Do the visible last digits of the saved document number match the document you're travelling on?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When checking in via a logged-in account, passport or known traveler numbers are often visually masked (e.g., ********[account number]), requiring verification via the exposed digits.",
+        "whatTheAgentLoses": "The user loses the chance to verify that the correct saved passport is being used for the flight, as they cannot see the masking pattern or the visible digits.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "what are the visible trailing digits of the pre-filled, masked travel-document number shown on the page",
+        "say_example": "The saved document on file ends in <[account number]>. Check that's the one you're travelling on, not a different passport or card."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Add the visa details",
+      "questions": [
+       {
+        "question": "Does the screen show an example or tooltip pointing to where the visa number is on your document?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a tooltip with an example Schengen visa and a red arrow to help you locate the exact document number.",
+        "whatTheAgentLoses": "You lose the visual guidance showing exactly which number on your physical visa needs to be provided.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "does the page show a tooltip or example image pointing to where the visa number appears on the document",
+        "say_example": "Used the page's example image to find where the visa number sits"
+       },
+       {
+        "question": "Did the form accept an incomplete visa expiry year without flagging it as invalid?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The system allowed '[number]' to pass, but an invalid visa expiry date could cause you to be denied boarding at the airport.",
+        "whatTheAgentLoses": "The user loses the opportunity to ensure their travel documents are accurately recorded to avoid delays or boarding denials.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "what value is currently entered in the visa expiry year field, and does the form show any validation error for it",
+        "say_example": "The visa expiry year shows just <07>. The form let it through, but that's not a full year, and it may get flagged at the airport."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Accept the terms",
+      "questions": [
+       {
+        "question": "Was the privacy-notice checkbox ticked before the form was submitted?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires checking a box to agree to the privacy notice before you can submit the verification form.",
+        "whatTheAgentLoses": "You lose the chance to review exactly what personal data the airline collects and how they intend to use it.",
+        "kind": "decision",
+        "verify_form": "The agent ticked the privacy box - check whether the notice behind it was ever opened; that tick is what lets the airline use your details, and it cannot be unticked later.",
+        "speak": "never",
+        "check": "does the page show the privacy-notice checkbox as ticked",
+        "say_example": "Ticked the <privacy notice> box before submitting"
+       },
+       {
+        "question": "Are you the passenger or someone authorised to check these bags in, and do you know what's in them?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen requires checking a box to legally declare that you are either the passenger or an authorized person with personal knowledge of the baggage contents.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally attest to this legal declaration, potentially making them liable if an agent falsely agrees on their behalf.",
+        "kind": "decision",
+        "verify_form": "The agent ticked the box saying it is a passenger on this booking or an authorised person - check who is actually doing this; the declaration covers knowing what is in the bags, and it names a person, not a tool.",
+        "speak": "gate",
+        "check": "what do the declaration and baggage-security checkboxes state - being the passenger or an authorised person, knowing the baggage contents, having packed the bags yourself and kept them with you",
+        "say_example": "This box says you packed the bags yourself and they've been with you since. It also says you're the passenger, or someone allowed to check them in. Is that all true?"
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Accept the dangerous-goods rules",
+      "questions": [
+       {
+        "question": "Do you agree to the dangerous-goods and security rules?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to acknowledge the dangerous goods policy and confirms your prepaid flight total of PHP 6,552.80 before continuing.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the specific list of prohibited items to ensure your baggage complies with the airline's safety rules.",
+        "kind": "decision",
+        "verify_form": "The agent accepted the dangerous-goods and security statements - check that somebody actually knows what is in the bags; this is a declaration about your luggage, and the penalties on the screen are criminal ones.",
+        "speak": "never",
+        "check": "does the page show a dangerous-goods and security acknowledgment, and what penalties does it state",
+        "say_example": "Ticked the dangerous-goods declaration, which the page says carries criminal penalties if false"
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Confirm the baggage security statements",
+      "questions": [
+       {
+        "question": "What does the baggage-security checklist ask you to confirm?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Baggage Security' checklist asking you to verify that you packed and maintained possession of your own bags.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally and truthfully attest to the security and contents of their luggage.",
+        "kind": "decision",
+        "verify_form": "The agent confirmed the baggage-security statements - check that they are true: that you packed the bags, that they have been with you since, and that nobody handed you anything to carry.",
+        "speak": "never",
+        "check": "what does the baggage-security checklist ask you to confirm (packed it yourself, kept possession, nothing handed to you)",
+        "say_example": "Ticked the baggage-security statements, which say you packed the bags yourself and kept them with you"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Settle the seat",
+    "note": "5.1 wherever the airline has already given the user a seat, which is four of the videos. 5.2 before the user picks an option that has to be paid for. then 5.3 or 5.4, not both - 5.3 where the user can pick a seat off a map, 5.4 where the airline hands out a free seat instead. 5.5 once the user has picked a seat or kept the one they were given. 5.6 only in PirI, the only video with a seat payment, and the payment does not finish.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Read the assigned seat",
+      "questions": [
+       {
+        "question": "Do you want to keep the free seat you were given, or look at the map for another?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows seat 25H is already assigned for free, meaning you must decide whether to accept it or browse the seat map for a better location.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to stick with the free assigned seat or browse for one that better fits your personal preferences.",
+        "kind": "decision",
+        "verify_form": "The agent kept the seat the airline assigned or went into the map - check where you are sitting; the assignment is free, and the map is the only place to see whether anything better is left.",
+        "speak": "always",
+        "check": "what seat has already been assigned for free, and is a seat map available to look for another",
+        "say_example": "You already have <25H> at no charge. I'll look at the map in case something better is free."
+       },
+       {
+        "question": "Does the summary name the seat the free allocation gave you?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "This matters because you need to confirm that a seat was successfully assigned, as indicated by the \"You're sitting in the aisle seat\" message on the trip summary page.",
+        "whatTheAgentLoses": "A person delegating this task loses the immediate awareness of where they will be sitting after opting out of paid seat selection.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "does the trip summary name the assigned seat (e.g. 'you're sitting in the aisle seat')",
+        "say_example": "The summary doesn't name a seat. The free allocation may not have gone through."
+       },
+       {
+        "question": "Is this a confirmed seat, or are you on standby?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If the flight is oversold and you don't have a confirmed seat, you need to know you are on standby so you can prepare for the possibility of being bumped.",
+        "whatTheAgentLoses": "You lose the awareness that you do not actually have a guaranteed seat on the plane, which drastically changes how you plan your travel day.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "does the page show a confirmed seat number, or does it say standby or waitlisted",
+        "say_example": "Heads up, this isn't a confirmed seat. The page shows you're on <standby>, so there's a chance of being bumped."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Read what a seat costs",
+      "questions": [
+       {
+        "question": "Does the page show a seat-price table, and does it say you'll be sent to an outside site to choose?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a pricing table for different seat types ranging from free to RMB 600 and a disclaimer about being redirected to an external website.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate the potential costs of seat upgrades before entering the external booking tool.",
+        "kind": "decision",
+        "verify_form": "The agent went past the seat fee table without reading it - check what a seat on this route actually costs; the bands run from free to a few hundred, and the table is the only place they are all listed.",
+        "speak": "on-event",
+        "check": "does the page show a seat-pricing table, and does it say you'll be redirected to an external site to book seats",
+        "say_example": "Seats here run from free up to <28 USD>, and picking one takes us to an outside site."
+       },
+       {
+        "question": "Are you being charged for a seat that the pricing table listed as free?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The initial pricing table indicated that seats outside rows 1-20 were free, but the confirmation screen shows a 50CNY charge for seat 43C.",
+        "whatTheAgentLoses": "The user loses the opportunity to dispute the unexpected fee or choose a different seat to avoid the charge.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "does the confirmation screen show a charge for the seat, and what did the earlier pricing table say this seat band would cost",
+        "say_example": "The pricing table said this seat was free, but the confirmation shows a <38 CNY> charge for <22C>. That doesn't match."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Pick a seat from the map",
+      "questions": [
+       {
+        "question": "Which seat do you want, and are you willing to pay its fee instead of taking a free one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The interactive seat map displays available seats with varying color-coded prices in Chinese currency, so your choice dictates the extra cost added to your booking.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to balance your personal seating preferences against the specific cost of each available seat.",
+        "kind": "decision",
+        "verify_form": "The agent picked a seat off the map - check the seat and the fee attached to its colour; the price is in the legend rather than on the seat, so an expensive row looks the same as a free one.",
+        "speak": "gate",
+        "check": "which seat is highlighted as selected on the map, what fee is attached to its colour band, and does the page offer a free random allocation instead of paying to choose",
+        "say_example": "This one's <14A> and it costs <28 USD>. The free option is a random seat, and it can split your party up. Which do you want?"
+       },
+       {
+        "question": "Are there any alternative seats actually available to choose from?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The seat map shows that all other seats are occupied, forcing you to cancel the selection and stick with the automatically assigned seat.",
+        "whatTheAgentLoses": "The user loses the awareness that the flight is completely full, which explains why they cannot change their seating assignment.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "does the seat map show any available (non-grey, non-X) seats left to choose",
+        "say_example": "No other seats are open on this map. Staying with the seat you were already given."
+       },
+       {
+        "question": "Does the seat you picked carry a warning icon, like an exit row or no window?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Seat maps rely heavily on visual symbols to communicate critical seat characteristics, like exit row responsibilities or a lack of a window, which might not be read aloud by a screen reader or parsed by an agent.",
+        "whatTheAgentLoses": "You lose the ability to spot visual caveats about a seat, potentially resulting in being assigned an exit row you cannot legally sit in or a window seat with no view.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "does the seat map show a warning icon on the selected seat, such as an exit-row door or a crossed-out window",
+        "say_example": "That seat's marked with an exit-row icon on the map. It comes with extra responsibilities, and no window."
+       },
+       {
+        "question": "Is the seat you picked next to a toilet or a galley?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The layout of the plane, including high-traffic areas like bathrooms and galleys, is shown entirely through spatial icons on the map rather than text descriptions.",
+        "whatTheAgentLoses": "You lose the spatial awareness of the cabin layout, which is crucial for avoiding noisy or disruptive seats near the bathrooms.",
+        "kind": "decision",
+        "verify_form": "The agent chose a seat near the galley or the lavatory - check its position on the map; those rows are noisy and have people standing beside them for most of a long flight.",
+        "speak": "on-event",
+        "check": "does the seat map show a lavatory or galley icon next to the selected seat",
+        "say_example": "That seat's right by the galley icon on the map. Those rows get noisy, with people standing by them most of the flight."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Take the free allocation",
+      "questions": [
+       {
+        "question": "Is everyone on this booking seated together?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Automated systems often scatter passengers in remaining middle seats, so you must intervene if you want to sit with your children or companions.",
+        "whatTheAgentLoses": "You lose the chance to rearrange your party's seating, risking that your group or family will be separated for the entire flight.",
+        "kind": "decision",
+        "verify_form": "The agent left the party scattered or moved seats together - check where everybody is sitting; automatic allocation fills whatever middle seats are left, and children being seated apart is the usual result.",
+        "speak": "on-event",
+        "check": "does the seat summary show every passenger in the same row or section, or are they in different parts of the cabin",
+        "say_example": "The free allocation split you up. You're in <14C> and the other passenger is in <22F>. I can go back and pay to sit together."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Confirm the seat and the price",
+      "questions": [
+       {
+        "question": "What seat and price does the confirmation screen show before you continue?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Clicking continue locks in your assignment to seat 25H for no additional charge before moving to the next step.",
+        "whatTheAgentLoses": "You lose the chance to review the assigned seat and decide if you want to change it before it is finalized.",
+        "kind": "decision",
+        "verify_form": "The agent confirmed the assigned seat rather than choosing another - check the seat number and the price beside it; once confirmed it is on the pass, and a change after that may cost.",
+        "speak": "never",
+        "check": "what seat number and price does the confirmation screen show before you continue",
+        "say_example": "Confirmed seat <19C> at no extra charge"
+       },
+       {
+        "question": "Do your initials appear on the seat you picked before you continue to the flight summary?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying that your initials appear on the chosen seat and clicking \"Continue to Flight Summary\" ensures your specific seat is saved before moving forward.",
+        "whatTheAgentLoses": "The user loses the visual reassurance of seeing their own initials on the seat map to confirm they secured their preferred spot.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "does the seat you picked show as taken - your initials marked on the seat on the map, or the seat listed as 'ADDED' on the services page",
+        "say_example": "Your initials aren't showing on <14A>. The pick may not have registered. Want me to try again?"
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Pay for the seat",
+      "note": "5.6.1, then 5.6.2, then 5.6.3 where the card brand offers more than one route, then 5.6.4. these steps appear only in PirI, and the last frame shows a card error.",
+      "children": [
+       {
+        "id": "5.6.1",
+        "label": "Choose the payment method",
+        "questions": [
+         {
+          "question": "Which payment type is being used for the seat fee?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The checkout page requires you to select a payment method category, such as an international credit card, to pay the 50CNY fee for your advance seat selection.",
+          "whatTheAgentLoses": "You lose control over which type of financial account is used to pay for the transaction.",
+          "kind": "decision",
+          "verify_form": "The agent chose a payment category for the seat fee - check whether it used a domestic card, an international card or a third-party wallet; the category decides which of your cards can be used at all.",
+          "speak": "never",
+          "check": "what payment method categories does the page offer for the seat fee (e.g. domestic card, international card, wallet)",
+          "say_example": "Picked <international credit card> as the payment type for the seat fee"
+         }
+        ]
+       },
+       {
+        "id": "5.6.2",
+        "label": "Accept the payment terms",
+        "questions": [
+         {
+          "question": "Do the payment terms say what happens to this seat fee if the aircraft or seat configuration changes?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen requires choosing a payment network like VISA or MasterCard and checking a box to accept the terms before confirming payment.",
+          "whatTheAgentLoses": "You lose the chance to select your preferred payment method and review the terms and conditions yourself.",
+          "kind": "decision",
+          "verify_form": "The agent picked a card network and ticked the payment terms - check both; the terms cover refunds on a seat you may not keep if the aircraft changes.",
+          "speak": "on-event",
+          "check": "what do the payment terms say happens to this seat fee if the aircraft or seat configuration changes",
+          "say_example": "The payment terms say this seat fee isn't refunded if the aircraft changes. Worth knowing before it goes through."
+         }
+        ]
+       },
+       {
+        "id": "5.6.3",
+        "label": "Pick the payment gateway"
+       },
+       {
+        "id": "5.6.4",
+        "label": "Enter the card details",
+        "questions": [
+         {
+          "question": "What card is being charged for the seat, and what amount does the page show?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The payment page requires valid credit card details to process the ¥50.00 CNY charge for the selected seat.",
+          "whatTheAgentLoses": "The user loses the opportunity to decide which specific credit card is charged for the seat selection fee.",
+          "kind": "decision",
+          "verify_form": "The agent entered a card for the seat fee - check which card and the amount beside it; this is a real charge and it is separate from the fare you already paid.",
+          "speak": "always",
+          "check": "what card is being charged and what amount does the page show for the seat fee",
+          "say_example": "Charging <38 CNY> to the card on file for the seat. That's separate from the fare you already paid."
+         },
+         {
+          "question": "What currency does the page bill the seat fee in?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The seat selection fee is charged in Chinese Yuan (CNY), which could trigger additional foreign transaction fees depending on your credit card's home currency.",
+          "whatTheAgentLoses": "The user loses the chance to choose a card with no foreign transaction fees to avoid unexpected bank charges.",
+          "kind": "decision",
+          "verify_form": "The agent paid a seat fee in the airline's own currency - check which card it used; a card without foreign-transaction fees saves a few percent on a charge like this one.",
+          "speak": "on-event",
+          "check": "what currency does the page charge the seat fee in",
+          "say_example": "The seat fee is billed in <CNY>, so some cards add a foreign-transaction charge."
+         },
+         {
+          "question": "Do you successfully complete the payment process to get your boarding pass?",
+          "cluster": "receipts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The video ends on a payment form showing an 'Enter a valid card number' error, meaning the check-in was never actually completed.",
+          "whatTheAgentLoses": "The user is left without a boarding pass and an incomplete check-in due to an unresolved payment error.",
+          "kind": "state-check",
+          "speak": "on-event",
+          "check": "does the page show a payment error (e.g. 'enter a valid card number') after submission, or a payment confirmation",
+          "say_example": "The payment didn't go through. The page still shows <enter a valid card number>, and check-in isn't finished without it."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Settle the bags",
+    "note": "6.1 in the app videos, where the user answers a yes or no question. 6.2 where the airline sells the allowance. 6.3 only in i5Xh, the one video where the app stops the user from continuing. 6.4 wherever the gate fee is printed, which in i5Xh is after check-in is finished.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Say whether bags are checked",
+      "questions": [
+       {
+        "question": "Do you need to check any bags, and do you want to pay for more than the free allowance?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen offers a time-saving bag drop shortcut and requires you to declare whether you are checking bags.",
+        "whatTheAgentLoses": "You lose the opportunity to review the carry-on bag policy and learn how the bag drop shortcut works.",
+        "kind": "decision",
+        "verify_form": "The agent answered whether there are bags to check - check what it said; declaring no bags is right only if everything you are taking fits the cabin allowance, and paying at the airport costs more than paying here.",
+        "speak": "gate",
+        "check": "does the page ask whether you're checking any bags, and what paid cabin or checked-bag upgrades does it offer beside the free allowance",
+        "say_example": "The page is asking about bags. You get <one free small bag under the seat>, and a checked bag is <54 GBP>. Are you checking anything?"
+       },
+       {
+        "question": "Does the bag icon show a small personal item or a full carry-on?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Airlines often use a small purse or backpack icon to denote a 'personal item only' allowance, while the text might vaguely say '1 piece', which can easily be misinterpreted by an automated reader.",
+        "whatTheAgentLoses": "You lose the visual context that clarifies exactly what size bag you are allowed to bring, risking unexpected gate fees if you pack a roller bag.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "does the baggage-allowance icon show a small personal item (purse/backpack) or a full-sized carry-on bag",
+        "say_example": "That icon is a small personal item, not a full carry-on. The text just says '1 piece', which sounds bigger than it is."
+       },
+       {
+        "question": "Does the page show the checked bags you already paid for?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The check-in screen displays your current checked items (e.g., 'Current checked items 0'), requiring you to verify that any bags you prepaid for during booking are actually recognized by the system before you decide to buy more.",
+        "whatTheAgentLoses": "The user loses the chance to catch a system sync error where prepaid bags are forgotten, which could lead to the agent unnecessarily purchasing baggage a second time.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "what does the page show as the current checked-items count",
+        "say_example": "The page shows <0> checked items. If you already paid for a bag at booking, it isn't showing up here."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Choose the bag allowance",
+      "questions": [
+       {
+        "question": "How many extra bags do you want to add?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Additional Baggage' dropdown allows you to select the quantity of extra bags, such as '1 PC', to add to your booking before checking in.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact number of extra bags they need to purchase for their trip.",
+        "kind": "decision",
+        "verify_form": "The agent bought extra bags or none - check how many pieces are on the booking; each piece is priced separately and each way, and buying at the airport costs more.",
+        "speak": "if-wrong",
+        "check": "how many extra bags does the dropdown currently show as selected",
+        "say_example": "The dropdown's set to <1 PC> extra. Check that matches how many bags you actually want."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Authorise a card for bag fees",
+      "questions": [
+       {
+        "question": "Do you want your saved card authorised for bag fees at the gate?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to toggle an authorization for your saved Visa card to cover potential baggage fees of up to $65 at the gate before you can continue.",
+        "whatTheAgentLoses": "You lose the ability to decide which credit card is kept on file and authorized for unexpected baggage fees.",
+        "kind": "decision",
+        "verify_form": "The agent authorised a saved card for baggage fees - check which card it used and that the toggle is on; nothing is charged now, but a bag at the gate is billed to that card without asking again.",
+        "speak": "gate",
+        "check": "does the page require toggling on authorization for a saved card to cover baggage fees up to a stated amount",
+        "say_example": "This lets them charge your saved card up to <50 USD> in bag fees at the gate, without asking again. OK to turn it on?"
+       },
+       {
+        "question": "What does the page say is blocking the bags step?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The system blocks submission and displays an error because the mandatory 'Authorize this card' switch was left off, meaning you must explicitly toggle it to accept potential gate fees.",
+        "whatTheAgentLoses": "The user loses the ability to understand and fix the specific validation error blocking their check-in progress.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "does the page block submission with an error, and does it name the authorization toggle as the cause",
+        "say_example": "The page is stuck. It won't move on until the card-authorisation switch for bag fees is turned on."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Read the gate-fee warning",
+      "questions": [
+       {
+        "question": "What size does a carry-on have to be to count as free?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The speaker clarifies that carry-ons are only free if they fit under the cubby where you sit, meaning larger items will be charged.",
+        "whatTheAgentLoses": "You lose the awareness of the specific size constraint for free carry-ons, risking a surprise fee at the gate if your bag is too big.",
+        "kind": "intent-check",
+        "speak": "always",
+        "check": "what size requirement does the page state for a carry-on to count as free (e.g. must fit under the seat)",
+        "say_example": "A carry-on is only free if it fits under the seat in front of you. Anything bigger gets charged at the gate."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Turn down the offers",
+    "note": "the user reaches this goal when the airline puts an offer in front of them, so where it sits in the sequence varies. for example, it comes before the itinerary in i5Xh, between the terms and the documents in AX6A, and after the bags in AX6A again. the order of 7.1 to 7.5 depends on when each offer appears, and in every video the user declines all of them.",
+    "questions": [
+     {
+      "question": "Do you want any of the paid extras on offer, or should they all be skipped?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen offers optional purchases such as pre-ordered meals, travel insurance, and sports equipment before continuing the check-in process.",
+      "whatTheAgentLoses": "You lose the opportunity to customize your flight experience with specific extras you might want or need.",
+      "kind": "decision",
+      "verify_form": "The agent went through the add-on shelf - check what is ticked; meals, seats, insurance and sports equipment are all priced here, and anything ticked is charged before the pass is issued.",
+      "speak": "gate",
+      "check": "what optional paid extras does the page list (meals, insurance, sports equipment, car hire), and is the page presented as a required step in the flow",
+      "say_example": "There's meals, insurance and car hire on offer here, all extra. The page looks like a required step, but none of it is needed to check in. Want any of it?"
+     }
+    ],
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Decline the insurance",
+      "questions": [
+       {
+        "question": "Does the insurance offer limit who can buy it by where they live?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The travel insurance offer explicitly states it is for residents of the United Kingdom, so you must verify your eligibility before adding it to your booking.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure you actually qualify for the insurance policy, preventing you from paying for coverage that would be void.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "does the insurance offer state a residency requirement, such as UK residents only",
+        "say_example": "This insurance only covers residents of <the country it names>. Worth knowing before adding it."
+       },
+       {
+        "question": "Is the running total still zero after the seat, the bag and the insurance choices?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screens show a running total that should remain at 0.00 GBP if the free random seat allocation, small bag, and no insurance options were properly recorded.",
+        "whatTheAgentLoses": "The user loses the chance to personally ensure they aren't being charged unexpected fees for optional add-ons during check-in.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "what does the page show as the running total after the seat, bag, and insurance choices",
+        "say_example": "The running total shows <4.50 GBP>, not zero. Something here picked up a charge."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Skip the add-on shelf"
+     },
+     {
+      "id": "7.3",
+      "label": "Decline the cabin upgrade"
+     },
+     {
+      "id": "7.4",
+      "label": "Answer the flight-change offer",
+      "questions": [
+       {
+        "question": "Do you want to volunteer to change your flight in exchange for a travel voucher?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents alternative flights and asks if you want to submit a bid for a travel voucher to change your itinerary.",
+        "whatTheAgentLoses": "The user loses the opportunity to earn travel compensation or risks being moved to a less convenient flight without their consent.",
+        "kind": "decision",
+        "verify_form": "The agent answered an offer to move to a different flight for a travel voucher - check whether it bid or declined; a bid can put you on a flight the next morning, and the voucher is only worth it if the later arrival works.",
+        "speak": "gate",
+        "check": "what alternate flight and voucher does the page offer in exchange for volunteering to change",
+        "say_example": "They're offering a voucher if you take a later flight, <8:40 AM instead of 2:15 PM>. Want to bid for it, or stay on your flight?"
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Skip the car hire"
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Complete the check-in",
+    "note": "8.1 only where the fare was settled at booking and the airline shows the fare again. then 8.2, where the user presses one button and the pass is issued. 8.3 in every video where the user presses that button. 8.4 where the airline asks the user for something else at the end of check-in.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the payment summary",
+      "questions": [
+       {
+        "question": "Does the page show a receipt and transaction ID for what was paid?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The payment summary screen displays a Transaction ID and a 'Print Official Receipt' button for your PHP 6,552.80 payment.",
+        "whatTheAgentLoses": "The user loses the opportunity to retain a formal receipt and transaction ID for their records or expense reporting.",
+        "kind": "decision",
+        "verify_form": "The agent left the receipt for the prepaid fare unprinted or saved it - check whether you have a copy; the transaction reference is on this screen and is what an expense claim or a refund request needs later.",
+        "speak": "on-event",
+        "check": "does the page show a transaction ID and a 'print official receipt' option for the prepaid amount",
+        "say_example": "There's an official receipt here for the <4,980> payment, with a transaction ID. Worth saving for an expense claim."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Issue the boarding pass",
+      "questions": [
+       {
+        "question": "Ready to finish check-in and have the boarding pass issued?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen explicitly warns that 'By clicking the Check-in button, you will be checked in', making this the point of no return for finalizing the process.",
+        "whatTheAgentLoses": "You lose the final opportunity to pause and verify all your details before the check-in is officially recorded and boarding passes are issued.",
+        "kind": "decision",
+        "verify_form": "The agent pressed the button that completes check-in - check that the flight, the passenger and the seat were right first; after this the seat is taken and the pass is issued, and undoing it means calling the airline.",
+        "speak": "gate",
+        "check": "does the page warn that pressing check-in finalises it and issues the boarding pass, and what flight, passengers and seat does the summary beside it show",
+        "say_example": "Ready to check in. <Flight 402> on <Sep 15>, <two passengers>, seat <14A>, <one checked bag>. This press takes the seat and issues the pass. Undoing it means calling the airline. Press to check in, or say change."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Read the confirmation"
+     },
+     {
+      "id": "8.4",
+      "label": "Decline the loyalty signup",
+      "questions": [
+       {
+        "question": "Does the confirmation page offer a loyalty signup, or a way straight to the boarding pass?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The confirmation screen offers a choice to join the airline's loyalty program or bypass the offer to immediately view your boarding pass.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to enroll in the airline's rewards program to earn miles for your trip.",
+        "kind": "decision",
+        "verify_form": "The agent answered the loyalty-programme offer on the way to the pass - check whether it joined; joining creates an account in your name, and skipping it costs nothing you cannot get later.",
+        "speak": "never",
+        "check": "does the confirmation screen offer to join a loyalty program, or a way to skip straight to the boarding pass",
+        "say_example": "Said no to the loyalty signup, went straight to the boarding pass"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Get the boarding pass",
+    "note": "9.1 where the airline offers more than one delivery route, and 9.2 where a wallet is one of them. 9.3 when the booking holds more than one leg or more than one passenger. 9.4 and 9.5 in every video where the user gets a pass. 9.6 is PuZe's ending, a completed check-in with no pass at all. 9.7 last, where the airline prints what to do next.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Choose how to receive the pass",
+      "questions": [
+       {
+        "question": "How do you want to save the boarding pass?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen requires obtaining a copy of the boarding pass to board and provides a button to download them directly to the device.",
+        "whatTheAgentLoses": "The user loses control over exactly how and where their boarding passes are stored for easy access on their travel day.",
+        "kind": "decision",
+        "verify_form": "The agent saved the passes - check where they went: printed, in the phone's wallet, or left to be fetched later; the airline needs a pass in one of those forms before you can board.",
+        "speak": "always",
+        "check": "what options does the page offer for saving the boarding pass (download, wallet, print)",
+        "say_example": "Downloading both boarding passes to your phone now."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Save the pass to the wallet"
+     },
+     {
+      "id": "9.3",
+      "label": "Pick the pass for each leg",
+      "questions": [
+       {
+        "question": "Does a boarding pass exist for every leg of this booking?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays multiple boarding passes to choose from, alongside a critical warning about a $65 gate fee for oversized carry-on bags.",
+        "whatTheAgentLoses": "The user misses the strict Basic Economy baggage fee warnings and payment rules, risking an unexpected $65 charge at the gate.",
+        "kind": "decision",
+        "verify_form": "The agent chose which leg's pass to look at first - check that a pass exists for every leg; on a connection there is one per flight, and a missing one is only noticed at the gate.",
+        "speak": "if-wrong",
+        "check": "how many boarding passes does the page show, and how many flight legs does the booking have",
+        "say_example": "Only <1> pass is showing, but the booking has <2> legs. One flight is still missing its pass."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Check the pass details",
+      "questions": [
+       {
+        "question": "Does the boarding pass show the bags you added at check-in?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Confirming that the boarding pass explicitly states '1 small bag on board' ensures your earlier selection was saved and prevents surprise fees at the airport.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that your specific baggage needs were accurately recorded on the final document.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "does the boarding pass state the baggage allowance, e.g. '1 small bag on board'",
+        "say_example": "The pass says <no checked bag>, but you added <one> at check-in. That won't match at the gate."
+       },
+       {
+        "question": "Does the name on the boarding pass match the passenger you selected for check-in?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The passenger selected for check-in and the name printed on the resulting boarding pass are different people.",
+        "whatTheAgentLoses": "The user receives a boarding pass for the wrong person and will be unable to board their flight.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "what flight, date and passenger name does the issued boarding pass show, and do they match the flight and the passenger checked in",
+        "say_example": "The pass reads <J. Marlow>. You checked in <K. Marlow>. That's a different passenger."
+       },
+       {
+        "question": "Does the pass show a TSA PreCheck or other fast-track logo?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Expedited security status is usually confirmed by a specific logo on the boarding pass; if it is missing, you must go back and add your Known Traveler Number before arriving at the airport.",
+        "whatTheAgentLoses": "You lose the quick visual confirmation of your security status, which could result in waiting in the standard security line if a system glitch dropped your Known Traveler Number.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "does the boarding pass display a TSA PreCheck or other expedited-security logo",
+        "say_example": "There's no TSA PreCheck logo on this pass. If you're enrolled, you'd need to add your Known Traveler Number before you get to the airport."
+       }
+      ]
+     },
+     {
+      "id": "9.5",
+      "label": "Read the gate and boarding time",
+      "questions": [
+       {
+        "question": "Does the boarding time on the pass come before the departure time?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Checking that the 1:35 PM boarding time is exactly 40 minutes before the 2:15 PM departure confirms the boarding pass details match your original itinerary.",
+        "whatTheAgentLoses": "You lose the opportunity to catch a potential system error where the generated boarding pass displays incorrect flight times.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "what boarding time and what departure time does the pass show",
+        "say_example": "The pass shows boarding at <10:05 AM> for a departure of <9:45 AM>. Those two don't line up."
+       },
+       {
+        "question": "What gate-closing time does the boarding pass show?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Reviewing the final boarding pass details, such as the gate closing time and baggage allowance, ensures you have the correct information for your departure.",
+        "whatTheAgentLoses": "You lose the immediate awareness of critical travel details like your specific gate closing time and exact baggage allowance.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "what gate-closing time does the boarding pass show",
+        "say_example": "Gate closes at <12:20 PM>, separate from the boarding time"
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Collect the pass at the counter",
+      "questions": [
+       {
+        "question": "Does the page say the boarding pass has to be collected at the airport counter?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The confirmation screen states that while check-in was successful, you must visit the airport counter to actually get your boarding pass.",
+        "whatTheAgentLoses": "The user loses the immediate heads-up that they need to arrive at the airport early to visit the physical check-in counter.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "does the confirmation say the boarding pass must be collected at an airport counter instead of online",
+        "say_example": "Check-in went through, but the pass has to be collected at the airport counter. It won't appear online."
+       }
+      ]
+     },
+     {
+      "id": "9.7",
+      "label": "Read the pre-flight reminders",
+      "questions": [
+       {
+        "question": "Do the pre-flight reminders name anything you have to do before the flight?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays final instructions about baggage, security, and boarding procedures before closing the check-in flow.",
+        "whatTheAgentLoses": "You miss the opportunity to review the airline's specific day-of-travel instructions regarding baggage and boarding.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "what actions does the pre-flight reminders section list (e.g. arrival time, ID to bring)",
+        "say_example": "Logged the pre-flight reminders, which say <arrive two hours early> and <bring photo ID>"
+       },
+       {
+        "question": "Do the final details match the trip, and what does the page say about passport validity?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen displays your final trip summary alongside a crucial warning about passport validity for British citizens traveling to the EU.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify your flight times and read important travel warnings regarding your passport.",
+        "kind": "intent-check",
+        "speak": "always",
+        "check": "what flight details does the final summary show, and does the page warn about passport-validity requirements for the destination",
+        "say_example": "Final summary matches, <Flight 402> on <Sept 22>. The page also says this passport needs <six months' validity> for the destination."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

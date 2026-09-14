@@ -22,17 +22,9 @@
         "why": "The website displays a list of supported banks alongside a prompt to download the app, requiring you to determine the correct platform for your transaction.",
         "whatTheAgentLoses": "You lose the opportunity to decide whether to manage the payment securely within your familiar banking app or through a separate third-party application.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Should you use the standalone Zelle app instead of your bank's app?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the App Store page for the standalone Zelle app, which is required if your bank does not natively support the service.",
-        "whatTheAgentLoses": "You lose the ability to decide whether to route the transaction through a dedicated payment app or your primary banking application.",
-        "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen show a prompt to download a standalone Zelle app, or does it show Zelle already built into the bank's own app?",
+        "say_example": "Opened <bank>'s built-in Zelle instead of the separate app"
        },
        {
         "question": "Which payment app should you open to send the money?",
@@ -42,7 +34,9 @@
         "why": "The screen displays a folder containing multiple financial apps like Venmo, Cash App, and PayPal, requiring a choice of which platform to use.",
         "whatTheAgentLoses": "Delegating this choice means the agent might select a payment platform that your intended recipient does not use or where you lack sufficient funds.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen show a folder or list containing more than one payment app (for example Venmo, Cash App, PayPal)?",
+        "say_example": "Opened <app name> from the folder of payment apps"
        }
       ]
      },
@@ -51,24 +45,16 @@
       "label": "Verify the official app",
       "questions": [
        {
-        "question": "Are you opening the correct, official banking app to access Zelle?",
+        "question": "Is this actually your bank's own app, not a lookalike?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking the App Store page for the official developer name and the 'OPEN' button confirms you are using the legitimate, already-installed banking app to securely access Zelle.",
         "whatTheAgentLoses": "You lose the ability to personally verify that the app being opened is your legitimate, trusted banking application rather than a fraudulent lookalike.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Is this the official Zelle app, and should you review its details before opening it?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows the app store listing for Zelle, making it important to verify the app's legitimacy and recent updates before proceeding.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally verify the app's authenticity and read recent update notes before trusting it with their money.",
-        "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the App Store listing's developer name match the known official developer for this bank or for Zelle, and does the button say OPEN rather than GET?",
+        "say_example": "The listing says it's from <unexpected developer>, not <the bank/Zelle's real developer>. This might not be the real app."
        }
       ]
      },
@@ -100,7 +86,9 @@
           "why": "The settings screen confirms that two-factor authentication is on, which is a strict requirement to set up Apple Pay Cash.",
           "whatTheAgentLoses": "Letting an agent handle this means you lose direct oversight of your device's core security and authentication settings.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "if-wrong",
+          "check": "Does the settings screen show two-factor authentication as turned on?",
+          "say_example": "Two-factor authentication is off, and Apple Pay Cash needs it on before setup can continue"
          }
         ]
        },
@@ -116,7 +104,9 @@
           "why": "The screen presents a choice between signing in with a pre-filled mobile number and signing up, which dictates how you will link your bank account.",
           "whatTheAgentLoses": "You lose control over whether to use an existing profile or create a new one to properly link your specific bank.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen show a pre-filled mobile number with a sign-in option, alongside a separate Sign up option?",
+          "say_example": "Signed in with the pre-filled number instead of starting a new sign-up"
          },
          {
           "question": "Do you want to log in to an existing account or sign up for a new one?",
@@ -126,17 +116,21 @@
           "why": "The Venmo launch screen requires choosing between 'Log in' and 'Sign up' to access the app and begin the payment process.",
           "whatTheAgentLoses": "The user loses the choice of whether to access their established account or create a new profile for this transaction.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the launch screen show both a Log in option and a Sign up option?",
+          "say_example": "Chose Log in over Sign up on the launch screen"
          },
          {
-          "question": "How do you want to authenticate to log in?",
+          "question": "How do you want to log in?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen presents a login form requiring an email and password, which can be filled manually or via device-level biometric authentication.",
           "whatTheAgentLoses": "The user must hand over their actual password to the agent instead of securely authenticating locally with their own biometrics.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the login screen show an email-and-password form with a biometric option (Face ID or Touch ID) alongside it?",
+          "say_example": "Logged in with <email/password or biometrics>"
          }
         ]
        },
@@ -152,7 +146,9 @@
           "why": "The app requires choosing between a personal, teen, or business account before proceeding.",
           "whatTheAgentLoses": "You lose the ability to specify whether the account should be set up for business or teen use instead of the default personal option.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen require choosing between a personal, teen, or business account before continuing?",
+          "say_example": "Created a personal account rather than teen or business"
          },
          {
           "question": "Should you set up Zelle for your small business account within the banking app?",
@@ -162,7 +158,9 @@
           "why": "The screen offers an option to set up Zelle for small business accounts directly within the banking interface.",
           "whatTheAgentLoses": "Delegating this choice means losing the opportunity to decide whether to link your small business account to Zelle through your bank.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen offer to set up Zelle for a small-business account from inside the banking app?",
+          "say_example": "Set up Zelle on the personal account, not the small-business option offered"
          }
         ]
        },
@@ -171,7 +169,7 @@
         "label": "Verify the phone number",
         "questions": [
          {
-          "question": "Are you ready to verify your phone number via SMS?",
+          "question": "Are you ready to verify your phone number by text message?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": false,
@@ -179,28 +177,21 @@
           "whatTheAgentLoses": "The user loses control over exactly when the verification text is triggered and sent to their personal device.",
           "kind": "decision",
           "verify_form": "Setup fired an SMS verification - check which number it went to; the agent accepted the message-rates consent on your behalf.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen show a prompt to send a verification code by SMS to authorize the account?",
+          "say_example": "Sent an SMS verification code to set up the account"
          },
          {
-          "question": "Are you willing to provide your phone number to receive a verification code?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen requires a phone number to send a verification code, which also acts as consent to receive texts and accept potential carrier fees.",
-          "whatTheAgentLoses": "The user loses the ability to decide whether they are comfortable sharing their personal phone number and agreeing to the app's SMS terms.",
-          "kind": "decision",
-          "verify_form": "Sign-up wanted a phone number for a code - check which number the agent submitted and that you were fine with the texting consent attached to it.",
-          "speak": "never"
-         },
-         {
-          "question": "What phone number do you want to associate with this account?",
+          "question": "What phone number do you want to use for this account?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen requires a mobile number to proceed and warns that message and data rates may apply to automated texts.",
           "whatTheAgentLoses": "The user loses the ability to keep their personal phone number private or choose an alternative number for account verification.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen require entering a mobile number, with a notice that message and data rates may apply?",
+          "say_example": "Entered <a phone number> for account verification"
          }
         ]
        },
@@ -209,7 +200,7 @@
         "label": "Accept the terms and permissions",
         "questions": [
          {
-          "question": "Should you grant the app permission to make and manage phone calls?",
+          "question": "Should you let the app make and manage phone calls?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": false,
@@ -217,10 +208,12 @@
           "whatTheAgentLoses": "You lose the ability to decide whether to grant or deny this potentially invasive system permission.",
           "kind": "decision",
           "verify_form": "A system prompt asked for phone-call access - check whether the agent tapped Allow; that grant outlives this payment and is yours to give.",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the system permission prompt ask for access to make and manage phone calls?",
+          "say_example": "The app is asking to manage your phone calls. That's more than a payment app usually needs. Allow it?"
          },
          {
-          "question": "Do you want to enable automatic updates and notifications?",
+          "question": "Do you want to turn on notifications for payments and requests?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": false,
@@ -228,21 +221,12 @@
           "whatTheAgentLoses": "You lose the ability to decide whether the app can interrupt you with promotional and transactional notifications.",
           "kind": "decision",
           "verify_form": "The app asked to send notifications - check whether the agent tapped Allow or Not now; ongoing payment alerts on your phone are your call.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen ask for permission to send notifications about payments, requests, and new features?",
+          "say_example": "Allowed notifications for payments and requests"
          },
          {
-          "question": "Do you want to allow Zelle to send you notifications?",
-          "cluster": "approve",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The app is requesting system permission to send alerts, sounds, and icon badges to your device.",
-          "whatTheAgentLoses": "You lose the ability to control whether this app can interrupt you with alerts on your personal device.",
-          "kind": "decision",
-          "verify_form": "The install asked to allow notifications - check what the agent answered; alerts about money on your lock screen are your preference.",
-          "speak": "never"
-         },
-         {
-          "question": "Do you agree to the app's privacy and security terms regarding data collection and device scanning?",
+          "question": "Do you agree to let the app collect your data and scan your device?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": false,
@@ -250,7 +234,9 @@
           "whatTheAgentLoses": "Delegating this step deprives you of the opportunity to evaluate and consent to how your personal data and device information will be used.",
           "kind": "decision",
           "verify_form": "The agent accepted the privacy terms - the ones covering location and device-data collection; the app won't run without them, but you should know the box got ticked for you.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen require agreeing to terms covering location and device-data collection before the app will continue?",
+          "say_example": "Accepted the data-collection terms, required to continue"
          }
         ]
        },
@@ -266,7 +252,9 @@
           "why": "Tapping the profile icon in the top right corner opens the account screen where your personal cashtag is displayed.",
           "whatTheAgentLoses": "Delegating this means you lose the opportunity to visually verify your own profile details and exact account handle.",
           "kind": "state-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Does the profile screen show a cashtag, and does it match the account you're operating from?",
+          "say_example": "The cashtag shown here is <@handle>. Is that the one you meant to be sending from?"
          }
         ]
        },
@@ -275,14 +263,16 @@
         "label": "Turn on the cash feature",
         "questions": [
          {
-          "question": "How do you initiate the creation of the digital cash card?",
+          "question": "Do you want to set up the digital cash card?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen prompts you to set up Apple Pay Cash to send and receive money, requiring you to tap to continue and authorize the setup.",
           "whatTheAgentLoses": "You lose the opportunity to decide whether you actually want to activate and link this new digital financial feature to your account.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen prompt you to set up Apple Pay Cash before you can send or receive money?",
+          "say_example": "Started the digital cash card setup"
          },
          {
           "question": "Do you want to turn on Apple Cash?",
@@ -293,7 +283,9 @@
           "whatTheAgentLoses": "You lose control over whether a new financial service is activated and linked to your personal Apple account.",
           "kind": "decision",
           "verify_form": "Apple Cash was off - check whether the agent flipped it on; enabling the payment feature accepts its terms, a step you may have wanted to see.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the Wallet settings screen show an Apple Cash toggle currently off?",
+          "say_example": "Turned Apple Cash on"
          }
         ]
        }
@@ -316,17 +308,21 @@
           "why": "The screen asks 'Where do you bank?' and requires you to select your specific institution from the search results to authorize the connection.",
           "whatTheAgentLoses": "You lose the ability to decide which of your financial institutions is linked to the payment app.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen ask which bank you use, with a list of institutions to search?",
+          "say_example": "Searched for <bank name> to link"
          },
          {
-          "question": "Is your bank supported and is your app updated to the required version?",
+          "question": "Is your bank on the supported list, and is your app up to date?",
           "cluster": "facts",
           "moment": "Now",
           "moneyMoving": false,
           "why": "This matters because you can only link an account if your bank is on the provided list and your app meets the minimum version requirements shown on screen.",
           "whatTheAgentLoses": "The user loses the opportunity to verify that their specific bank is supported and that their personal device meets the technical requirements for the payment feature.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the bank-search screen show your bank in the supported list, and does it state a minimum app version requirement?",
+          "say_example": "<Bank> isn't on the supported list here, or the app needs an update first"
          }
         ]
        },
@@ -343,7 +339,9 @@
           "whatTheAgentLoses": "The user loses the awareness that their transaction is being redirected to a different application than the one they initially opened.",
           "kind": "decision",
           "verify_form": "The network offered a redirect into the bank's own app - check whether the agent switched or stayed standalone; where your transfers live afterward follows from that pick.",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the screen say this bank already has Zelle built in and offer to redirect you to the banking app?",
+          "say_example": "This offers to switch you into <bank>'s own app to use Zelle instead of staying here. Switch, or stay?"
          }
         ]
        },
@@ -359,7 +357,9 @@
           "why": "The screen displays a 'Don't see your bank?' button when a search yields no matches, providing a manual workaround to continue the setup.",
           "whatTheAgentLoses": "You lose the opportunity to decide whether to proceed with a manual bank setup or switch to a different payment app entirely.",
           "kind": "state-check",
-          "speak": "on-event"
+          "speak": "on-event",
+          "check": "Does the screen show a \"Don't see your bank?\" option after a bank search returns no match?",
+          "say_example": "<Bank> isn't in the list. There's a manual option to link a debit card instead."
          },
          {
           "question": "Which debit card do you want to link to use Zelle?",
@@ -369,7 +369,9 @@
           "why": "The screen requires you to enter a debit card number, expiration date, and security code because your bank is not directly supported by the Zelle network.",
           "whatTheAgentLoses": "The user loses the ability to decide which specific bank account and debit card will be linked to the payment app.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen ask for a debit card number, expiration date, and security code to link because the bank isn't directly supported?",
+          "say_example": "Entered the debit card ending <last 4> to link"
          },
          {
           "question": "Which email address should you enter to receive the authorization code?",
@@ -379,7 +381,9 @@
           "why": "The screen requires an email address to send an authorization code, which is necessary to activate the CONTINUE button and proceed with the account setup.",
           "whatTheAgentLoses": "The user loses control over which email is linked to the account and where the sensitive authorization code is sent.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen require an email address to receive an authorization code before the Continue button activates?",
+          "say_example": "Entered <an email> to receive the authorization code"
          }
         ]
        },
@@ -395,10 +399,12 @@
           "why": "The screen confirms that the payment setup is complete and requires you to tap 'DONE' to proceed to a chat.",
           "whatTheAgentLoses": "The user misses the explicit confirmation that their payment account was successfully linked and is ready for use.",
           "kind": "state-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Does the screen confirm the bank link is complete before any send screen is reached?",
+          "say_example": "This moved on to <the next step> without the bank-link confirmation screen showing"
          },
          {
-          "question": "Now that your bank account is successfully linked, should you tap to send your first payment or go back to the main menu?",
+          "question": "Your bank account is linked. Do you want to send your first payment now, or go back to the main menu?",
           "cluster": "select",
           "moment": "Now",
           "moneyMoving": false,
@@ -406,17 +412,21 @@
           "whatTheAgentLoses": "You lose the opportunity to personally verify the newly added primary account details and decide whether to add backup accounts before initiating a transfer.",
           "kind": "decision",
           "verify_form": "Setup ended on a send-your-first-payment shortcut - check which way the agent went; if it jumped straight into a payment you hadn't specified, that was its idea.",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the screen offer a shortcut to send your first payment right after the bank link completes, alongside a way back to the main menu?",
+          "say_example": "Right after linking, it offered a shortcut to send a payment. I'm going to the main menu instead, unless you had one in mind."
          },
          {
-          "question": "What is the 3-digit CVV for your Bank of America debit card on file?",
+          "question": "What is the 3-digit CVV for the debit card on file?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
           "why": "The screen prompts for the 3-digit security code to verify the Bank of America Visa debit card on file before it can be used.",
           "whatTheAgentLoses": "You lose the security of keeping your physical card's verification code private from a third party.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen ask for the 3-digit security code on the debit card on file?",
+          "say_example": "Entered the security code for the card on file"
          },
          {
           "question": "Which bank account's routing and account numbers will you enter?",
@@ -426,7 +436,9 @@
           "why": "The screen requires a 9-digit routing number and an account number to successfully link a new bank account.",
           "whatTheAgentLoses": "You lose the ability to decide which specific bank account is linked to the app and used to fund the payment.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen require a 9-digit routing number and an account number to link a new bank account?",
+          "say_example": "Entered the routing and account numbers for <bank>"
          },
          {
           "question": "Which type of payment method do you want to add?",
@@ -437,7 +449,9 @@
           "whatTheAgentLoses": "You lose the opportunity to decide whether the convenience of using a credit card is worth the extra 3% fee compared to the free options.",
           "kind": "decision",
           "verify_form": "Check what kind of instrument the agent added - bank, debit, or credit; they carry different fees on every future send.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen offer more than one type of funding method to add, such as bank account, debit card, or credit card?",
+          "say_example": "Added a <bank account/debit card/credit card> as a funding method"
          },
          {
           "question": "Do you want to link a new credit card to this account?",
@@ -448,7 +462,9 @@
           "whatTheAgentLoses": "The user loses the ability to decide whether to link a new line of credit to the payment app.",
           "kind": "decision",
           "verify_form": "Check whether the agent linked a credit card - a new instrument on your account, with a fee on every send it funds; that enrollment outlives today.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen show a \"Link Credit Card\" option in addition to the bank accounts already linked?",
+          "say_example": "Linked a new credit card to the account"
          }
         ]
        },
@@ -465,7 +481,9 @@
           "whatTheAgentLoses": "You lose the ability to securely choose and verify which of your personal financial accounts is linked and charged.",
           "kind": "decision",
           "verify_form": "The agent went ahead without touching Banks & Cards - check which funding source was already on file; if you wanted this send to come from a different bank or card, that choice was made for you.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the settings menu offer \"Banks & Cards\" and \"Backup Payment\" options before you reach the send screen?",
+          "say_example": "Went straight to send without opening Banks & Cards"
          },
          {
           "question": "Do you want to remove all Apple Pay cards from this device?",
@@ -476,7 +494,9 @@
           "whatTheAgentLoses": "The user loses the ability to manage their own device security and decide whether their payment methods should remain active or be wiped.",
           "kind": "decision",
           "verify_form": "Check whether the agent touched Remove All Cards - unlinking every card on the device is a choice only you can make, and it breaks future payments if it fired.",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the device-info screen show a \"Remove All Cards\" option that would unlink every card from this device?",
+          "say_example": "There's an option here to remove every card from this device, not just one. That would stop future payments from this phone. Leave it alone unless you meant it."
          },
          {
           "question": "Which card do you want to set as your default for Apple Pay transactions?",
@@ -487,7 +507,9 @@
           "whatTheAgentLoses": "A person delegating to an agent loses the ability to manage their personal cash flow and avoid potential credit card fees by choosing the funding source themselves.",
           "kind": "decision",
           "verify_form": "Check what the default card became - every future tap-to-pay uses it; the agent changing it outlives this task.",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the screen list more than one funding source (for example a debit card, credit card, and Apple Pay Cash) with one marked as default?",
+          "say_example": "This sets <card> as the default for every future Apple Pay charge, not just this one"
          }
         ]
        },
@@ -504,7 +526,9 @@
           "whatTheAgentLoses": "Delegating this step means you lose the ability to choose exactly which personal contact methods are linked to your bank account for receiving funds.",
           "kind": "decision",
           "verify_form": "Enrollment ties an email or number to the receiving account - check what the agent enrolled where; money sent to an unenrolled handle of yours just waits.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen list your mobile numbers and email addresses with their current Zelle-enrollment status?",
+          "say_example": "Enrolled <a phone number/email> with Zelle"
          },
          {
           "question": "Which of your emails and phone numbers are currently enrolled in Zelle?",
@@ -514,7 +538,9 @@
           "why": "This matters because the screen shows exactly which of your contact methods are linked to your savings account and which are not yet enrolled.",
           "whatTheAgentLoses": "Delegating this means you lose the ability to personally verify and control which of your contact methods are tied to your bank account for Zelle transfers.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen show which of your emails and phone numbers are currently enrolled in Zelle?",
+          "say_example": "Your phone number is already enrolled with Zelle. Your email isn't yet."
          }
         ]
        },
@@ -531,7 +557,9 @@
           "whatTheAgentLoses": "You lose the opportunity to decide whether to share highly sensitive personal information, such as your Social Security Number, with the platform.",
           "kind": "decision",
           "verify_form": "The identity form wants name, address, SSN, and birth date - check whether the agent entered or submitted any of it; handing those over is yours to approve.",
-          "speak": "never"
+          "speak": "gate",
+          "check": "Does the screen ask for personal identifying information such as name, address, Social Security number, or date of birth to verify your identity?",
+          "say_example": "This account setup wants your name, address, and Social Security number to verify who you are. OK to enter that?"
          }
         ]
        }
@@ -547,16 +575,6 @@
         "label": "Check the available balance",
         "questions": [
          {
-          "question": "What is your current Venmo balance before initiating the payment?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The side navigation menu displays a balance of $0.00, indicating that a linked bank account or card will be needed to fund the transfer.",
-          "whatTheAgentLoses": "Delegating this step means you lose the ability to check your available app balance and make an informed choice about your funding source.",
-          "kind": "state-check",
-          "speak": "never"
-         },
-         {
           "question": "Do you have enough in your cash balance to cover the payment?",
           "cluster": "facts",
           "moment": "Now",
@@ -564,27 +582,9 @@
           "why": "Checking the displayed cash balance of $29.24 ensures you have sufficient funds before initiating a transfer.",
           "whatTheAgentLoses": "You lose the immediate awareness of your available funds and other financial options presented on the dashboard.",
           "kind": "state-check",
-          "speak": "never"
-         },
-         {
-          "question": "Are you on the correct account dashboard with sufficient funds to start the Zelle transfer?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Checking the available balance of $685.52 and locating the 'Send Money with Zelle' button ensures you are using the correct, funded account for the payment.",
-          "whatTheAgentLoses": "You lose the opportunity to verify your current balance and ensure the transfer is being initiated from your preferred account.",
-          "kind": "state-check",
-          "speak": "never"
-         },
-         {
-          "question": "What is your available balance, and where do you tap to start sending money?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Checking the $0.00 balance indicates whether a linked bank or card is needed to cover the transaction, and finding the 'Send' button is required to begin the process.",
-          "whatTheAgentLoses": "You lose the immediate awareness of your current balance, which dictates how the upcoming payment must be funded.",
-          "kind": "state-check",
-          "speak": "never"
+          "speak": "if-wrong",
+          "check": "Does the displayed cash balance cover the amount about to be sent?",
+          "say_example": "The balance here is <$14>, which isn't enough to cover <$60>"
          }
         ]
        },
@@ -600,7 +600,9 @@
           "why": "The screen shows a $0 balance and an \"Add money\" option, meaning you must decide if you need to deposit funds to cover the upcoming transfer.",
           "whatTheAgentLoses": "Delegating this step removes your control over choosing exactly when and how to replenish your account balance from your external funding sources.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the screen show a $0 balance with an \"Add money\" option?",
+          "say_example": "Balance is $0, so money needs to be added before this can be sent"
          },
          {
           "question": "How do you want to add money to your balance?",
@@ -611,37 +613,33 @@
           "whatTheAgentLoses": "You lose control over selecting the specific financial source or method used to top up your account.",
           "kind": "decision",
           "verify_form": "The balance needed topping up - check which method and amount the agent used to add money; pulling from your bank without you naming the figure is a spend it made for you.",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the screen list more than one way to add money (bank account, debit card, cashing a check)?",
+          "say_example": "This pulls <$35> from your bank to top up the balance before sending. OK to do that?"
          },
          {
-          "question": "How do you add money to your account balance?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen displays a $0 balance, meaning you must navigate through the Info tab to find the Add Money option before you can fund a payment.",
-          "whatTheAgentLoses": "You lose the opportunity to verify your current balance and manually control how much money is transferred into the app.",
-          "kind": "state-check",
-          "speak": "never"
-         },
-         {
-          "question": "Are the details correct before you double-click to add funds to your Apple Pay Cash balance?",
+          "question": "Is the amount and card right before you double-click to add funds?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": true,
           "why": "Double-clicking the side button will immediately charge your BofA debit card to add $10 to your Apple Pay Cash balance.",
           "whatTheAgentLoses": "You lose the final opportunity to verify the funding source and amount before the transaction is authenticated and processed.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "if-wrong",
+          "check": "Does the double-click screen show the amount and card that will be charged to add funds to the Apple Pay Cash balance?",
+          "say_example": "This double-click charges <your debit card> <$20> to add to the balance. Is that right?"
          },
          {
-          "question": "Does your updated balance correctly reflect the funds you just added?",
+          "question": "Does your updated balance match what you just added?",
           "cluster": "receipts",
           "moment": "Completion",
           "moneyMoving": true,
           "why": "Checking the math ensures the app correctly processed the $10 addition to your initial $0.00 balance.",
           "whatTheAgentLoses": "You lose the ability to personally verify that your account balance updated correctly after moving funds.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "if-wrong",
+          "check": "Does the updated balance equal the starting balance plus the amount just added?",
+          "say_example": "Added <$10>, but the balance only went up by <$6>."
          }
         ]
        }
@@ -666,7 +664,9 @@
         "why": "Selecting the 'Payment' option from the attachment menu is required to launch the built-in money transfer feature instead of sending a file or photo.",
         "whatTheAgentLoses": "You lose the opportunity to choose whether to use this chat interface's integrated payment system or a separate, dedicated financial app.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the attachment menu list a Payment option alongside file and photo options?",
+        "say_example": "Chose Payment from the attachment menu"
        },
        {
         "question": "Which menu option do you select to send money with Zelle?",
@@ -676,7 +676,9 @@
         "why": "The menu lists multiple transfer and payment options like bill pay and wire transfers, so you must specifically identify 'QuickPay with Zelle®' to initiate a peer-to-peer payment.",
         "whatTheAgentLoses": "Delegating this step prevents you from learning how your banking app's menu is organized to access the peer-to-peer payment feature.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the menu list QuickPay with Zelle among other options like bill pay and wire transfers?",
+        "say_example": "Chose QuickPay with Zelle from the transfer menu"
        }
       ]
      },
@@ -692,7 +694,9 @@
         "why": "The expanded QuickPay menu offers distinct paths like 'Send money' and 'Request & split money' that dictate the rest of the transaction workflow.",
         "whatTheAgentLoses": "Delegating this step means you miss the chance to discover other available features like viewing past activity or managing your recipient list.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the highlighted or selected option say \"Send money\" rather than \"Request & split money\"?",
+        "say_example": "This selected Request instead of Send. I'm switching it to Send."
        }
       ]
      },
@@ -701,14 +705,16 @@
       "label": "Choose the transfer type",
       "questions": [
        {
-        "question": "What type of transfer are you initiating?",
+        "question": "Which kind of transfer are you starting?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen offers multiple transfer options like bank, card, crypto, or international, which determines the routing process and required recipient details.",
         "whatTheAgentLoses": "You lose the opportunity to choose the specific transfer method that best fits your recipient's location and preferred receiving account.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen list transfer types such as bank, card, crypto, and international?",
+        "say_example": "Chose <transfer type> from the list"
        }
       ]
      },
@@ -724,7 +730,9 @@
         "why": "The screen requires selecting a destination country from the available list to ensure the money is routed to the correct international jurisdiction.",
         "whatTheAgentLoses": "Delegating this step means the agent might select the wrong destination country, causing the funds to be sent to an unintended location.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen list countries to select as the destination for the transfer?",
+        "say_example": "Chose <country> as the destination"
        }
       ]
      },
@@ -733,14 +741,16 @@
       "label": "Add a sending currency",
       "questions": [
        {
-        "question": "Are your currency balances correct, and where do you go to send money?",
+        "question": "Is there no obvious way to send money because all your currency balances are empty?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a list of zero-balance currencies and exchange rates but lacks an obvious send button, meaning you must verify your setup and find the right menu.",
         "whatTheAgentLoses": "You lose the chance to verify the exchange rates and confirm that your preferred currency is set as primary before navigating away.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen show currency balances and an exchange rate, without an obvious send button?",
+        "say_example": "All the currency balances here read zero, and there's no obvious send button."
        },
        {
         "question": "Which currency do you want to add to your account balance?",
@@ -750,7 +760,9 @@
         "why": "The screen asks you to select a currency to add to your balance, which determines how future payments received in that currency are credited.",
         "whatTheAgentLoses": "You lose the ability to choose which specific foreign currencies you want to hold in your account.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen ask you to select a currency to add to your balance?",
+        "say_example": "Added <currency> to the balance"
        }
       ]
      }
@@ -769,7 +781,9 @@
       "why": "The \"Manage your recipients\" screen requires you to either search through your existing contacts or use the \"+ Add\" button to send money to someone new.",
       "whatTheAgentLoses": "You lose the opportunity to review your existing contacts and decide whether to use a previously verified recipient or add a new one.",
       "kind": "state-check",
-      "speak": "never"
+      "speak": "never",
+      "check": "Does the \"Manage your recipients\" screen offer both a search over existing contacts and a \"+ Add\" option for someone new?",
+      "say_example": "Chose to <search existing contacts/add a new recipient>"
      }
     ],
     "children": [
@@ -785,7 +799,9 @@
         "why": "Tapping the 'Pay' button on the amount screen is required to open the recipient selection screen and view your contacts.",
         "whatTheAgentLoses": "You lose the ability to manually initiate the recipient selection process and control when your personal contacts are displayed.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the recipient screen show the same amount that was entered on the previous screen?",
+        "say_example": "The amount carried over shows <$40>, not the <$25> that was entered"
        },
        {
         "question": "Do you want to search for the recipient by name or scan their QR code?",
@@ -796,7 +812,9 @@
         "whatTheAgentLoses": "You lose the ability to decide the most convenient way to locate the recipient based on whether they are physically present to share a QR code.",
         "kind": "decision",
         "verify_form": "The agent chose between typing a search and scanning a code - check which route it took; a QR scan needs the person present, a typed search can land on a lookalike.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen offer both a search bar for a name or number and a QR-code icon to scan a profile?",
+        "say_example": "Searched by name instead of scanning a code"
        },
        {
         "question": "How do you want to search for or select the recipient?",
@@ -807,7 +825,9 @@
         "whatTheAgentLoses": "The user loses the ability to choose the most reliable identifier for their specific situation, such as using a phone number to ensure they find the correct new contact.",
         "kind": "decision",
         "verify_form": "Check how the agent went looking for your recipient - typed search, the suggested list, or a code; the suggested list is ranked by the app's history, not your intent, and one tap there pays the wrong person.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen show a list of suggested or top contacts alongside the search bar?",
+        "say_example": "That suggested list is ranked by your app history, not by who you meant. Search by name or handle instead of tapping the top suggestion."
        },
        {
         "question": "How do you want to identify the recipient?",
@@ -818,7 +838,9 @@
         "whatTheAgentLoses": "The user loses the security of personally inputting and verifying the exact contact details of the person they intend to pay.",
         "kind": "decision",
         "verify_form": "Check which identifier the agent used to find them - name, cashtag, phone, or email; names collide, so a typed name plus the top hit deserves your eyes.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen offer more than one way to identify the recipient (name, cashtag, phone, or email)?",
+        "say_example": "Searched by <name/cashtag/phone/email>"
        }
       ]
      },
@@ -827,14 +849,16 @@
       "label": "Enter the search identifier",
       "questions": [
        {
-        "question": "Which cashtag should you copy from the replies to fulfill the giveaway?",
+        "question": "Which cashtag from the public replies actually belongs to the person you mean to pay?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Identifying the correct cashtag from the tweet replies ensures you send the giveaway money to the rightful winner.",
         "whatTheAgentLoses": "You lose the ability to personally verify which follower replied first to rightfully win the giveaway.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the reply thread show a cashtag posted under the name or handle of the account you mean to identify?",
+        "say_example": "Several replies here claim to be the winner. This one is under <@handle>. Giveaway replies like this get faked often. Are you sure this is really them?"
        }
       ]
      },
@@ -843,14 +867,16 @@
       "label": "Pick from the results",
       "questions": [
        {
-        "question": "Who are you selecting as the recipient from the Top People list or entering in the To field?",
+        "question": "Does the name you picked or typed match who you actually mean to pay?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows the 'Add Recipients' view with a 'To:' field and a 'Top People' list, requiring you to accurately identify the correct person to pay.",
         "whatTheAgentLoses": "Delegating this step means the agent might select the wrong contact or mistype a username, potentially sending your money to a stranger.",
         "kind": "intent-check",
-        "speak": "gate"
+        "speak": "if-wrong",
+        "check": "Does the name populated in the To field, or the entry selected from the list, match the recipient named for this payment?",
+        "say_example": "The To field shows <a different name> than who this payment is meant for"
        },
        {
         "question": "Which conversation do you open?",
@@ -860,7 +886,9 @@
         "why": "Selecting the correct message thread ensures you find the right payment request or contact information for the intended recipient.",
         "whatTheAgentLoses": "Delegating this step means exposing your private message history and personal contacts to the agent.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the chats list show more than one thread, requiring a choice of which to open?",
+        "say_example": "Opened the conversation with <name>"
        },
        {
         "question": "Is this the correct person for the cashtag you pasted?",
@@ -870,7 +898,9 @@
         "why": "Verifying the suggested name and cashtag ensures the money goes to the intended recipient rather than a stranger with a similar handle.",
         "whatTheAgentLoses": "You lose the ability to personally verify that the suggested profile name and picture match the specific person you intend to pay.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the suggested name and cashtag shown match the cashtag that was pasted in?",
+        "say_example": "The pasted cashtag <@handle> shows up under <name>, which doesn't look like who you meant"
        }
       ]
      },
@@ -879,34 +909,28 @@
       "label": "Verify the recipient's identity",
       "questions": [
        {
-        "question": "How do you verify you are selecting the correct recipient?",
+        "question": "Does the recipient's profile photo and username shown match the person you intend to pay?",
         "cluster": "photos",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Because the search bar and suggested list can surface multiple people with similar names, verifying the exact username or profile picture prevents sending money to a stranger.",
         "whatTheAgentLoses": "The user loses the personal context needed to visually recognize the recipient's profile picture and confirm it is the right person.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the recipient's profile photo and username shown on screen match the person you intend to pay?",
+        "say_example": "The photo and handle shown are <description/@handle>. Does that match who you meant?"
        },
        {
-        "question": "Is the correct recipient selected in the 'To' field?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Verifying the populated name next to the 'To' button ensures you are directing the payment to the intended person before proceeding.",
-        "whatTheAgentLoses": "You lose the peace of mind of personally confirming that the selected contact is exactly who you intend to pay.",
-        "kind": "intent-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Is this the correct person, and are they an active user on this app?",
+        "question": "Are they an active, established user on this app, not a brand-new or empty account?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking the profile details like 'Joined June 2022' and 'In your contacts' confirms you are sending money to the intended, active user rather than a stranger.",
         "whatTheAgentLoses": "You lose the opportunity to personally verify the recipient's profile details and app history to ensure you are paying the right person.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the profile show account-age or activity signals, such as a join date or an \"In your contacts\" label?",
+        "say_example": "This account joined <a few weeks ago> and shares no contacts with you. Worth a second look before paying."
        },
        {
         "question": "Is this contact actually registered on the payment app?",
@@ -916,7 +940,9 @@
         "why": "The profile explicitly states 'Hasn't joined Cash App', meaning an immediate transfer to their account isn't possible.",
         "whatTheAgentLoses": "You lose the opportunity to realize the recipient isn't on the platform and decide whether to invite them or use a different payment method.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the profile explicitly say the contact hasn't joined this payment app?",
+        "say_example": "<Name> hasn't joined this app yet, so this can't go through as an instant transfer"
        },
        {
         "question": "Is there a visual verified badge next to the recipient's name?",
@@ -926,27 +952,21 @@
         "why": "Payment apps use visual badges (like a blue checkmark) to confirm official business or public figure accounts, which helps prevent sending money to impersonators with identical display names.",
         "whatTheAgentLoses": "The user loses the quick visual confirmation of the recipient's verified status, which is a crucial security check that might not be explicitly read out by an agent.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the recipient's name show a verified badge (checkmark) next to it?",
+        "say_example": "There's no verified badge next to this name, even though it looks like a business or public account"
        },
        {
-        "question": "Does the app display an alert that this recipient is restricted or currently unable to receive payments?",
+        "question": "Does the app warn that this recipient can't receive money right now?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "A recipient's account might be frozen, unverified, or have hit a receiving limit, which the app will flag when you attempt to select them.",
         "whatTheAgentLoses": "The user loses the chance to realize the intended recipient cannot accept the money, preventing them from seeking an alternative payment method before proceeding.",
         "kind": "state-check",
-        "speak": "on-event"
-       },
-       {
-        "question": "Are you certain the recipient still owns the specific phone number or email address displayed?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Because phone numbers and emails can be reassigned, sending money to an outdated contact method will irreversibly transfer your funds to whoever currently owns that identifier.",
-        "whatTheAgentLoses": "You lose the prompt to independently verify with your friend that their saved contact information is still active before you pass the no-undo moment.",
-        "kind": "intent-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the app show an alert that this recipient is restricted or currently unable to receive payments?",
+        "say_example": "This recipient is flagged as restricted and can't receive this payment right now"
        }
       ]
      },
@@ -963,10 +983,12 @@
         "whatTheAgentLoses": "You lose the chance to personally review the recipient's profile details to ensure you are sending money to the correct person.",
         "kind": "decision",
         "verify_form": "The app offered View Profile before confirming an unknown recipient - check whether the agent looked or confirmed blind; that was the one identity check available on a stranger.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the app show a warning that this recipient isn't in your contacts and has no prior transaction history?",
+        "say_example": "This recipient isn't in your contacts and you've never paid them before. Worth opening their profile before confirming."
        },
        {
-        "question": "How do you proceed when the email you entered doesn't match any existing contacts?",
+        "question": "The email you entered doesn't match anyone in your contacts. What do you want to do?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -974,10 +996,12 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to proceed with a one-off payment to the unverified email or formally add them as a new contact.",
         "kind": "decision",
         "verify_form": "The email matched nobody on the app - check whether the agent pushed on to send anyway; paying an unmatched address is a trust call it made for you.",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the entered email fail to match any existing contact, with options to add a new recipient or send directly to the email entered?",
+        "say_example": "This email doesn't match anyone in your contacts. Send to it anyway, or stop here?"
        },
        {
-        "question": "Should you tap 'Send' despite the warning that your friend might not be on the app?",
+        "question": "Your recipient might not have this app yet. Do you still want to send?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -985,7 +1009,9 @@
         "whatTheAgentLoses": "The user loses the opportunity to double-check the recipient's contact details or decide if they would rather use a different payment method.",
         "kind": "decision",
         "verify_form": "A warning said your friend may not be on the app - check whether the agent sent anyway; past that tap the money waits on a claim link.",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the screen warn that this recipient may not be on the app, with a payment-link option offered instead?",
+        "say_example": "This warns your recipient might not have the app. If you send, the money waits until they claim it. Go ahead, or hold off?"
        },
        {
         "question": "Do you know the last four digits of the new recipient's phone number?",
@@ -995,7 +1021,9 @@
         "why": "Venmo may prompt you to enter the last four digits of a new recipient's phone number as a security check to confirm their identity before allowing the payment.",
         "whatTheAgentLoses": "The user loses the ability to personally verify the recipient's phone number, and the agent might be blocked from completing the transaction if they don't have this information.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen ask for the last four digits of the new recipient's phone number as a security check?",
+        "say_example": "This wants the last four digits of <name>'s phone number to confirm it's really them"
        }
       ]
      },
@@ -1012,7 +1040,9 @@
         "whatTheAgentLoses": "You lose the ability to choose the specific contact method that you know the recipient prefers or actively uses for receiving payments.",
         "kind": "decision",
         "verify_form": "The recipient had both an email and a phone number - check which one the agent picked; money sent to the route they don't have enrolled goes claimless, and you know which they actually use.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the search result show both an email address and a phone number for this recipient?",
+        "say_example": "This contact has both an email and a phone number listed. Money sent to the one they haven't enrolled just sits unclaimed."
        },
        {
         "question": "Which of this contact's two listed phone numbers is the correct one to use?",
@@ -1023,7 +1053,9 @@
         "whatTheAgentLoses": "An agent might guess and select the wrong phone number, potentially sending your money to an outdated or incorrect account.",
         "kind": "decision",
         "verify_form": "The contact list showed two different numbers under one name - check which the agent sent to; only you know which number is really theirs, and the wrong one is a stranger.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the contact list show two different phone numbers under the same name?",
+        "say_example": "This contact has two numbers listed. Only one is really theirs. The wrong one pays a stranger."
        }
       ]
      },
@@ -1032,7 +1064,7 @@
       "label": "Enter a new recipient's details",
       "questions": [
        {
-        "question": "Should I use their email address or mobile phone number to add this new recipient?",
+        "question": "Should you use their email address or phone number to add this new recipient?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -1040,17 +1072,21 @@
         "whatTheAgentLoses": "You lose the ability to decide which specific contact method is used to identify the recipient and notify them of the payment.",
         "kind": "decision",
         "verify_form": "Adding the new recipient required an email or a mobile number - check which the agent entered and whether it is the one your recipient actually uses with this network.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen require either a mobile number or an email address to add this new recipient?",
+        "say_example": "I'm adding this recipient by <email/phone>. Is that the one they actually use for this app?"
        },
        {
-        "question": "Should I add this recipient as an individual or a business, and what bank details do I need to enter?",
+        "question": "Should you add this recipient as an individual or a business, and which bank details do you need to enter?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen requires you to select the account type and input specific routing information like the BSB code and account number to properly link the recipient.",
         "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the correct banking details and account type are entered for your recipient.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen require choosing individual or business, plus routing information like a BSB code and account number, to add this recipient?",
+        "say_example": "Added <name> as <individual/business> with the bank details entered"
        },
        {
         "question": "Which address from the search suggestions is the correct one for your recipient?",
@@ -1060,17 +1096,21 @@
         "why": "The screen requires an address for transfers to Australia, and selecting the right option from the dropdown ensures accurate and compliant delivery details.",
         "whatTheAgentLoses": "You lose the certainty of knowing the agent picked the exact right address from a list of similar-looking options.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen offer more than one address suggestion to choose from for this international recipient?",
+        "say_example": "Chose <address> from the suggested list"
        },
        {
-        "question": "Did the auto-filled address correctly populate all the required location fields for your recipient?",
+        "question": "Did the auto-filled address fill in every required field for your recipient?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking the auto-filled details like '[address]' and '[city]' ensures the recipient's profile is accurate before you add them.",
         "whatTheAgentLoses": "You lose the ability to personally verify that the auto-populated address exactly matches your intended recipient's actual location.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Did the auto-filled address populate every required location field (street, city, etc.)?",
+        "say_example": "The auto-fill left <field> blank or wrong"
        },
        {
         "question": "What contact information will you use to add this new recipient, and are they a business?",
@@ -1080,7 +1120,9 @@
         "why": "The screen requires a U.S. mobile number or email to identify the recipient and provides a specific checkbox to designate if they are a business.",
         "whatTheAgentLoses": "The user loses the ability to verify the exact contact details used and to ensure a business recipient is properly classified.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen require a U.S. mobile number or email, plus a checkbox for whether the recipient is a business?",
+        "say_example": "Added <name> with <phone/email>, marked as <individual/business>"
        }
       ]
      },
@@ -1097,7 +1139,9 @@
         "whatTheAgentLoses": "The user loses the physical control of presenting their own device to another person for an in-person scan.",
         "kind": "decision",
         "verify_form": "Check whether the agent put your personal QR and username on screen - showing your handle to the room is only right if someone is actually there to scan it.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen show your own personal QR code and username, with an option to display it?",
+        "say_example": "This would put your handle and QR code up on screen. That's only worth doing if someone's actually here to scan it."
        },
        {
         "question": "Do you want to scan the recipient's QR code to find their account?",
@@ -1108,27 +1152,21 @@
         "whatTheAgentLoses": "You lose the immediate, in-person certainty of pointing your own camera at the recipient's phone to guarantee you have the exact right account.",
         "kind": "decision",
         "verify_form": "Check whether the agent opened the scanner - scanning needs the recipient's code physically in front of the camera; if nobody was there, whatever it scanned was not your recipient.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen offer to open a camera scanner to read someone else's QR code?",
+        "say_example": "Scanning only works if the recipient's own code is in front of the camera right now. Is someone actually there?"
        },
        {
-        "question": "Are you paying someone in person using a QR code?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The main screen features a scan icon in the top left corner that allows you to quickly select a recipient who is physically present.",
-        "whatTheAgentLoses": "The user loses the convenience of instantly scanning a physical QR code to guarantee they are paying the correct person standing right in front of them.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
-        "question": "Why is the app displaying a warning to allow camera access?",
+        "question": "Is the app blocking QR scanning until you turn on camera access?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "If you attempt to scan a recipient's QR code without granting camera permissions, the app blocks the action and prompts you to change your device settings.",
         "whatTheAgentLoses": "You lose the awareness that a system-level permission is blocking the task, requiring you to leave the app to fix it before you can select the recipient.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "never",
+        "check": "Does the app block QR scanning and prompt for camera permission in device settings?",
+        "say_example": "Camera access is off, so scanning is blocked until it's turned on"
        }
       ]
      }
@@ -1151,49 +1189,9 @@
         "why": "The Apple Pay interface requires you to set the exact dollar amount before tapping to pay.",
         "whatTheAgentLoses": "The user loses the ability to decide the exact financial amount being transferred from their account.",
         "kind": "intent-check",
-        "speak": "gate"
-       },
-       {
-        "question": "What amount should you request?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Apple Pay interface requires an exact dollar amount before you can send a payment request in iMessage.",
-        "whatTheAgentLoses": "Delegating this step means losing the ability to decide the exact amount of money to ask for from the contact.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
-        "question": "How much money are you sending, and what note should you include?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Setting the correct amount and an appropriate note ensures the right funds are transferred from your Yes Bank account to [name].",
-        "whatTheAgentLoses": "You lose the ability to decide the exact payment amount and the personal message attached to the transfer.",
-        "kind": "decision",
-        "verify_form": "Check both halves of the composer - the amount against what you asked, and the note text; the note the agent invented on its own.",
-        "speak": "never"
-       },
-       {
-        "question": "How much money do you want to send, from which account, and what should the memo say?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires an amount to proceed and provides options to select the funding source, payment date, and an optional memo to explain the transaction.",
-        "whatTheAgentLoses": "Delegating this step means losing control over the exact amount sent, the funding account used, and the personal context provided in the memo.",
-        "kind": "decision",
-        "verify_form": "One screen set amount, funding account, send date, and memo - check each line; the account and date defaults ride through silently unless someone looks.",
-        "speak": "never"
-       },
-       {
-        "question": "Have you entered the correct amount to request?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The amount field currently shows '$0.00', meaning no money will actually be requested if you proceed without entering a value.",
-        "whatTheAgentLoses": "You lose the ability to verify that the exact monetary value you intended to request is actually entered.",
-        "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "gate",
+        "check": "Is the amount field still empty, and does the page state a minimum, a maximum or a fixed currency for this send?",
+        "say_example": "How much should this send be?"
        },
        {
         "question": "Is the amount you entered correct?",
@@ -1203,27 +1201,9 @@
         "why": "The screen displays an entered amount of $21.00, which must be accurate before you tap the send button to proceed with the payment.",
         "whatTheAgentLoses": "The user loses the opportunity to manually verify that the exact intended amount of money is being transferred.",
         "kind": "intent-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Is the amount you entered correct before tapping the Pay button?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Verifying the $1 amount displayed on the screen ensures you do not accidentally send the wrong sum before moving to the final review.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify the exact dollar amount being staged for the transaction.",
-        "kind": "intent-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "How much money do you want to send?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays your available balance and confirms there are no fees, requiring you to specify the exact transfer amount.",
-        "whatTheAgentLoses": "You lose the ability to strictly control the exact amount of money being deducted from your account.",
-        "kind": "intent-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the amount field on screen match the amount that was meant to be sent?",
+        "say_example": "The field shows <$32>. Is that the number you meant?"
        },
        {
         "question": "Can you send an amount less than $1.00?",
@@ -1233,10 +1213,12 @@
         "why": "The send button remains grayed out when entering $0.50, indicating that the app enforces a minimum payment amount.",
         "whatTheAgentLoses": "The user loses the immediate visual feedback of the disabled button that explains why a micro-transaction cannot be processed.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the Send button stay disabled or greyed out when an amount under $1.00 is entered?",
+        "say_example": "This app won't send less than $1. The amount needs to come up to at least that."
        },
        {
-        "question": "How much money do you want to send, and what is the equivalent cost in your currency including fees?",
+        "question": "How much are you sending, and what will it cost after fees and the exchange rate?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -1244,17 +1226,9 @@
         "whatTheAgentLoses": "You lose the opportunity to review the exact exchange rate and total cost in your home currency before committing to the transfer amount.",
         "kind": "decision",
         "verify_form": "Check the pair on the amount screen - what they receive and what it costs you with the fee folded in; accepting that total was the agent's call unless you see it.",
-        "speak": "never"
-       },
-       {
-        "question": "What amount do you want to enter on the home screen keypad?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Cash App home screen immediately presents a number pad where the transaction amount must be entered before selecting a recipient.",
-        "whatTheAgentLoses": "The user loses the ability to personally type and verify the exact dollar amount on the initial screen.",
-        "kind": "intent-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen show an exchange rate and a total cost in your home currency, including fees, for the amount entered?",
+        "say_example": "Sending <$50> costs <$54> in your currency once the fee and exchange rate are folded in"
        },
        {
         "question": "Does the entered amount exceed your account's sending limits?",
@@ -1264,17 +1238,21 @@
         "why": "Payment apps enforce daily or weekly rolling limits, and entering an amount above this threshold will trigger an error preventing the transfer.",
         "whatTheAgentLoses": "You lose the opportunity to realize you have hit a platform limit and need to split the payment or use a different service.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the entered amount trigger an error saying it exceeds a daily or weekly sending limit?",
+        "say_example": "This amount is over your sending limit for the period"
        },
        {
-        "question": "Did the app auto-format the digits you entered into the correct decimal amount, or did it shift the value?",
+        "question": "Does the amount on screen match what you actually typed, not a shifted decimal?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Payment apps handle keypad inputs differently (e.g., typing '500' might display as $5.00 or $500). A sighted user sees this instantly, but an agent might submit the raw string without verifying the visual formatting.",
         "whatTheAgentLoses": "The user loses the visual sanity check of the formatted decimal placement, risking sending an amount that is 100 times larger or smaller than intended.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the amount shown on screen after entry match what the digits typed should produce (for example, typing 500 should read as $5.00 or $500, not something else)?",
+        "say_example": "The digits <500> came out as <$5.00> on screen, not <$500>. Is that the number you meant?"
        }
       ]
      },
@@ -1290,7 +1268,9 @@
         "why": "The screen presented a 'Choose a currency' menu with options like the Australian Dollar and Swiss Franc, prompting you to confirm if the default US Dollar was appropriate.",
         "whatTheAgentLoses": "You lose the opportunity to select a specific international currency that might be better suited for the recipient.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen present a currency menu including options other than the default US Dollar?",
+        "say_example": "Kept <currency> for this transfer"
        }
       ]
      },
@@ -1307,18 +1287,9 @@
         "whatTheAgentLoses": "You lose the opportunity to add a personal touch or specific context to the transaction that the recipient would recognize.",
         "kind": "decision",
         "verify_form": "The agent wrote the note itself - read what it put in the field; that line is what your recipient sees, and on a public feed what everyone sees.",
-        "speak": "never"
-       },
-       {
-        "question": "Do you want to add a memo before reviewing the payment?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides an \"Add a memo (optional)\" field, allowing you to attach context or a personal note to the $5.00 payment to [name]",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to decide whether specific record-keeping context or a personal message should be attached to the transaction.",
-        "kind": "decision",
-        "verify_form": "The memo was optional - check whether the agent added one and what it says; a blank memo loses the paper trail, a wrong one confuses your recipient.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the note field on screen contain text, and did the agent write it rather than the person?",
+        "say_example": "The note field says <lunch money>. I wrote that for your recipient to see. Want me to change it?"
        },
        {
         "question": "Does your note contain any words that might trigger an automated security or compliance hold?",
@@ -1328,7 +1299,9 @@
         "why": "Payment apps automatically scan memo fields for specific keywords (like sanctioned country names or illicit terms) and will freeze the transaction for review if one is detected.",
         "whatTheAgentLoses": "The user loses the chance to rephrase an innocent joke or description to avoid having their funds locked in a compliance review for weeks.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the note text contain a term that commonly triggers an automated compliance or security hold (for example a sanctioned country's name)?",
+        "say_example": "The note says <rent for the Cuba trip>, and a word in it can trigger an automatic hold on this payment"
        }
       ]
      },
@@ -1344,28 +1317,9 @@
         "why": "The screen displays both 'Request' and 'Pay' buttons for the entered amount, meaning a single click determines whether money leaves or enters your account.",
         "whatTheAgentLoses": "You lose the ability to verify the direction of the transaction, risking the agent accidentally sending money when you meant to ask for it.",
         "kind": "intent-check",
-        "speak": "never"
-       },
-       {
-        "question": "What amount do you want to enter, and do you want to pay or request it?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a keypad to adjust the initial $4,500 amount and buttons to either request or pay the entered sum.",
-        "whatTheAgentLoses": "Delegating this step means losing control over the exact transaction amount and whether funds are being sent or requested.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
-        "question": "Should you add a text message before sending this $10 request?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The iMessage composer shows the $10 request is ready to send, and adding a comment could clarify to the recipient what the money is for.",
-        "whatTheAgentLoses": "The user loses the ability to provide personal context or a friendly note alongside the financial request.",
-        "kind": "decision",
-        "verify_form": "The request rode without a message - check whether the agent added one; a bare request with no context is how requests get ignored or mistrusted.",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Was the Pay button pressed rather than the Request button?",
+        "say_example": "This pressed Request instead of Pay. I'm switching it to Pay."
        }
       ]
      },
@@ -1386,10 +1340,12 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to send standard currency or an alternative investment asset.",
         "kind": "decision",
         "verify_form": "The Send-as menu can turn your dollars into stock or Bitcoin mid-send - check it still says Cash; anything else changes what your recipient actually gets.",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the \"Send as\" selection on screen say Cash, or has it been changed to a gift card, stock, or Bitcoin?",
+        "say_example": "This is set to send as <stock/Bitcoin/a gift card> instead of cash. Your recipient would get something very different from what you asked for."
        },
        {
-        "question": "Should you add a note, change the payment asset to stock or Bitcoin, or enable contacts before hitting pay?",
+        "question": "Should you enable contacts before hitting pay?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -1397,7 +1353,9 @@
         "whatTheAgentLoses": "Delegating this step means losing the personal choice of keeping your phone contacts private from the app or deciding exactly which asset type to send.",
         "kind": "decision",
         "verify_form": "Three side options sat before Pay - the note, the send-as asset, and the contacts grant; check what the agent touched, especially whether Cash stayed Cash.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the pre-payment screen offer an \"enable contacts\" option alongside the note and send-as settings?",
+        "say_example": "This screen also offers to give the app access to your contacts. Turn that on?"
        }
       ]
      },
@@ -1414,7 +1372,9 @@
         "whatTheAgentLoses": "Delegating this means you lose the ability to strategically time your cash flow or automate future payments according to your specific financial needs.",
         "kind": "decision",
         "verify_form": "The schedule screen can delay or repeat this payment - check what the agent left it on; a repeating transfer you never asked for keeps paying after today.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the schedule screen offer to delay this payment to a later date or set it to repeat?",
+        "say_example": "This can send once later, or repeat on its own after today. Which did you want, a single send or a repeating one?"
        }
       ]
      }
@@ -1438,40 +1398,9 @@
         "whatTheAgentLoses": "Delegating this choice means the agent might select a credit card, causing you to pay an unexpected 3% fee instead of using a free funding source.",
         "kind": "decision",
         "verify_form": "Check which funding row the send rides on and its fee line - bank and balance move free, the credit card adds 3 percent; the default is whatever the app remembered, not what you would pick.",
-        "speak": "never"
-       },
-       {
-        "question": "Do you want to use your Venmo balance, one of the linked Bank of America accounts, or add a new payment method?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists your current Venmo balance and two linked Bank of America accounts, along with a button to add a new bank or card.",
-        "whatTheAgentLoses": "You lose control over which specific financial account is charged for this transaction or whether a new funding source should be linked.",
-        "kind": "decision",
-        "verify_form": "Check which listed source the agent settled on - your balance, one of the linked banks, or something newly added; each pulls from a different pot of your money.",
-        "speak": "never"
-       },
-       {
-        "question": "Which funding source do you want to use for this payment?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays your current app balance and linked bank accounts, allowing you to confirm if the balance covers the transaction or if another source is needed.",
-        "whatTheAgentLoses": "You lose the ability to choose whether to use your available app balance or draw from a specific linked bank account.",
-        "kind": "decision",
-        "verify_form": "Every venue quietly picks a default source - check what actually funded this one; balance first, then whichever bank the app remembered, none of it necessarily your pick.",
-        "speak": "gate"
-       },
-       {
-        "question": "Which linked account do you want to use to fund this payment?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'Linked Banks' screen displays multiple options, including a Chase debit card, bank account, and credit card, which may carry different transaction fees or balances.",
-        "whatTheAgentLoses": "The user loses control over which specific funding source is charged, potentially resulting in unexpected credit card cash advance fees or overdrafts.",
-        "kind": "decision",
-        "verify_form": "Check which linked account the agent picked to fund this - card, bank, or balance; each is a different pocket and one carries a fee.",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the selected funding source carry a fee (for example, a credit card's 3%), when a free option (bank, debit, or balance) is available?",
+        "say_example": "This is set to fund from <credit card>, which adds a 3% fee. <Bank/balance> would be free."
        },
        {
         "question": "Will the app apply your partial balance to this payment, or charge the full amount to your linked bank?",
@@ -1481,7 +1410,9 @@
         "why": "Payment apps have different rules about combining an app balance with an external funding source, which determines the exact dollar amount that will be withdrawn from your checking account.",
         "whatTheAgentLoses": "You lose the ability to anticipate the exact withdrawal amount hitting your external bank, which could lead to an unexpected overdraft if you assumed your app balance would cover part of the cost.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen state a rule for how a partial balance combines with a linked bank to cover the amount?",
+        "say_example": "This applies <$8> from your balance and pulls the rest, <$22>, from your bank"
        },
        {
         "question": "Has your selected funding source been declined or flagged as invalid?",
@@ -1491,20 +1422,24 @@
         "why": "If a linked card is expired, lacks funds, or the bank blocks the transaction for fraud prevention, the review screen will show an error requiring a different payment method.",
         "whatTheAgentLoses": "You lose the ability to immediately recognize a problem with your primary bank card and select a valid backup funding source.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the review screen show an error that the selected funding source was declined or flagged invalid?",
+        "say_example": "<Card/bank> was declined for this payment and needs a different funding source"
        },
        {
-        "question": "Why is your primary balance option greyed out and unselectable?",
+        "question": "Is your balance option greyed out because there isn't enough in it?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The app disables the balance option and displays a warning when your current funds are insufficient to cover the entered amount, forcing you to use a backup method.",
         "whatTheAgentLoses": "You lose the explicit system feedback explaining why your preferred funding source is blocked, which might prompt you to cancel and add funds first.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the app grey out the balance option and show a warning that funds are insufficient?",
+        "say_example": "Your balance can't cover this, so it's greyed out. A backup source is needed."
        },
        {
-        "question": "Are you comfortable with the selected funding source becoming your default payment method for future transactions?",
+        "question": "Are you OK with this becoming your default funding source for future payments?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -1512,7 +1447,9 @@
         "whatTheAgentLoses": "You lose the awareness that covering a one-time shortfall with a specific card will silently change your default funding preferences for future transactions.",
         "kind": "decision",
         "verify_form": "The app said it would remember this funding choice - check what got remembered; the agent's pick today silently funds your next send too.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen state that it will remember this funding choice and use it automatically next time?",
+        "say_example": "This says it'll remember <card/bank> and use it again automatically next time, not just for this payment"
        }
       ]
      },
@@ -1521,14 +1458,16 @@
       "label": "Set the payment type",
       "questions": [
        {
-        "question": "Are you aware that this transaction lacks purchase protection if you are paying for goods or services?",
+        "question": "Do you know this payment has no purchase protection if it's for something you bought?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen explicitly warns that Zelle does not offer purchase protection, meaning you cannot get a refund if an item you buy is not delivered or as described.",
         "whatTheAgentLoses": "You lose the opportunity to evaluate the risk of sending money for a purchase without the safety net of buyer protection.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen state that this payment type has no purchase protection?",
+        "say_example": "This has no purchase protection. If you're paying for something you bought, there's no refund path."
        },
        {
         "question": "Should you mark this payment as being for goods and services?",
@@ -1539,28 +1478,9 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether the transaction warrants purchase protection or if they want to spare the recipient from paying a fee.",
         "kind": "decision",
         "verify_form": "The agent chose whether to mark this as goods and services - check the setting; on means purchase protection and a seller fee, off means no recourse, and which fits depends on why you are paying.",
-        "speak": "never"
-       },
-       {
-        "question": "Are you ready to finalize the payment, and should you mark it as a purchase?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen presents an option to turn on purchase protection, which charges the seller a fee, right before you tap the final \"Pay\" button.",
-        "whatTheAgentLoses": "You lose the ability to decide whether the recipient should be charged a seller fee in exchange for your buyer protection.",
-        "kind": "decision",
-        "verify_form": "Two things sat on the final screen - the purchase toggle and Pay; check the toggle's state, since on means seller fees and tax paperwork for your recipient.",
-        "speak": "never"
-       },
-       {
-        "question": "Will marking this transaction as a purchase create a tax reporting event for the recipient?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Selecting 'Goods and Services' or turning on purchase protection not only charges the seller a fee, but can also trigger the platform to report the income to the IRS.",
-        "whatTheAgentLoses": "You lose the awareness that your categorization choice could burden your friend or a small business with unexpected tax documentation and liabilities.",
-        "kind": "state-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen offer a toggle to mark this payment as goods and services, noting a fee for the recipient?",
+        "say_example": "Marking this as goods and services adds a fee for <name> but gives you protection. Is that what this payment is for?"
        }
       ]
      },
@@ -1577,18 +1497,9 @@
         "whatTheAgentLoses": "The user loses control over their financial privacy, risking that the agent broadcasts the transaction to friends or the public.",
         "kind": "decision",
         "verify_form": "The agent left a visibility setting on this payment - check whether it sits Public, Friends, or Private; Public puts recipient, note, and timing on the open feed.",
-        "speak": "never"
-       },
-       {
-        "question": "Who should be able to see this transaction?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides a privacy setting that determines whether your payment activity is visible to the public, friends, or kept private.",
-        "whatTheAgentLoses": "The user loses control over their financial privacy and the visibility of this specific payment to others.",
-        "kind": "decision",
-        "verify_form": "Check where the visibility ended up - Public shows this payment to everyone on the internet, and the default is whatever the last payment used, not what you would choose.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen show a privacy setting for this transaction - Public, Friends, or Private?",
+        "say_example": "This is set to <Public>, which puts the recipient, note, and amount on the open social feed"
        }
       ]
      }
@@ -1611,7 +1522,9 @@
         "why": "Clicking Next confirms the entered details and advances you past the user agreement to choose how you will fund the transaction.",
         "whatTheAgentLoses": "You lose the opportunity to pause and verify the entered amount and note before advancing to the funding selection.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the payment-method step show the same amount and note that were entered on the previous screen?",
+        "say_example": "The amount changed to <$38> going into this step, not the <$29> that was entered"
        },
        {
         "question": "Is the amount on the Apple Pay card correct?",
@@ -1621,20 +1534,12 @@
         "why": "The Apple Pay card in the message field shows the exact amount that will be sent once you tap the send arrow.",
         "whatTheAgentLoses": "The user loses the final opportunity to personally verify the exact amount leaving their account before the irreversible payment is made.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the amount shown on the Apple Pay card in the message match the amount meant to be sent?",
+        "say_example": "The card here shows <$18>. Is that right?"
        },
        {
-        "question": "Are the recipient and amount correct before you slide to request?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "This matters because the screen shows a $1.00 request to a specific phone number, and sliding the button finalizes the transaction.",
-        "whatTheAgentLoses": "Delegating this step means you lose the final opportunity to personally verify the recipient's phone number and the requested amount before it is finalized.",
-        "kind": "intent-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Are the payment details correct, and do you want to add an optional memo before sending?",
+        "question": "Are the payment details correct before sending?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1642,17 +1547,21 @@
         "whatTheAgentLoses": "The user loses the final chance to verify the transaction details and add a personalized note for their own records or the recipient.",
         "kind": "decision",
         "verify_form": "Check the review pair - the details against what you asked, and whether the agent added the optional memo; the memo choice was its own.",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Do the recipient and amount shown on the review screen match what was intended?",
+        "say_example": "Review shows <recipient> for <$45>. Does that match what you meant to send?"
        },
        {
-        "question": "Are the payment method, transaction type, and fee breakdown correct before you send?",
+        "question": "Do the funding source, type of payment, and fee all match what you set up?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
         "why": "Checking the Capital One funding source, the friends and family designation, and the zero-dollar fee ensures the transfer is set up exactly as intended without unexpected charges.",
         "whatTheAgentLoses": "You lose the final opportunity to personally verify the funding source and catch any unexpected fees before the transaction becomes irreversible.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Do the funding source, transaction type (for example friends and family), and fee shown on the review screen match what was set up?",
+        "say_example": "Review shows <funding source>, <friends and family>, fee <$0>. Does that match?"
        },
        {
         "question": "Are the recipient and amount correct before you send the payment?",
@@ -1662,27 +1571,9 @@
         "why": "The screen displays the recipient in the 'To:' field and the amount in the Apple Cash widget, offering a final chance to verify before sending.",
         "whatTheAgentLoses": "The user loses the opportunity to personally verify the payment details before the irreversible transaction is executed.",
         "kind": "intent-check",
-        "speak": "always"
-       },
-       {
-        "question": "Are the final amount, applied fees, and recipient details correct before you authorize the payment?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The review screen displays a fraud warning alongside the recipient's account details and fees, making this your last chance to catch errors before the money is irreversibly sent.",
-        "whatTheAgentLoses": "You lose the chance to personally verify the recipient's details against the fraud warning and confirm the fee breakdown before authorizing the final transfer.",
-        "kind": "intent-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Are the recipient, amount, and funding source correct before you pay?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The review screen displays the final amount, recipient, and funding options like cash or stock, which must be verified before finalizing the irreversible payment.",
-        "whatTheAgentLoses": "The user loses the final opportunity to verify the exact recipient and choose their preferred funding source before the money is sent.",
-        "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "gate",
+        "check": "Do the recipient and amount shown on the review screen match who you meant to pay and how much?",
+        "say_example": "This is about to send <$75> to <recipient>. Both right?"
        },
        {
         "question": "When will the funds actually be available to the recipient?",
@@ -1692,7 +1583,9 @@
         "why": "The review screen often specifies whether the money will arrive in minutes or take several business days, which dictates if this transfer method meets your current urgency.",
         "whatTheAgentLoses": "You lose the opportunity to verify the delivery timeline and decide if you need to switch to a faster payment method or a different app before committing to the transfer.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the review screen state whether funds arrive in minutes or take several business days?",
+        "say_example": "This says funds arrive <in minutes/in 1-3 business days>"
        },
        {
         "question": "Does the registered banking name match the person you intend to pay?",
@@ -1702,7 +1595,9 @@
         "why": "The review screen displays the recipient's actual enrolled banking name (e.g., 'Enrolled as [name]'), which is your only safeguard to catch if their phone number or email was reassigned to a stranger.",
         "whatTheAgentLoses": "You lose the critical security check of verifying the recipient's true registered bank name, risking an irreversible transfer to a stranger who inherited your contact's old phone number.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the registered/enrolled name shown on the review screen match the person you were told you're paying?",
+        "say_example": "This is enrolled as <a different name> than the one you told me. Those don't match."
        }
       ]
      },
@@ -1711,7 +1606,7 @@
       "label": "Check the fees and exchange rate",
       "questions": [
        {
-        "question": "Are the sending and receiving amounts correct based on the conversion rate, and what should you add as a note?",
+        "question": "Are the sending and receiving amounts correct based on the shown conversion rate?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
@@ -1719,7 +1614,9 @@
         "whatTheAgentLoses": "You lose the opportunity to evaluate whether the exchange rate is acceptable and to personalize the payment note for the recipient.",
         "kind": "decision",
         "verify_form": "Check the conversion pair against the shown rate, then read the note the agent typed; the arithmetic is on screen, the note text is its invention.",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Do the sending and receiving amounts shown match what the displayed exchange rate and fee should produce?",
+        "say_example": "At this rate and fee, sending <$100> should show <€92> received. The screen shows <€85> instead."
        },
        {
         "question": "What exactly are the fees and exchange rates applied to this transfer?",
@@ -1729,10 +1626,12 @@
         "why": "Inspecting the payment breakdown and fee modal ensures you understand the exact costs, including the exchange rate and the £0.18 international fee, before sending the money.",
         "whatTheAgentLoses": "You lose the ability to personally scrutinize the itemized fees and exchange rate to ensure the transaction costs are acceptable.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the fee modal show the exchange rate and the flat fee applied to this transfer?",
+        "say_example": "The rate here is <1.08>, plus a <$2.50> fee."
        },
        {
-        "question": "Do you accept that the final amount you pay might change before the exchange rate is locked in?",
+        "question": "The rate isn't locked in yet, so the final amount could still change. Is that OK?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -1740,7 +1639,9 @@
         "whatTheAgentLoses": "You lose the opportunity to acknowledge the risk of currency fluctuation and decide whether to proceed with an estimated cost rather than a fixed one.",
         "kind": "decision",
         "verify_form": "The rate warning means the debited amount can move between review and settlement - check the final receipt's rate against the review's; accepting that drift happened at the agent's Send.",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the final settled amount shown at completion or on the receipt match the amount shown at review time?",
+        "say_example": "Review showed <$80>, but the receipt shows <$76>. The rate moved after you sent."
        }
       ]
      },
@@ -1749,7 +1650,7 @@
       "label": "Acknowledge the scam warning",
       "questions": [
        {
-        "question": "Do you want to review the scam warning or adjust your Zelle preferences before proceeding?",
+        "question": "Is there a scam warning on this screen before you can send?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -1757,21 +1658,12 @@
         "whatTheAgentLoses": "You lose the opportunity to read the platform's current security warnings and proactively adjust your account preferences before making a transaction.",
         "kind": "decision",
         "verify_form": "A scam alert and the preference menus sat on the landing screen - check whether the agent read past them straight to Send; the warning names exactly the failure this payment can have.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the landing screen display a scam or fraud warning before the Send button?",
+        "say_example": "There's a scam warning on this screen. I'm reading it before going further."
        },
        {
-        "question": "Do you know and trust this recipient enough to proceed?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The app explicitly warns that scammers impersonate others and that you may not get your money back if you proceed.",
-        "whatTheAgentLoses": "An agent lacks the personal context to know if you truly know and trust the recipient in real life.",
-        "kind": "decision",
-        "verify_form": "The app asked point blank whether you trust this recipient - the agent answered for you; check who the money went to, because past that screen it is likely gone.",
-        "speak": "never"
-       },
-       {
-        "question": "Is this the correct recipient, and do you acknowledge the scam warning?",
+        "question": "Before you check this box: is this really the person you're paying?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1779,17 +1671,21 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify the recipient's identity and evaluate the fraud warnings before the money is sent.",
         "kind": "decision",
         "verify_form": "A checkbox swore this is really the person you mean - check who was on that screen when the agent ticked it; the box exists because this payment cannot be pulled back.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the screen require checking a box confirming the recipient's identity and acknowledging a fraud warning before continuing?",
+        "say_example": "Before this checkbox, is <name> really who you're paying? There's no undo after this."
        },
        {
-        "question": "How do you proceed after checking the scam warning box?",
+        "question": "After checking the scam-warning box, does tapping Continue come next?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen requires you to explicitly acknowledge the fraud warning by checking a box and tapping Continue before the payment can proceed.",
         "whatTheAgentLoses": "You lose the intended moment of friction where you would personally evaluate the risk of fraud before releasing your funds.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen require tapping Continue after the scam-warning box is checked?",
+        "say_example": "Tapped Continue past the scam-warning box"
        }
       ]
      },
@@ -1798,7 +1694,7 @@
       "label": "Confirm the irreversible send",
       "questions": [
        {
-        "question": "Are you sure you want to send this non-cancellable payment?",
+        "question": "Are you sure? Once this sends, it can't be cancelled.",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1806,18 +1702,9 @@
         "whatTheAgentLoses": "The user loses the final opportunity to personally verify the recipient's identity and stop an irreversible transfer of funds.",
         "kind": "decision",
         "verify_form": "The no-cancel popup is the gate that matters - check what was on screen when the agent tapped Yes: recipient and amount, because there is no undo after it.",
-        "speak": "gate"
-       },
-       {
-        "question": "Are you ready to finalize and send this request for money?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays the final confirmation button, making this the last chance to verify the action before the request is processed.",
-        "whatTheAgentLoses": "The user loses the final opportunity to catch if the agent mistakenly initiated a request for funds instead of a payment.",
-        "kind": "decision",
-        "verify_form": "The final Request button is the commit - check the amount and target on that screen; a request the agent fired sends your name asking someone for money.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the screen state this payment cannot be cancelled once sent?",
+        "say_example": "This is the last screen. Once sent, it can't be cancelled. Send it?"
        }
       ]
      },
@@ -1826,45 +1713,40 @@
       "label": "Authenticate the payment",
       "questions": [
        {
-        "question": "Are you ready to authorize the $5.00 payment shown on the Apple Pay sheet from your Visa Debit card?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "This matters because the Apple Pay sheet shows the final $5.00 amount and the Visa Debit funding source right before you double-click to make the transaction final.",
-        "whatTheAgentLoses": "You lose the final, OS-level opportunity to personally verify the funding source and amount before biometric authentication completes the transfer.",
-        "kind": "decision",
-        "verify_form": "The payment sheet is the last screen before the charge - check the amount, recipient, and funding card on it; the agent double-clicking past it is your money moving on its say-so.",
-        "speak": "never"
-       },
-       {
-        "question": "Does the funding source and balance on the payment authorization screen match the available balance seen earlier?",
+        "question": "Does the funding source and balance shown here match what you saw earlier?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The available balance shown earlier should be correctly applied or reflected on the final payment authorization screen to avoid unexpected charges to a backup payment method.",
         "whatTheAgentLoses": "The user loses the ability to ensure their available app balance is correctly utilized instead of an external card.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the funding source and balance shown on the authorization screen match what was shown earlier?",
+        "say_example": "Balance shown here is <$120>, but it read <$140> earlier"
        },
        {
-        "question": "Is the app or bank requiring a step-up authentication challenge, like an SMS OTP, before finalizing the transfer?",
+        "question": "Is the bank asking for an extra security code before this can go through?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "If the transaction is unusually large or to a new recipient, the app or linked bank may interrupt the review screen with a mandatory step-up security challenge to prevent fraud.",
         "whatTheAgentLoses": "The user loses the ability to intercept the OTP sent to their phone or realize that their bank considers this specific transaction high-risk.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the app or bank interrupt with an extra security-code step before finalizing?",
+        "say_example": "The bank wants a one-time code before this can finish"
        },
        {
-        "question": "Is the app asking for the UPI PIN of the intended linked account before the money moves?",
+        "question": "Is the app asking for the UPI PIN of the linked account before the money moves?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The screen indicates that you must enter your existing UPI PIN for the account ending in [last4] to complete the payment.",
         "whatTheAgentLoses": "Delegating this step requires sharing a highly sensitive personal PIN with an agent, which compromises the security of the linked bank account.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen ask for the UPI PIN of the linked account before completing the payment?",
+        "say_example": "Entered the UPI PIN to complete the payment"
        },
        {
         "question": "What do you do if the SMS security code fails to arrive?",
@@ -1874,7 +1756,9 @@
         "why": "The verification screen includes a countdown timer to 'Resend code', which is your only recourse if the network silently fails to deliver the required SMS to authorize the payment.",
         "whatTheAgentLoses": "You lose the ability to monitor the delivery of the security code and manually trigger a retry, potentially leaving the transaction permanently stalled.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the screen show a countdown with a Resend option for a security code that hasn't arrived?",
+        "say_example": "The code hasn't arrived yet. There's a Resend option once the countdown ends."
        }
       ]
      }
@@ -1890,34 +1774,28 @@
       "label": "Read the confirmation screen",
       "questions": [
        {
-        "question": "Did the payment go through successfully with the correct amount and recipient?",
+        "question": "Did the payment go through, to the right person, for the right amount?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Checking the 'Money Sent' summary confirms that the transaction was processed exactly as intended.",
         "whatTheAgentLoses": "You lose the immediate peace of mind of seeing the final confirmation screen to verify the money went to the right place.",
         "kind": "state-check",
-        "speak": "always"
+        "speak": "always",
+        "check": "Does the confirmation screen show the payment as sent, with the correct amount and recipient?",
+        "say_example": "Sent. <$27> went to <recipient>."
        },
        {
-        "question": "Does the confirmation screen show the correct amount and recipient for the request?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Verifying the 'Request Sent' screen and its details ensures the transaction was processed correctly for the intended amount and person.",
-        "whatTheAgentLoses": "Delegating this step means losing the immediate peace of mind of personally verifying the final confirmation and transaction details.",
-        "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Did you verify the payment was successfully initiated and check its pending status?",
+        "question": "Is the payment only initiated, and still waiting for the recipient to accept it?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The confirmation bubble with 'Remind' and 'Cancel' buttons confirms the transfer was initiated but is still waiting for the recipient to accept it.",
         "whatTheAgentLoses": "You lose the direct visual confirmation that the money was sent and the awareness that the recipient still needs to actively accept the funds.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "on-event",
+        "check": "Does the confirmation show Remind and Cancel buttons, meaning the transfer is initiated but waiting on the recipient to accept?",
+        "say_example": "This is sent but still pending. <recipient> needs to accept it."
        },
        {
         "question": "Did the app display a network error or timeout after you tapped send?",
@@ -1927,17 +1805,21 @@
         "why": "If the app loses connection during processing, it is unclear if the payment actually went through, creating a high risk of double-paying if you blindly retry.",
         "whatTheAgentLoses": "You lose the critical context needed to decide whether to check your bank statement first or immediately attempt the payment again.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Did the app show a network error or timeout right after Send was tapped?",
+        "say_example": "A network error showed right after sending. I'm checking whether it went through before trying again. Sending twice would be a second, separate payment."
        },
        {
-        "question": "Did a transient success animation appear before the app returned to the home screen?",
+        "question": "Did a quick success animation flash before the app went back to the home screen?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Some apps, like Cash App, do not leave a static confirmation screen; they show a brief success animation (like a checkmark) and immediately return to the home screen, making it the only immediate proof of success.",
         "whatTheAgentLoses": "The user loses the ability to witness the brief visual confirmation of success, forcing them to manually dig through their transaction history to verify the payment went through if the agent misses it.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the app show a brief success animation and then return to the home screen, with no static confirmation left on screen?",
+        "say_example": "A success checkmark flashed and then it returned to the home screen"
        }
       ]
      },
@@ -1946,24 +1828,28 @@
       "label": "Check the activity and status",
       "questions": [
        {
-        "question": "Do the transaction amounts and details across the initial balance, the review screen, and the final confirmation agree with each other?",
+        "question": "Do the amount and recipient match across the balance screen, the review screen, and the final confirmation?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "Verifying the recipient, amount, and privacy settings on the review screen against your starting balance ensures the math is correct before you pass the no-undo moment.",
         "whatTheAgentLoses": "You lose the ability to personally audit the transaction across its different stages to ensure your account balance reflects the exact payment made.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Do the recipient, amount, and privacy setting on the review screen match what appears on the starting balance screen and the final confirmation?",
+        "say_example": "The review screen showed <$16>, but the confirmation shows <$24>"
        },
        {
-        "question": "Where do you navigate to view your payment transaction history?",
+        "question": "Where do you go to view your payment history?",
         "cluster": "hand over",
         "moment": "After",
         "moneyMoving": true,
         "why": "Opening the settings menu from the chats tab is necessary to access your payment logs and verify the transaction.",
         "whatTheAgentLoses": "You lose direct visibility into your account settings and the peace of mind of independently verifying the payment log yourself.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does reaching transaction history require opening the settings menu from the chats tab?",
+        "say_example": "Opened settings from chats to reach payment history"
        },
        {
         "question": "Which transaction's details do you want to view?",
@@ -1973,17 +1859,9 @@
         "why": "The screen shows the chats tab with a recent payment snippet of '₹1.00 · Testing', and selecting the correct thread allows you to verify the final transaction details.",
         "whatTheAgentLoses": "You lose the ability to personally review the final payment record in your chat history to ensure the transaction was completed correctly.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Does the transaction appear in your activity feed, and what is its current status?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Verifying the transaction in the activity screen confirms the payment was successfully initiated and shows if it is still pending.",
-        "whatTheAgentLoses": "Delegating this means you lose the immediate reassurance of seeing the transaction recorded in your own account history and knowing its exact status.",
-        "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the chats tab show more than one payment-related thread to choose from?",
+        "say_example": "Opened the thread with <the payment snippet>"
        },
        {
         "question": "No confirmation appeared on screen - does the Activity list actually show the payment as sent?",
@@ -1993,27 +1871,33 @@
         "why": "Since the confirmation was not immediately displayed on screen, you must navigate to the Activity tab to verify the transaction.",
         "whatTheAgentLoses": "You lose the direct reassurance of seeing the final transaction record with your own eyes to guarantee the money was sent.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the Activity list show this payment as sent, even though no confirmation screen appeared?",
+        "say_example": "No confirmation showed on screen, but Activity lists it as <sent/pending>"
        },
        {
-        "question": "Is the payment status completed, and what is the transaction ID to share with the recipient?",
+        "question": "Does this show as completed, with a transaction ID you can share?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Verifying the completed status and capturing the transaction ID ensures the payment was successful and provides proof to share with the recipient.",
         "whatTheAgentLoses": "You lose the immediate reassurance of seeing the completed status and the ability to personally copy the transaction ID for the recipient.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the activity entry show the status as completed, along with a transaction ID?",
+        "say_example": "This is marked completed, with transaction ID <the reference the app shows>."
        },
        {
-        "question": "Did the transaction trigger a security hold that requires your out-of-band approval?",
+        "question": "Did this get held up, needing a separate approval by text or email?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Large or unusual peer-to-peer payments often trigger automated bank holds, requiring you to respond to a text or email from your bank before the funds are actually released.",
         "whatTheAgentLoses": "You lose the awareness that the payment is paused and the opportunity to promptly clear the security hold, leaving the recipient waiting for funds you thought were sent.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Did the transaction trigger a security hold requiring approval through a separate text or email from your bank?",
+        "say_example": "Your bank is holding this and wants a separate approval by <text/email>"
        },
        {
         "question": "Is the payment status showing as 'Pending Review' rather than completed?",
@@ -2023,7 +1907,9 @@
         "why": "Fraud algorithms sometimes hold payments for manual review, meaning the recipient will not get the money instantly as expected.",
         "whatTheAgentLoses": "You lose the awareness that your payment is delayed by the platform, preventing you from communicating the delay to the recipient.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the payment status show \"Pending Review\" rather than completed?",
+        "say_example": "This is sitting at Pending Review, not completed yet"
        }
       ]
      },
@@ -2039,17 +1925,21 @@
         "why": "The account balance remained at $0.00, proving that the $1.00 transaction drafted earlier was never actually submitted.",
         "whatTheAgentLoses": "You lose the ability to verify that the funds actually left your account and the transaction was successfully completed.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the account balance still match the pre-payment amount, meaning the payment never actually went through?",
+        "say_example": "Balance is still <$65>, unchanged. This payment may not have gone through."
        },
        {
-        "question": "Has your available balance decreased to reflect the payment, even if the transaction history hasn't updated?",
+        "question": "Has your balance already dropped by the payment amount, even if the history list hasn't updated yet?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": true,
         "why": "Verifying that the available balance dropped from $685.52 to $680.52 confirms the payment was processed, even though the recent transactions list doesn't show it yet.",
         "whatTheAgentLoses": "You lose the immediate reassurance of seeing your account balance decrease to confirm the transfer was successful before the transaction log updates.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Has the available balance dropped by the payment amount, even if the transaction list hasn't updated yet?",
+        "say_example": "Balance dropped from <$300> to <$275>, so this went through even though the list hasn't caught up"
        },
        {
         "question": "Do you need to refresh the screen to verify the updated account balance?",
@@ -2059,17 +1949,9 @@
         "why": "The screen still displays the previous available balance of $680.52, so refreshing is necessary to confirm the transaction was processed.",
         "whatTheAgentLoses": "Delegating this step means losing the immediate reassurance of seeing your funds successfully update in real time.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Is the transaction visible in your recent activity and reflected in your updated balance?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Verifying the recent transactions list and the available balance ensures the payment was fully processed and recorded.",
-        "whatTheAgentLoses": "You lose the peace of mind that comes from personally confirming your funds settled correctly in the account history.",
-        "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "never",
+        "check": "Does the balance shown still reflect the pre-payment amount until the screen is refreshed?",
+        "say_example": "Refreshed the screen to pick up the updated balance"
        }
       ]
      },
@@ -2078,24 +1960,16 @@
       "label": "Check the notifications",
       "questions": [
        {
-        "question": "What confirmation will I receive after sending the money?",
+        "question": "What confirmation will you get after sending the money?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Knowing that Zelle sends confirmation emails to both parties provides peace of mind that the transaction completed successfully.",
         "whatTheAgentLoses": "You lose the immediate reassurance of checking your own inbox to verify the transaction went through and the recipient was notified.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Which notifications confirm the money transfer was successful?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Checking the text message and Gmail notification from Capital One provides immediate proof that the transaction was completed and acknowledged by the recipient.",
-        "whatTheAgentLoses": "Delegating this step means missing the personal reassurance of seeing the recipient's direct text message and the official bank confirmation.",
-        "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the app state that it sends confirmation emails to both sender and recipient?",
+        "say_example": "This sends a confirmation email to both of you"
        }
       ]
      },
@@ -2111,10 +1985,12 @@
         "why": "This matters because the confirmation screen warns that the recipient is unregistered and your account will not be debited until they sign up.",
         "whatTheAgentLoses": "The user loses the awareness that their payment is currently pending and requires the recipient to take action before the money actually moves.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the confirmation warn that the recipient is unregistered and the account won't be debited until they sign up?",
+        "say_example": "<Name> hasn't signed up yet, so nothing's actually been taken from your account until they do"
        },
        {
-        "question": "Do you want to verify the instructions the recipient receives to claim the money?",
+        "question": "Do you want to check what your recipient needs to do to claim the money?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": true,
@@ -2122,17 +1998,9 @@
         "whatTheAgentLoses": "You lose the opportunity to understand exactly what steps the recipient must take to access the funds.",
         "kind": "decision",
         "verify_form": "Check whether anyone verified the claim side - the email gives your recipient 24 hours before the payment dies; if the agent skipped that, the send can quietly expire.",
-        "speak": "never"
-       },
-       {
-        "question": "Is your payment confirmed, and does the recipient need to take action to receive it?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "This matters because the screen confirms the send but warns that the deposit is pending the recipient's action.",
-        "whatTheAgentLoses": "The delegator loses the immediate knowledge that their recipient might need to manually accept the payment to get the funds.",
-        "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the email to the recipient say they must click a link to claim the money within a stated time limit before it expires?",
+        "say_example": "Your recipient has <24 hours> to claim this before it expires"
        }
       ]
      },
@@ -2149,18 +2017,9 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify the estimated delivery timeline and decide if you need to keep a downloaded record of the transaction.",
         "kind": "decision",
         "verify_form": "Check whether a receipt got saved - the screen offered a download and the agent chose; with no file kept, this transfer's proof lives only inside the app.",
-        "speak": "never"
-       },
-       {
-        "question": "Do you want to save or print a PDF copy of this receipt?",
-        "cluster": "hand over",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays a browser print dialog with a preview of the transaction details, offering the option to save a permanent record of the completed payment.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether to keep a personal, offline record of the transaction receipt for your own files.",
-        "kind": "decision",
-        "verify_form": "The print dialog was open and got cancelled - check whether you wanted a PDF or paper copy; the transaction ID on it is what you would quote in a dispute.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen offer to download a statement or receipt for this transfer?",
+        "say_example": "There's a receipt to download here. Keep it, because this kind of payment has no chargeback."
        }
       ]
      }
@@ -2173,110 +2032,19 @@
     "children": [
      {
       "id": "9.1",
-      "label": "Review a received payment",
-      "questions": [
-       {
-        "question": "What are the details of the transaction you just received?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The screen displays the sender, amount, and completed status, confirming the exact details of the transfer.",
-        "whatTheAgentLoses": "You lose the immediate reassurance of personally verifying the completed transaction details and knowing the money was successfully processed.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Did the payment successfully post to your Apple Pay Cash balance?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "Checking the last transaction on the Apple Pay Cash card confirms that the money was actually received and added to the balance.",
-        "whatTheAgentLoses": "You lose the peace of mind that comes from independently verifying the completed transaction in your own Wallet app history.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Do the sender names on the sending and receiving receipts match?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The receipt on the receiving device lists the sender as \"[name]\", but the sending device lists \"[name]\", revealing a discrepancy in the transaction records.",
-        "whatTheAgentLoses": "You lose the opportunity to realize that the payment was processed under an unexpected or mismatched account name.",
-        "kind": "state-check",
-        "speak": "if-wrong"
-       }
-      ]
+      "label": "Review a received payment"
      },
      {
       "id": "9.2",
-      "label": "Start a bank transfer",
-      "questions": [
-       {
-        "question": "Should you transfer your current balance to a bank account?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a $10 Apple Pay Cash balance and requires adding a full bank account number to initiate a transfer.",
-        "whatTheAgentLoses": "The user loses the privacy of keeping their full bank account number secure and the choice of which specific bank receives the funds.",
-        "kind": "decision",
-        "verify_form": "Check whether a transfer to the bank was started and for how much - moving your balance out is a withdrawal you may never have asked for.",
-        "speak": "never"
-       },
-       {
-        "question": "How do you proceed when your available balance is zero and the next button is inactive?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a $0.00 Venmo balance, which disables the Next button and prevents the transfer from being executed.",
-        "whatTheAgentLoses": "The user loses the immediate feedback that the account lacks funds and the choice to verbally explain the steps rather than attempting an impossible action.",
-        "kind": "state-check",
-        "speak": "on-event"
-       }
-      ]
+      "label": "Start a bank transfer"
      },
      {
       "id": "9.3",
-      "label": "Choose the transfer speed and fee",
-      "questions": [
-       {
-        "question": "Should you pay a fee for an instant transfer to your bank, or wait up to three days for a free transfer?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents a choice between paying for an instant transfer or waiting up to three business days for a free transfer to your linked bank account.",
-        "whatTheAgentLoses": "You lose the ability to decide whether the speed of an instant transfer is worth the associated fee based on your current financial urgency.",
-        "kind": "decision",
-        "verify_form": "The agent picked a transfer speed - check whether it took the instant option and its fee or the free three-day one; paying for speed you didn't ask for is a preference, not a default.",
-        "speak": "never"
-       }
-      ]
+      "label": "Choose the transfer speed and fee"
      },
      {
       "id": "9.4",
-      "label": "Set the transfer amount and destination",
-      "questions": [
-       {
-        "question": "How much of your cash balance do you want to transfer, and to which linked bank account?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays your current Apple Pay Cash balance and the destination bank account, requiring you to specify the exact amount to move.",
-        "whatTheAgentLoses": "You lose control over your immediate liquidity, as an agent might transfer funds you intended to keep in the app or send them to the wrong linked account.",
-        "kind": "decision",
-        "verify_form": "The agent set the withdrawal - check the amount and destination account on the transfer screen; moving the full balance somewhere you didn't name is exactly the mistake this screen invites.",
-        "speak": "never"
-       },
-       {
-        "question": "Did the bank transfer ever resolve? The confirmation warns it takes 1 to 3 business days, and nothing afterward shows it completing.",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The confirmation screen states that transfers take 1 to 3 business days, so the video concludes before the payment fully clears.",
-        "whatTheAgentLoses": "You lose the certainty of knowing the transfer successfully cleared the bank after the pending period.",
-        "kind": "state-check",
-        "speak": "if-wrong"
-       }
-      ]
+      "label": "Set the transfer amount and destination"
      }
     ]
    }

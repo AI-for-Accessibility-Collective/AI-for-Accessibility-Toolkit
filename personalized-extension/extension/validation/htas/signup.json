@@ -23,7 +23,9 @@
         "whatTheAgentLoses": "You lose the choice of which device is most convenient for you to type your credentials on.",
         "kind": "decision",
         "verify_form": "The TV offered typing by phone (QR) or by remote - the agent picked one; check which, since the phone path moves the flow onto another device you would need in hand.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the TV screen offer a QR code for phone entry as well as a remote-entry option?",
+        "say_example": "This screen wants your info typed by <phone (QR code)> or by <the remote>. I'll use <the remote> so you don't need your phone in hand."
        },
        {
         "question": "Can you create an account directly in the mobile app?",
@@ -33,7 +35,9 @@
         "why": "This matters because the app only displays a profile selection screen for existing users, requiring you to switch to a web browser to actually sign up.",
         "whatTheAgentLoses": "You lose the awareness that the app restricts new signups and the opportunity to choose which browser to use for creating your account.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the mobile app screen show only profile selection for an existing account, with no option to start a new signup?",
+        "say_example": "The app only lets you pick a profile - it won't start a new account here. I'm switching to a browser to sign up."
        },
        {
         "question": "Do you want to create the account using the installed app or a web browser?",
@@ -44,7 +48,9 @@
         "whatTheAgentLoses": "The user loses the ability to choose their preferred platform for account creation, which can affect how billing and subscriptions are routed.",
         "kind": "decision",
         "verify_form": "The agent signed up through the app or the browser - check which, because the surface decides who bills you (app store vs the site) and where you would later have to cancel.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the app store page offer 'Open' for the already-installed app alongside a way to continue in a web browser instead?",
+        "say_example": "I can do this in the app that's already installed, or in a browser. I'm using <the app>, which means billing and cancelling later both happen through <the app store>."
        },
        {
         "question": "Which app will you use to browse the web?",
@@ -55,7 +61,9 @@
         "whatTheAgentLoses": "Delegating this choice means the agent might select a browser that lacks your preferred settings, saved passwords, or extensions.",
         "kind": "decision",
         "verify_form": "Check which browser the agent ran the signup in - a different browser means your saved passwords and sessions were not there, and the new credentials got saved somewhere you may not look.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Which browser app did the device's app drawer open to reach the site?",
+        "say_example": "Opened <Chrome>"
        },
        {
         "question": "How should you start the new browsing session?",
@@ -66,7 +74,9 @@
         "whatTheAgentLoses": "You lose the choice to force a clean slate for the signup by selecting an incognito tab instead of a standard one.",
         "kind": "decision",
         "verify_form": "Check whether the session ran in incognito or a normal tab - incognito left no saved session or password behind; a normal tab may have kept credentials you wanted gone.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the browser menu show a private/incognito tab option alongside a normal tab?",
+        "say_example": "Started a <normal> tab, not incognito"
        }
       ]
      },
@@ -83,7 +93,9 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to take advantage of a specific promotional ad or start from the standard homepage.",
         "kind": "decision",
         "verify_form": "The agent entered through the promoted free-trial ad or the plain homepage link - check which, because the two start different offers and the promo can bind you to a specific plan.",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the results page label the three-month-trial link as a paid ad, separate from an organic link to the plain homepage?",
+        "say_example": "The top link was a paid ad for <a three-month trial>; the plain homepage link sat below it. I used <the plain link> so I'm not bound to the ad's terms."
        },
        {
         "question": "Which search result should you click to begin setting up your Shopify store?",
@@ -93,7 +105,9 @@
         "why": "The top sponsored result points directly to the official Shopify free trial page, which is the correct starting point for creating a new account.",
         "whatTheAgentLoses": "You lose the ability to verify that the official Shopify link is selected from the search results rather than a potentially deceptive ad.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the top search result (sponsored or not) point to Shopify's own domain rather than a third-party site?",
+        "say_example": "The top result was a sponsored ad, but it points to <Shopify's own trial page>, so I used it."
        },
        {
         "question": "Which search result should you click to reach the official WordPress account creation page?",
@@ -103,7 +117,9 @@
         "why": "The search results display links for both WordPress.com and WordPress.org, requiring you to choose the correct platform to start your signup.",
         "whatTheAgentLoses": "You lose the ability to ensure the agent selects the correct version of the service for your specific needs.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the clicked result go to wordpress.com's account-creation page rather than wordpress.org?",
+        "say_example": "There were two WordPress links - .com and .org. I used <wordpress.com>, since that's where accounts get made."
        },
        {
         "question": "Which search result should you click to reach the official Netlify website?",
@@ -113,7 +129,9 @@
         "why": "Selecting the correct search result ensures you navigate to the legitimate Netlify website rather than a sponsored ad or third-party site.",
         "whatTheAgentLoses": "The user loses the chance to visually verify that the selected search result is the official website and not a deceptive ad.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the top result link to netlify.com rather than a sponsored ad or a third-party site?",
+        "say_example": "I used the link that actually goes to <netlify.com>, not the sponsored one above it."
        },
        {
         "question": "Which search result should you click to reach the official Spotify for Artists website?",
@@ -123,7 +141,9 @@
         "why": "The top search result is a sponsored ad for SoundCloud, so selecting the correct organic link ensures you sign up for Spotify rather than a competitor.",
         "whatTheAgentLoses": "You lose the assurance of knowing the agent bypassed competitor ads to select the authentic service website.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the chosen result point to Spotify's own artists.spotify.com rather than a competitor's sponsored ad?",
+        "say_example": "The top ad was for <a rival platform>, not Spotify. I skipped it and used the organic link to Spotify for Artists."
        },
        {
         "question": "Which search result do you click to access the SPSS Statistics free trial?",
@@ -133,7 +153,9 @@
         "why": "The first result points to the general SPSS software platform, while the second result points directly to SPSS Statistics, which could offer a faster path to the trial.",
         "whatTheAgentLoses": "You lose the opportunity to evaluate the search results and select the most direct link to the specific product trial.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the chosen result link to the SPSS Statistics-specific trial page rather than the general SPSS platform page?",
+        "say_example": "Two results looked alike - I used the one that goes straight to <the SPSS Statistics trial>, not the general platform page."
        }
       ]
      },
@@ -149,7 +171,9 @@
         "why": "The search results display a sponsored ad and a competitor like Apple Music alongside the actual Spotify app, requiring careful selection to proceed.",
         "whatTheAgentLoses": "The user loses the assurance of visually verifying that the official Spotify app is being selected instead of a sponsored ad or competitor.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the app store listing opened match the official app rather than a sponsored ad or a competitor's app?",
+        "say_example": "The search results had a sponsored ad and <a competitor's app> next to the real one. I opened <the official Spotify app>."
        },
        {
         "question": "Does the app's store page show Open (already installed) rather than Install?",
@@ -159,17 +183,21 @@
         "why": "The narrator says to install Premiere Pro, but the button reads 'Open', indicating the software is already installed.",
         "whatTheAgentLoses": "The user loses accurate guidance on the current state of the application, leading to confusion about whether installation is actually required.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the app store page's button read 'Open' rather than 'Install'?",
+        "say_example": "This says Open, not Install - <the app> is already on this device, so nothing new is being installed."
        },
        {
-        "question": "Are you installing the correct app, and do you have enough storage space for it?",
+        "question": "Do you have enough storage space on your device to install this app?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows the app requires 32.27MB of space and your device only has 352MB free, making it important to verify capacity before installing.",
         "whatTheAgentLoses": "You lose the chance to monitor your device's limited storage capacity and decide if this specific app is worth the space.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the app's listed storage requirement exceed what the device reports as free space?",
+        "say_example": "The app needs <32MB> and this device shows <352MB> free, so there's room."
        }
       ]
      },
@@ -186,7 +214,9 @@
         "whatTheAgentLoses": "The user loses the chance to evaluate the platform's offerings and terms before committing to the signup process.",
         "kind": "decision",
         "verify_form": "The agent skipped or skimmed the platform's features and pricing pages on its way in - check what it actually read; if you wanted the offer vetted first, that evaluation never happened.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the homepage have visible Features, Pricing, and Resources sections?",
+        "say_example": "Went straight past Features and Pricing without opening them"
        },
        {
         "question": "Do you want to explore top navigation sections like Pricing or Resources before starting?",
@@ -197,7 +227,9 @@
         "whatTheAgentLoses": "You lose the opportunity to manually review the service's features and pricing details before the agent proceeds with creating an account.",
         "kind": "decision",
         "verify_form": "Check whether the agent went straight into signup without opening Pricing or Resources - it committed you to the flow without the background read you might have wanted.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the top navigation offer Pricing or Resources links?",
+        "say_example": "Skipped the Pricing and Resources menu items"
        },
        {
         "question": "Should you review the app's features and supported languages before opening it?",
@@ -208,17 +240,9 @@
         "whatTheAgentLoses": "You lose the chance to personally verify the app's features, ratings, and language options before committing to an account.",
         "kind": "decision",
         "verify_form": "The agent moved past the app's store page - check that the supported languages and features cover what you need, because nobody verified that before the account got made.",
-        "speak": "never"
-       },
-       {
-        "question": "What is the starting price, and how do you begin the sign-up process?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Seeing the starting price of USD2.99/month informs your financial expectations before you enter your email to create a membership.",
-        "whatTheAgentLoses": "You miss seeing the lowest available monthly price before deciding to share your email address and start the flow.",
-        "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "never",
+        "check": "Does the app store page show screenshots and a list of supported languages and features?",
+        "say_example": "Skipped the app's screenshots and language list"
        },
        {
         "question": "Does the homepage pricing match the promise of a free sign-up?",
@@ -228,7 +252,9 @@
         "why": "The opening title card claims the sign-up is free, but the Netflix homepage explicitly states plans start at USD 2.99.",
         "whatTheAgentLoses": "The user loses the chance to avoid unexpected charges if the agent proceeds with a paid plan when a free one was expected.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the homepage list a starting price (e.g., USD2.99/month) even though an earlier screen advertised the sign-up as free?",
+        "say_example": "The earlier screen said sign-up was free, but plans actually start at <USD2.99 a month>. That's not really free."
        },
        {
         "question": "Do you want to browse the available shows and live TV categories before signing up?",
@@ -239,7 +265,9 @@
         "whatTheAgentLoses": "An agent might immediately proceed to sign up without exploring the catalog, preventing you from confirming if your favorite series or local live stations are available.",
         "kind": "decision",
         "verify_form": "Check whether the agent explored the catalog before committing - if not, nobody confirmed your channels and shows exist on this service before the account was created.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the homepage let you browse show or live-TV categories before signing up?",
+        "say_example": "Skipped browsing the show catalog before signing up"
        },
        {
         "question": "Is your preferred language supported by the software?",
@@ -249,7 +277,9 @@
         "why": "The registration page explicitly lists that only English and Chinese (Simplified and Traditional) are supported.",
         "whatTheAgentLoses": "You lose the chance to abort the signup if the software is not available in a language you can read and use.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the registration page list the supported languages (e.g., English, Chinese Simplified/Traditional)?",
+        "say_example": "This only supports <English and Chinese>. If you need another language, this service won't have it."
        }
       ]
      },
@@ -266,10 +296,12 @@
         "whatTheAgentLoses": "You lose the ability to enforce your personal privacy preferences regarding online tracking.",
         "kind": "decision",
         "verify_form": "A cookie banner sat on the page - check whether the agent accepted all, rejected all, or ignored it; that is your tracking preference and it made the call.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show a cookie-consent banner with Accept All / Reject All options?",
+        "say_example": "There's a cookie banner here. I'm picking <Reject All> unless you'd rather I accept."
        },
        {
-        "question": "Do you want to proceed with the sign-up despite the browser compatibility warning?",
+        "question": "Do you want to sign up anyway, even with the browser warning?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -277,7 +309,9 @@
         "whatTheAgentLoses": "The user loses the chance to evaluate if the service's browser requirements conflict with how they plan to watch.",
         "kind": "decision",
         "verify_form": "A warning said this browser cannot play the service - the agent continued anyway or stopped; check whether the browser you will actually watch in meets the requirement, or the account only works elsewhere.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page warn that this browser (e.g., not Chrome or Firefox) isn't supported for watching on a computer?",
+        "say_example": "This warns that <this browser> isn't supported for watching on a computer. If you'll watch here later, the account may not work in this browser."
        },
        {
         "question": "Is the service available in your current region, or did the site display a geo-restriction error?",
@@ -287,7 +321,9 @@
         "why": "Streaming services frequently restrict signups by country, meaning a VPN or traveling might block you from even opening the join flow.",
         "whatTheAgentLoses": "The user loses the ability to realize they need to adjust their network settings or VPN to access the service's catalog.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show a message blocking signup because of a country or region restriction?",
+        "say_example": "This says the service isn't available in <your region> right now, so signup is blocked here."
        },
        {
         "question": "Did clicking the trial link redirect you to a standard pricing page because the promotional offer had expired?",
@@ -297,7 +333,9 @@
         "why": "Promotional links can expire, and if the system redirects you to the standard paid plans instead of the free trial, you need to decide whether to continue or abandon the signup.",
         "whatTheAgentLoses": "You lose the ability to notice that the promised free trial is no longer available before you start entering your personal information.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the landing page show the standard pricing/plans page instead of the promotional trial that was clicked?",
+        "say_example": "The trial link actually landed on <the regular pricing page> - that promo looks expired."
        },
        {
         "question": "Did the sign-up flow crash or loop because your incognito tab blocked the necessary session cookies?",
@@ -307,7 +345,9 @@
         "why": "Strict privacy settings in incognito mode can sometimes block the cookies required to maintain your session across the multi-step registration process.",
         "whatTheAgentLoses": "You lose the ability to recognize that your privacy settings are breaking the site and that you need to switch to a standard tab to sign up.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show a repeated login error or loop back to the start after an incognito tab was used?",
+        "say_example": "The incognito tab is looping back to the start - its cookie blocking seems to be breaking the sign-up session."
        }
       ]
      },
@@ -324,7 +364,9 @@
         "whatTheAgentLoses": "You lose the ability to clarify whether the agent should log into an existing account or start a brand new signup flow.",
         "kind": "decision",
         "verify_form": "The agent went down one of the two doors - new account or existing sign-in. Check which it picked; if you already have an account here, a fresh signup may create a duplicate you never wanted.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the launch screen show a distinct 'Sign In' option for existing users separate from a 'Get Started' or 'Join' option for new accounts?",
+        "say_example": "This screen has a Sign In door and a Get Started door. Do you already have an account here, or should I start a new one?"
        },
        {
         "question": "Has the flow drifted into the join path when the goal was signing in (or the reverse), and does it back out cleanly instead of leaving a stray half-account?",
@@ -334,7 +376,9 @@
         "why": "The screen only provides options to send a sign-up link or go back, so you must use the 'Back' button to return to the main menu and find the login area.",
         "whatTheAgentLoses": "The user loses the ability to manually correct a wrong navigation choice and switch to logging into an existing account.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the current screen offer only a 'send sign-up link' action and a Back button, suggesting the flow drifted onto the join path when the goal was signing in (or the reverse)?",
+        "say_example": "This landed on <the join path>, not sign-in. I'm using Back to get to the login area instead of pushing through here."
        },
        {
         "question": "Are you on the login page for existing users instead of the new account signup?",
@@ -344,10 +388,12 @@
         "why": "The screen displays a 'Log in' prompt with a 'Continue with email' button and a 'New to Shopify?' link, indicating this is meant for returning users.",
         "whatTheAgentLoses": "The user loses the ability to ensure the agent correctly recognizes a login screen and redirects to the proper new account registration flow.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "if-wrong",
+        "check": "Does the page show a 'Log in' heading with a 'Continue with email' button and a 'New to <service>?' link, rather than a new-signup screen?",
+        "say_example": "This is the existing-user login page, not new signup. I'm backing out to find Join instead."
        },
        {
-        "question": "Do you want to accept the 7-day free trial for ₹ 99.00/month, or sign in to an existing account?",
+        "question": "Do you want to accept the free trial here, or sign in to an existing account?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -355,7 +401,9 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to commit to the specific trial terms or use an existing subscription.",
         "kind": "decision",
         "verify_form": "The welcome screen bound the trial to Rs 99 a month after 7 days - check whether the agent accepted that offer or signed into an existing account; if it proceeded, those trial terms are now yours.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the welcome screen offer a 7-day free trial that converts to a stated monthly charge, alongside a sign-in option for existing accounts?",
+        "say_example": "This is a <7-day> free trial, then <₹99 a month> automatically. OK to start that, or do you already have an account to sign into instead?"
        },
        {
         "question": "Do you want to confirm signing out and abandon the account creation process?",
@@ -366,7 +414,9 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to intentionally abandon the signup flow or stay logged in to finish creating your account.",
         "kind": "decision",
         "verify_form": "A Leaving-So-Soon screen asked to confirm the exit - check whether the agent abandoned the signup or stayed; an abandoned flow means no account despite the time spent.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does a 'Leaving So Soon?' screen ask to confirm signing out, noting it's only needed on shared devices?",
+        "say_example": "This is asking to confirm signing out and dropping the account creation. Want me to stay, or actually leave?"
        },
        {
         "question": "Should you finish setting up this existing account or start a fresh signup?",
@@ -377,7 +427,9 @@
         "whatTheAgentLoses": "You lose the choice of whether to reuse an existing incomplete profile or force a completely new account creation.",
         "kind": "decision",
         "verify_form": "An unfinished account already existed - check whether the agent resumed it or forced a new one in a fresh session; duplicates and orphaned half-accounts both start at this fork.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the screen show an unfinished account with a 'Start Membership' warning, rather than a completed one?",
+        "say_example": "There's already a half-finished account sitting here. Want me to continue that one, or start over fresh?"
        }
       ]
      }
@@ -387,19 +439,6 @@
     "id": "2",
     "label": "Create the account",
     "note": "2.1 first; 2.2 replaces 2.3 through 2.5 when SSO is taken; else 2.3, 2.4, 2.5 in the form's order; 2.6 before 2.7; 2.8 fires whenever the browser interrupts; a failed 2.7 loops back into 2.3 or 2.4",
-    "questions": [
-     {
-      "question": "Which email and password will you use, and do you want to opt out of promotional emails?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen requires an email and password to create the account and includes a checkbox to opt out of Netflix special offers.",
-      "whatTheAgentLoses": "The person loses control over their account password and their preference for receiving marketing emails.",
-      "kind": "decision",
-      "verify_form": "One form took the email, the password, and the offers checkbox together - check all three values; each is a preference of yours the agent filled in one pass.",
-      "speak": "never"
-     }
-    ],
     "children": [
      {
       "id": "2.1",
@@ -414,10 +453,12 @@
         "whatTheAgentLoses": "You lose control over whether to link your social media profile or use a specific, isolated email address for the new account.",
         "kind": "decision",
         "verify_form": "Check which signup route the agent took - linking Facebook ties the account to your social profile, plain email keeps it separate; that trade-off was made without you.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the signup screen offer a Facebook-login option alongside standard email fields?",
+        "say_example": "This site offers signing up through Facebook or by plain email. I'm using <email> so the account stays separate from your Facebook profile."
        },
        {
-        "question": "Which signup method should you use, and do you accept the trial terms?",
+        "question": "Which signup method do you want to use?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -425,7 +466,9 @@
         "whatTheAgentLoses": "Delegating this step means the agent might link a social account you prefer to keep separate or accept future billing terms you haven't explicitly approved.",
         "kind": "decision",
         "verify_form": "Check which signup option the agent tapped under the 3-days-free-then-charged banner - the method links accounts, and proceeding accepted the trial's billing terms.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen show a specific trial offer (e.g., 3 days free, then a stated charge) alongside multiple account-creation methods?",
+        "say_example": "Under this option you get <3 days free>, then <₹20> automatically. I'm using <email> to sign up under those terms."
        },
        {
         "question": "Which method do you want to use to create your new account?",
@@ -436,7 +479,9 @@
         "whatTheAgentLoses": "You lose the ability to choose your preferred authentication method and decide whether to link the service to your existing single sign-on providers.",
         "kind": "decision",
         "verify_form": "Check whether the account was created with email or by linking Google or Apple - the linkage decides where your credentials live and what gets shared.",
-        "speak": "gate"
+        "speak": "on-event",
+        "check": "Does the screen offer email, Google, and Apple as separate ways to create the account?",
+        "say_example": "You can sign up with email, Google, or Apple here. I'm using <email> so nothing gets linked to another account."
        }
       ]
      },
@@ -445,7 +490,7 @@
       "label": "Authorize the linked account",
       "questions": [
        {
-        "question": "Which provider do you want to use to sign up, and do you approve the requested access permissions?",
+        "question": "Which provider do you want to use to sign up?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -453,7 +498,9 @@
         "whatTheAgentLoses": "You lose the ability to choose which third-party account is linked and to review the specific data permissions granted to the new service.",
         "kind": "decision",
         "verify_form": "An identity provider got linked and its permission screen approved - check which account was connected and what data access got granted in your name.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the screen ask you to pick an identity provider (e.g., GitHub, email) and show a permissions screen naming what data access will be granted (e.g., read-only email)?",
+        "say_example": "Signing up with <GitHub> means giving this app <read-only access to your email>. I'm continuing with that unless you'd rather use plain email instead."
        },
        {
         "question": "Do you agree to the new data control features for your Google account?",
@@ -464,7 +511,9 @@
         "whatTheAgentLoses": "You lose the opportunity to review and understand how your Google account data will be managed under these new terms.",
         "kind": "decision",
         "verify_form": "An I-AGREE screen for new Google data features got accepted - check what was agreed to; those controls now govern your Google account, not just this signup.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the screen require accepting new data-control features or terms for the linked Google account before continuing?",
+        "say_example": "Continuing here also updates data-control settings on your actual Google account, not just this signup. I accepted them to keep going."
        },
        {
         "question": "Did using single sign-on (SSO) unexpectedly log you into an old, inactive account instead of starting a new registration?",
@@ -474,7 +523,9 @@
         "why": "Clicking 'Continue with Google/Apple' can bypass the new account flow if you previously used the service, meaning you won't get a new free trial.",
         "whatTheAgentLoses": "The user loses the chance to realize they are reactivating an old account (and will be billed immediately) rather than getting the expected new user trial.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the page show you logged into an existing, previously-used account rather than a fresh registration, right after using single sign-on?",
+        "say_example": "Signing in with <Google> logged into an account you already had here, not a new one, so there's no free trial. Do you want to keep using that account, or stop here so you can decide what to do next?"
        }
       ]
      },
@@ -488,28 +539,6 @@
         "label": "Enter email or phone",
         "questions": [
          {
-          "question": "Where do you enter your email to begin creating your account?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The homepage features a prominent email input field and a 'Get Started' button specifically designed to initiate the membership process.",
-          "whatTheAgentLoses": "Delegating this step means you lose the opportunity to choose which specific email address is used to establish your new account.",
-          "kind": "decision",
-          "verify_form": "An email address went into the homepage field - check whose address it is; the whole account hangs off it, and if you did not name one, the agent chose for you.",
-          "speak": "never"
-         },
-         {
-          "question": "Are you okay with plans starting at USD2.99/month, and which email address do you want to use to create the account?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen shows the base price for the service and asks for the email address that will be tied to your new membership.",
-          "whatTheAgentLoses": "You lose the ability to confirm the starting price before proceeding and to choose which specific email address is registered.",
-          "kind": "decision",
-          "verify_form": "Before the flow moved on, the screen said plans start at USD2.99 and took an email - check the address used and whether that price band is one you accepted; the agent settled both.",
-          "speak": "never"
-         },
-         {
           "question": "Which email address do you want to use to receive the sign-up link?",
           "cluster": "hand over",
           "moment": "Now",
@@ -518,7 +547,9 @@
           "whatTheAgentLoses": "You lose the ability to decide which of your personal email addresses will receive the sign-up link and be tied to the new account.",
           "kind": "decision",
           "verify_form": "The sign-up link went to some address - check which inbox, because finishing the signup and every future recovery happens there.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the page ask for an email address to send a sign-up link to, rather than a password field?",
+          "say_example": "Sent the sign-up link to <the address on file>"
          },
          {
           "question": "Which email address should I use for this account?",
@@ -529,7 +560,9 @@
           "whatTheAgentLoses": "The user loses the opportunity to decide which specific email address will receive account notifications and serve as the login credential.",
           "kind": "decision",
           "verify_form": "Check the address the account got created under - notifications, receipts, and login all route there; if you never named one, the agent picked.",
-          "speak": "gate"
+          "speak": "gate",
+          "check": "Does the account-creation screen show an empty or editable email field required to proceed?",
+          "say_example": "This account needs an email address. Which one should I use?"
          },
          {
           "question": "Should you select one of your saved email addresses to sign up?",
@@ -540,10 +573,12 @@
           "whatTheAgentLoses": "You lose control over whether to reuse a specific saved email or modify it into a new alias for the account.",
           "kind": "decision",
           "verify_form": "The browser offered saved addresses - check whether one was reused or edited into an alias; which identity got recycled was the agent's pick.",
-          "speak": "on-event"
+          "speak": "on-event",
+          "check": "Does the browser show an autofill dropdown listing previously saved email addresses under 'Use saved password?'",
+          "say_example": "Your browser is offering three saved addresses here. Should I reuse one of those, or type a different address?"
          },
          {
-          "question": "Which email or phone number should I use to create your account, and do you want to opt into marketing emails?",
+          "question": "Which email or phone number should I use to create your account?",
           "cluster": "hand over",
           "moment": "Now",
           "moneyMoving": false,
@@ -551,7 +586,9 @@
           "whatTheAgentLoses": "You lose control over which contact method is linked to the account and whether you receive promotional spam.",
           "kind": "decision",
           "verify_form": "Check which contact identifier the account was created with and the promo checkbox's state - both were the agent's defaults if you never said.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the form ask for an email or phone number, with a separate checkbox for marketing emails?",
+          "say_example": "Used <the address given>; left the marketing checkbox <unchecked>"
          },
          {
           "question": "Will you register using your mobile number or use your email address instead?",
@@ -562,27 +599,21 @@
           "whatTheAgentLoses": "You lose control over whether your personal phone number or email address is shared with the service and used for account verification.",
           "kind": "decision",
           "verify_form": "The form defaulted to phone-number signup with an email alternative - check which the agent used; that decides whether your phone number got handed over and where verification codes go.",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the registration form default to a mobile-number field, with a separate button to use email instead?",
+          "say_example": "This defaults to registering by phone number. I switched it to <email> instead, unless you'd rather give a number."
          },
          {
-          "question": "Do you currently have access to the email address you are entering?",
-          "cluster": "",
-          "moment": null,
-          "moneyMoving": false,
-          "why": "The signup process will require you to verify or receive communications at this address, so it must be an inbox you can actually open.",
-          "whatTheAgentLoses": "You risk creating an account tied to an inaccessible email address, potentially locking you out of password recovery or verification steps.",
-          "kind": "intent-check",
-          "speak": "never"
-         },
-         {
-          "question": "Are you using a new phone number to ensure you can successfully create the account?",
+          "question": "Did the page reject the phone number as already registered to an existing account?",
           "cluster": "",
           "moment": null,
           "moneyMoving": false,
           "why": "The narrator warns that if you have used the service before, you must enter a new phone number because the old one will not work for creating a new account.",
           "whatTheAgentLoses": "The user loses the ability to successfully create a new trial account if the agent reuses an old phone number that the system rejects.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the page reject or warn that this phone number is already registered to an existing account?",
+          "say_example": "This number is already tied to an account here. Do you want to use a different number, or is that your existing account?"
          }
         ]
        },
@@ -599,7 +630,9 @@
           "whatTheAgentLoses": "You lose the ability to decide whether to link this new account to your current inbox or keep it separate with a brand new email address.",
           "kind": "decision",
           "verify_form": "Check whether the account rides on an address you already own or a freshly minted Outlook one - the agent decided whether this inbox stays connected to your life or starts empty.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the signup screen offer both an existing-email field and a 'Get a new email address' option?",
+          "say_example": "Used <an existing address> rather than creating a new Outlook one"
          },
          {
           "question": "Which email domain do you want to use?",
@@ -610,7 +643,9 @@
           "whatTheAgentLoses": "Delegating this step means you lose the ability to choose your preferred email extension for the new account.",
           "kind": "decision",
           "verify_form": "The new address took a domain from the dropdown - check whether it reads outlook.com or hotmail.com; that suffix is permanent and it was the agent's pick.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the new-address form show a domain dropdown listing outlook.com and hotmail.com?",
+          "say_example": "Picked the <outlook.com> domain"
          },
          {
           "question": "Is your desired email address available?",
@@ -620,7 +655,9 @@
           "why": "The screen displayed an error stating the email address was already taken, requiring a different input to continue creating the account.",
           "whatTheAgentLoses": "You lose the opportunity to decide which alternative email address to use when your first choice is unavailable.",
           "kind": "state-check",
-          "speak": "on-event"
+          "speak": "if-wrong",
+          "check": "Does the page show an error that the requested email address is already taken?",
+          "say_example": "That address is already taken. I need a different one - any preference?"
          }
         ]
        },
@@ -636,17 +673,9 @@
           "why": "The screen shows \"[email]\" entered in the email field, which will become the primary contact and login for this service once you proceed.",
           "whatTheAgentLoses": "You lose the opportunity to decide whether to use your primary, secondary, or a dedicated spam email address for this specific subscription.",
           "kind": "intent-check",
-          "speak": "if-wrong"
-         },
-         {
-          "question": "Is the correct email address entered to proceed?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen shows a pre-filled email in the IBMid field, which must be accurate to successfully access or create your account.",
-          "whatTheAgentLoses": "You lose the opportunity to verify that the agent is using your preferred email address for this service.",
-          "kind": "intent-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Does the email field show the address that was just entered, presented as the one to carry forward as this account's primary contact?",
+          "say_example": "The email on screen is <address>. That's what this account will use to log in and get notified - is that the one you want?"
          },
          {
           "question": "Does the verification disclaimer match the contact method you just entered?",
@@ -656,7 +685,9 @@
           "why": "The form shows an email address entered, but the disclaimer warns about a text message verification, creating confusion about the actual verification method.",
           "whatTheAgentLoses": "The user loses the chance to notice a discrepancy in the signup requirements that might unexpectedly demand a phone number.",
           "kind": "state-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Does the verification disclaimer name a contact method (e.g., text message) that differs from what was actually entered (e.g., an email address)?",
+          "say_example": "This warns about a text message, but an email was entered, not a phone number. Those two don't match - the code may not go where you'd expect."
          },
          {
           "question": "Did the form reject your input because the 'Email Address' and 'Confirm your Address' fields did not match?",
@@ -666,7 +697,9 @@
           "why": "The signup form requires both email fields to be identical to prevent typos, and a mismatch will block you from advancing to the next step.",
           "whatTheAgentLoses": "You lose the ability to spot that a simple typo between the two email fields is what is preventing the account creation from proceeding.",
           "kind": "state-check",
-          "speak": "on-event"
+          "speak": "on-event",
+          "check": "Does the form show an error that the 'Email Address' and 'Confirm your Address' fields didn't match?",
+          "say_example": "The two email fields didn't match, so the form rejected it. Re-entering now."
          }
         ]
        }
@@ -685,7 +718,9 @@
         "whatTheAgentLoses": "You lose control over your personal password management strategy, as the agent might generate a password you cannot easily retrieve later.",
         "kind": "decision",
         "verify_form": "Check whether the password is the browser's generated string or a typed one - a generated one you never saw exists only inside that browser's vault.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the browser offer to auto-generate a password, alongside a field to type one manually?",
+        "say_example": "Used <a typed password> rather than the browser's generated one"
        },
        {
         "question": "What password do you want to set for this account?",
@@ -696,10 +731,12 @@
         "whatTheAgentLoses": "Delegating this means you lose control over the security credentials used to access your new account.",
         "kind": "decision",
         "verify_form": "A password now guards the account - check that it is one you know and can retrieve; an agent-invented secret locks you out of your own account.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the form require a password within a stated length range (e.g., 4-60 characters) to create the account?",
+        "say_example": "This needs a password to lock in the account. What do you want to use?"
        },
        {
-        "question": "What password will you set, and do you want to receive promotional emails?",
+        "question": "Is the promotional-offers checkbox pre-checked by default on this signup form?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -707,7 +744,9 @@
         "whatTheAgentLoses": "Delegating this means the agent chooses your password and might leave you subscribed to unwanted marketing emails.",
         "kind": "decision",
         "verify_form": "Check the password set and the state of the pre-checked Microsoft offers box - the box arrives checked, so doing nothing subscribed you.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the promotional-offers checkbox on this password screen start pre-checked by default?",
+        "say_example": "The box for Microsoft offers and tips starts checked by default - I'm unchecking it unless you want that mail."
        },
        {
         "question": "What account name and password do you want to use?",
@@ -718,10 +757,12 @@
         "whatTheAgentLoses": "You lose the ability to select a personalized, memorable username and a secure password of your own choosing.",
         "kind": "decision",
         "verify_form": "Check the account name that got claimed (the one with the Available badge) and that the password is retrievable by you - both are permanent credentials the agent invented.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the form show a claimed account name (e.g., an 'Available' badge) alongside a password field?",
+        "say_example": "Claimed the account name <name>; password set separately"
        },
        {
-        "question": "What email and password will you use, and is your password strong enough?",
+        "question": "What email and password do you want to use?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -729,7 +770,9 @@
         "whatTheAgentLoses": "The user loses the ability to choose their own credentials and decide whether to accept a weak password or create a stronger one.",
         "kind": "decision",
         "verify_form": "The password drew a strength warning - check what was finally set; the agent traded between convenience and a password that can survive.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the screen show a password-strength warning after an email and password were entered?",
+        "say_example": "That password came back as weak. I'm strengthening it before continuing - want to set your own instead?"
        },
        {
         "question": "Did the form block you from proceeding because your password was shorter than the required 10 characters?",
@@ -739,7 +782,9 @@
         "why": "The screen explicitly requires a 10-character password, and entering a shorter one will trigger a validation error that stops the account creation.",
         "whatTheAgentLoses": "You lose the ability to immediately see the length requirement error and adjust your password to meet the security policy.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the form show a validation error that the password is shorter than a stated minimum (e.g., 10 characters)?",
+        "say_example": "That password was too short - this form needs at least <10 characters>. Lengthening it now."
        },
        {
         "question": "Did the password you entered satisfy all the visual formatting rules, such as checkmarks turning green?",
@@ -749,7 +794,9 @@
         "why": "Password requirements (e.g., uppercase, numbers, symbols) are often displayed as a checklist that visually changes state as you type, which is trivial to see but hard to verify if you cannot see the screen.",
         "whatTheAgentLoses": "You lose the ability to instantly know which specific password complexity rule is missing, leading to frustrating trial and error when the form is rejected.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Do the password's visual requirement indicators (e.g., checkmarks) all show satisfied/green, with no requirement still unmet?",
+        "say_example": "One of the password checkmarks never turned green, even though nothing said which rule failed. I'm adjusting it."
        },
        {
         "question": "Do you want to create a password to access your new account?",
@@ -760,7 +807,9 @@
         "whatTheAgentLoses": "The user loses the ability to securely set their own password for future access to the account.",
         "kind": "decision",
         "verify_form": "The order confirmation prompted for a password - check that one got set and that you know it; without it the paid account is reachable only through reset flows.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the order-confirmation page prompt for a password to access the new subscription?",
+        "say_example": "Set a password on the order-confirmation page"
        }
       ]
      },
@@ -777,7 +826,9 @@
         "whatTheAgentLoses": "Delegating this step means you lose the ability to choose the specific nickname or persona you want associated with your account.",
         "kind": "decision",
         "verify_form": "A profile name went in - check what the platform will now call you; if you did not dictate it, the agent invented your public name.",
-        "speak": "if-wrong"
+        "speak": "never",
+        "check": "Does the profile setup ask for a display name to show on the account?",
+        "say_example": "Set the display name to <name>"
        },
        {
         "question": "What date of birth and gender should I enter for your profile?",
@@ -788,7 +839,9 @@
         "whatTheAgentLoses": "The user loses control over what personal demographic information is shared with the service.",
         "kind": "decision",
         "verify_form": "A birth date and gender went into the form - check what was entered; the agent disclosed personal demographics on your behalf, possibly invented ones.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the signup flow require a date of birth and a gender selection to proceed?",
+        "say_example": "This needs a birth date and a gender to finish the profile. What should I put down?"
        },
        {
         "question": "What name should you provide for the account?",
@@ -799,7 +852,9 @@
         "whatTheAgentLoses": "Letting an agent choose means it might use a generic name instead of your preferred personal or professional identity.",
         "kind": "decision",
         "verify_form": "A first and last name went in - check what identity the account now carries; a placeholder name follows you onto invoices and mail.",
-        "speak": "if-wrong"
+        "speak": "never",
+        "check": "Does the setup screen require a first and last name to finish the profile?",
+        "say_example": "Entered the name <name>"
        },
        {
         "question": "What country and birthdate should I provide?",
@@ -810,7 +865,9 @@
         "whatTheAgentLoses": "You lose the ability to control the region and age associated with your account, which dictates whether you get a standard or child-restricted experience.",
         "kind": "decision",
         "verify_form": "Check the country and birthdate submitted - the country pins your service region, and a child's birthdate would lock the account into a restricted mode.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the form ask for a country and a birthdate, noting that a child's birthdate creates a restricted account?",
+        "say_example": "Entered country <country> and birthdate <date>"
        },
        {
         "question": "Which email address and country of residence should you use to register?",
@@ -821,7 +878,9 @@
         "whatTheAgentLoses": "Delegating this means the agent might use an incorrect email address or accept a default country that affects your service region and billing.",
         "kind": "decision",
         "verify_form": "Check the email registered and the country left in the dropdown - the defaulted country silently sets your store region and billing.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the account-creation form ask for an email address plus a country of residence?",
+        "say_example": "Registered with country set to <country>"
        },
        {
         "question": "What date of birth do you want to provide?",
@@ -832,7 +891,9 @@
         "whatTheAgentLoses": "You lose the ability to provide your actual birth date or control the age associated with your new account.",
         "kind": "decision",
         "verify_form": "Check the birth date submitted - a wrong or defaulted date can flag the account as a minor's or misstate your age permanently.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the signup flow ask for a date of birth to verify age?",
+        "say_example": "Entered birth date <date>"
        },
        {
         "question": "What gender should you select for your profile?",
@@ -843,7 +904,9 @@
         "whatTheAgentLoses": "You lose the choice of whether to share your gender identity or keep it private on this platform.",
         "kind": "decision",
         "verify_form": "Check what gender the form ended up with - Prefer-not-to-say existed, so disclosure was optional and the agent made the choice.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the account-creation screen ask for a gender, with an option not to disclose it?",
+        "say_example": "Selected gender <female>; not-to-say was available"
        },
        {
         "question": "What personal details do you want to provide to create this trial account?",
@@ -854,17 +917,21 @@
         "whatTheAgentLoses": "You lose control over which specific email address and personal information are registered with the service.",
         "kind": "decision",
         "verify_form": "Check the email, name, and location the trial registration carries - the service region and all correspondence follow those fields.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the registration form require an email, full name, password, and location together to proceed?",
+        "say_example": "Filled in email, name, password, and location <values> for the trial account"
        },
        {
-        "question": "Does the pre-filled date of birth accurately reflect your age, or will it restrict your account as a minor?",
+        "question": "Is the pre-filled date of birth actually yours, or would it register the account as a minor's?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The date of birth picker defaults to a recent year (e.g., 2015), and accepting it without changing it will register the account to a young child, potentially triggering age restrictions or parental controls.",
         "whatTheAgentLoses": "You lose the chance to prevent the agent from blindly accepting the default date, which could lock your new account into a restricted, underage experience.",
         "kind": "intent-check",
-        "speak": "on-event"
+        "speak": "if-wrong",
+        "check": "Does the date-of-birth field default to a recent year (e.g., 2015) rather than reflecting an adult age?",
+        "say_example": "This defaulted the birth year to <2015>, which would register the account as a minor's. I'm changing it to your real birth date."
        }
       ]
      },
@@ -881,7 +948,9 @@
         "whatTheAgentLoses": "Delegating this step means the agent might make the wrong choice about your marketing preferences, either cluttering your inbox with unwanted emails or causing you to miss out on promotions.",
         "kind": "decision",
         "verify_form": "There was an opt-out box for special offers - check its final state; your inbox's marketing fate got decided silently either way.",
-        "speak": "always"
+        "speak": "never",
+        "check": "Does the account-creation screen include a checkbox to opt out of special promotional offers?",
+        "say_example": "Left the promotional-offers box unchecked"
        },
        {
         "question": "Do you want to share your registration data with content providers for marketing purposes?",
@@ -892,7 +961,9 @@
         "whatTheAgentLoses": "You lose the ability to prevent your personal data from being shared with third-party marketers.",
         "kind": "decision",
         "verify_form": "There was a checkbox to share your registration data with third-party marketers - check its final state; that privacy call was the agent's unless you spoke.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the screen include an optional checkbox to share registration data with content providers for marketing?",
+        "say_example": "There's a box to share your sign-up info with outside marketers. I'm leaving it unchecked."
        },
        {
         "question": "Do you want to review the subscriber agreement and privacy policy before accepting?",
@@ -903,10 +974,12 @@
         "whatTheAgentLoses": "You lose the chance to review the specific legal terms and privacy policies you are agreeing to.",
         "kind": "decision",
         "verify_form": "The agreement box got checked - check whether anyone actually opened the terms; the agent legally bound you to documents nobody read.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does continuing require checking a box agreeing to a subscriber agreement and privacy policy?",
+        "say_example": "This checks a box legally agreeing to <the subscriber agreement and privacy policy>. Want me to go ahead, or do you want to look at it first?"
        },
        {
-        "question": "Is your profile name correct, and do you want to opt into sharing your data for marketing?",
+        "question": "Do you want to opt into sharing your data with marketers?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -914,7 +987,9 @@
         "whatTheAgentLoses": "You lose the ability to control your personal privacy preferences regarding marketing data sharing.",
         "kind": "decision",
         "verify_form": "Check the profile name and the marketing-share toggle's final state - the toggle is phrased to opt you in by default.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen show a profile name alongside a toggle for sharing registration data for marketing?",
+        "say_example": "Profile name <name>; marketing-share toggle left <off>"
        },
        {
         "question": "Do you want to opt out of special offers before I send the sign-up link to your email?",
@@ -925,7 +1000,9 @@
         "whatTheAgentLoses": "The user loses control over their marketing email preferences and the chance to verify the email address being used.",
         "kind": "decision",
         "verify_form": "Check the offers checkbox state at the moment the sign-up link was sent - unchecked meant marketing mail comes bundled with the account.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen show a marketing opt-out checkbox before the sign-up link gets sent?",
+        "say_example": "Left the special-offers box unchecked before sending the link"
        },
        {
         "question": "What name should I use for your profile, and do you want to opt out of marketing messages?",
@@ -936,7 +1013,9 @@
         "whatTheAgentLoses": "You lose control over your public display name and the opportunity to prevent unwanted promotional emails.",
         "kind": "decision",
         "verify_form": "Check the display name and the negatively-phrased marketing toggle - left alone, the default subscribed you.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the signup screen pair a display-name field with a marketing-messages toggle that defaults to opted in?",
+        "say_example": "Display name <name>; the marketing toggle defaults to on unless changed"
        },
        {
         "question": "Do you agree to the Terms and Privacy Policy and confirm you are at least 16 years old?",
@@ -947,7 +1026,9 @@
         "whatTheAgentLoses": "You lose the opportunity to review the privacy policy and terms of service before legally agreeing to them.",
         "kind": "decision",
         "verify_form": "Tapping create bound you to the terms and asserted you are over 16 - check that both are facts you would stand behind; the agent asserted them for you.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does clicking the create-account button implicitly confirm agreement to the Terms and Privacy Policy and an age of at least 16?",
+        "say_example": "Creating the account also confirmed the Terms, Privacy Policy, and being 16 or older, all in one click"
        }
       ]
      },
@@ -963,7 +1044,9 @@
         "why": "The screen showed an 'account already exists' error during password creation, meaning the flow never actually reached the plan selection step.",
         "whatTheAgentLoses": "The user loses the ability to successfully create a new account if the agent fails to handle the existing account error.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "if-wrong",
+        "check": "Does the screen show an 'account already exists' error rather than advancing to plan selection?",
+        "say_example": "This came back saying an account already exists here, instead of moving on to plans. Is this actually your account?"
        },
        {
         "question": "Should you submit the form despite the weak password warning?",
@@ -974,7 +1057,9 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to prioritize account security by creating a stronger password or to proceed quickly with a weak one.",
         "kind": "decision",
         "verify_form": "The form warned the password was weak - check whether the agent submitted anyway; account security got traded off without you.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen show a warning that the password is weak, with an option to submit anyway?",
+        "say_example": "This warned the password was weak. I'm strengthening it rather than submitting as-is - let me know if you'd rather set your own."
        },
        {
         "question": "Have you filled in all required fields and agreed to the terms before clicking next?",
@@ -984,7 +1069,9 @@
         "why": "The screen shows mandatory fields like password and name are empty and the terms are unchecked, meaning the form will reject the submission.",
         "whatTheAgentLoses": "The user loses the ability to successfully create the account because the agent submits an incomplete form that triggers validation errors.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "if-wrong",
+        "check": "Does the page show required fields (e.g., password, name) still empty or the terms checkbox unchecked when Next was clicked?",
+        "say_example": "Next got blocked - <the password field and the terms box> weren't filled in yet. Finishing those now."
        },
        {
         "question": "Are any of the input fields highlighted with a red border or warning icon without explicit error text?",
@@ -994,7 +1081,9 @@
         "why": "Forms frequently use visual-only cues like a red outline to indicate a formatting error (like an invalid email or weak password) before you even click submit.",
         "whatTheAgentLoses": "You lose the ability to know why the form is stuck or failing if the agent cannot interpret silent, visual-only error states.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Are any input fields shown with a red border or warning icon but no explanatory error text?",
+        "say_example": "One of the fields turned red with no text saying why. Likely <the email field> - I'm re-checking its format."
        }
       ]
      },
@@ -1011,7 +1100,9 @@
         "whatTheAgentLoses": "You lose the ability to decide whether your new password is automatically stored and synced within your personal Google account.",
         "kind": "decision",
         "verify_form": "A Smart Lock prompt offered to store the new password - check whether the agent saved or dismissed it; where this credential lives is your call, and it was made for you.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does a browser password-manager prompt appear offering to save the newly created password to a linked account?",
+        "say_example": "Your browser is offering to save this new password to your Google account. Should I let it, or skip?"
        }
       ]
      }
@@ -1030,7 +1121,9 @@
       "why": "Verification messages often get delayed, sent to spam, or blocked by carriers, requiring you to find the 'Resend' button or correct a typo in your contact info.",
       "whatTheAgentLoses": "The user loses the ability to manually intervene, check spam, or correct a typo if the agent gets stuck waiting indefinitely for a code.",
       "kind": "state-check",
-      "speak": "on-event"
+      "speak": "on-event",
+      "check": "Does the page offer a 'Resend' option or a way to correct the email/phone entered, after some time has passed with no code?",
+      "say_example": "No code has shown up yet. There's a resend option here - want me to use it, or double check the address first?"
      }
     ],
     "children": [
@@ -1039,26 +1132,6 @@
       "label": "Pass the bot check",
       "questions": [
        {
-        "question": "How do I align the object to pass the verification challenge?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires using arrow buttons to rotate a 3D object until it matches the direction of a pointing hand to prove you are human.",
-        "whatTheAgentLoses": "You lose the ability to manually solve the visual puzzle, relying on the agent's image recognition to correctly align the objects.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "How do you pass the bot check?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presented an 'I'm not a robot' reCAPTCHA checkbox that must be clicked to successfully submit your account details.",
-        "whatTheAgentLoses": "You lose the ability to manually clear the security check if the system flags the agent's automated behavior and blocks the signup.",
-        "kind": "state-check",
-        "speak": "on-event"
-       },
-       {
         "question": "Did the verification complete after the exact number of challenges stated in the instructions?",
         "cluster": "receipts",
         "moment": "After",
@@ -1066,7 +1139,9 @@
         "why": "The instructions indicated there was only one challenge, so the immediate appearance of the 'Verification complete!' message confirms the process worked as expected.",
         "whatTheAgentLoses": "The user loses the direct confirmation that the security check was completed smoothly and without unexpected additional hurdles.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does a 'Verification complete' message appear after exactly the number of challenges the instructions stated?",
+        "say_example": "Verification finished after <1> challenge, matching what the instructions said"
        }
       ]
      },
@@ -1082,7 +1157,9 @@
         "why": "The screen instructs you to check your inbox and finish signing up on the web, requiring you to switch to your email client.",
         "whatTheAgentLoses": "An agent cannot access your personal email inbox on another device to click the required verification link.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page instruct you to check your inbox and finish signing up on the web, via a link?",
+        "say_example": "This needs the sign-up link from your inbox. I'm switching over to your email to find and open it."
        },
        {
         "question": "Which application should you use to open the confirmation link?",
@@ -1093,7 +1170,9 @@
         "whatTheAgentLoses": "You lose the ability to ensure the signup process continues in your preferred browser where your session and settings are managed.",
         "kind": "decision",
         "verify_form": "The emailed link opened in some app - check which browser took it; a different one than your usual means the session and the saved login ended up there.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Which app opened the confirmation link from the email?",
+        "say_example": "Opened the link in <Safari>"
        },
        {
         "question": "Did you confirm your email address as requested by the signup flow?",
@@ -1103,7 +1182,9 @@
         "why": "The email entry screen explicitly stated that the email would need to be confirmed later, but the video ends without showing this verification step being completed.",
         "whatTheAgentLoses": "The user might lose access to the newly created account or face service interruptions if the agent fails to complete the mandatory email verification.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the account's status page show the email address as confirmed, rather than still pending?",
+        "say_example": "The email still shows as unconfirmed, even though the flow said it would need confirming. It isn't done yet."
        },
        {
         "question": "Did the original signup tab automatically advance after you clicked the verification link in your email?",
@@ -1113,7 +1194,9 @@
         "why": "The signup page is supposed to automatically proceed once the email link is clicked, but browser settings or pop-up blockers can sometimes prevent this handoff.",
         "whatTheAgentLoses": "You lose the ability to catch a broken background refresh and manually intervene to continue the account creation.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the original signup tab remain unchanged after the verification link in the email was clicked?",
+        "say_example": "The original tab didn't move forward after clicking the email link - a pop-up blocker may be holding it back."
        },
        {
         "question": "Did the sign-up link open in your email app's restricted browser instead of Safari, potentially breaking the session handoff?",
@@ -1123,7 +1206,9 @@
         "why": "In-app browsers often don't share cookies with your main browser, which can cause the passwordless sign-in flow to fail or require you to start over.",
         "whatTheAgentLoses": "You lose the ability to notice the wrong browser opened and manually copy the link to Safari to ensure the account creation completes smoothly.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Did the sign-up link open inside the email app's own built-in browser rather than the device's main browser (e.g., Safari)?",
+        "say_example": "That link opened inside the email app's own browser, not Safari. If the session doesn't carry over, we may need to reopen it there directly."
        },
        {
         "question": "Does the confirmation screen display the exact email address you intended, and do you need to use the resend option?",
@@ -1133,7 +1218,9 @@
         "why": "The TV interface shows the specific email address the sign-up link was sent to and provides a 'Resend Link' button to recover if there was a typo or delivery failure.",
         "whatTheAgentLoses": "The user loses the chance to catch a spelling mistake made on the cumbersome TV keyboard and to manually trigger a new email without restarting the flow.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the confirmation screen show the exact email address the link was sent to, along with a resend option?",
+        "say_example": "The confirmation screen shows <address> as where the link went. Say the word if you want me to hit resend instead."
        },
        {
         "question": "Did the email link drop you on a generic login page instead of the specific trial dashboard you were expecting?",
@@ -1143,7 +1230,9 @@
         "why": "Sometimes activation links fail to redirect properly after login, requiring you to manually navigate the site to find your newly activated trial software.",
         "whatTheAgentLoses": "You lose the ability to realize the redirect failed and manually search the dashboard to locate your software download.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "if-wrong",
+        "check": "Does the email link land on a generic login page rather than the specific trial dashboard?",
+        "say_example": "That link dropped onto a generic login page, not the trial dashboard we were expecting. Looking for the trial from here."
        }
       ]
      },
@@ -1159,7 +1248,9 @@
         "why": "The screen displays an empty form requiring a verification code sent to your email, alongside mandatory profile fields like password, name, and date of birth.",
         "whatTheAgentLoses": "The user loses direct control over handling their private email verification and setting their own secure password and personal details.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show an empty verification-code field alongside required profile fields (password, name, date of birth)?",
+        "say_example": "This screen wants the code from your email plus the rest of the profile - password, name, birth date. Working through those now."
        },
        {
         "question": "Did the screen display a 'Code expired' error, forcing you to click 'Request a New Code' to continue?",
@@ -1169,7 +1260,9 @@
         "why": "Verification codes have a short lifespan, and if you take too long to retrieve it from your email, you will be blocked until you generate a fresh one.",
         "whatTheAgentLoses": "You lose the ability to realize the code is no longer valid and that you must actively request a new one rather than repeatedly trying the old one.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the screen show a 'Code expired' error requiring a 'Request a New Code' click?",
+        "say_example": "That code expired. Requesting a fresh one now."
        },
        {
         "question": "Is there a visual countdown timer active on the 'Resend Code' button?",
@@ -1179,7 +1272,9 @@
         "why": "Security screens often disable the resend button and display a ticking timer (e.g., 60 seconds) to prevent spamming the email or SMS gateway.",
         "whatTheAgentLoses": "You lose the awareness of the system's rate-limiting, which might cause an agent to fail or loop endlessly trying to click a temporarily disabled button.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "never",
+        "check": "Does the 'Resend Code' button show a disabled state with a countdown timer?",
+        "say_example": "Resend is on a countdown, not broken"
        },
        {
         "question": "Was your phone number rejected because the service does not accept VoIP or prepaid numbers?",
@@ -1189,7 +1284,9 @@
         "why": "Many consumer platforms block virtual numbers (like Google Voice) or prepaid carriers to prevent fraud, throwing an error when you attempt to use them for SMS verification.",
         "whatTheAgentLoses": "You lose the chance to understand why the verification failed and to provide an alternative, traditional mobile number to bypass the block.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page reject the phone number, citing VoIP or prepaid numbers as unsupported?",
+        "say_example": "This number got rejected - it says VoIP and prepaid numbers aren't accepted here. Do you have a different number to use?"
        },
        {
         "question": "Did a temporary toast notification or banner appear confirming the verification code was actually sent?",
@@ -1199,7 +1296,9 @@
         "why": "Systems often use transient visual popups that disappear after a few seconds to confirm an action like sending an SMS or email, leaving no permanent record on the page.",
         "whatTheAgentLoses": "You lose the immediate reassurance that the verification message is actually on its way, leaving you unsure whether to wait or click 'resend'.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does a temporary toast or banner appear confirming the verification code was sent?",
+        "say_example": "A quick banner just confirmed the code went out - easy to miss if you blink."
        }
       ]
      },
@@ -1215,7 +1314,9 @@
         "why": "The code 'HRHP' shown on the TV must be accurately entered on the laptop to successfully link the devices and load the interface.",
         "whatTheAgentLoses": "An agent lacks physical access to your TV screen to read the activation code needed to complete the setup.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the code typed on the laptop match the code displayed on the TV?",
+        "say_example": "The TV shows <code>, and that's what got typed on the laptop - they match."
        }
       ]
      },
@@ -1231,7 +1332,9 @@
         "why": "The screen requires you to choose between claiming an existing artist profile or starting fresh, which determines your onboarding path.",
         "whatTheAgentLoses": "You lose the ability to ensure your account is correctly linked to your existing catalog or properly set up for your first release.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does a search on the platform return an existing profile matching the name given, or no match at all?",
+        "say_example": "A search here found <an existing profile / no existing profile> under that name. That decides which path we're on."
        },
        {
         "question": "What should you do if the artist profile has already been claimed?",
@@ -1242,7 +1345,9 @@
         "whatTheAgentLoses": "An agent cannot know who on your team currently manages the profile to request an invite from.",
         "kind": "decision",
         "verify_form": "The claim hit already-claimed-ask-your-team - check what the agent did next; only you know who holds the profile and whether to chase an invite or dispute it.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page state that this profile has already been claimed and requires a team invite?",
+        "say_example": "This profile is already claimed and wants a team invite to proceed. Only you know who holds it - want me to request an invite, or dispute it another way?"
        },
        {
         "question": "Is this the correct account to link to Spotify for Artists?",
@@ -1252,7 +1357,9 @@
         "why": "The screen displays the currently logged-in email and name so you can confirm it is the right profile to use.",
         "whatTheAgentLoses": "You lose the opportunity to ensure the new service is being linked to your preferred personal or professional account.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the page display the logged-in email and name as the account being linked?",
+        "say_example": "The account linking in is <name/email>. Is that the right one?"
        },
        {
         "question": "Which role should you select to claim the profile?",
@@ -1262,7 +1369,9 @@
         "why": "The screen asks whether you are an artist, manager, or label team member to determine the correct access level for the account.",
         "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong role, potentially giving you incorrect permissions or requiring an admin to fix it.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the page ask you to declare a role (e.g., artist, manager, label team member) to claim the profile?",
+        "say_example": "This wants to know if you're the artist, a manager, or a label rep before it'll let you claim the profile. Which one are you?"
        },
        {
         "question": "Which artist profile do you want to claim?",
@@ -1272,7 +1381,9 @@
         "why": "The screen requires you to search for and select the specific artist profile you are claiming access to.",
         "whatTheAgentLoses": "You lose the ability to ensure the correct artist profile is selected and claimed for your account.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does a search return a specific artist profile matching the name provided?",
+        "say_example": "Search turned up <a profile / no profile> under that name - that's the one being claimed."
        },
        {
         "question": "Did you successfully resolve the 'Claim an artist profile' process that you started earlier?",
@@ -1282,7 +1393,9 @@
         "why": "The process started at 0:32 is left unresolved because the selected artist page states 'This artist profile has already been claimed.'",
         "whatTheAgentLoses": "The user fails to gain control of the intended artist profile because the claim process was abandoned.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the page show the claim as resolved, rather than blocked by an already-claimed profile?",
+        "say_example": "The claim never went through - the profile still shows as already claimed by someone else."
        }
       ]
      },
@@ -1299,7 +1412,9 @@
         "whatTheAgentLoses": "Delegating this means the agent might create an unnecessary third-party distributor account instead of returning to claim your existing Spotify profile.",
         "kind": "decision",
         "verify_form": "The flow detoured to a distributor's signup page - check whether the agent stayed to create a DistroKid account or returned to the claim tab; a second account may have been opened that you never asked for.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show a third-party distributor's own signup form (e.g., DistroKid) rather than the Spotify for Artists claim flow?",
+        "say_example": "This detoured into <DistroKid's> own signup page, a different company entirely. Want me to create an account there, or go back to the Spotify claim tab?"
        },
        {
         "question": "Do you want to view the preferred and recommended distributors for getting your music on Spotify?",
@@ -1310,7 +1425,9 @@
         "whatTheAgentLoses": "The user loses the chance to research and choose a distributor that aligns with their preferences and budget.",
         "kind": "decision",
         "verify_form": "Check whether the agent opened the distributor directory or skipped it - choosing a distributor by research versus taking the first link is your budget call.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the page offer a directory of preferred or recommended music distributors?",
+        "say_example": "Skipped the distributor directory"
        },
        {
         "question": "Do you want to claim your profile through RouteNote for instant access or skip it?",
@@ -1321,7 +1438,9 @@
         "whatTheAgentLoses": "The user loses the choice of whether to authenticate through their specific music distributor or use the standard manual verification process.",
         "kind": "decision",
         "verify_form": "Instant access ran through RouteNote - check whether the agent took the distributor handoff or skipped to manual verification; the handoff routes your claim through a third party's account.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page offer instant profile access through a specific distributor (e.g., RouteNote) as an alternative to skipping?",
+        "say_example": "RouteNote offers instant access here since the music was uploaded through them. Want that shortcut, or skip to manual verification?"
        },
        {
         "question": "Which artist distributor do you want to use to upload your music?",
@@ -1332,7 +1451,9 @@
         "whatTheAgentLoses": "You lose the ability to research and compare the pricing and royalty structures of different distributors before committing to one.",
         "kind": "decision",
         "verify_form": "A distributor got picked from the directory - check which one; its fees and royalty terms bind your releases, and no comparison happened unless you did it.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page list multiple distributor companies (e.g., DistroKid, CD Baby) to choose from?",
+        "say_example": "There's a list of distributors here, each with its own fees and royalty terms. I haven't compared them - want me to before picking one?"
        }
       ]
      }
@@ -1355,10 +1476,12 @@
         "why": "The screen explicitly states that you won't be charged until after the free month and can cancel anytime, which clarifies your financial commitment.",
         "whatTheAgentLoses": "You lose the direct reassurance of reading the trial's cancellation policy and billing timeline before committing to a plan.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does the page state that no charge occurs until after the free period, with cancellation available anytime?",
+        "say_example": "You won't be charged until after <the free month>, and you can cancel anytime before then."
        },
        {
-        "question": "Do you want to proceed with the $40.00 per month base plan and its included channels?",
+        "question": "Do you want to go ahead with this plan and its included channels?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1366,17 +1489,21 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify if your favorite channels are actually included before agreeing to the subscription cost.",
         "kind": "decision",
         "verify_form": "Check the channel list bundled in the $40 base plan before trusting the subscription - whether your locals and sports channels are in there is exactly what the agent could not know.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the page show a specific monthly price and list the channels or content included at that plan?",
+        "say_example": "This plan is <$40.00 a month> and includes <the listed channels>. OK to go ahead with that plan?"
        },
        {
-        "question": "Are you eligible for the 50% youth discount, and do you want to verify your age to claim it?",
+        "question": "Are you eligible for the youth discount, and do you want to verify your age to claim it?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The screen offers a 50% discount for users aged 18-24, which requires a photo ID for verification, providing a significant saving if you qualify.",
         "whatTheAgentLoses": "You lose the opportunity to claim a massive discount on your subscription because the agent bypasses the age verification step.",
         "kind": "intent-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page offer a discount (e.g., 50% off) for a specific age range, requiring photo ID to verify?",
+        "say_example": "There's a discount here for <18-24 year olds>, but it needs a photo ID to claim. Want me to pursue that, or skip it?"
        }
       ]
      },
@@ -1392,17 +1519,21 @@
         "why": "Comparing the ₹129 monthly rate over twelve months to the ₹999 yearly rate reveals a savings of ₹549.",
         "whatTheAgentLoses": "You lose the opportunity to optimize your subscription cost based on long-term value rather than just the lowest upfront price.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does the page show a monthly rate and a yearly rate whose totals differ (e.g., monthly x 12 vs. the yearly price)?",
+        "say_example": "The monthly rate adds up to <₹1,548> a year; the yearly plan is <₹999>, so it's the cheaper way to pay if you're staying a full year."
        },
        {
-        "question": "Do you notice that the claim of 'one low price' contradicts the four different plan prices shown?",
+        "question": "This page advertises 'one low price' but lists several different prices. Which one do you want?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen claims 'Everything on Netflix for one low price' but actually displays four different monthly prices ranging from USD2.99 to USD9.99.",
         "whatTheAgentLoses": "You lose the ability to spot this pricing contradiction and critically evaluate if the actual tiered costs fit your expectations.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the page advertise 'one low price' while actually listing several different plan prices (e.g., USD2.99 to USD9.99)?",
+        "say_example": "This says 'one low price,' but there are actually <four different prices> on this page, from <USD2.99> to <USD9.99>."
        },
        {
         "question": "Does the available plan price match the advertised starting price you saw earlier?",
@@ -1412,7 +1543,9 @@
         "why": "The initial screen promised plans starting at USD2.99/month, so you must confirm the 'Mobile' plan actually offers this price before committing.",
         "whatTheAgentLoses": "An agent might blindly select a plan without verifying if the service honored its advertised starting price, potentially causing you to overpay.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the plan actually offered match the starting price advertised earlier (e.g., USD2.99/month)?",
+        "say_example": "The price advertised earlier was <USD2.99>, and the Mobile plan here matches that."
        },
        {
         "question": "Is the billing toggle switch currently set to annual or monthly billing by default?",
@@ -1422,7 +1555,9 @@
         "why": "Pricing pages frequently use a visual toggle switch that defaults to annual billing, showing a lower monthly breakdown but charging a large lump sum at checkout.",
         "whatTheAgentLoses": "You lose the ability to verify the actual billing frequency state, risking a massive unexpected upfront charge if the agent misreads the toggle's position.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Is the billing toggle set to annual rather than monthly by default, while the page displays a low per-month figure?",
+        "say_example": "The toggle defaults to yearly billing, even though the number shown looks like a monthly price. That low number isn't what a month-to-month plan would cost."
        },
        {
         "question": "Which plan is visually highlighted with a 'Best Value' or 'Most Popular' ribbon?",
@@ -1432,17 +1567,21 @@
         "why": "Services use visual cues like ribbons, badges, or highlighted borders to steer users toward specific tiers, which often represent the standard feature set most users expect.",
         "whatTheAgentLoses": "You lose the context of which plan the platform considers the standard or optimal choice, which might influence your decision beyond just reading the raw prices.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does one plan carry a 'Best Value' or 'Most Popular' ribbon or badge?",
+        "say_example": "The <mid-tier plan> is the one marked Most Popular here - that's the one being pushed, not necessarily the cheapest."
        },
        {
-        "question": "Are you aware that the displayed monthly price requires you to pay for a full year upfront?",
+        "question": "That monthly price only works if you pay for the full year upfront. Do you want to go ahead with that?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The pricing page displays an appealing low monthly rate for the paid plans, but the toggle indicates this is only valid if you pay for the entire year in advance.",
         "whatTheAgentLoses": "You lose the ability to realize that a seemingly affordable monthly subscription actually requires a much larger, immediate lump-sum payment at checkout.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "on-event",
+        "check": "Does the page display a per-month price that only applies if the full year is paid upfront?",
+        "say_example": "That monthly-looking price only works if you pay <the full year> upfront right now, not month to month."
        }
       ]
      },
@@ -1459,7 +1598,9 @@
         "whatTheAgentLoses": "You lose the chance to evaluate whether a different subscription tier, such as a family or student plan, better suits your needs before initiating the signup flow.",
         "kind": "decision",
         "verify_form": "The agent took the front-page offer - check whether it clicked Get Started on the standard one-month trial without ever opening View Plans; a family or student tier might have fit you better.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the landing page feature a specific trial offer alongside a separate option to view other plans?",
+        "say_example": "This page pushes <the standard one-month trial>, but there's also a View Plans option. Want that one, or should I look at the other plans first?"
        },
        {
         "question": "Which subscription plan fits your budget and viewing preferences?",
@@ -1470,18 +1611,9 @@
         "whatTheAgentLoses": "Delegating this choice means an agent might select a plan that exceeds your budget or lacks the specific resolution you prefer for your devices.",
         "kind": "decision",
         "verify_form": "Four tiers from USD3.99 to 11.99 differ on resolution and devices - check which one the agent chose; the recurring price and whether it plays on your TV both hang on that pick.",
-        "speak": "gate"
-       },
-       {
-        "question": "Which subscription plan should you choose, or should you skip this step for now?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen offers discounted plans like Basic for ₹20 INR, but skipping allows you to explore the platform before committing to a specific tier and its payment provider fees.",
-        "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to decide whether to lock in a promotional rate immediately or defer the commitment until you have tested the service.",
-        "kind": "decision",
-        "verify_form": "The platform allowed skipping the plan - check whether the agent locked a discounted tier now or deferred; locking in trades later flexibility for the Rs 20 promo rate.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "What subscription tiers and prices does the page list, and which one is currently selected or highlighted?",
+        "say_example": "<Service> lists plans from <$6.99> to <$19.99>, splitting on resolution and how many devices can watch. Which one? I'll go with <the middle plan> unless you say otherwise."
        },
        {
         "question": "Which subscription plan do you want to select for your trial?",
@@ -1492,21 +1624,12 @@
         "whatTheAgentLoses": "You lose the opportunity to align the plan's specific features and long-term pricing with your actual business needs.",
         "kind": "decision",
         "verify_form": "Check the tier picked for the trial - staff limits and per-sale fees differ, and the post-promo price is the number that will actually bill.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Which plan tier is selected for the trial, and what staff-account limit or per-sale fee does the page attach to it?",
+        "say_example": "picked <tier> for the trial - <3> staff accounts, <2.9%> per-sale fee after the trial ends"
        },
        {
-        "question": "Which subscription plan fits your needs and budget?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen offers multiple tiers, including a free option and a discounted Personal plan, which dictates your available features and upfront costs.",
-        "whatTheAgentLoses": "Letting an agent decide means it might commit you to a paid subscription when the free plan would have been sufficient.",
-        "kind": "decision",
-        "verify_form": "A free tier sat next to discounted paid ones - check which the agent committed to; paying when free would have done is the miss this guards against.",
-        "speak": "never"
-       },
-       {
-        "question": "Are you comfortable with the account sharing rules and resolution limits detailed in the fine print?",
+        "question": "The fine print caps this plan's resolution and how many people can share the account. OK with those limits?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1514,10 +1637,12 @@
         "whatTheAgentLoses": "You lose the opportunity to decide if the specific restrictions on video quality and household sharing are acceptable for your needs.",
         "kind": "decision",
         "verify_form": "Fine print capped resolution and household sharing - confirm those limits fit how you will use the plan; the agent scrolled past them.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the plan's fine print state resolution limits or account/household sharing rules?",
+        "say_example": "fine print caps this plan at <resolution> and <4> simultaneous streams/household sharing"
        },
        {
-        "question": "Which subscription plan should you select, and do you want to add the Adobe Stock trial?",
+        "question": "Which subscription plan should you select?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -1525,10 +1650,12 @@
         "whatTheAgentLoses": "You lose the ability to choose the billing structure that best fits your budget and decide whether the extra stock assets are worth the risk of future charges.",
         "kind": "decision",
         "verify_form": "Check the billing option (annual-paid-monthly carries a cancel fee after 14 days) and whether the Stock add-on box ended up ticked - it auto-bills $29.99 a month after its own trial.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Which billing option is selected, and separately, is the optional Adobe Stock add-on checkbox ticked?",
+        "say_example": "picked <billing option>; Adobe Stock trial box is <ticked/unticked> - it auto-bills <$29.99>/mo after its own trial"
        },
        {
-        "question": "Are you willing to accept a cancellation fee if you end the subscription after 14 days, or should you choose the flexible monthly plan?",
+        "question": "Do you want the plan that can carry a cancellation fee if you cancel early, or the flexible monthly plan with no fee?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -1536,7 +1663,9 @@
         "whatTheAgentLoses": "You lose the ability to avoid unexpected cancellation fees by choosing a truly flexible plan.",
         "kind": "decision",
         "verify_form": "Check which billing option got picked - the annual-paid-monthly discount carries a cancellation fee after day 14, the plain monthly does not; that risk trade was made for you.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Which billing option is selected - the one carrying a cancellation fee if cancelled early, or the plain monthly plan with no such fee?",
+        "say_example": "picked <annual-paid-monthly / plain monthly> - <does/does not> carry a fee if you cancel early"
        }
       ]
      },
@@ -1553,18 +1682,9 @@
         "whatTheAgentLoses": "You lose the ability to decide exactly which of your financial accounts or cards will be charged for the recurring membership fee.",
         "kind": "decision",
         "verify_form": "Check which payment instrument the membership now bills - card, mobile bill, or PayPal; which of your accounts eats the recurring charge was the agent's choice.",
-        "speak": "gate"
-       },
-       {
-        "question": "Which payment method do you prefer to use, and do you agree to the subscription terms?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires you to choose between a credit card or PayPal and presents the subscription terms before you can click the BUY NOW button.",
-        "whatTheAgentLoses": "You lose the opportunity to review the exact billing terms and select your preferred payment method for the subscription.",
-        "kind": "decision",
-        "verify_form": "Check which rail was selected (card vs PayPal) and that the subscription terms above BUY NOW were ones you would sign - both went through together.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "What payment method options does the page offer for the subscription, and which one is selected?",
+        "say_example": "<Service> wants a payment method for the subscription - card, PayPal, or <carrier> billing. Which do you want to use? I'll pick <method> unless you say otherwise."
        },
        {
         "question": "Did the PayPal authorization window fail to open, leaving you stuck on the payment selection screen?",
@@ -1574,7 +1694,9 @@
         "why": "Third-party payment popups can be blocked by browser settings or fail due to network issues, requiring you to manually allow the popup or choose a different payment method.",
         "whatTheAgentLoses": "You lose the ability to recognize that the payment gateway failed to load and that you need to intervene to complete the checkout.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show the PayPal authorization window failed to open, leaving the flow stuck on payment selection?",
+        "say_example": "The PayPal window didn't open - still on payment selection. I'll try again, or you can pick a different payment method."
        }
       ]
      },
@@ -1591,20 +1713,24 @@
         "whatTheAgentLoses": "You lose the ability to choose exactly which physical or billing address is registered to this new service.",
         "kind": "decision",
         "verify_form": "A street, city, state, and ZIP went into checkout - check what address the subscription now bills to; if you never gave one, it was invented.",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "What street address, city, state, and ZIP does the page show entered for billing?",
+        "say_example": "billing address on file is <address> - that's not what you gave me, want it fixed before continuing?"
        },
        {
-        "question": "What information must I provide to add a card, and what happens if I submit an empty form?",
+        "question": "What card details does the form require, and does it reject an empty submission?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen requires a name, card number, and expiry date to add a payment method, and shows validation errors if left blank.",
         "whatTheAgentLoses": "The user loses the opportunity to see the exact payment details required and the specific error messages for missing information.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "What fields does the card form require (name, card number, expiry), and did it show a validation error on an empty submission?",
+        "say_example": "required name, card number, expiry for the card form - rejected the empty submission with inline errors"
        },
        {
-        "question": "Are you comfortable with the platform saving your credit card details for future convenience?",
+        "question": "OK for this to save your card to your account for next time, or should I skip saving it?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -1612,7 +1738,9 @@
         "whatTheAgentLoses": "You lose the opportunity to decide whether you want your payment method permanently stored on the platform or if you prefer to enter it manually each time.",
         "kind": "decision",
         "verify_form": "The form noted the card will be stored for future use - confirm you are fine with it living on the platform; the agent proceeded as if you were.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the payment form state the card will be saved to the account for future use?",
+        "say_example": "<Service> will save this card to your account for next time. OK with that, or should I skip saving it?"
        },
        {
         "question": "Did the system reject your payment method because it is a prepaid or virtual card?",
@@ -1622,7 +1750,9 @@
         "why": "Many streaming services block prepaid or virtual cards for free trials to prevent abuse, requiring you to provide a standard credit card instead.",
         "whatTheAgentLoses": "The user loses the ability to swap to an accepted payment method when their preferred privacy-focused card is declined by the fraud filter.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show an error rejecting the card because it is prepaid or virtual?",
+        "say_example": "Card declined - <Service> doesn't accept prepaid or virtual cards for this."
        },
        {
         "question": "Did the payment form reject your card because the selected expiration date is in the past?",
@@ -1632,7 +1762,9 @@
         "why": "Selecting an expired month and year will trigger a validation error, preventing the card from being added and halting the subscription process.",
         "whatTheAgentLoses": "You lose the ability to quickly identify that an invalid expiration date is the reason your payment method was declined.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show a validation error because the entered expiration date is in the past?",
+        "say_example": "Card rejected - the expiration date entered has already passed."
        },
        {
         "question": "Did the payment fail due to a zip code mismatch or a blocked pre-authorization hold?",
@@ -1642,7 +1774,9 @@
         "why": "Even for free trials, services place a temporary hold on the card, which banks might flag as suspicious or decline if the billing address doesn't match perfectly.",
         "whatTheAgentLoses": "You lose the opportunity to correct your billing details, try a different card, or approve the transaction with your bank to successfully complete the signup.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show a decline tied to a ZIP/address mismatch or a blocked pre-authorization hold?",
+        "say_example": "Payment failed - <Service> flagged a ZIP mismatch or a blocked hold on the card."
        }
       ]
      },
@@ -1659,10 +1793,12 @@
         "whatTheAgentLoses": "Delegating this step requires giving the agent access to your personal financial apps and the ability to authorize payments on your behalf.",
         "kind": "decision",
         "verify_form": "The purchase stalled waiting on a UPI approval - check whether it was approved inside your payment app and by whom; approving is a real money authorization only you should perform.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Is a UPI mandate approval pending in a separate payment app, and how much time remains before the window lapses?",
+        "say_example": "<Service> needs you to approve a payment request in your UPI app within <5> minutes. I can't do that part - only you have the PIN. Go approve it now, or it'll expire."
        },
        {
-        "question": "Should you review the automatic payment details before authorizing the ₹79 mandate from your BOB Bank account?",
+        "question": "Should you review the automatic payment details before authorizing the mandate?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1670,7 +1806,9 @@
         "whatTheAgentLoses": "You lose the chance to verify the exact terms and frequency of the recurring payment mandate before it is applied to your bank account.",
         "kind": "decision",
         "verify_form": "A Rs 79 recurring mandate on your bank account got authorized - check whether the View-Details link was ever opened; the terms of a standing money grant went unread.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the mandate screen show a details/link control (e.g. 'View Details'), and was it left unopened before the mandate was authorized?",
+        "say_example": "Never opened the View Details link on the mandate screen before authorizing."
        },
        {
         "question": "Are the details of this automatic payment setup correct?",
@@ -1680,7 +1818,9 @@
         "why": "Verifying the mandate details, such as the maximum amount of Rs.79 and the linked Bank of Baroda account, ensures you agreed to these specific subscription terms.",
         "whatTheAgentLoses": "You lose the ability to review the exact payment terms authorized and decide how you prefer to navigate the app to manage or cancel the mandate.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the mandate screen's maximum amount and linked bank account match what was expected (e.g. a stated cap and bank name)?",
+        "say_example": "mandate says up to <amount> from <bank> - that's not what you agreed to"
        },
        {
         "question": "Does the authorization amount match the stated verification charge?",
@@ -1690,7 +1830,9 @@
         "why": "The Google Play screen stated a temporary verification charge of two INR, but the subsequent Paytm authorization screen requested a mandate for the full monthly amount of ₹79.",
         "whatTheAgentLoses": "You lose the opportunity to catch unexpected billing amounts before authorizing the payment.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the verification charge shown earlier match the ceiling amount on the mandate authorization screen?",
+        "say_example": "the verification charge was <small amount>, but the mandate you're about to approve allows up to <larger amount> - those don't match"
        },
        {
         "question": "Do you want to require authentication for future purchases on this device?",
@@ -1701,7 +1843,9 @@
         "whatTheAgentLoses": "You lose the ability to set your preferred security level for future purchases made through this Google Play account.",
         "kind": "decision",
         "verify_form": "Google Play asked whether future purchases need authentication - check what got picked; on a shared device, No means anyone can spend.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page ask whether to require authentication for future purchases on this device?",
+        "say_example": "Google Play is asking whether to require sign-in for future purchases on this device. Want that on, or leave it off?"
        },
        {
         "question": "Did the UPI app display an 'Incorrect PIN' error, causing the automatic payment mandate to fail?",
@@ -1711,10 +1855,12 @@
         "why": "Entering the wrong UPI PIN will immediately reject the mandate authorization, forcing you to restart the payment approval process within the time limit.",
         "whatTheAgentLoses": "You lose the ability to catch a typo in your secure PIN and quickly retry before the transaction times out and cancels your trial.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the UPI app show an 'Incorrect PIN' error for the mandate authorization?",
+        "say_example": "UPI app says incorrect PIN - the mandate didn't go through, try again with the right PIN"
        },
        {
-        "question": "Are you comfortable authorizing the automatic payment mandate to remain active until the year 2035?",
+        "question": "This mandate stays active for years past the trial. OK with a standing authorization that long, or should it be shorter?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -1722,7 +1868,9 @@
         "whatTheAgentLoses": "You lose the opportunity to realize how long the financial authorization lasts and to decide if you want to grant a decade-long payment mandate just to start a free trial.",
         "kind": "decision",
         "verify_form": "The autopay mandate runs to 31 Dec 2035 - confirm you meant to grant a decade-long standing payment authorization for a one-week trial; the agent granted it.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the mandate/autopay screen state an end date or validity period, and how far out is it?",
+        "say_example": "this mandate stays active until <year> - years past the trial. OK with a standing authorization that long, or should it be shorter?"
        }
       ]
      },
@@ -1738,7 +1886,9 @@
         "why": "The audio instructs the viewer to uncheck the Adobe stock box, but the video shows the cursor clicking to check it instead.",
         "whatTheAgentLoses": "The user risks being charged for an unwanted add-on subscription because the agent performed the exact opposite of the requested action.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Is the Adobe Stock add-on checkbox currently checked or unchecked on the page?",
+        "say_example": "the Adobe Stock box on screen is checked, not unchecked - it's still being added even though the plan was to skip it"
        },
        {
         "question": "Do you want to add any premium networks to your subscription for an additional monthly fee?",
@@ -1749,7 +1899,9 @@
         "whatTheAgentLoses": "The user loses the ability to customize their channel lineup with specific premium networks they might want to watch.",
         "kind": "decision",
         "verify_form": "Add-on networks were offered at extra monthly cost - check whether any got added; each one silently raises the recurring bill.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page offer optional premium network add-ons, and what monthly fee does each carry?",
+        "say_example": "<Service> offers <a sports package> for an extra <$9.99>/mo. Want it added, or skip?"
        }
       ]
      },
@@ -1758,7 +1910,7 @@
       "label": "Commit the membership",
       "questions": [
        {
-        "question": "Are you ready to agree to the terms and authorize the $9.99 monthly charge?",
+        "question": "Are you ready to agree to the terms and authorize the monthly charge?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1766,10 +1918,12 @@
         "whatTheAgentLoses": "You lose the opportunity to review the final billing terms and explicitly consent to the recurring financial commitment.",
         "kind": "decision",
         "verify_form": "The agent checked the agreement and hit Start Membership - confirm you accept the recurring $9.99 it authorized; that consent was given in your name.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the page show a checkbox to agree to terms and a button (e.g. 'Start Membership') that authorizes a stated recurring monthly charge?",
+        "say_example": "ready to start? agreeing to <Service>'s terms and starting the membership authorizes <$9.99>/month going forward. go ahead, or hold off?"
        },
        {
-        "question": "Are you comfortable with the future subscription charges before continuing to PayPal?",
+        "question": "PayPal shows $0 due now, then a monthly charge once the trial ends. OK to continue on those terms?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1777,10 +1931,12 @@
         "whatTheAgentLoses": "You lose the chance to personally review and approve the future recurring charges before linking your payment account.",
         "kind": "decision",
         "verify_form": "Before the PayPal handoff the screen fixed $0 now and $15.99 a month later - confirm that future charge is one you accept; the agent carried your consent to the payment provider.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Before the PayPal handoff, does the screen state $0 due now and a recurring amount starting after the trial?",
+        "say_example": "$0 charged now on PayPal, then <$9.99>/month once the trial ends - continuing on those terms"
        },
        {
-        "question": "Am I comfortable agreeing to the $95.15 monthly charge that begins after the free trial?",
+        "question": "Do you want to continue with the charge that starts once the free trial ends?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1788,7 +1944,9 @@
         "whatTheAgentLoses": "You lose the ability to personally review and consent to the specific future monthly charges and tax amounts before committing to the subscription.",
         "kind": "decision",
         "verify_form": "The cart's future charge reads $95.15 a month starting Dec 28 - confirm you accept that number before relying on the trial; the agent already did.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the cart/checkout summary state a future monthly total and the date it starts once the trial ends?",
+        "say_example": "after the trial, this renews at <$9.99>/month starting <date> - continuing on that basis"
        },
        {
         "question": "Do you accept the trial terms, the temporary verification charge, and the selected payment method?",
@@ -1799,10 +1957,12 @@
         "whatTheAgentLoses": "You lose the chance to review the exact trial end date, the temporary verification charge, and the opportunity to plan an immediate cancellation strategy to avoid future fees.",
         "kind": "decision",
         "verify_form": "Subscribing accepted a 7-day trial that converts to a monthly charge on your UPI account, plus a refundable 2 INR verification - confirm those terms and the payment source; cancelling in time is now your deadline.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the subscribe screen state the trial length, a temporary refundable verification charge, and the payment account that will be charged?",
+        "say_example": "subscribing starts a <7>-day trial that turns into a monthly charge on your <payment method>, plus a refundable <amount> verification charge right now - accepting those terms"
        },
        {
-        "question": "Are you comfortable providing your credit card to start the free trial, knowing you will be billed $43.08 per month once it ends?",
+        "question": "Starting the trial needs a card on file, and it'll bill you monthly once the trial ends. OK to go ahead with that?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1810,10 +1970,12 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to share your financial information and risk an automatic charge if you forget to cancel.",
         "kind": "decision",
         "verify_form": "A card now backs the trial and $43.08 a month starts Sep 30 - confirm you accept handing the card over on those terms; forgetting to cancel converts silently.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the checkout screen require card details to start the trial and state a monthly charge beginning on a specific date?",
+        "say_example": "starting the trial needs a card on file, and it renews at <$9.99>/month on <date> if not cancelled first"
        },
        {
-        "question": "Are you okay with the final price being higher than the advertised rate due to estimated taxes?",
+        "question": "Checkout adds tax, so the final price is higher than what was advertised. OK to go with the taxed total?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1821,7 +1983,9 @@
         "whatTheAgentLoses": "You lose the opportunity to decide if the unexpected tax addition makes the subscription too expensive.",
         "kind": "decision",
         "verify_form": "Checkout raised the advertised $40 to $43.08 with estimated tax - confirm the real number is still worth it to you; the agent absorbed the increase without asking.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does checkout show a final price higher than the advertised rate, with an estimated tax amount explaining the difference?",
+        "say_example": "advertised at <$9.99>/mo, but checkout adds tax to make it <$10.79>/mo - going with the taxed total"
        },
        {
         "question": "Did the screen display a 'Card declined' error after you clicked 'BUY NOW', requiring you to provide a different payment method?",
@@ -1831,7 +1995,9 @@
         "why": "If the bank rejects the transaction due to insufficient funds or a block, the service will display an error, and you must use another card to activate the account.",
         "whatTheAgentLoses": "You lose the ability to catch a payment decline and swap to a working card to successfully complete the upgrade.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page show a 'Card declined' error after clicking the purchase button?",
+        "say_example": "card declined after hitting Buy Now - need a different payment method to continue"
        }
       ]
      },
@@ -1840,16 +2006,6 @@
       "label": "Verify the money math",
       "questions": [
        {
-        "question": "Does the plan price you selected match the final billing amount shown on the payment screen?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The $15.99 price selected for the Premium plan must match the $15.99/mo. shown on the payment setup and final agreement screens to ensure accurate billing.",
-        "whatTheAgentLoses": "You lose the chance to verify that the service isn't sneaking in hidden fees or changing the price before the final confirmation.",
-        "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
         "question": "Is the one-month free trial consistently applied throughout the checkout and confirmation screens?",
         "cluster": "facts",
         "moment": "Now",
@@ -1857,17 +2013,9 @@
         "why": "Confirming that the one-month free trial appears in both the plan summary and the final order confirmation ensures you are actually getting the promised trial.",
         "whatTheAgentLoses": "You lose the ability to personally verify that the service didn't quietly drop the free trial offer before finalizing the account.",
         "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Does the price in the order summary match the plan you selected?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Confirming that the 'USD 9.99/month' on the payment screen matches your chosen Premium plan ensures you are signing up for the correct tier without hidden fees.",
-        "whatTheAgentLoses": "Delegating this check means you lose the opportunity to catch unexpected price discrepancies before authorizing a recurring payment.",
-        "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the one-month free trial mentioned in the plan summary also appear on the final order confirmation?",
+        "say_example": "the trial was in the plan summary but missing from the final confirmation - can't confirm it actually applied"
        },
        {
         "question": "Does the final monthly charge correctly add up the base plan, add-ons, and taxes?",
@@ -1877,7 +2025,9 @@
         "why": "Verifying that the US$95.15/mo total matches the sum of the US$59.99/mo plan, US$29.99/mo add-on, and US$5.17/mo tax ensures you are not being overcharged.",
         "whatTheAgentLoses": "You lose the opportunity to personally verify the math behind the recurring monthly charge and catch any unwanted add-ons before committing to the payment.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the final monthly total equal the sum of the base plan, listed add-ons, and tax shown on the page?",
+        "say_example": "base <$9.99> plus add-on <$4.99> plus tax <$1.20> should be <$16.18>, but the total shown is <$17.98> - doesn't add up"
        },
        {
         "question": "Does the trial duration on screen match the duration stated elsewhere in the flow?",
@@ -1887,7 +2037,9 @@
         "why": "The narrator claims a 14-day and 30-day free trial, but the screen clearly shows a 7-day free trial for both.",
         "whatTheAgentLoses": "The user loses accurate expectations about when they will be charged, risking unexpected fees.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the trial length stated in narration or an earlier screen match the duration actually shown on the trial screen itself?",
+        "say_example": "you were told a <14/30>-day trial, but the screen itself shows <7> days"
        },
        {
         "question": "Do the trial and pricing terms match across the initial offer, checkout, and final subscription screens?",
@@ -1897,7 +2049,9 @@
         "why": "Verifying that the initial offer of a 7-day free trial at ₹99.00/month exactly matches the Google Play checkout and final subscription status ensures you are not agreeing to unexpected charges.",
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to catch mismatched pricing or trial terms before committing to the billing cycle.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Do the trial length and price stated in the initial offer, at checkout, and on the final subscription screen all agree?",
+        "say_example": "The initial offer, checkout, and final screen don't all agree on the trial length and price - <detail>."
        },
        {
         "question": "Does the billing start date in the final order summary match the date shown during checkout?",
@@ -1907,7 +2061,9 @@
         "why": "Checking that the billing start date remains consistent across the checkout and final confirmation screens ensures you are not charged earlier than expected.",
         "whatTheAgentLoses": "Delegating this means you lose the chance to personally verify that the service honored the promised billing start date.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the billing start date in the final order summary match the billing start date shown during checkout?",
+        "say_example": "checkout said billing starts <date A>, but the final summary says <date B> - dates don't match"
        }
       ]
      },
@@ -1924,7 +2080,9 @@
         "whatTheAgentLoses": "You lose the creative control to brainstorm and select a memorable domain name that perfectly represents your brand or identity.",
         "kind": "decision",
         "verify_form": "A domain got searched and claimed - check the exact name; it is your site's public identity, and the agent brainstormed it if you did not.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the page provide a domain search field requiring a name to search for and claim?",
+        "say_example": "need a domain name to search and claim for the site. what do you want it to be? I can't guess this one for you."
        },
        {
         "question": "Does the checkout summary confirm that the domain you selected is actually free?",
@@ -1934,7 +2092,9 @@
         "why": "Verifying that the domain initially offered as free is confirmed as ₱0.00 in the summary ensures you avoid unexpected charges.",
         "whatTheAgentLoses": "The user loses the opportunity to personally verify that the promised free tier truly rings up as a zero balance before committing.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the checkout summary show $0/free for the domain that was offered as free?",
+        "say_example": "the domain was offered free, but checkout lists a charge for it - not $0 as promised"
        },
        {
         "question": "Are you willing to pay the annual renewal fee after the first free year for a custom domain, or do you prefer the permanently free subdomain?",
@@ -1945,7 +2105,9 @@
         "whatTheAgentLoses": "The user loses the ability to avoid a surprise domain renewal charge a year later if the agent selects a promotional domain instead of the permanently free one.",
         "kind": "decision",
         "verify_form": "Check whether the domain picked is free-first-year-then-renewal or the permanently free subdomain - a surprise renewal bill a year out is the difference.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page offer a custom domain free for the first year with a stated renewal fee afterward, alongside a permanently free subdomain option?",
+        "say_example": "custom domain is free for a year, then <$14.99>/year after - or there's a subdomain that's free forever. which do you want?"
        }
       ]
      },
@@ -1961,7 +2123,9 @@
         "why": "Locating the automatic payments section is necessary to manage your trial mandate, but the screen body appears blank below the title bar.",
         "whatTheAgentLoses": "Delegating this step means you lose direct oversight of your financial mandates and the ability to troubleshoot when the interface fails to load.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the automatic payments section list the mandate that was just created, or does it appear blank?",
+        "say_example": "the automatic payments page is blank where the new mandate should show - can't confirm it's listed"
        },
        {
         "question": "Which automatic payment mandate do you need to cancel?",
@@ -1971,10 +2135,12 @@
         "why": "The screen lists active automatic payments, including a ₹79 mandate for Google India Digital Services, and selecting the correct one ensures you manage the intended subscription.",
         "whatTheAgentLoses": "Delegating this step means losing direct control over which financial mandates are canceled or maintained in your bank account.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Which mandate is listed on the automatic payments screen (merchant and amount), and is it the one just created?",
+        "say_example": "found <merchant/amount> mandate on the automatic payments list - matches the one just set up"
        },
        {
-        "question": "Are you sure you want to cancel the automatic payment rather than pausing it?",
+        "question": "The mandate's terms don't match what you were promised - do you want to cancel it now, or pause it instead?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1982,7 +2148,9 @@
         "whatTheAgentLoses": "You lose the ability to weigh the consequences of fully cancelling the payment mandate versus temporarily pausing it.",
         "kind": "decision",
         "verify_form": "The screen offered pause as the reversible option - check whether the agent cancelled outright; cancelling kills the service when you might have meant to keep it.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the cancellation prompt distinguish 'cancel' (ends the service) from 'pause' (payment resumes later), and which one is selected?",
+        "say_example": "The mandate you just set up doesn't match what you were promised. Pause keeps it going and resumes later; cancel stops it for good. Which do you want? I won't cancel outright unless you say so."
        },
        {
         "question": "Does the actual payment amount match the promised free trial terms?",
@@ -1992,7 +2160,9 @@
         "why": "The Google Play screen promised a 7-day free trial with charges starting on January 11, but the Paytm screen shows an immediate payment of ₹79 on January 4.",
         "whatTheAgentLoses": "The user loses money to an unexpected immediate charge if the agent fails to notice the billing discrepancy.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the payment screen show an immediate charge, when an earlier screen promised a free trial with charges starting on a later date?",
+        "say_example": "you were promised a free trial starting later, but this screen just charged <amount> today - that's not the trial you were told about"
        }
       ]
      }
@@ -2011,7 +2181,9 @@
       "why": "The initial screen promises only three steps, but the process actually forces you through six additional configuration screens before granting access to the home screen.",
       "whatTheAgentLoses": "The user loses the ability to make personal choices about profiles, content, and devices during these unexpected onboarding screens.",
       "kind": "state-check",
-      "speak": "if-wrong"
+      "speak": "if-wrong",
+      "check": "Does the number of setup/configuration screens actually shown match the number the flow initially said to expect?",
+      "say_example": "you were told <3> steps, but it's actually running <9> screens before reaching the home screen - more setup than promised"
      }
     ],
     "children": [
@@ -2027,7 +2199,9 @@
         "why": "The email address shown on the TV sign-in screen contradicts the one used during the account creation steps.",
         "whatTheAgentLoses": "You lose the certainty that the account is tied to the correct email address, which could cause access or billing issues.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the email address shown at sign-in match the email address used earlier during account creation?",
+        "say_example": "account creation used <email A>, but the sign-in screen shows <email B> - different addresses"
        },
        {
         "question": "Has my account been successfully created, and how do I finish signing up?",
@@ -2037,7 +2211,9 @@
         "why": "The 'Account created' banner confirms your credentials were accepted, and the 'Finish sign-up' button directs you to the next step of choosing a plan.",
         "whatTheAgentLoses": "You miss the immediate confirmation that your new credentials were successfully registered with the service before moving on to plan selection.",
         "kind": "state-check",
-        "speak": "always"
+        "speak": "always",
+        "check": "Does the page show an 'Account created' confirmation, and does it present a next step (e.g. 'Finish sign-up')?",
+        "say_example": "Account created - next is picking a plan."
        },
        {
         "question": "Is there on-screen evidence the signup actually completed, rather than a jump from an empty form to a signed-in state?",
@@ -2047,7 +2223,9 @@
         "why": "The video cuts directly from an empty payment form to a manual sign-in, failing to show the actual completion of the web signup.",
         "whatTheAgentLoses": "You lose the ability to verify that the payment and final account creation steps were executed correctly.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Is there a visible completion step between the payment form and the signed-in state, or does the record jump directly from an empty form to signed-in?",
+        "say_example": "there's no confirmation step between the empty form and being signed in - can't confirm the signup actually went through"
        },
        {
         "question": "Does the welcome email confirm the free account offer you saw on the homepage?",
@@ -2057,7 +2235,9 @@
         "why": "The homepage banner advertised a free personal email, so you need to verify that the welcome email confirms the account is actually free.",
         "whatTheAgentLoses": "Delegating this means you might miss discrepancies between the advertised free service and the actual account terms you received.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the welcome email state the account is free, matching the free-account offer shown on the homepage?",
+        "say_example": "homepage advertised a free account, but the welcome email doesn't confirm that - worth double-checking before assuming no charge"
        },
        {
         "question": "Does the profile menu display the exact name you entered during signup?",
@@ -2067,7 +2247,9 @@
         "why": "Verifying that the name entered earlier appears in the profile menu confirms the account was created with your correct personal details.",
         "whatTheAgentLoses": "You lose the assurance that the agent correctly inputted your desired profile name rather than making a typo or using a default.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the profile menu show the same name that was typed into the signup form?",
+        "say_example": "signed up as <name A>, but the profile menu shows <name B> - names don't match"
        },
        {
         "question": "Does the plan price confirmed in the welcome email match the price you saw during checkout?",
@@ -2077,17 +2259,9 @@
         "why": "The website listed the Mobile plan at ₦2,200/month during selection, but the welcome email confirmed it at NGN 1,600/month.",
         "whatTheAgentLoses": "You lose the opportunity to catch and clarify a confusing pricing discrepancy between the checkout screen and the official confirmation.",
         "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Did the flow end with the promised account actually created, or did it stop short?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The video title and intro promise to show how to make a Spotify Artist account, so the final screen should show the completed account creation.",
-        "whatTheAgentLoses": "The user loses the ability to verify if the agent successfully completed the specific account creation requested.",
-        "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the plan price stated in the welcome email match the price shown at checkout?",
+        "say_example": "checkout showed <price A>/month, but the welcome email confirms <price B>/month - the numbers don't match"
        }
       ]
      },
@@ -2103,7 +2277,9 @@
         "why": "The screen requires a registered email and password to access an existing account, while also offering a 'Sign up now' link for new users.",
         "whatTheAgentLoses": "The user loses control over which specific account is used to log in or whether to initiate a new signup instead.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the sign-in screen ask for a registered email and password, and were those the credentials actually used?",
+        "say_example": "this screen wants your registered email and password to sign in - something else was used instead"
        },
        {
         "question": "Should I log in with a password or use a sign-in code?",
@@ -2114,7 +2290,9 @@
         "whatTheAgentLoses": "The user loses the chance to choose their preferred method for authenticating the new account on the app.",
         "kind": "decision",
         "verify_form": "Check how the agent authenticated in the app - password or emailed sign-in code; the code path makes your inbox part of every future login.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Did sign-in complete via password entry or via an emailed sign-in code?",
+        "say_example": "signed in using an emailed code, not a password - your inbox is now part of every login here"
        }
       ]
      },
@@ -2130,7 +2308,9 @@
         "why": "The screen displays multiple profile options, such as '[name]' and 'kids', so the correct one must be chosen to access the right personalized experience.",
         "whatTheAgentLoses": "Allowing an agent to choose could result in selecting the wrong profile, which would disrupt your personalized viewing history and recommendations.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Which profile (by name, or a 'Kids' profile) is currently selected on the profile screen?",
+        "say_example": "the <profile name> profile got selected, not the Kids one - switch it if that's wrong"
        }
       ]
      },
@@ -2152,7 +2332,9 @@
           "whatTheAgentLoses": "The user loses the ability to specify their native language and the new language they want to learn.",
           "kind": "decision",
           "verify_form": "The agent picked the course pairing - check which target language and which base language it chose; if you never said, it guessed your languages for you.",
-          "speak": "gate"
+          "speak": "gate",
+          "check": "Does the language-selection screen list target languages grouped under a base/native language, and which pairing is selected?",
+          "say_example": "I need to know which language you want to learn and what your base language is - which do you want?"
          },
          {
           "question": "Do you want to change the app's interface language to Hindi?",
@@ -2162,7 +2344,9 @@
           "why": "The dialog explicitly warns that this will change the interface to Hindi and should only be chosen if you speak the language.",
           "whatTheAgentLoses": "The user loses the ability to ensure the application is presented in a language they can actually read and understand.",
           "kind": "intent-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the dialog warn that continuing will switch the app's interface language to Hindi?",
+          "say_example": "confirmed the interface language switch to Hindi"
          },
          {
           "question": "Where do you plan to sell your products?",
@@ -2173,7 +2357,9 @@
           "whatTheAgentLoses": "You lose the ability to tailor the platform's initial setup to your specific business model and sales strategy.",
           "kind": "decision",
           "verify_form": "The setup asked where you will sell - check which channels got ticked; the platform tailored your whole store around that answer.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which sales channel(s) were selected on the setup screen?",
+          "say_example": "selected <channel(s)> as where you sell"
          },
          {
           "question": "What type of products or services do you plan to sell?",
@@ -2184,7 +2370,9 @@
           "whatTheAgentLoses": "The user loses the ability to customize their initial store setup and receive relevant onboarding guidance for their specific business model.",
           "kind": "decision",
           "verify_form": "Check what the agent told the platform you sell, or whether it deferred with I'll-decide-later - onboarding and imports got tuned to that answer.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which product/service type was selected on the setup screen?",
+          "say_example": "selected <product type> for what you sell"
          },
          {
           "question": "Why are you learning the language?",
@@ -2195,7 +2383,9 @@
           "whatTheAgentLoses": "If an agent selects the motivation, the resulting course content may not align with your actual personal goals.",
           "kind": "decision",
           "verify_form": "A motivation got selected for you - check which one; the course content bends toward it.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which learning-motivation option was selected?",
+          "say_example": "selected <motivation> as the reason for learning"
          },
          {
           "question": "Do you accept the English course overview showing what you will learn?",
@@ -2206,7 +2396,9 @@
           "whatTheAgentLoses": "You lose the opportunity to review the course curriculum and ensure it matches your learning goals before proceeding.",
           "kind": "decision",
           "verify_form": "The course overview got waved through - check that the listed skills and counts match what you wanted to learn before the plan locked in.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the course overview screen list the skills/words/sentences to be covered, and was continue clicked past it?",
+          "say_example": "course overview listed <skills covered> - continued past it"
          },
          {
           "question": "What daily time commitment do you want to set for your goal?",
@@ -2217,7 +2409,9 @@
           "whatTheAgentLoses": "You lose the opportunity to set a daily time commitment that realistically fits your personal schedule.",
           "kind": "decision",
           "verify_form": "A daily goal between 5 and 20 minutes got set - check which one; the app will now hold you to that schedule.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which daily practice-time goal was selected?",
+          "say_example": "set daily goal to <15> minutes"
          },
          {
           "question": "What are your primary goals for the website you are creating?",
@@ -2228,7 +2422,9 @@
           "whatTheAgentLoses": "You lose the ability to tailor the platform's initial setup, templates, and tool recommendations to your specific personal or business objectives.",
           "kind": "decision",
           "verify_form": "Check which goals got ticked on the what-are-your-goals screen - the dashboard and feature suggestions now assume them.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which website goals were selected on the setup screen?",
+          "say_example": "selected <goals> for the website"
          },
          {
           "question": "What are my goals for using this service?",
@@ -2239,7 +2435,9 @@
           "whatTheAgentLoses": "You lose the ability to accurately reflect your real-world objectives, which could result in a less relevant dashboard or feature set.",
           "kind": "decision",
           "verify_form": "Check which of the six goal boxes the agent selected - the platform's setup and recommendations follow that answer, right or wrong.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which of the goal checkboxes were selected on the 'what are your goals' screen?",
+          "say_example": "checked <goals> on the goals screen"
          },
          {
           "question": "What name and usage intent should I provide to complete your profile?",
@@ -2250,10 +2448,12 @@
           "whatTheAgentLoses": "You lose the ability to control the exact name associated with your profile and how the platform categorizes your intended use.",
           "kind": "decision",
           "verify_form": "Check the name typed into the profile and the usage category picked - both shape the account, and neither came from you unless you said so.",
-          "speak": "never"
+          "speak": "never",
+          "check": "What name and usage-intent value does the onboarding profile form show as submitted?",
+          "say_example": "profile form submitted with name '<name>' and usage '<intent>'"
          },
          {
-          "question": "How should I categorize your project type and professional role for your profile?",
+          "question": "What project type and professional role should I select for your profile?",
           "cluster": "select",
           "moment": "Now",
           "moneyMoving": false,
@@ -2261,7 +2461,9 @@
           "whatTheAgentLoses": "You lose the opportunity to tailor the platform's initial templates, recommendations, and onboarding experience to your actual skills and goals.",
           "kind": "decision",
           "verify_form": "Check which project type and role were selected - templates and onboarding got tuned to a guess about your work.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which project type and which professional role were selected on the onboarding form?",
+          "say_example": "selected project type '<type>' and role '<role>'"
          },
          {
           "question": "What should you select when asked how you heard about the application?",
@@ -2272,7 +2474,9 @@
           "whatTheAgentLoses": "You lose the ability to provide accurate feedback on how you found the service, which the platform uses for its marketing analytics.",
           "kind": "decision",
           "verify_form": "A discovery survey got answered for you - check what source it claims; harmless, but it is your answer on record.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which 'how did you hear about us' source option was selected?",
+          "say_example": "selected '<source>' for how you heard about it"
          },
          {
           "question": "Do you want to start learning from the beginning or take a placement test?",
@@ -2283,7 +2487,9 @@
           "whatTheAgentLoses": "Letting an agent decide means it might pick a learning path that does not match your actual language proficiency.",
           "kind": "decision",
           "verify_form": "Check whether the course started from zero or from a placement test - the agent judged your proficiency without asking you a single question.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Was 'start from the beginning' or 'take a placement test' selected on the level-setup screen?",
+          "say_example": "chose to start from the beginning rather than take the placement test"
          }
         ]
        },
@@ -2299,7 +2505,9 @@
           "why": "The screen displays a detected location for your local channels and requires you to either confirm it or indicate that you do not live there.",
           "whatTheAgentLoses": "You lose the ability to correct the location if the system guessed incorrectly or if you need your account tied to a different home area for local broadcasts.",
           "kind": "intent-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Does the screen show an auto-detected location for local channels, and was it confirmed or corrected?",
+          "say_example": "detected location for local channels shown as <city>, but that's not where you live - needs fixing before it sets local channels"
          },
          {
           "question": "Which devices will you use to watch?",
@@ -2310,7 +2518,9 @@
           "whatTheAgentLoses": "Allowing an agent to choose means it might guess your preferred viewing devices incorrectly, potentially altering your personalized onboarding experience.",
           "kind": "decision",
           "verify_form": "Check which watching devices got ticked - the agent guessed your living room, and the onboarding tuned itself to that guess.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which device options were selected for viewing?",
+          "say_example": "selected <devices> for viewing"
          },
          {
           "question": "Which languages do you prefer for watching shows and movies?",
@@ -2321,7 +2531,9 @@
           "whatTheAgentLoses": "You lose the ability to personalize your viewing experience with the specific languages you actually understand or want to learn.",
           "kind": "decision",
           "verify_form": "Check the audio and subtitle languages selected - defaults stick to English; the languages you actually watch in were the agent's guess.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which audio/subtitle language default was selected?",
+          "say_example": "set default audio/subtitle language to <language>"
          }
         ]
        },
@@ -2338,7 +2550,9 @@
           "whatTheAgentLoses": "Delegating this step means the agent might skip adding your family members, forcing everyone to share a profile and mix up their recommendations.",
           "kind": "decision",
           "verify_form": "Check what names sit in the household profile slots - empty means everyone shares one history, invented names mean profiles nobody asked for.",
-          "speak": "never"
+          "speak": "never",
+          "check": "What names, if any, are filled into the household profile name fields?",
+          "say_example": "Named the profile slots <names>, or left them empty."
          },
          {
           "question": "Do you want to set up any of the profiles for kids?",
@@ -2349,7 +2563,9 @@
           "whatTheAgentLoses": "You lose the ability to ensure your children have a restricted viewing environment right from the start of your subscription.",
           "kind": "decision",
           "verify_form": "Check whether any profile got the kids flag - a missing flag leaves children in the full catalog, a wrong one locks an adult into the kids area.",
-          "speak": "on-event"
+          "speak": "on-event",
+          "check": "Does the page ask whether any profile is for a child 12 or under, enabling a kids' viewing area?",
+          "say_example": "one of the profiles can be set as a kids profile with restricted content - want that for <name>?"
          }
         ]
        },
@@ -2366,7 +2582,9 @@
           "whatTheAgentLoses": "Delegating this step means the agent will guess your entertainment preferences, resulting in an initial home screen filled with irrelevant movie and TV show recommendations.",
           "kind": "decision",
           "verify_form": "Three titles seeded the recommendations - check which ones; your entire home screen now assumes the agent's taste is yours.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which three (or more) titles were tapped to seed recommendations?",
+          "say_example": "selected <Stranger Things>, <The Crown>, <Ted Lasso> to seed recommendations"
          },
          {
           "question": "Do the three shows you selected during onboarding appear in your 'My List' on the homepage?",
@@ -2376,7 +2594,9 @@
           "why": "This confirms that the onboarding personalization step successfully saved your preferences to your new account.",
           "whatTheAgentLoses": "You lose the opportunity to personally curate your initial content recommendations based on your actual tastes.",
           "kind": "state-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Do the titles selected during onboarding personalization appear in the 'My List' section on the homepage?",
+          "say_example": "the shows picked during setup aren't showing up in My List - the personalization may not have saved"
          },
          {
           "question": "Which artists should you select to personalize your initial recommendations?",
@@ -2387,7 +2607,9 @@
           "whatTheAgentLoses": "Delegating this means the agent guesses your musical tastes, leading to irrelevant recommendations in your new account.",
           "kind": "decision",
           "verify_form": "Check the three-plus artists picked - the agent's guesses at your music taste now drive every recommendation row.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which artists were selected to seed music recommendations?",
+          "say_example": "selected <Taylor Swift>, <Drake>, <Adele> to seed recommendations"
          },
          {
           "question": "Which podcasts do you want to select to personalize your feed?",
@@ -2398,7 +2620,9 @@
           "whatTheAgentLoses": "Letting an agent pick these podcasts means your initial recommendations will not reflect your actual listening preferences.",
           "kind": "decision",
           "verify_form": "Check which podcasts got selected - your feed leads with them; the agent chose your listening, not you.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which podcasts were selected to personalize the feed?",
+          "say_example": "selected <The Daily>, <Radiolab> to seed the feed"
          }
         ]
        },
@@ -2414,7 +2638,9 @@
           "why": "The final home screen displays a banner asking to add a phone number for password recovery, indicating it was skipped earlier.",
           "whatTheAgentLoses": "The user loses the security and convenience of having a password recovery method established right from the start.",
           "kind": "state-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Does the final home screen still show a banner asking to add a phone number for recovery?",
+          "say_example": "the home screen is still asking for a recovery phone number - looks like it never got entered earlier"
          },
          {
           "question": "Do you want to opt in to receive promotional text messages when providing your phone number?",
@@ -2425,7 +2651,9 @@
           "whatTheAgentLoses": "You lose the ability to decide whether your personal phone number is used for marketing communications.",
           "kind": "decision",
           "verify_form": "Alongside the recovery number sat a texts-opt-in box - check whether it got ticked; your phone number becoming a marketing channel was decided right there.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the recovery-number field include a checkbox for promotional text messages, and is it checked or unchecked?",
+          "say_example": "the promo-texts checkbox next to the recovery number is <checked/unchecked>"
          },
          {
           "question": "Do you want to provide a mobile phone number for password recovery?",
@@ -2436,18 +2664,9 @@
           "whatTheAgentLoses": "The user loses the ability to link their own personal device for account recovery, which an agent might skip or fill with an inaccessible number.",
           "kind": "decision",
           "verify_form": "Check whether a recovery number was added and whose it is - skipped means weaker recovery, a number that is not yours means someone else can reset your account.",
-          "speak": "on-event"
-         },
-         {
-          "question": "Should you provide a phone number for password recovery?",
-          "cluster": "select",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The welcome screen offers an optional phone number entry to help you regain access if you forget your password.",
-          "whatTheAgentLoses": "You lose the ability to decide whether to link your personal phone number for secure account recovery.",
-          "kind": "decision",
-          "verify_form": "Check whether the optional recovery number went in - the agent either linked a device for resets or left the account with email-only recovery.",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does the welcome/setup screen ask for a mobile phone number for account recovery?",
+          "say_example": "<Service> wants a phone number for account recovery. want to add one, or skip it?"
          }
         ]
        },
@@ -2464,7 +2683,9 @@
           "whatTheAgentLoses": "You lose the opportunity to immediately browse and select movies or TV episodes for offline viewing.",
           "kind": "decision",
           "verify_form": "The Download & Go modal got dismissed or followed - check which; nothing broke either way, but the offline-viewing setup you might have wanted did not happen by itself.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the page show a 'Download & Go' modal offering to explore downloads now or dismiss?",
+          "say_example": "the Download & Go modal was dismissed"
          },
          {
           "question": "How do you want to handle the 'Get started' checklist and welcome email in your new inbox?",
@@ -2475,7 +2696,9 @@
           "whatTheAgentLoses": "You lose the opportunity to customize your inbox appearance, set your time zone, and import contacts if the agent automatically dismisses the onboarding checklist.",
           "kind": "decision",
           "verify_form": "The inbox checklist (look, time zone, contacts) got handled or dismissed - check which items ran; your time zone and import settings may still be defaults.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the new inbox show a welcome email and a 'Get started' setup checklist, and which items were completed or dismissed?",
+          "say_example": "Handled Get Started checklist items <invite a teammate, verify your email> and left the rest default."
          },
          {
           "question": "Do you want to read about Prime Video Profiles right now?",
@@ -2486,7 +2709,9 @@
           "whatTheAgentLoses": "You lose the opportunity to learn about and set up personalized profiles for your household right away.",
           "kind": "decision",
           "verify_form": "The profiles introduction got dismissed or read - check which; household profiles stay unconfigured if it was waved away.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does a popup introduce a new profiles feature, and was it opened or dismissed?",
+          "say_example": "the Profiles feature popup was dismissed without reading"
          },
          {
           "question": "Should you start listening to the generated playlist or skip it for now?",
@@ -2497,7 +2722,9 @@
           "whatTheAgentLoses": "You lose the opportunity to immediately experience the personalized content curated for your new account.",
           "kind": "decision",
           "verify_form": "A starter playlist offered Start Listening or Not Now - check which the agent tapped; playback starting on its own is the surprise this catches.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the page offer a generated starter playlist with options to play now or skip, and which was chosen?",
+          "say_example": "started the generated playlist"
          },
          {
           "question": "Do you want to answer a survey about your college enrollment status?",
@@ -2508,7 +2735,9 @@
           "whatTheAgentLoses": "You lose the opportunity to decide whether to share your educational status with the service.",
           "kind": "decision",
           "verify_form": "A student-discount survey popped - check whether it was answered and how; your enrollment status is marketing data you may not want shared, or a discount you may want claimed.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does a survey modal ask about college enrollment status, and was it answered or dismissed?",
+          "say_example": "the college-enrollment survey was dismissed without answering"
          },
          {
           "question": "Do you want to enable push notifications for new music, events, and special offers?",
@@ -2519,7 +2748,9 @@
           "whatTheAgentLoses": "If an agent makes this choice, you lose control over whether the app is allowed to interrupt you with promotional alerts.",
           "kind": "decision",
           "verify_form": "The notifications ask got answered - check which way; the agent decided whether the app may interrupt your phone with promos.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the app request permission to send push notifications for content and offers, and what was chosen?",
+          "say_example": "<Allowed/Denied> push notifications for new music, events, and offers."
          }
         ]
        }
@@ -2543,7 +2774,9 @@
           "whatTheAgentLoses": "The user loses the opportunity to create a specific, meaningful custom name for their team if the agent defaults to a saved personal name.",
           "kind": "decision",
           "verify_form": "The team-name field offered saved personal names - check what was finally entered; a personal name would brand the whole workspace.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the team-name field show an autofilled personal name, and was that kept or replaced with a custom name?",
+          "say_example": "Kept the autofilled '<personal name>' as the team name instead of a custom one."
          },
          {
           "question": "What should you name your team workspace before submitting your profile?",
@@ -2554,7 +2787,9 @@
           "whatTheAgentLoses": "Delegating this step means you lose the ability to choose a recognizable name for your workspace and control over opting into marketing communications.",
           "kind": "decision",
           "verify_form": "Check the workspace name submitted with the profile - collaborators will see it, and submitting also accepted the privacy policy.",
-          "speak": "never"
+          "speak": "never",
+          "check": "What workspace name was submitted, and did submitting also accept a privacy policy shown on the same screen?",
+          "say_example": "Named the workspace '<name>' - submitting this also accepted the privacy policy shown alongside it."
          }
         ]
        },
@@ -2571,10 +2806,12 @@
           "whatTheAgentLoses": "You lose the opportunity to select a visual style that best fits your brand while avoiding unexpected subscription costs.",
           "kind": "decision",
           "verify_form": "Check which design theme the site now wears - and that it is one of the free ones; premium themes chain to an upgrade fee.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which design theme was selected, and is it a free theme or one requiring a premium upgrade?",
+          "say_example": "selected '<theme>' - <free / requires the paid plan>"
          },
          {
-          "question": "Should you proceed with the default style for the 'Attar' theme?",
+          "question": "Do you want to keep the default style for the 'Attar' theme?",
           "cluster": "select",
           "moment": "Now",
           "moneyMoving": false,
@@ -2582,7 +2819,9 @@
           "whatTheAgentLoses": "You lose the chance to evaluate the premium style variations and decide if they better fit your aesthetic preferences.",
           "kind": "decision",
           "verify_form": "The theme's default style was accepted - check whether the look is what you wanted, since the paid style variations were never opened.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Was the default style for the selected theme kept, or was a premium style variation explored?",
+          "say_example": "kept the default style for '<theme>' rather than opening the paid style variations"
          }
         ]
        },
@@ -2599,7 +2838,9 @@
           "whatTheAgentLoses": "You lose the ability to restrict the integration to specific repositories, potentially granting broader access to your private code than necessary.",
           "kind": "decision",
           "verify_form": "Check the repository scope granted - All repositories gave the service current and future access to every repo, when Only-select was on the table.",
-          "speak": "on-event"
+          "speak": "on-event",
+          "check": "Does the authorization screen offer 'All repositories' vs 'Only select repositories' access scope, and which was chosen?",
+          "say_example": "granted <all repositories / only selected repositories> access to <service>"
          },
          {
           "question": "Which version control platform holds the project you want to deploy?",
@@ -2609,7 +2850,9 @@
           "why": "The onboarding screen prompts you to deploy your first project by connecting a platform like GitHub, GitLab, Bitbucket, or Azure DevOps, or allows you to skip the step.",
           "whatTheAgentLoses": "Delegating this choice means the agent might connect the wrong repository platform or skip the initial deployment, leaving your new workspace empty.",
           "kind": "intent-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Which version-control platform was connected for deployment, or was this step skipped?",
+          "say_example": "connected <platform> for deployment"
          },
          {
           "question": "Are the default deployment settings correct for this repository?",
@@ -2619,7 +2862,9 @@
           "why": "The screen showed options to edit the build settings or choose a different repository before deploying to the Go ANB team from the main branch.",
           "whatTheAgentLoses": "You lose the ability to verify or customize the specific build settings and branch used for your initial project deployment.",
           "kind": "intent-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Were the default build/deploy settings kept or edited, and which repository/branch is set to deploy?",
+          "say_example": "deploying from '<repo>' on branch '<branch>' with default build settings kept"
          },
          {
           "question": "Has the deployment finished successfully, and what is the generated name for your new site?",
@@ -2629,7 +2874,9 @@
           "why": "The screen shows a 'Deploy success!' message and provides the generated name for your first site on Netlify.",
           "whatTheAgentLoses": "The user misses the confirmation of their first successful deployment and the generated name of their new site.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the page show 'Deploy success!' and a generated site name?",
+          "say_example": "Deployed successfully - site name '<generated-name>'."
          }
         ]
        },
@@ -2646,7 +2893,9 @@
           "whatTheAgentLoses": "You lose the choice of whether to install the native application on your device or manage your new account entirely through the web browser.",
           "kind": "decision",
           "verify_form": "Check whether the agent installed the app or stayed in the browser - where your account gets managed, and where you stay signed in, follows that choice.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Was the desktop/device app downloaded, or was the web account used instead?",
+          "say_example": "stayed on the web account rather than downloading the app"
          },
          {
           "question": "Which operating system do you need the installer for?",
@@ -2656,7 +2905,9 @@
           "why": "The screen provides separate download options for Windows 64-bit and macOS, requiring the correct version to successfully install the software.",
           "whatTheAgentLoses": "Letting an agent decide could result in downloading an installer that is incompatible with your computer.",
           "kind": "intent-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Which OS-specific installer was downloaded?",
+          "say_example": "downloaded the <OS> installer"
          }
         ]
        }
@@ -2674,7 +2925,9 @@
         "why": "The homepage advertised a three-month Premium free trial, but the account page shows you were placed on the standard free tier instead.",
         "whatTheAgentLoses": "The user loses the advertised premium benefits because the agent silently accepted a standard free account instead of securing the promotional trial.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the account page show the plan/tier promised in the promotional offer, or a different tier?",
+        "say_example": "the offer promised <3-month Premium trial>, but the account page shows you're on <standard free tier> instead"
        },
        {
         "question": "What is your current subscription status and next payment date?",
@@ -2684,27 +2937,33 @@
         "why": "This confirms that the Apple TV+ subscription is active and verifies the upcoming payment amount of ₹99.00 along with its scheduled date.",
         "whatTheAgentLoses": "You lose direct visibility into your billing schedule and the exact date you need to cancel by to avoid future charges.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "What subscription status and next payment date/amount does the account page show?",
+        "say_example": "Confirmed the subscription is active - next payment <amount> on <date>."
        },
        {
-        "question": "Is your trial active, and where do you download the software?",
+        "question": "Is your trial active on the dashboard?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The dashboard confirms the trial is active under the Products heading and provides a direct download button to access the software.",
         "whatTheAgentLoses": "You lose the immediate visibility of your trial's expiration date and the direct control over downloading the software to your device.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the dashboard show the trial as active?",
+        "say_example": "trial is active per the dashboard"
        },
        {
-        "question": "Does the trial expiration date on your dashboard match the 30-day period promised during registration?",
+        "question": "Does the trial expiration date on your dashboard match the trial length promised during registration?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The dashboard shows an expiration date of July 4, which confirms the 30-day trial period promised on the registration page was correctly applied.",
         "whatTheAgentLoses": "You lose the ability to verify that the exact trial length you signed up for was accurately credited to your new account.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the dashboard's trial expiration date fall exactly the promised number of days after registration?",
+        "say_example": "registration promised a <30-day> trial, but the dashboard's expiration date is <fewer/more> days out than that"
        },
        {
         "question": "Does the membership section confirm your free trial is active?",
@@ -2714,7 +2973,9 @@
         "why": "Verifying that the membership status shows a free subscription ensures you successfully enrolled in the trial without being immediately charged.",
         "whatTheAgentLoses": "Delegating this means you lose the chance to personally verify the trial status and immediately manage linked auto-payments to prevent unwanted future charges.",
         "kind": "state-check",
-        "speak": "always"
+        "speak": "always",
+        "check": "Does the membership/account section state the free trial is active and not yet billed?",
+        "say_example": "trial confirmed active - not billed yet"
        },
        {
         "question": "Can you play the content now that your free trial is active?",
@@ -2724,7 +2985,9 @@
         "why": "Seeing the \"Play First Episode\" button confirms that the free trial was successfully activated and grants immediate access to the streaming library.",
         "whatTheAgentLoses": "Delegating this step means missing the immediate reassurance of seeing the play button appear to confirm the trial is actually working.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the page show a 'Play First Episode' (or equivalent) control, indicating catalog access is unlocked?",
+        "say_example": "content unlocked - Play First Episode button available"
        },
        {
         "question": "Does the app home screen still prompt you to upgrade even after you successfully authorized the trial payment?",
@@ -2734,7 +2997,9 @@
         "why": "The Crunchyroll home screen continues to display a 'GO PREMIUM' button immediately after the UPI mandate is approved, presenting a stale state that suggests the subscription failed.",
         "whatTheAgentLoses": "The user loses the ability to recognize that the interface hasn't updated yet, which might cause them to unnecessarily repeat the checkout process and risk a double charge.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the home screen still show a 'Go Premium'/upgrade prompt after the mandate/payment was already approved?",
+        "say_example": "home screen still says Go Premium even though the payment just went through - might be a stale screen, worth confirming the trial actually activated"
        }
       ]
      },
@@ -2756,7 +3021,9 @@
           "whatTheAgentLoses": "Delegating this step means you miss the chance to personally browse the initial recommendations and pick your first show.",
           "kind": "decision",
           "verify_form": "Check where the browsing went right after signup - the categories opened now shape the first impressions and history the account starts with.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which content category/row was opened first on the new home screen?",
+          "say_example": "opened '<category>' first on the home screen"
          },
          {
           "question": "Do you want to review your account settings or claim the Premium trial offer?",
@@ -2767,7 +3034,9 @@
           "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with your new account settings or immediately take advantage of the free Premium trial offer.",
           "kind": "decision",
           "verify_form": "The account page dangled a 3-month Premium offer next to the settings - check which the agent took; an unclaimed promo or an unwanted trial are the two ways this goes wrong.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the account page offer a Premium trial claim alongside settings, and which was opened?",
+          "say_example": "opened <account settings / the 3-month Premium trial offer>"
          }
         ]
        },
@@ -2784,7 +3053,9 @@
           "whatTheAgentLoses": "The user loses the ability to choose which specific show or movie to test their new subscription with.",
           "kind": "decision",
           "verify_form": "Check what the agent played first - harmless, but it lands in your watch history and steers recommendations from day one.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which title was opened/played first from the home screen?",
+          "say_example": "played '<title>' first"
          },
          {
           "question": "Do you want to browse the available episodes for this season?",
@@ -2795,18 +3066,9 @@
           "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally verify if the specific episodes you want to watch are included in the service.",
           "kind": "decision",
           "verify_form": "Check whether the episodes you actually care about exist in the catalog - the agent can list them, but only you know which ones justify the subscription.",
-          "speak": "never"
-         },
-         {
-          "question": "What do you want to watch first?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The home screen presents multiple curated categories like 'Must-See Hits' and 'Newest Releases' to help you discover content.",
-          "whatTheAgentLoses": "You lose the personal enjoyment of browsing the newly accessible catalog to find a show or movie that catches your eye.",
-          "kind": "decision",
-          "verify_form": "Check what the agent queued first from the catalog - your history and recommendations start from that pick.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Were episodes for a given season browsed, and which ones are listed as available?",
+          "say_example": "browsed Season <2> - episodes <1-8> available"
          }
         ]
        },
@@ -2823,18 +3085,9 @@
           "whatTheAgentLoses": "You lose the opportunity to personally curate your DVR library with the specific programs you want to watch later.",
           "kind": "decision",
           "verify_form": "Check whether the show got added to the DVR library - and that it is one you want recorded; storage fills with the agent's picks otherwise.",
-          "speak": "never"
-         },
-         {
-          "question": "How do you save or record this show to your account?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": true,
-          "why": "The screen shows an 'ADD TO LIBRARY' button next to the episode details, which is the platform's method for recording or saving content.",
-          "whatTheAgentLoses": "The user loses the ability to personally curate their library with the specific shows they want to watch later.",
-          "kind": "decision",
-          "verify_form": "Check whether the live show actually got added to the library - and that recording it is something you wanted; the button was shown but the click never appeared on screen.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the page offer an 'Add to Library' control to record future episodes of this show, and was it used?",
+          "say_example": "added '<show>' to the library for future recordings"
          },
          {
           "question": "Which upcoming program should you select from the channel guide to record?",
@@ -2845,7 +3098,9 @@
           "whatTheAgentLoses": "You lose the opportunity to pick a specific upcoming show that aligns with your actual viewing preferences to test the DVR.",
           "kind": "decision",
           "verify_form": "A future broadcast got picked from the guide for recording - check which one; the DVR fills with what the agent chose to save.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which upcoming program/time slot was selected from the channel guide for recording?",
+          "say_example": "selected '<program>' at <time> from the guide to record"
          },
          {
           "question": "Which show should you select from the populated search results?",
@@ -2856,7 +3111,9 @@
           "whatTheAgentLoses": "You lose the ability to choose the specific show you actually want to watch or add to your profile.",
           "kind": "decision",
           "verify_form": "Check which search result got opened - the agent picked from the suggestions, and the show you wanted saved may not be the one it chose.",
-          "speak": "never"
+          "speak": "never",
+          "check": "Which show was opened from the search results?",
+          "say_example": "opened '<show>' from the search results"
          },
          {
           "question": "Did you successfully add the show to your library?",
@@ -2866,17 +3123,9 @@
           "why": "The screen displays a checkmark and 'Added to library' next to the show title, confirming the action was successful.",
           "whatTheAgentLoses": "You lose the immediate visual confirmation that your desired content has been saved for later viewing.",
           "kind": "state-check",
-          "speak": "if-wrong"
-         },
-         {
-          "question": "Do you verify that the newly recorded show actually appears in the library?",
-          "cluster": "receipts",
-          "moment": "After",
-          "moneyMoving": true,
-          "why": "Checking the 'NEW IN YOUR LIBRARY' list confirms that the recording process worked as intended.",
-          "whatTheAgentLoses": "The user loses absolute confirmation that their desired content was successfully saved to the account.",
-          "kind": "state-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Does the page show a checkmark and 'Added to library' next to the show title?",
+          "say_example": "confirmed - '<show>' shows Added to library with a checkmark"
          },
          {
           "question": "Is the show already added to the library, making another tap a removal?",
@@ -2886,7 +3135,9 @@
           "why": "The narrator tells you to add the item to the library, but the screen shows a checkmark and 'Added to library', indicating it has already been done.",
           "whatTheAgentLoses": "The user loses accurate task completion if the agent blindly follows the audio and clicks the button, which might accidentally remove the item from the library.",
           "kind": "state-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Does the show already show 'Added to library' before the instructed tap, meaning tapping again would remove it?",
+          "say_example": "'<show>' already shows Added to library - tapping again would remove it, not add it"
          }
         ]
        },
@@ -2903,7 +3154,9 @@
           "whatTheAgentLoses": "The user loses control over whether to preserve their progress or abandon the current lesson.",
           "kind": "decision",
           "verify_form": "A warning said leaving restarts the lesson - check whether the agent stayed or bailed; abandoning threw away progress without you choosing to.",
-          "speak": "on-event"
+          "speak": "on-event",
+          "check": "Does a confirmation dialog warn that exiting now will restart the lesson or lose progress?",
+          "say_example": "exiting now restarts the lesson from scratch - still want to leave, or keep going?"
          },
          {
           "question": "What were your results for the completed lesson?",
@@ -2913,7 +3166,9 @@
           "why": "The screen displays your earned points, combo bonus, and a 93% score for finishing the lesson.",
           "whatTheAgentLoses": "You miss seeing your initial performance metrics and the satisfaction of completing your first lesson.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "What score, points, and bonus does the lesson-completion screen show?",
+          "say_example": "lesson finished - <score>%, <points> points, <bonus> combo bonus"
          },
          {
           "question": "Does the reported lesson score match what the results screen shows?",
@@ -2923,7 +3178,9 @@
           "why": "The lesson completion screen displays a score of 93%, but the narrator states it is 100%.",
           "whatTheAgentLoses": "The user loses accurate feedback on their performance if the agent fails to notice the discrepancy between the audio and visual scores.",
           "kind": "state-check",
-          "speak": "if-wrong"
+          "speak": "if-wrong",
+          "check": "Does the score stated by narration or a summary match the percentage shown on the results screen?",
+          "say_example": "the results screen shows <93>%, not the <100>% that was reported"
          }
         ]
        }
@@ -2942,7 +3199,9 @@
         "whatTheAgentLoses": "Delegating this means you lose the peace of mind of personally verifying the cancellation steps to ensure your payment method is not unexpectedly billed.",
         "kind": "decision",
         "verify_form": "The cancel path was located but not followed - check whether the subscription is still set to bill Rs 99 on Feb 20; whether and when to cancel before that date is your call, not the agent's.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the manage-subscription screen show a working cancel control, along with the next billing date and amount?",
+        "say_example": "cancel button is here if needed - next charge is <amount> on <date>"
        }
       ]
      }

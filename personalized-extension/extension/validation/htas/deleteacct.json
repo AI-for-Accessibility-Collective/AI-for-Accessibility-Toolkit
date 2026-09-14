@@ -23,18 +23,9 @@
         "whatTheAgentLoses": "Delegating this decision risks the agent permanently deleting the wrong account and losing your data on a service you wanted to keep.",
         "kind": "decision",
         "verify_form": "The agent opened one app out of several to start the deletion - check which icon it tapped; the service it picked is the account that ends up destroyed.",
-        "speak": "never"
-       },
-       {
-        "question": "Which app's account do you want to delete?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays an app drawer with multiple applications, making it necessary to identify the exact service you want to remove.",
-        "whatTheAgentLoses": "Delegating this step removes your ability to specify exactly which service to target, risking the permanent deletion of the wrong account.",
-        "kind": "decision",
-        "verify_form": "An app was chosen from the drawer as the deletion target - check that it is the service you meant; the wrong pick here aims the whole flow at an account you wanted to keep.",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Which app icon did the agent tap in the app drawer, and does the app name shown match the service named in the task?",
+        "say_example": "This opened <Facebook>, but you asked me to delete <Instagram>."
        },
        {
         "question": "Should you allow the app to send you notifications?",
@@ -45,17 +36,9 @@
         "whatTheAgentLoses": "The user loses the ability to prevent unwanted alerts from a service they are actively trying to abandon.",
         "kind": "decision",
         "verify_form": "A notification-permission prompt appeared on the way in and the agent answered it - check which button it tapped; allowing alerts from a service you are abandoning is a choice you may not have wanted made.",
-        "speak": "never"
-       },
-       {
-        "question": "Which app should you open to access your Google account settings?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The app drawer shows multiple Google services like Gmail, Google, and Drive, so you must select one to serve as the entry point for your account settings.",
-        "whatTheAgentLoses": "You lose the opportunity to decide which specific app is used to access your overarching Google account settings.",
-        "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Did a notification-permission system prompt appear when opening the app, and which button (Allow/Don't Allow) got tapped?",
+        "say_example": "Declined notification permissions for <the app>"
        }
       ]
      },
@@ -71,7 +54,9 @@
         "why": "Checking if the store page displays an 'Open' or 'Update' button ensures you are using the most recent version of the app before navigating its settings.",
         "whatTheAgentLoses": "You lose the assurance that the agent is working within the most current version of the app's interface.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the app store listing show an 'Update' button instead of 'Open'?",
+        "say_example": "Updated <the app> before opening it"
        }
       ]
      },
@@ -87,7 +72,9 @@
         "why": "The screen currently shows the profile for '[handle]', so you must use the profile icon in the bottom navigation bar to switch if this is not the account you intend to delete.",
         "whatTheAgentLoses": "The user loses the ability to personally verify they are selecting the correct secondary account from the switcher, risking the accidental deletion of the wrong profile.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the account switcher currently show a different profile active than the one named in the task?",
+        "say_example": "This switcher shows <handle B>, not <handle A>. Switching to the right one."
        }
       ]
      },
@@ -96,26 +83,6 @@
       "label": "Verify the signed-in identity",
       "questions": [
        {
-        "question": "How do I access the detailed settings for this specific account?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple logged-in accounts, so you must explicitly choose to manage the active profile to ensure you are modifying the correct one.",
-        "whatTheAgentLoses": "The user loses the opportunity to verify that the agent is entering the settings for the intended account rather than accidentally switching to a secondary profile.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
-        "question": "Is the currently active channel the one you intend to delete?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The profile dropdown displays the active channel name and handle, which must be verified to prevent accidentally deleting the wrong account.",
-        "whatTheAgentLoses": "You lose the opportunity to personally verify the active channel name and handle before the deletion process begins.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
         "question": "Are you logged into the exact account you intend to delete?",
         "cluster": "facts",
         "moment": "Now",
@@ -123,7 +90,9 @@
         "why": "Checking the profile icon ensures you do not accidentally delete the wrong account if multiple are signed in.",
         "whatTheAgentLoses": "You lose the ability to personally verify that the agent is targeting the correct account rather than your primary one.",
         "kind": "intent-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the profile/handle shown as currently active match the account named in the task?",
+        "say_example": "You're signed in as <handle B>. You asked me to delete <handle A>."
        },
        {
         "question": "Is the 'Meta Accounts Center' visible in the settings sidebar, or do you need to switch profiles?",
@@ -133,17 +102,21 @@
         "why": "The 'Meta Accounts Center' is required to access account deletion options, and its absence indicates you are on a profile that cannot manage these settings.",
         "whatTheAgentLoses": "The user loses the ability to ensure the agent is attempting to delete the correct profile within their connected accounts.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the settings sidebar show 'Accounts Center' as an option?",
+        "say_example": "I don't see Accounts Center here. This profile may not be the one that manages deletion."
        },
        {
-        "question": "How do you verify which profile is currently active if the Accounts Center isn't visible?",
+        "question": "Which profile is active, if Accounts Center isn't showing?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Opening the profile dropdown reveals the active profile and alternatives like '[profile]', which is crucial for ensuring you delete the correct account when standard settings are missing.",
         "whatTheAgentLoses": "You lose the ability to manually verify the active profile from the dropdown menu to prevent accidentally deleting the wrong account.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the profile dropdown list more than one signed-in profile when Accounts Center isn't shown?",
+        "say_example": "Accounts Center isn't showing, so I checked the profile dropdown. It lists <handle A> and <handle B>."
        }
       ]
      }
@@ -163,7 +136,9 @@
       "whatTheAgentLoses": "You lose the chance to learn the platform's current menu structure and see exactly where they are hiding the deletion option.",
       "kind": "decision",
       "verify_form": "The agent picked a route to the deletion option - check whether it drilled the menus or used settings search; a menu walk on a reorganized app can land on the wrong screen, and the route it chose decides what it saw.",
-      "speak": "never"
+      "speak": "never",
+      "check": "Does the settings screen offer both a scrollable menu and a search icon for finding account options?",
+      "say_example": "Used the settings search instead of scrolling the menu"
      }
     ],
     "children": [
@@ -180,17 +155,6 @@
       "label": "Search the settings",
       "questions": [
        {
-        "question": "Do you want to use the settings search bar to find the account deletion option directly?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a settings search bar, offering a faster way to locate the buried deletion option without navigating complex menus.",
-        "whatTheAgentLoses": "You lose the chance to learn the manual navigation path through the settings menus for future reference.",
-        "kind": "decision",
-        "verify_form": "The settings search bar was available and the agent either used it or scrolled past - check which; the search route skips the menu maze but also skips the screens where warnings live.",
-        "speak": "never"
-       },
-       {
         "question": "Which search result should you select to find the account deletion option?",
         "cluster": "select",
         "moment": "Now",
@@ -198,7 +162,9 @@
         "why": "The search results for 'Delete' show multiple ambiguous options like 'Personal details' and 'Apps and websites', requiring you to know which path actually contains the deletion menu.",
         "whatTheAgentLoses": "You lose the opportunity to learn the platform's specific settings hierarchy and where it hides its account management tools.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Do the search results for 'delete' include ambiguous entries like 'Personal details' or 'Apps and websites' alongside the actual deletion path?",
+        "say_example": "Searched 'delete' - picked <Delete your account> over <Personal details, Apps and websites>"
        }
       ]
      },
@@ -214,7 +180,9 @@
         "why": "Selecting the Accounts Centre is necessary because it houses the personal details and security settings required to initiate account deletion.",
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to explore other account management options or review your saved activity before proceeding toward deletion.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the menu list an option like 'Accounts Center' or 'Manage account' that leads to account settings?",
+        "say_example": "Opened <Accounts Center> to manage account settings"
        },
        {
         "question": "Should you enter YouTube Studio to access your channel settings?",
@@ -224,7 +192,9 @@
         "why": "The profile menu displays the YouTube Studio option, which serves as the required gateway to reach the advanced settings where deletion is located.",
         "whatTheAgentLoses": "The user loses the opportunity to verify they have the correct channel selected before entering its specific management dashboard.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the profile menu offer a 'YouTube Studio' entry as the way into advanced settings?",
+        "say_example": "Opened YouTube Studio to reach the advanced settings"
        }
       ]
      },
@@ -240,7 +210,9 @@
         "why": "This matters because the Accounts Centre presents multiple ambiguous categories like 'Password and security' and 'Personal details', making the exact location of the deletion path unclear.",
         "whatTheAgentLoses": "The user loses the knowledge of how the platform categorizes and potentially obscures its account deletion settings within the Accounts Centre.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the Accounts Center menu list multiple categories such as 'Password and security' and 'Personal details'?",
+        "say_example": "Opened <Personal details> from the Accounts Center menu"
        },
        {
         "question": "Where do you go to manage the accounts linked to this Accounts Center?",
@@ -250,17 +222,9 @@
         "why": "The Accounts Center menu contains multiple categories like personal details and security, so you must specifically choose 'Manage accounts' to find the profile you intend to delete.",
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review exactly which of your profiles and connected experiences are currently linked together in this hub.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Which settings layout does my app have, and which menu should I select next?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "This matters because the app displays different versions of the settings menu, meaning the exact path to find the deletion option depends on whether categories like 'Personal details' are present.",
-        "whatTheAgentLoses": "You lose the opportunity to learn the exact navigation path required to find the deletion option in your specific version of the app.",
-        "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the Accounts Center menu include a 'Manage accounts' category?",
+        "say_example": "Opened <Manage accounts> to find the profile to delete"
        },
        {
         "question": "Where do you go to manage account deletion in this menu layout?",
@@ -270,7 +234,9 @@
         "why": "The Accounts Center screen contains multiple sections, requiring you to scroll down to find 'Manage accounts' to continue the deletion process.",
         "whatTheAgentLoses": "You lose the opportunity to learn how to navigate this platform's specific account management layout to find buried privacy settings.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does this layout require scrolling down within Accounts Center to find 'Manage accounts'?",
+        "say_example": "Scrolled down in Accounts Center to find <Manage accounts>"
        }
       ]
      },
@@ -279,14 +245,16 @@
       "label": "Open the deletion controls",
       "questions": [
        {
-        "question": "Which account management flow do you want to initiate?",
+        "question": "Which account management flow do you want to start?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen offers multiple account control options, so you must specify whether you want to manage memorialization, reactivation, or deactivation and deletion.",
         "whatTheAgentLoses": "You lose the chance to review and select alternative account management options like memorialization or temporary deactivation.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the account-control screen offer memorialize, reactivate, and deactivate-or-delete as separate paths?",
+        "say_example": "This screen also offers memorializing the account. Going with deletion, since that's what you asked for."
        },
        {
         "question": "Which menu option should you select to delete your account?",
@@ -296,17 +264,9 @@
         "why": "The screen displays multiple account management categories, requiring you to locate the specific 'Delete your account' link to proceed.",
         "whatTheAgentLoses": "You lose visibility into how the platform organizes its account management settings and where the deletion option is buried.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Do you want to memorialize your account or proceed with deactivation or deletion?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents options for account ownership and control, requiring a choice between memorialization and deactivation or deletion.",
-        "whatTheAgentLoses": "The user loses the ability to decide whether their account should be memorialized instead of being deactivated or deleted.",
-        "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the deactivation-and-deletion menu list a distinct 'Delete your account' link?",
+        "say_example": "Selected <Delete your account> from the deactivation-and-deletion menu"
        }
       ]
      },
@@ -322,27 +282,21 @@
         "why": "Knowing where to look next is essential because app updates frequently move the deletion option away from the legacy personal information menu.",
         "whatTheAgentLoses": "You lose the opportunity to learn the updated navigation paths for managing your account data when the interface changes.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is there no deletion link under the personal-information settings where it used to be?",
+        "say_example": "Checked elsewhere - deletion wasn't under personal information anymore"
        },
        {
-        "question": "Has the account deletion option moved from its previous location?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen no longer displays the old 'Access and control' option among the settings, meaning you must search the updated menu structure to find the new deletion path.",
-        "whatTheAgentLoses": "You lose the opportunity to learn the platform's updated privacy menu structure and understand how they currently bury data-deletion requests.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "How do you proceed if the official instructions don't match the actual settings menu?",
+        "question": "What do you do if the help article doesn't match the settings menu?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The official help article displayed steps that did not match the current interface, requiring you to manually hunt for the correct settings path.",
         "whatTheAgentLoses": "The user loses the opportunity to learn the actual, undocumented path to the deletion settings if the agent navigates the updated interface behind the scenes.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the platform's own help article describe steps or menu names that the current settings screen doesn't actually show?",
+        "say_example": "The help article says to tap <Settings>, but this screen doesn't have that option."
        }
       ]
      },
@@ -363,7 +317,9 @@
           "why": "Navigating to the Help section is necessary because the direct account deletion link is often hidden there instead of the main settings menu.",
           "whatTheAgentLoses": "The user loses the knowledge of where the service hides its account deletion request forms within the support menus.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the settings menu route account deletion through a 'Help' section rather than showing it directly?",
+          "say_example": "Opened Help to look for account deletion"
          },
          {
           "question": "Which help option should you choose to find the account deletion settings?",
@@ -373,7 +329,9 @@
           "why": "The help page lists several categories like 'Help Centre' and 'Privacy and security help', so you must choose the correct one to locate the buried deletion path.",
           "whatTheAgentLoses": "You lose the opportunity to learn how the platform categorizes its account management and deletion settings within its help menus.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Does the Help page list separate categories like 'Help Centre' and 'Privacy and security help'?",
+          "say_example": "Opened <Privacy and security help> to look for deletion"
          }
         ]
        },
@@ -393,7 +351,9 @@
           "why": "The expanded text only lists steps to navigate through the Accounts Centre without providing an actionable button or link to start the deletion.",
           "whatTheAgentLoses": "You lose the ability to quickly recognize a dead-end help page and redirect the search to the actual settings menu.",
           "kind": "state-check",
-          "speak": "never"
+          "speak": "on-event",
+          "check": "Does this help section only describe steps in prose, with no clickable link or button to start deletion?",
+          "say_example": "This section only explains the steps. There's no button here that actually starts anything."
          }
         ]
        },
@@ -409,17 +369,9 @@
           "why": "The screen prominently displays temporary deactivation instructions first, requiring you to scroll down to find the buried permanent deletion link.",
           "whatTheAgentLoses": "The user loses the assurance that the agent will correctly bypass the deactivation option to initiate a permanent deletion.",
           "kind": "intent-check",
-          "speak": "if-wrong"
-         },
-         {
-          "question": "How do you reveal the hidden deletion link on this help page?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The default Android App Help view hides the direct deletion link, requiring you to open the dropdown menu to find the actual steps.",
-          "whatTheAgentLoses": "You lose the ability to navigate the platform's intentionally confusing interface to ensure the correct deletion path is uncovered.",
-          "kind": "state-check",
-          "speak": "never"
+          "speak": "if-wrong",
+          "check": "Does the page show a deactivation link more prominently than a separate 'delete your account' link further down?",
+          "say_example": "The visible link only deactivates. The actual delete link is further down the page."
          },
          {
           "question": "Where do you click to actually start the deletion process on this help page?",
@@ -429,17 +381,9 @@
           "why": "The platform buries the actionable 'Delete your account' link inside the 'Mobile Browser Help' dropdown section.",
           "whatTheAgentLoses": "You lose the knowledge of how to navigate the platform's intentionally confusing help center to find buried account settings.",
           "kind": "state-check",
-          "speak": "never"
-         },
-         {
-          "question": "Did you notice that the actual deletion link is hidden inside the temporary deactivation instructions?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The permanent deletion help section lacks a direct link, meaning you must check the temporary deactivation section to find the actual hyperlink to delete the account.",
-          "whatTheAgentLoses": "An agent might fail the task by giving up when the permanent deletion section lacks a link, missing its counterintuitive placement under the deactivation heading.",
-          "kind": "state-check",
-          "speak": "never"
+          "speak": "never",
+          "check": "Is the actual deletion link collapsed inside a dropdown section such as 'Mobile Browser Help'?",
+          "say_example": "Found the delete link collapsed inside <Mobile Browser Help> and opened it"
          }
         ]
        }
@@ -457,7 +401,9 @@
         "why": "The 'Delete a Google service' option only removes individual apps like YouTube or Photos, rather than permanently deleting the entire account.",
         "whatTheAgentLoses": "The user fails to achieve full account deletion if the agent mistakenly only removes a single service.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "on-event",
+        "check": "Is there a 'Delete a Google service' option next to (but distinct from) 'Delete your Google Account'?",
+        "say_example": "There's a 'Delete a Google service' option here too, but that only removes one app, not the whole account. Using 'Delete your Google Account' instead."
        },
        {
         "question": "Which option under other settings should you select to delete your channel?",
@@ -467,7 +413,9 @@
         "why": "The advanced settings tab presents multiple links under other settings, so you must specifically choose 'Remove YouTube content' to initiate the deletion process.",
         "whatTheAgentLoses": "You lose the opportunity to review other channel settings or choose to manage the account instead of immediately proceeding to remove content.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the advanced settings tab list 'Remove YouTube content' among the 'other settings' links?",
+        "say_example": "Selected <Remove YouTube content> from other settings"
        }
       ]
      },
@@ -483,17 +431,21 @@
         "why": "The menu icon on the profile page is unresponsive, blocking access to the account deletion settings unless the interface is refreshed.",
         "whatTheAgentLoses": "The user loses the ability to apply intuitive workarounds, like toggling between tabs, to bypass a frozen interface.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does tapping the settings menu icon fail to open anything?",
+        "say_example": "The menu isn't responding. Trying a refresh before continuing."
        },
        {
-        "question": "Should I wait for the skeleton placeholders to finish loading or tap the back arrow?",
+        "question": "Should I wait for the page to finish loading, or go back?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows only grey skeleton loading placeholders and a back arrow, requiring a decision on whether to wait for the content to resolve or navigate away.",
         "whatTheAgentLoses": "The user loses the ability to decide their own tolerance for waiting on a slow-loading page before giving up or retrying.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Is the screen still showing grey skeleton placeholders instead of loaded content?",
+        "say_example": "This screen is still loading. Waiting rather than backing out."
        }
       ]
      },
@@ -502,14 +454,16 @@
       "label": "Request deletion through support",
       "questions": [
        {
-        "question": "Does the service require you to submit a manual privacy request form rather than providing an automated deletion button?",
+        "question": "Do you want me to fill out and send this privacy request form, since there's no delete button here?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Some platforms do not have a self-serve deletion button and instead require you to fill out a GDPR or CCPA data subject access request that is processed by customer support.",
         "whatTheAgentLoses": "The user loses the awareness that the deletion is not instantaneous and that they must monitor their email for a support response to complete the process.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the page require submitting a privacy/data-deletion request form instead of offering a direct delete button?",
+        "say_example": "There's no delete button here. It's a request form that goes to their support team instead. OK for me to fill it out and send it?"
        }
       ]
      }
@@ -525,17 +479,6 @@
       "label": "Select the account to delete",
       "questions": [
        {
-        "question": "Which of these linked profiles do you want to delete?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Accounts Centre displays multiple connected profiles, making it critical to identify the exact account intended for deletion.",
-        "whatTheAgentLoses": "You lose the chance to verify which specific account among your connected profiles is being selected for deletion.",
-        "kind": "decision",
-        "verify_form": "The agent selected one profile from your connected-profiles list - read the name it picked; every other profile on that list survives and this one does not.",
-        "speak": "never"
-       },
-       {
         "question": "Which of your linked accounts do you want to delete?",
         "cluster": "select",
         "moment": "Now",
@@ -544,7 +487,9 @@
         "whatTheAgentLoses": "Delegating this choice means the agent might select the wrong linked profile, resulting in the permanent loss of an account you intended to keep.",
         "kind": "decision",
         "verify_form": "One linked account was picked on the deletion screen - check the name against the account you meant; the picker is where a Facebook and an Instagram sit one tap apart.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Which named profile is selected on the linked-accounts list, and does it match the account you asked to delete?",
+        "say_example": "This list shows <Facebook: handle_a> and <Instagram: handle_b>, one tap apart. Which one should I delete?"
        }
       ]
      },
@@ -553,14 +498,16 @@
       "label": "Choose delete over deactivate",
       "questions": [
        {
-        "question": "Is the 'Deactivate' option styled as a prominent primary button while the 'Delete' option is disguised as a muted, low-contrast text link?",
+        "question": "Is Deactivate the big, obvious button here, while Delete is just a small link?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Platforms use visual dark patterns to steer users away from permanent deletion by making the temporary deactivation button visually dominant and the deletion link barely visible.",
         "whatTheAgentLoses": "The user loses the assurance that the agent didn't just click the most visually prominent call-to-action, mistakenly deactivating the account instead of permanently deleting it.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "on-event",
+        "check": "Is 'Deactivate' shown as a solid, prominent button while 'Delete' appears only as a smaller text link?",
+        "say_example": "Deactivate is the big button here. Delete is just a small link underneath it."
        },
        {
         "question": "Do you want to permanently delete your account instead of temporarily deactivating it?",
@@ -570,37 +517,21 @@
         "why": "The platform offers a temporary deactivation option that hides your profile without permanently erasing your data.",
         "whatTheAgentLoses": "You lose the opportunity to change your mind and opt for a temporary break that preserves your data.",
         "kind": "intent-check",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the page offer temporary deactivation as an alternative to permanent deletion?",
+        "say_example": "This page also offers deactivating instead, which just hides the account and keeps your data. Go ahead with permanent deletion, or deactivate instead?"
        },
        {
-        "question": "Should you continue with permanent account deletion?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Proceeding past this screen commits you to the permanent deletion path rather than the temporary deactivation option shown.",
-        "whatTheAgentLoses": "The user loses the chance to personally decide whether temporary deactivation would be a better choice than permanent deletion.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
-        "question": "Do you want to hide your content or permanently delete it?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents two distinct options that determine whether your content is temporarily hidden or irreversibly erased.",
-        "whatTheAgentLoses": "You lose the chance to opt for a temporary suspension of your account rather than a permanent, unrecoverable deletion.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
-        "question": "Is the 'Delete account' radio button actively selected, or is the form still resting on the platform's default 'Deactivate account' choice?",
+        "question": "Is Delete already selected, or is Deactivate still the default?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "The platform intentionally pre-selects the temporary deactivation option to prevent accidental data loss, requiring a deliberate override to initiate a permanent deletion.",
         "whatTheAgentLoses": "The user loses the visual confirmation that the agent successfully overrode the default setting, risking that the account will only be temporarily hidden rather than permanently destroyed.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "on-event",
+        "check": "Is the 'Deactivate account' radio button pre-selected by default, with 'Delete account' requiring a deliberate click to switch?",
+        "say_example": "This form starts on 'Deactivate' by default. Switching the radio button to 'Delete' now."
        }
       ]
      },
@@ -617,18 +548,9 @@
         "whatTheAgentLoses": "You lose the opportunity to provide authentic feedback about why you are leaving or to review the specific troubleshooting help the platform offers.",
         "kind": "decision",
         "verify_form": "The agent gave the platform a reason for leaving - check which one it selected; the reason it picked chose which counter-offer screen you were shown, and it spoke for you.",
-        "speak": "never"
-       },
-       {
-        "question": "What reason should you select for deleting your account before continuing?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The platform requires you to choose a reason for leaving, such as no longer finding it useful, before the continue button allows you to proceed.",
-        "whatTheAgentLoses": "You lose the opportunity to provide your own authentic feedback about why you are choosing to leave the service.",
-        "kind": "decision",
-        "verify_form": "A reason was required before the continue button armed - check what the agent picked; the selection is feedback given in your name.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page require picking a reason for leaving before the continue button will proceed?",
+        "say_example": "Telling <the platform> the reason for leaving is <no longer useful>, since it's asking before I can continue."
        }
       ]
      },
@@ -645,7 +567,9 @@
         "whatTheAgentLoses": "You lose the opportunity to resolve security issues and keep your account if an agent automatically bypasses this offer.",
         "kind": "decision",
         "verify_form": "The platform offered to secure the account instead of deleting it - check whether the agent dismissed that; if the account really was hacked, the rescue it skipped may have been what you wanted.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page offer to help secure the account instead of deleting it (e.g., because it flags a security concern)?",
+        "say_example": "It's offering to help secure the account instead. Skipping that and continuing to delete, since that's what you asked for."
        },
        {
         "question": "Do you want to adjust your notification settings instead of deleting the account?",
@@ -656,7 +580,9 @@
         "whatTheAgentLoses": "You lose the chance to keep your account active with fewer interruptions if the agent automatically bypasses this alternative and proceeds with deletion.",
         "kind": "decision",
         "verify_form": "A notifications-instead offer was shown - check whether the agent brushed past it; fewer alerts on a kept account was an alternative only you could weigh.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the page offer to adjust notification settings as an alternative to deletion?",
+        "say_example": "Skipped the notification-settings offer"
        },
        {
         "question": "Do you want to explore the suggested alternatives to deleting your account?",
@@ -667,7 +593,9 @@
         "whatTheAgentLoses": "You lose the opportunity to reconsider your decision and try the platform's suggested alternatives before committing to the deletion process.",
         "kind": "decision",
         "verify_form": "The platform suggested alternatives before the deletion - check whether the agent considered any; the suggestions screen was your off-ramp and it went past it.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the page suggest alternatives like finding friends or learning more, before letting the deletion continue?",
+        "say_example": "Skipped the suggested-alternatives screen"
        }
       ]
      }
@@ -683,16 +611,6 @@
       "label": "Read the loss inventory",
       "questions": [
        {
-        "question": "What specific data and connected services will you lose if you proceed?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen explicitly warns that deleting the account permanently removes access to various connected services and data, so reviewing this list prevents unintended data loss.",
-        "whatTheAgentLoses": "An agent might bypass the detailed list of affected services, causing you to permanently lose critical data or access to third-party apps that you didn't realize were tied to this account.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
         "question": "Does the number of items listed for deletion match what you saw in your account earlier?",
         "cluster": "facts",
         "moment": "Now",
@@ -700,7 +618,9 @@
         "why": "Confirming that the deletion summary of '4 conversations' matches the 4 emails seen earlier in the inbox ensures you are deleting the correct account.",
         "whatTheAgentLoses": "You lose the chance to personally cross-check the system's data deletion summary against your own knowledge of the account's contents to ensure no unexpected data is lost.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the item count in the deletion summary (e.g., number of conversations) match the count seen earlier in the account?",
+        "say_example": "The summary here says <4 conversations>, but I counted <5> earlier in the inbox."
        },
        {
         "question": "Do the timestamps in the deletion summary agree with the inbox and system clock you saw earlier?",
@@ -710,20 +630,12 @@
         "why": "Verifying that the deletion summary's note of an account recovery '1 hour ago' matches the 5:32 PM email seen earlier when the clock read 6:37 ensures the timeline of the account being deleted is consistent.",
         "whatTheAgentLoses": "You lose the ability to personally cross-reference the account's recent activity history with your own knowledge of recent events to confirm everything is correct before permanent deletion.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Do the timestamps in the deletion summary line up with the inbox and system clock seen earlier?",
+        "say_example": "This summary says the account was recovered <1 hour ago>, but that doesn't line up with the earlier screen's clock."
        },
        {
-        "question": "What specific data and subscriptions am I agreeing to permanently lose?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen requires you to check mandatory boxes acknowledging exactly which content and subscriptions will be permanently erased before you can proceed.",
-        "whatTheAgentLoses": "Delegating this step means you lose the chance to personally review and accept exactly which content and subscriptions will be destroyed before the action becomes irreversible.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Do you accept the consequences of deletion, including the 30-day deactivation period?",
+        "question": "Do you accept the consequences of deletion, including the deactivation waiting period?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -731,7 +643,9 @@
         "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally review the specific data you will lose and the exact timeline of the deletion process.",
         "kind": "decision",
         "verify_form": "The consequences and the 30-day timeline were on screen for acceptance - check that the agent's acceptance matches what you are actually willing to lose; the acknowledgment it gave was yours to give.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "What does the page list as lost or affected by deletion (data, subscriptions, grace-period length), and does a checkbox require accepting all of it?",
+        "say_example": "Deleting this also erases <your subscription history> and starts a <30>-day window before it's final. OK to accept that and continue?"
        },
        {
         "question": "Are you aware that deleting your account will not erase the direct messages you have already sent to others?",
@@ -741,7 +655,9 @@
         "why": "The deletion summary explicitly warns that information not stored directly in your account, such as direct messages, may still remain visible to the recipients after your profile is gone.",
         "whatTheAgentLoses": "If the agent blindly accepts the terms, you lose the crucial realization that deleting your account won't hide your past conversations from the people you sent them to, which might defeat your primary reason for leaving.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page state that direct messages already sent to others will remain visible to them after the account is gone?",
+        "say_example": "Heads up, messages you already sent will still be visible to the people you sent them to, even after this is gone."
        }
       ]
      },
@@ -758,17 +674,21 @@
         "whatTheAgentLoses": "The user loses the opportunity to save their associated Pages by transferring admin rights to someone else before the account is deleted.",
         "kind": "decision",
         "verify_form": "The warning listed Pages that die with this account - read the list and check whether the agent assigned another admin first; each Page named there is deleted with your account unless someone else was given control.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page name specific Pages you solely admin that will be deleted along with the account?",
+        "say_example": "You're the only admin on <a Page you manage>, so it gets deleted too unless someone else is made admin first."
        },
        {
-        "question": "Do the screens consistently display the exact number of pages tied to your account before you delete it?",
+        "question": "Does this screen actually list your pages by name, or just show a general ownership menu?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The analyst claimed the screen showed 5 managed pages, but the actual screen at that moment only showed the general account ownership menu without listing specific assets.",
         "whatTheAgentLoses": "The user loses the ability to verify exactly which connected pages and assets will be permanently destroyed along with the main account.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the actual screen at this point list specific managed pages, or only a general account-ownership menu?",
+        "say_example": "This screen doesn't actually list the pages. It's just the general ownership menu, not a count of managed pages."
        }
       ]
      },
@@ -777,7 +697,7 @@
       "label": "Weigh the download offer",
       "questions": [
        {
-        "question": "Do you want to export your information before proceeding with the deletion?",
+        "question": "Do you want to export your information before you delete the account?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -785,10 +705,12 @@
         "whatTheAgentLoses": "Delegating this step means the agent might skip exporting your data, causing you to permanently lose your content and account history.",
         "kind": "decision",
         "verify_form": "The export offer came before the point of no return - check whether the agent requested your information; declined, your content has no copy anywhere once the deletion starts.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the page offer a data export/download before the deletion proceeds?",
+        "say_example": "Last chance to download a copy of everything first. Want that before I continue?"
        },
        {
-        "question": "Do you want to save your data, keep Messenger, or review linked apps before permanently deleting your account?",
+        "question": "Do you want to keep Messenger or review the apps you've linked to this account before deleting it?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -796,61 +718,21 @@
         "whatTheAgentLoses": "You lose the final opportunity to back up your personal information, retain Messenger access, or manage linked applications before they are permanently erased.",
         "kind": "decision",
         "verify_form": "The screen offered saving your data, keeping Messenger, and reviewing linked apps - check which offers the agent took; each one it skipped is something you lose with no way back.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page separately offer to keep Messenger access or review linked/connected apps, apart from the data-download offer?",
+        "say_example": "This also offers to keep <Messenger> separately, and to review apps you've linked to this account. Check either before continuing?"
        },
        {
-        "question": "Do you want to download your photos and posts before proceeding with the deletion?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen indicates you have 588 photos and 658 posts available to download, which will be permanently lost once the account is deleted.",
-        "whatTheAgentLoses": "The user loses the chance to decide whether their personal data and memories should be archived before they are permanently destroyed.",
-        "kind": "decision",
-        "verify_form": "The screen counted your photos and posts and offered a download - check whether the agent took it; 588 photos with no copy is the difference one skipped button makes.",
-        "speak": "never"
-       },
-       {
-        "question": "Do you want to download your data before permanently losing access to all listed services?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen explicitly warns that all data and access to connected services will be permanently lost and provides a link to download your data first.",
-        "whatTheAgentLoses": "The user loses the opportunity to review the affected services and archive their personal data before the agent permanently destroys the account.",
-        "kind": "decision",
-        "verify_form": "A download-your-data link sat at the top of the loss list - check whether the agent used it; everything in that list has no other copy after the delete.",
-        "speak": "never"
-       },
-       {
-        "question": "Do you want to download a copy of your data before permanently deleting your account?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen warns that once the account is deleted, you will no longer be able to download your data like video posts.",
-        "whatTheAgentLoses": "Delegating this step means the agent might permanently delete the account without saving your personal data and memories.",
-        "kind": "decision",
-        "verify_form": "The platform recommended downloading your data before deletion - check whether the agent requested it; posts you never exported do not come back.",
-        "speak": "never"
-       },
-       {
-        "question": "Should you export your data or temporarily deactivate your account before proceeding with permanent deletion?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen explicitly warns that all content will be permanently lost and offers a final chance to export your information or deactivate instead.",
-        "whatTheAgentLoses": "Delegating this step means you lose the final opportunity to evaluate whether your posts and account data are worth saving before they are permanently erased.",
-        "kind": "decision",
-        "verify_form": "Export and deactivate both sat beside the continue button - check which of the three the agent pressed; two of them preserve something and it may have picked the one that preserves nothing.",
-        "speak": "never"
-       },
-       {
-        "question": "If you request a data export, do you need to wait for the file to arrive before finalizing the account deletion?",
+        "question": "If you request a data export, do you need to wait for it before finishing the deletion?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Data archives can take hours or days to compile, and if you proceed with deleting the account immediately, the pending export request is cancelled and the data is permanently lost.",
         "whatTheAgentLoses": "An agent might request the export and immediately finish the deletion task in the same session, destroying the account before the archive is ever generated.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the page warn that a pending data-export request gets cancelled if the deletion is finalized before the export finishes?",
+        "say_example": "The export can take a while to arrive. Finishing the deletion before it's ready cancels that request and the data doesn't come."
        }
       ]
      },
@@ -866,7 +748,9 @@
         "why": "The data download warning explicitly states that content not stored on their servers, such as local drafts, cannot be exported and will be lost.",
         "whatTheAgentLoses": "The user loses the specific warning that their unpublished local drafts will be permanently destroyed and cannot be saved via the data export tool.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page state that local drafts (not stored on their servers) cannot be included in the data download?",
+        "say_example": "Any drafts only saved on this device won't be in the download and won't come back."
        }
       ]
      },
@@ -875,7 +759,7 @@
       "label": "Accept the financial terms",
       "questions": [
        {
-        "question": "Are you willing to forfeit your unwithdrawn referral balance to proceed with deletion?",
+        "question": "Are you willing to give up your unclaimed referral balance to delete the account?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -883,7 +767,9 @@
         "whatTheAgentLoses": "Delegating this step means the agent might permanently discard your unwithdrawn funds without giving you a chance to claim them.",
         "kind": "decision",
         "verify_form": "A pending referral balance stood between the agent and the deletion - check whether it withdrew the money or checked the forfeit box; that balance is gone the moment the box was ticked.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the page state that an unwithdrawn referral or account balance will be forfeited by deleting the account?",
+        "say_example": "There's <an unwithdrawn referral balance> tied to this account. Deleting now means giving that up."
        },
        {
         "question": "Does the platform block the deletion request because of an active subscription or pending balance?",
@@ -893,7 +779,9 @@
         "why": "Some services prevent account deletion until all active subscriptions are canceled and outstanding balances are settled.",
         "whatTheAgentLoses": "The user loses the ability to intervene and resolve billing dependencies that are hard-blocking the agent from completing the deletion.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the page block the deletion request because of an active subscription or an outstanding balance?",
+        "say_example": "Deletion is blocked here. There's still an active subscription that needs cancelling first."
        },
        {
         "question": "Are you sure you want to accept the financial terms and permanently delete your account?",
@@ -904,7 +792,9 @@
         "whatTheAgentLoses": "Delegating this step removes your final chance to reconsider the financial consequences before the account is irreversibly deleted.",
         "kind": "decision",
         "verify_form": "Two checkboxes were ticked - continuing financial responsibility and permanent deletion of all data - check both statements; the agent accepted ongoing charges and total loss in your name.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Do both checkboxes here require accepting ongoing financial responsibility and permanent data loss before the delete button enables?",
+        "say_example": "This wants you to accept two things: you're still responsible for any open charges, and everything gets permanently erased. OK to accept both?"
        }
       ]
      }
@@ -920,18 +810,7 @@
       "label": "Re-enter the password",
       "questions": [
        {
-        "question": "Are you willing to enter your password to proceed with the deletion?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen explicitly requires you to re-enter your password for security before allowing the deletion process to continue.",
-        "whatTheAgentLoses": "Delegating this step requires sharing your password with the agent, which exposes your sensitive credentials.",
-        "kind": "decision",
-        "verify_form": "A password prompt gated the deletion - check who satisfied it; an agent that typed it was holding your credential, which is a handover you must have chosen.",
-        "speak": "never"
-       },
-       {
-        "question": "What is your password to authorize the deletion?",
+        "question": "What's your password, to confirm it's really you?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
@@ -939,28 +818,21 @@
         "whatTheAgentLoses": "Delegating this step means you must share your sensitive account password with the agent.",
         "kind": "decision",
         "verify_form": "The security screen demanded the account password - check how the agent got it; the password is yours to supply, and wherever the agent found it is somewhere your credential lives in reach of it.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the page require re-entering the account password before the deletion can proceed?",
+        "say_example": "It wants your password again to confirm this is really you. What is it?"
        },
        {
-        "question": "Should you click 'Continue' to submit your password and proceed?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen shows a filled password field and an enabled 'Continue' button, marking the critical authorization step for the request.",
-        "whatTheAgentLoses": "Delegating this step means you lose the final chance to halt the process before your credentials are submitted to authorize the deletion.",
-        "kind": "decision",
-        "verify_form": "The agent pressed the continue that submitted your password - check that you authorized that submission; it was the last stop before the credential left your hands.",
-        "speak": "never"
-       },
-       {
-        "question": "Are you sure you are deleting the correct account, given the profile picture just changed?",
+        "question": "The profile picture just changed. Is this still the right account?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": true,
         "why": "The profile picture for [handle] unexpectedly changed from a photograph of a man to a 3D cartoon avatar on the password confirmation screen.",
         "whatTheAgentLoses": "The user loses the opportunity to catch a potential session mix-up before an account is permanently deleted.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the profile picture shown on this password screen match the one seen earlier for the account, or has it changed to something different?",
+        "say_example": "The profile picture just changed from <one photo> to <a different image>. Worth checking this is still the right account."
        }
       ]
      },
@@ -976,7 +848,9 @@
         "why": "The screen displays a list of saved passwords for multiple websites, requiring you to select the one associated with the account being deleted.",
         "whatTheAgentLoses": "The user loses the ability to control which specific account's credentials the agent retrieves from the password manager.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the saved-password list show entries for more than one website?",
+        "say_example": "Opened the saved password for <the platform>"
        },
        {
         "question": "Is this the saved password for the account you are deleting?",
@@ -986,10 +860,12 @@
         "why": "You must select the credentials for the exact account you intend to delete, especially since multiple accounts like '[handle]' are also saved on this device.",
         "whatTheAgentLoses": "You lose the ability to personally verify that the agent is retrieving the password for the correct account rather than an alternate one.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the saved credential entry's site/username match the account being deleted, rather than a different saved account for the same site?",
+        "say_example": "This saved login is for <handle B>, not the <handle A> account you're deleting."
        },
        {
-        "question": "Do you need to retrieve your forgotten password from a password manager to verify your identity?",
+        "question": "Do you need to get your password from a password manager to prove it's you?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
@@ -997,7 +873,9 @@
         "whatTheAgentLoses": "Delegating this step means you must expose your plaintext password or grant the agent access to your personal password manager.",
         "kind": "decision",
         "verify_form": "The flow detoured into a password manager - check whether you granted that; opening the vault exposes every saved credential, not just the one this deletion needed.",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the password field show no saved/autofilled value, meaning the password has to be retrieved from a password manager?",
+        "say_example": "Nothing autofilled. Getting the password means opening your password manager, which shows every saved login, not just this one. OK to open it?"
        },
        {
         "question": "Is the password actually saved in your device manager, or do you need to recover it manually?",
@@ -1007,7 +885,9 @@
         "why": "The speaker notes that their device showed a message indicating the password wasn't saved, meaning they couldn't rely on the password manager to autofill it for the deletion authorization.",
         "whatTheAgentLoses": "The agent might fail the task if it blindly relies on extracting the password from the device's manager when the credentials were never actually stored there.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the device report that no password is saved for this account, rather than autofilling one?",
+        "say_example": "Nothing's saved for this account. No password to autofill here."
        }
       ]
      },
@@ -1016,7 +896,7 @@
       "label": "Take the recovery path",
       "questions": [
        {
-        "question": "Do you want to use your device's screen lock to verify your identity, or try another way?",
+        "question": "Do you want to use your device's screen lock to prove it's you, or try another way?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": true,
@@ -1024,7 +904,9 @@
         "whatTheAgentLoses": "Delegating this step means you lose the ability to choose your preferred authentication method, as an agent cannot use your personal biometrics or local screen lock.",
         "kind": "decision",
         "verify_form": "The verification offered your screen lock or another way - check which the agent chose; biometrics and device locks are yours alone, so whatever path it took routed around something only you can do.",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the identity screen offer verifying with the device's screen lock/passkey, or a 'try another way' alternative?",
+        "say_example": "This wants you to unlock with your screen lock or passkey to prove it's you. Only you can do that. Go ahead, or try another way?"
        },
        {
         "question": "Do you want to continue past the account recovery confirmation?",
@@ -1034,7 +916,9 @@
         "why": "This matters because the screen confirms your identity via your phone and requires your approval to proceed with the deletion process.",
         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally verify that the correct account was successfully authenticated before proceeding.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen show a phone-based recovery approval as confirmed before letting the flow continue?",
+        "say_example": "Continued past the recovery confirmation"
        },
        {
         "question": "Do you want to update your password before continuing?",
@@ -1045,7 +929,9 @@
         "whatTheAgentLoses": "You lose the opportunity to reset a forgotten password, which might be necessary to successfully verify your identity and complete the deletion.",
         "kind": "decision",
         "verify_form": "A password-update offer appeared mid-recovery and the agent answered it - check which way; updating changes how you sign in everywhere, skipping leaves a password you may not know.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the recovery screen offer updating the password as an alternative to continuing with the one you have?",
+        "say_example": "It's also offering to update the password here. That changes how you sign in everywhere, not just for this deletion."
        }
       ]
      },
@@ -1062,27 +948,21 @@
         "whatTheAgentLoses": "Delegating this step means the agent cannot receive the out-of-band verification code sent to your personal phone.",
         "kind": "decision",
         "verify_form": "A 6-digit code went to your phone and ended up in the form - check who read it across; the code is the platform asking YOU, and relaying it hands your second factor to the agent.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the page require a 6-digit verification code sent to a phone before the delete button activates?",
+        "say_example": "A 6-digit code just went to your phone. What is it?"
        },
        {
-        "question": "Should you click 'Delete account' to submit the verification code?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays the entered 6-digit code and an active 'Delete account' button, making this the decisive action to verify your identity and proceed.",
-        "whatTheAgentLoses": "Delegating this action means losing the final manual check to ensure the correct verification code is submitted before the account is deleted.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Has the countdown timer for the SMS verification code reached zero, requiring you to request a new code?",
+        "question": "Did the resend timer hit zero while the code field was still empty?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "SMS delivery can be delayed, and the interface enforces a strict time limit (like 'Resend code 60s'); if the timer expires before the code arrives, the person must recognize this stale state and explicitly request a new code.",
         "whatTheAgentLoses": "The agent might wait indefinitely for a code that will never be accepted or attempt to submit a stale code, failing the verification step because it didn't monitor the interface's expiration timer.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Has the resend-code countdown reached zero while the code field is still empty?",
+        "say_example": "The resend timer hit zero and the code field is still empty. Requesting a new one."
        }
       ]
      },
@@ -1099,7 +979,9 @@
         "whatTheAgentLoses": "The user loses the opportunity to supply alternative authentication methods when the agent gets stuck on an impossible security prompt.",
         "kind": "decision",
         "verify_form": "The verification code went somewhere unreachable - check what the agent did next; backup codes and recovery routes are yours to provide, and any path it improvised touched your account security.",
-        "speak": "if-wrong"
+        "speak": "gate",
+        "check": "What contact method (phone number or authenticator app) does the page say the verification code was sent to?",
+        "say_example": "The code went to <a number or app you might not have access to>. Try a backup code, or handle recovery yourself?"
        },
        {
         "question": "Did the 'Continue' button remain disabled even after you pasted or autofilled your password?",
@@ -1109,7 +991,9 @@
         "why": "The app's form validation sometimes fails to detect pasted or autofilled text, requiring you to manually type a character to activate the submit button.",
         "whatTheAgentLoses": "The agent might get permanently stuck on the password screen, unable to proceed because it doesn't know how to force the form to recognize the inputted text.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the continue button stay disabled after the password field is filled by paste or autofill?",
+        "say_example": "Continue is still greyed out even though the password field is filled. This form doesn't seem to detect pasted text."
        },
        {
         "question": "Did an 'Incorrect password' error appear after you clicked continue?",
@@ -1119,7 +1003,9 @@
         "why": "If you entered the wrong password, the system will block the deletion and display an error, meaning you must retrieve the correct credentials and try again.",
         "whatTheAgentLoses": "The agent might assume the submission was successful and wait indefinitely for the next screen, failing to catch and resolve the authentication error.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Did an 'Incorrect password' error appear after submitting?",
+        "say_example": "Got an 'incorrect password' error. That password didn't go through."
        },
        {
         "question": "Do you need to take over to solve a CAPTCHA before the deletion can proceed?",
@@ -1129,7 +1015,9 @@
         "why": "Platforms frequently trigger a visual puzzle or CAPTCHA during sensitive actions like account deletion to block automated bots, which an agent cannot bypass alone.",
         "whatTheAgentLoses": "The agent will fail silently or get stuck on the verification step if the user does not intervene to solve the visual challenge.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the page present a CAPTCHA or similar puzzle that must be solved before continuing?",
+        "say_example": "There's a CAPTCHA here I can't solve. Can you take over for a second?"
        }
       ]
      }
@@ -1145,7 +1033,7 @@
       "label": "Read the final terms",
       "questions": [
        {
-        "question": "Are you sure you want to permanently delete the account, knowing the final deletion date and cancellation policy?",
+        "question": "What date does the final screen give for when the account is erased, and what does it say about cancelling before then?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1153,7 +1041,9 @@
         "whatTheAgentLoses": "Delegating this means you lose the final chance to reconsider the permanent deletion and personally note the exact date the account becomes unrecoverable.",
         "kind": "decision",
         "verify_form": "The final screen named the deletion date and the cancel rule, and the agent confirmed - check that the date and the terms it accepted are ones you saw; this was the last screen where stopping cost nothing.",
-        "speak": "gate"
+        "speak": "always",
+        "check": "Does the final screen name the exact date the account will be permanently erased and describe the cancellation policy?",
+        "say_example": "Your account will be fully gone on <a date>. You can still cancel any time before then."
        },
        {
         "question": "Does the final confirmation contradict the earlier warning about permanent deletion?",
@@ -1163,7 +1053,9 @@
         "why": "The initial settings screen stated the deletion was permanent, but the final confirmation screen reveals a 30-day grace period to reactivate the account.",
         "whatTheAgentLoses": "You lose the awareness that your account is not immediately destroyed and that you have a 30-day window to reverse the decision.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does this final confirmation name a grace period at all, when the earlier settings screen called the deletion immediately permanent?",
+        "say_example": "Earlier this said deletion was immediate and permanent. This screen actually gives you a grace period first."
        },
        {
         "question": "Does the scheduled deletion date match the stated grace period?",
@@ -1173,7 +1065,9 @@
         "why": "Checking that the March 22, 2025 deletion date aligns with the one-month reversal window ensures the system correctly calculated your grace period.",
         "whatTheAgentLoses": "You lose the peace of mind of personally verifying the exact date your data will be permanently erased and your reversal window closes.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the deletion date shown match the stated grace-period length added to today's date?",
+        "say_example": "The grace period is supposed to be <30 days>, but the date shown here is only <10 days> out."
        },
        {
         "question": "Does the username listed on this final warning screen match the account you actually want to delete?",
@@ -1183,7 +1077,9 @@
         "why": "If you misclicked in the account switcher earlier, this screen is your last chance to realize you are about to permanently delete the wrong profile.",
         "whatTheAgentLoses": "You lose the final safety check against an earlier misclick, risking the irreversible destruction of the wrong account.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the username on this final warning screen match the account named earlier as the deletion target?",
+        "say_example": "This final screen names <handle B>, not the <handle A> you told me to delete."
        }
       ]
      },
@@ -1196,7 +1092,7 @@
       "label": "Tap the final delete",
       "questions": [
        {
-        "question": "Are you ready to make the final confirmation to permanently delete your account?",
+        "question": "Are you ready to permanently delete your account?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": true,
@@ -1204,7 +1100,9 @@
         "whatTheAgentLoses": "Delegating this step removes your final opportunity to change your mind before the account and its data are permanently destroyed.",
         "kind": "decision",
         "verify_form": "The red delete on the final pop-up was pressed - check that the pop-up named the account you meant; there is no screen after this one where a wrong answer can be fixed.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does a final confirmation pop-up (e.g., a red 'Delete' button) appear as the last step before the account is actually erased?",
+        "say_example": "This is the actual delete button. Nothing after this can be undone. It's gone on <a date>, but you can still cancel before then. Press it?"
        }
       ]
      },
@@ -1213,14 +1111,16 @@
       "label": "Pass the second confirm",
       "questions": [
        {
-        "question": "Did the 'Delete account' button immediately finalize the deletion as stated, or did it trigger another confirmation pop-up?",
+        "question": "Did clicking Delete account actually finish it, or open another confirmation?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": true,
         "why": "The password screen claimed tapping the button would delete the account, but it actually spawned a final confirmation pop-up that requires an additional tap.",
         "whatTheAgentLoses": "An agent might assume the task is complete after the first button press and fail to click the final pop-up, leaving the account active.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does clicking 'Delete account' open another confirmation pop-up, rather than finishing the deletion as the earlier screen said it would?",
+        "say_example": "That button didn't finish it. It opened one more confirmation pop-up instead."
        }
       ]
      }
@@ -1243,17 +1143,21 @@
         "why": "The conflicting messages between a 30-day grace period and an immediate deletion toast leave it unclear if the account is permanently gone right now.",
         "whatTheAgentLoses": "You lose the certainty of knowing exactly when your data is permanently erased from the platform.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Do the deletion-confirmation screen and the success message agree on whether the account is deleted now or after a grace period?",
+        "say_example": "One message here says weeks from now, the other says immediately. They don't agree."
        },
        {
-        "question": "Does the screen actually show you logged out with a generic profile silhouette after confirming deletion?",
+        "question": "After confirming deletion, does the screen show you logged out with a blank default photo?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "Visually confirming the logged-out state on the main feed proves the deletion request was successfully processed rather than silently failing.",
         "whatTheAgentLoses": "The user loses the guarantee that their account was actually deleted if the agent assumes success without verifying the final logged-out screen.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "After confirming deletion, does the app show you logged out with a generic/blank profile silhouette?",
+        "say_example": "Instead of a logged-out screen, it's still showing signed-in content. That's not the expected state after deleting."
        },
        {
         "question": "Do you see a clear confirmation that the account deletion is scheduled, or does the session expire first?",
@@ -1263,27 +1167,33 @@
         "why": "The sudden 'Session Expired' prompt obscures whether the deletion with its 30-day grace period was actually finalized.",
         "whatTheAgentLoses": "You lose the certainty that your account was successfully scheduled for deletion rather than just prematurely logging you out.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does a clear deletion-scheduled confirmation appear, or does the session simply expire before one shows?",
+        "say_example": "The session just expired here. No confirmation screen appeared before that happened."
        },
        {
-        "question": "Did the interface say 'Account removed' instead of 'Account scheduled for deletion', meaning it was only removed from this device?",
+        "question": "Did the screen say 'Account removed' instead of 'Account scheduled for deletion', meaning it was only removed from this device?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "A common mistake is clicking 'Remove account' in an account switcher, which only logs you out locally but leaves your account and data fully active on the server.",
         "whatTheAgentLoses": "You might falsely believe your personal data is permanently wiped when it is actually still public and active, leaving you exposed.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the screen say 'Account removed' rather than 'Account scheduled for deletion' or similar wording?",
+        "say_example": "This says 'Account removed,' which just signs this device out. It doesn't mean the account itself is scheduled for deletion."
        },
        {
-        "question": "Did a brief success toast appear at the bottom of the screen confirming the deletion schedule before the app redirected to the login page?",
+        "question": "Did a quick confirmation message flash on screen before it sent you to the login page?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Apps often confirm successful deletion with a transient toast message that vanishes in seconds before redirecting to the login screen, which otherwise looks identical to a generic session timeout.",
         "whatTheAgentLoses": "The user loses definitive proof of success if the agent only checks that the final state is a login screen, missing the fleeting visual confirmation that the deletion actually succeeded.",
         "kind": "state-check",
-        "speak": "always"
+        "speak": "always",
+        "check": "Did a brief success toast confirming the deletion schedule appear before the app redirected to the login screen?",
+        "say_example": "A confirmation flashed on screen just before it sent you to the login page. It said <account scheduled for deletion>."
        }
       ]
      },
@@ -1292,34 +1202,40 @@
       "label": "Catch the silent failure",
       "questions": [
        {
-        "question": "After the final tap, did a deletion-confirmed or scheduled-for-deletion screen actually appear, or did the flow end on a loading state?",
+        "question": "After the final tap, did you see a deletion-confirmed screen, or did it just stay loading?",
         "cluster": "receipts",
         "moment": "Completion",
         "moneyMoving": true,
         "why": "The video cuts off while the final 'Delete account' button is still showing a loading spinner, leaving the actual success of the deletion unconfirmed.",
         "whatTheAgentLoses": "The user loses the certainty that the deletion request actually went through successfully rather than timing out or failing.",
         "kind": "state-check",
-        "speak": "always"
+        "speak": "always",
+        "check": "After the final tap, does a deletion-confirmed or deletion-scheduled screen actually appear, or does it stay on a loading state?",
+        "say_example": "The screen after the final tap says <deletion scheduled>, so that part went through."
        },
        {
-        "question": "Did the 'Delete account' button revert to its normal state after the loading spinner vanished, without logging you out or showing a confirmation?",
+        "question": "Did the Delete account button go back to normal after loading, without logging you out or showing a confirmation?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "If the network drops or the server rejects the request silently, the button will stop spinning but the account won't be deleted, requiring a retry.",
         "whatTheAgentLoses": "The agent might record the button click as a success and close the page, leaving the account perfectly active because it missed the silent failure.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the delete button return to its normal, clickable state after the spinner stops, without logging you out or showing a confirmation?",
+        "say_example": "The button just went back to normal after loading. No confirmation, and you're still logged in, so this probably didn't go through."
        },
        {
-        "question": "Did a transient error toast appear and vanish after clicking delete, leaving you on the same screen?",
+        "question": "Did an error message flash and disappear after you clicked delete, leaving you on the same screen?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Mobile applications often handle network timeouts or server-side failures during deletion with a brief toast message rather than a persistent modal, leaving the interface in a stale state that looks like the button just wasn't pressed.",
         "whatTheAgentLoses": "An agent might miss the fleeting error message and assume the click simply failed to register, getting stuck in an endless loop of clicking the delete button instead of diagnosing the network issue or reporting the server error.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Did a brief error toast appear and disappear after clicking delete, leaving the same screen on view?",
+        "say_example": "An error message flashed and vanished, and you're still on the same screen. That click likely didn't take."
        }
       ]
      },
@@ -1335,7 +1251,9 @@
         "why": "The frame at 1:05 only shows a phone held in a hand rather than the account switcher, making it impossible to visually confirm that the account count decreased from two to one.",
         "whatTheAgentLoses": "The user loses definitive visual proof that the specific account was successfully removed from the device's active accounts list.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the account switcher, checked after deletion, list one fewer account than it did before?",
+        "say_example": "The switcher now shows <one fewer> account than before. Matches the one that was deleted."
        }
       ]
      },
@@ -1351,7 +1269,9 @@
         "why": "The login screen explicitly states you have 30 days to log back in and recover your account, meaning the deletion is not immediately permanent.",
         "whatTheAgentLoses": "Delegating this means you miss seeing the exact 30-day deadline and instructions for recovering your account if you change your mind.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "always",
+        "check": "Does the confirmation state say the account is deleted immediately, or does it name a grace period during which you can still recover it?",
+        "say_example": "It's not gone yet. You have <30 days> to log back in and recover it before this is final."
        },
        {
         "question": "Do you need to manually log out of this account on your other devices to prevent them from accidentally cancelling the deletion?",
@@ -1362,17 +1282,21 @@
         "whatTheAgentLoses": "The user loses the critical warning that their other devices could silently undo the agent's work, leaving the account active without their knowledge.",
         "kind": "decision",
         "verify_form": "The grace period leaves the deletion cancellable by any login - check which of your other devices are still signed in; a tablet or TV that reconnects quietly undoes the whole task.",
-        "speak": "never"
+        "speak": "always",
+        "check": "Are there other devices or apps that could sign back into this account on their own during the grace period?",
+        "say_example": "Any tablet, TV, or app still signed into this account will cancel the deletion the moment it reconnects. Worth signing those out too."
        },
        {
-        "question": "Did the agent attempt to log back in to verify that the account was deleted, thereby accidentally canceling the deletion request?",
+        "question": "After the deletion, does the account show as active again instead of still pending?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Most platforms immediately cancel a scheduled deletion if a login occurs during the 30-day grace period, so an agent testing its own success will actually undo the entire task.",
         "whatTheAgentLoses": "You lose the deletion entirely because the agent's automated verification step silently reactivates the account.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "if-wrong",
+        "check": "After the deletion was requested, does the account now show as active again rather than still pending deletion?",
+        "say_example": "Logging back in just now undid it. The account shows active again instead of pending deletion."
        }
       ]
      },
@@ -1381,24 +1305,28 @@
       "label": "Check the email receipt",
       "questions": [
        {
-        "question": "Did you receive an email receipt confirming that the account deletion has been scheduled?",
+        "question": "Does the page say it's sending a confirmation email for this deletion?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Because on-screen success messages are often fleeting or interrupted by a forced logout, an email receipt provides the only persistent proof that the platform's backend registered the request.",
         "whatTheAgentLoses": "The user loses the out-of-band guarantee that their account is actually queued for deletion, leaving them uncertain if the process silently failed after the session expired.",
         "kind": "state-check",
-        "speak": "always"
+        "speak": "always",
+        "check": "Does the page state that a confirmation email has been sent for the account deletion?",
+        "say_example": "The page says it's emailing a confirmation. That's your record if the on-screen message disappears."
        },
        {
-        "question": "Did the final screen state that a confirmation link was sent to your email that must be clicked to actually finalize the deletion?",
+        "question": "Does the final screen say you still need to click an emailed link to finish the deletion?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Some services require an out-of-band email confirmation to prevent malicious account deletion, meaning the process is not complete until that link is clicked.",
         "whatTheAgentLoses": "The user fails to actually delete the account if the agent stops at the app screen and never alerts them to check their inbox for the final required link.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "always",
+        "check": "Does the final screen state that a link was emailed that must be clicked to actually finalize the deletion?",
+        "say_example": "This isn't done yet. It says a link was emailed that you still need to click to finish the deletion."
        }
       ]
      }

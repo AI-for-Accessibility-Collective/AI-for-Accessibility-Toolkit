@@ -35,11 +35,11 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the signed-in account identity. A sign-in provider button does not prove the account used.",
+        "check": "What is the signed-in account identity? A sign-in provider button does not prove the account used.",
         "say_example": "The editor is signed in as <account>. This project was meant for <requested account>."
        },
        {
-        "question": "Does connecting this account to the editor have your authorization?",
+        "question": "Do you want to connect this account to the editor?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -56,7 +56,7 @@
         "kind": "decision",
         "verify_form": "Does connecting this account to the editor have your authorization?",
         "speak": "gate",
-        "check": "Read the account-connection prompt, receiving app, account identity, and requested permissions.",
+        "check": "What do the account-connection prompt, receiving app, account identity, and requested permissions show?",
         "say_example": "<Editor> is asking for <access> to <account>. Allow that connection?"
        }
       ]
@@ -82,7 +82,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected project mode or template name and the available editing controls.",
+        "check": "What are the selected project mode or template name and the available editing controls?",
         "say_example": "This project uses <mode>. Your request needs <requested mode>."
        }
       ]
@@ -107,9 +107,9 @@
          "thirdParty": 0
         },
         "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Read the saved project name in the title or project listing.",
-        "say_example": "The project was named <actual>. You asked for <requested>."
+        "speak": "never",
+        "check": "What is the saved project name in the title or project listing?",
+        "say_example": "Named the project <Weekend Recap> - you asked for <Beach Day Edit>"
        }
       ]
      },
@@ -134,7 +134,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the active project name and any displayed location or distinguishing date.",
+        "check": "What are the active project name and any displayed location or distinguishing date?",
         "say_example": "The open project is <actual>. You asked me to edit <requested>."
        }
       ]
@@ -160,7 +160,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected canvas width and height or aspect ratio.",
+        "check": "What are the selected canvas width and height or aspect ratio?",
         "say_example": "The canvas is <actual ratio>. You asked for <requested ratio>."
        }
       ]
@@ -186,11 +186,11 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the active timeline resolution and frame rate, separately from source and export settings.",
+        "check": "What are the active timeline resolution and frame rate, separately from source and export settings?",
         "say_example": "The timeline uses <actual setting>. We agreed on <requested setting>."
        },
        {
-        "question": "Does this format change require a decision before it becomes difficult to undo?",
+        "question": "Do you want to make this change now, before it's hard to undo?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -207,7 +207,7 @@
         "kind": "decision",
         "verify_form": "Does this format change require a decision before it becomes difficult to undo?",
         "speak": "gate",
-        "check": "Read the proposed setting and the exact warning about undoing or changing it later.",
+        "check": "What are the proposed setting and the exact warning about undoing or changing it later?",
         "say_example": "The editor says <warning>. Change the timeline to <setting>?"
        }
       ]
@@ -221,7 +221,7 @@
    {
     "id": "2",
     "label": "Gather source media",
-    "note": "2.1 identifies a source; use 2.2 to inspect candidates and 2.3 to import the selected files; 2.4 and 2.5 cover library assets; 2.6 and 2.7 check what arrived; use 2.8 when media is missing; repeat this goal whenever another asset is needed",
+    "note": "2.1 identifies a source; if that source is a stock or library asset, use 2.4 and 2.5 first to find it and check its cost; then use 2.2 to inspect candidates and 2.3 to import the selected files; 2.6 and 2.7 check what arrived; use 2.8 when media is missing; repeat this goal whenever another asset is needed",
     "children": [
      {
       "id": "2.1",
@@ -248,6 +248,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What people, setting, action, or subject do the clip's or generated image's preview thumbnail or filename/label show?",
         "say_example": "This clip shows <observed content>. You asked for <requested content>."
        }
       ]
@@ -272,9 +273,9 @@
          "thirdParty": 0
         },
         "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Read the destination project or library name and the imported file listing.",
-        "say_example": "The files went into <actual project>. The edit is in <intended project>."
+        "speak": "never",
+        "check": "What are the destination project or library name and the imported file listing?",
+        "say_example": "Imported files into <Untitled Project 2> - the edit is in <Weekend Recap>"
        },
        {
         "question": "Do the selected filenames match the sources you requested?",
@@ -293,7 +294,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected filenames and displayed source locations.",
+        "check": "What are the selected filenames and displayed source locations?",
         "say_example": "The selection includes <actual file>. You requested <requested file>."
        }
       ]
@@ -323,11 +324,11 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected asset or feature name and its displayed price or subscription requirement.",
+        "check": "What are the selected asset or feature name and its displayed price or subscription requirement?",
         "say_example": "<Selected item> requires <paid plan or price>. That cost has not been approved."
        },
        {
-        "question": "Does this paid plan or asset purchase have your authorization?",
+        "question": "Do you want to approve this purchase?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -344,7 +345,7 @@
         "kind": "decision",
         "verify_form": "Does this paid plan or asset purchase have your authorization?",
         "speak": "gate",
-        "check": "Read the selected paid item or plan, total charge, billing period, and renewal terms when applicable.",
+        "check": "What are the selected paid item or plan, total charge, billing period, and renewal terms when applicable?",
         "say_example": "<Item or plan> costs <price>, with <billing terms>. Make this purchase?"
        }
       ]
@@ -374,7 +375,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the source identity, total duration, and selected in and out points, with units.",
+        "check": "What are the source identity, total duration, and selected in and out points, with units?",
         "say_example": "This source ends at <source end>. The requested passage continues to <requested end>."
        }
       ]
@@ -400,7 +401,7 @@
         },
         "kind": "state-check",
         "speak": "on-event",
-        "check": "Read the exact missing-media warning and any named files.",
+        "check": "What are the exact missing-media warning and any named files?",
         "say_example": "The editor cannot find <file>. That part of the video is not ready to export."
        }
       ]
@@ -433,6 +434,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What are the edit mode used for the drop (Insert or Overwrite) and the sequence duration immediately before and after the action?",
         "say_example": "Adding <clip> replaced <earlier passage>. That passage was meant to stay."
        },
        {
@@ -452,6 +454,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "Does the timeline entry for the added clip have a video segment, an audio segment, or both?",
         "say_example": "<Clip> was added without <required component>."
        }
       ]
@@ -477,6 +480,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What are the clip names or labels on the timeline in left-to-right order?",
         "say_example": "<Clip> now appears <actual position>. It was meant to appear <requested position>."
        }
       ]
@@ -511,6 +515,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What does the source preview at the selected in and out points show, compared with the specific moment named in the request?",
           "say_example": "The selected passage leaves out <required moment>."
          },
          {
@@ -530,7 +535,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "Read the selected source identity and source in and out times, separately from sequence time.",
+          "check": "What are the selected source identity and source in and out times, separately from sequence time?",
           "say_example": "The source selection runs from <actual in> to <actual out>. You requested <requested range>."
          }
         ]
@@ -556,6 +561,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What is the sequence time at which each track (video and any linked audio) was split?",
           "say_example": "<Track> was split at <actual time>. The other intended tracks were split at <target time>."
          }
         ]
@@ -581,6 +587,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What do the frames or waveform immediately before and after the trimmed edge show for the word or action named in the request?",
           "say_example": "The cut removes <word or action> at <time>. It belongs to the passage you wanted to keep."
          }
         ]
@@ -605,7 +612,8 @@
            "thirdParty": 0
           },
           "kind": "state-check",
-          "speak": "if-wrong",
+          "speak": "on-event",
+          "check": "Does the timeline immediately after the requested ending show an automatically added clip, bumper, or watermark?",
           "say_example": "An editor promotion follows your ending at <time>."
          }
         ]
@@ -631,6 +639,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Does the timeline show a gap or joined edit at the point of the deletion, and what is its duration if a gap remains?",
           "say_example": "The deletion <left or removed> the gap from <start> to <end>. You asked to <close or preserve> it."
          },
          {
@@ -650,6 +659,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What are the duration and start time of the retained clip, title, or audio cue immediately outside the deleted passage, before and after the deletion?",
           "say_example": "Deleting that passage also changed <retained layer> from <before> to <after>."
          }
         ]
@@ -690,6 +700,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What does the overlay cover in the composed frame at the relevant time?",
           "say_example": "<Overlay> covers <required content> at <time>."
          }
         ]
@@ -715,6 +726,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Which tracks are included, locked, or muted for this operation?",
           "say_example": "This operation includes <track>, which was meant to stay unchanged."
          }
         ]
@@ -746,6 +758,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What do the timeline or edit history immediately before and after the undo action show, for the specific change it reports reverting?",
         "say_example": "Undo also removed <retained change>. That change was meant to stay."
        }
       ]
@@ -771,6 +784,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What are the start and end time of the background clip, against the start and end time of the title or sequence interval it should cover?",
         "say_example": "The background ends at <time>, while <title or layer> continues to <end>."
        }
       ]
@@ -808,6 +822,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What falls inside versus outside the crop boundary in the cropped frame at the relevant time?",
           "say_example": "The crop cuts off <required content> at <time>."
          }
         ]
@@ -833,6 +848,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What falls outside the visible frame in the framed result at the relevant time?",
           "say_example": "<Required content> is outside the frame at <time>."
          }
         ]
@@ -858,6 +874,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Does the flipped frame show any on-screen text or asymmetric detail, and what is its orientation?",
           "say_example": "The flip reversed <visible text> in the picture."
          }
         ]
@@ -883,6 +900,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Does the framed result across the animated range keep the intended subject inside the frame?",
           "say_example": "The framing loses <subject> from <start> to <end>."
          }
         ]
@@ -915,7 +933,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "Read the selected clip identity and speed value, including whether the value is a percentage or multiplier.",
+          "check": "What are the selected clip identity and speed value, including whether the value is a percentage or multiplier?",
           "say_example": "<Clip> is set to <actual speed>. You asked for <requested speed>."
          },
          {
@@ -935,6 +953,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What is the sequence time of a later clip or audio cue before and after the speed change?",
           "say_example": "Changing the speed moved <later cue> from <before> to <after>."
          },
          {
@@ -954,6 +973,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "When listening to the sped-up passage, do the words remain distinguishable, and is pitch correction enabled?",
           "say_example": "The speed change makes <passage> hard to understand."
          }
         ]
@@ -979,6 +999,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Do the frames at each speed-ramp node show the action named in the request as visible or obscured?",
           "say_example": "The speed ramp passes over <required action> at <time>."
          }
         ]
@@ -1004,6 +1025,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "When viewing or listening to the reversed passage, what plays backward?",
           "say_example": "<Passage> now plays backward, including <component that should remain forward>."
          }
         ]
@@ -1028,8 +1050,9 @@
            "thirdParty": 0
           },
           "kind": "state-check",
-          "speak": "if-wrong",
-          "say_example": "The freeze holds <actual frame> for <duration>. You asked for <requested hold>."
+          "speak": "never",
+          "check": "What are the frozen frame's timestamp and the hold duration?",
+          "say_example": "Held the frame at <0:42> for <2 seconds> - you asked for <3 seconds>"
          }
         ]
        }
@@ -1061,6 +1084,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What are the source clip's recorded color format or profile and the color-space conversion applied to it?",
           "say_example": "The source is recorded as <source format>. The selected conversion expects <different format>."
          }
         ]
@@ -1093,9 +1117,9 @@
            "thirdParty": 0
           },
           "kind": "state-check",
-          "speak": "if-wrong",
-          "check": "Read the selected clip, applied preset name, and strength value.",
-          "say_example": "<Clip> uses <actual preset and strength>. You chose <requested preset and strength>."
+          "speak": "never",
+          "check": "What are the selected clip, applied preset name, and strength value?",
+          "say_example": "Applied <Cinematic> at <70%> to <clip 3> - you asked for <100%>"
          }
         ]
        },
@@ -1120,10 +1144,11 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Does the adjusted frame at the relevant passage still show detail that was visible before the adjustment?",
           "say_example": "The adjustment hides <required detail> in <affected passage>."
          },
          {
-          "question": "Is the preview showing the color adjustments that are being reviewed?",
+          "question": "Is the preview showing your color adjustments right now?",
           "cluster": "facts",
           "moment": "After",
           "moneyMoving": false,
@@ -1138,8 +1163,8 @@
            "thirdParty": 0
           },
           "kind": "state-check",
-          "speak": "if-wrong",
-          "check": "Read whether color-grade bypass is enabled or disabled. The button label alone does not show whether bypass is active.",
+          "speak": "on-event",
+          "check": "Is color-grade bypass enabled or disabled? The button label alone does not show whether bypass is active.",
           "say_example": "Color adjustments are bypassed. This preview is showing the ungraded result."
          }
         ]
@@ -1149,7 +1174,7 @@
      {
       "id": "4.4",
       "label": "Apply the visual effects",
-      "note": "choose only the effects the edit needs; 4.4.1 manages the effect stack, 4.4.2 changes blending, 4.4.3 changes values over time, 4.4.4 stabilizes motion, 4.4.5 changes appearance, and 4.4.6 isolates a subject; review each result with 7.3",
+      "note": "4.4.1 manages the effect stack for whichever effects the edit needs; 4.4.2 changes blending, 4.4.3 changes values over time, 4.4.4 stabilizes motion, 4.4.5 changes appearance, and 4.4.6 isolates a subject, each used only when needed; review each result with 7.3",
       "children": [
        {
         "id": "4.4.1",
@@ -1172,6 +1197,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What does the frame with the effect applied at the relevant time cover or obscure?",
           "say_example": "<Effect> hides <required content> from <start> to <end>."
          },
          {
@@ -1191,7 +1217,7 @@
           },
           "kind": "state-check",
           "speak": "on-event",
-          "check": "Read the exact load or application error and the affected effect name.",
+          "check": "What are the exact load or application error and the affected effect name?",
           "say_example": "The editor reports <error> for <effect>. That effect has not been confirmed."
          },
          {
@@ -1211,7 +1237,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "Read the selected clip, applied effect name, and the particular parameter named in the request.",
+          "check": "What are the selected clip, applied effect name, and the particular parameter named in the request?",
           "say_example": "<Effect parameter> is set to <actual value>. You requested <requested value>."
          }
         ]
@@ -1237,6 +1263,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Which layer, if any, is no longer visible in the composited frame at the relevant time?",
           "say_example": "<Layer> disappears at <time> after the opacity change."
          },
          {
@@ -1255,9 +1282,9 @@
            "thirdParty": 0
           },
           "kind": "state-check",
-          "speak": "if-wrong",
-          "check": "Read the selected layer and opacity at the requested time.",
-          "say_example": "<Layer> has <actual opacity> opacity at <time>. You requested <requested opacity>."
+          "speak": "never",
+          "check": "What are the selected layer and opacity at the requested time?",
+          "say_example": "Set <the overlay> to <60%> opacity at <1:12> - you asked for <40%>"
          }
         ]
        },
@@ -1286,6 +1313,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Does the stabilized frame across the shot keep the subject framed and undistorted?",
           "say_example": "The stabilized shot still has <observed problem> at <time>."
          }
         ]
@@ -1311,6 +1339,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Which features or subjects changed in the retouched frame compared with the original?",
           "say_example": "The retouch also changes <unrequested feature or subject>."
          }
         ]
@@ -1336,10 +1365,11 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Does the masked frame across the shot show any part of the subject missing?",
           "say_example": "The mask removes <part of the subject> from <start> to <end>."
          },
          {
-          "question": "Would stopping this process discard work you have not agreed to lose?",
+          "question": "Would stopping now throw away work you haven't agreed to lose?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": false,
@@ -1356,7 +1386,7 @@
           "kind": "decision",
           "verify_form": "Would stopping this process discard work you have not agreed to lose?",
           "speak": "gate",
-          "check": "Read the cancellation warning and identify the work it says will be discarded.",
+          "check": "What work does the cancellation warning say will be discarded?",
           "say_example": "Stopping will discard <work named in warning>. Stop anyway?"
          },
          {
@@ -1376,7 +1406,8 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
-          "say_example": "<Requested redaction> is incomplete at <time>: <type of information> remains <visible or audible>."
+          "check": "When viewing or listening to the affected passage across its full duration, is the information named for redaction still visible or audible at any point?",
+          "say_example": "The redaction at <time> is incomplete. <Type of information> remains visible or audible."
          }
         ]
        }
@@ -1411,11 +1442,12 @@
            "thirdParty": 0
           },
           "kind": "state-check",
-          "speak": "if-wrong",
-          "say_example": "The transition at <cut> lasts <actual duration>. You asked for <requested duration>."
+          "speak": "never",
+          "check": "What are the transition's applied effect, the cut it sits on, and its duration?",
+          "say_example": "Applied a <1 second> transition at <the second cut> - you asked for <0.5 seconds>"
          },
          {
-          "question": "Is the transition using available footage without an unintended frozen or repeated frame?",
+          "question": "Does the transition freeze or repeat a frame it shouldn't?",
           "cluster": "facts",
           "moment": "After",
           "moneyMoving": false,
@@ -1431,6 +1463,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "Does any frame the transition uses repeat or freeze where source footage should continue?",
           "say_example": "The transition shows <unintended frozen or repeated image> at <time>."
          }
         ]
@@ -1473,7 +1506,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the title text from the editor’s text field, without assuming every word is visible in playback.",
+        "check": "What is the title text in the editor’s text field, without assuming every word is visible in playback?",
         "say_example": "The title says <actual wording>. You approved <requested wording>."
        }
       ]
@@ -1483,7 +1516,7 @@
       "label": "Set the text appearance",
       "questions": [
        {
-        "question": "Does the title use the style that was explicitly requested?",
+        "question": "Does the title use the style you asked for?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -1498,9 +1531,9 @@
          "thirdParty": 0
         },
         "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Read the selected title’s font, color, or template for the specified property.",
-        "say_example": "The title uses <actual property>. You chose <requested property>."
+        "speak": "never",
+        "check": "What are the selected title’s font, color, or template for the specified property?",
+        "say_example": "Set the title's <color> to <white> - you asked for <yellow>"
        }
       ]
      },
@@ -1529,6 +1562,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What are the title's on-screen start and end time, against the start and end time of the passage it belongs with?",
         "say_example": "<Title> appears during <actual passage>. It belongs with <intended passage>."
        }
       ]
@@ -1538,7 +1572,7 @@
       "label": "Prepare and correct captions",
       "questions": [
        {
-        "question": "Will generating captions replace corrections that should be retained?",
+        "question": "Will generating captions overwrite corrections you already made?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -1555,11 +1589,11 @@
         "kind": "decision",
         "verify_form": "Will generating captions replace corrections that should be retained?",
         "speak": "gate",
-        "check": "Read the selected caption source, existing caption status, and explicit replacement setting or warning.",
+        "check": "What are the selected caption source, existing caption status, and explicit replacement setting or warning?",
         "say_example": "Generating captions will replace <existing captions>. Replace them?"
        },
        {
-        "question": "Do the captions accurately represent the spoken words?",
+        "question": "Do the captions match the spoken words?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -1575,6 +1609,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What is the caption text at a given time, against the words spoken in the audio at that time?",
         "say_example": "At <time>, the caption says <caption>. The audio says <spoken words>."
        },
        {
@@ -1594,10 +1629,11 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What is the caption's displayed time range, against the time range in which its words are actually spoken?",
         "say_example": "The caption <caption> appears at <caption time>. Its words are spoken at <speech time>."
        },
        {
-        "question": "Are captions being generated from the requested audio and language?",
+        "question": "Do the captions use the audio and language you asked for?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -1613,7 +1649,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected caption audio source and language settings.",
+        "check": "What are the selected caption audio source and language settings?",
         "say_example": "Captions are set to use <actual source or language>. You requested <requested value>."
        },
        {
@@ -1633,6 +1669,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "Is any character in the caption at the relevant time, against its background, obscured or cut off?",
         "say_example": "The caption at <time> has <observed reading problem>."
        }
       ]
@@ -1658,6 +1695,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What does the placed graphic cover in the frame?",
         "say_example": "<Graphic> covers <required content> at <time>."
        }
       ]
@@ -1683,6 +1721,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "Viewed against the video behind it throughout its on-screen duration, is there any point where the title becomes hard to distinguish from the background?",
         "say_example": "<Words> become hard to read against <background> at <time>."
        },
        {
@@ -1702,6 +1741,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "When the preview shows the destination platform's interface elements (such as a caption bar or button overlay), do they cover the title or graphics?",
         "say_example": "<Destination control> covers <text or graphic> in this preview."
        }
       ]
@@ -1723,7 +1763,7 @@
         "label": "Find and preview music",
         "questions": [
          {
-          "question": "Does connecting the sound library grant only the access you approved?",
+          "question": "Is this connection asking for more access than you agreed to?",
           "cluster": "approve",
           "moment": "Now",
           "moneyMoving": false,
@@ -1740,7 +1780,7 @@
           "kind": "decision",
           "verify_form": "Does connecting the sound library grant only the access you approved?",
           "speak": "gate",
-          "check": "Read the account identity, receiving app, and permission scope in the actual authorization prompt.",
+          "check": "What are the account identity, receiving app, and permission scope in the actual authorization prompt?",
           "say_example": "<App> is asking for <access> to <account>. Allow that connection?"
          }
         ]
@@ -1766,7 +1806,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "Read the asset’s stated allowed uses and restrictions. A search filter or automated copyright pass does not establish permission.",
+          "check": "What are the asset’s stated allowed uses and restrictions? A search filter or automated copyright pass does not establish permission.",
           "say_example": "The terms for <track> exclude <requested use>. We need a track whose terms cover it."
          }
         ]
@@ -1792,6 +1832,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What are the track name and selected passage shown in the music browser or timeline?",
           "say_example": "The edit uses <actual track or passage>. You selected <requested track or passage>."
          },
          {
@@ -1811,7 +1852,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "Read the selected audio filename and displayed location or version.",
+          "check": "What are the selected audio filename and displayed location or version?",
           "say_example": "The selected audio is <actual file>. You requested <requested file>."
          }
         ]
@@ -1837,6 +1878,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What does the selected sound-effect variation sound like, against the moment it is meant to accompany?",
           "say_example": "The sound at <time> suggests <observed event>. You asked for <intended sound>."
          }
         ]
@@ -1869,7 +1911,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "Read the selected input device, armed track, and recording destination.",
+          "check": "What are the selected input device, armed track, and recording destination?",
           "say_example": "Recording is set to <actual device and track>. The intended setup is <requested setup>."
          }
         ]
@@ -1895,6 +1937,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "When listening to a short test recording, is there any audible problem such as noise, clipping, or silence?",
           "say_example": "The test recording contains <observed problem>. The main take is not ready to start."
          }
         ]
@@ -1920,6 +1963,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What does the retained voiceover take sound like, against the script or passage it was meant to cover?",
           "say_example": "The retained voiceover <omits or repeats> <phrase> at <time>."
          }
         ]
@@ -1952,6 +1996,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What are the timeline positions of the audio component and its paired video component after the edit?",
           "say_example": "<Audio or video component> moved by <offset> while its paired component stayed in place."
          }
         ]
@@ -1977,6 +2022,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "When listening to the dialogue at the current levels, is any word inaudible or distorted?",
           "say_example": "The words at <time range> are <observed listening problem>."
          },
          {
@@ -1996,7 +2042,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "Read the selected clip or track, its level value with units, and whether the change applies to one clip or all clips.",
+          "check": "What are the selected clip or track and its level value with units, and does the change apply to one clip or all clips?",
           "say_example": "<Track or clip> is set to <actual level>. You requested <requested level>."
          }
         ]
@@ -2022,6 +2068,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What are the mute, solo, and enabled state of each audio track before export?",
           "say_example": "<Required track> is excluded from the mix."
          }
         ]
@@ -2047,6 +2094,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What is the applied audio effect, and is its scope set to the single clip or the whole track?",
           "say_example": "<Effect> applies to <actual scope>. You asked to change <requested scope>."
          },
          {
@@ -2066,6 +2114,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "When listening to the processed passage against the unprocessed original, is there any change to the words or background sound?",
           "say_example": "The processed passage has <observed sound problem> at <time>."
          }
         ]
@@ -2098,8 +2147,8 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "Read the signed offset and affected linked media identifiers. Color alone does not prove an offset.",
-          "say_example": "The editor reports <offset> between <paired media>. Their intended offset is <target>."
+          "check": "What are the signed offset and affected linked media identifiers? Color alone does not prove an offset.",
+          "say_example": "The editor reports <offset> between <paired media>. It should stay at <target>."
          },
          {
           "question": "Does the sound occur with the intended visible event?",
@@ -2118,6 +2167,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What is the timestamp of the sound cue, against the timestamp of the visible event it should match?",
           "say_example": "<Sound> occurs <observed timing> relative to <event>."
          }
         ]
@@ -2143,6 +2193,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What does the last moment of the audio track sound like, against the last moment of the video?",
           "say_example": "The ending cuts off <word or sound> at <time>."
          },
          {
@@ -2162,6 +2213,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "What does the first moment of the selected audio sound like, against the passage it was meant to start with?",
           "say_example": "The audio starts with <actual passage>. You asked it to start with <requested passage>."
          }
         ]
@@ -2187,6 +2239,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "When listening across the join where the music repeats, is there any audible break or repeat?",
           "say_example": "There is <audible problem> at the music join at <time>."
          }
         ]
@@ -2196,7 +2249,7 @@
         "label": "Set fades and crossfades",
         "questions": [
          {
-          "question": "Do the fades preserve the words and sound they should leave audible?",
+          "question": "Do the fades still let you hear the words and sounds that matter?",
           "cluster": "facts",
           "moment": "After",
           "moneyMoving": false,
@@ -2212,6 +2265,7 @@
           },
           "kind": "state-check",
           "speak": "if-wrong",
+          "check": "When listening through the fade, does any word or sound become inaudible during it?",
           "say_example": "The fade hides <word or sound> at <time>."
          }
         ]
@@ -2250,6 +2304,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "Do the frames immediately before and after the cut show any visible jump, mismatch, or repeated action?",
         "say_example": "The cut at <time> <observed continuity problem>."
        },
        {
@@ -2269,6 +2324,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "Do the frames at each cut point show a frame that does not belong to either adjacent clip, or a black frame?",
         "say_example": "There is <unexpected frame or gap> at <time>."
        }
       ]
@@ -2298,6 +2354,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "When listening to the passage with music or effects playing under speech, does any word become inaudible?",
         "say_example": "<Music or effect> covers the words <passage> at <time range>."
        },
        {
@@ -2317,6 +2374,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "When listening to the mix, what is the relative loudness of the named sound against what was requested?",
         "say_example": "<Sound> is <observed prominence> at <time>. You asked for <requested prominence>."
        }
       ]
@@ -2342,7 +2400,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the total active sequence duration and its time units.",
+        "check": "What are the total active sequence duration and its time units?",
         "say_example": "The sequence lasts <actual duration>. Your limit is <requested limit>."
        }
       ]
@@ -2379,7 +2437,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected export type and mode, including single-file versus individual-clips output.",
+        "check": "What are the selected export type and mode, including single-file versus individual-clips output?",
         "say_example": "This export will produce <actual type>. You asked for <requested type>."
        }
       ]
@@ -2405,7 +2463,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the export range mode, start, end, and duration for the active sequence.",
+        "check": "What are the export range mode, start, end, and duration for the active sequence?",
         "say_example": "The export is set from <start> to <end>. The requested range is <requested range>."
        }
       ]
@@ -2415,7 +2473,7 @@
       "label": "Set output dimensions and rate",
       "questions": [
        {
-        "question": "Does the selected export resolution meet the delivery request?",
+        "question": "Does the export resolution match what you need to deliver?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -2431,11 +2489,11 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected export width and height, separately from the preview resolution.",
+        "check": "What are the selected export width and height, separately from the preview resolution?",
         "say_example": "The export is set to <actual dimensions>. You requested <required dimensions>."
        },
        {
-        "question": "Does the export frame-rate control retain the requested value?",
+        "question": "Does the export still use the frame rate you set?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -2451,7 +2509,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected export frame rate after the control settles. File-size estimates do not establish the selected rate.",
+        "check": "What is the selected export frame rate after the control settles? File-size estimates do not establish the selected rate.",
         "say_example": "The export frame rate is <actual>. You requested <requested>."
        }
       ]
@@ -2461,7 +2519,7 @@
       "label": "Set encoding and quality",
       "questions": [
        {
-        "question": "Do the export format settings satisfy the stated delivery requirements?",
+        "question": "Does the export match what you need to deliver?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -2477,7 +2535,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected export format and the encoding properties specified by the request.",
+        "check": "What are the selected export format and the encoding properties specified by the request?",
         "say_example": "<Export property> is set to <actual>. The delivery requirement is <requested>."
        }
       ]
@@ -2503,7 +2561,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected subtitle export mode and any selected caption track.",
+        "check": "What are the selected subtitle export mode and any selected caption track?",
         "say_example": "Captions are set to <actual mode>. You requested <required mode>."
        }
       ]
@@ -2529,7 +2587,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the output filename and extension in the save or render dialog.",
+        "check": "What are the output filename and extension in the save or render dialog?",
         "say_example": "The output is named <actual filename>. You requested <requested filename>."
        },
        {
@@ -2549,11 +2607,11 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the selected save destination and account if one is displayed.",
+        "check": "What are the selected save destination and account, if one is displayed?",
         "say_example": "The selected destination is <actual>. You requested <requested destination>."
        },
        {
-        "question": "Is replacing this existing output file authorized?",
+        "question": "Do you want to replace the existing file?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -2570,7 +2628,7 @@
         "kind": "decision",
         "verify_form": "Is replacing this existing output file authorized?",
         "speak": "gate",
-        "check": "Read the existing filename, destination, and replacement warning.",
+        "check": "What are the existing filename, destination, and replacement warning?",
         "say_example": "<Filename> already exists in <destination>. Replace it?"
        }
       ]
@@ -2596,7 +2654,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the estimated output file size and its units.",
+        "check": "What are the estimated output file size and its units?",
         "say_example": "The estimated file size is <estimate>. The delivery limit is <limit>."
        },
        {
@@ -2615,12 +2673,12 @@
          "thirdParty": 0
         },
         "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Read free space for the selected destination and the displayed space requirement or exact insufficient-space warning.",
+        "speak": "on-event",
+        "check": "What are the free space for the selected destination and the displayed space requirement or exact insufficient-space warning?",
         "say_example": "<Destination> has <available space>. The export requires <required space>."
        },
        {
-        "question": "Does the export add a watermark excluded by the request?",
+        "question": "Does the export add a watermark you didn't ask for?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -2635,8 +2693,8 @@
          "thirdParty": 0
         },
         "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Read the exact watermark warning and the feature or asset it applies to.",
+        "speak": "on-event",
+        "check": "What are the exact watermark warning and the feature or asset it applies to?",
         "say_example": "The export warning says <watermark> will be added because of <selected item>."
        }
       ]
@@ -2666,7 +2724,7 @@
         },
         "kind": "state-check",
         "speak": "on-event",
-        "check": "Read a captured error or failure message and associate it with the current export job.",
+        "check": "What captured error or failure message is there, and does it belong to the current export job?",
         "say_example": "The export failed with <error>. <Output> has not been confirmed."
        },
        {
@@ -2686,7 +2744,7 @@
         },
         "kind": "state-check",
         "speak": "always",
-        "check": "Read a completion or save confirmation naming the output, or a saved-file listing that identifies it. Progress, Render All, and a thumbnail alone are insufficient.",
+        "check": "Is there a completion or save confirmation naming the output, or a saved-file listing that identifies it? Progress, Render All, and a thumbnail alone are insufficient.",
         "say_example": "The editor reports that <output> was saved to <destination>."
        },
        {
@@ -2706,7 +2764,7 @@
         },
         "kind": "state-check",
         "speak": "on-event",
-        "check": "Read the exact result and any stated restriction.",
+        "check": "What are the exact result and any stated restriction?",
         "say_example": "The sound check reports <warning>. It says <stated effect on delivery>."
        }
       ]
@@ -2732,10 +2790,11 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "When opening and playing the saved file, is there any point where it stops, skips, or fails to match the requested content?",
         "say_example": "The saved file <filename> has <observed playback problem> at <time>."
        },
        {
-        "question": "Does the saved file meet the actual delivery requirements?",
+        "question": "Does the saved file match what you need to deliver?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": false,
@@ -2751,6 +2810,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What are the saved file's properties (resolution, duration, format), against the stated delivery requirements?",
         "say_example": "<Filename> has <actual property>. The delivery requires <requested property>."
        },
        {
@@ -2770,6 +2830,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "When opening the delivered file, is the requested caption track present and does it display text?",
         "say_example": "The delivered <file or track> has <observed caption problem>."
        },
        {
@@ -2789,10 +2850,11 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What are the saved file's modification time or content, against the version that was approved?",
         "say_example": "<Filename> still contains <earlier content>. The approved version has <changed content>."
        },
        {
-        "question": "Did export introduce a visible problem that is absent from the approved sequence?",
+        "question": "Did the export introduce a visible problem the approved version doesn't have?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
@@ -2808,6 +2870,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "Is there any visible difference between the exported file at the relevant time and the approved sequence?",
         "say_example": "The exported file has <visible problem> at <time>. The approved sequence does not."
        }
       ]
@@ -2817,7 +2880,7 @@
       "label": "Choose the sharing destination",
       "questions": [
        {
-        "question": "Is publishing or uploading this video authorized for this account and audience?",
+        "question": "Do you want to publish this video to this account and audience?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -2834,11 +2897,11 @@
         "kind": "decision",
         "verify_form": "Is publishing or uploading this video authorized for this account and audience?",
         "speak": "gate",
-        "check": "Read the pending output, destination account, and audience or visibility setting. Do not assume an upload is public.",
+        "check": "What are the pending output, destination account, and audience or visibility setting? Do not assume an upload is public.",
         "say_example": "<Video> will be uploaded to <account> with <visibility>. Upload it?"
        },
        {
-        "question": "Does the publishing connection grant only the access you approved?",
+        "question": "Is this publishing connection asking for more access than you agreed to?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -2855,7 +2918,7 @@
         "kind": "decision",
         "verify_form": "Does the publishing connection grant only the access you approved?",
         "speak": "gate",
-        "check": "Read the actual authorization prompt, account identity, and permissions requested.",
+        "check": "What are the actual authorization prompt, account identity, and permissions requested?",
         "say_example": "<App> is asking for <permissions> on <account>. Allow that access?"
        },
        {
@@ -2874,9 +2937,9 @@
          "thirdParty": 0
         },
         "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Read the destination’s completed-upload confirmation or file listing identifying this output.",
-        "say_example": "<Destination> reports <upload problem> for <output>."
+        "speak": "always",
+        "check": "What does the destination’s completed-upload confirmation, or file listing identifying this output, show?",
+        "say_example": "The destination confirms <output> finished uploading to <account>."
        }
       ]
      }
@@ -2908,7 +2971,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "Read the current save status or explicit unsaved-changes warning. An Edited label during ongoing work is normal.",
+        "check": "What are the current save status or explicit unsaved-changes warning? An Edited label during ongoing work is normal.",
         "say_example": "The editor still reports unsaved changes in <project>."
        },
        {
@@ -2927,9 +2990,9 @@
          "thirdParty": 1
         },
         "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Read the saved project location and account or cloud status.",
-        "say_example": "The project is saved in <actual location>. You requested <intended location>."
+        "speak": "never",
+        "check": "What are the saved project location and account or cloud status?",
+        "say_example": "Saved the project in <the local Videos folder> - you asked for <the cloud drive>"
        }
       ]
      },
@@ -2958,6 +3021,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "What does the file listing at the retained location show for each source file that was marked to keep?",
         "say_example": "<Required source> is no longer available after cleanup."
        },
        {
@@ -2977,6 +3041,7 @@
         },
         "kind": "state-check",
         "speak": "if-wrong",
+        "check": "When reopening the saved project, does it show the latest edit and locate its required media without a missing-file warning?",
         "say_example": "The saved project has <observed reopening problem>."
        }
       ]
@@ -2986,7 +3051,7 @@
       "label": "Confirm the project deletion",
       "questions": [
        {
-        "question": "Is deleting this project covered by your cleanup request?",
+        "question": "Is deleting this project part of the cleanup you asked for?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -3003,7 +3068,7 @@
         "kind": "decision",
         "verify_form": "Is deleting this project covered by your cleanup request?",
         "speak": "gate",
-        "check": "Read the project identity and the exact deletion dialog, including any affected media.",
+        "check": "What are the project identity and the exact deletion dialog, including any affected media?",
         "say_example": "This will delete <project>. The dialog says <what happens to its media>. Delete it?"
        }
       ]
@@ -3013,7 +3078,7 @@
       "label": "Review source-file removal",
       "questions": [
        {
-        "question": "Is removing these source files covered by your cleanup request?",
+        "question": "Is removing these source files part of the cleanup you asked for?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -3030,7 +3095,7 @@
         "kind": "decision",
         "verify_form": "Is removing these source files covered by your cleanup request?",
         "speak": "gate",
-        "check": "Read the selected file identities and the deletion warning, including any trash or permanent-delete distinction.",
+        "check": "What are the selected file identities and the deletion warning, including any trash or permanent-delete distinction?",
         "say_example": "This will remove <source files>. They may still be needed by other edits. Remove them?"
        }
       ]

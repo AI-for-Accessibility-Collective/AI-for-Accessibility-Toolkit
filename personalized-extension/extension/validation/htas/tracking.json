@@ -523,7 +523,7 @@
         "whatTheAgentLoses": "The user loses visibility into the final, most important leg of the delivery because the agent stops at the initial carrier's 'Transferred to Post Office' milestone.",
         "speak": "on-event",
         "check": "Does the page say the package was handed to another carrier for final delivery, and does it show a second tracking number?",
-        "say_example": "<UPS> handed it to the post office for the last stretch. The new number ends in <9354>. I'll track that one from here."
+        "say_example": "<UPS> handed it to the post office for the last stretch. The new number ends in <[account number]>. I'll track that one from here."
        }
       ]
      },

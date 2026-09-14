@@ -22,17 +22,9 @@
         "why": "The App Store page displays an 'OPEN' button for Spotify, confirming the app is already installed on the device and can be launched.",
         "whatTheAgentLoses": "The user loses the opportunity to decide whether to use the mobile app or a web browser to manage their playlist.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Which app icon do you tap to launch Apple Music?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The home screen displays multiple app icons, so you must identify the correct 'Music' icon to access the service.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to choose which specific music service or app to use for your playlist.",
-        "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the app store or home screen show the app already installed (an OPEN button rather than GET/INSTALL)?",
+        "say_example": "Found <Spotify> already installed, opening it directly"
        },
        {
         "question": "Which app do you tap on the home screen to access your music library and playlists?",
@@ -42,7 +34,9 @@
         "why": "The screen displays the iOS home screen with various app icons, meaning the correct music application must be launched before any playlist management can occur.",
         "whatTheAgentLoses": "The person delegating loses the choice of which specific music service app on their device is opened to host and manage the playlist.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the home screen show an icon matching the name of the requested music or video app?",
+        "say_example": "Tapped <the Music icon> on the home screen"
        },
        {
         "question": "Do you want to start a free trial for the premium subscription?",
@@ -53,7 +47,9 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to commit to a recurring subscription fee or continue using the free version of the service.",
         "kind": "decision",
         "verify_form": "A trial or premium prompt interrupted the flow - check how the agent got past it and that nothing was subscribed; a wrong tap there starts a recurring charge.",
-        "speak": "on-event"
+        "speak": "gate",
+        "check": "Does the screen show a free-trial offer for a paid subscription tier, with a price that applies after the trial ends?",
+        "say_example": "This app is offering a free trial of Premium, then <$10.99> a month after. Start the trial, or skip it for now?"
        }
       ]
      },
@@ -62,16 +58,6 @@
       "label": "Confirm the account",
       "questions": [
        {
-        "question": "Have you confirmed the specific song to add and the correct music service to use?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Verifying the target song and platform before starting ensures you do not waste time searching in the wrong app or for the wrong track.",
-        "whatTheAgentLoses": "The user loses the ability to verify that the agent correctly understood which song to add and which platform to use.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
         "question": "Are you logged into the correct music service account?",
         "cluster": "facts",
         "moment": "Now",
@@ -79,7 +65,9 @@
         "why": "The screen must show an active user profile to ensure the playlist modifications are saved to the correct account.",
         "whatTheAgentLoses": "The user loses the ability to verify that the songs are being added to their own personal library rather than a guest or incorrect profile.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the account/profile area show a signed-in name different from the one expected?",
+        "say_example": "Signed in here as <a different account name>, not the one you use"
        },
        {
         "question": "Are you logged into a supported music or video service?",
@@ -89,7 +77,9 @@
         "why": "The screen must show the interface of a music or video platform to confirm you are ready to begin searching for the requested songs.",
         "whatTheAgentLoses": "The user loses the ability to ensure the playlist is being created on their preferred platform and personal account.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the current screen belong to a recognized music or video streaming service rather than something else?",
+        "say_example": "This app isn't one of the music or video services I recognize"
        }
       ]
      },
@@ -106,7 +96,9 @@
         "whatTheAgentLoses": "You lose the ability to choose whether your new account is linked to a third-party service like Facebook or Apple or kept separate with an email address.",
         "kind": "decision",
         "verify_form": "The agent created the account through one signup rail - check whether it linked a Facebook or Apple login or made a standalone email account; if you never said which, it chose how your account is secured for you.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the sign-up screen offer more than one method (e.g. email, Facebook, Apple) to create the account?",
+        "say_example": "This is a fresh sign-up - I'll use <email> unless you'd rather link <Facebook> or <Apple>"
        },
        {
         "question": "What date of birth should you enter?",
@@ -117,7 +109,9 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to share their real birth date or use a placeholder to protect their privacy.",
         "kind": "decision",
         "verify_form": "The agent typed a date of birth at the age gate - check what date went in; if you never gave one, it either invented a birthday or used your real one without asking.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the sign-up screen show a date-of-birth field required before the account can be created?",
+        "say_example": "This needs a real birth date to create the account. What should I enter?"
        },
        {
         "question": "What name should I use for my profile?",
@@ -128,7 +122,9 @@
         "whatTheAgentLoses": "The user loses the opportunity to choose their preferred public-facing profile name.",
         "kind": "decision",
         "verify_form": "The agent set the profile name during signup - check what name now sits on the account header, because that exact text is what other listeners see.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the sign-up screen show a profile-name field that will be publicly visible?",
+        "say_example": "I'm setting the profile name to <a display name> - that's what other listeners will see"
        }
       ]
      },
@@ -145,7 +141,9 @@
         "whatTheAgentLoses": "You lose the opportunity to seed the platform's recommendation algorithm with your actual favorite artists.",
         "kind": "decision",
         "verify_form": "The agent picked seed artists on the taste screen - check which ones it chose; those picks steer every recommendation this account gets from here on.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the onboarding screen show a grid or search bar asking you to pick artists to personalize recommendations?",
+        "say_example": "Picked <three seed artists> on the taste screen to start recommendations"
        }
       ]
      }
@@ -165,7 +163,9 @@
       "whatTheAgentLoses": "The user loses the opportunity to organically browse their library or recommendations for inspiration instead of just executing a targeted search.",
       "kind": "decision",
       "verify_form": "The agent picked one route to find music - check whether it searched, browsed, or took suggestions; the route decides whether your named songs or the platform's guesses filled the list.",
-      "speak": "never"
+      "speak": "never",
+      "check": "Does the screen offer more than one way to find music - a search bar, browse tiles, or a library view?",
+      "say_example": "Went straight to search rather than browsing recommendations"
      }
     ],
     "children": [
@@ -174,14 +174,16 @@
       "label": "Search the catalog",
       "questions": [
        {
-        "question": "Do you want to browse the recommended or trending music on the home screen before searching, or go straight to search?",
+        "question": "Do you want to browse the home screen first, or go straight to search?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays a navigation menu, and you must identify the Search tab to begin looking for the specific track.",
         "whatTheAgentLoses": "You lose the chance to browse personalized recommendations or trending music on the home screen before initiating your search.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is a Search tab or icon visible in the app's navigation menu?",
+        "say_example": "Skipped the trending home screen and opened Search directly"
        },
        {
         "question": "Should you search for the song in the global Apple Music catalog or within your own saved library?",
@@ -192,7 +194,9 @@
         "whatTheAgentLoses": "You lose the ability to specify the search scope, which could result in the agent failing to find a new song if it restricts the search to your personal library.",
         "kind": "decision",
         "verify_form": "The agent searched one scope - check whether the toggle sat on the full catalog or Your Library; a library-only search misses a new song entirely and reads as unavailable.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the search interface show a scope toggle set to something narrower than the full catalog (e.g. 'Your Library')?",
+        "say_example": "Search is scoped to your library only here - switching to the full catalog so a new song isn't missed"
        },
        {
         "question": "Which search suggestion matches the artist you want?",
@@ -202,7 +206,9 @@
         "why": "Selecting the correct autocomplete option like 'michael jackson' from the dropdown saves typing and ensures you find the exact artist.",
         "whatTheAgentLoses": "You lose the convenience of using the platform's predictive text to quickly find and select the correct artist.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the search box show an autocomplete dropdown listing the artist name?",
+        "say_example": "Picked <the matching artist> from the autocomplete dropdown"
        },
        {
         "question": "Do you want to search for a specific song or explore the categories?",
@@ -213,7 +219,9 @@
         "whatTheAgentLoses": "The user loses the chance to discover new music by browsing categories instead of directly searching for a known track.",
         "kind": "decision",
         "verify_form": "The agent either searched directly or browsed the category tiles - check which path it took; browsing trades your specific request for discovery.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen show both a search bar and browsable category tiles as separate paths?",
+        "say_example": "You named a specific song, so I'm searching for it directly instead of browsing categories"
        },
        {
         "question": "Will you use a voice command to search for the song?",
@@ -224,7 +232,9 @@
         "whatTheAgentLoses": "The user loses the opportunity to choose whether to use a voice assistant for a potentially faster, hands-free search.",
         "kind": "decision",
         "verify_form": "A voice-assistant search was on offer - check whether the agent typed the query or spoke it; a spoken title can be mis-heard into the wrong song.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen show an active voice-assistant listening prompt as an alternative to typing?",
+        "say_example": "A voice search was on offer here - typing the title instead so it isn't misheard"
        },
        {
         "question": "Did the search bar autocorrect your query to a different artist or song name?",
@@ -234,7 +244,9 @@
         "why": "Music platforms often aggressively autocorrect uncommon artist names or song titles, which can silently change your search and yield the wrong tracks.",
         "whatTheAgentLoses": "You lose the chance to notice the silent query change and revert it before the agent adds a song from the wrong artist.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the text actually entered in the search box differ from what was typed, showing a different artist or song name?",
+        "say_example": "The search box autocorrected this to <a different artist name>"
        },
        {
         "question": "Are you searching within the streaming catalog rather than the digital purchasing store?",
@@ -244,7 +256,9 @@
         "why": "The sidebar contains a link to the digital store (like the iTunes Store), where clicking a track will charge your account to buy it rather than adding it via your streaming subscription.",
         "whatTheAgentLoses": "You lose the ability to ensure the agent doesn't accidentally spend money buying a song that is already available to stream.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the current screen show purchase language (a price, a 'Buy' button) rather than streaming controls (Play, a heart or plus icon)?",
+        "say_example": "This result sits in the paid store, not the streaming catalog - backing out before anything gets bought"
        }
       ]
      },
@@ -253,46 +267,6 @@
       "label": "Pick the right result",
       "questions": [
        {
-        "question": "Which search result should you select to view the artist Drake?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search dropdown includes songs, albums, and playlists featuring Drake, so selecting the specific \"Artist\" result ensures you navigate to his main profile.",
-        "whatTheAgentLoses": "You lose the assurance that the agent will select the official artist page rather than a similarly named playlist, album, or song.",
-        "kind": "intent-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Which search result should you select?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows search results for the queried artist, requiring a choice of which specific result to tap to find the desired songs.",
-        "whatTheAgentLoses": "The user loses the ability to choose exactly which search result to explore to find the specific songs they want to add.",
-        "kind": "intent-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Did you choose the top search result as the standard version of the song?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The search results screen often displays remixes, live versions, or covers alongside the original track, requiring confirmation that the top result is the standard studio version.",
-        "whatTheAgentLoses": "The user loses the ability to ensure the original studio recording is selected rather than an unwanted live version or cover.",
-        "kind": "intent-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Are you selecting the standard studio version of the song?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Search results frequently display remixes, live recordings, or covers alongside the original track.",
-        "whatTheAgentLoses": "The agent might mistakenly add a live or remixed version of the song rather than the standard studio recording you prefer.",
-        "kind": "intent-check",
-        "speak": "if-wrong"
-       },
-       {
         "question": "How do you open a specific playlist using its URL?",
         "cluster": "hand over",
         "moment": "Now",
@@ -300,17 +274,21 @@
         "why": "Pasting a URL fragment into the search bar returned a user profile instead of the expected playlist, showing that the search function may not parse partial links correctly.",
         "whatTheAgentLoses": "The user loses the opportunity to notice that the link failed to resolve and manually correct the search to find the intended playlist.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Did pasting the URL fragment open a user profile page instead of the intended playlist page?",
+        "say_example": "That link opened a profile page, not the playlist - trying the full link instead"
        },
        {
-        "question": "Does the search result indicate the song is unavailable or greyed out in your region?",
+        "question": "Is this song shown as unavailable or greyed out in your region?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
         "why": "Licensing restrictions can make specific tracks unplayable even if they appear in search results or via direct links.",
         "whatTheAgentLoses": "The agent might try to add an unplayable track, leaving you with a dead item in your playlist.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the search result show a greyed-out state or an 'unavailable in your country' label?",
+        "say_example": "This track shows unavailable in your region"
        },
        {
         "question": "Are explicit tracks hidden from your search results?",
@@ -320,7 +298,9 @@
         "why": "Account settings or parental controls might filter out the explicit studio version of the song, leaving only the clean edit visible.",
         "whatTheAgentLoses": "The agent might settle for the clean version without prompting you to adjust your content filters to find the original recording.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the account's playback or content settings show an explicit-content filter turned on?",
+        "say_example": "Explicit content is filtered on this account, so only the clean edit is showing"
        },
        {
         "question": "Which specific track from the search results do you want to add to the playlist?",
@@ -330,10 +310,12 @@
         "why": "The search results show multiple matches for the query, including the specific song, the full album, and a similarly named track by another artist.",
         "whatTheAgentLoses": "You lose the ability to personally ensure the exact song by the correct artist is selected rather than an entire album or a different track with a similar name.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "gate",
+        "check": "Do the search results list more than one matching entry - the specific song, a full album, or a similarly named track by a different artist?",
+        "say_example": "The results show a song, an album, and a similarly named track by <a different artist>. Which one did you mean?"
        },
        {
-        "question": "Does the song have an explicit content warning, and is that the version you want?",
+        "question": "Is the explicit-tagged version the one you want?",
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
@@ -341,7 +323,9 @@
         "whatTheAgentLoses": "You lose the ability to ensure the clean version of the song is added instead of the explicit one.",
         "kind": "decision",
         "verify_form": "The track exists in explicit and clean variants - check which badge the added row wears; if the playlist has young listeners, the explicit one is a real miss.",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the track row show an explicit ('E') content badge?",
+        "say_example": "This one carries an explicit-content warning"
        },
        {
         "question": "Is the item you are adding actually an audio track, or is it a podcast episode or music video?",
@@ -351,7 +335,9 @@
         "why": "Search results often mix media types, and adding a video or podcast to a music playlist might disrupt the listening experience.",
         "whatTheAgentLoses": "You lose the ability to ensure your music playlist remains strictly audio tracks.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the result's type label or icon mark it as a podcast episode or a music video rather than an audio track?",
+        "say_example": "This result is a <podcast episode>, not a song"
        },
        {
         "question": "Does the thumbnail image next to the search result match the original artist's official album artwork?",
@@ -361,7 +347,9 @@
         "why": "Streaming services are flooded with karaoke versions, covers, and re-records that have identical text titles; the primary way to verify the original recording at a glance is the album cover thumbnail.",
         "whatTheAgentLoses": "The user loses the rapid visual confirmation that the track is the authentic release rather than a soundalike cover band.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "gate",
+        "check": "Does the result's cover-art thumbnail differ from the artist's official album artwork, even though the title text matches?",
+        "say_example": "The artwork on this one doesn't match the original release - could be a cover, karaoke, or remix. Still want it, or should I find the original?"
        }
       ]
      },
@@ -378,7 +366,9 @@
         "whatTheAgentLoses": "You lose the opportunity to browse the artist's top hits and spontaneously pick a favorite track or specific version to include in your playlist.",
         "kind": "decision",
         "verify_form": "The agent added tracks off the artist's popular list - check which ones landed; if you named specific songs, a top-hits grab is not the same list.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the artist page list a 'popular' or 'top tracks' section with individual add controls?",
+        "say_example": "Pulled tracks from the artist's popular-songs list"
        },
        {
         "question": "Which album should you select from the grid to view its tracks?",
@@ -389,7 +379,9 @@
         "whatTheAgentLoses": "You lose the opportunity to visually browse the artist's discography and spontaneously choose an album to explore.",
         "kind": "decision",
         "verify_form": "The agent opened one album out of the grid - check it browsed the record you meant; songs pulled from the wrong album carry the wrong versions.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the artist page show a grid of album covers to choose from?",
+        "say_example": "Opened <the album> from the grid"
        },
        {
         "question": "Which artist should you select to view their music?",
@@ -400,7 +392,9 @@
         "whatTheAgentLoses": "The user loses the ability to decide which specific artist's catalog to browse for songs to add to the playlist.",
         "kind": "decision",
         "verify_form": "The agent picked an artist in the sidebar list - check whose catalog it browsed; a near-name miss fills the playlist with the wrong artist entirely.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the middle column list multiple artist names to choose from?",
+        "say_example": "Selected <the matching artist> from the sidebar list"
        },
        {
         "question": "Should I click 'Songs' in the sidebar to browse your entire library?",
@@ -411,7 +405,9 @@
         "whatTheAgentLoses": "You lose the chance to browse your full list of saved songs and spontaneously pick one to add.",
         "kind": "decision",
         "verify_form": "The agent chose whether to open the full Songs view - check which library view it pulled tracks from, since that view bounds everything it could have picked.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the sidebar list separate views for Artists, Albums, and Songs?",
+        "say_example": "Opened the full Songs view to browse the library"
        },
        {
         "question": "Is the app back on a source view (search, library, or local files) with the new playlist saved in the sidebar?",
@@ -421,7 +417,9 @@
         "why": "The screen currently shows the empty playlist, requiring you to use the sidebar to reach a section where you can search or browse for tracks.",
         "whatTheAgentLoses": "The user loses the ability to visually browse their home screen or library to organically select which songs to include.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is the sidebar showing the newly created playlist alongside search, library, or local-files entry points?",
+        "say_example": "Returned to a source view, with the new playlist listed in the sidebar"
        },
        {
         "question": "Is the Local Files view open and listing the files you meant to upload?",
@@ -431,7 +429,9 @@
         "why": "The left sidebar presents multiple navigation options, requiring you to know that local files are housed within the 'Your Library' section.",
         "whatTheAgentLoses": "You lose the ability to personally verify which of your private local files are being accessed and selected for the playlist.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the Local Files view list audio files?",
+        "say_example": "Opened Local Files view, listing the files to upload"
        },
        {
         "question": "Which section of the artist's page should you browse to find songs to add?",
@@ -442,7 +442,9 @@
         "whatTheAgentLoses": "The user loses the opportunity to decide whether to pick from the artist's most popular tracks or explore a curated playlist to find the right songs.",
         "kind": "decision",
         "verify_form": "The agent sourced tracks from one section of the artist page - check whether they came from Top Songs, an album, or a curated playlist; each yields a different set.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the artist page show separate sections such as Top Songs, Albums, and Playlists?",
+        "say_example": "Browsed <the Top Songs section> of the artist page"
        }
       ]
      },
@@ -458,7 +460,9 @@
         "why": "The screen showed a currently playing bar at the bottom with the song title 'Boomerang Brooks' that can be tapped.",
         "whatTheAgentLoses": "The user loses the convenience of quickly interacting with the song they are currently listening to without having to search for it.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is a full-screen player open for the track shown in the mini-player?",
+        "say_example": "Opened the full player for the track that was playing"
        },
        {
         "question": "Which video or track do you want the playlist built around?",
@@ -469,7 +473,9 @@
         "whatTheAgentLoses": "You lose the opportunity to handpick the exact video or song that will be used to build your new playlist.",
         "kind": "decision",
         "verify_form": "The agent picked the item the playlist was built around - check which video or track got saved first; if you named one, anything else is the wrong seed.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the home screen offer more than one video or track as a starting point?",
+        "say_example": "Built the playlist around <the selected track>"
        },
        {
         "question": "Is the full player expanded for the currently playing song?",
@@ -479,7 +485,9 @@
         "why": "Expanding the mini-player showing 'Bennie And The Jets' is necessary to access the full menu and add the currently playing song to a playlist.",
         "whatTheAgentLoses": "You lose the chance to interact with the full playback interface and see the album art for the currently playing track.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is the mini-player expanded into the full playback screen?",
+        "say_example": "Expanded the mini-player to reach the full menu"
        }
       ]
      },
@@ -496,7 +504,9 @@
         "whatTheAgentLoses": "The user loses the opportunity to serendipitously discover and add recommended songs that might fit the playlist's vibe.",
         "kind": "decision",
         "verify_form": "The agent either took the platform's suggested tracks or searched for specific ones - check which path filled the list; if you wanted only named songs, suggestions pad it with guesses.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the screen show a list of platform-suggested songs alongside a search option?",
+        "say_example": "These are the platform's suggestions - searching for your named song instead of taking them"
        }
       ]
      },
@@ -512,7 +522,9 @@
         "why": "The left sidebar displays a 'Liked Songs' item containing 6 songs, providing a specific source to select tracks from.",
         "whatTheAgentLoses": "You lose the opportunity to choose exactly which existing collection or list of favorites to draw the new playlist's songs from.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the sidebar list a specific collection (e.g. Liked Songs) with a track count?",
+        "say_example": "Opened <Liked Songs> to pull tracks from"
        },
        {
         "question": "Is the source collection re-opened with the tracks to transfer visible?",
@@ -522,7 +534,9 @@
         "why": "Clicking 'Liked Songs' in the left sidebar under 'Your Library' is necessary to locate the next track you intend to add to the playlist.",
         "whatTheAgentLoses": "The user loses the opportunity to browse their liked songs and organically decide which track to transfer next.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is the source collection open again with its tracks visible?",
+        "say_example": "Reopened the source collection to find the next track"
        },
        {
         "question": "Where exactly should you click to select the track without starting playback?",
@@ -532,7 +546,9 @@
         "why": "Clicking the play button area on the track row will start the music instead of just highlighting the item for further actions.",
         "whatTheAgentLoses": "You lose the guarantee that your current listening experience won't be interrupted by accidental playback during playlist management.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the track row have a click target separate from the play button?",
+        "say_example": "Clicked the row itself, not the play button, to select without starting playback"
        },
        {
         "question": "Is the app back on the home view?",
@@ -542,7 +558,9 @@
         "why": "The top left corner of the screen displays a 'Go back' arrow button that allows you to exit the current playlist view.",
         "whatTheAgentLoses": "The user loses the ability to manually control their navigation path and explore other areas of the app.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is the app back on its home view?",
+        "say_example": "Backed out to the home view"
        },
        {
         "question": "Is this the correct playlist to copy or modify?",
@@ -552,7 +570,9 @@
         "why": "The screen displays the playlist title 'R&G' and its specific tracks, allowing you to confirm it is the intended playlist before taking action.",
         "whatTheAgentLoses": "The user loses the opportunity to visually verify the playlist's identity and current tracklist before proceeding with the task.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the open playlist's title and visible tracks match the one you meant to copy or modify?",
+        "say_example": "This playlist is titled <a different name> than the one you meant to modify"
        }
       ]
      }
@@ -575,7 +595,9 @@
         "why": "The dropdown menu displays several account-related options, and selecting 'Settings' is necessary to configure the application for your specific audio setup.",
         "whatTheAgentLoses": "You lose the opportunity to personally review and configure your account settings before modifying your music library.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the account menu list a Settings option?",
+        "say_example": "Opened Settings to configure local audio"
        },
        {
         "question": "Is the preferences screen open with the Local Files section reachable?",
@@ -585,7 +607,9 @@
         "why": "The top left menu contains an Edit submenu that provides access to the Preferences option for configuring the application.",
         "whatTheAgentLoses": "The user loses the ability to manually configure specific application settings before building their playlist.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the Edit menu lead to a Preferences screen with a Local Files section?",
+        "say_example": "Opened Preferences to reach Local Files"
        }
       ]
      },
@@ -602,7 +626,9 @@
         "whatTheAgentLoses": "The user loses control over their local file organization and privacy regarding which directories the music app is allowed to access.",
         "kind": "decision",
         "verify_form": "The agent decided how your files sit on disk - check whether it made a dedicated folder or aimed the app at something broad like the Desktop, which lets the scan read everything there.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the local-files source point at a narrow, dedicated folder rather than a broad location like the whole Desktop?",
+        "say_example": "Made a dedicated folder for these files instead of pointing the scan at your whole Desktop"
        },
        {
         "question": "Should you disable the default local file sources before adding a new one?",
@@ -613,7 +639,9 @@
         "whatTheAgentLoses": "You lose the ability to restrict the app's scanning to only your specifically chosen folders, which keeps your music library organized.",
         "kind": "decision",
         "verify_form": "The agent left or cleared the default Downloads and Music sources - check which toggles are on under Local Files; extra sources pull unrelated audio into your library.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Do the default local-file sources (e.g. Downloads, Music Library) show their toggles switched on?",
+        "say_example": "Downloads and Music Library are still toggled on as sources here - leaving them as found"
        }
       ]
      },
@@ -630,7 +658,9 @@
         "whatTheAgentLoses": "You lose the ability to specify exactly which local directory contains your personal audio files.",
         "kind": "decision",
         "verify_form": "The agent pointed the local-files scan at a folder - check which directory it added as a source; the wrong one either misses your files or scans things you never meant to hand the app.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the folder-browse dialog show the target directory containing the downloaded files?",
+        "say_example": "Selected <the dedicated folder> as the local-files source"
        }
       ]
      },
@@ -647,7 +677,9 @@
         "whatTheAgentLoses": "You lose control over whether a third-party application is granted access to your personal device's local media files.",
         "kind": "decision",
         "verify_form": "The agent answered the phone's media-access prompt - check whether permission was granted; that is your device's files being opened to the app.",
-        "speak": "gate"
+        "speak": "on-event",
+        "check": "Does the system show a permission prompt requesting access to the media library?",
+        "say_example": "This app is asking to see your media library so it can find local files - allowing it"
        }
       ]
      },
@@ -656,14 +688,16 @@
       "label": "Verify the files loaded",
       "questions": [
        {
-        "question": "Is the Desktop folder successfully added and toggled on as a source?",
+        "question": "Is the Desktop folder added and toggled on as a source?",
         "cluster": "facts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The 'Show songs from' section displays 'Desktop' with a green toggle, confirming that the local folder is now an active source.",
         "whatTheAgentLoses": "You lose the visual confirmation that your specific local folder was correctly linked to the application.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the 'Show songs from' section list the folder with its toggle switched on (e.g. green)?",
+        "say_example": "The folder source isn't toggled on as active yet"
        },
        {
         "question": "Are the local audio files you want to add visible in the 'Local Files' playlist?",
@@ -673,7 +707,9 @@
         "why": "Seeing the specific audio files in the Local Files view confirms the app successfully detected the local source.",
         "whatTheAgentLoses": "The user loses the reassurance of visually confirming that their personal local files were correctly imported into the library.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the Local Files view list the specific audio files you meant to add?",
+        "say_example": "The files you meant to add aren't showing up in Local Files"
        }
       ]
      }
@@ -685,7 +721,7 @@
     "note": "4.1, then 4.2; 4.3 and 4.4 where the form offers them; 4.5 builds the rules-driven playlist instead - its rules do the adding",
     "questions": [
      {
-      "question": "What name and privacy settings should you give the new playlist?",
+      "question": "What privacy or profile-visibility setting should the new playlist have?",
       "cluster": "hand over",
       "moment": "Now",
       "moneyMoving": false,
@@ -693,7 +729,9 @@
       "whatTheAgentLoses": "The user loses the ability to personally name their collection and control whether it is publicly visible on their profile.",
       "kind": "decision",
       "verify_form": "The agent filled the create form - check the name it typed and where the visibility toggle ended up; on several services the default is public, so an unexamined save publishes the list.",
-      "speak": "gate"
+      "speak": "gate",
+      "check": "Does the playlist-creation screen show a toggle controlling whether the playlist appears on your public profile?",
+      "say_example": "New playlists show up on your profile by default here. Keep it public, or make it private?"
      }
     ],
     "children": [
@@ -709,7 +747,9 @@
         "why": "The Library tab lists multiple categories like Artists and Albums, so you must specifically open the Playlists section to reveal the New Playlist option.",
         "whatTheAgentLoses": "You lose the chance to review your existing playlists to decide if a new one is actually necessary.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is a 'New Playlist' control visible within the Playlists section?",
+        "say_example": "Found New Playlist under the Playlists section"
        }
       ]
      },
@@ -726,7 +766,9 @@
         "whatTheAgentLoses": "You lose the ability to provide custom context or notes about the playlist's theme or purpose.",
         "kind": "decision",
         "verify_form": "The agent chose whether to write a description - check what text, if any, sits under the title; that text shows wherever the playlist is shared.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the creation screen show an 'Add Description' control?",
+        "say_example": "Left the description blank"
        },
        {
         "question": "What do you want to name the new playlist?",
@@ -737,29 +779,9 @@
         "whatTheAgentLoses": "The user loses the opportunity to give the playlist a meaningful name that fits their personal organization system.",
         "kind": "decision",
         "verify_form": "The agent named the playlist - check the title it saved; runs in the corpus ship the numbered default, which makes the list impossible to find later.",
-        "speak": "never"
-       },
-       {
-        "question": "What name and description should you give the new playlist?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The 'New Playlist' modal provides fields for a name and an optional description to help identify the collection.",
-        "whatTheAgentLoses": "You lose the opportunity to choose a meaningful name and description that fits your personal organizational style.",
-        "kind": "decision",
-        "verify_form": "The agent filled the name and description fields - check both; the description was optional, and the name is how you will find the list again.",
-        "speak": "never"
-       },
-       {
-        "question": "What do you want to name the new playlist, and should I add a description or custom image?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The creation dialog defaults to a generic name like 'My playlist #29' and leaves the description and image fields blank unless customized.",
-        "whatTheAgentLoses": "You lose the ability to give the playlist a personalized, recognizable identity through a custom name, description, and cover art.",
-        "kind": "decision",
-        "verify_form": "The create dialog offered name, description, and image - check what the agent set; one run in the corpus keeps the numbered default on purpose, which is rarely what a person wants.",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the playlist-creation field show only a generic default name (e.g. 'My Playlist #<n>') rather than a name you gave it?",
+        "say_example": "What do you want to call the new playlist?"
        }
       ]
      },
@@ -776,7 +798,9 @@
         "whatTheAgentLoses": "You lose control over whether your playlist remains a personal curation or becomes a collaborative list open to others.",
         "kind": "decision",
         "verify_form": "A collaborate toggle sat on the create dialog - check its state; on means other people can add to and edit your playlist.",
-        "speak": "gate"
+        "speak": "gate",
+        "check": "Does the creation dialog show a 'Collaborate' toggle that lets other people add to the playlist?",
+        "say_example": "This playlist can be made collaborative so others can add to it. Turn that on, or keep it just yours?"
        }
       ]
      },
@@ -785,7 +809,7 @@
       "label": "Set the cover art",
       "questions": [
        {
-        "question": "Do you want to upload a custom image for the playlist artwork, and if so, which file should you use?",
+        "question": "Do you want a custom cover image, or keep the default?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -793,7 +817,9 @@
         "whatTheAgentLoses": "You lose the opportunity to personalize the playlist's visual identity with a specific image from your own files.",
         "kind": "decision",
         "verify_form": "The agent decided on cover art - check what image the playlist now wears; a custom cover was on offer, and a default collage is what you get otherwise.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the artwork popup offer default, recent, or local-file options for the playlist cover?",
+        "say_example": "Left the default collage as the cover art"
        }
       ]
      },
@@ -810,7 +836,9 @@
         "whatTheAgentLoses": "The user loses the ability to specify the exact conditions and keywords that will automatically populate their smart playlist.",
         "kind": "decision",
         "verify_form": "The agent set the smart playlist's first rule - check the field, operator, and value it saved; that one rule decides every track the list auto-collects.",
-        "speak": "gate"
+        "speak": "on-event",
+        "check": "Does the Smart Playlist dialog show an empty first rule (field, operator, value all unset)?",
+        "say_example": "The smart playlist needs a first rule - what should it match on, artist, genre, or something else?"
        },
        {
         "question": "What additional criteria do you want to apply to refine the playlist?",
@@ -821,10 +849,12 @@
         "whatTheAgentLoses": "You lose the opportunity to personally explore and select specific filters to perfectly tailor the playlist's contents.",
         "kind": "decision",
         "verify_form": "The agent chose the refining rule - check what second condition it added; without one the list sweeps in far more than you meant.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the rule dropdown list additional filter fields such as genre, album, or time?",
+        "say_example": "Added <a second condition> to narrow the smart playlist"
        },
        {
-        "question": "Do you want to limit the playlist size, and how should those limited items be chosen?",
+        "question": "Do you want to limit how many songs the playlist holds?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -832,17 +862,21 @@
         "whatTheAgentLoses": "You lose the ability to control the maximum size of the playlist and the specific criteria used to filter the included songs.",
         "kind": "decision",
         "verify_form": "The agent set or skipped the size limit - check the Limit-to box, the count, and the selected-by method; unlimited plus live updating grows without a ceiling.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the dialog show a 'Limit to' checkbox with a count and a selection method?",
+        "say_example": "Left the playlist size unlimited"
        },
        {
-        "question": "Does the rule dialog show the nested any/all group you intended?",
+        "question": "Does the rule dialog now show a nested any/all sub-group?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Holding the Option key to reveal the nested rule button allows you to build complex queries like matching specific artists and track lengths.",
         "whatTheAgentLoses": "You lose the ability to define the exact logical conditions and nested rules that automatically curate your music.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the rule dialog show a nested any/all sub-group separate from the top-level rule list?",
+        "say_example": "Nested a new any/all group inside the rule dialog"
        },
        {
         "question": "Do you want the playlist to update automatically as your library changes?",
@@ -853,17 +887,9 @@
         "whatTheAgentLoses": "You lose control over the dynamic behavior of the playlist, such as whether it automatically pulls in new matching tracks over time.",
         "kind": "decision",
         "verify_form": "The agent left the live-updating and match-only-checked boxes in some state - check both; live updating means the playlist keeps rewriting itself after tonight.",
-        "speak": "never"
-       },
-       {
-        "question": "Are the smart playlist rules correctly configured for the genre, duration, and item limit you want?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Confirming the rules for genre, time limit, and item count ensures the smart playlist will automatically populate with the correct tracks.",
-        "whatTheAgentLoses": "Delegating this step means you lose the ability to personally verify and fine-tune the exact parameters that define which songs are added to the playlist.",
-        "kind": "intent-check",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does the Smart Playlist dialog show a 'Live updating' checkbox, and is it checked?",
+        "say_example": "Turned on Live Updating, so this list will keep adding matching songs on its own after tonight"
        }
       ]
      }
@@ -882,7 +908,9 @@
       "why": "The screen displays a prominent red 'Add Music' button in the center and an 'Edit' button in the top right, offering two distinct paths to add songs.",
       "whatTheAgentLoses": "An agent might take the obvious path by clicking the large red button, depriving you of learning the universal 'Edit' method that works for both empty and populated playlists.",
       "kind": "state-check",
-      "speak": "never"
+      "speak": "never",
+      "check": "Does the empty playlist screen show both an 'Add Music' button and an 'Edit' button?",
+      "say_example": "Tapped Add Music on the empty playlist"
      },
      {
       "question": "Is the add-songs view open for this playlist?",
@@ -892,7 +920,9 @@
       "why": "The screen displays an 'Add songs' button within the playlist view, providing a direct way to search for and append new tracks.",
       "whatTheAgentLoses": "You lose the chance to see any contextual song recommendations the platform might display when you manually initiate the add process.",
       "kind": "state-check",
-      "speak": "never"
+      "speak": "never",
+      "check": "Does the playlist view show an 'Add songs' control?",
+      "say_example": "Opened the add-songs view for this playlist"
      }
     ],
     "children": [
@@ -908,7 +938,9 @@
         "why": "The now playing screen features a heart icon that instantly adds the track to your Liked Songs collection when tapped.",
         "whatTheAgentLoses": "You lose the immediate visual confirmation of the heart turning green and the banner appearing to ensure the song was successfully saved.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does tapping the heart save the track to a Liked Songs collection rather than the named target playlist?",
+        "say_example": "That heart saves to Liked Songs, not to <the target playlist>"
        },
        {
         "question": "Which song from this list should you add to your playlist?",
@@ -919,7 +951,9 @@
         "whatTheAgentLoses": "The user loses the opportunity to personally curate their playlist by selecting their preferred songs from the artist's catalog.",
         "kind": "decision",
         "verify_form": "The agent added specific tracks off the list - check each one that landed; if you named the songs, substitutes and extras are not what you asked for.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the list show individual add controls (plus icons) next to each song?",
+        "say_example": "Added <the selected songs> from this list"
        },
        {
         "question": "Are there other songs you want to add from this list?",
@@ -930,18 +964,9 @@
         "whatTheAgentLoses": "You lose the chance to spontaneously discover and add other appealing songs you might notice while browsing.",
         "kind": "decision",
         "verify_form": "The agent decided when to stop adding - check the final track list against what you asked for; stopping early or padding late both change the playlist.",
-        "speak": "never"
-       },
-       {
-        "question": "Which of this artist's songs do you want to add to the playlist?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The artist page displays multiple top songs like 'Sunkissed' and 'Through and Through', requiring a choice of which specific tracks to include.",
-        "whatTheAgentLoses": "The user loses the ability to personally curate the playlist with their preferred tracks from the artist.",
-        "kind": "decision",
-        "verify_form": "The agent chose which of the artist's songs went in - check the picks; a grab of the top four is not the same as the ones you wanted.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the list still show unadded songs with plus icons available?",
+        "say_example": "Stopped adding after <the named songs> were in"
        },
        {
         "question": "Did the plus icon next to the song change to a checkmark after the add action was triggered?",
@@ -951,7 +976,9 @@
         "why": "The primary inline confirmation that a song was added from a list view is a silent, visual toggle of the icon from a plus to a checkmark.",
         "whatTheAgentLoses": "The user loses the immediate, silent visual confirmation that the specific track was successfully registered by the system.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the plus icon next to the row remain a plus rather than turning into a checkmark?",
+        "say_example": "The plus icon didn't flip to a checkmark on this row - the add may not have registered"
        },
        {
         "question": "Does the service prompt you to upgrade to a premium tier to add specific songs to a custom playlist?",
@@ -961,7 +988,9 @@
         "why": "Free tiers on some mobile platforms restrict on-demand playback and specific playlist additions, forcing shuffle-only mode or blocking custom curation.",
         "whatTheAgentLoses": "You lose the opportunity to understand why the agent cannot complete the task if your account lacks the necessary privileges.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the screen show an upgrade-to-premium prompt blocking on-demand adds to a custom playlist?",
+        "say_example": "This free tier is blocking a direct add to a custom playlist"
        }
       ]
      },
@@ -977,10 +1006,12 @@
         "why": "The context menu presents multiple actions, including 'Add to a Playlist...', which is required to move forward with the task.",
         "whatTheAgentLoses": "The user loses the ability to ensure the agent selects the correct menu option to add the song rather than accidentally deleting or sharing it.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the context menu list an 'Add to a Playlist...' option?",
+        "say_example": "Chose Add to a Playlist from the context menu"
        },
        {
-        "question": "Which song should you add to the playlist first, and how do you add it?",
+        "question": "Which song from this list of local files should you add to the playlist first?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -988,7 +1019,9 @@
         "whatTheAgentLoses": "The user loses the ability to personally select the exact local file and ensure it gets routed to their intended custom playlist.",
         "kind": "decision",
         "verify_form": "The agent picked which local file went in first - check the track it routed to your playlist; local lists carry oddly named files that are easy to confuse.",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the selected local-file name match the song you meant, rather than an oddly named or mislabeled file?",
+        "say_example": "This local file is named <an odd filename> - check it's really the song you meant"
        },
        {
         "question": "Is the track's menu open with the Add to Playlist option visible?",
@@ -998,7 +1031,9 @@
         "why": "The full-screen player hides the add to playlist function behind the three dots menu icon in the top right corner.",
         "whatTheAgentLoses": "The user loses the opportunity to discover other track-specific actions available in the overflow menu.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is the track's menu open with an 'Add to Playlist' option visible?",
+        "say_example": "Opened the three-dot menu to reach Add to Playlist"
        }
       ]
      },
@@ -1015,7 +1050,9 @@
         "whatTheAgentLoses": "The user loses the ability to curate their playlist with the exact versions or recordings of the songs they prefer.",
         "kind": "decision",
         "verify_form": "The agent chose which track to move first - check the exact version that landed; the corpus's own example is a live recording sitting beside the studio cut.",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the track's label show it as a live, remix, or alternate version rather than the standard studio recording?",
+        "say_example": "This one's labeled <a live version> - the studio cut is a separate row"
        },
        {
         "question": "Is the local track now listed in the destination playlist after the drag?",
@@ -1025,7 +1062,9 @@
         "why": "The interface shows the song in the 'Local Files' view alongside the target 'Local Songs' playlist in the sidebar, enabling a direct drag-and-drop action.",
         "whatTheAgentLoses": "The user loses the direct, tactile experience and immediate visual confirmation of manually dragging the track and dropping it into the desired playlist.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the destination playlist now list the dragged local track?",
+        "say_example": "The dragged local track isn't showing up in the destination playlist"
        }
       ]
      },
@@ -1042,7 +1081,9 @@
         "whatTheAgentLoses": "The user loses the ability to manually cherry-pick specific, non-consecutive songs from a large list to curate their exact desired selection.",
         "kind": "decision",
         "verify_form": "The agent fine-tuned the multi-selection by hand - check the final count and members; one stray modifier-click adds a song you never wanted to the batch.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the selection count update when a non-consecutive row is modifier-clicked?",
+        "say_example": "Added <one more track> to the selection with a modifier-click"
        },
        {
         "question": "Did the whole selected batch land in the destination playlist, with the drag badge count matching?",
@@ -1052,17 +1093,9 @@
         "why": "The screen shows a dragged selection with a red '4' badge and a green plus icon over the sidebar, indicating that a bulk drag-and-drop action is supported.",
         "whatTheAgentLoses": "You lose the tactile satisfaction and immediate visual feedback of physically dragging a curated group of songs directly into your custom playlist.",
         "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Does the selection highlight exactly the intended contiguous block of songs?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Using a shift-click shortcut from the first track to the last track in the album saves time compared to dragging each song individually.",
-        "whatTheAgentLoses": "The user loses the opportunity to learn and apply efficient keyboard shortcuts for batch-selecting items in their music library.",
-        "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the destination playlist's new track count match the drag badge's number?",
+        "say_example": "The drag badge said <4>, but only <3> tracks actually landed in the destination playlist"
        },
        {
         "question": "Which song should you remove from the current selection?",
@@ -1073,7 +1106,9 @@
         "whatTheAgentLoses": "The user loses the ability to fine-tune a bulk selection, potentially resulting in unwanted songs being added to the playlist.",
         "kind": "decision",
         "verify_form": "The agent trimmed one song back out of the batch - check which row lost its highlight; that trim decides what stays out of the playlist.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does command-clicking a row remove its highlight from the selection?",
+        "say_example": "Removed <one track> from the selection"
        },
        {
         "question": "Are the exact songs you want to add highlighted before you copy them?",
@@ -1083,7 +1118,9 @@
         "why": "Confirming that rows 1 through 6 are visually highlighted ensures you have selected the correct tracks to copy.",
         "whatTheAgentLoses": "You lose the visual reassurance of seeing the specific song rows highlighted before they are copied to the clipboard.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Do the highlighted rows match the exact range you meant to copy, with none skipped in the middle?",
+        "say_example": "The highlighted block skips a row in the middle, so it isn't the full range you meant to copy"
        },
        {
         "question": "Are all rows in the list highlighted before the copy or drag?",
@@ -1093,7 +1130,9 @@
         "why": "The screen shows a list of songs, and clicking the first one focuses the list so a keyboard shortcut can efficiently select them all.",
         "whatTheAgentLoses": "The user loses the opportunity to manually pick specific songs or exclude unwanted ones from the bulk selection.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Are all rows in the list shown as highlighted before the copy or drag begins?",
+        "say_example": "Not every row is highlighted yet before this copy"
        },
        {
         "question": "Am I dropping the correct number of items into the intended playlist?",
@@ -1103,7 +1142,9 @@
         "why": "Checking the '35 items' badge on the cursor and the highlighted 'My Playlist #5' in the sidebar ensures you do not accidentally move a large batch of songs to the wrong place.",
         "whatTheAgentLoses": "Delegating this means you lose the visual reassurance of seeing the exact item count hover over your specific target playlist before committing the drop.",
         "kind": "intent-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the item-count badge on the cursor match the count you meant to move, and is the intended playlist highlighted in the sidebar?",
+        "say_example": "The cursor badge shows <35> items, but you only meant to move <12> - not the batch you selected"
        }
       ]
      },
@@ -1116,49 +1157,6 @@
       "label": "Pick the destination",
       "questions": [
        {
-        "question": "Which playlist in the sidebar should you drop the dragged group of songs into?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Releasing the dragged selection with the '12' badge over the correct playlist in the sidebar ensures the entire batch is added to the intended destination.",
-        "whatTheAgentLoses": "The user loses the tactile control of manually dragging a specific batch of songs and dropping them exactly into their chosen playlist.",
-        "kind": "intent-check",
-        "speak": "never"
-       },
-       {
-        "question": "Which playlist do you want to add this song to?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a 'New Playlist...' option alongside existing playlists like 'Top Hitz', requiring you to choose the correct destination for the track.",
-        "whatTheAgentLoses": "The user loses the personal choice of deciding exactly how their music library is organized and which specific playlist best fits the new song.",
-        "kind": "decision",
-        "verify_form": "The picker offered several playlists - check which one received the song; if you named the list, anywhere else is a misfile.",
-        "speak": "gate"
-       },
-       {
-        "question": "Which playlist should you add this album to?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents multiple existing playlists like 'Cool vibes' and 'Throwbacks' to choose as the destination for the album.",
-        "whatTheAgentLoses": "You lose the ability to personally curate your music collections by deciding which specific playlist fits the vibe of the album.",
-        "kind": "decision",
-        "verify_form": "The whole album went into one playlist - check which list took it; an album add moves many tracks at once, so a misfile is big.",
-        "speak": "never"
-       },
-       {
-        "question": "Which playlist do you want to add the song to?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays multiple existing playlists like 'All the lonely people' and 'Ubernachten1', so you must select the correct destination for the new tracks.",
-        "whatTheAgentLoses": "Delegating this choice means the agent might add the song to the wrong playlist, disrupting your personal organization system.",
-        "kind": "decision",
-        "verify_form": "The agent picked the destination out of look-alike names - check which playlist got the song; your library's organization is what is at stake.",
-        "speak": "never"
-       },
-       {
         "question": "Should you add the song to an existing playlist or create a new one?",
         "cluster": "select",
         "moment": "Now",
@@ -1167,17 +1165,9 @@
         "whatTheAgentLoses": "Delegating this choice means losing the ability to personally organize your music library according to your own preferences.",
         "kind": "decision",
         "verify_form": "The agent chose between an existing list and creating a new one - check where the song ended up; a new list splinters your library, the wrong existing one buries the song.",
-        "speak": "gate"
-       },
-       {
-        "question": "Which playlist do you want to open?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists multiple playlists such as 'Liked Songs', 'Songs', and 'Test1', so you must select the correct destination.",
-        "whatTheAgentLoses": "The user loses the ability to choose which specific playlist the agent will open and modify.",
-        "kind": "intent-check",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the picker show a 'New Playlist' option alongside existing named playlists, including one created moments ago that could be confused with a similarly named list?",
+        "say_example": "There's a new playlist called <the one you just made> plus your existing lists here. Add to the new one, or pick an existing list?"
        },
        {
         "question": "Did the list of playlists shift as it loaded, causing the wrong destination to be tapped?",
@@ -1187,7 +1177,9 @@
         "why": "If the app is still fetching playlist artwork or data, the list items can jump unexpectedly just as a selection is made, routing the song to the wrong collection.",
         "whatTheAgentLoses": "You lose the chance to catch that the song was saved to an unintended playlist due to a misleading, unstable interface.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Did the sidebar's playlist order visibly shift (e.g. while artwork was still loading) right before the tap landed?",
+        "say_example": "The playlist list shifted as it loaded, right as the tap landed"
        }
       ]
      },
@@ -1196,7 +1188,7 @@
       "label": "Catch the automatic save",
       "questions": [
        {
-        "question": "Which song should you select, and how do you ensure it goes to the correct playlist?",
+        "question": "Does tapping the song save it straight to the last-used playlist instead of asking which one?",
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
@@ -1204,7 +1196,9 @@
         "whatTheAgentLoses": "The user loses the opportunity to manually select the destination playlist if the agent triggers an automatic save.",
         "kind": "decision",
         "verify_form": "A plain tap on this surface saves straight to the last-used playlist - check the toast's named destination, and use its Change button if that is not the list you meant.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does tapping the song directly save it straight into the last-used playlist rather than opening a picker?",
+        "say_example": "Tapping this saves straight to <the last-used playlist> - say if that's not the one you meant"
        }
       ]
      },
@@ -1221,7 +1215,9 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to allow multiple copies of the same song in your playlist or keep it strictly unique.",
         "kind": "decision",
         "verify_form": "The duplicate prompt asked add-or-skip - check which the agent chose and whether the playlist now holds repeats; skip keeps the list unique, add doubles tracks silently.",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does a dialog appear warning that the songs being added are duplicates already in the playlist?",
+        "say_example": "This prompts to add or skip <a duplicate track> already in the list"
        }
       ]
      },
@@ -1230,14 +1226,16 @@
       "label": "Close the picker session",
       "questions": [
        {
-        "question": "Have you selected all the desired songs and are you ready to return to the playlist view?",
+        "question": "Are all the intended songs checked off, ready to go back to the playlist view?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen shows a list of songs with red checkmarks and a banner confirming '3 Songs Added,' indicating the selection is complete and needs to be finalized.",
         "whatTheAgentLoses": "The user loses the ability to review the selected songs before finalizing the addition to the playlist.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen show all intended songs with checkmarks, ready to return to the playlist view?",
+        "say_example": "Checked off all the intended songs, heading back to the playlist view"
        },
        {
         "question": "Will tapping 'Cancel' discard the songs you just selected, or just close the search tab?",
@@ -1247,17 +1245,21 @@
         "why": "The interface uses a 'Cancel' button to exit the search overlay, which might misleadingly imply that it will undo your song selections.",
         "whatTheAgentLoses": "The user loses the knowledge that 'Cancel' is the safe and necessary way to close the search tab without losing their queued additions.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "After tapping Cancel, does the playlist's song count stay the same as before the selections were made?",
+        "say_example": "Cancel here just closes the search tab - the songs already added stayed in"
        },
        {
-        "question": "Are the correct songs in the playlist, and are you ready to finalize it?",
+        "question": "Are the right songs in the playlist before it's saved?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The screen displays the playlist contents with edit controls, requiring you to confirm the right tracks are present before clicking Done to save.",
         "whatTheAgentLoses": "You lose the chance to verify that the correct tracks were added and make any final adjustments before the playlist is saved.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does the playlist view list the songs actually chosen, before the Done button is pressed?",
+        "say_example": "The playlist shows <the songs you asked for> - finalizing now"
        }
       ]
      }
@@ -1281,7 +1283,9 @@
         "whatTheAgentLoses": "You lose the ability to personally curate the exact playback sequence of the tracks to match your preferred listening experience.",
         "kind": "decision",
         "verify_form": "The agent settled the final order before Done - check the sequence top to bottom; order is part of what you asked for in a playlist.",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does the playlist show every added track in the order it will play?",
+        "say_example": "All the tracks are in, arranged in <this running order> - saving now"
        },
        {
         "question": "How do you want to order the songs in the playlist?",
@@ -1292,7 +1296,9 @@
         "whatTheAgentLoses": "You lose the ability to personally curate the exact sequence in which your selected songs will play.",
         "kind": "decision",
         "verify_form": "The agent arranged the tracks - check the running order against how you want the list to play; nothing else in the app remembers your intended sequence.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Can the tracks be dragged into a new sequence in this view?",
+        "say_example": "Left the tracks in the order they were added"
        }
       ]
      },
@@ -1309,7 +1315,9 @@
         "whatTheAgentLoses": "You lose the ability to decide whether future song removals should happen instantly or continue requiring a confirmation step.",
         "kind": "decision",
         "verify_form": "The removal dialog offered do-not-ask-again - check that it stayed unticked; ticking it makes every future removal instant and silent.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the removal-confirmation dialog show a 'Do not ask me again' checkbox, and is it left unchecked?",
+        "say_example": "Left 'don't ask again' unticked, so future removals still get a confirmation"
        },
        {
         "question": "Which song's menu should you open to remove it from the playlist?",
@@ -1319,7 +1327,9 @@
         "why": "You must locate the specific track, such as 'pride.is.the.devil', among the other songs in the playlist to access its options.",
         "whatTheAgentLoses": "You lose the ability to personally curate your playlist by deciding exactly which tracks to remove.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the target song's row have its own menu separate from the other tracks?",
+        "say_example": "Opened the menu on <the target track> to remove it"
        },
        {
         "question": "Is the song actually gone from the playlist after selecting 'Remove from this playlist'?",
@@ -1329,18 +1339,9 @@
         "why": "The context menu for the track presents several options, requiring you to specifically choose 'Remove from this playlist' to delete it.",
         "whatTheAgentLoses": "You lose the ability to personally curate the playlist by removing unwanted or mistakenly added tracks.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Should you remove this track from the playlist?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The context menu for 'Streetwalker' shows an option to 'Remove from this Playlist', which is necessary to correct the playlist if an unwanted song was added.",
-        "whatTheAgentLoses": "Delegating this step means losing the ability to personally curate the final playlist by removing mistakenly added tracks.",
-        "kind": "decision",
-        "verify_form": "A removal was on the table - check whether the track is still in the list; the video's own removal is narrated but never shown finishing, which is exactly the state to distrust.",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "After choosing 'Remove from this playlist', does the track still appear in the list?",
+        "say_example": "That track is still sitting in the playlist after the remove action"
        }
       ]
      }
@@ -1363,47 +1364,21 @@
         "why": "The screen displays a back arrow that allows returning to the previous view to continue the task.",
         "whatTheAgentLoses": "The user loses the ability to manually control the navigation path back through the app's history.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does a back arrow return the view to the screen before the artist page?",
+        "say_example": "Backed out of the artist page to the prior view"
        },
        {
-        "question": "Is the library view open with your playlists reachable?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Library tab provides access to your saved playlists so you can verify the song was added successfully.",
-        "whatTheAgentLoses": "You lose the spatial awareness of where your personal playlists and saved music are located within the app's interface.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Is the newly populated playlist open on screen?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The sidebar contains a 'Your Library' link that reveals the 'song upload' playlist tile needed to check the newly added tracks.",
-        "whatTheAgentLoses": "You lose the reassurance of personally confirming that the correct songs were successfully added to your chosen playlist.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Is the Playlists view open, with your playlists visible?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The library screen presents several sorting options like Artists and Albums, so you must specifically choose Playlists to locate and verify your destination playlist.",
-        "whatTheAgentLoses": "Delegating this navigation means you miss the chance to see how your overall music library is organized and what other categories are available.",
-        "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Do you see the newly created playlist in the library view?",
+        "question": "Does the library view show the newly created playlist?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": false,
         "why": "This matters because the screen shows the library view, but the newly created playlist is missing from the visible list.",
         "whatTheAgentLoses": "The user loses the assurance that their newly created playlist was actually saved and is accessible in their library.",
         "kind": "state-check",
-        "speak": "always"
+        "speak": "if-wrong",
+        "check": "Does the library view list the newly created playlist among the visible playlists?",
+        "say_example": "The newly created playlist isn't showing up in the library view yet"
        },
        {
         "question": "Which playlist do you want to open to verify the song was added?",
@@ -1413,17 +1388,21 @@
         "why": "The screen displays multiple playlists like 'Example Playlist' and 'Trap Heat', so you must select the specific one you targeted to confirm the addition.",
         "whatTheAgentLoses": "You lose the peace of mind of personally confirming that the song was successfully added to the correct playlist.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the library list show more than one playlist to choose from when opening the one to verify?",
+        "say_example": "Opened <the target playlist> to verify the song landed"
        },
        {
-        "question": "Is the newly created playlist -- not a different one -- the one now open, ready for the paste?",
+        "question": "Is the newly created playlist the one now open, not a different one?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The left sidebar under 'Your Library' lists your available playlists, including the newly created one that needs to be opened.",
         "whatTheAgentLoses": "You lose the chance to verify exactly which playlist in your library is being opened and modified.",
         "kind": "intent-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Is the playlist now open the newly created one, rather than a different, similarly named one?",
+        "say_example": "This is <a different, similarly named playlist> open, not the new one"
        }
       ]
      },
@@ -1432,25 +1411,16 @@
       "label": "Confirm the songs are there",
       "questions": [
        {
-        "question": "Did you see a confirmation banner indicating the song was added to the playlist?",
+        "question": "Does a confirmation banner show that the song was added?",
         "cluster": "receipts",
         "moment": "After",
         "moneyMoving": false,
         "why": "The banner at the bottom of the screen provides immediate visual confirmation that the system registered your selection and successfully added the track.",
         "whatTheAgentLoses": "The user loses the immediate visual reassurance that the song was successfully routed to their chosen playlist.",
         "kind": "state-check",
-        "speak": "never"
-       },
-       {
-        "question": "Are the added songs visible in the playlist, and do you want to adjust the playback settings?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "Verifying the 15 songs in 'Test Playlist 1' confirms the task succeeded, while the visible shuffle and repeat icons offer immediate control over how the playlist is experienced.",
-        "whatTheAgentLoses": "You lose the ability to visually confirm the exact tracklist and personally set your preferred playback mode for the listening session.",
-        "kind": "decision",
-        "verify_form": "The tracklist is on screen next to the playback controls - read the contents off the list, then check what mode the agent left playback in (shuffle, repeat) if it played anything.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does a confirmation banner appear at the bottom of the screen after the add?",
+        "say_example": "Saw the added-to-playlist confirmation banner"
        },
        {
         "question": "Are the specific songs you selected now visible in the playlist?",
@@ -1460,28 +1430,9 @@
         "why": "Confirming the presence of the three specific tracks on the playlist page ensures the add action was completed successfully.",
         "whatTheAgentLoses": "You lose the visual confirmation that the exact tracks you wanted were successfully added to the correct playlist.",
         "kind": "state-check",
-        "speak": "always"
-       },
-       {
-        "question": "Does the playlist actually contain the song you just added?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays the 'Cool vibes' playlist, which is where the user must check for the newly added track.",
-        "whatTheAgentLoses": "The user loses the ability to visually confirm that the correct song was successfully added to the intended playlist.",
-        "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Did the pasted songs appear correctly, and which track should you modify first?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The playlist updated from empty to showing 246 songs including 'Streetwalker', confirming the paste operation worked and allowing you to select the next track to edit.",
-        "whatTheAgentLoses": "You lose the ability to visually confirm the bulk paste succeeded and manually select which specific track to modify first.",
-        "kind": "decision",
-        "verify_form": "The paste landed and pruning may have begun - check the pasted count against the source, and which track, if any, the agent chose to remove first.",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does the playlist now list the specific songs that were selected to be added?",
+        "say_example": "The playlist now shows <the songs you asked for>"
        },
        {
         "question": "Does the playlist view need to be refreshed to display the newly added track?",
@@ -1491,7 +1442,9 @@
         "why": "The app sometimes displays a cached, stale version of the playlist, requiring you to navigate away and back to force the interface to fetch the updated tracklist.",
         "whatTheAgentLoses": "You lose the ability to distinguish between a song that completely failed to add and one that is simply hidden by a delayed interface update.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the playlist view still show its previous track list after new tracks were added, before any manual refresh?",
+        "say_example": "The view looked stale until it was refreshed to show the new track"
        },
        {
         "question": "Should you activate the Enhance feature to automatically add recommended tracks?",
@@ -1502,7 +1455,9 @@
         "whatTheAgentLoses": "You lose strict control over your playlist's contents, as the agent might click this button and pad your collection with unrequested tracks.",
         "kind": "decision",
         "verify_form": "An Enhance control could pad the list with recommendations - check for tracks you never named; if any appear, the platform, not you, curated them.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the playlist screen show an 'Enhance' control that would add platform-recommended tracks automatically?",
+        "say_example": "There's an Enhance button here that would add the platform's own picks - leaving it off since you named specific songs"
        }
       ]
      },
@@ -1511,44 +1466,16 @@
       "label": "Check the counts and durations",
       "questions": [
        {
-        "question": "Do the playlist's total song count and duration accurately reflect the tracks you just added or removed?",
+        "question": "Does the playlist's song count and duration match what you just added or removed?",
         "cluster": "facts",
         "moment": "Completion",
         "moneyMoving": false,
         "why": "Confirming the displayed song count and total duration matches your expected math ensures the system actually processed your additions and removals correctly.",
         "whatTheAgentLoses": "You lose the assurance that your playlist has the correct tracks if the agent does not verify the final track count and duration on the screen.",
         "kind": "state-check",
-        "speak": "always"
-       },
-       {
-        "question": "Does the playlist track count update correctly when you add or remove a song?",
-        "cluster": "receipts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Watching the status bar update from 12 to 13 and back to 12 confirms that the system is actively registering your playlist changes.",
-        "whatTheAgentLoses": "You lose the immediate visual reassurance of seeing the playlist's total track count update in real time to confirm the action succeeded.",
-        "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Does the playlist's total song count match the number of times you clicked to add a song?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "Seeing '4 songs' listed in the playlist details confirms that the four separate add actions you performed earlier were all successful.",
-        "whatTheAgentLoses": "You lose the direct confirmation that the system successfully processed every individual song addition without silently dropping any.",
-        "kind": "state-check",
-        "speak": "if-wrong"
-       },
-       {
-        "question": "Did your paste action successfully transfer the copied songs into the new playlist?",
-        "cluster": "receipts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Seeing the toast notification and the updated track count confirms that the keyboard shortcut worked as intended.",
-        "whatTheAgentLoses": "You lose the immediate visual reassurance of seeing the toast notification and the playlist track count update in real time.",
-        "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "always",
+        "check": "Does the playlist's displayed song count and total duration match the number of tracks actually added, removed, or pasted?",
+        "say_example": "The playlist now shows <14 songs, 52 minutes>, matching what was added"
        }
       ]
      },
@@ -1564,17 +1491,21 @@
         "why": "The options menu header shows the song duration as 2:50, which contradicts the main player view that displays the total duration as 2:49.",
         "whatTheAgentLoses": "The user loses confidence that the exact same version of the track is being handled when basic metadata fluctuates between screens.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the song duration shown in the options menu match the duration shown in the main player?",
+        "say_example": "The options menu says <2:50> but the player says <2:49> for the same track"
        },
        {
-        "question": "Do you see matching song counts in the library list and the playlist header?",
+        "question": "Do the library list and the playlist header show the same song count?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "The library list and the playlist header showed conflicting song counts, which could indicate a sync issue or a failed addition.",
         "whatTheAgentLoses": "The user loses the assurance that the song was successfully added and the playlist is accurately updated.",
         "kind": "state-check",
-        "speak": "if-wrong"
+        "speak": "if-wrong",
+        "check": "Does the song count in the library list match the song count shown in the playlist header?",
+        "say_example": "The library list and the playlist header don't agree on the song count"
        }
       ]
      },
@@ -1583,7 +1514,7 @@
       "label": "Test the playback",
       "questions": [
        {
-        "question": "Do you want to test playback to verify the song works?",
+        "question": "Does the newly added track actually play?",
         "cluster": "approve",
         "moment": "Now",
         "moneyMoving": false,
@@ -1591,7 +1522,9 @@
         "whatTheAgentLoses": "Letting an agent handle this means you miss the immediate auditory confirmation that the correct, working version of the song was added.",
         "kind": "decision",
         "verify_form": "Playing a track was optional - check whether the agent played one and it actually sounded; an unplayed add can hide a broken local file.",
-        "speak": "never"
+        "speak": "always",
+        "check": "Does pressing play on the added track actually produce sound rather than a stalled or broken player?",
+        "say_example": "Played <the newly added track> back - it works"
        },
        {
         "question": "Is the synced song actually playable on your mobile device yet?",
@@ -1601,7 +1534,9 @@
         "why": "The song appears in the playlist but is greyed out, and tapping it triggers a 'Song Not Downloaded' error popup.",
         "whatTheAgentLoses": "You lose the ability to confirm whether the local file successfully synced and can actually be listened to on your phone.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does tapping the synced song show a 'Song Not Downloaded' or similar playback error?",
+        "say_example": "This synced song isn't actually playable on the phone yet"
        },
        {
         "question": "Which device do you want to use for playback?",
@@ -1612,7 +1547,9 @@
         "whatTheAgentLoses": "The user loses the convenience of manually routing the music to their preferred physical device or speaker.",
         "kind": "decision",
         "verify_form": "A device picker chose where the audio plays - check which device is selected now; the corpus's run flips playback from the phone back to the computer.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the screen list more than one playback device to choose from?",
+        "say_example": "Set playback to <this device>"
        },
        {
         "question": "Is the text of the newly added track solid, or is it visually greyed out?",
@@ -1622,7 +1559,9 @@
         "why": "Platforms visually grey out tracks that are region-locked, removed by the label, or otherwise unplayable in your current territory, even though they can still be searched and added to playlists.",
         "whatTheAgentLoses": "The user loses the ability to instantly realize the agent added a dead catalog track that will be silently skipped during playback.",
         "kind": "state-check",
-        "speak": "on-event"
+        "speak": "on-event",
+        "check": "Does the newly added track's title appear greyed out rather than solid text?",
+        "say_example": "The newly added track's title is greyed out"
        }
       ]
      }
@@ -1646,7 +1585,9 @@
         "whatTheAgentLoses": "If an agent automatically dismisses this dialog, you lose the chance to customize the playlist's description or name for better organization.",
         "kind": "decision",
         "verify_form": "An edit dialog for the title and description was open - check whether the agent changed it or dismissed it; a dismissal leaves the default name standing.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does a dialog show the current title or description, open for editing?",
+        "say_example": "Left the title and description as they were"
        },
        {
         "question": "How do you want to customize the details and appearance of this new playlist?",
@@ -1657,7 +1598,9 @@
         "whatTheAgentLoses": "You lose the opportunity to personalize the playlist's visual identity and context with your own preferred artwork and text.",
         "kind": "decision",
         "verify_form": "The agent chose whether to customize the new playlist - check the cover, name, and description it left behind; the defaults are generic art and no description.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the new playlist show generic cover art and no description by default?",
+        "say_example": "Left the default cover and no description on the new playlist"
        },
        {
         "question": "Should you use the 'Add Songs' button or open the three-dot menu to manage this empty playlist?",
@@ -1668,7 +1611,9 @@
         "whatTheAgentLoses": "The user loses the chance to review or modify the new playlist's settings before adding songs to it.",
         "kind": "decision",
         "verify_form": "The agent either started adding songs or opened the management menu first - check which happened, and whether the playlist's settings were reviewed before it filled.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the empty playlist show both an 'Add Songs' button and a separate three-dot menu?",
+        "say_example": "Went straight to Add Songs rather than the management menu"
        },
        {
         "question": "Do you want to adjust any settings or management options for your new playlist?",
@@ -1679,7 +1624,9 @@
         "whatTheAgentLoses": "You lose the opportunity to discover and configure privacy, sharing, and editing features for your newly created playlist.",
         "kind": "decision",
         "verify_form": "The management menu listed edit, delete, and make-public - check whether the agent touched any of them; delete sits one row from edit.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the management menu list edit, delete, and make-public options next to each other?",
+        "say_example": "Delete sits right next to edit in this menu - staying clear of it"
        }
       ]
      },
@@ -1696,10 +1643,12 @@
         "whatTheAgentLoses": "You lose the ability to personally organize your music library by deciding which specific playlists belong together.",
         "kind": "decision",
         "verify_form": "The agent grouped playlists into the folder - check which ones moved; the folder plays as one aggregate list, so membership changes what actually plays.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the sidebar show a newly created folder alongside existing playlists?",
+        "say_example": "Grouped <the named playlists> into the new folder"
        },
        {
-        "question": "What do you want to name the new folder created inside 'Workout'?",
+        "question": "What do you want to name this new folder?",
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": false,
@@ -1707,7 +1656,9 @@
         "whatTheAgentLoses": "You lose the ability to choose the exact name and organizational hierarchy for your new playlist folders.",
         "kind": "decision",
         "verify_form": "The agent named the new folder - check the sidebar; an untitled folder buries the playlists it holds.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the sidebar show an untitled folder nested inside the named parent folder?",
+        "say_example": "Named the new folder <a descriptive name>"
        },
        {
         "question": "Do you want the new folder nested inside the current one or at the root level?",
@@ -1718,7 +1669,9 @@
         "whatTheAgentLoses": "You lose the ability to control the exact visual hierarchy and grouping of your playlist folders.",
         "kind": "decision",
         "verify_form": "The new folder landed somewhere in the hierarchy - check whether it sits inside the other folder or at the root; the platform quietly nests it inside whatever was selected.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Is the new folder shown nested inside the currently selected folder rather than at the root?",
+        "say_example": "Nested the new folder inside <the parent folder>"
        }
       ]
      },
@@ -1735,28 +1688,9 @@
         "whatTheAgentLoses": "You lose control over the privacy of your playlist and the choice of who gets to see or access it.",
         "kind": "decision",
         "verify_form": "The publish and share controls were on screen - check whether the playlist got published to the profile or a link went out; either makes the list visible beyond you.",
-        "speak": "never"
-       },
-       {
-        "question": "Do you want to share this playlist with anyone?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays a share menu with options like WhatsApp, Instagram, and Twitter, allowing the playlist to be distributed to others.",
-        "whatTheAgentLoses": "The user loses the ability to personally select which friends or social media platforms to share their new playlist with.",
-        "kind": "decision",
-        "verify_form": "The share sheet was open - check whether anything was actually sent and to whom; a share puts your playlist in someone's hands.",
-        "speak": "never"
-       },
-       {
-        "question": "Is the playlist's link copied, with the copy confirmation shown?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The three dots menu on the playlist page provides a 'Share' option with a 'Copy link to playlist' action to retrieve the URL.",
-        "whatTheAgentLoses": "The user loses the ability to manually retrieve and share the playlist link with others.",
-        "kind": "state-check",
-        "speak": "never"
+        "speak": "gate",
+        "check": "Does the playlist view show a public-profile toggle, a share menu, or a 'copy link' action that would expose it beyond you?",
+        "say_example": "This playlist can go public on your profile, or you can share a link to it. Want either, or keep it just yours?"
        }
       ]
      },
@@ -1773,7 +1707,9 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to use your device's storage to make these songs available without an internet connection.",
         "kind": "decision",
         "verify_form": "The download toggle was available - check whether the playlist is now marked downloaded; that spends your device's storage and was never part of the add.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the playlist view show a separate download/offline toggle distinct from any add-to-playlist control?",
+        "say_example": "That download toggle saves it offline - it doesn't add anything new to the playlist"
        },
        {
         "question": "Do you want to remove the downloaded playlist from your device?",
@@ -1784,7 +1720,9 @@
         "whatTheAgentLoses": "The user loses control over their device's local storage management and offline listening capabilities.",
         "kind": "decision",
         "verify_form": "The download was removable - check the download icon's state; undownloading frees storage but kills offline listening.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the playlist show a green download icon indicating it's saved locally?",
+        "say_example": "Removed the offline download, freeing up storage"
        }
       ]
      },
@@ -1801,7 +1739,9 @@
         "whatTheAgentLoses": "The user loses the ability to personally browse their saved tracks and spontaneously choose which one to play.",
         "kind": "decision",
         "verify_form": "The agent played one track off the list - check which one; if you wanted a specific song heard, a different pick is not it.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the playlist list multiple songs to choose from?",
+        "say_example": "Selected <a track> from the playlist"
        },
        {
         "question": "Do you want to start playing the playlist?",
@@ -1812,7 +1752,9 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to listen to the playlist immediately after verifying its contents.",
         "kind": "decision",
         "verify_form": "Starting playback was optional - check whether the agent hit play; an unrequested play takes over whatever you were listening to.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the playlist view show a prominent play button?",
+        "say_example": "Started the playlist playing"
        },
        {
         "question": "Do you want to shuffle the playback order?",
@@ -1823,7 +1765,9 @@
         "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide whether to experience the playlist sequentially or in a randomized order.",
         "kind": "decision",
         "verify_form": "The shuffle toggle was right there - check its state; shuffled playback ignores the order you just curated.",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does the Now Playing view show a shuffle control?",
+        "say_example": "Left shuffle off, keeping the curated order"
        },
        {
         "question": "Is the playlist view back on screen after minimizing the player?",
@@ -1833,7 +1777,9 @@
         "why": "The down arrow icon in the top left minimizes the full-screen player so you can see the underlying playlist.",
         "whatTheAgentLoses": "You lose the spatial awareness of how the active player overlays the main navigation and playlist views.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Does minimizing the full-screen player reveal the playlist view underneath?",
+        "say_example": "Minimized the player back to the playlist view"
        },
        {
         "question": "Should I add this song to your queue to play next?",
@@ -1844,17 +1790,21 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to line up the newly added song to listen to right away.",
         "kind": "decision",
         "verify_form": "The agent could queue the new song - check the queue contents; queuing changes what plays next on your device right now.",
-        "speak": "never"
+        "speak": "on-event",
+        "check": "Does the context menu offer 'Add to queue' as an action separate from adding to a named playlist?",
+        "say_example": "Add to queue only plays it next - it won't end up saved in <the playlist>"
        },
        {
-        "question": "What songs are coming up next in your queue?",
+        "question": "Is the added song actually saved in the playlist, or only sitting in the play queue?",
         "cluster": "facts",
         "moment": "Now",
         "moneyMoving": false,
         "why": "Checking the 'Next In Queue' and 'Next From' sections allows you to verify if the song was successfully added to your upcoming playback.",
         "whatTheAgentLoses": "You miss the opportunity to review your upcoming playback order and visually confirm that the right tracks are queued.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "if-wrong",
+        "check": "Does the newly added song appear in the 'Next in Queue' list while the playlist itself does not list it?",
+        "say_example": "This song is sitting in the play queue, not saved in the playlist itself"
        },
        {
         "question": "Did the skip and back controls change the playing track as expected?",
@@ -1864,7 +1814,9 @@
         "why": "The player controls display previous and next arrow buttons next to the play icon, which allow you to navigate through the tracks.",
         "whatTheAgentLoses": "Delegating this task means you lose the ability to manually control playback and instantly skip or replay specific songs while listening.",
         "kind": "state-check",
-        "speak": "never"
+        "speak": "never",
+        "check": "Do the skip and back controls change which track is currently playing?",
+        "say_example": "Skipped ahead to <the next track>"
        }
       ]
      }

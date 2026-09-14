@@ -2463,7 +2463,7 @@
         "cluster": "",
         "moment": null,
         "moneyMoving": false,
-        "why": "The screen shows multiple matches like Courtney and [name] have already reached out with opening lines, requiring a decision on who to engage with.",
+        "why": "The screen shows multiple matches like [name] and [name] have already reached out with opening lines, requiring a decision on who to engage with.",
         "whatTheAgentLoses": "The user loses the opportunity to personally evaluate the opening lines and decide which match sparks their genuine interest.",
         "speak": "never",
         "check": "Which received messages does the list show, from whom?",

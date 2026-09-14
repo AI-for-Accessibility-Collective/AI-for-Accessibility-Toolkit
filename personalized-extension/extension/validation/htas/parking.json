@@ -1,0 +1,2583 @@
+{
+ "task": "book or pay for parking, or buy a transit fare, online (SpotHero, ParkMobile, city meter apps, transit fare apps): find the location or enter the zone number, pick a time window or fare type, pay; complete when the parking pass, active session, or purchased fare is on screen. Surface pinned: a parking or transit website/app — not a physical pay station or meter. Variants: paying a parking ticket or fine, monthly parking contracts, and airport parking bundled with flights do not belong.",
+ "tree": {
+  "id": "0",
+  "label": "Book parking or a transit fare",
+  "note": "1 where the app or the site still has to be reached - A2Q arrives by scanning a sign and Kj30 opens straight onto the zone prompt. 2 to pick which of the several things this app sells. then 3 and 4 in either order: A2Q cannot pick a duration until a car exists, while 8GuH names both stations first and its passenger counts last. 5 bounds the purchase, and in the parking half the bound is a clock that starts on payment. 6 wherever a price is on screen, which is more than once in five keepers. 7 in every keeper that pays. 8 as soon as the artifact appears, and 8.7 when it never does. 9 afterwards; Kj30 runs 5 to 8 a second time to extend a session that is already running.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Get into the app",
+    "note": "1.1 or 1.2 depending on whether the product lives in an app or on a website. 1.3 as the prompts arrive - TIcF's fires at the moment of ordering rather than at the start. 1.4 wherever the account gates the purchase, and 7C-g is asked only after the fare is already fixed. 1.5 and 1.6 once, and they persist. Kj30, Otk8 and A2Q run none of this.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Install and open the app",
+      "questions": [
+       {
+        "question": "Is this the booking screen now, and not the intro tour overlay?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen displays an active feature tour with options to continue or end it, which introduces features like booking reserved tickets.",
+        "whatTheAgentLoses": "Delegating this means you miss the opportunity to learn how to navigate the app's features through the introductory tour.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Is the current screen the booking/home screen rather than the introductory tour overlay?",
+        "say_example": "Closed the intro tour, landed on the booking screen"
+       },
+       {
+        "question": "Is this the correct app to use for booking transit tickets?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the UTS app by the Centre for Railway Information Systems, confirming it is the official app for Indian Railways.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the agent is using the official, trusted app for their specific transit system.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the page identify this as the operator's own app or site (matching the named publisher/authority), not an unrelated third party?",
+        "say_example": "This isn't <the operator>'s own app. It's published by <an unrelated developer>."
+       },
+       {
+        "question": "Which app from the search results should you install?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results showed the 'One Delhi' app with a low 2.6-star rating, which might prompt a careful user to read reviews before installing.",
+        "whatTheAgentLoses": "The user loses the opportunity to evaluate the app's reliability and read user feedback before committing to the installation.",
+        "kind": "decision",
+        "verify_form": "The agent installed one of the apps in the results - check the publisher and the rating it took; a two-star lookalike will take your card details just as readily as the real one.",
+        "speak": "on-event",
+        "check": "Does the search-results list show more than one app with this name, including one with a notably low rating or a different publisher?",
+        "say_example": "Two apps came up under that name. I'm installing the one from <the transit authority>, not the <2.6>-star one."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Find the operator's site",
+      "questions": [
+       {
+        "question": "Which search result should you select to apply for the transit card?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display multiple websites like mufinpay.com and sahelipinkcard.com, requiring you to identify the correct portal for the application.",
+        "whatTheAgentLoses": "You lose the opportunity to evaluate the search results and decide which website you trust to process your transit card application.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the selected website's domain name match the transit card's official issuing authority rather than a third-party reseller?",
+        "say_example": "A few sites come up for this pass. I'm using the one that names <the transit authority>, not <lookalikepass>.com."
+       },
+       {
+        "question": "Does the page show the delivery time and what the application needs before you start it?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The homepage outlines a three-step process for getting a bus pass delivered and provides an 'APPLY NOW' button to begin.",
+        "whatTheAgentLoses": "You miss seeing the expected delivery timeline and the exact steps required to complete the application.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the homepage display the delivery timeline and required application steps before the 'Apply Now' button?",
+        "say_example": "This pass takes <5 business days> to arrive by post. Here's what the form still needs."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Answer the permission prompts",
+      "questions": [
+       {
+        "question": "Should I allow the app to send notifications?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a system prompt asking if RailOne can send you notifications.",
+        "whatTheAgentLoses": "Delegating this means you lose the choice of whether to allow or block push alerts from this service.",
+        "kind": "decision",
+        "verify_form": "The agent answered the app's notification prompt - check whether it allowed or blocked push alerts; allowing them means this operator can message you about every session from now on.",
+        "speak": "never",
+        "check": "Does a system prompt ask whether to allow the app to send notifications, and what was chosen?",
+        "say_example": "Allowed notifications from <the transit app>"
+       },
+       {
+        "question": "What level of location access do you want to grant the app?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app prompts you to choose between precise or approximate location access and whether to allow it while using the app, only this time, or not at all.",
+        "whatTheAgentLoses": "You lose control over your privacy preferences regarding how and when the app can track your device's location.",
+        "kind": "decision",
+        "verify_form": "The agent answered the location prompt - check what it granted; while-using-the-app and precise are different amounts of tracking, and only-this-time is also on that list.",
+        "speak": "never",
+        "check": "Does a system prompt ask what level of location access to grant, and what was chosen?",
+        "say_example": "Granted <precise, while using the app> location access"
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Sign in or register",
+      "questions": [
+       {
+        "question": "How will you log into your account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires authentication to proceed, offering options like an mPIN, a password, or a mobile number.",
+        "whatTheAgentLoses": "You lose the security of keeping your personal login credentials and mPIN private.",
+        "kind": "decision",
+        "verify_form": "The agent picked a way to sign in - check whether it used a PIN, a password or a one-time code; a stored PIN leaves the account reachable on this phone without you.",
+        "speak": "never",
+        "check": "Does the sign-in screen show which method was used to log in (PIN, password, or one-time code)?",
+        "say_example": "Signed in with <a one-time code>, not a stored PIN"
+       },
+       {
+        "question": "Are the profile details it filled in for you correct, and okay to submit?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a 'Please fill/modify details' modal with pre-filled information from a linked account that must be verified.",
+        "whatTheAgentLoses": "You lose the opportunity to review and correct your personal information before it is registered in the app.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the screen show a 'fill/modify details' modal with prefilled fields pulled from a linked account, requiring confirmation before proceeding?",
+        "say_example": "Your profile pulled in <name> and <date of birth> from your linked account. Check those before I submit them."
+       },
+       {
+        "question": "Does the screen show a success message confirming the registration is complete?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen displays a success modal confirming your registration, which must be acknowledged to proceed to login.",
+        "whatTheAgentLoses": "The user misses the direct confirmation that their account was successfully created and is ready for use.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the screen show a success modal confirming registration is complete?",
+        "say_example": "Registered a new account with <a mobile number>"
+       },
+       {
+        "question": "Do you want to log in to an existing account or register as a new user?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a choice between logging in as a registered user or completing a new user registration to proceed.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether to link the transaction to an existing profile with saved payment methods or to create a new account.",
+        "kind": "decision",
+        "verify_form": "The agent either signed in to an existing account or created a new one - check which; the existing account is where your saved cards and past tickets are.",
+        "speak": "if-wrong",
+        "check": "Does the screen offer a choice between logging into an existing account and registering as a new user?",
+        "say_example": "Picked <register as new user>. Say if you already have an account, since that's where your saved cards and past tickets live."
+       },
+       {
+        "question": "Can you clearly read the characters in the captcha?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The captcha image presented on the screen was too distorted to decipher, requiring a refresh to pass the security check.",
+        "whatTheAgentLoses": "The user loses the opportunity to manually solve visual security checks that an automated agent might struggle with or fail.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the page show that the captcha needed a refresh because it was too distorted to read?",
+        "say_example": "Refreshed a captcha that was too blurry to read"
+       },
+       {
+        "question": "Which mobile number and password will you use to register?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Register with UTS' screen requires a mobile number and password to proceed.",
+        "whatTheAgentLoses": "You lose control over which personal phone number and password are used to create your transit account.",
+        "kind": "decision",
+        "verify_form": "The agent registered with a phone number and a password - check which number; every code and every ticket afterwards goes to that phone.",
+        "speak": "never",
+        "check": "Does the registration screen show the mobile number and password that were entered?",
+        "say_example": "Registered with <a mobile number> - every code and ticket from now on goes there"
+       },
+       {
+        "question": "Was a mobile number and password already filled in before anything happened on this screen?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the login form with the mobile number and password fields filled in.",
+        "whatTheAgentLoses": "The user loses the ability to verify their login details and manage their account security preferences.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the login form show a mobile number and password already filled in before any action was taken on this screen?",
+        "say_example": "The login box already had a number and password in it. Using what was saved, not typing anything new."
+       },
+       {
+        "question": "Does continuing count as agreeing to the Terms of Use and Privacy Policy?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The registration screen explicitly states that by continuing, you are agreeing to the app's Terms of Use and Privacy Policy.",
+        "whatTheAgentLoses": "The user loses the opportunity to review or reject the legal terms and data privacy conditions required to use the service.",
+        "kind": "decision",
+        "verify_form": "The agent accepted the app's terms of use and privacy policy by continuing through registration - check what was accepted; there was no separate tick box, so continuing was the agreement.",
+        "speak": "never",
+        "check": "Does the registration screen state that continuing counts as agreeing to the Terms of Use and Privacy Policy?",
+        "say_example": "Agreed to the Terms of Use and Privacy Policy by continuing - there was no separate box"
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Choose the language",
+      "questions": [
+       {
+        "question": "Which language do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The application prompts you to choose between English and Hindi for the interface language.",
+        "whatTheAgentLoses": "Letting an agent choose might result in the app displaying a language you cannot read to verify your parking or transit details.",
+        "kind": "decision",
+        "verify_form": "The agent set the interface language - check which one; if it picked a language you do not read, you cannot check the fare or the ticket yourself.",
+        "speak": "if-wrong",
+        "check": "Does the settings screen show which interface language is currently selected?",
+        "say_example": "Set the interface language to <English>."
+       }
+      ]
+     },
+     {
+      "id": "1.6",
+      "label": "Set a PIN or biometric login",
+      "questions": [
+       {
+        "question": "What 6-digit mPIN do you want to set for future logins?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires setting and confirming a 6-digit mPIN to secure your account for future access.",
+        "whatTheAgentLoses": "You lose the ability to choose a memorable, private PIN for accessing your account later.",
+        "kind": "decision",
+        "verify_form": "The agent set a login PIN - check that you know what it is; if the agent chose the digits, you cannot get back into this account without it.",
+        "speak": "never",
+        "check": "Does the screen require setting and confirming a 6-digit login PIN?",
+        "say_example": "Set a 6-digit login PIN"
+       },
+       {
+        "question": "Should you enable biometric login to avoid entering your password next time?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile screen features a 'Biometric' toggle that saves you from manually entering your login details in the future.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to link your device's biometric security to this specific account.",
+        "kind": "decision",
+        "verify_form": "The agent set the biometric login toggle - check whether it is on; that ties this account to whoever can unlock the phone.",
+        "speak": "never",
+        "check": "Does the profile screen show a biometric login toggle, and is it on or off?",
+        "say_example": "Left biometric login off"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Choose what to buy",
+    "note": "2.1 in every keeper, because the same app sells several different things. 2.2 where the purchase starts in the street or in a chat rather than on a home screen. 2.3 only where the format of the proof is itself a choice. 2.4 where the product's terms sit on the page in front of the form.",
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Choose the ticket or session kind",
+      "questions": [
+       {
+        "question": "Which ticketing option or service do you want to select from the home screen?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The home screen presents multiple journey planning options, such as reserved or unreserved tickets, and other train-related services.",
+        "whatTheAgentLoses": "The user loses the ability to choose the specific type of ticket or service that matches their travel needs.",
+        "kind": "decision",
+        "verify_form": "The agent opened one of the home screen's booking modules - check which one; reserved, unreserved and platform tickets are three different products at three different prices.",
+        "speak": "on-event",
+        "check": "Does the home screen list more than one distinct ticket or service module (e.g. reserved ticket, unreserved ticket, platform ticket, other services) at different prices?",
+        "say_example": "The home screen has a few modules. I'm opening <Unreserved Ticket>, not <Reserved Ticket> or the other services."
+       },
+       {
+        "question": "Which transit card or wallet do you want to manage?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows both an EZ-Link Wallet with a zero balance and a physical card with remaining funds, requiring a choice of which account to view or reload.",
+        "whatTheAgentLoses": "The user loses the ability to choose whether to fund their digital wallet or a specific physical transit card based on their personal travel habits.",
+        "kind": "decision",
+        "verify_form": "The agent opened either the card or the in-app wallet - check which balance it is about to top up; money in the wallet does not pay a fare until it is moved onto the card.",
+        "speak": "on-event",
+        "check": "Does the account show more than one funding source (e.g. an in-app wallet and a physical card) with different balances?",
+        "say_example": "You've got both a wallet and a card here. I'm topping up <the card>, since wallet balance doesn't pay a fare until it's moved over."
+       },
+       {
+        "question": "Are you an existing bus pass user?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify if you already have a bus pass to determine whether you need a new application or a renewal.",
+        "whatTheAgentLoses": "The user loses control over whether the agent applies for a brand new pass or attempts to renew an existing one.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the screen ask whether this is a new bus pass application or a renewal of an existing one?",
+        "say_example": "The form asks if you already have a bus pass. Going with <new application>. Say if you already hold one."
+       },
+       {
+        "question": "Do you want to issue a new season ticket or renew an existing one?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The season ticket screen requires you to select between 'ISSUE' and 'RENEW' to determine if you are starting a new pass or extending a current one.",
+        "whatTheAgentLoses": "Delegating this means the agent might issue a brand new ticket instead of renewing your existing one, potentially causing you to lose renewal benefits or continuity.",
+        "kind": "decision",
+        "verify_form": "The agent either issued a new season ticket or renewed the existing one - check which; renewing keeps the continuity that issuing fresh throws away.",
+        "speak": "on-event",
+        "check": "Does the season ticket screen offer a choice between issuing a new ticket and renewing an existing one?",
+        "say_example": "Going with <renew> for the existing season ticket. Say if you actually want a fresh one instead."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Start from the sign or the chat",
+      "questions": [
+       {
+        "question": "How do you want to initiate the parking payment from the options on the sign?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The parking sign provides three different options to access the payment system—scanning a QR code, using the ParkMobile app, or texting a number—so you must select one to proceed.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose their preferred method of accessing the service, such as avoiding an app download by simply scanning the QR code.",
+        "kind": "decision",
+        "verify_form": "The agent started the session by scanning the sign's code, by opening the app, or by texting the short code - check which; the scan carries the zone in and the other two make you type it.",
+        "speak": "never",
+        "check": "Does the parking sign show more than one way to start payment (scan a code, open the app, or text a number), and which was used?",
+        "say_example": "Started the session by scanning the sign's code, not by texting the number"
+       },
+       {
+        "question": "Does the chat with the transit operator show a menu of options after the first message is sent?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a blank WhatsApp chat with Chennai Metro Rail where an initial message must be sent to trigger the ticketing bot.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide how to initiate the conversation with the transit bot.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the chat with the transit operator show a menu of options after the first message is sent?",
+        "say_example": "Messaged the operator's chat and got a menu back"
+       },
+       {
+        "question": "How do you want to select your route?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The chatbot presents options to either manually select a station or use a quick booking feature to begin the reservation.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to manually select your station or use a faster quick-booking method.",
+        "kind": "decision",
+        "verify_form": "The agent chose between picking stations by hand and using quick booking - check which; quick booking reuses a previous journey rather than asking for this one.",
+        "speak": "on-event",
+        "check": "Does the chatbot offer a 'quick booking' shortcut alongside manually selecting stations?",
+        "say_example": "There's a quick-booking shortcut here, but it reuses your last route, not necessarily this one. I'm picking stations by hand instead."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Choose what counts as proof",
+      "questions": [
+       {
+        "question": "Are you currently located inside or outside the station?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires you to select whether you are physically at the station or outside of it to issue the correct ticket.",
+        "whatTheAgentLoses": "An agent cannot know your real-world physical location to accurately choose between the 'Outside Station' and 'At Station' options.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the screen ask whether the person is currently located inside or outside the station?",
+        "say_example": "The app wants to know if you're inside or outside the station right now. That decides which ticket you get."
+       },
+       {
+        "question": "Do you want a paperless ticket or a ticket you print at the station?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires choosing between a paperless ticket displayed on your phone and a paper ticket that must be printed at the originating station.",
+        "whatTheAgentLoses": "The agent might select a ticket type that requires printing when you prefer the convenience of a digital ticket, or vice versa.",
+        "kind": "decision",
+        "verify_form": "The agent chose a paperless ticket or one printed at the station - check which; paperless makes this phone your travel authority, and printed means travelling without the printout is an offence.",
+        "speak": "on-event",
+        "check": "Does the screen offer a choice between a paperless ticket and one printed at the station?",
+        "say_example": "Going paperless, so this phone becomes your ticket. The printed option means travelling without the printout is an offence."
+       },
+       {
+        "question": "Do you want a digital e-Bus Pass or a printed conventional bus pass?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires choosing between an e-Bus Pass for immediate digital download and a conventional printed pass that gets mailed to an address.",
+        "whatTheAgentLoses": "The user loses the opportunity to choose whether they prefer the convenience of a digital pass on their device or a physical card mailed to their home.",
+        "kind": "decision",
+        "verify_form": "The agent chose an electronic pass or a printed one - check which; the printed one is posted to an address and carries a delivery charge that shows up two screens later.",
+        "speak": "on-event",
+        "check": "Does the screen offer a choice between a digital e-Bus Pass and a printed conventional pass?",
+        "say_example": "The printed pass gets mailed and carries a delivery charge that shows up two screens from now. Going digital instead avoids that."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Read what the product covers",
+      "questions": [
+       {
+        "question": "Do you have the documents this pass needs?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The AI Overview states that applying for the Delhi Pink Card requires an Aadhaar card linked to a mobile number.",
+        "whatTheAgentLoses": "The user loses the chance to personally confirm they meet the specific documentation requirements for this subsidized fare.",
+        "kind": "intent-check",
+        "speak": "always",
+        "check": "Does the page state what documents are required to apply for this transit pass?",
+        "say_example": "This pass needs <an ID card linked to a mobile number>. Worth having that ready before we go further."
+       },
+       {
+        "question": "Do you meet the age and residency rules for this fare?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The FAQ section explicitly states that the Saheli Pink Card is restricted to women and transgender residents of Delhi who are at least five years old.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that your demographic details qualify you for this restricted transit pass before applying.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the eligibility section state a specific age or residency requirement for this fare or pass type?",
+        "say_example": "This pass is only for <women and transgender residents of the city, age 5 and up>. Do you meet that, so I keep going?"
+       },
+       {
+        "question": "Are you currently riding the bus?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The top-up screen displays a warning banner instructing users to only perform a top-up before or after a bus ride.",
+        "whatTheAgentLoses": "Delegating this means the agent might process the top-up while you are in transit, which the app explicitly warns against.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the top-up screen show a warning banner saying to only top up before or after a bus ride, not during one?",
+        "say_example": "This screen warns not to top up while riding the bus. Are you riding right now?"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Name the place or journey",
+    "note": "one of 3.1 to 3.5 says where. 3.1 and 3.2 for a zone and a bay, 3.3 for a place searched on a map, 3.4 for a pair of stations, 3.5 for the bus you are already sitting on. 3.6 and 3.7 only where there is an inventory to compare, which is Otk8 and zUyS. 3.8 where the operator's own live information is checked before committing - 8GuH leaves the booking form and comes back to it unchanged.",
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Enter the zone number",
+      "questions": [
+       {
+        "question": "Should I type a new zone number or select one from your recent zones?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a text field to manually enter a zone number alongside a list of recent zones like '31', so the correct parking location must be specified.",
+        "whatTheAgentLoses": "The user loses the convenience of quickly selecting a familiar parking location from their personal history.",
+        "kind": "decision",
+        "verify_form": "The agent set the zone by typing a number or by taking one from the recent list - check which; a recent zone is fast and is also the one place where the number posted on the sign never gets read.",
+        "speak": "on-event",
+        "check": "Does the screen offer a list of recent zones as an alternative to typing a new zone number?",
+        "say_example": "You can pick a recent zone or type a new one. A recent pick is fast, but it's also the one path where the number on the sign never gets read."
+       },
+       {
+        "question": "Does the zone or station it found match where you actually are?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The app often uses GPS to pre-fill your current zone or station on a map, which can be inaccurate due to signal drift or being parked near a zone boundary.",
+        "whatTheAgentLoses": "A sighted user can instantly see if the map pin or pre-filled zone is across the street, but delegating this means you might accidentally pay for the wrong location if the agent blindly trusts the auto-detect.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the app show an auto-detected zone, station, or street name/neighborhood, and does it match where the car is actually parked or where the person actually is?",
+        "say_example": "The app has you at <Zone 4412> on <Maple St>. Is that actually where you're parked?"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Enter the space number",
+      "questions": [
+       {
+        "question": "What is the space number of your parking spot?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires the specific space number within the zone to ensure the correct parking spot is paid for.",
+        "whatTheAgentLoses": "An agent cannot look outside or check the physical pavement to see which specific space number you are parked in.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the app show a field asking for the specific space number within the zone?",
+        "say_example": "This app also wants the space number, not just the zone. What number is posted at your actual spot?"
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Search for a place to park",
+      "questions": [
+       {
+        "question": "Does the screen already have a location picked that might not be the one you want?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a currently selected location and a search bar, allowing you to enter the exact destination where you need to park.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact landmark or address you want to park near.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the screen show a pre-selected location alongside a search bar for entering a different address or landmark?",
+        "say_example": "Searched for <a different address> instead of the one already selected"
+       },
+       {
+        "question": "Do you select your destination from the recent searches list or type it in to use the recommendations?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed the Daley Center in the recent searches list, but typing it also brought it up under recommended places.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to quickly tap a recent search or type out the name to ensure the correct recommended place appears.",
+        "kind": "decision",
+        "verify_form": "The agent set the destination from the recent list or from a typed suggestion - check which entry it took; the recent list holds places you parked at before, not the one you are going to now.",
+        "speak": "gate",
+        "check": "Does the recent-searches list show a prior destination being offered as the pick, rather than a freshly typed one?",
+        "say_example": "Your recent list has <Daley Center> saved from before. Is that where you're parking now, or somewhere else?"
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Choose the two stations",
+      "questions": [
+       {
+        "question": "What are your origin and destination stations?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed fields to enter the starting and ending points of the journey, along with an interchange button to swap them.",
+        "whatTheAgentLoses": "The user loses the ability to specify their exact travel route and direction.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the screen show fields for entering both the origin and destination stations?",
+        "say_example": "Filled in <the origin> and <the destination> stations"
+       },
+       {
+        "question": "Should you search using your saved preferences?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Reserved Ticket screen offers a shortcut to search using your saved source, destination, class, and quota, which saves time if your routine hasn't changed.",
+        "whatTheAgentLoses": "You lose the chance to verify if your current travel needs actually match the saved preferences before the search is initiated.",
+        "kind": "decision",
+        "verify_form": "The agent either used your saved search preferences or filled the form fresh - check which; saved preferences carry an old route, class and quota that may not be this trip's.",
+        "speak": "on-event",
+        "check": "Does the screen offer a shortcut to search using saved source, destination, class, and quota preferences?",
+        "say_example": "There's a saved-preferences shortcut, but it carries your last route, class and quota, which may not be this trip's. Filling the form fresh instead."
+       },
+       {
+        "question": "What date and quota are you selecting for your train search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a search form with fields for origin, destination, date, class, and quota options like 'General' or 'Tatkal' that dictate which trains and fares will be found.",
+        "whatTheAgentLoses": "You lose the control to specify your exact travel route, date, preferred class, and special quota requirements for the train ticket.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the search form show fields for travel date and quota (e.g. General, Tatkal) before submitting?",
+        "say_example": "Set the date to <Sep 20> and the quota to <General>. Worth checking both before this search runs, since the wrong one changes which trains show up."
+       },
+       {
+        "question": "Which train line are you traveling on?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'BUY TICKETS' page requires you to select your specific train line from a dropdown menu to determine the correct route.",
+        "whatTheAgentLoses": "You lose the ability to ensure the agent selects the correct train line for your actual travel plans.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the 'Buy Tickets' page show a dropdown for selecting the train line?",
+        "say_example": "Selected <the Green Line> from the train-line dropdown"
+       },
+       {
+        "question": "Are your selected origin and destination stations correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the chosen line, origin, and destination, which must accurately match your intended route before you proceed to ticket selection.",
+        "whatTheAgentLoses": "You lose the opportunity to verify that the agent selected the exact stations you intend to travel between.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the screen display the chosen origin and destination stations together for confirmation?",
+        "say_example": "The trip is set to <Borivali> to <Surat>. Is that right, or did I get a station wrong?"
+       },
+       {
+        "question": "Which station do you need the platform ticket for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to specify the station, like Borivali, and the number of passengers to calculate the correct total fare.",
+        "whatTheAgentLoses": "You lose the ability to ensure the ticket is booked for the correct station and covers everyone in your group.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the screen show a station field specifically for a platform ticket?",
+        "say_example": "Got the platform ticket for <Borivali> station"
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Identify the bus you boarded",
+      "questions": [
+       {
+        "question": "Should I scan the physical QR code or manually enter the bus number?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app presents a camera viewfinder to scan the QR code alongside a text entry section with suggested bus number prefixes.",
+        "whatTheAgentLoses": "The user loses the convenience of simply pointing their camera at the physical QR code, as a digital agent cannot scan objects in the real world.",
+        "kind": "decision",
+        "verify_form": "The agent got the bus's identity either by scanning the sticker or by typing the registration - check which; a typed registration is the one that can be a digit wrong.",
+        "speak": "on-event",
+        "check": "Does the screen offer both a QR-code scan and a manual bus-number entry field?",
+        "say_example": "You can scan the bus's code or type its number. Typing is the one way a digit gets transposed, so scanning is safer if the sticker's there."
+       },
+       {
+        "question": "Which bus route are you currently on?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to search for and select your current route from a dropdown to correctly identify the bus you are riding.",
+        "whatTheAgentLoses": "The user loses the certainty that the fare being purchased matches the exact bus route they are physically riding.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the screen show a dropdown for searching and selecting the current bus route?",
+        "say_example": "Selected route <711> from the dropdown"
+       },
+       {
+        "question": "Which stop did you board the bus at?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a dropdown list of source stops, requiring you to select your exact boarding location to ensure the correct route and fare.",
+        "whatTheAgentLoses": "Delegating this means the agent might guess the wrong starting stop, leaving you with an invalid ticket for your actual journey.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the screen show a dropdown of source stops for selecting where the bus was boarded?",
+        "say_example": "Selected <Main St> as the boarding stop"
+       },
+       {
+        "question": "Do the suggested route numbers match the bus you are actually on?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The user typed '2' into the route field, but the suggestions showed '724' and '932', prompting them to delete their input and type the correct route '711'.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch a typo by noticing that the app's autocomplete suggestions do not match the physical bus they are riding.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Do the route numbers the app is suggesting match the bus route the person is actually riding?",
+        "say_example": "The app suggests <route 724> or <932>. Neither is <711>. Which route are you actually on?"
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Compare the available spots",
+      "questions": [
+       {
+        "question": "Do you want to browse the available parking spots on the map or switch to the list view?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a map crowded with various price pins alongside a list icon, offering two different ways to compare the options.",
+        "whatTheAgentLoses": "You lose the ability to choose the browsing format that best helps you weigh price against walking distance.",
+        "kind": "decision",
+        "verify_form": "The agent browsed the spots on the map or in the list - check which view the choice was made from; the map shows where they are and the list shows what they cost, and neither shows both.",
+        "speak": "never",
+        "check": "Does the screen offer both a map view and a list view for browsing parking spots?",
+        "say_example": "Browsed spots in <list view>, not the map"
+       },
+       {
+        "question": "Which parking spot do you want, price and location together?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a list of nearby parking options with varying prices and distances, requiring a trade-off between cost and convenience.",
+        "whatTheAgentLoses": "You lose the ability to personally decide whether saving a few dollars is worth choosing a specific location or parking type like valet.",
+        "kind": "decision",
+        "verify_form": "The agent picked a spot - check its price against the ones nearby and how far it is to walk; $14 four blocks away and $20 next door are both reasonable answers and only you know which.",
+        "speak": "always",
+        "check": "Does the results list show more than one parking spot with different prices and different distances from the destination?",
+        "say_example": "Two options here: <14> four blocks away, or <20> right next door. Both are reasonable. Going with <the closer one> unless you'd rather save the <6>."
+       },
+       {
+        "question": "Which train do you want to check availability for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen listed multiple trains traveling from Borivali to Surat, each with its own schedule and potential seat availability.",
+        "whatTheAgentLoses": "You lose the ability to choose a specific train that best fits your preferred departure time and travel style.",
+        "kind": "decision",
+        "verify_form": "The agent opened availability on one train out of the list - check which; that is the only service whose seats are being counted.",
+        "speak": "never",
+        "check": "Does the results list show more than one train, and which one was opened to check availability?",
+        "say_example": "Checked availability on the <12:30> departure"
+       },
+       {
+        "question": "Which train and seating class do you want to book?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple trains with different departure times, seating classes, and prices, so you must choose the option that best fits your schedule and budget.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to personally balance the trade-offs between departure times, seating comfort, and ticket prices.",
+        "kind": "decision",
+        "verify_form": "The agent picked a train and a seating class from the results - check the departure time and the price together; the cheapest block on that screen is usually the least comfortable.",
+        "speak": "always",
+        "check": "Does the results list show more than one train and seating class combination at different prices?",
+        "say_example": "The cheapest seat here is <General>, but it's also the least comfortable. Going with <Sleeper> for <200> more unless you'd rather save it."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Read the spot's terms and photos",
+      "questions": [
+       {
+        "question": "Does the garage show amenities as icons that need a tap to see what they mean?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays icons for valet, wheelchair accessibility, on-site staff, and 24/7 access to help evaluate the facility.",
+        "whatTheAgentLoses": "Delegating this step means the agent might book a garage that lacks an amenity you consider essential for your visit.",
+        "kind": "decision",
+        "verify_form": "The agent booked a garage without filtering on amenities - check whether it has the ones you need; accessible parking, on-site staff and 24-hour access are each an icon that has to be tapped to read.",
+        "speak": "always",
+        "check": "Does the garage's details show amenity icons (e.g. accessible parking, on-site staff, 24/7 access) that need a tap to reveal what they mean?",
+        "say_example": "This garage lists <accessible parking> and <24-hour access> as icons. Tapped through to confirm they're actually offered."
+       },
+       {
+        "question": "Does your vehicle exceed the height limits or require an oversized vehicle fee at this specific garage?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Many parking garages have strict height clearances or mandate an extra fee for SUVs and trucks, which is usually buried in the facility details.",
+        "whatTheAgentLoses": "Delegating this means the agent might book a garage your car physically cannot enter, or you might face an unexpected surcharge at the gate.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the garage's details state a height limit or an extra fee for oversized vehicles?",
+        "say_example": "This garage adds a <15> fee for oversized vehicles. Worth knowing if that's your car."
+       },
+       {
+        "question": "Does the garage list restrictions or special instructions, like no in-and-out privileges?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays important details like a lack of in/out privileges and specific valet hours that could impact your plans.",
+        "whatTheAgentLoses": "You lose the chance to decide if specific garage rules, like not being able to enter and exit multiple times, work for your trip.",
+        "kind": "decision",
+        "verify_form": "The agent reserved a garage with restrictions attached - check them; no in-and-out privileges means leaving and coming back voids the spot you paid for.",
+        "speak": "on-event",
+        "check": "Does the garage's details list restrictions or special instructions, such as no in-and-out privileges or fixed valet hours?",
+        "say_example": "No in-and-out privileges here. Leaving and coming back would mean paying again."
+       },
+       {
+        "question": "Is the cancellation deadline for a refund on this reservation shown anywhere before you pay?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Parking reservation services often allow free cancellation up to a certain time (e.g., 1 hour before the start time), but the exact cutoff varies by garage.",
+        "whatTheAgentLoses": "You lose the opportunity to know exactly how long you have to back out of the transaction and get your money back if your trip is delayed.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the page show a cancellation deadline or refund policy for this reservation anywhere before payment?",
+        "say_example": "Free to cancel until <1 hour before your start time>. After that it's non-refundable."
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Check the live departures",
+      "questions": [
+       {
+        "question": "Should you book immediately or check the train schedules first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presented options to either proceed directly to booking or check upcoming trains.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the train schedule and ensure the timing works for them before committing to a booking.",
+        "kind": "decision",
+        "verify_form": "The agent either went straight to booking or checked the departures first - check which; the board is the only place that says whether the train you want is actually running.",
+        "speak": "never",
+        "check": "Does the screen offer a choice between booking immediately and checking train schedules first?",
+        "say_example": "Checked the schedule board first, since it's the only place that says if the train's running"
+       },
+       {
+        "question": "How far ahead do you want to search for upcoming trains?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to a 3-hour window for upcoming trains, but you can adjust this dropdown to narrow or expand your search based on when you plan to travel.",
+        "whatTheAgentLoses": "Delegating this means you lose the ability to fine-tune the search window to match your exact departure flexibility.",
+        "kind": "decision",
+        "verify_form": "The agent set how far ahead the departure board looks - check the window; two hours and eight hours give very different lists, and the default was three.",
+        "speak": "never",
+        "check": "Does the screen show a dropdown for how far ahead to search for upcoming trains, and what's it set to?",
+        "say_example": "Searched <3 hours> ahead for upcoming trains"
+       },
+       {
+        "question": "Which train do you want to check the live status for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists available trains along with their scheduled times and delay statuses, so you must select the specific one you want to track.",
+        "whatTheAgentLoses": "You lose the ability to pick exactly which train's progress and upcoming stations you want to monitor for your trip.",
+        "kind": "decision",
+        "verify_form": "The agent opened one train's live status - check which one; that is the train whose position and delay you are being shown, not necessarily the one you would board.",
+        "speak": "never",
+        "check": "Does the results list show more than one train, and which one was opened for live status?",
+        "say_example": "Checked live status on the <5:40> departure"
+       },
+       {
+        "question": "Do you want to check the live status of the train to see if it is running on time?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays the train's current movement and actual versus scheduled arrival times, which helps you verify if it fits your schedule.",
+        "whatTheAgentLoses": "You lose the opportunity to review the train's real-time progress and decide for yourself if any current delays are acceptable before booking.",
+        "kind": "decision",
+        "verify_form": "The agent either read the train's running status or skipped it - check whether it did; a delay on that screen is the difference between catching this service and waiting for the next.",
+        "speak": "always",
+        "check": "Does the live-status page show whether the train is running on time or delayed?",
+        "say_example": "Live status shows the <5:40> running <12 minutes> late."
+       },
+       {
+        "question": "Does the reported delay time in the summary match the calculated difference between the scheduled and actual departure times?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The summary panel reports a two-minute delay, but the scheduled and actual departure times for the station only show a one-minute difference.",
+        "whatTheAgentLoses": "The user loses an accurate understanding of their transit schedule if an agent relies on a summary delay that contradicts the detailed timeline.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the summary's reported delay match the difference between the scheduled and actual departure times shown elsewhere on the page?",
+        "say_example": "The summary says a <2-minute> delay, but the times shown are only <1 minute> apart."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Identify the car or traveller",
+    "note": "4.1 in the parking half, where the thing identified is a car and A2Q cannot pick a duration until it exists. 4.2 and 4.3 in the transit half, where it is a headcount. 4.4 where a class, a quota or a concession depends on who is travelling. 4.5 only for the two government products, which prove identity before they sell anything. 4.6 and 4.7 for the pass application, which wants a photo and a full set of the applicant's own details. Otk8, Kj30 and jakd identify nobody at all - Kj30's bay number does the same job in 3.2.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Add the vehicle",
+      "questions": [
+       {
+        "question": "Does the screen ask for vehicle details before you can continue?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app explicitly states that a vehicle is required for this zone and provides an '[name]' button to continue.",
+        "whatTheAgentLoses": "The person loses the ability to verify that the correct license plate is registered, which could result in a parking citation if the agent makes a mistake.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the screen require entering vehicle details, with a button to proceed?",
+        "say_example": "Entered vehicle details"
+       },
+       {
+        "question": "Does the form ask for a license plate, state, and nickname, not a car model?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The narrator states the app requires the vehicle's model, but the on-screen form only asks for the license plate, state, and a nickname.",
+        "whatTheAgentLoses": "An agent relying on the audio instructions might fail the task by searching for a non-existent vehicle model field.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the vehicle-add form actually ask for a license plate, state, and nickname, rather than the model?",
+        "say_example": "This form wants your plate, state, and a nickname. It's not asking for the car's make or model."
+       },
+       {
+        "question": "Should you set this new vehicle as your default for future parking sessions?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The 'Add Vehicle' form includes a 'Default Vehicle' toggle, which determines if this car is automatically selected the next time you park.",
+        "whatTheAgentLoses": "You lose the convenience of having your primary car auto-selected, or conversely, you might accidentally make a temporary rental car your default.",
+        "kind": "decision",
+        "verify_form": "The agent set the Default Vehicle switch on the car it just added - check whether it is on; a default plate is the one that gets preselected next time, including for a rental.",
+        "speak": "never",
+        "check": "Does the 'Add Vehicle' form show a 'Default Vehicle' toggle, and is it on?",
+        "say_example": "Left this car set as <the default vehicle> for next time"
+       },
+       {
+        "question": "Is the pre-selected plate the car you're driving today?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Parking apps often default to the last used vehicle, which could be a rental or a family member's car, leading to a ticket if you parked a different vehicle.",
+        "whatTheAgentLoses": "You lose the chance to catch a default selection error that would result in paying for the wrong car and getting a parking citation.",
+        "kind": "intent-check",
+        "speak": "gate",
+        "check": "Does the app show a pre-selected or default license plate?",
+        "say_example": "The app has <a plate> preselected. Is that the car you're driving right now, or a different one?"
+       },
+       {
+        "question": "Does the active session show the plate of the car you're actually parked in?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If a user has multiple cars or a rental, they might have accidentally paid for a session under the wrong license plate, which means the current car is illegally parked.",
+        "whatTheAgentLoses": "The user loses the chance to immediately notice the error and start a new session for the correct car before a parking enforcement officer arrives.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Does the active session's confirmation show the same license plate as the vehicle currently parked?",
+        "say_example": "The active session lists <a different plate> than the one on the car you're parked in."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Set the passenger counts",
+      "questions": [
+       {
+        "question": "How many adult passengers are traveling?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays an 'Adult' counter with plus and minus buttons to adjust the number of tickets being purchased.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact number of people needing a fare for this trip.",
+        "kind": "decision",
+        "verify_form": "The agent set the adult count - check the number against how many of you are travelling; each extra adult is a full fare and each missing one is a passenger without a ticket.",
+        "speak": "on-event",
+        "check": "Does the screen show an adult-passenger counter, and what is it set to?",
+        "say_example": "Set adult passengers to <2>. Check that against how many are actually travelling."
+       },
+       {
+        "question": "Do you need to purchase any fares for children aged 5 to 12?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides a specific fare selector for children aged 5 to 12, which is required to ensure all passengers have the correct ticket.",
+        "whatTheAgentLoses": "The user loses the ability to specify exactly how many qualifying children are traveling with them.",
+        "kind": "decision",
+        "verify_form": "The agent set the child count - check it, and check their ages against the concession band printed beside the field; a child above the band needs an adult fare.",
+        "speak": "on-event",
+        "check": "Does the screen show a fare selector for children aged 5 to 12, and is it set correctly?",
+        "say_example": "There's a child fare band here for ages <5 to 12>. A child older than that needs an adult fare instead."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Choose how many tickets",
+      "questions": [
+       {
+        "question": "How many tickets do you want to book?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen asked how many tickets to book, offering options for 1, 2, or more up to a maximum of 6.",
+        "whatTheAgentLoses": "The person loses the ability to specify the exact number of tickets they need for their group.",
+        "kind": "decision",
+        "verify_form": "The agent set the number of tickets - check it against how many of you are travelling; the operator caps it at six and the price multiplies.",
+        "speak": "on-event",
+        "check": "Does the screen show a ticket-count selector capped at a maximum, and what is it set to?",
+        "say_example": "Set ticket count to <2>. The price multiplies by that number, and the cap here is <6>."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Pick the traveller and concession",
+      "questions": [
+       {
+        "question": "Which passenger details should I save to speed up future bookings?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen provides fields for name, date of birth, and travel preferences to create a saved passenger profile for faster checkout.",
+        "whatTheAgentLoses": "Delegating this means you lose control over which of your personal details and travel preferences are permanently stored in the app.",
+        "kind": "decision",
+        "verify_form": "The agent saved a passenger record - check what went into it; a saved passenger carries a date of birth, a berth preference and an ID, and it stays in the account afterwards.",
+        "speak": "on-event",
+        "check": "Does the screen offer to save passenger details (name, date of birth, travel preferences) as a profile for future bookings?",
+        "say_example": "This would save <name, date of birth and an ID> to your account for next time. That stays on file after today."
+       },
+       {
+        "question": "Which concession category do you qualify for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple specialized pass types, such as Senior Citizen or Student, which require specific eligibility.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a pass type you do not qualify for or miss a discount you are entitled to.",
+        "kind": "intent-check",
+        "speak": "on-event",
+        "check": "Does the screen list more than one concessional pass category (e.g. senior, student) to choose from?",
+        "say_example": "Going with <the student> concession. Say if a different category actually fits."
+       },
+       {
+        "question": "Do you need a general or a concessional bus pass?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires selecting a pass category from a dropdown menu before proceeding.",
+        "whatTheAgentLoses": "An agent might select a general pass by default, potentially causing you to miss out on a discounted concessional fare you qualify for.",
+        "kind": "decision",
+        "verify_form": "The agent chose a general or a concessional pass - check which; a concession is cheaper and needs proof, and a general pass is what gets taken when nobody looks.",
+        "speak": "on-event",
+        "check": "Does the form offer a choice between a general and a concessional bus pass category?",
+        "say_example": "Going with <the concessional> pass. It's cheaper but needs proof, and a general pass is the one nobody checks."
+       },
+       {
+        "question": "Is travel insurance already checked here, so it adds to the fare unless you remove it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires you to add passenger details to proceed and includes a pre-checked option for travel insurance that will affect your final price.",
+        "whatTheAgentLoses": "You lose the chance to opt out of the extra travel insurance fee and ensure the correct passenger profile is used for the ticket.",
+        "kind": "decision",
+        "verify_form": "The agent added a passenger and left the travel insurance box as it found it - check both; the insurance box is ticked by default and it adds to the fare.",
+        "speak": "on-event",
+        "check": "Is the travel insurance add-on already checked by default, adding to the fare unless it's removed?",
+        "say_example": "Travel insurance was already checked here, adding <8> to the fare. Taking it off unless you want it."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Prove your identity",
+      "note": "4.5.1 then 4.5.2, and 4.5.3 once for each thing being proved - Gj7O runs it twice, first for the phone and then for the ID. 4.5.4 is how the site says it worked. only zUyS, Gj7O and 4bhQ reach this goal, and for Gj7O it is the whole task.",
+      "children": [
+       {
+        "id": "4.5.1",
+        "label": "Pick the ID document",
+        "questions": [
+         {
+          "question": "Which type of ID do you want to use for verification?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires selecting an identification document type from a dropdown menu to proceed with the booking.",
+          "whatTheAgentLoses": "Delegating this choice means the agent might select an ID type that you do not have readily available or prefer not to share.",
+          "kind": "decision",
+          "verify_form": "The agent picked which ID document to verify with - check which; the list also holds a licence, a passport and a voter card, and they are not equally private.",
+          "speak": "on-event",
+          "check": "Does the ID-type dropdown offer more than one document (e.g. licence, passport, voter card)?",
+          "say_example": "You can verify with a licence, a passport, or a voter card. Going with <the licence>, since it's the least revealing of what's offered."
+         }
+        ]
+       },
+       {
+        "id": "4.5.2",
+        "label": "Enter the ID and consent",
+        "questions": [
+         {
+          "question": "Do you want to give your Aadhaar number here, with sharing already checked?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires your Aadhaar number and explicit agreement to share your details with the Delhi Transport Corporation for an eligibility check.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to share your sensitive national identity number and accept the specific data sharing terms.",
+          "kind": "decision",
+          "verify_form": "The agent entered your national ID number and ticked the consent box beside it - check what the consent covers; it authorises sharing your verification result with the transport operator, and it was already ticked.",
+          "speak": "gate",
+          "check": "Does the form require a national ID number and show a consent checkbox for sharing those details, and is that checkbox already checked?",
+          "say_example": "This wants your <national ID number>, and the box sharing it with <the transport operator> is already checked. OK to go ahead?"
+         },
+         {
+          "question": "Is your Aadhaar Card number formatted correctly?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The input field displayed a red warning stating the Aadhaar Card must be 12 digits long before the verify link appeared.",
+          "whatTheAgentLoses": "The user loses the assurance that their sensitive government ID was entered accurately and securely.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Does the page show a warning that the ID number entered isn't the required length or format?",
+          "say_example": "That ID number needs to be <12 digits>. It's short, so I can't submit it yet."
+         }
+        ]
+       },
+       {
+        "id": "4.5.3",
+        "label": "Enter the one-time code",
+        "questions": [
+         {
+          "question": "Which name and mobile number should you enter for the verification step?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The form requires a customer name and mobile number to send an OTP for the Pink Saheli Smart Card verification.",
+          "whatTheAgentLoses": "The user loses the ability to ensure the entered name and phone number exactly match their official identification documents.",
+          "kind": "intent-check",
+          "speak": "never",
+          "check": "Does the form ask for a name and mobile number to send a verification code?",
+          "say_example": "Entered <a name> and <a mobile number> for the verification code"
+         },
+         {
+          "question": "Is the one-time code something you should type in yourself, not read out to me?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen requires a 4-digit OTP sent to your mobile number to verify your identity and continue the smart card journey.",
+          "whatTheAgentLoses": "Delegating this step means the agent cannot proceed without real-time access to your personal text messages to retrieve the verification code.",
+          "kind": "intent-check",
+          "speak": "gate",
+          "check": "Does the page show a one-time verification code field, with the code sent only to the person's own phone?",
+          "say_example": "The code just went to your phone. Type it in yourself. I can't see it, and it shouldn't be read out to me."
+         },
+         {
+          "question": "Does the page say the code you entered was wrong?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen prompts for a 6-digit OTP sent to your Aadhaar-linked mobile number to verify your identity.",
+          "whatTheAgentLoses": "You lose control over your sensitive Aadhaar-linked OTP, which is a security risk if shared with a third-party agent.",
+          "kind": "intent-check",
+          "speak": "if-wrong",
+          "check": "Does the page show an error that the OTP entered was incorrect?",
+          "say_example": "That code came back wrong. The page is asking for it again."
+         },
+         {
+          "question": "Is the identity-verification screen actually showing, rather than a blank page?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "This matters because the expected mobile verification flow is contradicted by the screen showing a blank page with an about:blank URL.",
+          "whatTheAgentLoses": "A person delegating to an agent loses the assurance that their account was properly authenticated if the agent hallucinates completing a step on a broken page.",
+          "kind": "state-check",
+          "speak": "on-event",
+          "check": "Does the page show a blank screen or an about:blank address instead of the identity-verification form?",
+          "say_example": "This came up blank instead of the verification form. Reloading it."
+         },
+         {
+          "question": "Are you verifying an Aadhaar number or a mobile account?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen shows 'Step 2 of 5' and 'Verify Mobi' rather than the expected Aadhaar OTP prompt.",
+          "whatTheAgentLoses": "The user loses the ability to know exactly which identity or payment method is being verified for the transaction.",
+          "kind": "state-check",
+          "speak": "on-event",
+          "check": "Does the verification screen's heading name a national ID or a mobile number as what's being verified?",
+          "say_example": "This step says it's verifying <a mobile number>, not the ID number expected here."
+         }
+        ]
+       },
+       {
+        "id": "4.5.4",
+        "label": "Confirm the check passed",
+        "questions": [
+         {
+          "question": "Does the profile screen show a percentage and push you to finish ID authentication?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The profile section shows an 80% completion status and prompts for Aadhaar authentication to prevent future account issues.",
+          "whatTheAgentLoses": "Delegating this step means you lose control over whether and how your sensitive government ID is used to verify the account.",
+          "kind": "decision",
+          "verify_form": "The agent either ran the identity check on your profile or skipped it - check whether your government ID has been submitted; that is not something to hand over by default.",
+          "speak": "on-event",
+          "check": "Does the profile screen show a completion percentage and prompt to finish optional ID authentication?",
+          "say_example": "Your profile is at <80%> and it's nudging you to submit ID authentication. That's not something to hand over just to clear a percentage."
+         },
+         {
+          "question": "Does your profile completion status update to 100% after finishing the Aadhaar authentication?",
+          "cluster": "receipts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "Comparing the before and after screens confirms that the app successfully registered your identity verification.",
+          "whatTheAgentLoses": "You lose the reassurance of seeing your profile reach fully verified status after submitting sensitive identity documents.",
+          "kind": "state-check",
+          "speak": "never",
+          "check": "Does the profile completion status show 100% after finishing the ID authentication?",
+          "say_example": "Finished ID authentication - profile now shows <100%>"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Upload a photo that passes",
+      "questions": [
+       {
+        "question": "Does your uploaded photo meet the size and style guidelines?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires a passport-style photo between 20kb and 50kb and provides visual examples of acceptable and unacceptable images.",
+        "whatTheAgentLoses": "You lose the ability to choose which specific personal photo represents you on your transit pass.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the uploaded photo fall within the stated size range and match the passport-style visual examples shown?",
+        "say_example": "The photo's <42kb>, inside the <20-50kb> range, and matches the style examples shown."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Enter the applicant's details",
+      "questions": [
+       {
+        "question": "Which region are you parking or traveling in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires you to select a specific region, such as Delhi or NCR, to locate the correct parking zones or transit options.",
+        "whatTheAgentLoses": "You lose the ability to ensure the parking or transit fare is booked for your actual geographic location.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the screen show a region selector (e.g. city or metro area) for finding zones or transit options?",
+        "say_example": "Set the region to <the city's own transit zone>"
+       },
+       {
+        "question": "What personal details should you provide for the applicant?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires a name, father's name, date of birth, and gender to register the pass.",
+        "whatTheAgentLoses": "The user loses the ability to ensure their actual identity and demographic details are correctly attached to the transit fare.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the form ask for name, parent's name, date of birth, and gender to register the pass?",
+        "say_example": "Filled in the applicant's personal details"
+       },
+       {
+        "question": "What contact and address details will you provide?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The form requires a communication address, city, pincode, region, email, and mobile number to proceed with the booking.",
+        "whatTheAgentLoses": "You lose the ability to ensure your actual contact and billing address are used rather than placeholder or incorrect data.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the form ask for a communication address, city, postal code, region, email, and mobile number?",
+        "say_example": "Filled in contact and address details"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Set the duration or fare",
+    "note": "5.1 in the parking half, where the bound is a length of time against a posted ceiling, and Kj30 runs it a second time from goal 9 to extend. 5.2 where a start and an end are set separately instead of a length. 5.3 in the transit half, where the bound is which product rather than how long. 5.4 where the class or the train changes the price. 5.5 wherever a date decides when travel happens - a pass's start date, or a journey's departure day. 5.6 for the stored-value case, which has no place and no clock at all.",
+    "questions": [
+     {
+      "question": "What ticket type and travel class do you need for this journey?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen requires selecting the train type, ticket type, class, and passenger count to calculate the correct fare.",
+      "whatTheAgentLoses": "You lose the ability to specify your preferred travel class and exact passenger count, which could result in purchasing the wrong tickets.",
+      "kind": "decision",
+      "verify_form": "The agent set the ticket type, the class and the passenger count on this form - check all three; they are what the fare is calculated from and none of them is confirmed later.",
+      "speak": "on-event",
+      "check": "What ticket type, travel class, and passenger count does the booking form currently show as selected?",
+      "say_example": "I'm picking <Economy> class and a <single> ticket for this trip."
+     }
+    ],
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Set the parking duration",
+      "questions": [
+       {
+        "question": "How long do you need to park?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires you to set a specific parking duration that falls under the zone's 10-hour maximum limit.",
+        "whatTheAgentLoses": "Delegating this means the agent must guess how long your real-world plans will take, which could result in overpaying or risking a parking ticket.",
+        "kind": "decision",
+        "verify_form": "The agent set the parking duration - check it against how long you will really be away, and against the zone's stated maximum; the session ends at that time whether you are back or not.",
+        "speak": "gate",
+        "check": "Does the page ask for a parking duration, and does it state a maximum allowed duration?",
+        "say_example": "How long do you need to park? The session ends at that time whether you're back or not, and I can't guess it."
+       }
+      ]
+     },
+     {
+      "id": "5.2",
+      "label": "Set the start and end times",
+      "questions": [
+       {
+        "question": "Do you need to adjust the parking time window before selecting a spot?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The map displays parking options and a $20 price based on the currently selected time of 9:30 AM to 12:30 PM, which must match your actual schedule.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to ensure the parking reservation exactly matches the hours you will actually need the spot.",
+        "kind": "decision",
+        "verify_form": "The agent set the parking window before the spots were priced - check the start and end times; every price on that list is for those hours and nothing else.",
+        "speak": "gate",
+        "check": "Does the page show a start and end time selector for parking, and does it price spots based on that window?",
+        "say_example": "What time should parking start and end? Every price on the next screen only holds for that window."
+       },
+       {
+        "question": "Are the selected start and end times correctly set to AM or PM?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Time selectors often use small toggles or scroll wheels for AM/PM that are easy to overlook, resulting in booking parking for the middle of the night instead of the day.",
+        "whatTheAgentLoses": "The agent might book parking for 2:00 AM instead of 2:00 PM, leaving the vehicle illegally parked during the day.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Are the selected start and end times AM or PM, and would that combination put the parking window overnight rather than during the day the task asked for?",
+        "say_example": "The window reads <9:30 PM> to <12:30 AM>, not daytime. That books parking for the middle of the night."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Choose the fare type",
+      "questions": [
+       {
+        "question": "Do you need a single journey or a return ticket?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires selecting a ticket type, offering \"JOURNEY\" for a one-way trip and \"RETURN\" for a round trip.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to purchase your return trip upfront or handle it later.",
+        "kind": "decision",
+        "verify_form": "The agent bought a one-way or a return - check which; a return is cheaper than two singles and it also fixes you to coming back on this ticket.",
+        "speak": "on-event",
+        "check": "Does the ticket-type selector show JOURNEY (one-way) or RETURN currently chosen?",
+        "say_example": "I picked a <return> ticket, not a single. A return costs less, but it also locks you into coming back on it."
+       },
+       {
+        "question": "Which bus route or pass type do you need?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dropdown lists several pass options, including general AC or non-AC passes and specific routes like Delhi to Gurgaon, which dictate where you can travel.",
+        "whatTheAgentLoses": "You lose the ability to ensure the purchased pass covers your exact commuting route and preferred bus type.",
+        "kind": "decision",
+        "verify_form": "The agent picked which route the pass covers - check it against where you actually commute; an all-route pass and a named city-to-city pass are different prices for different freedoms.",
+        "speak": "on-event",
+        "check": "Which specific route or pass type does the dropdown currently show selected?",
+        "say_example": "I'm picking the <Delhi to Gurgaon> pass, not the all-route one. That fixes where you can ride."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Choose the class or train type",
+      "questions": [
+       {
+        "question": "Which type of train are you booking a ticket for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The app requires you to select between ordinary, mail/express, or superfast trains to determine the correct fare.",
+        "whatTheAgentLoses": "You lose the ability to choose the specific train service type that fits your travel schedule and budget.",
+        "kind": "decision",
+        "verify_form": "The agent set the train type - check whether it is ordinary, express or superfast; the same two stations cost about three times as much on an express as on an ordinary train.",
+        "speak": "on-event",
+        "check": "Does the page show the train type as ordinary, mail/express, or superfast?",
+        "say_example": "This train is <ordinary>, not express. The same ride on an express train can cost about three times as much."
+       },
+       {
+        "question": "Which train class and ticket quota do you want to select?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists specific train classes like 'SL' and quotas like 'Tatkal' that determine your seating type and ticket availability.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might select a ticket class or quota that does not match your travel needs or eligibility.",
+        "kind": "decision",
+        "verify_form": "The agent set a travel class and a quota - check both; the quota decides whether the ticket is available at all, and the class decides what you sit in.",
+        "speak": "on-event",
+        "check": "What travel class and quota does the page currently show selected?",
+        "say_example": "I set the class to <SL> and the quota to <Tatkal>. The quota decides whether a seat is even available."
+       },
+       {
+        "question": "What type of train are you taking, and is the default the one you want?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen defaults to an ordinary train and one adult journey, so you must select the correct train type and passenger count for your specific trip.",
+        "whatTheAgentLoses": "You lose the ability to specify the exact type of train you are boarding, which could result in purchasing an invalid fare for your journey.",
+        "kind": "decision",
+        "verify_form": "The agent set a train type and left the passenger counts at their defaults - check both; the form opens on one adult and an ordinary train, and both are easy to leave alone.",
+        "speak": "if-wrong",
+        "check": "Does the form still show the default train type (ordinary) and default passenger count (one adult) unchanged?",
+        "say_example": "The form still shows <ordinary> train and <one adult>, both left at their defaults. Neither got changed for this trip."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Set the dates it covers",
+      "questions": [
+       {
+        "question": "Which departure date do you want to select for this search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a saved preferences menu with specific departure date options like July 5th through July 8th.",
+        "whatTheAgentLoses": "You lose control over specifying the exact day you need the parking or transit fare.",
+        "kind": "decision",
+        "verify_form": "The agent set the departure date - check the day it chose; the search only returns trains for that date and the fare is fixed to it.",
+        "speak": "never",
+        "check": "What departure date does the search currently show selected?",
+        "say_example": "Set departure date to <July 6>"
+       },
+       {
+        "question": "When do you want the bus pass to start?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The calendar widget requires a specific 'From Date' to determine exactly when your transit fare becomes active.",
+        "whatTheAgentLoses": "Delegating this means the agent might select a start date that does not align with your actual travel schedule.",
+        "kind": "decision",
+        "verify_form": "The agent set the date the pass starts - check it; the pass is dead time until then and the months run from that day.",
+        "speak": "never",
+        "check": "What 'From Date' does the bus pass calendar currently show selected?",
+        "say_example": "Set pass start date to <July 6>"
+       },
+       {
+        "question": "How many months should the pass be valid for?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen requires selecting the duration of the pass from a dropdown menu offering one or two months.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might purchase a pass for the wrong duration, potentially wasting your money or leaving you without coverage.",
+        "kind": "decision",
+        "verify_form": "The agent set how many months the pass runs - check the number; one month and two are the options and the end date is computed from whichever it took.",
+        "speak": "gate",
+        "check": "Does the page ask how many months the pass should run, and does it show the price for each option?",
+        "say_example": "How many months should this pass cover, one or two? Two months costs about twice as much, and only you know which you need."
+       },
+       {
+        "question": "Are the calculated end date and total price correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen auto-populated an end date of 24/2/2021 and an amount of 1500, which dictates the final charge and exact parking duration.",
+        "whatTheAgentLoses": "The user loses the chance to verify that the system's calculated duration and cost align with their actual parking needs and budget before paying.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the auto-populated end date and total price match what would follow from the chosen start date and duration?",
+        "say_example": "The form now shows an end date of <Feb 24> and a total of <1500>. That doesn't match a <1-month> pass starting <Jan 24>."
+       },
+       {
+        "question": "Do you want your season ticket to start from the current date or the next date?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Unreserved E-Ticket screen for a Season pass requires choosing between 'Next Date' and 'Current Date' to determine when the pass becomes valid.",
+        "whatTheAgentLoses": "Delegating this choice means the agent might start the season ticket immediately when you actually needed it to begin the following day, wasting a day of validity.",
+        "kind": "decision",
+        "verify_form": "The agent set the season ticket to start today or tomorrow - check which; starting it today spends a day of validity you may not need.",
+        "speak": "on-event",
+        "check": "Does the season-ticket form offer 'Current Date' and 'Next Date' as start options, and which is selected?",
+        "say_example": "I set the season ticket to start <tomorrow>, not today. Starting it today would spend a day you might not need."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Choose the top-up amount",
+      "questions": [
+       {
+        "question": "How much money do you want to add to your balance, and which payment method should I use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen requires selecting a specific top-up amount, such as $10 or $20, and choosing between payment methods like a saved DBS card or EZ-Link Wallet.",
+        "whatTheAgentLoses": "The user loses the ability to control exactly how much money is tied up in their transit balance and which specific financial account is charged.",
+        "kind": "decision",
+        "verify_form": "The agent set a top-up amount and a payment method - check both; the amount sits on the card until it is spent, and the method is whichever card was already saved.",
+        "speak": "on-event",
+        "check": "What top-up amount and payment method does the page currently show selected?",
+        "say_example": "I'm adding <$10> to your balance, paid with your <saved card>. That money sits on the card until you spend it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Read what it costs",
+    "note": "6.1 wherever a price first appears. 6.2 where the total is broken into parts, which is the two meter apps and the bus pass. 6.3 whenever the paying screen's number is not the number the last screen showed - five keepers, and none of them reacts. 6.4 where a discount or a promo is on offer; it is taken in two keepers and skipped in two. 6.5 in every keeper that has a summary screen at all.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Read the fare",
+      "questions": [
+       {
+        "question": "Does the page show an alert for special event or surge pricing here?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Garages near stadiums or downtown areas often switch to flat event rates that are significantly higher than normal hourly rates.",
+        "whatTheAgentLoses": "The user loses the chance to reject an unexpectedly high parking fee caused by a nearby event they might not even be attending.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the page show an alert for special event pricing or surge rates at this location?",
+        "say_example": "There's an event-pricing alert on this garage. The rate on screen right now may not be the normal hourly rate."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Read the fee breakdown",
+      "questions": [
+       {
+        "question": "Do you accept the final total, including the extra delivery charge for the printed pass?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The payment details screen shows an extra 33.00 delivery charge added to the 1500.00 base fare because a printed pass was selected.",
+        "whatTheAgentLoses": "The user loses the chance to review the final cost breakdown and decide if the extra fee for physical delivery is acceptable.",
+        "kind": "decision",
+        "verify_form": "The agent accepted a total that includes a delivery charge - check the charge; it is there because a printed pass was chosen and it disappears if an electronic one is.",
+        "speak": "on-event",
+        "check": "Does the payment details screen add a delivery charge to the base fare, and is that charge tied to choosing a printed pass over an electronic one?",
+        "say_example": "The total now includes a <$33> delivery charge for the printed pass. Choosing the electronic pass instead would drop that charge."
+       },
+       {
+        "question": "Does the checkout screen show the total, and does it name the transaction fee inside it?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The analyst claimed the checkout screen showed a $2.35 total with a $0.35 fee, but the video frames do not actually show this information.",
+        "whatTheAgentLoses": "The user loses the ability to verify the exact base rate and transaction fees before payment if the agent hallucinates checkout details.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the checkout screen actually display a total amount, and does it name a transaction fee within that total?",
+        "say_example": "The checkout screen doesn't actually show a fee amount anywhere, even though one should be named here before you pay."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Check the total against earlier screens",
+      "questions": [
+       {
+        "question": "Does a banner say no ticket is needed for these dates, while the purchase still continues?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays a warning banner stating that no tickets are required through 9/30/22 due to Fare Free September, making a purchase unnecessary.",
+        "whatTheAgentLoses": "The user loses money by paying for a transit fare during a period when rides are completely free.",
+        "kind": "decision",
+        "verify_form": "The agent went ahead and bought a ticket while a banner said none was required - check the banner's dates; if it covers today the fare you just paid was not owed.",
+        "speak": "on-event",
+        "check": "Does a banner say no ticket or fare is required for the current dates, and is the purchase still proceeding?",
+        "say_example": "A banner says no ticket is needed through <Sept 30> for Fare Free September. This purchase may not be required at all."
+       },
+       {
+        "question": "Does the total fare on the review screen match the price you initially selected?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The availability screen showed a fare of ₹ 430, but the review screen listed a total of ₹ 441.80, revealing an unexpected markup.",
+        "whatTheAgentLoses": "The user loses the chance to notice and reject hidden fees added right before payment.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the total fare on the review screen match the fare shown on the earlier availability screen?",
+        "say_example": "The fare was <₹430> on the search screen but <₹441.80> on this review screen. Nothing on screen explains the jump."
+       },
+       {
+        "question": "Does the total amount charged match the base fare plus the delivery fee?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Checking the math ensures the 1533.00 total at the payment gateway correctly reflects the 1500 base amount and 33.00 delivery charge shown earlier.",
+        "whatTheAgentLoses": "You lose the opportunity to catch hidden fees or calculation errors before the payment is finalized.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the total charged at the gateway equal the base fare plus the delivery fee shown earlier?",
+        "say_example": "The total charged is <1550>, but the base fare of <1500> plus the <33> delivery charge only add up to <1533>."
+       },
+       {
+        "question": "Are you being charged for a fare that is advertised as free?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "A banner states that no tickets are required for Fare Free September, but the checkout screen still charges $5.00.",
+        "whatTheAgentLoses": "The user loses money by paying for a transit fare that they were entitled to use for free.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does a banner say no fare is required for the current dates, while the checkout screen still charges an amount?",
+        "say_example": "The banner says no fare is needed through <Sept 30>, but checkout is still charging <$5>."
+       },
+       {
+        "question": "Does the amount asked for here match what an earlier payment screen showed?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The payment amount unexpectedly increased from ₹24 to ₹32 between the two screens without a booking summary to explain the change.",
+        "whatTheAgentLoses": "The user loses the opportunity to question or reject an unexpected price increase before the transaction is finalized.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the payment amount on this screen match the amount shown on the previous payment screen?",
+        "say_example": "The last screen showed <₹24>, and this one now asks for <₹32>. Nothing on screen explains the jump."
+       },
+       {
+        "question": "Does the final ticket match the total amount charged during payment?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The payment screen showed a total charge of ₹30.64 including a convenience fee, but the final generated ticket only displays the ₹30.00 base fare.",
+        "whatTheAgentLoses": "The user loses the ability to accurately track or expense the full cost of the transaction if the agent does not report the unreceipted fees.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the amount shown on the final ticket match the total charged during payment, including any convenience fee?",
+        "say_example": "Payment charged <₹30.64> with a convenience fee included, but the ticket itself only shows <₹30.00>."
+       },
+       {
+        "question": "Does the time on the final parking pass match the time you originally searched for?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The search filter was set for 12:00 PM to 5:00 PM, but the details page and final pass booked the spot until 6:00 PM.",
+        "whatTheAgentLoses": "The user ends up paying for an extra hour of parking they did not request because the agent failed to verify the final booking times against the initial search.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the time window on the final parking pass match the time window originally searched for?",
+        "say_example": "You searched for parking until <5:00 PM>, but this pass runs until <6:00 PM>."
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Look for a discount",
+      "questions": [
+       {
+        "question": "Do you have a promo code to apply to this parking reservation?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout screen provides a 'Have a promo code?' link that allows you to reduce the final price.",
+        "whatTheAgentLoses": "You lose the opportunity to apply a discount and save money on your parking session.",
+        "kind": "decision",
+        "verify_form": "The agent left the promo-code field empty - check whether you have one; the link is on the confirm screen and it is the only discount this booking offers.",
+        "speak": "on-event",
+        "check": "Does the checkout screen show a 'have a promo code?' link or field?",
+        "say_example": "There's a promo code box on this screen, still empty. I'll leave it blank unless you have one."
+       },
+       {
+        "question": "Did the app apply the expected 10% discount to your fare before payment?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout screen shows a base fare of ₹15.0 crossed out with a 10% discount applied, bringing the payable amount to ₹13.5.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify that they are receiving the advertised discount on their transit fare before finalizing the payment.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the checkout screen show the discounted fare as exactly 10% below the crossed-out base fare?",
+        "say_example": "The discount promised <10%> off, but <₹15.0> only dropped to <₹14.5>, not the <₹13.5> that would be a real 10%."
+       },
+       {
+        "question": "Does the updated wallet balance match the starting balance plus the cashback?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Checking the math ensures that the $0.50 cashback was actually credited to your initial $0.00 EZ-Link Wallet balance.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the app's accounting is accurate and your funds were correctly updated.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the updated wallet balance equal the balance before the top-up plus the cashback amount promised?",
+        "say_example": "The wallet started at <$0.00> and now shows <$0.30>, not the <$0.50> cashback that was promised."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Review the order before paying",
+      "questions": [
+       {
+        "question": "Are the previewed pass details and personal information correct?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The preview page lists all your entered data, including the pass type and your personal details, so you can verify everything is accurate before checking the confirmation box.",
+        "whatTheAgentLoses": "You lose the opportunity to review your personal information and pass details to ensure they are correct before finalizing the application.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the preview page list the pass type and the personal details entered for this application?",
+        "say_example": "The preview lists your pass type and your personal details together on one screen, right before you confirm."
+       },
+       {
+        "question": "Are the parking details and total fees correct before you start the session?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Reviewing the zone, space number, duration, and total fee ensures you are paying the right amount for the correct spot.",
+        "whatTheAgentLoses": "You lose the chance to catch errors in the location or unexpected convenience fees before the payment is processed.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the review screen show the zone, space number, duration, and total fee together before starting the session?",
+        "say_example": "This review shows <Zone 4412>, <2 hours>, and a total of <$18>. That's everything charged before you pay."
+       },
+       {
+        "question": "Is travel insurance already checked here, adding its cost to the fare?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows an optional travel insurance checkbox and a final fare of ₹ 441.80 that must be reviewed before booking.",
+        "whatTheAgentLoses": "You lose the ability to decide whether the extra cost of travel insurance is worth it for this specific trip.",
+        "kind": "decision",
+        "verify_form": "The agent accepted the travel insurance that was already ticked - check whether you want it; it is part of the total on the review screen and nothing else says it is optional.",
+        "speak": "on-event",
+        "check": "Is a travel insurance option shown as already checked, and is its cost folded into the final fare?",
+        "say_example": "Travel insurance is already checked and added to the total. Nothing on this screen says it's optional."
+       },
+       {
+        "question": "Is the total amount correct and the right payment method selected before paying?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows an order summary for 1533.00 INR and prompts for a UPI ID, which is the final review step before authorizing the transaction.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to verify the final charge amount and ensure your preferred payment method is used.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the order summary show the total amount and prompt for a payment method together on this screen?",
+        "say_example": "The order comes to <1533.00>, and it's asking for a UPI ID to pay with. Both are on this one screen."
+       },
+       {
+        "question": "Are the trip details, such as the destination stop, correct before you complete the payment?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The Complete Payment screen displays the selected route, such as 'Lajwanti Garden -> Shastri Bazar', giving you a final chance to verify the destination before being charged.",
+        "whatTheAgentLoses": "You lose the opportunity to catch and correct an incorrect destination before your money is spent on the wrong transit fare.",
+        "kind": "intent-check",
+        "speak": "always",
+        "check": "Does the Complete Payment screen show the selected route before the payment is charged?",
+        "say_example": "This screen shows the trip going from <Maple Street> to <Oak Avenue>. That's your last look before paying."
+       },
+       {
+        "question": "Are the trip details and fare right before you pay?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The booking summary card displays the departure, destination, ticket type, date, passengers, and total fare, which must be verified before clicking the pay button.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the exact trip details and fare amount before committing to the payment.",
+        "kind": "intent-check",
+        "speak": "always",
+        "check": "Does the booking summary show departure, destination, ticket type, date, passenger count, and total fare together before the pay button?",
+        "say_example": "The summary shows <2 passengers>, <Economy>, and a total of <₹500> for this trip, all before payment."
+       },
+       {
+        "question": "Is the option to automatically reload your transit wallet or extend your parking session pre-selected?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Payment screens often include a small, pre-checked visual toggle to auto-reload funds when the balance drops, which might not be explicitly stated in the total.",
+        "whatTheAgentLoses": "The user might incur unexpected future charges because the agent failed to uncheck a subtle visual opt-in.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Is there a toggle for auto-reloading the transit wallet or auto-extending the parking session, and is it shown pre-selected?",
+        "say_example": "There's a small toggle here for auto-reloading your balance, and it's already switched on."
+       },
+       {
+        "question": "Is the maximum hold that could be placed on your card disclosed anywhere before you start this open-ended session?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When starting a meter session where you manually stop the clock later, the app often authorizes a maximum charge upfront before settling the actual amount.",
+        "whatTheAgentLoses": "You lose visibility into how much of your available credit or bank balance is temporarily locked up by the parking app.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does any screen state the maximum amount that could be held on the card for this open-ended session?",
+        "say_example": "This screen never says what the biggest hold on your card could be, even though the session has no fixed end time yet."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Pay the fare or fee",
+    "note": "7.1 in every keeper that pays. 7.2 wherever the money comes out of a stored balance. 7.3 when that balance will not cover it - 7C-g routes around a zero wallet and zUyS taps one anyway and gets an error. 7.4 is the nested hand-off, and five keepers leave the app to finish. 7.5 where the app slows the commit down on purpose. 7.6 is the commit itself; three keepers never reach it. 7.7 only for the stored-value case, where the money has to be written onto a physical card afterwards. 7.8 whenever the commit is refused or errors, which happens in four keepers.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Choose the payment method",
+      "questions": [
+       {
+        "question": "Which payment method do you want to use?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offers multiple payment options like R-Wallet and UPI, so you must choose how to fund the transaction.",
+        "whatTheAgentLoses": "Letting an agent decide means it might select a payment method you prefer not to use, potentially draining a specific wallet balance.",
+        "kind": "decision",
+        "verify_form": "The agent picked how to pay - check whether it used the in-app wallet, a card, or a payment app; the wallet spends a balance you topped up for something else.",
+        "speak": "always",
+        "check": "Which payment method does the page show as selected — the in-app wallet, a card, or an external payment app?",
+        "say_example": "I'm paying with <the in-app wallet>, not a payment app. That draws from a balance meant for other trips."
+       },
+       {
+        "question": "Which payment method will you use to pay the final amount with the added convenience fee?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows multiple payment options like Paytm Balance or UPI to cover the final amount of ₹30.64, which includes a ₹0.64 convenience charge.",
+        "whatTheAgentLoses": "Delegating this means the agent might select a payment method you prefer not to use or accept added convenience fees without your explicit approval.",
+        "kind": "decision",
+        "verify_form": "The agent picked a method to pay a total that now includes a convenience charge - check the amount beside the button; it is higher than the fare the summary showed.",
+        "speak": "always",
+        "check": "What is the final amount shown next to the payment button, and which payment method is selected to cover it?",
+        "say_example": "The total is now <₹30.64> with the convenience fee added. I'm paying that with <your payment app balance>."
+       },
+       {
+        "question": "Which of your saved payment methods is visually pre-selected by default?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The checkout screen usually defaults to your last used card, displaying only a small network logo and the last four digits.",
+        "whatTheAgentLoses": "A sighted user can glance at the card icon to confirm it's the right one, but delegating means the agent might charge a personal card instead of a corporate one if it just clicks 'Pay'.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Which saved payment method does the checkout screen show as the default selection?",
+        "say_example": "The card shown by default is the one ending <[account number]>, not the one you meant to use."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Check the balance covers it",
+      "questions": [
+       {
+        "question": "Does your selected payment method have enough balance to cover the fare?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displayed an 'Insufficient Balance' warning because the R-Wallet only had ₹ 50.00 for a ₹ 441.80 fare, guaranteeing a payment error.",
+        "whatTheAgentLoses": "You lose the ability to proactively switch payment methods or top up the wallet before encountering a failed transaction.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the selected payment method's balance cover the fare shown on screen?",
+        "say_example": "Your <in-app wallet> only holds <₹50.00>, and this fare comes to <₹441.80>. That's short."
+       },
+       {
+        "question": "Is your R-Wallet balance consistent across different screens?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "Verifying that the balance consistently displays as ₹ 50.00 across the profile, payment screens, and side menu ensures the app is accurately tracking your available funds.",
+        "whatTheAgentLoses": "You lose the ability to personally monitor your digital wallet throughout the process to ensure no unexpected deductions occur before payment.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the wallet balance shown on this screen match the wallet balance shown on other screens (profile, side menu)?",
+        "say_example": "The profile screen shows <₹50.00>, but the payment screen shows a different number for the same wallet."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Handle a shortfall",
+      "questions": [
+       {
+        "question": "How do you want to pay since your wallet balance is insufficient?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen shows your wallet balance is lower than the fare, requiring you to choose between recharging the wallet or using another payment option.",
+        "whatTheAgentLoses": "You lose the ability to decide whether to add funds to your transit wallet for future use or just pay directly for this specific trip.",
+        "kind": "decision",
+        "verify_form": "The agent hit a balance too small for the fare and either topped the wallet up or paid another way - check which; topping up puts more money into this operator's wallet than this trip needs.",
+        "speak": "on-event",
+        "check": "Does the page show the wallet balance as insufficient for the fare, and does it offer a choice between topping up or paying another way?",
+        "say_example": "Your wallet balance is short for this fare. I can top it up, or pay another way. Topping up puts more into this wallet than this trip needs."
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Pay through an outside gateway",
+      "note": "7.4.1 to leave the app, then 7.4.2 or 7.4.3 depending on whether a saved payment app or a card is used, then 7.4.4 wherever the bank inserts its own check, then 7.4.5 to get back. 4bhQ has to get past a certificate warning to reach its own operator's gateway.",
+      "children": [
+       {
+        "id": "7.4.1",
+        "label": "Leave the app for the gateway",
+        "questions": [
+         {
+          "question": "Should you bypass the browser's security warning to reach the payment gateway?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The browser displayed a 'Your connection is not private' warning stating that attackers might try to steal your information, requiring a manual override to continue.",
+          "whatTheAgentLoses": "Delegating this step means you lose the ability to evaluate the security risk of submitting your payment information over a potentially unsafe connection.",
+          "kind": "decision",
+          "verify_form": "The agent clicked through a browser warning that the connection is not private - check whether it did; that warning sat between the operator's own site and its payment page, and card details were about to be typed.",
+          "speak": "gate",
+          "check": "Does the browser show a security/privacy warning before reaching the payment gateway, and does proceeding require overriding it?",
+          "say_example": "The browser says this connection isn't private, right before it wants your card number. Should I go through anyway, or stop here?"
+         },
+         {
+          "question": "Does the payment link in the chat actually go somewhere real, before it's opened?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The bot message provided a specific button to open the external payment gateway.",
+          "whatTheAgentLoses": "The user loses the chance to verify the authenticity of the payment link before initiating the transaction.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "What URL or domain does the chat's payment-gateway button point to, and does it match the operator's known payment domain?",
+          "say_example": "The button in the chat points to a domain that doesn't match the operator's own site."
+         },
+         {
+          "question": "Should you allow the browser to open an external app to process the payment?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The browser displayed a prompt asking if you want to leave DuckDuckGo to view the content, which is necessary to launch the external UPI payment selector.",
+          "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally verify and authorize the transition to an external payment application on your device.",
+          "kind": "decision",
+          "verify_form": "The agent allowed the browser to leave for an outside payment app - check that the app it opened is one you use; that hand-off is where the transaction stops being visible.",
+          "speak": "on-event",
+          "check": "Does the browser show a prompt asking to leave the site for an external app to complete payment?",
+          "say_example": "The browser is asking to leave for an outside app to finish this payment. That handoff is where I stop being able to see what happens."
+         },
+         {
+          "question": "Does the merchant name on the payment gateway match the transit authority you intend to pay?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The SBIePay gateway explicitly lists 'DELHI TRANSPORT CORPORATION' as the merchant, confirming exactly who is receiving your funds.",
+          "whatTheAgentLoses": "You lose the opportunity to verify the counterparty's identity on the official payment gateway, which protects against paying a fraudulent or incorrect merchant.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "What merchant name does the payment gateway display, and does it match the transit authority or operator the purchase is for?",
+          "say_example": "The gateway names <Example Transit Authority> as the merchant, not the operator you meant to pay."
+         }
+        ]
+       },
+       {
+        "id": "7.4.2",
+        "label": "Pick the payment app",
+        "questions": [
+         {
+          "question": "Do you want to pay using a UPI app or by entering a UPI ID?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The Indian Railways payment screen requires you to choose between opening a UPI app directly or manually entering a UPI ID to complete the ₹5.00 transaction.",
+          "whatTheAgentLoses": "You lose the ability to decide whether to route the payment through a specific installed app or manually enter your preferred UPI ID.",
+          "kind": "decision",
+          "verify_form": "The agent chose between opening a payment app and typing a payment id - check which; opening an app hands the transaction to whatever account that app is signed in to.",
+          "speak": "always",
+          "check": "Does the payment screen show a choice between opening a UPI app and entering a UPI ID by hand, and which is selected?",
+          "say_example": "I'm opening a UPI app to pay, not typing a UPI ID by hand."
+         },
+         {
+          "question": "Which UPI app do you want to use to complete the payment?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The payment gateway displays an 'Open with' popup requiring a choice between multiple installed apps like GPay or PhonePe to process the ₹441.80 transaction.",
+          "whatTheAgentLoses": "You lose the ability to choose your preferred payment application and its associated funding source for the transaction.",
+          "kind": "decision",
+          "verify_form": "The agent handed the payment to one app out of the list - check which; that app pays from whichever bank account it is set up with.",
+          "speak": "always",
+          "check": "Which app does the 'Open with' payment selector show as chosen?",
+          "say_example": "I'm sending this payment through <your chosen payment app>, one of the apps offered here."
+         }
+        ]
+       },
+       {
+        "id": "7.4.3",
+        "label": "Enter the card details",
+        "questions": [
+         {
+          "question": "Should I enter your card details to make this payment?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen displays a payment form requiring sensitive card details to authorize a ₹32 charge.",
+          "whatTheAgentLoses": "You lose the opportunity to keep your payment details private or choose which specific card is charged for this transaction.",
+          "kind": "decision",
+          "verify_form": "The agent entered card details on the gateway's form - check which card; that is the account this fare comes out of, and the form may also be offering to keep it.",
+          "speak": "always",
+          "check": "What card (network and last four digits) does the payment form show as entered for this charge?",
+          "say_example": "I'm entering the card ending <[account number]> for this <₹32> charge."
+         },
+         {
+          "question": "Is the checkbox to save your credit card details for future purchases selected by default?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Payment gateways often default to storing card details, which a user might want to opt out of for security reasons.",
+          "whatTheAgentLoses": "The user loses control over their financial data hygiene if the agent blindly accepts the default to store the card on the server.",
+          "kind": "state-check",
+          "speak": "never",
+          "check": "Is the 'save card for future purchases' checkbox shown as checked or unchecked by default?",
+          "say_example": "Left the save-card box unchecked"
+         }
+        ]
+       },
+       {
+        "id": "7.4.4",
+        "label": "Authenticate with the bank",
+        "questions": [
+         {
+          "question": "The app needs your PIN next - are you the one entering it, not the agent?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The checkout process redirects to a separate UPI application where a secure PIN must be entered to finalize the transaction.",
+          "whatTheAgentLoses": "The user loses the security of keeping their personal UPI PIN private since the agent would need it to authorize the transaction.",
+          "kind": "state-check",
+          "speak": "always",
+          "check": "Does the bank/UPI screen ask the person to enter their own PIN to finish authentication?",
+          "say_example": "Your bank wants your PIN next. I won't see or enter that. That part is yours."
+         },
+         {
+          "question": "Does the dialog ask you to confirm before moving to the bank's OTP screen?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The dialog box requires you to confirm that you are ready to follow the instructions on the next screen to complete the OTP process for this transaction.",
+          "whatTheAgentLoses": "You lose the ability to personally review the authentication instructions and manage the security verification for your payment.",
+          "kind": "decision",
+          "verify_form": "The agent accepted the bank's prompt to move to its own verification screen - check that the page it landed on is your bank's; this is the step where the amount is authorised.",
+          "speak": "always",
+          "check": "Does the dialog ask for confirmation before moving to the bank's own OTP verification screen?",
+          "say_example": "Next is your bank's own verification screen. I'm continuing there now."
+         },
+         {
+          "question": "Does the bank authentication screen show the correct merchant and top-up amount before you confirm the charge?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The bank's 3D Secure page displays the exact amount and merchant name, providing a final security check before your card is charged.",
+          "whatTheAgentLoses": "You lose the chance to verify the exact amount your bank is being asked to authorize and ensure it matches your intended top-up.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Does the bank's 3D Secure screen show the correct merchant name and amount for this charge?",
+          "say_example": "The bank's screen names <a different merchant> for this charge, not the top-up you started."
+         }
+        ]
+       },
+       {
+        "id": "7.4.5",
+        "label": "Come back with the result",
+        "questions": [
+         {
+          "question": "Does the app show that the payment went through and the ticket was booked?",
+          "cluster": "receipts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "Checking the notification shade for the UTS and Paytm alerts confirms the ₹ 30.64 payment processed correctly before you navigate back to the ticket.",
+          "whatTheAgentLoses": "You lose the immediate peace of mind that comes from personally verifying the system notifications to ensure your transaction was successful.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Does the app show that the payment succeeded and the ticket was booked?",
+          "say_example": "The app shows no confirmation yet, so I can't tell if this went through."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Pass the commit gate",
+      "questions": [
+       {
+        "question": "Do you want to accept these terms, which also submits your application?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The form states that by proceeding, you automatically accept the Terms and Conditions of the service.",
+        "whatTheAgentLoses": "You lose the opportunity to review the legal terms you are agreeing to by submitting your application.",
+        "kind": "decision",
+        "verify_form": "The agent ticked the box accepting the service's terms - check what was accepted; that tick is what submits the application and it is the only place the terms are agreed to.",
+        "speak": "gate",
+        "check": "Does checking this box both accept the terms and conditions and submit the smart card application?",
+        "say_example": "Checking this box also submits your smart card application and agrees to its terms. Want me to go ahead?"
+       },
+       {
+        "question": "Did the checkout fail because you forgot to select a payment method?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The user clicked 'COMPLETE ORDER' but was stopped by a popup stating 'Please select a payment method' because they hadn't opened the credit card entry form yet.",
+        "whatTheAgentLoses": "The user loses the ability to catch and correct a stalled checkout process caused by omitting required payment details.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Did a popup block checkout with a message that no payment method was selected?",
+        "say_example": "Checkout blocked - no payment method selected"
+       }
+      ]
+     },
+     {
+      "id": "7.6",
+      "label": "Confirm the payment",
+      "questions": [
+       {
+        "question": "Do you want to pay now, since it also turns on location access?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "This matters because tapping complete order finalizes the $5.00 charge, and the app requires a decision on location access to proceed.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to review the final total and decide whether to grant the app access to your current location.",
+        "kind": "decision",
+        "verify_form": "The agent placed the order and answered a location prompt at the same moment - check both; the order is the charge and the prompt is separate from it.",
+        "speak": "gate",
+        "check": "Does completing the order charge the shown amount, and does the app separately ask for location access at the same moment?",
+        "say_example": "This charges <$5.00> now and also asks to use your location. Ready for both, or should I hold?"
+       }
+      ]
+     },
+     {
+      "id": "7.7",
+      "label": "Write the value to the card",
+      "questions": [
+       {
+        "question": "Does the screen show a top-up success message after tapping the card?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The app explicitly prompts you to tap and hold the EZ-Link card to the phone to transfer the funds and verify the updated balance.",
+        "whatTheAgentLoses": "An AI agent cannot physically hold a smart card against the device to complete an NFC-based transaction.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the screen show a top-up success message after the card is tapped against the phone?",
+        "say_example": "The screen never showed a top-up success message after the tap. The balance may not have moved to the card."
+       }
+      ]
+     },
+     {
+      "id": "7.8",
+      "label": "Recover from a failed payment",
+      "questions": [
+       {
+        "question": "Did the app block your payment attempt with an error popup?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The user clicked the R-Wallet payment option despite the screen showing an 'Insufficient Balance' warning, causing the app to throw a hard error popup that had to be dismissed.",
+        "whatTheAgentLoses": "The user loses the chance to acknowledge the payment failure and actively decide how to resolve it, such as by topping up the wallet or choosing a different method.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Did the app show an error popup blocking the payment attempt?",
+        "say_example": "Payment blocked - insufficient balance error shown"
+       },
+       {
+        "question": "Did the payment fail and prompt you to select a different payment method?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Transactions can be declined by the bank or gateway, requiring you to notice the error message and choose an alternative card to complete the booking.",
+        "whatTheAgentLoses": "You lose the ability to step in and provide a backup payment method if your primary choice is rejected.",
+        "kind": "decision",
+        "verify_form": "The agent hit a declined payment and either tried a different method or stopped - check what it did; a second attempt on a different card can also mean two holds on your money.",
+        "speak": "on-event",
+        "check": "Did the payment get declined, and does the page prompt for a different payment method?",
+        "say_example": "That card was declined. I can try a different one, but a second attempt can leave two holds on your money at once."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Confirm the pass or ticket",
+    "note": "8.1 the moment the artifact appears. 8.2 where it is a code that has to be shown or scanned. 8.3 where what was bought is a running clock rather than a document. 8.4 where the terms of use only arrive with the artifact. 8.5 where the app's own screens disagree. 8.6 where the artifact has to be saved or found again. 8.7 when nothing is issued at all - four keepers, and in x--I something is issued for the wrong journey.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "Read the issued pass or ticket",
+      "questions": [
+       {
+        "question": "What are the details and validity of your booked ticket?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays the journey ticket details, including the route, passenger count, fare, and validity time.",
+        "whatTheAgentLoses": "The user loses the opportunity to verify the ticket details and understand its validity conditions firsthand.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What route, passenger count, fare, and validity does the issued ticket show?",
+        "say_example": "Ticket issued - <Borivali to Surat>, <2 passengers>, <₹500>, valid until <6:00 PM>"
+       },
+       {
+        "question": "Is the final digital ticket or active session actually displayed on the screen?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Because the mobile display acts as the travel authority for paperless bookings, the actual ticket must be visible to confirm the transaction succeeded.",
+        "whatTheAgentLoses": "The user loses the necessary proof of payment to legally park or ride if the agent stops before the digital pass is generated and displayed.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the screen actually display a final digital ticket, active session, or QR code with a validity period, distinct from merely completing the purchase steps?",
+        "say_example": "The steps finished, but no ticket or active session actually shows on this screen."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Check the code that gets scanned",
+      "questions": [
+       {
+        "question": "Does the downloaded pass show the correct QR code and acknowledgement details?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "You need to verify that the downloaded PNG clearly displays the QR code, acknowledgement number, and validity dates so you can successfully use the transit pass.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally verifying that the downloaded transit pass image contains a legible, scannable QR code before closing the file.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the downloaded pass file actually show a QR code, an acknowledgement number, and validity dates?",
+        "say_example": "The downloaded pass doesn't actually show a QR code or acknowledgement number, even though the download said it would."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Read the session's clock"
+     },
+     {
+      "id": "8.4",
+      "label": "Read the rules that come with it",
+      "questions": [
+       {
+        "question": "What restrictions apply to this digital ticket?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists strict conditions for the ticket, including a one-hour validity window, non-refundability, and device-locking, which are critical to know before proceeding.",
+        "whatTheAgentLoses": "The user loses the opportunity to review the strict validity and device-locking rules, potentially leaving them with an unusable or expired ticket if they aren't ready to travel immediately.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "What restrictions does the ticket state — validity window, refund policy, device lock?",
+        "say_example": "This ticket is good for <one hour>, can't be refunded, and only works on this device."
+       },
+       {
+        "question": "Does the ticket say ID is required for a reduced fare?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The ticket portal explicitly warns that presentation of valid identification will be required when using reduced fare tickets.",
+        "whatTheAgentLoses": "The user loses the chance to realize they must carry specific physical ID to prove their eligibility, potentially rendering the ticket unusable at the station.",
+        "kind": "intent-check",
+        "speak": "always",
+        "check": "Does the ticket portal warn that identification is required when using a reduced fare ticket?",
+        "say_example": "Reduced fare tickets need ID at the gate. Have that ready."
+       },
+       {
+        "question": "Does the confirmation name landmarks for finding the entrance, not just an address?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen provides crucial visual landmarks, like the Tilted Kilt valet and New York Jewelers sign, to help you find the correct entrance.",
+        "whatTheAgentLoses": "Delegating this step means you miss reading the specific on-the-ground instructions required to successfully locate and park your car.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Does the confirmation screen name visual landmarks for finding the entrance?",
+        "say_example": "Look for the <valet stand> and the <jewelers sign>. Those mark the entrance, not the street address."
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Refresh a screen that disagrees",
+      "questions": [
+       {
+        "question": "Does the screen show your updated card balance?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The app warns there may be a delay in displaying the latest balance, so refreshing ensures your recent top-up actually went through.",
+        "whatTheAgentLoses": "You lose the immediate reassurance of seeing your funds successfully added to the transit card balance.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the balance shown update after refreshing the screen?",
+        "say_example": "The balance on screen still hasn't updated after the refresh."
+       },
+       {
+        "question": "Do the account balances shown across these moments agree with each other?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The 'My Card' screen initially shows an outdated balance of $2.08, contradicting the $12.08 shown on the earlier 'Top Up Successful' screen before finally updating.",
+        "whatTheAgentLoses": "An agent might see the outdated balance before the page refreshes and incorrectly assume the top-up failed, potentially charging your payment method a second time.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the balance shown on this screen match the balance shown on the earlier top-up confirmation screen?",
+        "say_example": "The card screen shows <$2.08>, but the top-up screen just showed <$12.08> for the same card."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Find the pass again later",
+      "questions": [
+       {
+        "question": "Do you want to download the QR code needed to collect your transit card?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The confirmation screen displays a QR code that must be presented at the issuance center to collect the physical card.",
+        "whatTheAgentLoses": "The user loses the ability to directly save the required QR code to their personal device for later use at the issuance center.",
+        "kind": "decision",
+        "verify_form": "The agent either downloaded the collection code or left it on the screen - check whether the file is on the phone; the code has to be shown at a counter and it expires in 48 hours.",
+        "speak": "on-event",
+        "check": "Does the confirmation screen show a QR code needed to collect the physical transit card, and does it state an expiry window?",
+        "say_example": "There's a QR code here for collecting the physical card. It expires in <48 hours>, so I'm downloading it now."
+       },
+       {
+        "question": "Should you open the downloaded file to verify the pass?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The browser popup shows the image file has finished downloading, prompting a check to ensure the pass is readable and correct.",
+        "whatTheAgentLoses": "You lose the immediate visual confirmation that the downloaded pass contains the correct details for your session.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the downloaded file, once opened, show a readable pass rather than a blank or corrupted image?",
+        "say_example": "The file downloaded, but opening it shows a blank or broken image, not the pass."
+       },
+       {
+        "question": "Is the menu option about to be picked the one that gets your existing pass, not one that starts a new application?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The navigation menu presents multiple similar choices like 'APPLY FOR BUS PASS' and 'DOWNLOAD', so you must identify the specific 'GET e-Pass' button to retrieve your digital ticket.",
+        "whatTheAgentLoses": "You miss learning how to navigate the transit portal to retrieve and download your own electronic passes.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the menu option about to be selected retrieve an existing pass, or does it start a new application instead?",
+        "say_example": "The menu option I'm about to pick is <Apply for Bus Pass>, which starts a new application, not <Get e-Pass>, which retrieves the one you already have."
+       },
+       {
+        "question": "Which details will you use to retrieve your e-BusPass?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen offers two distinct lookup methods: entering the specific e-BusPass number or providing a mobile number and date of birth for an OTP verification.",
+        "whatTheAgentLoses": "You lose the choice of which personal information to provide and verify when accessing your transit pass.",
+        "kind": "decision",
+        "verify_form": "The agent retrieved the pass with either its number or a phone number and a date of birth - check which it used; the second route sends a code to a phone and the first does not.",
+        "speak": "on-event",
+        "check": "Does the page offer looking up the pass by its number, or by phone number and date of birth with an OTP?",
+        "say_example": "I can look this up with just the pass number, or with your phone number and birth date instead. The second way sends a code to your phone."
+       },
+       {
+        "question": "Does the app provide an option to add the ticket to your device's digital wallet or save it for offline use?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Transit stations often have poor cellular reception, so a digital ticket must be accessible without an internet connection to pass through the gates.",
+        "whatTheAgentLoses": "The user risks being stranded at the fare gate without internet access if the agent doesn't secure an offline version of the ticket.",
+        "kind": "decision",
+        "verify_form": "The agent either saved the ticket for offline use or left it inside the app - check whether it opens with the phone in flight mode; station platforms are where the signal goes.",
+        "speak": "on-event",
+        "check": "Does the app offer adding the ticket to a digital wallet or saving it for offline use?",
+        "say_example": "This app can save the ticket for offline use. Stations often lose signal, so I'm saving it now."
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Notice that nothing was issued",
+      "questions": [
+       {
+        "question": "Did the payment actually process, or did the app loop back to the checkout screen?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "After the UPI payment step, the app briefly showed a loading dialog but then unexpectedly looped back to the 'Complete Payment' screen without confirming the transaction.",
+        "whatTheAgentLoses": "The user loses the ability to catch a silent payment failure where the app returns to the checkout screen instead of completing the ticket purchase.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After the payment step, does the app show a confirmation, or does it loop back to the checkout screen?",
+        "say_example": "The payment step showed a loading spinner, then landed back on the same checkout screen instead of a confirmation."
+       },
+       {
+        "question": "Does the page show an order confirmation for the bus pass, or does it end before one shows up?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The homepage promised a bus pass delivery in five working days, but the recording ended before an order was placed to confirm this.",
+        "whatTheAgentLoses": "The user loses the certainty of knowing their transit pass was successfully ordered and will arrive when expected.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the page show an order confirmation for the bus pass, or does the flow end before one appears despite a stated delivery promise?",
+        "say_example": "The page promised the bus pass would arrive in <5 working days>, but there's no order confirmation showing the order was actually placed."
+       },
+       {
+        "question": "Does the route on the final ticket match the stops you selected before paying?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The final ticket displays a completely different starting and ending stop than the route shown on the payment screen.",
+        "whatTheAgentLoses": "The user loses a valid fare for their intended journey because the agent finalized a ticket for the wrong route.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the route on the final ticket match the stops selected before payment?",
+        "say_example": "The final ticket shows <Route A>, but you paid for <Route B>."
+       },
+       {
+        "question": "Does the booking time on your final ticket match the time displayed on the payment screen?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The final ticket showed a booking time of 13:20:59, which is earlier than the 01:22 PM time displayed before the transaction was initiated.",
+        "whatTheAgentLoses": "The user loses the opportunity to notice and dispute a discrepancy where the parking session started earlier than the agreed-upon time.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the booking time on the final ticket match the time shown on the payment screen just before paying?",
+        "say_example": "The ticket says it was booked at <13:20>, earlier than the <13:22> shown right before you paid."
+       },
+       {
+        "question": "Does an active parking session or pass actually appear on screen, or does the flow end at the location-permission prompt with no proof of booking?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The narrator claims a confirmation will appear, but the video cuts away after a location permission popup without showing the active session or pass.",
+        "whatTheAgentLoses": "The user loses the certainty that their parking session was successfully booked because the final proof of purchase is missing.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does an active parking session or pass actually appear on screen, or does the flow end at a location-permission prompt or a pending-verification state with no proof of booking?",
+        "say_example": "The screen stopped at a location-permission prompt. There's no pass or active session showing anywhere after it."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9",
+    "label": "Use what you bought",
+    "note": "9.1 where the session can still be lengthened - both meter apps offer it and Kj30 uses it, which sends it back through 5.1, 6.2 and 8.3. 9.2 where the buyer has to go to the place they bought. 9.3 where the artifact has to be scanned before it is worth anything. 9.4 where buying and using are separate acts on separate surfaces. 9.5 where one purchase starts the next. 9.6 where the product is collected off screen entirely.",
+    "children": [
+     {
+      "id": "9.1",
+      "label": "Extend the session",
+      "questions": [
+       {
+        "question": "How much additional time do you need to add to your parking session?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen displays an overlay with adjustable columns for days, hours, and minutes to extend the current parking time.",
+        "whatTheAgentLoses": "Delegating this decision means the agent might misjudge your schedule, leading to either overpaying for unnecessary time or risking a parking ticket.",
+        "kind": "decision",
+        "verify_form": "The agent added time to a session that is already running - check how much; the clock does not restart, so the extension is added to the end time you already had.",
+        "speak": "gate",
+        "check": "Does the page ask how much additional time to add, and does it add that to the existing end time rather than restarting the clock?",
+        "say_example": "How much more time do you need? Whatever I add goes on top of the end time you already had, not from right now."
+       },
+       {
+        "question": "Is the parking extension confirmed with the correct new end time and total cost?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Verifying the success message, the new end time of 2:04 PM, and the updated total fee ensures your vehicle is legally parked for the extra time.",
+        "whatTheAgentLoses": "You lose the peace of mind of personally confirming the exact time your extended parking session expires.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After extending, does the page show a new end time and a new total cost confirming the extension went through?",
+        "say_example": "The extension screen doesn't show a new end time or a new total, so I can't confirm it actually went through."
+       },
+       {
+        "question": "Does the screen show the fee for the extra time, or just a spinner with no amount?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen displays an 'Extending your parking session...' spinner but does not show the actual fee being charged for the additional time.",
+        "whatTheAgentLoses": "The user loses the certainty of knowing exactly how much they were charged for extending their parking time.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the screen show the fee charged for the extra time (matching or differing from the fee on the original session), or only a processing spinner with no amount?",
+        "say_example": "The spinner says it's extending, but no fee for the extra time shows here, so there's nothing to compare against the first session's fee."
+       }
+      ]
+     },
+     {
+      "id": "9.2",
+      "label": "Travel to the place you booked",
+      "questions": [
+       {
+        "question": "Do you want to open directions to the parking location?",
+        "cluster": "select",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Tapping the 'Take me there' link launches Apple Maps to provide a route and a 10-minute drive estimate to the destination.",
+        "whatTheAgentLoses": "The user misses seeing the estimated driving time and having their navigation app automatically routed to the parking spot.",
+        "kind": "decision",
+        "verify_form": "The agent opened directions to the garage in a maps app - check that it is the maps app you use and the address it routed to; the pass names an entrance, not just a street.",
+        "speak": "if-wrong",
+        "check": "Does the address the directions open to match the location or entrance named on the parking pass?",
+        "say_example": "The directions are routing to <123 Example Ave>, not the entrance named on your pass."
+       }
+      ]
+     },
+     {
+      "id": "9.3",
+      "label": "Scan the ticket at the gate",
+      "questions": [
+       {
+        "question": "Is the ticket a code that can be scanned at the gate, rather than something that needs printing?",
+        "cluster": "hand over",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "The screen shows a demonstration of a QR code being scanned at a physical metro gate to gain entry.",
+        "whatTheAgentLoses": "An agent cannot physically take the digital ticket and scan it at a real-world transit gate.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the ticket appear as a scannable code rather than something needing printing?",
+        "say_example": "Got a scannable ticket code - no printing needed"
+       },
+       {
+        "question": "Does the physical card reflect the new balance when you tap it at the gantry?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Seeing the green arrow and updated card value on the reader screen confirms that your online purchase successfully synced to the physical card.",
+        "whatTheAgentLoses": "You lose the real-world reassurance of seeing the gantry screen display your updated balance as you walk through the gate.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the card reader show the new balance after tapping, matching the amount just added online?",
+        "say_example": "The card reader shows the old balance, not the amount you just added online."
+       }
+      ]
+     },
+     {
+      "id": "9.4",
+      "label": "Activate the ticket separately"
+     },
+     {
+      "id": "9.5",
+      "label": "Start the next purchase",
+      "questions": [
+       {
+        "question": "Should you book a connecting journey from where you arrive?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The 'Unreserved E-Ticket' screen allows you to enter a 'To Destination' and proceed to book an onward train.",
+        "whatTheAgentLoses": "You lose the choice of whether to purchase your connecting transit fare immediately or wait.",
+        "kind": "decision",
+        "verify_form": "The agent either did or did not start a connecting journey from the arrival station - check whether a second ticket is being bought; you may want to buy that leg later, or not at all.",
+        "speak": "on-event",
+        "check": "Does the page offer booking a connecting journey as a next step from the arrival station?",
+        "say_example": "There's an option here to book a connecting train onward. That would be a second purchase, not part of this one."
+       }
+      ]
+     },
+     {
+      "id": "9.6",
+      "label": "Collect the card in person"
+     }
+    ]
+   }
+  ]
+ }
+}

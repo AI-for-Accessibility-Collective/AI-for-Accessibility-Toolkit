@@ -829,11 +829,11 @@
           "cluster": "",
           "moment": null,
           "moneyMoving": false,
-          "why": "The bidding modal displays a default card (e.g., Mastercard ending in 7903) that will be automatically charged if you win, requiring you to verify it before confirming the bid.",
+          "why": "The bidding modal displays a default card (e.g., Mastercard ending in [account number]) that will be automatically charged if you win, requiring you to verify it before confirming the bid.",
           "whatTheAgentLoses": "The user loses the ability to choose which specific bank account or credit card will be debited, potentially causing overdrafts or using the wrong funds for the purchase.",
           "speak": "if-wrong",
           "check": "Which payment method is shown as selected, and does it match the card asked for?",
-          "say_example": "The site picked <Mastercard ending 7903>. You asked for <the Visa>. Switching it."
+          "say_example": "The site picked <Mastercard ending [account number]>. You asked for <the Visa>. Switching it."
          }
         ]
        }

@@ -477,7 +477,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to continue investing time with a familiar tutor or try out someone new.",
         "speak": "if-wrong",
         "check": "Which tutor name is selected in the buy-hours modal, and which action (buy hours or book trial)?",
-        "say_example": "The buy box has <Kate> selected, from your old lessons. You picked <Marco>. Switching."
+        "say_example": "The buy box has <[name]> selected, from your old lessons. You picked <[name]>. Switching."
        }
       ]
      },
@@ -1122,11 +1122,11 @@
         "cluster": "select",
         "moment": "Now",
         "moneyMoving": false,
-        "why": "The 'My Teachers' page displays your previous tutor, Kate, alongside options to find someone new, requiring a choice between continuing an existing learning relationship or starting a fresh search.",
+        "why": "The 'My Teachers' page displays your previous tutor, [name], alongside options to find someone new, requiring a choice between continuing an existing learning relationship or starting a fresh search.",
         "whatTheAgentLoses": "An agent might automatically rebook your previous teacher for convenience, missing your desire to try a different teaching style or learn from someone new.",
         "speak": "on-event",
         "check": "Does the page list a previous tutor under 'My Teachers', and what name?",
-        "say_example": "You've had lessons with <Kate> before. Book them again, or find someone new?"
+        "say_example": "You've had lessons with <[name]> before. Book them again, or find someone new?"
        }
       ]
      },

@@ -364,7 +364,7 @@
         "whatTheAgentLoses": "Delegating this step requires you to actively monitor your phone and relay a time-sensitive OTP to the agent.",
         "speak": "gate",
         "check": "Does the page show a one-time code field and say a code was sent to a phone number?",
-        "say_example": "A code went to your phone ending <274>. Enter it yourself. I'll wait."
+        "say_example": "A code went to your phone ending <[account number]>. Enter it yourself. I'll wait."
        }
       ]
      },
@@ -720,11 +720,11 @@
         "cluster": "hand over",
         "moment": "Now",
         "moneyMoving": true,
-        "why": "The screen prompts for a One Time Password sent to the registered mobile number ending in 274 to proceed with the transaction.",
+        "why": "The screen prompts for a One Time Password sent to the registered mobile number ending in [account number] to proceed with the transaction.",
         "whatTheAgentLoses": "The user must share a time-sensitive security code sent to their personal device, requiring real-time coordination and compromising account security.",
         "speak": "gate",
         "check": "Does the page show a one-time code field and say a code was sent to the phone number ending shown?",
-        "say_example": "A code went to your phone ending <274> to approve the payment. Type it in yourself. I'll wait."
+        "say_example": "A code went to your phone ending <[account number]> to approve the payment. Type it in yourself. I'll wait."
        }
       ]
      },
@@ -1067,7 +1067,7 @@
         "cluster": "compare",
         "moment": "Completion",
         "moneyMoving": true,
-        "why": "The portal displays a disposed challan ending in 210, but the citation you originally selected to pay ended in 041.",
+        "why": "The portal displays a disposed challan ending in [account number], but the citation you originally selected to pay ended in 041.",
         "whatTheAgentLoses": "You lose certainty that your specific ticket was successfully paid, which could result in late fees or legal trouble for an unresolved citation.",
         "speak": "if-wrong",
         "check": "Does the ticket number shown as paid or disposed match the ticket number that was selected for payment?",
