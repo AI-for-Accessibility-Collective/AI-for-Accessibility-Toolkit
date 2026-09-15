@@ -406,17 +406,6 @@
         "say_example": "One screen says the video runs <2:04>, another says <2:09>. I'll make sure the download plays to the end."
        },
        {
-        "question": "Does the publication date on the loaded article match the date shown in the timeline?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The timeline listed the article under December 19th, but the loaded article page shows December 20, 2009, indicating a discrepancy in the reported dates.",
-        "whatTheAgentLoses": "The user loses the assurance that the agent is accurately verifying the true publication date of the news.",
-        "speak": "if-wrong",
-        "check": "Does the date on the opened article match the date the timeline filed it under?",
-        "say_example": "The timeline filed this under <December 19>. The article itself says <December 20>. I'm going by the article's own date."
-       },
-       {
         "question": "Does the unread count update to reflect the article you just opened?",
         "cluster": "receipts",
         "moment": "After",
@@ -822,6 +811,17 @@
         "speak": "if-wrong",
         "check": "Does the opened article's text contain the snippet shown in the results?",
         "say_example": "This page doesn't match the story I clicked. I'm going back to pick it again."
+       },
+       {
+        "question": "Does the publication date on the loaded article match the date shown in the timeline?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The timeline listed the article under December 19th, but the loaded article page shows December 20, 2009, indicating a discrepancy in the reported dates.",
+        "whatTheAgentLoses": "The user loses the assurance that the agent is accurately verifying the true publication date of the news.",
+        "speak": "if-wrong",
+        "check": "Does the date on the opened article match the date the timeline filed it under?",
+        "say_example": "The timeline filed this under <December 19>. The article itself says <December 20>. I'm going by the article's own date."
        }
       ]
      },

@@ -1375,19 +1375,6 @@
         "say_example": "Sorted the statement by <date, newest first>"
        },
        {
-        "question": "Should you unmask your full account number before saving the page as a PDF?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen hides the account number as '...7821' by default but provides a 'See full account number >' link, which must be clicked if an underwriter requires the complete number on the document.",
-        "whatTheAgentLoses": "The user loses the ability to ensure the generated document contains the complete identifying information required by third parties for verification.",
-        "kind": "decision",
-        "verify_form": "The account number prints masked by default - unmasking it is a privacy trade only you can make against what the requester demands.",
-        "speak": "always",
-        "check": "Does the page show the account number masked by default, with a link to reveal the full number?",
-        "say_example": "Account number left masked, as shown by default. Say if the full number needs to show"
-       },
-       {
         "question": "Does the number of items selected reflect a deliberate choice, not just the original default?",
         "cluster": "approve",
         "moment": "Now",
@@ -1517,6 +1504,19 @@
         "speak": "always",
         "check": "Does the export offer more than one file format (like PDF, Excel, or CSV)?",
         "say_example": "Exported as <PDF> - say if you need it as <Excel> or <CSV> instead"
+       },
+       {
+        "question": "Should you unmask your full account number before saving the page as a PDF?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen hides the account number as '...7821' by default but provides a 'See full account number >' link, which must be clicked if an underwriter requires the complete number on the document.",
+        "whatTheAgentLoses": "The user loses the ability to ensure the generated document contains the complete identifying information required by third parties for verification.",
+        "kind": "decision",
+        "verify_form": "The account number prints masked by default - unmasking it is a privacy trade only you can make against what the requester demands.",
+        "speak": "always",
+        "check": "Does the page show the account number masked by default, with a link to reveal the full number?",
+        "say_example": "Account number left masked, as shown by default. Say if the full number needs to show"
        }
       ]
      },

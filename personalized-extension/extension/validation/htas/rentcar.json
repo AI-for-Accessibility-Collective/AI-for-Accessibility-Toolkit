@@ -97,17 +97,6 @@
         "speak": "never",
         "check": "Is a notification permission prompt showing?",
         "say_example": "Said no to notifications for now. You can turn them on later if you want trip alerts."
-       },
-       {
-        "question": "Does the listing say the car has a GPS tracker?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Tapping the car image opens an informational popup disclosing that all vehicles have GPS tracking devices installed.",
-        "whatTheAgentLoses": "The user loses awareness of important privacy details, such as the presence of mandatory GPS tracking devices in their rental car.",
-        "speak": "never",
-        "check": "Does the listing's popup say the car has a GPS tracker?",
-        "say_example": "Noted the listing says every car has a GPS tracker."
        }
       ]
      },
@@ -522,6 +511,17 @@
         "speak": "never",
         "check": "Which company filter is selected?",
         "say_example": "Kept all rental companies in the results."
+       },
+       {
+        "question": "Do you want the car delivered, so only hosts who deliver show up?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Exploring the extended filters reveals whether the platform supports having the rental car delivered directly to your location.",
+        "whatTheAgentLoses": "You lose the chance to personally verify if delivery is an option before settling for a standard pickup.",
+        "speak": "never",
+        "check": "Is a delivery filter available, and is it on?",
+        "say_example": "Kept only hosts who deliver."
        }
       ]
      },
@@ -771,6 +771,17 @@
         "speak": "always",
         "check": "What car, dates, total, fuel policy, and transmission does the details page show?",
         "say_example": "Here's the one you picked. <Toyota Yaris>, <March 3 to 6>, <163> total. Manual gearbox. Full tank out, full tank back."
+       },
+       {
+        "question": "Does the listing say the car has a GPS tracker?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping the car image opens an informational popup disclosing that all vehicles have GPS tracking devices installed.",
+        "whatTheAgentLoses": "The user loses awareness of important privacy details, such as the presence of mandatory GPS tracking devices in their rental car.",
+        "speak": "never",
+        "check": "Does the listing's popup say the car has a GPS tracker?",
+        "say_example": "Noted the listing says every car has a GPS tracker."
        }
       ]
      },
@@ -872,17 +883,6 @@
       "id": "4.7",
       "label": "Choose the delivery location",
       "questions": [
-       {
-        "question": "Do you want the car delivered, so only hosts who deliver show up?",
-        "cluster": "refine",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Exploring the extended filters reveals whether the platform supports having the rental car delivered directly to your location.",
-        "whatTheAgentLoses": "You lose the chance to personally verify if delivery is an option before settling for a standard pickup.",
-        "speak": "never",
-        "check": "Is a delivery filter available, and is it on?",
-        "say_example": "Kept only hosts who deliver."
-       },
        {
         "question": "Which pickup or delivery option do you want, given what each costs?",
         "cluster": "compare",
@@ -1168,6 +1168,17 @@
         "speak": "never",
         "check": "Which company logos does the page show as possible providers?",
         "say_example": "Noted any of <Alamo, Avis, Budget, Hertz, or National> could fill this bid."
+       },
+       {
+        "question": "Do taxes and fees go up when the bid goes up?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed taxes and fees rising from $7.84 on a $19 bid to $8.88 on a $25 bid, indicating that these charges are partially percentage-based rather than a flat rate.",
+        "whatTheAgentLoses": "You lose the ability to strategically calculate your true maximum budget, as an agent might just increase the base bid without accounting for the scaling fees.",
+        "speak": "never",
+        "check": "How do taxes and fees change between the two bid amounts shown?",
+        "say_example": "Noted taxes go up a little with the bid."
        }
       ]
      }
@@ -1378,17 +1389,6 @@
         "speak": "if-wrong",
         "check": "What discount did the earlier page promise, and does the breakdown show a discount line of that amount?",
         "say_example": "The listing promised <42> off. The breakdown shows no discount line. Total is <382>."
-       },
-       {
-        "question": "Do taxes and fees go up when the bid goes up?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed taxes and fees rising from $7.84 on a $19 bid to $8.88 on a $25 bid, indicating that these charges are partially percentage-based rather than a flat rate.",
-        "whatTheAgentLoses": "You lose the ability to strategically calculate your true maximum budget, as an agent might just increase the base bid without accounting for the scaling fees.",
-        "speak": "never",
-        "check": "How do taxes and fees change between the two bid amounts shown?",
-        "say_example": "Noted taxes go up a little with the bid."
        },
        {
         "question": "Does the review page show the same company and price as the row that was clicked?",

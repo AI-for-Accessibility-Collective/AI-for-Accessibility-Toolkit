@@ -342,17 +342,6 @@
         "speak": "if-wrong",
         "check": "Does the results heading or a 'showing results for' line contain exactly the term typed, not a different one?",
         "say_example": "It changed <hypothyroidism> to <hyperthyroidism>. Those are opposite conditions. Searching the one you asked for again."
-       },
-       {
-        "question": "On the second site, is the page for the same drug as the first, not one with a similar name?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows 'Paracetamol' being selected from the Wikipedia search dropdown, which must perfectly align with the first source's topic to ensure a valid cross-check.",
-        "whatTheAgentLoses": "The user loses the peace of mind that the agent is consistently tracking and verifying the exact same medication across different sources without getting derailed by similar search suggestions.",
-        "speak": "if-wrong",
-        "check": "Does the second site's page title contain the same drug name as the first site's page?",
-        "say_example": "The second page is for <paroxetine>, not <paracetamol>. Wrong drug. Finding the right page before I compare anything."
        }
       ]
      },
@@ -961,6 +950,17 @@
         "speak": "if-wrong",
         "check": "Does the second page carry a source credit, such as Cerner Multum or HealthDay, that matches the first page's credit?",
         "say_example": "Both pages come from the same supplier, <Multum>. So that's really one source. I'll check <NHS> instead."
+       },
+       {
+        "question": "On the second site, is the page for the same drug as the first, not one with a similar name?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows 'Paracetamol' being selected from the Wikipedia search dropdown, which must perfectly align with the first source's topic to ensure a valid cross-check.",
+        "whatTheAgentLoses": "The user loses the peace of mind that the agent is consistently tracking and verifying the exact same medication across different sources without getting derailed by similar search suggestions.",
+        "speak": "if-wrong",
+        "check": "Does the second site's page title contain the same drug name as the first site's page?",
+        "say_example": "The second page is for <paroxetine>, not <paracetamol>. Wrong drug. Finding the right page before I compare anything."
        }
       ]
      },

@@ -624,20 +624,7 @@
      },
      {
       "id": "3.8",
-      "label": "Pick the next section",
-      "questions": [
-       {
-        "question": "Which specific 1098 form do you need to add?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The search dropdown lists several variations of the 1098 form, such as Real Estate Taxes and Mortgage Interest, so the exact match for your document must be selected.",
-        "whatTheAgentLoses": "You lose the opportunity to ensure the agent selects the exact 1098 form that corresponds to your specific tax documents.",
-        "speak": "never",
-        "check": "Which 1098 variants does the search dropdown list?",
-        "say_example": "Added the 1098 Mortgage Interest form - it matches your lender's document."
-       }
-      ]
+      "label": "Pick the next section"
      },
      {
       "id": "3.9",
@@ -3130,6 +3117,17 @@
         "speak": "never",
         "check": "Which tax payment fields does the page show?",
         "say_example": "Entered the property tax from your county bill, left the rest zero."
+       },
+       {
+        "question": "Which specific 1098 form do you need to add?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The search dropdown lists several variations of the 1098 form, such as Real Estate Taxes and Mortgage Interest, so the exact match for your document must be selected.",
+        "whatTheAgentLoses": "You lose the opportunity to ensure the agent selects the exact 1098 form that corresponds to your specific tax documents.",
+        "speak": "never",
+        "check": "Which 1098 variants does the search dropdown list?",
+        "say_example": "Added the 1098 Mortgage Interest form - it matches your lender's document."
        }
       ]
      },
@@ -4169,17 +4167,6 @@
       "say_example": "Time to pay the <99> fee. Card, or out of your refund? Taking it from the refund costs <24.99> extra, so card is cheaper. Which?"
      },
      {
-      "question": "Did the IRS immediately reject the e-file due to a mismatch with your prior-year Adjusted Gross Income (AGI) or PIN?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "E-file systems instantly check the prior-year AGI for identity verification; if it fails, you must correct the number from your actual past records or print and mail the return.",
-      "whatTheAgentLoses": "You lose the ability to retrieve the correct AGI from your personal records to fix the rejection, potentially leaving your taxes unfiled and accumulating late penalties.",
-      "speak": "on-event",
-      "check": "What rejection reason does the page show for the e-file?",
-      "say_example": "The IRS bounced the return. It says last year's income number doesn't match their records. Nothing is filed yet. Can you check the AGI on last year's printed return?"
-     },
-     {
       "question": "Do you know the exact amount of the fee for paying with your federal refund?",
       "cluster": "",
       "moment": null,
@@ -4695,6 +4682,17 @@
         "speak": "always",
         "check": "What status does the tracker show for the transmitted return?",
         "say_example": "Sent at <3:07>. The tracker says submitted, not accepted - the IRS still has to take it. I'll watch for the acceptance and tell you either way."
+       },
+       {
+        "question": "Did the IRS immediately reject the e-file due to a mismatch with your prior-year Adjusted Gross Income (AGI) or PIN?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "E-file systems instantly check the prior-year AGI for identity verification; if it fails, you must correct the number from your actual past records or print and mail the return.",
+        "whatTheAgentLoses": "You lose the ability to retrieve the correct AGI from your personal records to fix the rejection, potentially leaving your taxes unfiled and accumulating late penalties.",
+        "speak": "on-event",
+        "check": "What rejection reason does the page show for the e-file?",
+        "say_example": "The IRS bounced the return. It says last year's income number doesn't match their records. Nothing is filed yet. Can you check the AGI on last year's printed return?"
        }
       ]
      },

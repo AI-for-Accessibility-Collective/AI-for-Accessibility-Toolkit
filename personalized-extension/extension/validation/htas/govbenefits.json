@@ -120,28 +120,6 @@
         "say_example": "The application needs <your employer's address and your ID number>. I don't have those. Can you give them to me?"
        },
        {
-        "question": "Did the form actually ask for the employer phone numbers I was told to gather?",
-        "cluster": "facts",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "The initial instructions explicitly told you to prepare employer phone numbers, but the actual employment history form lacked a field for them.",
-        "whatTheAgentLoses": "You lose the chance to notice this discrepancy and decide if you need to include the phone numbers in an additional notes section to prevent processing delays.",
-        "speak": "never",
-        "check": "Does the employment form show a field for employer phone numbers?",
-        "say_example": "The form never asked for the employer phone numbers the instructions said to gather."
-       },
-       {
-        "question": "Does the employment history date range match the 18-month requirement stated earlier?",
-        "cluster": "facts",
-        "moment": "On demand",
-        "moneyMoving": false,
-        "why": "Verifying that the system's requested start date of December 1, 2022, aligns with the 18-month rule ensures you provide the exact work history required.",
-        "whatTheAgentLoses": "You lose the opportunity to verify that the system's automated date calculations correctly align with the stated application requirements.",
-        "speak": "if-wrong",
-        "check": "What start date does the form request for employment history, and what span do the instructions state?",
-        "say_example": "The instructions said <18 months> of history, but the form asks from <a different date>. I'm answering what the form asks and noting the gap."
-       },
-       {
         "question": "Under what conditions can you cancel your unemployment claim once it has been filed?",
         "cluster": "facts",
         "moment": "On demand",
@@ -1225,6 +1203,17 @@
           "speak": "never",
           "check": "Which employer detail fields does the form require?",
           "say_example": "Filled the employer's address, phone, and your dates from what you gave me."
+         },
+         {
+          "question": "Did the form actually ask for the employer phone numbers I was told to gather?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "The initial instructions explicitly told you to prepare employer phone numbers, but the actual employment history form lacked a field for them.",
+          "whatTheAgentLoses": "You lose the chance to notice this discrepancy and decide if you need to include the phone numbers in an additional notes section to prevent processing delays.",
+          "speak": "never",
+          "check": "Does the employment form show a field for employer phone numbers?",
+          "say_example": "The form never asked for the employer phone numbers the instructions said to gather."
          }
         ]
        },
@@ -1331,6 +1320,17 @@
           "speak": "never",
           "check": "Which business categories does the form list?",
           "say_example": "Classified <the employer> under <food and drink>, the nearest category."
+         },
+         {
+          "question": "Does the employment history date range match the 18-month requirement stated earlier?",
+          "cluster": "facts",
+          "moment": "On demand",
+          "moneyMoving": false,
+          "why": "Verifying that the system's requested start date of December 1, 2022, aligns with the 18-month rule ensures you provide the exact work history required.",
+          "whatTheAgentLoses": "You lose the opportunity to verify that the system's automated date calculations correctly align with the stated application requirements.",
+          "speak": "if-wrong",
+          "check": "What start date does the form request for employment history, and what span do the instructions state?",
+          "say_example": "The instructions said <18 months> of history, but the form asks from <a different date>. I'm answering what the form asks and noting the gap."
          }
         ]
        },

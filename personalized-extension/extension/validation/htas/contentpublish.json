@@ -554,6 +554,18 @@
         "speak": "on-event",
         "check": "Do the duration readouts shown on different screens (file manager, timeline, thumbnail preview) disagree with each other?",
         "say_example": "the file manager, the timeline, and the thumbnail preview each show a slightly different length for this video"
+       },
+       {
+        "question": "Does the subscriber count shown in the animation match the current channel stats?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The channel page displayed 51.1K subscribers, but the subscribe animation graphic in the video showed 24K subscribers.",
+        "whatTheAgentLoses": "The user loses the opportunity to catch and update outdated graphics in their video before it goes live.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the subscribe-animation graphic baked into the video show a subscriber count different from the channel's actual current count?",
+        "say_example": "the animation in the video shows <count shown>, but the channel actually has <real count>"
        }
       ]
      },
@@ -1065,16 +1077,17 @@
       "say_example": "The narration said to skip this tab, then went back and filled it out anyway. Those don't match."
      },
      {
-      "question": "Does the subscriber count shown in the animation match the current channel stats?",
-      "cluster": "facts",
+      "question": "Do you want to use a template for the video details?",
+      "cluster": "select",
       "moment": "Now",
       "moneyMoving": false,
-      "why": "The channel page displayed 51.1K subscribers, but the subscribe animation graphic in the video showed 24K subscribers.",
-      "whatTheAgentLoses": "The user loses the opportunity to catch and update outdated graphics in their video before it goes live.",
-      "kind": "state-check",
+      "why": "The screen showed a template being applied to the video details before you chose to discard those changes.",
+      "whatTheAgentLoses": "You lose the ability to preview a template's details and then decide to discard them in favor of custom text.",
+      "kind": "decision",
+      "verify_form": "The agent applied a template and then discarded it - check what is actually saved; a discarded template leaves the end screen empty.",
       "speak": "if-wrong",
-      "check": "Does the subscribe-animation graphic baked into the video show a subscriber count different from the channel's actual current count?",
-      "say_example": "the animation in the video shows <count shown>, but the channel actually has <real count>"
+      "check": "Was a video-details template applied, and was it kept or discarded?",
+      "say_example": "A details template got applied, then discarded, so none of it is in the final video."
      }
     ],
     "children": [
@@ -1528,32 +1541,6 @@
           "say_example": "the first result had no hashtags, so used the second one's set instead"
          },
          {
-          "question": "What style of competitor thumbnail should you use as inspiration?",
-          "cluster": "compare",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "The screen showed a recent competitor video with high views, suggesting its thumbnail design is effective for this topic.",
-          "whatTheAgentLoses": "The user loses the ability to manually analyze competitor success and tailor their own thumbnail design accordingly.",
-          "kind": "decision",
-          "verify_form": "The agent used a competitor's thumbnail as the model for yours - look at both; borrowing a style is not the same as borrowing an image, and the line matters.",
-          "speak": "never",
-          "check": "Does a recent, high-view competitor video use a distinct thumbnail style?",
-          "say_example": "used that competitor's thumbnail layout as a starting point, not a copy"
-         },
-         {
-          "question": "Which competitor tags should you copy for this video?",
-          "cluster": "hand over",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Viewing a related video's tag panel reveals the specific keywords successful competitors use to rank for this topic.",
-          "whatTheAgentLoses": "You lose the opportunity to manually review and select which competitor tags are most relevant to your specific video.",
-          "kind": "decision",
-          "verify_form": "The agent copied another creator's tags - read them; they were chosen for their video, and they can carry that channel's own name.",
-          "speak": "never",
-          "check": "Does the related video's tag panel list its search-metadata tags?",
-          "say_example": "copied a few tags from that related video's tag panel"
-         },
-         {
           "question": "Which showcase contains the template you want to use?",
           "cluster": "select",
           "moment": "Now",
@@ -1811,6 +1798,19 @@
         "speak": "never",
         "check": "Which thumbnail path is selected - upload a file, use an auto-generated frame, or set up a test comparing several?",
         "say_example": "Chose to upload a custom thumbnail instead of using a generated frame"
+       },
+       {
+        "question": "What style of competitor thumbnail should you use as inspiration?",
+        "cluster": "compare",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen showed a recent competitor video with high views, suggesting its thumbnail design is effective for this topic.",
+        "whatTheAgentLoses": "The user loses the ability to manually analyze competitor success and tailor their own thumbnail design accordingly.",
+        "kind": "decision",
+        "verify_form": "The agent used a competitor's thumbnail as the model for yours - look at both; borrowing a style is not the same as borrowing an image, and the line matters.",
+        "speak": "never",
+        "check": "Does a recent, high-view competitor video use a distinct thumbnail style?",
+        "say_example": "used that competitor's thumbnail layout as a starting point, not a copy"
        }
       ],
       "children": [
@@ -2179,6 +2179,19 @@
         "speak": "never",
         "check": "What tags are typed into the Tags field on the edit-details screen?",
         "say_example": "Added tags on the edit-details screen after the upload"
+       },
+       {
+        "question": "Which competitor tags should you copy for this video?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Viewing a related video's tag panel reveals the specific keywords successful competitors use to rank for this topic.",
+        "whatTheAgentLoses": "You lose the opportunity to manually review and select which competitor tags are most relevant to your specific video.",
+        "kind": "decision",
+        "verify_form": "The agent copied another creator's tags - read them; they were chosen for their video, and they can carry that channel's own name.",
+        "speak": "never",
+        "check": "Does the related video's tag panel list its search-metadata tags?",
+        "say_example": "copied a few tags from that related video's tag panel"
        }
       ]
      },
@@ -2522,21 +2535,6 @@
     "id": "5",
     "label": "Declare and restrict the video",
     "note": "5.1 in every keeper on the modern flow, and it is the one field the interface marks required - YJnz shows the tooltip. 5.2 where the person opens the advanced block. 5.3 and 5.4 wherever the surface lists them. 5.5 and 5.6 where the person bothers, and 5.6 is refused outright twice. 5.7 in any order, and on the phone apps it is a separate screen per setting rather than a block.",
-    "questions": [
-     {
-      "question": "Should this video's public view count be hidden from other viewers?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The screen includes advanced options to set the recording date to today, declare paid product placements, and toggle the visibility of video statistics.",
-      "whatTheAgentLoses": "You lose the opportunity to legally disclose sponsorships or control whether your audience can see the video's performance metrics.",
-      "kind": "decision",
-      "verify_form": "The agent set the recording date, the paid-promotion declaration and whether the statistics are public - check all three; one is a fact, one is a legal disclosure and one is what your audience sees.",
-      "speak": "never",
-      "check": "Is the option to hide the video's public view count from other viewers turned on or off?",
-      "say_example": "Left the video's public view count visible to other viewers"
-     }
-    ],
     "children": [
      {
       "id": "5.1",
@@ -2719,6 +2717,19 @@
         "speak": "never",
         "check": "Is the Community contributions checkbox for translations turned on or off?",
         "say_example": "Left community contributions off - no one else can submit translations"
+       },
+       {
+        "question": "Should this video's public view count be hidden from other viewers?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen includes advanced options to set the recording date to today, declare paid product placements, and toggle the visibility of video statistics.",
+        "whatTheAgentLoses": "You lose the opportunity to legally disclose sponsorships or control whether your audience can see the video's performance metrics.",
+        "kind": "decision",
+        "verify_form": "The agent set the recording date, the paid-promotion declaration and whether the statistics are public - check all three; one is a fact, one is a legal disclosure and one is what your audience sees.",
+        "speak": "never",
+        "check": "Is the option to hide the video's public view count from other viewers turned on or off?",
+        "say_example": "Left the video's public view count visible to other viewers"
        }
       ],
       "children": [
@@ -3269,19 +3280,6 @@
         "speak": "if-wrong",
         "check": "What is the end-screen template name currently selected?",
         "say_example": "End screen template set to <video plus subscribe>."
-       },
-       {
-        "question": "Do you want to use a template for the video details?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen showed a template being applied to the video details before you chose to discard those changes.",
-        "whatTheAgentLoses": "You lose the ability to preview a template's details and then decide to discard them in favor of custom text.",
-        "kind": "decision",
-        "verify_form": "The agent applied a template and then discarded it - check what is actually saved; a discarded template leaves the end screen empty.",
-        "speak": "if-wrong",
-        "check": "Was a video-details template applied, and was it kept or discarded?",
-        "say_example": "A details template got applied, then discarded, so none of it is in the final video."
        },
        {
         "question": "Are you ready to save this end screen configuration?",

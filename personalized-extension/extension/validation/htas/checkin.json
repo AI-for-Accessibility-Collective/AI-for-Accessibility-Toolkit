@@ -508,30 +508,6 @@
         "speak": "if-wrong",
         "check": "Does the itinerary shown (booking reference, route, date) match the specific trip intended for check-in?",
         "say_example": "This booking reads <XYZ999> to <Cebu>, not the intended <[confirmation number]> to <Manila> - stopping to double check"
-       },
-       {
-        "question": "Is the seat picked where this airline keeps it, under additional services rather than check-in?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dashboard displays several action buttons, and the seat selection feature is specifically located in the 'Additional Services' section rather than the main check-in button.",
-        "whatTheAgentLoses": "You lose the awareness of how the airline organizes its booking management tools and where ancillary services are located.",
-        "kind": "state-check",
-        "speak": "on-event",
-        "check": "Is seat selection reached through an 'Additional Services' section rather than directly from the main check-in flow?",
-        "say_example": "Seat selection is under Additional Services here, not on the check-in screen itself"
-       },
-       {
-        "question": "Which flight does the page show as ready for check-in?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays flight [ref] from BXU to MNL as ready for check-in and instructs you to click the down arrow to proceed.",
-        "whatTheAgentLoses": "You lose the chance to verify that the correct flight itinerary is being selected before initiating the check-in steps.",
-        "kind": "intent-check",
-        "speak": "never",
-        "check": "Does the page show a specific flight (route, date) that is ready for check-in, with a clear next-step control (e.g. a down arrow) to proceed?",
-        "say_example": "Picked the <origin to destination> flight the page marked ready for check-in"
        }
       ]
      },
@@ -575,6 +551,18 @@
         "speak": "if-wrong",
         "check": "Was the 'Check-in' tab specifically opened, rather than 'Change flight', 'Add services', or another management option?",
         "say_example": "Opened <Change flight> instead of Check-in - switching tabs"
+       },
+       {
+        "question": "Which flight does the page show as ready for check-in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays flight [ref] from BXU to MNL as ready for check-in and instructs you to click the down arrow to proceed.",
+        "whatTheAgentLoses": "You lose the chance to verify that the correct flight itinerary is being selected before initiating the check-in steps.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "Does the page show a specific flight (route, date) that is ready for check-in, with a clear next-step control (e.g. a down arrow) to proceed?",
+        "say_example": "Picked the <origin to destination> flight the page marked ready for check-in"
        }
       ]
      }
@@ -988,6 +976,20 @@
     "id": "5",
     "label": "Settle the seat",
     "note": "5.1 wherever the airline has already given the user a seat, which is four of the videos. 5.2 before the user picks an option that has to be paid for. then 5.3 or 5.4, not both - 5.3 where the user can pick a seat off a map, 5.4 where the airline hands out a free seat instead. 5.5 once the user has picked a seat or kept the one they were given. 5.6 only in PirI, the only video with a seat payment, and the payment does not finish.",
+    "questions": [
+     {
+      "question": "Is the seat picked where this airline keeps it, under additional services rather than check-in?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The dashboard displays several action buttons, and the seat selection feature is specifically located in the 'Additional Services' section rather than the main check-in button.",
+      "whatTheAgentLoses": "You lose the awareness of how the airline organizes its booking management tools and where ancillary services are located.",
+      "kind": "state-check",
+      "speak": "on-event",
+      "check": "Is seat selection reached through an 'Additional Services' section rather than directly from the main check-in flow?",
+      "say_example": "Seat selection is under Additional Services here, not on the check-in screen itself"
+     }
+    ],
     "children": [
      {
       "id": "5.1",
@@ -1287,18 +1289,6 @@
         "say_example": "The page is asking about bags. You get <one free small bag under the seat>, and a checked bag is <54 GBP>. Are you checking anything?"
        },
        {
-        "question": "Does the bag icon show a small personal item or a full carry-on?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Airlines often use a small purse or backpack icon to denote a 'personal item only' allowance, while the text might vaguely say '1 piece', which can easily be misinterpreted by an automated reader.",
-        "whatTheAgentLoses": "You lose the visual context that clarifies exactly what size bag you are allowed to bring, risking unexpected gate fees if you pack a roller bag.",
-        "kind": "state-check",
-        "speak": "on-event",
-        "check": "Does the baggage-allowance icon show a small personal item (purse/backpack) or a full-sized carry-on bag?",
-        "say_example": "That icon is a small personal item, not a full carry-on. The text just says '1 piece', which sounds bigger than it is."
-       },
-       {
         "question": "Does the page show the checked bags you already paid for?",
         "cluster": "",
         "moment": null,
@@ -1328,6 +1318,18 @@
         "speak": "if-wrong",
         "check": "How many extra bags does the dropdown currently show as selected?",
         "say_example": "The dropdown's set to <1 PC> extra. Check that matches how many bags you actually want."
+       },
+       {
+        "question": "Does the bag icon show a small personal item or a full carry-on?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Airlines often use a small purse or backpack icon to denote a 'personal item only' allowance, while the text might vaguely say '1 piece', which can easily be misinterpreted by an automated reader.",
+        "whatTheAgentLoses": "You lose the visual context that clarifies exactly what size bag you are allowed to bring, risking unexpected gate fees if you pack a roller bag.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the baggage-allowance icon show a small personal item (purse/backpack) or a full-sized carry-on bag?",
+        "say_example": "That icon is a small personal item, not a full carry-on. The text just says '1 piece', which sounds bigger than it is."
        }
       ]
      },

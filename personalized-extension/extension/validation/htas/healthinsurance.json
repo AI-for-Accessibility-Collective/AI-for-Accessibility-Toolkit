@@ -388,17 +388,6 @@
         "say_example": "This one is only for families earning under <1,20,000> a year, and it wants an <Aadhaar card> and an income certificate."
        },
        {
-        "question": "What is your current plan and what are its basic costs?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Reviewing your current plan details, such as the $0.00 premium and $15.00 estimated drug costs for the Wellcare Value Script, establishes a baseline for comparing new options.",
-        "whatTheAgentLoses": "Delegating this step means you miss the immediate context of your current coverage and out-of-pocket estimates, making it harder to independently judge if a new plan is actually an improvement.",
-        "speak": "always",
-        "check": "What plan, premium and drug cost does the page show for the current plan?",
-        "say_example": "Right now you have <Wellcare Value Script>. <0> a month, about <15> in drug costs. That's the number to beat."
-       },
-       {
         "question": "What is your current benefit eligibility level?",
         "cluster": "",
         "moment": null,
@@ -1137,20 +1126,7 @@
      },
      {
       "id": "4.6",
-      "label": "Revise the drug list",
-      "questions": [
-       {
-        "question": "Does switching from brand-name Lipitor to generic Atorvastatin on a different plan reduce my estimated yearly cost?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The screen shows that switching from brand-name Lipitor on the Humana plan to generic Atorvastatin on the WellCare plan reduces the estimated yearly cost at CVS from $1,154.50 to $78.00.",
-        "whatTheAgentLoses": "An agent might overlook the massive out-of-pocket savings that come from switching to a generic equivalent on a different plan.",
-        "speak": "on-event",
-        "check": "Does the page show a much lower cost for a generic on another plan?",
-        "say_example": "One switch saves a lot. The generic on the <WellCare> plan takes your yearly drug cost from <1,154> to <78>."
-       }
-      ]
+      "label": "Revise the drug list"
      },
      {
       "id": "4.7",
@@ -1269,6 +1245,17 @@
       "speak": "always",
       "check": "What does the current plan's estimate show with the new drug list included?",
       "say_example": "First, your current plan with the new drug list: about <30> for the year. That's the number to beat."
+     },
+     {
+      "question": "What is your current plan and what are its basic costs?",
+      "cluster": "facts",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "Reviewing your current plan details, such as the $0.00 premium and $15.00 estimated drug costs for the Wellcare Value Script, establishes a baseline for comparing new options.",
+      "whatTheAgentLoses": "Delegating this step means you miss the immediate context of your current coverage and out-of-pocket estimates, making it harder to independently judge if a new plan is actually an improvement.",
+      "speak": "always",
+      "check": "What plan, premium and drug cost does the page show for the current plan?",
+      "say_example": "Right now you have <Wellcare Value Script>. <0> a month, about <15> in drug costs. That's the number to beat."
      }
     ],
     "children": [
@@ -1507,6 +1494,17 @@
         "speak": "on-event",
         "check": "Does the plan card show a special badge like HSA Eligible?",
         "say_example": "This one has a small <HSA Eligible> badge on the card. That matters if you want the savings account."
+       },
+       {
+        "question": "Does switching from brand-name Lipitor to generic Atorvastatin on a different plan reduce my estimated yearly cost?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows that switching from brand-name Lipitor on the Humana plan to generic Atorvastatin on the WellCare plan reduces the estimated yearly cost at CVS from $1,154.50 to $78.00.",
+        "whatTheAgentLoses": "An agent might overlook the massive out-of-pocket savings that come from switching to a generic equivalent on a different plan.",
+        "speak": "on-event",
+        "check": "Does the page show a much lower cost for a generic on another plan?",
+        "say_example": "One switch saves a lot. The generic on the <WellCare> plan takes your yearly drug cost from <1,154> to <78>."
        }
       ]
      },

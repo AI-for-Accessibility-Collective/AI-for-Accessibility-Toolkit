@@ -966,20 +966,7 @@
      },
      {
       "id": "9.4",
-      "label": "Check your contributions",
-      "questions": [
-       {
-        "question": "Is the review whose menu is open the one you just posted?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Locating the review for Club Angelina marked 'just now' and clicking its three-dot menu ensures you are targeting the correct recent submission.",
-        "whatTheAgentLoses": "The user loses the chance to personally verify the exact text and rating of their newly submitted review before opening its options menu.",
-        "speak": "if-wrong",
-        "check": "Does the review whose menu is open show <the business name> and 'just now' or today's date?",
-        "say_example": "That menu belongs to your older review of <Club Angelina> from <March>. I'm closing it. The one from just now is below."
-       }
-      ]
+      "label": "Check your contributions"
      },
      {
       "id": "9.6",
@@ -996,6 +983,17 @@
         "speak": "never",
         "check": "Which options does the review's menu show?",
         "say_example": "Used edit on the new review"
+       },
+       {
+        "question": "Is the review whose menu is open the one you just posted?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Locating the review for Club Angelina marked 'just now' and clicking its three-dot menu ensures you are targeting the correct recent submission.",
+        "whatTheAgentLoses": "The user loses the chance to personally verify the exact text and rating of their newly submitted review before opening its options menu.",
+        "speak": "if-wrong",
+        "check": "Does the review whose menu is open show <the business name> and 'just now' or today's date?",
+        "say_example": "That menu belongs to your older review of <Club Angelina> from <March>. I'm closing it. The one from just now is below."
        }
       ],
       "children": [

@@ -394,17 +394,6 @@
         "speak": "on-event",
         "check": "Are there two or more open orders showing the same buyer name and the same ship-to address?",
         "say_example": "Three orders here are from <buyer>, all going to the same address. Ship them as one package? That's one label instead of three."
-       },
-       {
-        "question": "Which of the combined orders gets the refund?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows three orders for the same buyer with the identical tracking number, requiring a choice of which specific order record to update.",
-        "whatTheAgentLoses": "You lose the ability to decide how the partial refund is accounted for across the specific items in the combined order.",
-        "speak": "never",
-        "check": "Which orders share the same tracking number, and which one is opened for the refund?",
-        "say_example": "Refund goes on order <9083>, the first of the three."
        }
       ]
      }
@@ -2011,7 +2000,7 @@
         "why": "The screen displays a list of orders on the 'Track and manage your shipments' page, including one for an Amazon Fire HD 8 Tablet.",
         "whatTheAgentLoses": "The user loses control over selecting the correct order to process.",
         "speak": "never",
-        "check": "Which order in the list matches the one just shipped?",
+        "check": "Which order in the list — among those sharing the same tracking number — matches the one just shipped, and is opened for the refund?",
         "say_example": "Opened order <25-08538> for the refund."
        },
        {

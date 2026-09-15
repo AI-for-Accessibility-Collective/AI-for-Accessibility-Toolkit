@@ -80,6 +80,18 @@
         "speak": "if-wrong",
         "check": "Does the account indicator on the page (e.g. the 'u/2' marker, profile avatar, or email) match the account the person said to use?",
         "say_example": "This is signed into <account>, not the one you meant."
+       },
+       {
+        "question": "Is the correct Apple ID signed in before you open iCloud settings?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Settings menu displays the Apple ID profile at the top, which must be selected to reach the iCloud configuration options.",
+        "whatTheAgentLoses": "The user loses the chance to verify that the correct Apple ID is signed in before proceeding with iCloud sharing.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the Apple ID shown at the top of Settings match the account the person intends to use?",
+        "say_example": "This is signed in as <email>, not the Apple ID you use for sharing."
        }
       ]
      },
@@ -111,18 +123,6 @@
         "speak": "if-wrong",
         "check": "Does the folder path shown include 'iCloud Drive'?",
         "say_example": "This file isn't in iCloud Drive yet, so it can't be shared this way."
-       },
-       {
-        "question": "Is the correct Apple ID signed in before you open iCloud settings?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Settings menu displays the Apple ID profile at the top, which must be selected to reach the iCloud configuration options.",
-        "whatTheAgentLoses": "The user loses the chance to verify that the correct Apple ID is signed in before proceeding with iCloud sharing.",
-        "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Does the Apple ID shown at the top of Settings match the account the person intends to use?",
-        "say_example": "This is signed in as <email>, not the Apple ID you use for sharing."
        },
        {
         "question": "Are your photos currently syncing to iCloud?",

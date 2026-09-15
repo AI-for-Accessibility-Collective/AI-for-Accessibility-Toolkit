@@ -119,6 +119,17 @@
       "speak": "on-event",
       "check": "Does the page show a hold, stop, or outstanding-obligation notice on the record?",
       "say_example": "There's a hold on your record for <unpaid tolls>. The renewal won't go through until that's paid, and it's paid on <a different site>. Want me to take you there?"
+     },
+     {
+      "question": "Should you check the mailing status of your card instead of starting a new renewal?",
+      "cluster": "select",
+      "moment": "Now",
+      "moneyMoving": false,
+      "why": "The screen provides a link to check the mailing status under the 'What to Expect' section, which is important if you recently renewed and are just waiting for the physical document to arrive.",
+      "whatTheAgentLoses": "The user loses the opportunity to discover that their previously renewed card is already in the mail, potentially resulting in an unnecessary duplicate transaction and fee.",
+      "speak": "on-event",
+      "check": "Does the page show that a renewal was already completed recently, with a mailing-status option for the pending card?",
+      "say_example": "Your record shows a renewal already went through on <March 3>. Renewing again would just charge you again. Want me to check the card's mailing status instead?"
      }
     ],
     "children": [
@@ -1934,17 +1945,6 @@
       "id": "8.7",
       "label": "Check the mailing status",
       "questions": [
-       {
-        "question": "Should you check the mailing status of your card instead of starting a new renewal?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen provides a link to check the mailing status under the 'What to Expect' section, which is important if you recently renewed and are just waiting for the physical document to arrive.",
-        "whatTheAgentLoses": "The user loses the opportunity to discover that their previously renewed card is already in the mail, potentially resulting in an unnecessary duplicate transaction and fee.",
-        "speak": "on-event",
-        "check": "Does the page show that a renewal was already completed recently, with a mailing-status option for the pending card?",
-        "say_example": "Your record shows a renewal already went through on <March 3>. Renewing again would just charge you again. Want me to check the card's mailing status instead?"
-       },
        {
         "question": "What information do you enter to check the mailing status of your card?",
         "cluster": "hand over",

@@ -1245,50 +1245,6 @@
       "speak": "on-event",
       "check": "Is a CAPTCHA or security challenge blocking the form?",
       "say_example": "There's a robot check I can't pass. Can you tap the box for me?"
-     },
-     {
-      "question": "Does the confirmation email match what you asked for?",
-      "cluster": "receipts",
-      "moment": "Completion",
-      "moneyMoving": true,
-      "why": "Reviewing the confirmation email ensures that the correct parameters, such as your contact info and requested tour time, were successfully submitted to the property.",
-      "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct contact information and viewing preferences were sent to the landlord.",
-      "speak": "if-wrong",
-      "check": "Do the details in the confirmation email match the request that was sent?",
-      "say_example": "The confirmation email doesn't match what we sent. It shows <Tuesday>, and we asked for <Saturday>. I'll follow up."
-     },
-     {
-      "question": "Does the page confirm the request was sent?",
-      "cluster": "receipts",
-      "moment": "Completion",
-      "moneyMoving": true,
-      "why": "The screen displayed a pop-up modal with a checkmark and success message, which is the only way to guarantee the inquiry was actually processed.",
-      "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the visual confirmation that their specific message successfully went through to the property manager.",
-      "speak": "always",
-      "check": "Does the page show a success message for the inquiry?",
-      "say_example": "Sent. The site confirmed your request to <Origin Apartments> at <3:07>."
-     },
-     {
-      "question": "Did the confirmation message state that the property manager will contact you, or does it require you to call them to confirm the tour?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "A 'success' screen might actually contain instructions that the user must take further action, like calling a number, to actually secure the booking.",
-      "whatTheAgentLoses": "The user thinks the tour is booked, but it gets canceled because they didn't see the instruction to call and confirm.",
-      "speak": "on-event",
-      "check": "Does the confirmation say the property will contact you, or that you must call?",
-      "say_example": "The confirmation says you have to call them to lock in the tour. Nothing is booked until that call."
-     },
-     {
-      "question": "Did the confirmation screen include a visual upsell for a paid renter profile or background check that you should ignore?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "After a successful inquiry, platforms often display prominent visual upsells for premium services, which can look like required next steps if not read carefully.",
-      "whatTheAgentLoses": "The user might be tricked into paying for an unnecessary premium renter profile or background check because the agent mistook the visual upsell for a mandatory application step.",
-      "speak": "on-event",
-      "check": "Does the screen after the inquiry offer a paid profile or background check?",
-      "say_example": "The next screen is selling a paid renter profile. You don't need it for this. I'm skipping past it."
      }
     ],
     "children": [
@@ -1568,8 +1524,41 @@
         "why": "The video cuts away while the 'Property Inquiry' form is still blank, meaning the contact step was never completed.",
         "whatTheAgentLoses": "The user misses out on actually contacting the property because the inquiry was never sent.",
         "speak": "if-wrong",
-        "check": "Does the page show the form submitted, or still blank?",
+        "check": "Does the page show a success message for the inquiry, or does the form still show blank/unsubmitted?",
         "say_example": "The form never went through. It's still sitting blank. I'm filling it in again."
+       },
+       {
+        "question": "Does the confirmation email match what you asked for?",
+        "cluster": "receipts",
+        "moment": "Completion",
+        "moneyMoving": true,
+        "why": "Reviewing the confirmation email ensures that the correct parameters, such as your contact info and requested tour time, were successfully submitted to the property.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct contact information and viewing preferences were sent to the landlord.",
+        "speak": "if-wrong",
+        "check": "Do the details in the confirmation email match the request that was sent?",
+        "say_example": "The confirmation email doesn't match what we sent. It shows <Tuesday>, and we asked for <Saturday>. I'll follow up."
+       },
+       {
+        "question": "Did the confirmation message state that the property manager will contact you, or does it require you to call them to confirm the tour?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "A 'success' screen might actually contain instructions that the user must take further action, like calling a number, to actually secure the booking.",
+        "whatTheAgentLoses": "The user thinks the tour is booked, but it gets canceled because they didn't see the instruction to call and confirm.",
+        "speak": "on-event",
+        "check": "Does the confirmation say the property will contact you, or that you must call?",
+        "say_example": "The confirmation says you have to call them to lock in the tour. Nothing is booked until that call."
+       },
+       {
+        "question": "Did the confirmation screen include a visual upsell for a paid renter profile or background check that you should ignore?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "After a successful inquiry, platforms often display prominent visual upsells for premium services, which can look like required next steps if not read carefully.",
+        "whatTheAgentLoses": "The user might be tricked into paying for an unnecessary premium renter profile or background check because the agent mistook the visual upsell for a mandatory application step.",
+        "speak": "on-event",
+        "check": "Does the screen after the inquiry offer a paid profile or background check?",
+        "say_example": "The next screen is selling a paid renter profile. You don't need it for this. I'm skipping past it."
        }
       ]
      }

@@ -28,17 +28,6 @@
     "say_example": "Picked <50> cheques, the middle of the three sizes offered."
    },
    {
-    "question": "Is this the correct closed vehicle loan you want to request an NOC for?",
-    "cluster": "",
-    "moment": null,
-    "moneyMoving": false,
-    "why": "Verifying the vehicle details, like the Splendor Plus XTE and the ₹ [number] loan amount, ensures you are requesting the certificate for the correct closed account.",
-    "whatTheAgentLoses": "You lose the ability to personally verify that the No Objection Certificate is being requested for the correct vehicle.",
-    "speak": "if-wrong",
-    "check": "Which closed loan does the page show selected for the NOC request?",
-    "say_example": "The page has the <Splendor Plus> loan selected. Your ask says the <car> loan. I stopped before requesting."
-   },
-   {
     "question": "What payment amount is entered, and is the reduce-EMI or reduce-term option selected?",
     "cluster": "",
     "moment": null,
@@ -799,17 +788,6 @@
         "speak": "never",
         "check": "Which navigation tabs does the page show?",
         "say_example": "Opened Bill Pay from the top menu."
-       },
-       {
-        "question": "Does the transfer method chosen - 'Your External Accounts', 'Wires & Transfers', or Zelle - carry a fee or a delay you did not intend?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The menu offers multiple transfer types like 'Your External Accounts', 'Wires & Transfers', and 'Zelle', so you must choose the correct routing method for your specific transaction.",
-        "whatTheAgentLoses": "Delegating this step means losing control over which transfer method is used, which could unexpectedly incur wire fees or affect how quickly the funds arrive.",
-        "speak": "always",
-        "check": "Which transfer options does the menu list, and what does the page say about each?",
-        "say_example": "A few ways to send this. Zelle is instant but has no recovery. The wire costs <25>. I'm using the external transfer; it's free and takes a day or two."
        }
       ]
      },
@@ -1424,7 +1402,7 @@
         "why": "The screen presents six different ways to move money, including Zelle and wires, so you must select the specific 'Transfer' option for an internal account-to-account move.",
         "whatTheAgentLoses": "Delegating this step means losing visibility into the bank's other available payment features, such as Zelle or wire transfers, that might be useful for future needs.",
         "speak": "always",
-        "check": "Which transfer options does the page list, and what does it say about each?",
+        "check": "Which transfer options (e.g. internal Transfer, Your External Accounts, Wires & Transfers, Zelle) does the page list, and what does it say about each, including any fee or delay?",
         "say_example": "Six ways to move money here. For your own two accounts, plain Transfer is the free one, so I picked it."
        },
        {
@@ -2446,6 +2424,17 @@
       "speak": "never",
       "check": "Which account is selected to pay the statement fee?",
       "say_example": "The <20> fee comes out of the savings account."
+     },
+     {
+      "question": "Is this the correct closed vehicle loan you want to request an NOC for?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Verifying the vehicle details, like the Splendor Plus XTE and the ₹ [number] loan amount, ensures you are requesting the certificate for the correct closed account.",
+      "whatTheAgentLoses": "You lose the ability to personally verify that the No Objection Certificate is being requested for the correct vehicle.",
+      "speak": "if-wrong",
+      "check": "Which closed loan does the page show selected for the NOC request?",
+      "say_example": "The page has the <Splendor Plus> loan selected. Your ask says the <car> loan. I stopped before requesting."
      }
     ],
     "children": [

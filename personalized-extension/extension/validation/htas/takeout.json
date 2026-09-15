@@ -1452,17 +1452,6 @@
         "speak": "if-wrong",
         "check": "What delivery time does checkout show for standard delivery, and what did the listing and the restaurant page show?",
         "say_example": "The listing promised <time>. At checkout that speed costs <fee> extra. Standard is <time>."
-       },
-       {
-        "question": "Is the total on the confirmation the same as at checkout?",
-        "cluster": "receipts",
-        "moment": "After",
-        "moneyMoving": true,
-        "why": "The checkout screen displayed a total of $30.76 with a $5.00 tip, but the final confirmation showed a different total of $26.82 with a $3.00 tip.",
-        "whatTheAgentLoses": "The user loses control over their spending and intended tip amount if the final order differs from what was approved.",
-        "speak": "if-wrong",
-        "check": "What total and which items does the confirmation show, and do they match the checkout screen?",
-        "say_example": "Checkout said <total>. The confirmation says <total> with a <amount> tip. Those don't match."
        }
       ]
      },
@@ -1560,6 +1549,17 @@
         "speak": "if-wrong",
         "check": "Does the confirmation say it is a pickup order, and from where?",
         "say_example": "The confirmation says pickup. You asked for delivery. You'd have to go to <street> for it. I can cancel it if you say so."
+       },
+       {
+        "question": "Is the total on the confirmation the same as at checkout?",
+        "cluster": "receipts",
+        "moment": "After",
+        "moneyMoving": true,
+        "why": "The checkout screen displayed a total of $30.76 with a $5.00 tip, but the final confirmation showed a different total of $26.82 with a $3.00 tip.",
+        "whatTheAgentLoses": "The user loses control over their spending and intended tip amount if the final order differs from what was approved.",
+        "speak": "if-wrong",
+        "check": "What total and which items does the confirmation show, and do they match the checkout screen?",
+        "say_example": "Checkout said <total>. The confirmation says <total> with a <amount> tip. Those don't match."
        }
       ]
      },

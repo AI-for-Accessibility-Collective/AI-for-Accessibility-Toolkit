@@ -468,20 +468,7 @@
     "children": [
      {
       "id": "3.1",
-      "label": "Open the schedule form",
-      "questions": [
-       {
-        "question": "Does the time being set clash with anything already on the calendar?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Checking the calendar grid, which currently shows only one existing meeting block, ensures you understand your availability before scheduling a new call.",
-        "whatTheAgentLoses": "You lose the opportunity to personally assess your weekly workload and availability before committing to a new meeting time.",
-        "speak": "on-event",
-        "check": "Does the calendar grid show an existing event at the chosen date and time, and what is its title?",
-        "say_example": "That time already has <Team standup> on your calendar. Booking the new meeting over it. Say a different time if you'd rather."
-       }
-      ]
+      "label": "Open the schedule form"
      },
      {
       "id": "3.2",
@@ -514,6 +501,17 @@
         "speak": "gate",
         "check": "What date, start time and duration does the form show?",
         "say_example": "You didn't say when. What day and time, and how long?"
+       },
+       {
+        "question": "Does the time being set clash with anything already on the calendar?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Checking the calendar grid, which currently shows only one existing meeting block, ensures you understand your availability before scheduling a new call.",
+        "whatTheAgentLoses": "You lose the opportunity to personally assess your weekly workload and availability before committing to a new meeting time.",
+        "speak": "on-event",
+        "check": "Does the calendar grid show an existing event at the chosen date and time, and what is its title?",
+        "say_example": "That time already has <Team standup> on your calendar. Booking the new meeting over it. Say a different time if you'd rather."
        }
       ]
      },
@@ -559,17 +557,6 @@
         "speak": "never",
         "check": "What does the 'Ends' setting show: never, a date, or a number of times?",
         "say_example": "Set no end date on the series. It runs until you delete it."
-       },
-       {
-        "question": "Does the saved repeat rule match what was set, with the same days and the same end?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The custom recurrence dialog showed the event ending after 13 occurrences, but the saved details suddenly display 20 times without showing the change on screen.",
-        "whatTheAgentLoses": "The user loses the ability to verify how the meeting recurrence was actually configured since the final saved state contradicts the earlier setup.",
-        "speak": "if-wrong",
-        "check": "Does the saved event's repeat line show the same days and the same end, by date or by count, as was entered?",
-        "say_example": "I set it to end after <13> meetings. The saved event says <20>. Fixing it."
        }
       ]
      },
@@ -872,6 +859,17 @@
         "speak": "never",
         "check": "Does the meeting detail page show the meeting ID and passcode?",
         "say_example": "Noted meeting ID <123 456 789> and passcode <abc123>."
+       },
+       {
+        "question": "Does the saved repeat rule match what was set, with the same days and the same end?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The custom recurrence dialog showed the event ending after 13 occurrences, but the saved details suddenly display 20 times without showing the change on screen.",
+        "whatTheAgentLoses": "The user loses the ability to verify how the meeting recurrence was actually configured since the final saved state contradicts the earlier setup.",
+        "speak": "if-wrong",
+        "check": "Does the saved event's repeat line show the same days and the same end, by date or by count, as was entered?",
+        "say_example": "I set it to end after <13> meetings. The saved event says <20>. Fixing it."
        }
       ]
      }
@@ -1720,6 +1718,17 @@
         "speak": "never",
         "check": "In the 'Mute all' confirmation, is the 'Allow participants to unmute themselves' box checked?",
         "say_example": "Muted everyone. They can unmute themselves."
+       },
+       {
+        "question": "After the mute, does the participant list actually show that person as muted, or is their audio still live?",
+        "cluster": "facts",
+        "moment": "On demand",
+        "moneyMoving": false,
+        "why": "The screen shows the mute dialog opening, but after a cut, the participant list still displays an active audio icon instead of a muted one.",
+        "whatTheAgentLoses": "An agent would be confused by the inconsistent state and fail to learn how to properly complete the action.",
+        "speak": "if-wrong",
+        "check": "After the mute, does the participant's entry show 'muted' or an unmute control?",
+        "say_example": "The mute didn't take. <[name]> still shows as live. Trying again."
        }
       ]
      },
@@ -1846,19 +1855,6 @@
     "id": "7",
     "label": "Use the call controls",
     "note": "any order and any subset - this is the tour every keeper runs after 5.11. 7.1 and 7.2 nearly always; 7.3 and 7.5 where the narrator opens the menus; 7.6 on most; 7.7 and 7.4 where offered; 7.8 only on the Teams participant path; 7.9 once.",
-    "questions": [
-     {
-      "question": "After the mute, does the participant list actually show that person as muted, or is their audio still live?",
-      "cluster": "facts",
-      "moment": "On demand",
-      "moneyMoving": false,
-      "why": "The screen shows the mute dialog opening, but after a cut, the participant list still displays an active audio icon instead of a muted one.",
-      "whatTheAgentLoses": "An agent would be confused by the inconsistent state and fail to learn how to properly complete the action.",
-      "speak": "if-wrong",
-      "check": "After the mute, does the participant's entry show 'muted' or an unmute control?",
-      "say_example": "The mute didn't take. <[name]> still shows as live. Trying again."
-     }
-    ],
     "children": [
      {
       "id": "7.1",

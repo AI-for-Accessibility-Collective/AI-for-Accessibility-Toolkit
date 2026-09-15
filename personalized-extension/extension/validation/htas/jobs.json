@@ -594,17 +594,6 @@
           "speak": "on-event",
           "check": "Does the posting state the pay is commission-only, and what salary range does it advertise?",
           "say_example": "The <50,000 to 250,000> here isn't a salary. The posting says pay is commission only. You could earn nothing."
-         },
-         {
-          "question": "Does the pay rate shown in the application match the rate advertised on the original job posting?",
-          "cluster": "facts",
-          "moment": "Now",
-          "moneyMoving": false,
-          "why": "Verifying consistency across the application process ensures the employer hasn't changed the compensation terms after you clicked apply.",
-          "whatTheAgentLoses": "The user loses the ability to catch a bait-and-switch in the compensation details and halt the application before handing over personal data.",
-          "speak": "if-wrong",
-          "check": "What pay does the application page show, and what pay did the original posting show?",
-          "say_example": "The posting said <25> an hour. The application now says <22>. The terms changed after you clicked apply."
          }
         ]
        },
@@ -2230,6 +2219,17 @@
         "speak": "if-wrong",
         "check": "What experience values do the questionnaire answers show, and what does the resume state?",
         "say_example": "The answers claim <12 years>; your resume says <10>. An employer reads that gap as lying. Matching the answers to the resume before it sends."
+       },
+       {
+        "question": "Does the pay rate shown in the application match the rate advertised on the original job posting?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying consistency across the application process ensures the employer hasn't changed the compensation terms after you clicked apply.",
+        "whatTheAgentLoses": "The user loses the ability to catch a bait-and-switch in the compensation details and halt the application before handing over personal data.",
+        "speak": "if-wrong",
+        "check": "What pay does the application page show, and what pay did the original posting show?",
+        "say_example": "The posting said <25> an hour. The application now says <22>. The terms changed after you clicked apply."
        }
       ]
      },

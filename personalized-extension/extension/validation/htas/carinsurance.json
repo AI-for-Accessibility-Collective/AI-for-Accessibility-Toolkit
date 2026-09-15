@@ -301,17 +301,6 @@
         "say_example": "Set the seats to <5>, from the registration."
        },
        {
-        "question": "Does the car have any modifications from standard?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Verifying retrieved details like the engine size, alarm status, and market value ensures the quote accurately reflects the specific vehicle being insured.",
-        "whatTheAgentLoses": "You lose the ability to catch inaccuracies in the registry data or declare specific aftermarket modifications that could otherwise invalidate your coverage.",
-        "speak": "on-event",
-        "check": "Does the form ask whether the car has modifications from standard, and what is selected?",
-        "say_example": "It asks if the car's been modified. I'm saying no, since you didn't mention any. Say so if it has, because an undeclared one can void a claim."
-       },
-       {
         "question": "Did the site read the VIN, or is it asking for the trim by hand?",
         "cluster": "",
         "moment": null,
@@ -581,6 +570,17 @@
         "speak": "never",
         "check": "Does the form ask about an anti-theft device or alarm, and what is selected?",
         "say_example": "Said no alarm or tracker. You didn't mention one. Having one would be a discount."
+       },
+       {
+        "question": "Does the car have any modifications from standard?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Verifying retrieved details like the engine size, alarm status, and market value ensures the quote accurately reflects the specific vehicle being insured.",
+        "whatTheAgentLoses": "You lose the ability to catch inaccuracies in the registry data or declare specific aftermarket modifications that could otherwise invalidate your coverage.",
+        "speak": "on-event",
+        "check": "Does the form ask whether the car has modifications from standard, and what is selected?",
+        "say_example": "It asks if the car's been modified. I'm saying no, since you didn't mention any. Say so if it has, because an undeclared one can void a claim."
        }
       ]
      }

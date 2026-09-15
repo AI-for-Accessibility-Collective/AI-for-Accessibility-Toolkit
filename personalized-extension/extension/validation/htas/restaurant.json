@@ -979,28 +979,6 @@
       "say_example": "The form wants names for the other <three> seats. Who's coming? I'll pick them from your contacts."
      },
      {
-      "question": "What phone number and special requests do you want to include?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": false,
-      "why": "The reservation form requires a phone number to proceed and provides an optional field for special requests.",
-      "whatTheAgentLoses": "The user loses the ability to specify their preferred contact number and communicate any specific needs or preferences to the restaurant.",
-      "speak": "always",
-      "check": "Which contact fields does the form show, and which are already filled?",
-      "say_example": "I'm putting in your name and <mobile> number now. You didn't ask for any special requests, so that stays blank."
-     },
-     {
-      "question": "Do you need to add any dietary restrictions, accessibility requests, or celebration cakes?",
-      "cluster": "hand over",
-      "moment": "Now",
-      "moneyMoving": true,
-      "why": "The screen offered options to add a Mickey Mouse Celebration Cake, dietary requests, or accessibility requests to the reservation.",
-      "whatTheAgentLoses": "You lose the opportunity to customize the dining experience with special cakes or ensure your dietary and accessibility needs are accommodated.",
-      "speak": "on-event",
-      "check": "Which request fields — dietary, accessibility, add-ons — does the form offer?",
-      "say_example": "You mentioned the <nut allergy>, so I'm putting it in the dietary box, in your words. The <celebration cake> costs extra and you didn't ask, so I'm skipping it."
-     },
-     {
       "question": "Did an error message appear stating that the selected time slot was taken by someone else while you were filling out the details?",
       "cluster": "",
       "moment": null,
@@ -1127,12 +1105,36 @@
         "speak": "on-event",
         "check": "Does the page show a validation error on the phone field, and what does it say is required?",
         "say_example": "The form won't take that number. It wants a mobile with a country code. Is there a mobile I should use instead?"
+       },
+       {
+        "question": "What phone number and special requests do you want to include?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The reservation form requires a phone number to proceed and provides an optional field for special requests.",
+        "whatTheAgentLoses": "The user loses the ability to specify their preferred contact number and communicate any specific needs or preferences to the restaurant.",
+        "speak": "always",
+        "check": "Which contact fields does the form show, and which are already filled?",
+        "say_example": "I'm putting in your name and <mobile> number now. You didn't ask for any special requests, so that stays blank."
        }
       ]
      },
      {
       "id": "6.4",
-      "label": "Add requests and the occasion"
+      "label": "Add requests and the occasion",
+      "questions": [
+       {
+        "question": "Do you need to add any dietary restrictions, accessibility requests, or celebration cakes?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The screen offered options to add a Mickey Mouse Celebration Cake, dietary requests, or accessibility requests to the reservation.",
+        "whatTheAgentLoses": "You lose the opportunity to customize the dining experience with special cakes or ensure your dietary and accessibility needs are accommodated.",
+        "speak": "on-event",
+        "check": "Which request fields — dietary, accessibility, add-ons — does the form offer?",
+        "say_example": "You mentioned the <nut allergy>, so I'm putting it in the dietary box, in your words. The <celebration cake> costs extra and you didn't ask, so I'm skipping it."
+       }
+      ]
      },
      {
       "id": "6.5",

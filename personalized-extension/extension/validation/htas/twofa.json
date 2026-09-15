@@ -73,6 +73,19 @@
         "speak": "never",
         "check": "Does the page or device indicate which app to open next for two-factor setup?",
         "say_example": "Opening <the phone's Settings app> to continue two-factor setup"
+       },
+       {
+        "question": "Do you want to let the password manager extension autofill your login credentials?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Keeper extension pop-up shows matching logins for the specific sites being visited, confirming it recognizes the domain before populating the fields.",
+        "whatTheAgentLoses": "You lose the ability to manually verify the exact vault entry being selected before the credentials are automatically populated into the login form.",
+        "kind": "decision",
+        "verify_form": "The agent let the password-manager extension autofill the login - check which vault entry it accepted; a look-alike entry autofills just as smoothly, and you never saw which credentials went in.",
+        "speak": "on-event",
+        "check": "Does a password-manager extension pop-up offer to autofill the login fields on this page?",
+        "say_example": "Your password manager offered to autofill this login, so I went ahead with <the matching entry>"
        }
       ]
      },
@@ -281,19 +294,6 @@
       "id": "2.2",
       "label": "Compare the factor kinds",
       "questions": [
-       {
-        "question": "Do you want to let the password manager extension autofill your login credentials?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Keeper extension pop-up shows matching logins for the specific sites being visited, confirming it recognizes the domain before populating the fields.",
-        "whatTheAgentLoses": "You lose the ability to manually verify the exact vault entry being selected before the credentials are automatically populated into the login form.",
-        "kind": "decision",
-        "verify_form": "The agent let the password-manager extension autofill the login - check which vault entry it accepted; a look-alike entry autofills just as smoothly, and you never saw which credentials went in.",
-        "speak": "on-event",
-        "check": "Does a password-manager extension pop-up offer to autofill the login fields on this page?",
-        "say_example": "Your password manager offered to autofill this login, so I went ahead with <the matching entry>"
-       },
        {
         "question": "Will you keep your 2FA codes in your password manager, or use a separate authenticator app?",
         "cluster": "select",

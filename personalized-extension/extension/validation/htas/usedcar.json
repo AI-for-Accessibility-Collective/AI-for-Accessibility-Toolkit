@@ -22,7 +22,7 @@
         "why": "This matters because the screen lists four specific URLs, highlighting that different platforms offer distinct advantages like better pricing deals or free vehicle history reports.",
         "whatTheAgentLoses": "The user loses the opportunity to choose their preferred platform based on their personal priority between finding the best price deals or securing free vehicle history reports.",
         "speak": "always",
-        "check": "Which car sites does the results page list, and which of them are marketplaces or pricing guides?",
+        "check": "Which car sites does the results page list, and which of them are marketplaces or pricing guides, as opposed to videos and ads?",
         "say_example": "Got it. Pricing a <2014 Mazda3> under <13,000> near <94110>. I'll check <CarGurus> and <Autotrader> for listings, and <KBB> for what it's worth."
        },
        {
@@ -595,17 +595,6 @@
       "label": "Skip the sponsored rows",
       "questions": [
        {
-        "question": "Are these search results car listings and pricing guides, or mostly videos and ads?",
-        "cluster": "refine",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen shows a list dominated by generic ads and YouTube videos rather than direct links to trusted car marketplaces or pricing tools.",
-        "whatTheAgentLoses": "You lose the ability to bypass unhelpful, ad-heavy search results and navigate directly to a reliable source for used car data.",
-        "speak": "on-event",
-        "check": "Are the search results marketplace or pricing-guide links, or mostly videos and ads?",
-        "say_example": "The search results are mostly videos and ads. I'm going straight to <CarGurus>."
-       },
-       {
         "question": "Which results are marked sponsored, featured, or new rather than matching used cars?",
         "cluster": "refine",
         "moment": "Now",
@@ -862,6 +851,17 @@
         "speak": "never",
         "check": "Does the gallery include a video tour?",
         "say_example": "Skipped the listing's video tour, can't watch it"
+       },
+       {
+        "question": "Does the mileage shown in the dashboard photos match the advertised mileage?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The dashboard photo shows an actual odometer reading of 76,353 miles, which contradicts the 78,872 miles advertised in the listing text.",
+        "whatTheAgentLoses": "The user loses the opportunity to spot a factual discrepancy in the listing that could impact the car's true value or indicate an unreliable seller.",
+        "speak": "if-wrong",
+        "check": "What mileage does the odometer photo show, and what mileage does the listing text state?",
+        "say_example": "The ad says <78,872> miles. The dashboard photo reads <76,353>. The photo is the actual car, so the ad is wrong."
        }
       ]
      },
@@ -2007,20 +2007,7 @@
      },
      {
       "id": "8.5",
-      "label": "Buy and add the warranty",
-      "questions": [
-       {
-        "question": "Does the mileage shown in the dashboard photos match the advertised mileage?",
-        "cluster": "photos",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The dashboard photo shows an actual odometer reading of 76,353 miles, which contradicts the 78,872 miles advertised in the listing text.",
-        "whatTheAgentLoses": "The user loses the opportunity to spot a factual discrepancy in the listing that could impact the car's true value or indicate an unreliable seller.",
-        "speak": "if-wrong",
-        "check": "What mileage does the odometer photo show, and what mileage does the listing text state?",
-        "say_example": "The ad says <78,872> miles. The dashboard photo reads <76,353>. The photo is the actual car, so the ad is wrong."
-       }
-      ]
+      "label": "Buy and add the warranty"
      }
     ]
    }

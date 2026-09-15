@@ -1191,6 +1191,17 @@
           "speak": "on-event",
           "check": "Do the chat's last replies repeat, or does it say it cannot help?",
           "say_example": "The chat is going in circles. Same answer three times. Want me to try the phone option?"
+         },
+         {
+          "question": "Did the return actually go through, or did it end rejected with only a phone number to call?",
+          "cluster": "receipts",
+          "moment": "Completion",
+          "moneyMoving": true,
+          "why": "The in-app chat explicitly rejected the return because the window expired, and the video ended by showing a phone number instead of a return confirmation.",
+          "whatTheAgentLoses": "The user is left with an unresolved return and a phone number to call, rather than a completed return and refund confirmation.",
+          "speak": "on-event",
+          "check": "Does the chat say the return was refused, why, and does it give a phone number?",
+          "say_example": "They refused the return. The window closed on <date>. There's a number to call, <number>. Want me to write it down?"
          }
         ]
        }
@@ -1231,17 +1242,6 @@
         "speak": "on-event",
         "check": "Is the support screen still showing a loading state after waiting?",
         "say_example": "The support page isn't loading. I'll look for their phone number on the site. If you have it saved, tell me."
-       },
-       {
-        "question": "Did the return actually go through, or did it end rejected with only a phone number to call?",
-        "cluster": "receipts",
-        "moment": "Completion",
-        "moneyMoving": true,
-        "why": "The in-app chat explicitly rejected the return because the window expired, and the video ended by showing a phone number instead of a return confirmation.",
-        "whatTheAgentLoses": "The user is left with an unresolved return and a phone number to call, rather than a completed return and refund confirmation.",
-        "speak": "on-event",
-        "check": "Does the chat say the return was refused, why, and does it give a phone number?",
-        "say_example": "They refused the return. The window closed on <date>. There's a number to call, <number>. Want me to write it down?"
        }
       ]
      }

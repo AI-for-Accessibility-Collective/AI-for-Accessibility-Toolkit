@@ -3782,21 +3782,7 @@
      },
      {
       "id": "9.5",
-      "label": "Set the site public or launch it",
-      "questions": [
-       {
-        "question": "Does the live address show the site, or a coming-soon page?",
-        "cluster": "facts",
-        "moment": "Completion",
-        "moneyMoving": false,
-        "why": "Platforms like Squarespace or WordPress often default new sites to a private state or display a 'coming soon' splash page until a specific setting is toggled, even after clicking publish.",
-        "whatTheAgentLoses": "The user might share their new URL thinking the site is live, only to have visitors hit a password prompt or generic landing page.",
-        "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "After publishing, does the live address show the real site, or a coming-soon page, a password wall, or the editor's 'only visible to you' banner?",
-        "say_example": "The live address is still showing <a coming-soon page>, not the actual site, even though it says published."
-       }
-      ]
+      "label": "Set the site public or launch it"
      },
      {
       "id": "9.6",
@@ -3862,6 +3848,18 @@
         "speak": "if-wrong",
         "check": "Does the live site, viewed fresh, still show older content instead of the latest edits or the fix just published?",
         "say_example": "The live site still shows an older version, not the latest edits. Might be a cached page."
+       },
+       {
+        "question": "Does the live address show the site, or a coming-soon page?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Platforms like Squarespace or WordPress often default new sites to a private state or display a 'coming soon' splash page until a specific setting is toggled, even after clicking publish.",
+        "whatTheAgentLoses": "The user might share their new URL thinking the site is live, only to have visitors hit a password prompt or generic landing page.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After publishing, does the live address show the real site, or a coming-soon page, a password wall, or the editor's 'only visible to you' banner?",
+        "say_example": "The live address is still showing <a coming-soon page>, not the actual site, even though it says published."
        }
       ]
      },

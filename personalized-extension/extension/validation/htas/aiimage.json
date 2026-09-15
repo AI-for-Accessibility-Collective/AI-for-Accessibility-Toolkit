@@ -1166,19 +1166,6 @@
         "say_example": "Set dimensions to <1080x1080> for a square social post"
        },
        {
-        "question": "How do you change the aspect ratio of the generated image?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Adding the '--ar 16:9' parameter to the Discord prompt ensures the resulting images are generated in a widescreen format rather than the default square.",
-        "whatTheAgentLoses": "Delegating this means you lose the ability to specify the exact dimensions and framing that best fit your project's layout needs.",
-        "kind": "decision",
-        "verify_form": "The agent set the aspect parameter - check widescreen is the shape you needed; the default square was the alternative.",
-        "speak": "never",
-        "check": "Was the '--ar' parameter added to the prompt with a specific ratio?",
-        "say_example": "Added <--ar 16:9> to the prompt for a widescreen image"
-       },
-       {
         "question": "Which aspect ratio and visual intensity should you select for this generation?",
         "cluster": "select",
         "moment": "Now",
@@ -1287,19 +1274,6 @@
         "speak": "never",
         "check": "Which content type toggle, such as Art or Photo, and which style effect were applied alongside the prompt?",
         "say_example": "Set content type to <Photo> with the <Vivid> style effect"
-       },
-       {
-        "question": "Should you apply any reference images or effects before generating?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Style section offers reference image and effects options that can steer the visual output, but skipping them establishes a baseline result from your text prompt alone.",
-        "whatTheAgentLoses": "Delegating this means you lose the chance to decide whether to establish a baseline text-only generation or immediately constrain the AI with specific visual styles.",
-        "kind": "decision",
-        "verify_form": "The agent generated a bare-text baseline or styled it first - check which; the baseline tells you what the prompt alone does.",
-        "speak": "never",
-        "check": "Was a reference image or effect applied before generating, or did the run use the plain text prompt alone?",
-        "say_example": "Generated from the plain prompt first, no reference image applied yet"
        },
        {
         "question": "Which styles, colors, lighting, and camera angles should you apply before generating?",
@@ -1729,6 +1703,19 @@
           "speak": "never",
           "check": "What value was set for the stylize parameter?",
           "say_example": "Set <--stylize 0> to reduce Midjourney's default aesthetic influence"
+         },
+         {
+          "question": "How do you change the aspect ratio of the generated image?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Adding the '--ar 16:9' parameter to the Discord prompt ensures the resulting images are generated in a widescreen format rather than the default square.",
+          "whatTheAgentLoses": "Delegating this means you lose the ability to specify the exact dimensions and framing that best fit your project's layout needs.",
+          "kind": "decision",
+          "verify_form": "The agent set the aspect parameter - check widescreen is the shape you needed; the default square was the alternative.",
+          "speak": "never",
+          "check": "Was the '--ar' parameter added to the prompt with a specific ratio?",
+          "say_example": "Added <--ar 16:9> to the prompt for a widescreen image"
          }
         ]
        },
@@ -2421,7 +2408,7 @@
           "kind": "decision",
           "verify_form": "The agent attached (or skipped) a reference image on the first prompt - check which; visual context changes what the model draws.",
           "speak": "never",
-          "check": "Was a reference image attached to the initial prompt, or was the prompt sent as text only?",
+          "check": "Was a reference image or effect applied before generating, or was the prompt sent as text only?",
           "say_example": "Sent the first prompt as text only, no reference image attached"
          },
          {

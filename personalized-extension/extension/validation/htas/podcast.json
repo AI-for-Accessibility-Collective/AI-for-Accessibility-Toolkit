@@ -106,7 +106,7 @@
         "kind": "decision",
         "verify_form": "The agent started from an empty project or from a voice template - check which. A voice template arrives with processed vocal tracks already on it, and an empty one arrives with nothing.",
         "speak": "on-event",
-        "check": "Does the project-open dialog show Empty Project and a factory template (e.g. Voice) as choices, and which is selected?",
+        "check": "Does the project-open dialog or New Session dropdown show the available templates, including specific named session/show templates, and which one is currently selected?",
         "say_example": "Starting from the <Voice> template, not empty. It comes with vocal tracks already processed."
        },
        {
@@ -132,6 +132,18 @@
         "speak": "on-event",
         "check": "Which file is selected from the Open Recent list, among the entries shown?",
         "say_example": "Two recent projects look alike: <Ep 12 v1> and <My Song>. Opening <Ep 12 v1>."
+       },
+       {
+        "question": "Did the template load with all its tracks and effects?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the multitrack session and effects rack ensures your standard EQ and dynamics presets are ready before you start editing.",
+        "whatTheAgentLoses": "You lose the reassurance of visually confirming your signature audio processing chain is in place.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the loaded session actually show the expected tracks and effects rack presets?",
+        "say_example": "Heads up, the template loaded without its EQ preset. Setting it manually."
        }
       ]
      },
@@ -358,30 +370,6 @@
         "speak": "never",
         "check": "What name and folder location are set in the Save Template dialog?",
         "say_example": "Saved the template as <podcast_default> in <Templates>"
-       },
-       {
-        "question": "Did the template load with all its tracks and effects?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Checking the multitrack session and effects rack ensures your standard EQ and dynamics presets are ready before you start editing.",
-        "whatTheAgentLoses": "You lose the reassurance of visually confirming your signature audio processing chain is in place.",
-        "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Does the loaded session actually show the expected tracks and effects rack presets?",
-        "say_example": "Heads up, the template loaded without its EQ preset. Setting it manually."
-       },
-       {
-        "question": "Which template should you use for the new multitrack session?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Selecting the '[template]' template ensures the workspace is instantly configured with the correct tracks and routing for this specific show.",
-        "whatTheAgentLoses": "You lose the opportunity to enforce your own naming conventions and select the exact custom template that fits your workflow.",
-        "kind": "intent-check",
-        "speak": "on-event",
-        "check": "Which template is selected in the New Session dropdown?",
-        "say_example": "Starting the session from the <interview> template."
        }
       ]
      },
@@ -897,19 +885,6 @@
         "speak": "if-wrong",
         "check": "Does the imported clip show a fluctuating waveform, or a flat line?",
         "say_example": "Heads up, this clip's waveform is a flat line. It imported, but it's silent."
-       },
-       {
-        "question": "Does the imported music overpower the voice track?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "Playing back the newly imported music track alongside the voice reveals whether the music volume needs to be lowered so it doesn't drown out the speaker.",
-        "whatTheAgentLoses": "You lose the ability to subjectively judge the audio mix and ensure the music complements rather than distracts from the spoken content.",
-        "kind": "decision",
-        "verify_form": "The agent balanced the imported music against the voice - listen to them together. Music that sits right on its own is usually too loud under speech.",
-        "speak": "on-event",
-        "check": "Does the music track's level sit above the voice track's level in the mix?",
-        "say_example": "The music is sitting louder than the voice. Pulling it down under the speaker."
        }
       ]
      },
@@ -3697,6 +3672,19 @@
         "speak": "if-wrong",
         "check": "Are all tracks unmuted and all solo buttons cleared before the export begins?",
         "say_example": "The <music> track is still soloed. Exporting now would leave out everything else."
+       },
+       {
+        "question": "Does the imported music overpower the voice track?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Playing back the newly imported music track alongside the voice reveals whether the music volume needs to be lowered so it doesn't drown out the speaker.",
+        "whatTheAgentLoses": "You lose the ability to subjectively judge the audio mix and ensure the music complements rather than distracts from the spoken content.",
+        "kind": "decision",
+        "verify_form": "The agent balanced the imported music against the voice - listen to them together. Music that sits right on its own is usually too loud under speech.",
+        "speak": "on-event",
+        "check": "Does the music track's level sit above the voice track's level in the mix?",
+        "say_example": "The music is sitting louder than the voice. Pulling it down under the speaker."
        }
       ]
      }

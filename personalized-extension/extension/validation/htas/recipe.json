@@ -532,6 +532,28 @@
         "speak": "if-wrong",
         "check": "Which filters does the results page show as active?",
         "say_example": "I set three filters, but the page only shows two active. I'm putting the missing one back."
+       },
+       {
+        "question": "Does the total number of search results remain consistent as you scroll through the filtered list?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The results count unexpectedly jumped from 10K+ to 24K+ while scrolling the same page, indicating the app may have dropped the applied filter or glitched.",
+        "whatTheAgentLoses": "You lose confidence that the agent is selecting a recipe from a list that actually adheres to your requested constraints.",
+        "speak": "if-wrong",
+        "check": "Is the result count the same as when the list first loaded?",
+        "say_example": "The result count jumped from <113> to <3,204> while scrolling. The filter may have dropped, so I'm putting it back."
+       },
+       {
+        "question": "Do the cooking times of the displayed recipes actually align with the 'Quick' filter you applied?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a recipe taking 30 to 45 minutes even though the 'Quick' filter is active, indicating the app's categorization might not match your actual time limit.",
+        "whatTheAgentLoses": "The user receives a recipe that takes too long to prepare because the agent blindly trusted the app's broad filter instead of verifying the specific cooking time.",
+        "speak": "if-wrong",
+        "check": "What time range does each displayed recipe show, and what does the active filter promise?",
+        "say_example": "This one is marked Quick but says 30 to 45 minutes. You wanted under 30, so I'm passing on it."
        }
       ]
      },
@@ -658,6 +680,28 @@
         "speak": "if-wrong",
         "check": "What total time, yield, and calories does the summary bar show?",
         "say_example": "This one takes <50> minutes and you wanted under <30>, so it's out. I'm trying the next one."
+       },
+       {
+        "question": "Does the rating count on the opened recipe page match the number of ratings shown on the search result card?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search result card displayed 170 ratings, so checking that the recipe page also shows 170 ratings confirms you opened the exact dish you intended.",
+        "whatTheAgentLoses": "The user loses the certainty that the agent opened the correct recipe from the search results instead of accidentally clicking a different or sponsored link.",
+        "speak": "if-wrong",
+        "check": "Does the rating count on the recipe page equal the count that was on the result card?",
+        "say_example": "The card said 170 ratings, but this page shows a different count. I may have the wrong recipe, so I'm going back to check."
+       },
+       {
+        "question": "Do the preparation and cook times on the recipe page match the total time displayed in the search results?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search list claimed the Chestnut truffle cake was ready in 1470 minutes, but the recipe's overview tab listed both prep and cook times as N/A.",
+        "whatTheAgentLoses": "You risk saving a recipe that violates your time constraints because the agent failed to catch the conflicting or missing time information.",
+        "speak": "if-wrong",
+        "check": "Do the prep and cook times on the page match the total the search list showed?",
+        "say_example": "The list claimed this cake takes 1470 minutes, but the recipe page shows no times at all. The listing data is off, so I'll trust the page."
        }
       ]
      },
@@ -739,6 +783,17 @@
         "speak": "if-wrong",
         "check": "What calories, carbs, and other values does the nutrition panel show per serving?",
         "say_example": "The carbs are <42> grams a serving. Your limit is <25>, so this one's out."
+       },
+       {
+        "question": "What is the total for the whole dish, from the servings count and the calories per serving?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists 6 servings at 434 calories each, requiring you to deduce the unstated total of 2,604 calories for the whole meatloaf.",
+        "whatTheAgentLoses": "You lose the assurance that the agent correctly calculates unstated nutritional totals that might violate your dietary constraints.",
+        "speak": "never",
+        "check": "What servings count and calories per serving does the page show?",
+        "say_example": "Whole dish - <4> servings at <520> calories each, about <2,100> in all"
        }
       ]
      },
@@ -756,6 +811,17 @@
         "speak": "never",
         "check": "Does the pin show a source link to the full recipe?",
         "say_example": "Followed the pin's source link to <site> for the full recipe"
+       },
+       {
+        "question": "Do the serving sizes match between the recipe app and the original blog post?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Checking that the 24 servings listed on Yummly matches the 2 dozen on the original blog post confirms the recipe data was imported accurately.",
+        "whatTheAgentLoses": "You lose the ability to catch discrepancies in serving sizes or recipe yields when content is imported from an external site.",
+        "speak": "if-wrong",
+        "check": "Does the serving count on the app's page match the count on the original source page?",
+        "say_example": "The app says <4> servings, but the original site says <6>. I'll go with the original."
        }
       ]
      },
@@ -1266,28 +1332,6 @@
       "label": "Check the totals across screens",
       "questions": [
        {
-        "question": "Does the total number of search results remain consistent as you scroll through the filtered list?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The results count unexpectedly jumped from 10K+ to 24K+ while scrolling the same page, indicating the app may have dropped the applied filter or glitched.",
-        "whatTheAgentLoses": "You lose confidence that the agent is selecting a recipe from a list that actually adheres to your requested constraints.",
-        "speak": "if-wrong",
-        "check": "Is the result count the same as when the list first loaded?",
-        "say_example": "The result count jumped from <113> to <3,204> while scrolling. The filter may have dropped, so I'm putting it back."
-       },
-       {
-        "question": "Do the cooking times of the displayed recipes actually align with the 'Quick' filter you applied?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen shows a recipe taking 30 to 45 minutes even though the 'Quick' filter is active, indicating the app's categorization might not match your actual time limit.",
-        "whatTheAgentLoses": "The user receives a recipe that takes too long to prepare because the agent blindly trusted the app's broad filter instead of verifying the specific cooking time.",
-        "speak": "if-wrong",
-        "check": "What time range does each displayed recipe show, and what does the active filter promise?",
-        "say_example": "This one is marked Quick but says 30 to 45 minutes. You wanted under 30, so I'm passing on it."
-       },
-       {
         "question": "Do the aggregate rating and the individual written review agree with each other?",
         "cluster": "facts",
         "moment": "Now",
@@ -1299,28 +1343,6 @@
         "say_example": "The page says 4.5 stars from one rating, but the one written review gives 5. The numbers don't agree, so I'm reading you the review instead."
        },
        {
-        "question": "Does the rating count on the opened recipe page match the number of ratings shown on the search result card?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search result card displayed 170 ratings, so checking that the recipe page also shows 170 ratings confirms you opened the exact dish you intended.",
-        "whatTheAgentLoses": "The user loses the certainty that the agent opened the correct recipe from the search results instead of accidentally clicking a different or sponsored link.",
-        "speak": "if-wrong",
-        "check": "Does the rating count on the recipe page equal the count that was on the result card?",
-        "say_example": "The card said 170 ratings, but this page shows a different count. I may have the wrong recipe, so I'm going back to check."
-       },
-       {
-        "question": "Do the preparation and cook times on the recipe page match the total time displayed in the search results?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search list claimed the Chestnut truffle cake was ready in 1470 minutes, but the recipe's overview tab listed both prep and cook times as N/A.",
-        "whatTheAgentLoses": "You risk saving a recipe that violates your time constraints because the agent failed to catch the conflicting or missing time information.",
-        "speak": "if-wrong",
-        "check": "Do the prep and cook times on the page match the total the search list showed?",
-        "say_example": "The list claimed this cake takes 1470 minutes, but the recipe page shows no times at all. The listing data is off, so I'll trust the page."
-       },
-       {
         "question": "Are the nutrition values hidden behind a collapsed dropdown?",
         "cluster": "hand over",
         "moment": "Now",
@@ -1330,28 +1352,6 @@
         "speak": "never",
         "check": "Is the nutrition section collapsed, with its values hidden?",
         "say_example": "Opened the nutrition dropdown - the values were hidden behind it"
-       },
-       {
-        "question": "Do the serving sizes match between the recipe app and the original blog post?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Checking that the 24 servings listed on Yummly matches the 2 dozen on the original blog post confirms the recipe data was imported accurately.",
-        "whatTheAgentLoses": "You lose the ability to catch discrepancies in serving sizes or recipe yields when content is imported from an external site.",
-        "speak": "if-wrong",
-        "check": "Does the serving count on the app's page match the count on the original source page?",
-        "say_example": "The app says <4> servings, but the original site says <6>. I'll go with the original."
-       },
-       {
-        "question": "What is the total for the whole dish, from the servings count and the calories per serving?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen lists 6 servings at 434 calories each, requiring you to deduce the unstated total of 2,604 calories for the whole meatloaf.",
-        "whatTheAgentLoses": "You lose the assurance that the agent correctly calculates unstated nutritional totals that might violate your dietary constraints.",
-        "speak": "never",
-        "check": "What servings count and calories per serving does the page show?",
-        "say_example": "Whole dish - <4> servings at <520> calories each, about <2,100> in all"
        },
        {
         "question": "Do the total nutritional values in the meal planner match the sum of the individual recipes you added?",

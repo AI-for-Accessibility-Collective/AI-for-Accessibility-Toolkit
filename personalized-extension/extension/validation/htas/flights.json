@@ -374,6 +374,17 @@
         "speak": "never",
         "check": "Is a refundable-fares-only option shown, and is it selected?",
         "say_example": "Filtered to refundable fares, since your ask says cancellable."
+       },
+       {
+        "question": "Do you want to add Price Drop Protection to your search?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search screen includes an option to 'Add Price Drop Protection', where the platform will pay the difference if the price drops after booking.",
+        "whatTheAgentLoses": "The user loses the opportunity to secure financial protection against future price drops before initiating the search.",
+        "speak": "never",
+        "check": "Does the page offer price-drop protection, and at what cost?",
+        "say_example": "Skipped the price-drop protection add-on."
        }
       ]
      },
@@ -1101,17 +1112,6 @@
       "id": "7.4",
       "label": "Decide on the insurance",
       "questions": [
-       {
-        "question": "Do you want to add Price Drop Protection to your search?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The search screen includes an option to 'Add Price Drop Protection', where the platform will pay the difference if the price drops after booking.",
-        "whatTheAgentLoses": "The user loses the opportunity to secure financial protection against future price drops before initiating the search.",
-        "speak": "never",
-        "check": "Does the page offer price-drop protection, and at what cost?",
-        "say_example": "Skipped the price-drop protection add-on."
-       },
        {
         "question": "Do you want to add the flight protection plan before completing the booking?",
         "cluster": "select",

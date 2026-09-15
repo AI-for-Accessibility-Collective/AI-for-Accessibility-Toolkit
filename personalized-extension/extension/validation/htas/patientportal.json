@@ -662,30 +662,6 @@
     "id": "2",
     "label": "Find the task",
     "note": "2.1, then 2.2 past whatever the feed stacks on top, then 2.3 for visit tasks - the other destinations open from the nav or a widget, and their entry ops sit in their own goals. re-entered between tasks: FE1_ returns here after each subtask, g18A comes back through Home to reach the inbox.",
-    "questions": [
-     {
-      "question": "Are these the upcoming appointments you want to print?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The screen displayed upcoming VA appointments for April 2025 alongside a print button, requiring confirmation before generating the document.",
-      "whatTheAgentLoses": "The user loses the chance to verify that the correct set of appointments is included before printing.",
-      "speak": "if-wrong",
-      "check": "Which appointments does the print list show?",
-      "say_example": "The print list includes two canceled visits. Print everything, or just the active one?"
-     },
-     {
-      "question": "Does the print preview look correct, and are you ready to print?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "Reviewing the page thumbnails in the print options screen ensures the document contains the correct appointment details before sending it to a printer.",
-      "whatTheAgentLoses": "Delegating this step means you lose the chance to visually verify the document's formatting and content in the preview before deciding whether a physical copy is actually needed.",
-      "speak": "never",
-      "check": "Does the print preview show the appointment pages?",
-      "say_example": "Printed the April appointment list - 2 pages"
-     }
-    ],
     "children": [
      {
       "id": "2.1",
@@ -2382,6 +2358,28 @@
         "speak": "if-wrong",
         "check": "Does the browser show the download completed?",
         "say_example": "The download never finished. Trying it again."
+       },
+       {
+        "question": "Are these the upcoming appointments you want to print?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen displayed upcoming VA appointments for April 2025 alongside a print button, requiring confirmation before generating the document.",
+        "whatTheAgentLoses": "The user loses the chance to verify that the correct set of appointments is included before printing.",
+        "speak": "if-wrong",
+        "check": "Which appointments does the print list show?",
+        "say_example": "The print list includes two canceled visits. Print everything, or just the active one?"
+       },
+       {
+        "question": "Does the print preview look correct, and are you ready to print?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Reviewing the page thumbnails in the print options screen ensures the document contains the correct appointment details before sending it to a printer.",
+        "whatTheAgentLoses": "Delegating this step means you lose the chance to visually verify the document's formatting and content in the preview before deciding whether a physical copy is actually needed.",
+        "speak": "never",
+        "check": "Does the print preview show the appointment pages?",
+        "say_example": "Printed the April appointment list - 2 pages"
        }
       ]
      }

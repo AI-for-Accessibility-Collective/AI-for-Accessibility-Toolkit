@@ -201,6 +201,25 @@
         "speak": "gate",
         "check": "Does the page show a password or credential dialog, and for which account name or email?",
         "say_example": "It's asking for the password for <your Apple account>. That's yours to type. I'll wait."
+       },
+       {
+        "question": "What birthday should you enter for this account?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The sign-up screen requires selecting a date of birth in the picker to proceed with creating the account.",
+        "whatTheAgentLoses": "The user loses the ability to provide their actual date of birth, which could impact account recovery or access to age-restricted features.",
+        "costDims": {
+         "money": 0,
+         "privacy": 2,
+         "thirdParty": 0,
+         "safety": 2,
+         "reversibility": 2,
+         "recovery": 2
+        },
+        "speak": "gate",
+        "check": "Does the sign-up form show a required date-of-birth field?",
+        "say_example": "The form wants a birthday. The date decides what protections the account gets, like private-by-default for under-16s. What should I put?"
        }
       ]
      },
@@ -573,6 +592,25 @@
         "speak": "never",
         "check": "Which additional safety options does the page list (e.g. Duet, Stitch, Mentions and tags), and what state is each in?",
         "say_example": "Left <Duet, Stitch, mentions> as they were - not in the ask"
+       },
+       {
+        "question": "Should a screen lock be set on the device the checkup flagged?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The Security Check-Up page shows a warning icon advising you to add a screen lock to this specific device.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether or not to enforce a screen lock on your physical device.",
+        "costDims": {
+         "money": 0,
+         "privacy": 3,
+         "thirdParty": 0,
+         "safety": 1,
+         "reversibility": 1,
+         "recovery": 1
+        },
+        "speak": "on-event",
+        "check": "Does the security checkup page show a warning that a specific device has no screen lock?",
+        "say_example": "The checkup flags <this phone> as having no screen lock. Setting one needs your hands on it, so it's in the report for later."
        }
       ]
      },
@@ -1902,25 +1940,6 @@
       "label": "Enter the required value",
       "questions": [
        {
-        "question": "What birthday should you enter for this account?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The sign-up screen requires selecting a date of birth in the picker to proceed with creating the account.",
-        "whatTheAgentLoses": "The user loses the ability to provide their actual date of birth, which could impact account recovery or access to age-restricted features.",
-        "costDims": {
-         "money": 0,
-         "privacy": 2,
-         "thirdParty": 0,
-         "safety": 2,
-         "reversibility": 2,
-         "recovery": 2
-        },
-        "speak": "gate",
-        "check": "Does the sign-up form show a required date-of-birth field?",
-        "say_example": "The form wants a birthday. The date decides what protections the account gets, like private-by-default for under-16s. What should I put?"
-       },
-       {
         "question": "Which private DNS provider hostname should you enter?",
         "cluster": "hand over",
         "moment": "Now",
@@ -1957,25 +1976,6 @@
         "speak": "gate",
         "check": "Which fields does the page mark as Required (e.g. Street, City, Zip), and are they empty?",
         "say_example": "The page won't save this without a billing address - street, city, and zip. Should I fill in yours?"
-       },
-       {
-        "question": "Should a screen lock be set on the device the checkup flagged?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The Security Check-Up page shows a warning icon advising you to add a screen lock to this specific device.",
-        "whatTheAgentLoses": "You lose the opportunity to decide whether or not to enforce a screen lock on your physical device.",
-        "costDims": {
-         "money": 0,
-         "privacy": 3,
-         "thirdParty": 0,
-         "safety": 1,
-         "reversibility": 1,
-         "recovery": 1
-        },
-        "speak": "on-event",
-        "check": "Does the security checkup page show a warning that a specific device has no screen lock?",
-        "say_example": "The checkup flags <this phone> as having no screen lock. Setting one needs your hands on it, so it's in the report for later."
        },
        {
         "question": "Have you chosen a new unlock pattern you can remember, before drawing it?",

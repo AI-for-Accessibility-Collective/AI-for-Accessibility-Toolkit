@@ -325,17 +325,6 @@
         "speak": "on-event",
         "check": "Does the membership page ask for card details before starting?",
         "say_example": "It wants a card to start the membership. That turns into a real charge later, so I stopped here."
-       },
-       {
-        "question": "Is there a pre-checked box authorizing automatic enrollment in a premium membership trial hidden near the 'Place Order' button?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Platforms often use dark patterns by defaulting to enrolling users in services like Walmart+ or Instacart+ during final checkout, requiring a manual opt-out to avoid future recurring charges.",
-        "whatTheAgentLoses": "The user might unknowingly be enrolled in a subscription that will automatically charge their credit card for a costly annual fee after the trial period ends.",
-        "speak": "on-event",
-        "check": "Near the order button, is any box already checked, and what does it enroll you in?",
-        "say_example": "A box near the order button came pre-ticked - it signs you up for <Walmart+>. I unticked it."
        }
       ]
      }
@@ -1001,6 +990,17 @@
           "speak": "on-event",
           "check": "Which recipe items does the page say found no match?",
           "say_example": "No match for the <fresh mint>. Want me to add the other <16> and try mint on its own search?"
+         },
+         {
+          "question": "Should I adjust the quantity of any items before adding them to the cart?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "The screen displays a list of items and an '+ Add 16 items to cart' button, allowing for quantity adjustments before bulk adding.",
+          "whatTheAgentLoses": "The user loses the chance to customize quantities for specific items, which could lead to over-ordering or missing needed amounts.",
+          "speak": "never",
+          "check": "What quantities does the bulk-add list show?",
+          "say_example": "Trimmed the bulk-add to what the recipe needs before sending it to the cart"
          }
         ]
        },
@@ -2285,17 +2285,6 @@
       "label": "Edit the cart",
       "questions": [
        {
-        "question": "Should I adjust the quantity of any items before adding them to the cart?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The screen displays a list of items and an '+ Add 16 items to cart' button, allowing for quantity adjustments before bulk adding.",
-        "whatTheAgentLoses": "The user loses the chance to customize quantities for specific items, which could lead to over-ordering or missing needed amounts.",
-        "speak": "never",
-        "check": "What quantities does the bulk-add list show?",
-        "say_example": "Trimmed the bulk-add to what the recipe needs before sending it to the cart"
-       },
-       {
         "question": "Do you need to increase the quantity of cake pans?",
         "cluster": "hand over",
         "moment": "Now",
@@ -2987,6 +2976,17 @@
         "speak": "if-wrong",
         "check": "After ordering, does the page show a confirmation with an order number?",
         "say_example": "I pressed order, but no confirmation came. I'm checking your orders page before anything else - a blind retry could buy it twice."
+       },
+       {
+        "question": "Is there a pre-checked box authorizing automatic enrollment in a premium membership trial hidden near the 'Place Order' button?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Platforms often use dark patterns by defaulting to enrolling users in services like Walmart+ or Instacart+ during final checkout, requiring a manual opt-out to avoid future recurring charges.",
+        "whatTheAgentLoses": "The user might unknowingly be enrolled in a subscription that will automatically charge their credit card for a costly annual fee after the trial period ends.",
+        "speak": "on-event",
+        "check": "Near the order button, is any box already checked, and what does it enroll you in?",
+        "say_example": "A box near the order button came pre-ticked - it signs you up for <Walmart+>. I unticked it."
        }
       ]
      }

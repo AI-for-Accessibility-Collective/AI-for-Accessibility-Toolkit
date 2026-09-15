@@ -1274,19 +1274,6 @@
         "say_example": "Read the site's <3> reasons for <the first console>, <memory bandwidth>, <exclusive games> and <clock speed>"
        },
        {
-        "question": "When the page calls one CPU faster, how big is the gap really?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays three specific reasons to choose the Xbox One, such as exclusive games and a faster CPU, which help differentiate the shortlisted consoles.",
-        "whatTheAgentLoses": "You lose the chance to personally decide if these specific technical and software advantages actually matter for your gaming preferences.",
-        "kind": "decision",
-        "verify_form": "The agent weighed the three listed advantages or counted them - check which; one of the three is a nine percent clock difference.",
-        "speak": "if-wrong",
-        "check": "For each numeric advantage the page lists, what is the actual difference, and does the page's word for it, like 'faster', overstate that gap?",
-        "say_example": "One of the reasons is a faster CPU. The actual gap is about <9 percent>."
-       },
-       {
         "question": "Does the higher overall score lead in every category, or only some?",
         "cluster": "compare",
         "moment": "Now",
@@ -1627,18 +1614,6 @@
         "say_example": "The core policy says <you pay return shipping> and you have <45 days> to send the old part back."
        },
        {
-        "question": "With the pickup fee added, is this still the better buy than the one you passed on?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The summary of charges reveals a $3.00 fee for store pickup that brings the total to $100.95, which you must review before selecting a payment method from the dropdown.",
-        "whatTheAgentLoses": "Delegating this step removes your visibility into final added costs like the pickup fee and your control over which payment method is used.",
-        "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Once the pickup fee shown in the payment summary is added, does the total still come out lower (or otherwise still winning) than the alternative(s) the person passed on?",
-        "say_example": "With the <$4> pickup fee, this comes to <$118.40>. That's now <$2> more than the one you passed on."
-       },
-       {
         "question": "Does the tax-free banner actually appear on the homepage, or is that promotion missing?",
         "cluster": "facts",
         "moment": "Now",
@@ -1866,7 +1841,22 @@
     "children": [
      {
       "id": "6.1",
-      "label": "Check the row and column you read"
+      "label": "Check the row and column you read",
+      "questions": [
+       {
+        "question": "When the page calls one CPU faster, how big is the gap really?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displays three specific reasons to choose the Xbox One, such as exclusive games and a faster CPU, which help differentiate the shortlisted consoles.",
+        "whatTheAgentLoses": "You lose the chance to personally decide if these specific technical and software advantages actually matter for your gaming preferences.",
+        "kind": "decision",
+        "verify_form": "The agent weighed the three listed advantages or counted them - check which; one of the three is a nine percent clock difference.",
+        "speak": "if-wrong",
+        "check": "For each numeric advantage the page lists, what is the actual difference, and does the page's word for it, like 'faster', overstate that gap?",
+        "say_example": "One of the reasons is a faster CPU. The actual gap is about <9 percent>."
+       }
+      ]
      },
      {
       "id": "6.2",
@@ -2243,6 +2233,18 @@
         "speak": "if-wrong",
         "check": "Does the final checkout or selection screen show a backorder notice or delayed ship date that wasn't shown earlier in the comparison?",
         "say_example": "This screen says <backordered, 6 to 8 weeks>. The comparison page didn't show that."
+       },
+       {
+        "question": "With the pickup fee added, is this still the better buy than the one you passed on?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The summary of charges reveals a $3.00 fee for store pickup that brings the total to $100.95, which you must review before selecting a payment method from the dropdown.",
+        "whatTheAgentLoses": "Delegating this step removes your visibility into final added costs like the pickup fee and your control over which payment method is used.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Once the pickup fee shown in the payment summary is added, does the total still come out lower (or otherwise still winning) than the alternative(s) the person passed on?",
+        "say_example": "With the <$4> pickup fee, this comes to <$118.40>. That's now <$2> more than the one you passed on."
        }
       ]
      },

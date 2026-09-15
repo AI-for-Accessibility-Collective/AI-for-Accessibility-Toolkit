@@ -1099,19 +1099,6 @@
     "id": "5",
     "label": "Run the navigation",
     "note": "5.1, answering 5.2's prompt stack where it fires. 5.3 almost immediately - it is the most-touched in-drive control in the corpus. then 5.4 to 5.9 in any order as the drive demands. 5.10 is reached only in one spliced session. 5.11 ends it - every keeper who starts guidance and keeps recording stops it on purpose, except mo0Q, whose video simply ends mid-drive.",
-    "questions": [
-     {
-      "question": "Which side of the street is the destination on, or is it located inside a larger complex?",
-      "cluster": "",
-      "moment": null,
-      "moneyMoving": false,
-      "why": "The map visually places the destination pin on the left or right side of the road line, or deep inside a shaded area like a mall or airport.",
-      "whatTheAgentLoses": "You lose the spatial cue of exactly where to look or which lane to pull into as you approach the final destination.",
-      "speak": "on-event",
-      "check": "Does the final step in the directions say which side the destination is on?",
-      "say_example": "It'll be on your <right>."
-     }
-    ],
     "children": [
      {
       "id": "5.1",
@@ -1221,6 +1208,17 @@
         "speak": "never",
         "check": "Does a safety warning pop-up block the navigation screen until OK is tapped?",
         "say_example": "Cleared the safety notice."
+       },
+       {
+        "question": "Do you want to stop the automatic navigation?",
+        "cluster": "undo",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen indicates that navigation will start automatically and provides a 'Stop' button, requiring a decision on whether to begin the trip immediately.",
+        "whatTheAgentLoses": "The user loses the opportunity to cancel the active turn-by-turn navigation if they were just checking the route and are not actually ready to leave.",
+        "speak": "on-event",
+        "check": "Does the screen say navigation will start automatically, with a stop button showing?",
+        "say_example": "It wants to start navigating on its own. I stopped it so you hear the route first."
        }
       ]
      },
@@ -1386,25 +1384,23 @@
         "speak": "on-event",
         "check": "Does the screen show arrival options at the stop, including a continue choice?",
         "say_example": "You're at <Coles>. Say continue when you're back and we'll head to <Arnprior>."
+       },
+       {
+        "question": "Which side of the street is the destination on, or is it located inside a larger complex?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The map visually places the destination pin on the left or right side of the road line, or deep inside a shaded area like a mall or airport.",
+        "whatTheAgentLoses": "You lose the spatial cue of exactly where to look or which lane to pull into as you approach the final destination.",
+        "speak": "on-event",
+        "check": "Does the final step in the directions say which side the destination is on?",
+        "say_example": "It'll be on your <right>."
        }
       ]
      },
      {
       "id": "5.11",
-      "label": "Stop the navigation",
-      "questions": [
-       {
-        "question": "Do you want to stop the automatic navigation?",
-        "cluster": "undo",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen indicates that navigation will start automatically and provides a 'Stop' button, requiring a decision on whether to begin the trip immediately.",
-        "whatTheAgentLoses": "The user loses the opportunity to cancel the active turn-by-turn navigation if they were just checking the route and are not actually ready to leave.",
-        "speak": "on-event",
-        "check": "Does the screen say navigation will start automatically, with a stop button showing?",
-        "say_example": "It wants to start navigating on its own. I stopped it so you hear the route first."
-       }
-      ]
+      "label": "Stop the navigation"
      }
     ]
    },

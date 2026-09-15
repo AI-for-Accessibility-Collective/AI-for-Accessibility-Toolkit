@@ -1088,19 +1088,6 @@
         "say_example": "The tab came out with straight sides and no flat top, not the angled profile it needs to slide into the box."
        },
        {
-        "question": "Should you snap the base horizontally for a flat bottom or follow the slight angle seen in the reference image?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Snapping the line horizontally overrides the slight angle visible in the reference image to ensure the final bottle has a functional flat bottom.",
-        "whatTheAgentLoses": "You lose the ability to decide when to intentionally deviate from the reference material to improve the functional design of the part.",
-        "kind": "decision",
-        "verify_form": "The agent drew a flat bottom rather than following the angle in the photograph - check which; a bottle with an angled base will not stand up.",
-        "speak": "if-wrong",
-        "check": "Is the base line constrained horizontal, or does it keep the slight angle visible in the reference image?",
-        "say_example": "The base kept the slight angle from the reference image instead of snapping horizontal. A bottle with an angled base won't stand up."
-       },
-       {
         "question": "How do you construct the 2D profile for the horizontal beam?",
         "cluster": "hand over",
         "moment": "Now",
@@ -2104,6 +2091,19 @@
         "speak": "if-wrong",
         "check": "Did the 'On Line' inference show while sliding the handle along the door's edge?",
         "say_example": "The handle isn't locked to the door's edge. It can slide off the line instead of just up and down it."
+       },
+       {
+        "question": "Should you snap the base horizontally for a flat bottom or follow the slight angle seen in the reference image?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Snapping the line horizontally overrides the slight angle visible in the reference image to ensure the final bottle has a functional flat bottom.",
+        "whatTheAgentLoses": "You lose the ability to decide when to intentionally deviate from the reference material to improve the functional design of the part.",
+        "kind": "decision",
+        "verify_form": "The agent drew a flat bottom rather than following the angle in the photograph - check which; a bottle with an angled base will not stand up.",
+        "speak": "if-wrong",
+        "check": "Is the base line constrained horizontal, or does it keep the slight angle visible in the reference image?",
+        "say_example": "The base kept the slight angle from the reference image instead of snapping horizontal. A bottle with an angled base won't stand up."
        }
       ]
      },

@@ -182,19 +182,6 @@
         "speak": "on-event",
         "check": "Does the pricing page show Free, Pro and Teams plans with a monthly/yearly toggle and a savings percentage?",
         "say_example": "This page shows Free, Pro and Teams. The <'Save 16%'> banner undersells it. <12.99> a month against <119.99> a year is about <23%> off. I'm staying on the free plan unless you want to upgrade."
-       },
-       {
-        "question": "Do you want the top download quality if it means creating an account?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Selecting the 'Super High' resolution triggered a pop-up requiring you to create a free account and start a trial to proceed with the download.",
-        "whatTheAgentLoses": "An agent might automatically sign up for a trial or settle for a lower quality without knowing your preference for avoiding new account creations.",
-        "kind": "decision",
-        "verify_form": "The top resolution asked for an account and a trial - check whether the agent signed up; a trial can convert to a charge.",
-        "speak": "on-event",
-        "check": "Does choosing the top resolution open a signup/free-trial prompt before the download can proceed?",
-        "say_example": "The top resolution needs a free account and a <7>-day trial that can turn into a charge. I'm downloading at the regular quality, unless you want to sign up."
        }
       ]
      }
@@ -4944,18 +4931,6 @@
       "label": "Rotate the element",
       "questions": [
        {
-        "question": "Do you keep the line as a vertical separator between the columns?",
-        "cluster": "approve",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "You temporarily rotated the line to test a vertical divider between the dish columns before changing it back to horizontal.",
-        "whatTheAgentLoses": "An agent might permanently leave the line vertical, missing your visual preference for horizontal dividers in the final layout.",
-        "kind": "state-check",
-        "speak": "never",
-        "check": "Is the line currently oriented vertically or horizontally between the columns?",
-        "say_example": "Kept the divider line vertical between the columns"
-       },
-       {
         "question": "How should you orient and size the splash graphic relative to the bottle?",
         "cluster": "hand over",
         "moment": "Now",
@@ -5750,6 +5725,18 @@
         "speak": "never",
         "check": "Is the second splash graphic still present in front of the bottle, or was it removed after testing?",
         "say_example": "Removed the second splash from in front of the bottle - it wasn't adding anything"
+       },
+       {
+        "question": "Do you keep the line as a vertical separator between the columns?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "You temporarily rotated the line to test a vertical divider between the dish columns before changing it back to horizontal.",
+        "whatTheAgentLoses": "An agent might permanently leave the line vertical, missing your visual preference for horizontal dividers in the final layout.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Is the line currently oriented vertically or horizontally between the columns?",
+        "say_example": "Kept the divider line vertical between the columns"
        }
       ]
      },
@@ -6129,6 +6116,19 @@
         "speak": "never",
         "check": "What file size, if shown, does the download panel display?",
         "say_example": "Recorded export size as <4.2 MB>"
+       },
+       {
+        "question": "Do you want the top download quality if it means creating an account?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting the 'Super High' resolution triggered a pop-up requiring you to create a free account and start a trial to proceed with the download.",
+        "whatTheAgentLoses": "An agent might automatically sign up for a trial or settle for a lower quality without knowing your preference for avoiding new account creations.",
+        "kind": "decision",
+        "verify_form": "The top resolution asked for an account and a trial - check whether the agent signed up; a trial can convert to a charge.",
+        "speak": "on-event",
+        "check": "Does choosing the top resolution open a signup/free-trial prompt before the download can proceed?",
+        "say_example": "The top resolution needs a free account and a <7>-day trial that can turn into a charge. I'm downloading at the regular quality, unless you want to sign up."
        }
       ]
      },

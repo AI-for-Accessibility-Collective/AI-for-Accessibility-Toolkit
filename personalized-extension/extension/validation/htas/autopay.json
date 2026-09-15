@@ -1188,19 +1188,6 @@
         "speak": "never",
         "check": "Does a tooltip on the Statement Balance option explain what it pays?",
         "say_example": "Found that Statement Balance pays off last month's statement in full, per the tooltip"
-       },
-       {
-        "question": "What payment amount do you want to set for this automatic payment?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The setup screen requires a payment amount to be selected before the 'Next' button becomes active.",
-        "whatTheAgentLoses": "The user loses control over the exact amount of money automatically deducted from their account each month.",
-        "kind": "decision",
-        "verify_form": "The amount field gated the Next button - check what the agent chose there; the deduction it locked in repeats monthly.",
-        "speak": "never",
-        "check": "Does the amount field need a value before the 'Next' button activates?",
-        "say_example": "Set the payment amount here to <amount> before continuing"
        }
       ]
      },
@@ -1230,7 +1217,7 @@
         "kind": "decision",
         "verify_form": "The amount field is the sum that moves every cycle - check what the agent entered; in this corpus the form even accepted it empty, so look at the value, not the fact it submitted.",
         "speak": "gate",
-        "check": "Does the 'Amount to be transferred' field show a specific, nonzero value, or would it submit empty?",
+        "check": "Does the 'Amount to be transferred' field show a specific, nonzero value needed before the Next button activates, or would it submit empty?",
         "say_example": "The transfer amount box is empty right now, and this page will let you submit it that way - meaning no money actually moves this cycle. Want me to set an amount before continuing?"
        },
        {

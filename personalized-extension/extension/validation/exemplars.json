@@ -7607,24 +7607,6 @@
      "id": "7",
      "label": "Contact the property",
      "note": "7.1 opens the form - or ends the goal when both buttons are read and left alone (cd07, iHOh). 7.2 to 7.4 in the order the form asks. 7.5 ends it, and in this corpus always by closing: ten keepers reach a form, none sends.",
-     "questions": [
-      {
-       "question": "Does the confirmation email match what you asked for?",
-       "cluster": "receipts",
-       "moment": "Completion",
-       "moneyMoving": true,
-       "why": "Reviewing the confirmation email ensures that the correct parameters, such as your contact info and requested tour time, were successfully submitted to the property.",
-       "whatTheAgentLoses": "You lose the opportunity to personally verify that the correct contact information and viewing preferences were sent to the landlord."
-      },
-      {
-       "question": "Does the page confirm the request was sent?",
-       "cluster": "receipts",
-       "moment": "Completion",
-       "moneyMoving": true,
-       "why": "The screen displayed a pop-up modal with a checkmark and success message, which is the only way to guarantee the inquiry was actually processed.",
-       "whatTheAgentLoses": "The user loses the immediate peace of mind of seeing the visual confirmation that their specific message successfully went through to the property manager."
-      }
-     ],
      "children": [
       {
        "id": "7.1",
@@ -14941,6 +14923,14 @@
          "moneyMoving": false,
          "why": "The quote form asks you to select whether or not your vehicle is equipped with an anti-theft device.",
          "whatTheAgentLoses": "Delegating this means the agent might guess incorrectly, potentially causing you to miss out on a discount or providing inaccurate information to the insurer."
+        },
+        {
+         "question": "Does the car have any modifications from standard?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Verifying retrieved details like the engine size, alarm status, and market value ensures the quote accurately reflects the specific vehicle being insured.",
+         "whatTheAgentLoses": "You lose the ability to catch inaccuracies in the registry data or declare specific aftermarket modifications that could otherwise invalidate your coverage."
         }
        ]
       }
@@ -16353,14 +16343,6 @@
          "moneyMoving": false,
          "why": "The screen provides a calendar widget to select the date, ensuring it matches the system's required format.",
          "whatTheAgentLoses": "You lose the ability to directly handle and verify the input of your sensitive personal information."
-        },
-        {
-         "question": "Are the application type, the file number and the date of birth all filled in before the search runs?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The tracking portal requires specific identifiers, such as your application type, file number, and date of birth, to locate your record.",
-         "whatTheAgentLoses": "You lose the ability to personally verify that your sensitive identification details are entered accurately."
         }
        ]
       },
@@ -16402,7 +16384,17 @@
       },
       {
        "id": "4.10",
-       "label": "Check the entries"
+       "label": "Check the entries",
+       "questions": [
+        {
+         "question": "Are the application type, the file number and the date of birth all filled in before the search runs?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The tracking portal requires specific identifiers, such as your application type, file number, and date of birth, to locate your record.",
+         "whatTheAgentLoses": "You lose the ability to personally verify that your sensitive identification details are entered accurately."
+        }
+       ]
       }
      ]
     },
@@ -17278,6 +17270,16 @@
      "id": "5",
      "label": "Settle the seat",
      "note": "5.1 wherever the airline has already given the user a seat, which is four of the videos. 5.2 before the user picks an option that has to be paid for. then 5.3 or 5.4, not both - 5.3 where the user can pick a seat off a map, 5.4 where the airline hands out a free seat instead. 5.5 once the user has picked a seat or kept the one they were given. 5.6 only in PirI, the only video with a seat payment, and the payment does not finish.",
+     "questions": [
+      {
+       "question": "Is the seat picked where this airline keeps it, under additional services rather than check-in?",
+       "cluster": "select",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "The dashboard displays several action buttons, and the seat selection feature is specifically located in the 'Additional Services' section rather than the main check-in button.",
+       "whatTheAgentLoses": "You lose the awareness of how the airline organizes its booking management tools and where ancillary services are located."
+      }
+     ],
      "children": [
       {
        "id": "5.1",
@@ -19497,12 +19499,12 @@
          "whatTheAgentLoses": "You lose the ability to strategically select parts that ship from the same location to minimize your overall shipping costs."
         },
         {
-         "question": "With the pickup fee added, is this still the better buy than the one you passed on?",
-         "cluster": "approve",
+         "question": "Once shipping is calculated, does the total still fit your budget?",
+         "cluster": "hand over",
          "moment": "Now",
          "moneyMoving": true,
-         "why": "The summary of charges reveals a $3.00 fee for store pickup that brings the total to $100.95, which you must review before selecting a payment method from the dropdown.",
-         "whatTheAgentLoses": "Delegating this step removes your visibility into final added costs like the pickup fee and your control over which payment method is used."
+         "why": "Filling out the address information fields and clicking the 'Calculate Shipping' button allows you to see the exact delivery fees added to the subtotal.",
+         "whatTheAgentLoses": "Delegating this means you lose the chance to personally review the shipping fees and confirm that the final total still fits your budget."
         }
        ]
       },
@@ -19622,7 +19624,17 @@
      "children": [
       {
        "id": "6.1",
-       "label": "Check the row and column you read"
+       "label": "Check the row and column you read",
+       "questions": [
+        {
+         "question": "When the page calls one CPU faster, how big is the gap really?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays three specific reasons to choose the Xbox One, such as exclusive games and a faster CPU, which help differentiate the shortlisted consoles.",
+         "whatTheAgentLoses": "You lose the chance to personally decide if these specific technical and software advantages actually matter for your gaming preferences."
+        }
+       ]
       },
       {
        "id": "6.2",
@@ -19780,6 +19792,14 @@
          "moneyMoving": true,
          "why": "The screen shows a payment-method dropdown and empty credit card fields, requiring a decision on whether to expose sensitive financial data to finalize the purchase.",
          "whatTheAgentLoses": "The delegator loses control over their sensitive financial information and the final authorization of the actual purchase."
+        },
+        {
+         "question": "With the pickup fee added, is this still the better buy than the one you passed on?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The summary of charges reveals a $3.00 fee for store pickup that brings the total to $100.95, which you must review before selecting a payment method from the dropdown.",
+         "whatTheAgentLoses": "Delegating this step removes your visibility into final added costs like the pickup fee and your control over which payment method is used."
         }
        ]
       },
@@ -20286,12 +20306,12 @@
        "whatTheAgentLoses": "The user loses a properly configured video upload if the agent blindly follows the initial audio instruction and skips adding a title, description, or thumbnail."
       },
       {
-       "question": "Does the subscriber count shown in the animation match the current channel stats?",
-       "cluster": "facts",
+       "question": "Do you want to use a template for the video details?",
+       "cluster": "select",
        "moment": "Now",
        "moneyMoving": false,
-       "why": "The channel page displayed 51.1K subscribers, but the subscribe animation graphic in the video showed 24K subscribers.",
-       "whatTheAgentLoses": "The user loses the opportunity to catch and update outdated graphics in their video before it goes live."
+       "why": "The screen showed a template being applied to the video details before you chose to discard those changes.",
+       "whatTheAgentLoses": "You lose the ability to preview a template's details and then decide to discard them in favor of custom text."
       }
      ],
      "children": [
@@ -20576,6 +20596,14 @@
          "moneyMoving": false,
          "why": "The screen presents choices to upload a file, use an auto-generated thumbnail, or test and compare multiple options.",
          "whatTheAgentLoses": "The user loses the opportunity to decide whether to A/B test thumbnails or just use a single uploaded or auto-generated image."
+        },
+        {
+         "question": "What style of competitor thumbnail should you use as inspiration?",
+         "cluster": "compare",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen showed a recent competitor video with high views, suggesting its thumbnail design is effective for this topic.",
+         "whatTheAgentLoses": "The user loses the ability to manually analyze competitor success and tailor their own thumbnail design accordingly."
         }
        ],
        "children": [
@@ -20878,16 +20906,6 @@
      "id": "5",
      "label": "Declare and restrict the video",
      "note": "5.1 in every keeper on the modern flow, and it is the one field the interface marks required - YJnz shows the tooltip. 5.2 where the person opens the advanced block. 5.3 and 5.4 wherever the surface lists them. 5.5 and 5.6 where the person bothers, and 5.6 is refused outright twice. 5.7 in any order, and on the phone apps it is a separate screen per setting rather than a block.",
-     "questions": [
-      {
-       "question": "Should this video's public view count be hidden from other viewers?",
-       "cluster": "hand over",
-       "moment": "Now",
-       "moneyMoving": false,
-       "why": "The screen includes advanced options to set the recording date to today, declare paid product placements, and toggle the visibility of video statistics.",
-       "whatTheAgentLoses": "You lose the opportunity to legally disclose sponsorships or control whether your audience can see the video's performance metrics."
-      }
-     ],
      "children": [
       {
        "id": "5.1",
@@ -28911,6 +28929,14 @@
        "moneyMoving": false,
        "why": "The page displayed a banner stating online processing was unavailable due to the expiration date and provided a link to make an appointment.",
        "whatTheAgentLoses": "You lose the ability to decide whether to abandon the online task or proceed with scheduling an in-office visit."
+      },
+      {
+       "question": "Should you check the mailing status of your card instead of starting a new renewal?",
+       "cluster": "select",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "The screen provides a link to check the mailing status under the 'What to Expect' section, which is important if you recently renewed and are just waiting for the physical document to arrive.",
+       "whatTheAgentLoses": "The user loses the opportunity to discover that their previously renewed card is already in the mail, potentially resulting in an unnecessary duplicate transaction and fee."
       }
      ],
      "children": [
@@ -30042,14 +30068,6 @@
          "moneyMoving": true,
          "why": "The screen instructs you to enter your Driver's License, ID, or CLP Number and Date of Issuance to check the status.",
          "whatTheAgentLoses": "The user loses the ability to track the delivery status of their renewed card."
-        },
-        {
-         "question": "Should you check the mailing status of your card instead of starting a new renewal?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen provides a link to check the mailing status under the 'What to Expect' section, which is important if you recently renewed and are just waiting for the physical document to arrive.",
-         "whatTheAgentLoses": "The user loses the opportunity to discover that their previously renewed card is already in the mail, potentially resulting in an unnecessary duplicate transaction and fee."
         }
        ]
       }
@@ -37046,14 +37064,6 @@
        "label": "Accept the portal terms",
        "questions": [
         {
-         "question": "Is there a CAPTCHA on this page that only you can solve?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen presents a mandatory terms of use agreement and a visual CAPTCHA that must be completed to access the portal.",
-         "whatTheAgentLoses": "The user loses the opportunity to personally review and legally consent to the government portal's terms of use."
-        },
-        {
          "question": "Does the site make you accept its user agreement before you can go in?",
          "cluster": "hand over",
          "moment": "Now",
@@ -37178,7 +37188,17 @@
       },
       {
        "id": "2.6",
-       "label": "Pass the bot check"
+       "label": "Pass the bot check",
+       "questions": [
+        {
+         "question": "Is there a CAPTCHA on this page that only you can solve?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen presents a mandatory terms of use agreement and a visual CAPTCHA that must be completed to access the portal.",
+         "whatTheAgentLoses": "The user loses the opportunity to personally review and legally consent to the government portal's terms of use."
+        }
+       ]
       },
       {
        "id": "2.7",
@@ -38458,14 +38478,6 @@
        "id": "7.4",
        "label": "Decide on the insurance",
        "questions": [
-        {
-         "question": "Do you want to add Price Drop Protection to your search?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The search screen includes an option to 'Add Price Drop Protection', where the platform will pay the difference if the price drops after booking.",
-         "whatTheAgentLoses": "The user loses the opportunity to secure financial protection against future price drops before initiating the search."
-        },
         {
          "question": "Do you want to add the flight protection plan before completing the booking?",
          "cluster": "select",
@@ -41820,14 +41832,6 @@
          "moneyMoving": true,
          "why": "The screen displays Canva Free, Pro, and Teams plans, along with a toggle showing a 16% discount for yearly billing.",
          "whatTheAgentLoses": "You lose control over your software budget and might miss out on cost-saving billing options if the agent selects a subscription for you."
-        },
-        {
-         "question": "Do you want the top download quality if it means creating an account?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "Selecting the 'Super High' resolution triggered a pop-up requiring you to create a free account and start a trial to proceed with the download.",
-         "whatTheAgentLoses": "An agent might automatically sign up for a trial or settle for a lower quality without knowing your preference for avoiding new account creations."
         }
        ]
       }
@@ -42762,20 +42766,20 @@
        "label": "Rotate the element",
        "questions": [
         {
-         "question": "Do you keep the line as a vertical separator between the columns?",
-         "cluster": "approve",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "You temporarily rotated the line to test a vertical divider between the dish columns before changing it back to horizontal.",
-         "whatTheAgentLoses": "An agent might permanently leave the line vertical, missing your visual preference for horizontal dividers in the final layout."
-        },
-        {
          "question": "How should you orient and size the splash graphic relative to the bottle?",
          "cluster": "hand over",
          "moment": "Now",
          "moneyMoving": false,
          "why": "Testing different rotation angles and sizes ensures the splash visually wraps around the bottle in a natural and dynamic way.",
          "whatTheAgentLoses": "You lose the creative control to fine-tune the exact visual interaction and placement of the splash around the bottle."
+        },
+        {
+         "question": "Is the corner graphic snapped to exactly 90 degrees?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Watching the rotation tooltip ensures the graphic snaps exactly to 90 degrees for a perfectly straight alignment in the corner.",
+         "whatTheAgentLoses": "You lose the precise visual feedback of the tooltip confirming the element is perfectly squared rather than slightly crooked."
         }
        ]
       },
@@ -43755,6 +43759,14 @@
            "moneyMoving": true,
            "why": "The screen shows a warning that no match was found for fresh mint leaves, meaning you must decide whether to proceed without them or search for a substitute first.",
            "whatTheAgentLoses": "Delegating this step means you lose the opportunity to decide whether to skip the missing ingredient or manually search for a suitable replacement."
+          },
+          {
+           "question": "Should I adjust the quantity of any items before adding them to the cart?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "The screen displays a list of items and an '+ Add 16 items to cart' button, allowing for quantity adjustments before bulk adding.",
+           "whatTheAgentLoses": "The user loses the chance to customize quantities for specific items, which could lead to over-ordering or missing needed amounts."
           }
          ]
         },
@@ -43965,14 +43977,6 @@
        "id": "5.3",
        "label": "Edit the cart",
        "questions": [
-        {
-         "question": "Should I adjust the quantity of any items before adding them to the cart?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": true,
-         "why": "The screen displays a list of items and an '+ Add 16 items to cart' button, allowing for quantity adjustments before bulk adding.",
-         "whatTheAgentLoses": "The user loses the chance to customize quantities for specific items, which could lead to over-ordering or missing needed amounts."
-        },
         {
          "question": "Do you need to increase the quantity of cake pans?",
          "cluster": "hand over",
@@ -45760,6 +45764,14 @@
        "moneyMoving": false,
        "why": "Confirming that your current plan covers all four drugs for an estimated $30.00 provides a clear baseline before you search for alternative plans.",
        "whatTheAgentLoses": "You lose the direct reassurance of seeing exactly how your specific prescriptions impact your out-of-pocket costs under your current coverage."
+      },
+      {
+       "question": "What is your current plan and what are its basic costs?",
+       "cluster": "facts",
+       "moment": "Now",
+       "moneyMoving": false,
+       "why": "Reviewing your current plan details, such as the $0.00 premium and $15.00 estimated drug costs for the Wellcare Value Script, establishes a baseline for comparing new options.",
+       "whatTheAgentLoses": "Delegating this step means you miss the immediate context of your current coverage and out-of-pocket estimates, making it harder to independently judge if a new plan is actually an improvement."
       }
      ],
      "children": [
@@ -50878,6 +50890,14 @@
          "moneyMoving": true,
          "why": "The review screen shows a contradiction between the 7 and 10+ years of experience on the resume and the 8 and 12 years claimed in the questionnaire, which could cause the employer to reject the application.",
          "whatTheAgentLoses": "The user loses the opportunity to catch and correct inconsistencies between their uploaded documents and form answers before the employer sees them."
+        },
+        {
+         "question": "Does the pay rate shown in the application match the rate advertised on the original job posting?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Verifying consistency across the application process ensures the employer hasn't changed the compensation terms after you clicked apply.",
+         "whatTheAgentLoses": "The user loses the ability to catch a bait-and-switch in the compensation details and halt the application before handing over personal data."
         }
        ]
       },
@@ -54169,17 +54189,7 @@
       },
       {
        "id": "5.11",
-       "label": "Stop the navigation",
-       "questions": [
-        {
-         "question": "Do you want to stop the automatic navigation?",
-         "cluster": "undo",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen indicates that navigation will start automatically and provides a 'Stop' button, requiring a decision on whether to begin the trip immediately.",
-         "whatTheAgentLoses": "The user loses the opportunity to cancel the active turn-by-turn navigation if they were just checking the route and are not actually ready to leave."
-        }
-       ]
+       "label": "Stop the navigation"
       }
      ]
     },
@@ -55854,6 +55864,14 @@
          "moneyMoving": false,
          "why": "Locating the red pencil icon is required to open the compose screen and begin drafting the message.",
          "whatTheAgentLoses": "You lose the opportunity to decide whether to start a brand new email or reply to an existing thread to make your commitment."
+        },
+        {
+         "question": "Is there already a thread with this person to reply in?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The messaging sidebar displays past threads like the one with [name], allowing you to reference previous interactions for tone and context while drafting.",
+         "whatTheAgentLoses": "You lose the ability to personally select the most relevant past conversation to use as a benchmark for your new message."
         }
        ]
       },
@@ -55897,14 +55915,6 @@
        "id": "2.4",
        "label": "Start from a calendar event",
        "questions": [
-        {
-         "question": "Is the new event on the date you want, or just the day the calendar opened on?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen displays the daily schedule for April 1, 2019, and clicking the '+ New' button in the toolbar is required to open the event creation form.",
-         "whatTheAgentLoses": "You lose the opportunity to visually confirm that the calendar is set to the correct date before starting the draft."
-        },
         {
          "question": "Do you want to create a calendar event instead of a standard email?",
          "cluster": "select",
@@ -56291,7 +56301,17 @@
         },
         {
          "id": "4.9.2",
-         "label": "Pick the date"
+         "label": "Pick the date",
+         "questions": [
+          {
+           "question": "Is the new event on the date you want, or just the day the calendar opened on?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The screen displays the daily schedule for April 1, 2019, and clicking the '+ New' button in the toolbar is required to open the event creation form.",
+           "whatTheAgentLoses": "You lose the opportunity to visually confirm that the calendar is set to the correct date before starting the draft."
+          }
+         ]
         },
         {
          "id": "4.9.3",
@@ -56480,14 +56500,6 @@
          "moneyMoving": false,
          "why": "The attachment menu presents distinct options for attaching a local file versus inserting a document directly from Google Drive.",
          "whatTheAgentLoses": "The user loses the ability to choose whether to send a static local file or share a live document from their Google Drive."
-        },
-        {
-         "question": "Does the message say something is attached while nothing is?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "Tapping the paperclip icon reveals options to attach a local file or insert one from Drive, which is essential if your commitment involves sharing a document.",
-         "whatTheAgentLoses": "You lose the ability to personally verify that the correct file or Drive link is selected and attached to the message."
         }
        ]
       },
@@ -56710,6 +56722,14 @@
          "moneyMoving": false,
          "why": "The screen shows a message containing just a bare link, which might lack necessary context or professionalism.",
          "whatTheAgentLoses": "The user loses the opportunity to decide whether to add context or a polite greeting to a bare link before committing to sending it."
+        },
+        {
+         "question": "Does the message say something is attached while nothing is?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Tapping the paperclip icon reveals options to attach a local file or insert one from Drive, which is essential if your commitment involves sharing a document.",
+         "whatTheAgentLoses": "You lose the ability to personally verify that the correct file or Drive link is selected and attached to the message."
         }
        ]
       },
@@ -56726,12 +56746,12 @@
          "whatTheAgentLoses": "The user loses the immediate reassurance of visually confirming that their meeting invitation was successfully created with the correct participants."
         },
         {
-         "question": "Is the new project made and open on its talent pool?",
-         "cluster": "receipts",
+         "question": "Do the pre-filled title and attendees match the message this meeting is answering?",
+         "cluster": "facts",
          "moment": "After",
          "moneyMoving": false,
-         "why": "The screen shows the newly created project in the dashboard and its details page with the 'Talent pool' tab.",
-         "whatTheAgentLoses": "The user loses the assurance that the project was correctly set up to organize the candidates they intend to message."
+         "why": "The screen displayed a new meeting window where the title, required attendees, and body were automatically filled from the original message.",
+         "whatTheAgentLoses": "You lose the ability to personally verify that the system correctly translated the original email's context into the meeting invitation."
         }
        ]
       },
@@ -65861,14 +65881,6 @@
          "moneyMoving": false,
          "why": "The 'Save' dialog requires a specific filename in the 'Save As' field and a folder location from the sidebar to ensure the file is stored correctly.",
          "whatTheAgentLoses": "If the agent chooses the name and location, you might not be able to find your podcast template when you need to record future episodes."
-        },
-        {
-         "question": "Did the template load with all its tracks and effects?",
-         "cluster": "facts",
-         "moment": "After",
-         "moneyMoving": false,
-         "why": "Checking the multitrack session and effects rack ensures your standard EQ and dynamics presets are ready before you start editing.",
-         "whatTheAgentLoses": "You lose the reassurance of visually confirming your signature audio processing chain is in place."
         }
        ]
       },
@@ -72958,22 +72970,6 @@
        "label": "Enter the required value",
        "questions": [
         {
-         "question": "What birthday should you enter for this account?",
-         "cluster": "hand over",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The sign-up screen requires selecting a date of birth in the picker to proceed with creating the account.",
-         "whatTheAgentLoses": "The user loses the ability to provide their actual date of birth, which could impact account recovery or access to age-restricted features.",
-         "costDims": {
-          "money": 0,
-          "privacy": 2,
-          "thirdParty": 0,
-          "safety": 2,
-          "reversibility": 2,
-          "recovery": 2
-         }
-        },
-        {
          "question": "Which private DNS provider hostname should you enter?",
          "cluster": "hand over",
          "moment": "Now",
@@ -72987,6 +72983,22 @@
           "safety": 2,
           "reversibility": 1,
           "recovery": 2
+         }
+        },
+        {
+         "question": "Are you willing to submit placeholder billing details to get past the required fields?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen displays several fields marked as 'Required' such as Street, City, and Zip that must be addressed to proceed with the setting change.",
+         "whatTheAgentLoses": "The user loses the ability to decide whether to provide real, accurate billing information or dummy data for their account profile.",
+         "costDims": {
+          "money": 2,
+          "privacy": 2,
+          "thirdParty": 1,
+          "safety": 0,
+          "reversibility": 2,
+          "recovery": 1
          }
         }
        ]
@@ -75286,6 +75298,14 @@
          "moneyMoving": false,
          "why": "Reviewing the summary metrics like '25 m' and '230 cals' ensures the recipe fits your schedule and dietary goals before you spend time reading the individual ingredients.",
          "whatTheAgentLoses": "You lose the opportunity to personally evaluate if the balance of prep time, portion size, and nutritional value is right for your current situation."
+        },
+        {
+         "question": "Does the rating count on the opened recipe page match the number of ratings shown on the search result card?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search result card displayed 170 ratings, so checking that the recipe page also shows 170 ratings confirms you opened the exact dish you intended.",
+         "whatTheAgentLoses": "The user loses the certainty that the agent opened the correct recipe from the search results instead of accidentally clicking a different or sponsored link."
         }
        ]
       },
@@ -75336,6 +75356,14 @@
          "moneyMoving": false,
          "why": "The screen displays specific nutritional values like calories and carbohydrates, which are necessary to check if you have strict macronutrient limits.",
          "whatTheAgentLoses": "You lose the opportunity to verify if the dish fits into your specific daily calorie or macronutrient goals before saving it."
+        },
+        {
+         "question": "What is the total for the whole dish, from the servings count and the calories per serving?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen lists 6 servings at 434 calories each, requiring you to deduce the unstated total of 2,604 calories for the whole meatloaf.",
+         "whatTheAgentLoses": "You lose the assurance that the agent correctly calculates unstated nutritional totals that might violate your dietary constraints."
         }
        ]
       },
@@ -75350,6 +75378,14 @@
          "moneyMoving": false,
          "why": "The expanded pin displays a source link that must be followed to view the full recipe details on an external website.",
          "whatTheAgentLoses": "You lose the opportunity to check the source website's credibility before clicking through to the full recipe."
+        },
+        {
+         "question": "Do the serving sizes match between the recipe app and the original blog post?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Checking that the 24 servings listed on Yummly matches the 2 dozen on the original blog post confirms the recipe data was imported accurately.",
+         "whatTheAgentLoses": "You lose the ability to catch discrepancies in serving sizes or recipe yields when content is imported from an external site."
         }
        ]
       },
@@ -76132,6 +76168,14 @@
          "moneyMoving": false,
          "why": "The screen displays a 'Rental car company' filter on the left sidebar with options like 'Hertz', allowing you to narrow down the available vehicles based on brand preference or loyalty perks.",
          "whatTheAgentLoses": "The user loses the opportunity to apply their personal brand loyalty or specific credit card benefits to the rental selection."
+        },
+        {
+         "question": "Do you want the car delivered, so only hosts who deliver show up?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Exploring the extended filters reveals whether the platform supports having the rental car delivered directly to your location.",
+         "whatTheAgentLoses": "You lose the chance to personally verify if delivery is an option before settling for a standard pickup."
         }
        ]
       },
@@ -76354,14 +76398,6 @@
        "id": "4.7",
        "label": "Choose the delivery location",
        "questions": [
-        {
-         "question": "Do you want the car delivered, so only hosts who deliver show up?",
-         "cluster": "refine",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "Exploring the extended filters reveals whether the platform supports having the rental car delivered directly to your location.",
-         "whatTheAgentLoses": "You lose the chance to personally verify if delivery is an option before settling for a standard pickup."
-        },
         {
          "question": "Which pickup or delivery option do you want, given what each costs?",
          "cluster": "compare",
@@ -77053,6 +77089,14 @@
            "moneyMoving": true,
            "why": "The screen displays a 'Reorder all items' button, which provides a quick way to move the entire previous order into your current cart before making modifications.",
            "whatTheAgentLoses": "You lose the chance to review the specific items and substituted products from this past order before deciding to bulk-add them to your new cart."
+          },
+          {
+           "question": "Was the cart already holding items before reorder was pressed?",
+           "cluster": "facts",
+           "moment": "Now",
+           "moneyMoving": true,
+           "why": "Clicking 'reorder all' will add the past order's items to whatever is currently in the cart, potentially leading to duplicate items or an unexpectedly high total.",
+           "whatTheAgentLoses": "The user loses the chance to clear out stale items from an abandoned session, resulting in accidentally purchasing things they no longer want."
           }
          ]
         },
@@ -77232,20 +77276,20 @@
        "label": "Check the returned lines",
        "questions": [
         {
-         "question": "Was the cart already holding items before reorder was pressed?",
-         "cluster": "facts",
-         "moment": "Now",
-         "moneyMoving": true,
-         "why": "Clicking 'reorder all' will add the past order's items to whatever is currently in the cart, potentially leading to duplicate items or an unexpectedly high total.",
-         "whatTheAgentLoses": "The user loses the chance to clear out stale items from an abandoned session, resulting in accidentally purchasing things they no longer want."
-        },
-        {
          "question": "Does the cart hold exactly the past order's items plus your changes, nothing missing and nothing extra?",
          "cluster": "facts",
          "moment": "After",
          "moneyMoving": true,
          "why": "When reordering, apps sometimes silently swap in the closest available match (like a family size instead of regular) if the exact original item is out of stock.",
          "whatTheAgentLoses": "The user loses the chance to reject an unwanted automatic substitution or price increase before it becomes part of the final order."
+        },
+        {
+         "question": "Did the store swap any item for a different size or version than the past order had?",
+         "cluster": "facts",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen shows 19 distinct items being added earlier, but the cart review only displays 6 items and includes a product that was never added.",
+         "whatTheAgentLoses": "The user ends up paying for and receiving the wrong groceries because the agent failed to ensure the cart updated correctly before checking out."
         }
        ]
       },
@@ -78250,14 +78294,6 @@
      "note": "6.1 with 6.2 against it. 6.3 wherever a field is empty - the phone number is the one hard gate in this corpus. 6.4 to 6.6 as the form offers them; 6.7 and 6.8 where policies, fees, or entitlements ride the booking; then 6.9 and 6.10. the whole goal runs against a countdown on three engines (XFZo 10 minutes, rteu from 10, l-eC 4:49, NxLJ 5:00). XFZo's browser round reaches back into 3.4 when the password wall lands here. hXtq stops at the button on purpose, three times; N0nZ and s4oX end before it; l-eC ends on its spinner.",
      "questions": [
       {
-       "question": "Do you need to add any dietary restrictions, accessibility requests, or celebration cakes?",
-       "cluster": "hand over",
-       "moment": "Now",
-       "moneyMoving": true,
-       "why": "The screen offered options to add a Mickey Mouse Celebration Cake, dietary requests, or accessibility requests to the reservation.",
-       "whatTheAgentLoses": "You lose the opportunity to customize the dining experience with special cakes or ensure your dietary and accessibility needs are accommodated."
-      },
-      {
        "question": "Who should I select from your saved contacts for the other three guests?",
        "cluster": "select",
        "moment": "Now",
@@ -78327,7 +78363,17 @@
       },
       {
        "id": "6.4",
-       "label": "Add requests and the occasion"
+       "label": "Add requests and the occasion",
+       "questions": [
+        {
+         "question": "Do you need to add any dietary restrictions, accessibility requests, or celebration cakes?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The screen offered options to add a Mickey Mouse Celebration Cake, dietary requests, or accessibility requests to the reservation.",
+         "whatTheAgentLoses": "You lose the opportunity to customize the dining experience with special cakes or ensure your dietary and accessibility needs are accommodated."
+        }
+       ]
       },
       {
        "id": "6.5",
@@ -79395,6 +79441,14 @@
          "label": "Read the bot's verdict",
          "questions": [
           {
+           "question": "Did the return actually go through, or did it end rejected with only a phone number to call?",
+           "cluster": "receipts",
+           "moment": "Completion",
+           "moneyMoving": true,
+           "why": "The in-app chat explicitly rejected the return because the window expired, and the video ended by showing a phone number instead of a return confirmation.",
+           "whatTheAgentLoses": "The user is left with an unresolved return and a phone number to call, rather than a completed return and refund confirmation."
+          },
+          {
            "question": "Is the chat bot getting anywhere, or just repeating itself?",
            "cluster": "facts",
            "moment": "Now",
@@ -79428,14 +79482,6 @@
        "id": "9.7",
        "label": "Leave for a phone number",
        "questions": [
-        {
-         "question": "Did the return actually go through, or did it end rejected with only a phone number to call?",
-         "cluster": "receipts",
-         "moment": "Completion",
-         "moneyMoving": true,
-         "why": "The in-app chat explicitly rejected the return because the window expired, and the video ended by showing a phone number instead of a return confirmation.",
-         "whatTheAgentLoses": "The user is left with an unresolved return and a phone number to call, rather than a completed return and refund confirmation."
-        },
         {
          "question": "Is the support screen stuck loading?",
          "cluster": "hand over",
@@ -82147,14 +82193,6 @@
          "moneyMoving": false,
          "why": "The screen showed three consecutive orders with the same ZIP code and 'Repeat buyer' tags, indicating they can be shipped together to save on postage.",
          "whatTheAgentLoses": "The user loses the ability to save money on shipping costs by manually identifying and grouping multiple purchases from the same buyer."
-        },
-        {
-         "question": "Which of the combined orders gets the refund?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The screen shows three orders for the same buyer with the identical tracking number, requiring a choice of which specific order record to update.",
-         "whatTheAgentLoses": "You lose the ability to decide how the partial refund is accounted for across the specific items in the combined order."
         }
        ]
       }
@@ -91388,6 +91426,14 @@
          "moneyMoving": true,
          "why": "The screen displays conflicting information with a connection error message appearing directly above green checkmarks for all hardware components.",
          "whatTheAgentLoses": "The user loses the opportunity to decide whether to contact support or restart the test to guarantee a stable connection for their medical appointment."
+        },
+        {
+         "question": "Is the hardware test actually run and passed before the visit, rather than skipped?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": true,
+         "why": "The appointment details page provides specific preparation instructions and a 'TEST HARDWARE' button to verify your equipment works before the visit.",
+         "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally verify that your specific camera and microphone are functioning correctly."
         }
        ]
       }
@@ -93610,20 +93656,20 @@
        "label": "Answer the onboarding questions",
        "questions": [
         {
-         "question": "What should I pick for how you heard about them?",
-         "cluster": "select",
-         "moment": "Now",
-         "moneyMoving": true,
-         "why": "The checkout form includes a dropdown menu asking how you heard about the platform before allowing you to complete the booking.",
-         "whatTheAgentLoses": "The user loses the ability to accurately report their actual referral source or give credit to the specific person who referred them."
-        },
-        {
          "question": "Do you want other learners to be able to contact you for language exchange?",
          "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
          "why": "The onboarding modal requires you to specify if you are looking for a paid tutor and whether you want to receive language exchange requests.",
          "whatTheAgentLoses": "You lose the ability to control your privacy and decide whether your profile is open to unsolicited language exchange requests."
+        },
+        {
+         "question": "The form asks for your program of study and semester. What should I put?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The onboarding form requires specific information like your program of study and semester to unlock the main booking calendar.",
+         "whatTheAgentLoses": "You lose the ability to accurately represent your specific academic background and preferred name on your tutoring profile."
         }
        ]
       },
@@ -94430,6 +94476,14 @@
          "moneyMoving": false,
          "why": "The screen lists multiple lesson options like 'Conversation Practice' and 'French for Beginners' with different hourly rates, requiring you to select the one that fits your goals.",
          "whatTheAgentLoses": "Delegating this choice means the agent might select a lesson type or pricing package that does not align with your specific learning needs or budget."
+        },
+        {
+         "question": "Which language do you want to learn in this lesson?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The tutor teaches multiple languages, so you must explicitly select which one you want to focus on for this booking.",
+         "whatTheAgentLoses": "You lose the ability to ensure the lesson is taught in your target language, potentially wasting money on the wrong subject."
         }
        ]
       },
@@ -94887,20 +94941,20 @@
        "label": "Compare the factor kinds",
        "questions": [
         {
-         "question": "Do you want to let the password manager extension autofill your login credentials?",
-         "cluster": "approve",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The Keeper extension pop-up shows matching logins for the specific sites being visited, confirming it recognizes the domain before populating the fields.",
-         "whatTheAgentLoses": "You lose the ability to manually verify the exact vault entry being selected before the credentials are automatically populated into the login form."
-        },
-        {
          "question": "Will you keep your 2FA codes in your password manager, or use a separate authenticator app?",
          "cluster": "select",
          "moment": "Now",
          "moneyMoving": false,
          "why": "The Keeper vault displays an integrated 'Two-Factor Code' field for the Porkbun entry, offering the option to consolidate passwords and 2FA codes in one tool.",
          "whatTheAgentLoses": "The user loses the ability to decide if keeping both their password and 2FA generator in a single vault aligns with their personal security risk tolerance."
+        },
+        {
+         "question": "Should you use a physical security key to protect your password manager?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows your Keeper vault storing a Microsoft account password, highlighting the risk of a single point of failure if the password manager itself is not highly secured.",
+         "whatTheAgentLoses": "You lose the ability to make strategic, high-level security decisions about how your central password vault is protected."
         }
        ]
       },
@@ -97503,14 +97557,6 @@
        "label": "Skip the sponsored rows",
        "questions": [
         {
-         "question": "Are these search results car listings and pricing guides, or mostly videos and ads?",
-         "cluster": "refine",
-         "moment": "After",
-         "moneyMoving": false,
-         "why": "The screen shows a list dominated by generic ads and YouTube videos rather than direct links to trusted car marketplaces or pricing tools.",
-         "whatTheAgentLoses": "You lose the ability to bypass unhelpful, ad-heavy search results and navigate directly to a reliable source for used car data."
-        },
-        {
          "question": "Which results are marked sponsored, featured, or new rather than matching used cars?",
          "cluster": "refine",
          "moment": "Now",
@@ -98396,17 +98442,7 @@
       },
       {
        "id": "8.5",
-       "label": "Buy and add the warranty",
-       "questions": [
-        {
-         "question": "Does the mileage shown in the dashboard photos match the advertised mileage?",
-         "cluster": "photos",
-         "moment": "Now",
-         "moneyMoving": false,
-         "why": "The dashboard photo shows an actual odometer reading of 76,353 miles, which contradicts the 78,872 miles advertised in the listing text.",
-         "whatTheAgentLoses": "The user loses the opportunity to spot a factual discrepancy in the listing that could impact the car's true value or indicate an unreliable seller."
-        }
-       ]
+       "label": "Buy and add the warranty"
       }
      ]
     }
@@ -99516,6 +99552,14 @@
          "moneyMoving": false,
          "why": "The confirmation dialog warns that muting the participant will silence them for everyone and only they will be able to unmute themselves.",
          "whatTheAgentLoses": "The user loses the contextual judgment of whether forcibly silencing a specific participant is appropriate for the current meeting dynamics."
+        },
+        {
+         "question": "After the mute, does the participant list actually show that person as muted, or is their audio still live?",
+         "cluster": "facts",
+         "moment": "On demand",
+         "moneyMoving": false,
+         "why": "The screen shows the mute dialog opening, but after a cut, the participant list still displays an active audio icon instead of a muted one.",
+         "whatTheAgentLoses": "An agent would be confused by the inconsistent state and fail to learn how to properly complete the action."
         }
        ]
       },
@@ -99547,16 +99591,6 @@
      "id": "7",
      "label": "Use the call controls",
      "note": "any order and any subset - this is the tour every keeper runs after 5.11. 7.1 and 7.2 nearly always; 7.3 and 7.5 where the narrator opens the menus; 7.6 on most; 7.7 and 7.4 where offered; 7.8 only on the Teams participant path; 7.9 once.",
-     "questions": [
-      {
-       "question": "After the mute, does the participant list actually show that person as muted, or is their audio still live?",
-       "cluster": "facts",
-       "moment": "On demand",
-       "moneyMoving": false,
-       "why": "The screen shows the mute dialog opening, but after a cut, the participant list still displays an active audio icon instead of a muted one.",
-       "whatTheAgentLoses": "An agent would be confused by the inconsistent state and fail to learn how to properly complete the action."
-      }
-     ],
      "children": [
       {
        "id": "7.1",
@@ -104145,17 +104179,7 @@
       },
       {
        "id": "9.5",
-       "label": "Set the site public or launch it",
-       "questions": [
-        {
-         "question": "Does the live address show the site, or a coming-soon page?",
-         "cluster": "facts",
-         "moment": "Completion",
-         "moneyMoving": false,
-         "why": "Platforms like Squarespace or WordPress often default new sites to a private state or display a 'coming soon' splash page until a specific setting is toggled, even after clicking publish.",
-         "whatTheAgentLoses": "The user might share their new URL thinking the site is live, only to have visitors hit a password prompt or generic landing page."
-        }
-       ]
+       "label": "Set the site public or launch it"
       },
       {
        "id": "9.6",

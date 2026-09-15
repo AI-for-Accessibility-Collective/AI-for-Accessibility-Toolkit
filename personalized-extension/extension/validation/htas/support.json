@@ -148,17 +148,6 @@
         "say_example": "Left the delivery address as <45 Oak St> when the location popup asked"
        },
        {
-        "question": "Should you call the 'Account Management Service' number on the dashboard, instead of going through the help menus?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "The dashboard explicitly lists a direct phone number ([number]) for Account Management Service, offering a potential shortcut to bypass the entire automated support maze.",
-        "whatTheAgentLoses": "The user loses the opportunity to use a highly visible, direct phone number to reach support immediately, instead wasting time navigating through the standard automated menus.",
-        "speak": "on-event",
-        "check": "Does the page show a direct support phone number, and which department is it for?",
-        "say_example": "There's a direct number on this page for <Account Management>. I can't make the call. Want it read out, or should I keep going for chat?"
-       },
-       {
         "question": "Should you use the Resolution Center to speak with a live agent?",
         "cluster": "select",
         "moment": "Now",
@@ -526,6 +515,17 @@
         "speak": "if-wrong",
         "check": "What email is entered in the contact field, and what email does the account page show?",
         "say_example": "The form has <old@example.com>. Your account uses <david@example.com>. Switching it."
+       },
+       {
+        "question": "Should you call the 'Account Management Service' number on the dashboard, instead of going through the help menus?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The dashboard explicitly lists a direct phone number ([number]) for Account Management Service, offering a potential shortcut to bypass the entire automated support maze.",
+        "whatTheAgentLoses": "The user loses the opportunity to use a highly visible, direct phone number to reach support immediately, instead wasting time navigating through the standard automated menus.",
+        "speak": "on-event",
+        "check": "Does the page show a direct support phone number, and which department is it for?",
+        "say_example": "There's a direct number on this page for <Account Management>. I can't make the call. Want it read out, or should I keep going for chat?"
        }
       ]
      },

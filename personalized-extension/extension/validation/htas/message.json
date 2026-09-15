@@ -108,6 +108,17 @@
         "speak": "if-wrong",
         "check": "Does the compose header show a subject starting with Re: or Fwd: with a quoted thread below it, or an empty subject with no quoted thread?",
         "say_example": "You asked me to reply on <name>'s thread. This is a brand new message. It wouldn't show up in the thread. I'm switching to a reply."
+       },
+       {
+        "question": "Is there already a thread with this person to reply in?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The messaging sidebar displays past threads like the one with [name], allowing you to reference previous interactions for tone and context while drafting.",
+        "whatTheAgentLoses": "You lose the ability to personally select the most relevant past conversation to use as a benchmark for your new message.",
+        "speak": "on-event",
+        "check": "Does the messaging sidebar list an existing thread with <recipient>? What is its date?",
+        "say_example": "You already have a thread with <name> from <March>. I'll reply there instead of starting a new one. OK?"
        }
       ]
      },
@@ -182,17 +193,6 @@
       "id": "2.4",
       "label": "Start from a calendar event",
       "questions": [
-       {
-        "question": "Is the new event on the date you want, or just the day the calendar opened on?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displays the daily schedule for April 1, 2019, and clicking the '+ New' button in the toolbar is required to open the event creation form.",
-        "whatTheAgentLoses": "You lose the opportunity to visually confirm that the calendar is set to the correct date before starting the draft.",
-        "speak": "if-wrong",
-        "check": "What date does the new event's date field show?",
-        "say_example": "The event landed on <April 1>. That's just the day the calendar opened on. You wanted <April 8>. Fixing it."
-       },
        {
         "question": "Do you want to create a calendar event instead of a standard email?",
         "cluster": "select",
@@ -404,6 +404,17 @@
           "speak": "if-wrong",
           "check": "Which filter chips are shown as applied, and do they match the ask?",
           "say_example": "The search is filtered to <Netherlands> and <telecom>. You said <Belgium>. Changing it."
+         },
+         {
+          "question": "Has someone on your team already messaged this person?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The Recruiting Activity feed displays notes, views, and message counts from colleagues, which helps you avoid sending redundant or conflicting outreach.",
+          "whatTheAgentLoses": "You lose the awareness of your team's prior relationship with the recipient, which could lead to an uncoordinated or embarrassing message.",
+          "speak": "on-event",
+          "check": "Does the activity feed show a message or note from a colleague to this candidate? Who and when?",
+          "say_example": "<[name]> already messaged <name> <two weeks ago>. Yours might double up. Still send?"
          }
         ]
        },
@@ -443,6 +454,17 @@
           "speak": "never",
           "check": "Which tag is shown on the connection?",
           "say_example": "Tagged <name> as <classmates>"
+         },
+         {
+          "question": "Is the new project made and open on its talent pool?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "The screen shows the newly created project in the dashboard and its details page with the 'Talent pool' tab.",
+          "whatTheAgentLoses": "The user loses the assurance that the project was correctly set up to organize the candidates they intend to message.",
+          "speak": "never",
+          "check": "Does the dashboard list the new project, with a Talent pool tab open?",
+          "say_example": "Created the project and opened its talent pool"
          }
         ]
        },
@@ -648,17 +670,6 @@
         "speak": "never",
         "check": "Which sharing option is selected in the New Template dialog?",
         "say_example": "Saved the template as private, just for you"
-       },
-       {
-        "question": "Is there already a thread with this person to reply in?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The messaging sidebar displays past threads like the one with [name], allowing you to reference previous interactions for tone and context while drafting.",
-        "whatTheAgentLoses": "You lose the ability to personally select the most relevant past conversation to use as a benchmark for your new message.",
-        "speak": "on-event",
-        "check": "Does the messaging sidebar list an existing thread with <recipient>? What is its date?",
-        "say_example": "You already have a thread with <name> from <March>. I'll reply there instead of starting a new one. OK?"
        }
       ]
      },
@@ -773,7 +784,20 @@
        },
        {
         "id": "4.9.2",
-        "label": "Pick the date"
+        "label": "Pick the date",
+        "questions": [
+         {
+          "question": "Is the new event on the date you want, or just the day the calendar opened on?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The screen displays the daily schedule for April 1, 2019, and clicking the '+ New' button in the toolbar is required to open the event creation form.",
+          "whatTheAgentLoses": "You lose the opportunity to visually confirm that the calendar is set to the correct date before starting the draft.",
+          "speak": "if-wrong",
+          "check": "What date does the new event's date field show?",
+          "say_example": "The event landed on <April 1>. That's just the day the calendar opened on. You wanted <April 8>. Fixing it."
+         }
+        ]
        },
        {
         "id": "4.9.3",
@@ -1059,17 +1083,6 @@
         "speak": "never",
         "check": "Which option was used, attach a file or insert a cloud link?",
         "say_example": "Attached <report.pdf> as a file rather than a cloud link"
-       },
-       {
-        "question": "Does the message say something is attached while nothing is?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "Tapping the paperclip icon reveals options to attach a local file or insert one from Drive, which is essential if your commitment involves sharing a document.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that the correct file or Drive link is selected and attached to the message.",
-        "speak": "if-wrong",
-        "check": "Does the body contain 'attached' or 'see attached', and is an attachment chip shown?",
-        "say_example": "The message says see attached, but nothing's attached. Adding <report.pdf> before it goes."
        }
       ]
      },
@@ -1419,6 +1432,17 @@
         "speak": "on-event",
         "check": "Does the body state a clock time with no time zone next to it? Does the recipient's profile, signature or away banner show a location?",
         "say_example": "You wrote <2 pm> with no time zone. <name> is in <London>. Add <Pacific>?"
+       },
+       {
+        "question": "Does the message say something is attached while nothing is?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Tapping the paperclip icon reveals options to attach a local file or insert one from Drive, which is essential if your commitment involves sharing a document.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that the correct file or Drive link is selected and attached to the message.",
+        "speak": "if-wrong",
+        "check": "Does the body contain 'attached' or 'see attached', and is an attachment chip shown?",
+        "say_example": "The message says see attached, but nothing's attached. Adding <report.pdf> before it goes."
        }
       ]
      },
@@ -1426,17 +1450,6 @@
       "id": "7.3",
       "label": "Check the pre-filled fields",
       "questions": [
-       {
-        "question": "Is the new project made and open on its talent pool?",
-        "cluster": "receipts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The screen shows the newly created project in the dashboard and its details page with the 'Talent pool' tab.",
-        "whatTheAgentLoses": "The user loses the assurance that the project was correctly set up to organize the candidates they intend to message.",
-        "speak": "never",
-        "check": "Does the dashboard list the new project, with a Talent pool tab open?",
-        "say_example": "Created the project and opened its talent pool"
-       },
        {
         "question": "Do the pre-filled title and attendees match the message this meeting is answering?",
         "cluster": "facts",
@@ -1805,17 +1818,6 @@
         "speak": "never",
         "check": "What text is in the candidate's notes?",
         "say_example": "Noted <messaged about the design role> on <name>'s profile"
-       },
-       {
-        "question": "Has someone on your team already messaged this person?",
-        "cluster": "facts",
-        "moment": "After",
-        "moneyMoving": false,
-        "why": "The Recruiting Activity feed displays notes, views, and message counts from colleagues, which helps you avoid sending redundant or conflicting outreach.",
-        "whatTheAgentLoses": "You lose the awareness of your team's prior relationship with the recipient, which could lead to an uncoordinated or embarrassing message.",
-        "speak": "on-event",
-        "check": "Does the activity feed show a message or note from a colleague to this candidate? Who and when?",
-        "say_example": "<[name]> already messaged <name> <two weeks ago>. Yours might double up. Still send?"
        },
        {
         "question": "What status should the candidate get now that you've messaged them?",

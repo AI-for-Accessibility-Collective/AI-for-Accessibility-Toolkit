@@ -344,17 +344,6 @@
         "say_example": "The <7.5%> only counts at <Flipkart>, <Cleartrip> and <Myntra>."
        },
        {
-        "question": "What reward categories does the page list for this card?",
-        "cluster": "compare",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displayed specific reward categories like 10X CashPoints on BigBasket, Swiggy, and Uber, which need to be evaluated against your actual daily expenses.",
-        "whatTheAgentLoses": "You lose the opportunity to personally weigh the specific reward multipliers and select the card that best maximizes returns for your unique lifestyle.",
-        "speak": "never",
-        "check": "What reward categories does the page list for the Freedom card?",
-        "say_example": "Freedom pays <10X> on <BigBasket>, <Swiggy>, <Uber>."
-       },
-       {
         "question": "What earning rate does the page state for each spending category?",
         "cluster": "approve",
         "moment": "Now",
@@ -572,7 +561,7 @@
         "why": "Comparing the specific reward rates for fuel, groceries, and partner brands helps you choose the card that maximizes your benefits.",
         "whatTheAgentLoses": "An agent might select a card that doesn't align with your spending habits, causing you to miss out on optimal rewards.",
         "speak": "never",
-        "check": "What reward rates does the page list for each card being compared?",
+        "check": "What reward categories and rates does the page list for each card being compared (e.g. the Freedom card)?",
         "say_example": "The <Freedom> card pays <10X> on <Swiggy>. The <Tata Neu> pays <7%> back on Tata brands."
        }
       ]

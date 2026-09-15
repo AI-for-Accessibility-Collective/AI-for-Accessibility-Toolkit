@@ -215,17 +215,6 @@
         "speak": "gate",
         "check": "Which required fields on the form are empty, and what are their labels?",
         "say_example": "The form won't go on without your program and semester. I don't have those. What should I put?"
-       },
-       {
-        "question": "What should I pick for how you heard about them?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The checkout form includes a dropdown menu asking how you heard about the platform before allowing you to complete the booking.",
-        "whatTheAgentLoses": "The user loses the ability to accurately report their actual referral source or give credit to the specific person who referred them.",
-        "speak": "never",
-        "check": "Does the form show a 'how did you hear about us' dropdown, and is it required?",
-        "say_example": "Picked Other for how you heard about them."
        }
       ]
      },
@@ -517,17 +506,6 @@
         "speak": "if-wrong",
         "check": "Which subject or language does the search show as selected?",
         "say_example": "The search is set to <Spanish>. You asked for <Portuguese>. Fixing it."
-       },
-       {
-        "question": "Which language do you want to learn in this lesson?",
-        "cluster": "select",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The tutor teaches multiple languages, so you must explicitly select which one you want to focus on for this booking.",
-        "whatTheAgentLoses": "You lose the ability to ensure the lesson is taught in your target language, potentially wasting money on the wrong subject.",
-        "speak": "if-wrong",
-        "check": "Which language is selected in the booking's language dropdown?",
-        "say_example": "<Tutor> teaches more than one language. The booking has <Italian> picked. You want <Spanish>. Changing it."
        }
       ]
      },
@@ -1461,6 +1439,17 @@
         "speak": "on-event",
         "check": "Does the page say how many discounted trial lessons remain, or that this is the last one?",
         "say_example": "This is your last discounted trial. After it, trials are full price."
+       },
+       {
+        "question": "Which language do you want to learn in this lesson?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tutor teaches multiple languages, so you must explicitly select which one you want to focus on for this booking.",
+        "whatTheAgentLoses": "You lose the ability to ensure the lesson is taught in your target language, potentially wasting money on the wrong subject.",
+        "speak": "if-wrong",
+        "check": "Which language is selected in the booking's language dropdown?",
+        "say_example": "<Tutor> teaches more than one language. The booking has <Italian> picked. You want <Spanish>. Changing it."
        }
       ]
      },
@@ -1719,6 +1708,17 @@
         "speak": "if-wrong",
         "check": "What currency code or symbol is on the search-result rates and on the checkout total, and what is the person's currency?",
         "say_example": "Prices were in <USD> while we searched. Checkout is in <CAD>. So the total is really <27.50 CAD>."
+       },
+       {
+        "question": "What should I pick for how you heard about them?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The checkout form includes a dropdown menu asking how you heard about the platform before allowing you to complete the booking.",
+        "whatTheAgentLoses": "The user loses the ability to accurately report their actual referral source or give credit to the specific person who referred them.",
+        "speak": "never",
+        "check": "Does the form show a 'how did you hear about us' dropdown, and is it required?",
+        "say_example": "Picked Other for how you heard about them."
        }
       ]
      },

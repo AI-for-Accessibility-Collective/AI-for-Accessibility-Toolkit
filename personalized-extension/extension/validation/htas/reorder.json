@@ -160,6 +160,17 @@
           "speak": "never",
           "check": "Does the page show a 'Reorder all items' control, and how many items does it say it will add?",
           "say_example": "Reordered all <31> items from <February 24>"
+         },
+         {
+          "question": "Was the cart already holding items before reorder was pressed?",
+          "cluster": "facts",
+          "moment": "Now",
+          "moneyMoving": true,
+          "why": "Clicking 'reorder all' will add the past order's items to whatever is currently in the cart, potentially leading to duplicate items or an unexpectedly high total.",
+          "whatTheAgentLoses": "The user loses the chance to clear out stale items from an abandoned session, resulting in accidentally purchasing things they no longer want.",
+          "speak": "on-event",
+          "check": "What item count and total does the cart show before reorder is pressed?",
+          "say_example": "Your cart already has <3> things in it from before. Reorder adds on top of that. Keep them, or clear the cart first?"
          }
         ]
        },
@@ -368,17 +379,6 @@
       "id": "5.2",
       "label": "Check the returned lines",
       "questions": [
-       {
-        "question": "Was the cart already holding items before reorder was pressed?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "Clicking 'reorder all' will add the past order's items to whatever is currently in the cart, potentially leading to duplicate items or an unexpectedly high total.",
-        "whatTheAgentLoses": "The user loses the chance to clear out stale items from an abandoned session, resulting in accidentally purchasing things they no longer want.",
-        "speak": "on-event",
-        "check": "What item count and total does the cart show before reorder is pressed?",
-        "say_example": "Your cart already has <3> things in it from before. Reorder adds on top of that. Keep them, or clear the cart first?"
-       },
        {
         "question": "Does the cart hold exactly the past order's items plus your changes, nothing missing and nothing extra?",
         "cluster": "facts",

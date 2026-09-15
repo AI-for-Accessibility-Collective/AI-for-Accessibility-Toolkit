@@ -987,18 +987,6 @@
         "say_example": "next step is completing eCheck-in"
        },
        {
-        "question": "Is the hardware test actually run and passed before the visit, rather than skipped?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": true,
-        "why": "The appointment details page provides specific preparation instructions and a 'TEST HARDWARE' button to verify your equipment works before the visit.",
-        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally verify that your specific camera and microphone are functioning correctly.",
-        "kind": "state-check",
-        "speak": "never",
-        "check": "Does the appointment page show the hardware/tech test as completed and passed, rather than not yet run?",
-        "say_example": "hardware test not yet run"
-       },
-       {
         "question": "Who do you contact if you need help downloading Zoom or accessing your account?",
         "cluster": "facts",
         "moment": "Now",
@@ -1547,6 +1535,18 @@
         "speak": "on-event",
         "check": "Does the error message indicate the camera or microphone is in use by another application?",
         "say_example": "The camera error says it's already in use by <another app>. Closing that first should free it up."
+       },
+       {
+        "question": "Is the hardware test actually run and passed before the visit, rather than skipped?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": true,
+        "why": "The appointment details page provides specific preparation instructions and a 'TEST HARDWARE' button to verify your equipment works before the visit.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally verify that your specific camera and microphone are functioning correctly.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the appointment page show the hardware/tech test as completed and passed, rather than not yet run?",
+        "say_example": "hardware test not yet run"
        }
       ]
      }

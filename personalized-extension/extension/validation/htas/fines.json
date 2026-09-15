@@ -116,17 +116,6 @@
       "label": "Accept the portal terms",
       "questions": [
        {
-        "question": "Is there a CAPTCHA on this page that only you can solve?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen presents a mandatory terms of use agreement and a visual CAPTCHA that must be completed to access the portal.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally review and legally consent to the government portal's terms of use.",
-        "speak": "gate",
-        "check": "Does the page show a CAPTCHA (image puzzle, text challenge, or an 'I'm not a robot' box) that must be completed before Continue works?",
-        "say_example": "The site wants a picture puzzle to prove you're a person. I'll hand it to you. Tell me when it's done."
-       },
-       {
         "question": "Does the site make you accept its user agreement before you can go in?",
         "cluster": "hand over",
         "moment": "Now",
@@ -348,6 +337,17 @@
         "speak": "on-event",
         "check": "After submit, did the page reload with a new CAPTCHA image and empty search fields, without an error message?",
         "say_example": "The page cleared itself and gave a new puzzle. That usually means the last one failed. I'll hand you the new one."
+       },
+       {
+        "question": "Is there a CAPTCHA on this page that only you can solve?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen presents a mandatory terms of use agreement and a visual CAPTCHA that must be completed to access the portal.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally review and legally consent to the government portal's terms of use.",
+        "speak": "gate",
+        "check": "Does the page show a CAPTCHA (image puzzle, text challenge, or an 'I'm not a robot' box) that must be completed before Continue works?",
+        "say_example": "The site wants a picture puzzle to prove you're a person. I'll hand it to you. Tell me when it's done."
        }
       ]
      },

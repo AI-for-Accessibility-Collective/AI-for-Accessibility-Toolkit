@@ -360,6 +360,17 @@
           "speak": "never",
           "check": "Does the page show the iCloud Photos and optimize-storage toggles as on?",
           "say_example": "iCloud Photos stayed on with optimize storage. Full photos live in the cloud."
+         },
+         {
+          "question": "Is password sync switched on for the old phone?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Verifying that the 'Use Autofill with Google' and 'Automatically sync app data' toggles are on ensures your saved passwords will seamlessly transfer to the new device.",
+          "whatTheAgentLoses": "Delegating this means you lose the opportunity to verify exactly which password manager or account is handling your sensitive login credentials before the transfer.",
+          "speak": "if-wrong",
+          "check": "Are the autofill and sync toggles on the old device shown as on?",
+          "say_example": "Password sync is off on your old phone, so your saved logins wouldn't come along. Switching it on and letting it sync before we transfer."
          }
         ]
        },
@@ -2858,17 +2869,6 @@
       "id": "7.9",
       "label": "Fix what did not carry",
       "questions": [
-       {
-        "question": "Is password sync switched on for the old phone?",
-        "cluster": "",
-        "moment": null,
-        "moneyMoving": false,
-        "why": "Verifying that the 'Use Autofill with Google' and 'Automatically sync app data' toggles are on ensures your saved passwords will seamlessly transfer to the new device.",
-        "whatTheAgentLoses": "Delegating this means you lose the opportunity to verify exactly which password manager or account is handling your sensitive login credentials before the transfer.",
-        "speak": "if-wrong",
-        "check": "Are the autofill and sync toggles on the old device shown as on?",
-        "say_example": "Password sync is off on your old phone, so your saved logins wouldn't come along. Switching it on and letting it sync before we transfer."
-       },
        {
         "question": "Did your login session transfer with the app?",
         "cluster": "",

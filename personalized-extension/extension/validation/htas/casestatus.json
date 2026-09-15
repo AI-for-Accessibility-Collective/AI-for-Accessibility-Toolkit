@@ -933,18 +933,6 @@
         "speak": "if-wrong",
         "check": "Does the date shown in the date-of-birth field match day/month/year in the calendar widget's own order and format?",
         "say_example": "The date reads <month then day> where this form wants <day then month>. Fixing the order before searching."
-       },
-       {
-        "question": "Are the application type, the file number and the date of birth all filled in before the search runs?",
-        "cluster": "hand over",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The tracking portal requires specific identifiers, such as your application type, file number, and date of birth, to locate your record.",
-        "whatTheAgentLoses": "You lose the ability to personally verify that your sensitive identification details are entered accurately.",
-        "kind": "state-check",
-        "speak": "if-wrong",
-        "check": "Are the application type, file number, and date-of-birth fields all showing values (none blank) on the form?",
-        "say_example": "The <date of birth> field is still empty. Filling that in before searching."
        }
       ]
      },
@@ -1023,6 +1011,18 @@
         "speak": "on-event",
         "check": "Do the fields on the tracking form already show values pre-filled from a previous session, rather than blank?",
         "say_example": "The form is still showing details from an earlier lookup. Clearing those and entering this case's instead."
+       },
+       {
+        "question": "Are the application type, the file number and the date of birth all filled in before the search runs?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tracking portal requires specific identifiers, such as your application type, file number, and date of birth, to locate your record.",
+        "whatTheAgentLoses": "You lose the ability to personally verify that your sensitive identification details are entered accurately.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Are the application type, file number, and date-of-birth fields all showing values (none blank) on the form?",
+        "say_example": "The <date of birth> field is still empty. Filling that in before searching."
        }
       ]
      }

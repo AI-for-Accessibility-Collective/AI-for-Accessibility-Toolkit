@@ -1382,6 +1382,17 @@
         "speak": "never",
         "check": "What company name, sector, and website does the page show?",
         "say_example": "Got the profile off the page: <name>, <sector>, <site>."
+       },
+       {
+        "question": "Are the personal details associated with this booking correct?",
+        "cluster": "facts",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen displayed specific passport and identification information for [name] that needed to be verified.",
+        "whatTheAgentLoses": "The user loses the opportunity to personally verify that their sensitive identification details are accurately recorded.",
+        "speak": "if-wrong",
+        "check": "What passport and ID details does the page show, and what do the person's own documents show?",
+        "say_example": "The passport number on this booking reads <shown>, and that's not what your document says. Worth fixing before the airport."
        }
       ]
      },
@@ -1487,17 +1498,6 @@
         "speak": "never",
         "check": "What current-conditions entries does the page show for the departure airport?",
         "say_example": "Kept the departure weather in the report."
-       },
-       {
-        "question": "Are the personal details associated with this booking correct?",
-        "cluster": "facts",
-        "moment": "Now",
-        "moneyMoving": false,
-        "why": "The screen displayed specific passport and identification information for [name] that needed to be verified.",
-        "whatTheAgentLoses": "The user loses the opportunity to personally verify that their sensitive identification details are accurately recorded.",
-        "speak": "if-wrong",
-        "check": "What passport and ID details does the page show, and what do the person's own documents show?",
-        "say_example": "The passport number on this booking reads <shown>, and that's not what your document says. Worth fixing before the airport."
        },
        {
         "question": "Is the metric expanded from the 'Latest trade' block the one asked for - previous close, opening price, or day's range?",
