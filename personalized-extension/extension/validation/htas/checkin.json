@@ -372,7 +372,7 @@
         "whatTheAgentLoses": "The user loses the awareness of the exact time window required to successfully check in for their partner-operated flight.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page state a check-in window for the operating carrier (e.g. opens 48 hours and closes 90 minutes before departure), and does the current time fall inside it",
+        "check": "Does the page state a check-in window for the operating carrier (e.g. opens 48 hours and closes 90 minutes before departure), and does the current time fall inside it?",
         "say_example": "Check-in for this flight opens <48 hours> before departure and closes <90 minutes> before. Right now it's outside that window."
        },
        {
@@ -828,7 +828,7 @@
         "kind": "decision",
         "verify_form": "The agent filled the passenger details and ticked both required boxes - check the gender, the nationality and the two boxes; the boxes are the terms and the baggage rules, and the form will not move until both are ticked.",
         "speak": "gate",
-        "check": "does the form require an ID-type choice or travel-document values - passport or national ID number, expiry, issuing country, visa type and number - that were not already supplied",
+        "check": "Does the form require an ID-type choice or travel-document values - passport or national ID number, expiry, issuing country, visa type and number - that were not already supplied?",
         "say_example": "The form wants a travel document. It needs the number and the expiry, and a visa if the destination asks for one. Which document should I use, and what are its details?"
        },
        {
@@ -865,7 +865,7 @@
         "whatTheAgentLoses": "The user loses the immediate, clear warning that their travel documents are legally invalid for the trip, which they need to know immediately to attempt an emergency renewal.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page display an error rejecting the passport as not valid enough for the destination",
+        "check": "Does the page display an error rejecting the passport as not valid enough for the destination?",
         "say_example": "The passport was rejected. The page says there isn't enough validity left for <the destination>, so this document won't get you through."
        },
        {
@@ -877,7 +877,7 @@
         "whatTheAgentLoses": "The user loses the chance to verify that the correct saved passport is being used for the flight, as they cannot see the masking pattern or the visible digits.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "what are the visible trailing digits of the pre-filled, masked travel-document number shown on the page",
+        "check": "What are the visible trailing digits of the pre-filled, masked travel-document number shown on the page?",
         "say_example": "The saved document on file ends in <[account number]>. Check that's the one you're travelling on, not a different passport or card."
        }
       ]
@@ -895,7 +895,7 @@
         "whatTheAgentLoses": "You lose the visual guidance showing exactly which number on your physical visa needs to be provided.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the page show a tooltip or example image pointing to where the visa number appears on the document",
+        "check": "Does the page show a tooltip or example image pointing to where the visa number appears on the document?",
         "say_example": "Used the page's example image to find where the visa number sits"
        },
        {
@@ -907,7 +907,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to ensure their travel documents are accurately recorded to avoid delays or boarding denials.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "what value is currently entered in the visa expiry year field, and does the form show any validation error for it",
+        "check": "What value is currently entered in the visa expiry year field, and does the form show any validation error for it?",
         "say_example": "The visa expiry year shows just <07>. The form let it through, but that's not a full year, and it may get flagged at the airport."
        }
       ]
@@ -926,7 +926,7 @@
         "kind": "decision",
         "verify_form": "The agent ticked the privacy box - check whether the notice behind it was ever opened; that tick is what lets the airline use your details, and it cannot be unticked later.",
         "speak": "never",
-        "check": "does the page show the privacy-notice checkbox as ticked",
+        "check": "Does the page show the privacy-notice checkbox as ticked?",
         "say_example": "Ticked the <privacy notice> box before submitting"
        },
        {
@@ -939,7 +939,7 @@
         "kind": "decision",
         "verify_form": "The agent ticked the box saying it is a passenger on this booking or an authorised person - check who is actually doing this; the declaration covers knowing what is in the bags, and it names a person, not a tool.",
         "speak": "gate",
-        "check": "what do the declaration and baggage-security checkboxes state - being the passenger or an authorised person, knowing the baggage contents, having packed the bags yourself and kept them with you",
+        "check": "What do the declaration and baggage-security checkboxes state - being the passenger or an authorised person, knowing the baggage contents, having packed the bags yourself and kept them with you?",
         "say_example": "This box says you packed the bags yourself and they've been with you since. It also says you're the passenger, or someone allowed to check them in. Is that all true?"
        }
       ]
@@ -958,7 +958,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted the dangerous-goods and security statements - check that somebody actually knows what is in the bags; this is a declaration about your luggage, and the penalties on the screen are criminal ones.",
         "speak": "never",
-        "check": "does the page show a dangerous-goods and security acknowledgment, and what penalties does it state",
+        "check": "Does the page show a dangerous-goods and security acknowledgment, and what penalties does it state?",
         "say_example": "Ticked the dangerous-goods declaration, which the page says carries criminal penalties if false"
        }
       ]
@@ -977,7 +977,7 @@
         "kind": "decision",
         "verify_form": "The agent confirmed the baggage-security statements - check that they are true: that you packed the bags, that they have been with you since, and that nobody handed you anything to carry.",
         "speak": "never",
-        "check": "what does the baggage-security checklist ask you to confirm (packed it yourself, kept possession, nothing handed to you)",
+        "check": "What does the baggage-security checklist ask you to confirm (packed it yourself, kept possession, nothing handed to you)?",
         "say_example": "Ticked the baggage-security statements, which say you packed the bags yourself and kept them with you"
        }
       ]
@@ -1003,7 +1003,7 @@
         "kind": "decision",
         "verify_form": "The agent kept the seat the airline assigned or went into the map - check where you are sitting; the assignment is free, and the map is the only place to see whether anything better is left.",
         "speak": "always",
-        "check": "what seat has already been assigned for free, and is a seat map available to look for another",
+        "check": "What seat has already been assigned for free, and is a seat map available to look for another?",
         "say_example": "You already have <25H> at no charge. I'll look at the map in case something better is free."
        },
        {
@@ -1015,7 +1015,7 @@
         "whatTheAgentLoses": "A person delegating this task loses the immediate awareness of where they will be sitting after opting out of paid seat selection.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the trip summary name the assigned seat (e.g. 'you're sitting in the aisle seat')",
+        "check": "Does the trip summary name the assigned seat (e.g. 'you're sitting in the aisle seat')?",
         "say_example": "The summary doesn't name a seat. The free allocation may not have gone through."
        },
        {
@@ -1027,7 +1027,7 @@
         "whatTheAgentLoses": "You lose the awareness that you do not actually have a guaranteed seat on the plane, which drastically changes how you plan your travel day.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page show a confirmed seat number, or does it say standby or waitlisted",
+        "check": "Does the page show a confirmed seat number, or does it say standby or waitlisted?",
         "say_example": "Heads up, this isn't a confirmed seat. The page shows you're on <standby>, so there's a chance of being bumped."
        }
       ]
@@ -1046,7 +1046,7 @@
         "kind": "decision",
         "verify_form": "The agent went past the seat fee table without reading it - check what a seat on this route actually costs; the bands run from free to a few hundred, and the table is the only place they are all listed.",
         "speak": "on-event",
-        "check": "does the page show a seat-pricing table, and does it say you'll be redirected to an external site to book seats",
+        "check": "Does the page show a seat-pricing table, and does it say you'll be redirected to an external site to book seats?",
         "say_example": "Seats here run from free up to <28 USD>, and picking one takes us to an outside site."
        },
        {
@@ -1058,7 +1058,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to dispute the unexpected fee or choose a different seat to avoid the charge.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the confirmation screen show a charge for the seat, and what did the earlier pricing table say this seat band would cost",
+        "check": "Does the confirmation screen show a charge for the seat, and what did the earlier pricing table say this seat band would cost?",
         "say_example": "The pricing table said this seat was free, but the confirmation shows a <38 CNY> charge for <22C>. That doesn't match."
        }
       ]
@@ -1077,7 +1077,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a seat off the map - check the seat and the fee attached to its colour; the price is in the legend rather than on the seat, so an expensive row looks the same as a free one.",
         "speak": "gate",
-        "check": "which seat is highlighted as selected on the map, what fee is attached to its colour band, and does the page offer a free random allocation instead of paying to choose",
+        "check": "Which seat is highlighted as selected on the map, what fee is attached to its colour band, and does the page offer a free random allocation instead of paying to choose?",
         "say_example": "This one's <14A> and it costs <28 USD>. The free option is a random seat, and it can split your party up. Which do you want?"
        },
        {
@@ -1089,7 +1089,7 @@
         "whatTheAgentLoses": "The user loses the awareness that the flight is completely full, which explains why they cannot change their seating assignment.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the seat map show any available (non-grey, non-X) seats left to choose",
+        "check": "Does the seat map show any available (non-grey, non-X) seats left to choose?",
         "say_example": "No other seats are open on this map. Staying with the seat you were already given."
        },
        {
@@ -1101,7 +1101,7 @@
         "whatTheAgentLoses": "You lose the ability to spot visual caveats about a seat, potentially resulting in being assigned an exit row you cannot legally sit in or a window seat with no view.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the seat map show a warning icon on the selected seat, such as an exit-row door or a crossed-out window",
+        "check": "Does the seat map show a warning icon on the selected seat, such as an exit-row door or a crossed-out window?",
         "say_example": "That seat's marked with an exit-row icon on the map. It comes with extra responsibilities, and no window."
        },
        {
@@ -1114,7 +1114,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a seat near the galley or the lavatory - check its position on the map; those rows are noisy and have people standing beside them for most of a long flight.",
         "speak": "on-event",
-        "check": "does the seat map show a lavatory or galley icon next to the selected seat",
+        "check": "Does the seat map show a lavatory or galley icon next to the selected seat?",
         "say_example": "That seat's right by the galley icon on the map. Those rows get noisy, with people standing by them most of the flight."
        }
       ]
@@ -1133,7 +1133,7 @@
         "kind": "decision",
         "verify_form": "The agent left the party scattered or moved seats together - check where everybody is sitting; automatic allocation fills whatever middle seats are left, and children being seated apart is the usual result.",
         "speak": "on-event",
-        "check": "does the seat summary show every passenger in the same row or section, or are they in different parts of the cabin",
+        "check": "Does the seat summary show every passenger in the same row or section, or are they in different parts of the cabin?",
         "say_example": "The free allocation split you up. You're in <14C> and the other passenger is in <22F>. I can go back and pay to sit together."
        }
       ]
@@ -1152,7 +1152,7 @@
         "kind": "decision",
         "verify_form": "The agent confirmed the assigned seat rather than choosing another - check the seat number and the price beside it; once confirmed it is on the pass, and a change after that may cost.",
         "speak": "never",
-        "check": "what seat number and price does the confirmation screen show before you continue",
+        "check": "What seat number and price does the confirmation screen show before you continue?",
         "say_example": "Confirmed seat <19C> at no extra charge"
        },
        {
@@ -1164,7 +1164,7 @@
         "whatTheAgentLoses": "The user loses the visual reassurance of seeing their own initials on the seat map to confirm they secured their preferred spot.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the seat you picked show as taken - your initials marked on the seat on the map, or the seat listed as 'ADDED' on the services page",
+        "check": "Does the seat you picked show as taken - your initials marked on the seat on the map, or the seat listed as 'ADDED' on the services page?",
         "say_example": "Your initials aren't showing on <14A>. The pick may not have registered. Want me to try again?"
        }
       ]
@@ -1188,7 +1188,7 @@
           "kind": "decision",
           "verify_form": "The agent chose a payment category for the seat fee - check whether it used a domestic card, an international card or a third-party wallet; the category decides which of your cards can be used at all.",
           "speak": "never",
-          "check": "what payment method categories does the page offer for the seat fee (e.g. domestic card, international card, wallet)",
+          "check": "What payment method categories does the page offer for the seat fee (e.g. domestic card, international card, wallet)?",
           "say_example": "Picked <international credit card> as the payment type for the seat fee"
          }
         ]
@@ -1207,7 +1207,7 @@
           "kind": "decision",
           "verify_form": "The agent picked a card network and ticked the payment terms - check both; the terms cover refunds on a seat you may not keep if the aircraft changes.",
           "speak": "on-event",
-          "check": "what do the payment terms say happens to this seat fee if the aircraft or seat configuration changes",
+          "check": "What do the payment terms say happens to this seat fee if the aircraft or seat configuration changes?",
           "say_example": "The payment terms say this seat fee isn't refunded if the aircraft changes. Worth knowing before it goes through."
          }
         ]
@@ -1230,7 +1230,7 @@
           "kind": "decision",
           "verify_form": "The agent entered a card for the seat fee - check which card and the amount beside it; this is a real charge and it is separate from the fare you already paid.",
           "speak": "always",
-          "check": "what card is being charged and what amount does the page show for the seat fee",
+          "check": "What card is being charged and what amount does the page show for the seat fee?",
           "say_example": "Charging <38 CNY> to the card on file for the seat. That's separate from the fare you already paid."
          },
          {
@@ -1243,7 +1243,7 @@
           "kind": "decision",
           "verify_form": "The agent paid a seat fee in the airline's own currency - check which card it used; a card without foreign-transaction fees saves a few percent on a charge like this one.",
           "speak": "on-event",
-          "check": "what currency does the page charge the seat fee in",
+          "check": "What currency does the page charge the seat fee in?",
           "say_example": "The seat fee is billed in <CNY>, so some cards add a foreign-transaction charge."
          },
          {
@@ -1255,7 +1255,7 @@
           "whatTheAgentLoses": "The user is left without a boarding pass and an incomplete check-in due to an unresolved payment error.",
           "kind": "state-check",
           "speak": "on-event",
-          "check": "does the page show a payment error (e.g. 'enter a valid card number') after submission, or a payment confirmation",
+          "check": "Does the page show a payment error (e.g. 'enter a valid card number') after submission, or a payment confirmation?",
           "say_example": "The payment didn't go through. The page still shows <enter a valid card number>, and check-in isn't finished without it."
          }
         ]
@@ -1283,7 +1283,7 @@
         "kind": "decision",
         "verify_form": "The agent answered whether there are bags to check - check what it said; declaring no bags is right only if everything you are taking fits the cabin allowance, and paying at the airport costs more than paying here.",
         "speak": "gate",
-        "check": "does the page ask whether you're checking any bags, and what paid cabin or checked-bag upgrades does it offer beside the free allowance",
+        "check": "Does the page ask whether you're checking any bags, and what paid cabin or checked-bag upgrades does it offer beside the free allowance?",
         "say_example": "The page is asking about bags. You get <one free small bag under the seat>, and a checked bag is <54 GBP>. Are you checking anything?"
        },
        {
@@ -1295,7 +1295,7 @@
         "whatTheAgentLoses": "You lose the visual context that clarifies exactly what size bag you are allowed to bring, risking unexpected gate fees if you pack a roller bag.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the baggage-allowance icon show a small personal item (purse/backpack) or a full-sized carry-on bag",
+        "check": "Does the baggage-allowance icon show a small personal item (purse/backpack) or a full-sized carry-on bag?",
         "say_example": "That icon is a small personal item, not a full carry-on. The text just says '1 piece', which sounds bigger than it is."
        },
        {
@@ -1307,7 +1307,7 @@
         "whatTheAgentLoses": "The user loses the chance to catch a system sync error where prepaid bags are forgotten, which could lead to the agent unnecessarily purchasing baggage a second time.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "what does the page show as the current checked-items count",
+        "check": "What does the page show as the current checked-items count?",
         "say_example": "The page shows <0> checked items. If you already paid for a bag at booking, it isn't showing up here."
        }
       ]
@@ -1326,7 +1326,7 @@
         "kind": "decision",
         "verify_form": "The agent bought extra bags or none - check how many pieces are on the booking; each piece is priced separately and each way, and buying at the airport costs more.",
         "speak": "if-wrong",
-        "check": "how many extra bags does the dropdown currently show as selected",
+        "check": "How many extra bags does the dropdown currently show as selected?",
         "say_example": "The dropdown's set to <1 PC> extra. Check that matches how many bags you actually want."
        }
       ]
@@ -1345,7 +1345,7 @@
         "kind": "decision",
         "verify_form": "The agent authorised a saved card for baggage fees - check which card it used and that the toggle is on; nothing is charged now, but a bag at the gate is billed to that card without asking again.",
         "speak": "gate",
-        "check": "does the page require toggling on authorization for a saved card to cover baggage fees up to a stated amount",
+        "check": "Does the page require toggling on authorization for a saved card to cover baggage fees up to a stated amount?",
         "say_example": "This lets them charge your saved card up to <50 USD> in bag fees at the gate, without asking again. OK to turn it on?"
        },
        {
@@ -1357,7 +1357,7 @@
         "whatTheAgentLoses": "The user loses the ability to understand and fix the specific validation error blocking their check-in progress.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page block submission with an error, and does it name the authorization toggle as the cause",
+        "check": "Does the page block submission with an error, and does it name the authorization toggle as the cause?",
         "say_example": "The page is stuck. It won't move on until the card-authorisation switch for bag fees is turned on."
        }
       ]
@@ -1375,7 +1375,7 @@
         "whatTheAgentLoses": "You lose the awareness of the specific size constraint for free carry-ons, risking a surprise fee at the gate if your bag is too big.",
         "kind": "intent-check",
         "speak": "always",
-        "check": "what size requirement does the page state for a carry-on to count as free (e.g. must fit under the seat)",
+        "check": "What size requirement does the page state for a carry-on to count as free (e.g. must fit under the seat)?",
         "say_example": "A carry-on is only free if it fits under the seat in front of you. Anything bigger gets charged at the gate."
        }
       ]
@@ -1397,7 +1397,7 @@
       "kind": "decision",
       "verify_form": "The agent went through the add-on shelf - check what is ticked; meals, seats, insurance and sports equipment are all priced here, and anything ticked is charged before the pass is issued.",
       "speak": "gate",
-      "check": "what optional paid extras does the page list (meals, insurance, sports equipment, car hire), and is the page presented as a required step in the flow",
+      "check": "What optional paid extras does the page list (meals, insurance, sports equipment, car hire), and is the page presented as a required step in the flow?",
       "say_example": "There's meals, insurance and car hire on offer here, all extra. The page looks like a required step, but none of it is needed to check in. Want any of it?"
      }
     ],
@@ -1415,7 +1415,7 @@
         "whatTheAgentLoses": "You lose the opportunity to ensure you actually qualify for the insurance policy, preventing you from paying for coverage that would be void.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "does the insurance offer state a residency requirement, such as UK residents only",
+        "check": "Does the insurance offer state a residency requirement, such as UK residents only?",
         "say_example": "This insurance only covers residents of <the country it names>. Worth knowing before adding it."
        },
        {
@@ -1427,7 +1427,7 @@
         "whatTheAgentLoses": "The user loses the chance to personally ensure they aren't being charged unexpected fees for optional add-ons during check-in.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "what does the page show as the running total after the seat, bag, and insurance choices",
+        "check": "What does the page show as the running total after the seat, bag, and insurance choices?",
         "say_example": "The running total shows <4.50 GBP>, not zero. Something here picked up a charge."
        }
       ]
@@ -1454,7 +1454,7 @@
         "kind": "decision",
         "verify_form": "The agent answered an offer to move to a different flight for a travel voucher - check whether it bid or declined; a bid can put you on a flight the next morning, and the voucher is only worth it if the later arrival works.",
         "speak": "gate",
-        "check": "what alternate flight and voucher does the page offer in exchange for volunteering to change",
+        "check": "What alternate flight and voucher does the page offer in exchange for volunteering to change?",
         "say_example": "They're offering a voucher if you take a later flight, <8:40 AM instead of 2:15 PM>. Want to bid for it, or stay on your flight?"
        }
       ]
@@ -1484,7 +1484,7 @@
         "kind": "decision",
         "verify_form": "The agent left the receipt for the prepaid fare unprinted or saved it - check whether you have a copy; the transaction reference is on this screen and is what an expense claim or a refund request needs later.",
         "speak": "on-event",
-        "check": "does the page show a transaction ID and a 'print official receipt' option for the prepaid amount",
+        "check": "Does the page show a transaction ID and a 'print official receipt' option for the prepaid amount?",
         "say_example": "There's an official receipt here for the <4,980> payment, with a transaction ID. Worth saving for an expense claim."
        }
       ]
@@ -1503,7 +1503,7 @@
         "kind": "decision",
         "verify_form": "The agent pressed the button that completes check-in - check that the flight, the passenger and the seat were right first; after this the seat is taken and the pass is issued, and undoing it means calling the airline.",
         "speak": "gate",
-        "check": "does the page warn that pressing check-in finalises it and issues the boarding pass, and what flight, passengers and seat does the summary beside it show",
+        "check": "Does the page warn that pressing check-in finalises it and issues the boarding pass, and what flight, passengers and seat does the summary beside it show?",
         "say_example": "Ready to check in. <Flight 402> on <Sep 15>, <two passengers>, seat <14A>, <one checked bag>. This press takes the seat and issues the pass. Undoing it means calling the airline. Press to check in, or say change."
        }
       ]
@@ -1526,7 +1526,7 @@
         "kind": "decision",
         "verify_form": "The agent answered the loyalty-programme offer on the way to the pass - check whether it joined; joining creates an account in your name, and skipping it costs nothing you cannot get later.",
         "speak": "never",
-        "check": "does the confirmation screen offer to join a loyalty program, or a way to skip straight to the boarding pass",
+        "check": "Does the confirmation screen offer to join a loyalty program, or a way to skip straight to the boarding pass?",
         "say_example": "Said no to the loyalty signup, went straight to the boarding pass"
        }
       ]
@@ -1552,7 +1552,7 @@
         "kind": "decision",
         "verify_form": "The agent saved the passes - check where they went: printed, in the phone's wallet, or left to be fetched later; the airline needs a pass in one of those forms before you can board.",
         "speak": "always",
-        "check": "what options does the page offer for saving the boarding pass (download, wallet, print)",
+        "check": "What options does the page offer for saving the boarding pass (download, wallet, print)?",
         "say_example": "Downloading both boarding passes to your phone now."
        }
       ]
@@ -1575,7 +1575,7 @@
         "kind": "decision",
         "verify_form": "The agent chose which leg's pass to look at first - check that a pass exists for every leg; on a connection there is one per flight, and a missing one is only noticed at the gate.",
         "speak": "if-wrong",
-        "check": "how many boarding passes does the page show, and how many flight legs does the booking have",
+        "check": "How many boarding passes does the page show, and how many flight legs does the booking have?",
         "say_example": "Only <1> pass is showing, but the booking has <2> legs. One flight is still missing its pass."
        }
       ]
@@ -1593,7 +1593,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify that your specific baggage needs were accurately recorded on the final document.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the boarding pass state the baggage allowance, e.g. '1 small bag on board'",
+        "check": "Does the boarding pass state the baggage allowance, e.g. '1 small bag on board'?",
         "say_example": "The pass says <no checked bag>, but you added <one> at check-in. That won't match at the gate."
        },
        {
@@ -1605,7 +1605,7 @@
         "whatTheAgentLoses": "The user receives a boarding pass for the wrong person and will be unable to board their flight.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "what flight, date and passenger name does the issued boarding pass show, and do they match the flight and the passenger checked in",
+        "check": "What flight, date and passenger name does the issued boarding pass show, and do they match the flight and the passenger checked in?",
         "say_example": "The pass reads <J. Marlow>. You checked in <K. Marlow>. That's a different passenger."
        },
        {
@@ -1617,7 +1617,7 @@
         "whatTheAgentLoses": "You lose the quick visual confirmation of your security status, which could result in waiting in the standard security line if a system glitch dropped your Known Traveler Number.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the boarding pass display a TSA PreCheck or other expedited-security logo",
+        "check": "Does the boarding pass display a TSA PreCheck or other expedited-security logo?",
         "say_example": "There's no TSA PreCheck logo on this pass. If you're enrolled, you'd need to add your Known Traveler Number before you get to the airport."
        }
       ]
@@ -1635,7 +1635,7 @@
         "whatTheAgentLoses": "You lose the opportunity to catch a potential system error where the generated boarding pass displays incorrect flight times.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "what boarding time and what departure time does the pass show",
+        "check": "What boarding time and what departure time does the pass show?",
         "say_example": "The pass shows boarding at <10:05 AM> for a departure of <9:45 AM>. Those two don't line up."
        },
        {
@@ -1647,7 +1647,7 @@
         "whatTheAgentLoses": "You lose the immediate awareness of critical travel details like your specific gate closing time and exact baggage allowance.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what gate-closing time does the boarding pass show",
+        "check": "What gate-closing time does the boarding pass show?",
         "say_example": "Gate closes at <12:20 PM>, separate from the boarding time"
        }
       ]
@@ -1665,7 +1665,7 @@
         "whatTheAgentLoses": "The user loses the immediate heads-up that they need to arrive at the airport early to visit the physical check-in counter.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the confirmation say the boarding pass must be collected at an airport counter instead of online",
+        "check": "Does the confirmation say the boarding pass must be collected at an airport counter instead of online?",
         "say_example": "Check-in went through, but the pass has to be collected at the airport counter. It won't appear online."
        }
       ]
@@ -1683,7 +1683,7 @@
         "whatTheAgentLoses": "You miss the opportunity to review the airline's specific day-of-travel instructions regarding baggage and boarding.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what actions does the pre-flight reminders section list (e.g. arrival time, ID to bring)",
+        "check": "What actions does the pre-flight reminders section list (e.g. arrival time, ID to bring)?",
         "say_example": "Logged the pre-flight reminders, which say <arrive two hours early> and <bring photo ID>"
        },
        {
@@ -1695,7 +1695,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify your flight times and read important travel warnings regarding your passport.",
         "kind": "intent-check",
         "speak": "always",
-        "check": "what flight details does the final summary show, and does the page warn about passport-validity requirements for the destination",
+        "check": "What flight details does the final summary show, and does the page warn about passport-validity requirements for the destination?",
         "say_example": "Final summary matches, <Flight 402> on <Sept 22>. The page also says this passport needs <six months' validity> for the destination."
        }
       ]

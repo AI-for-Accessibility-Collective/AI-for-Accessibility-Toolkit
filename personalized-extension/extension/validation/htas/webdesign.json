@@ -23,7 +23,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally review the initial hosting offers and terms before starting the purchase.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the current page show the plan/pricing selection, with no order confirmation or receipt visible",
+        "check": "Does the current page show the plan/pricing selection, with no order confirmation or receipt visible?",
         "say_example": "Opened <host>'s plan page, nothing bought yet"
        },
        {
@@ -36,7 +36,7 @@
         "kind": "decision",
         "verify_form": "The agent chose WordPress or the guided builder - check which editor opened; the guided one is simpler and the standard one keeps full control.",
         "speak": "on-event",
-        "check": "does the page offer a choice between the plain WordPress block editor and a drag-and-drop builder, like Elementor or Beaver Builder",
+        "check": "Does the page offer a choice between the plain WordPress block editor and a drag-and-drop builder, like Elementor or Beaver Builder?",
         "say_example": "This host gives two ways to build, the plain WordPress editor or a drag-and-drop one. Going with <the drag-and-drop builder>."
        },
        {
@@ -49,7 +49,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a builder - check which platform's editor is open; the builder decides the templates, the free tier and where the site lives.",
         "speak": "never",
-        "check": "which builder's name or logo is shown in the page's toolbar right now",
+        "check": "Which builder's name or logo is shown in the page's toolbar right now?",
         "say_example": "Building on <builder name>, as asked"
        }
       ]
@@ -68,7 +68,7 @@
         "kind": "decision",
         "verify_form": "The agent read or skipped the free and Pro tiers - check whether it knows the free tier's cap; if you need more than the free tier, the wall comes later.",
         "speak": "never",
-        "check": "does the homepage list distinct free vs premium tiers with their included features",
+        "check": "Does the homepage list distinct free vs premium tiers with their included features?",
         "say_example": "Read the free and paid plans before starting"
        },
        {
@@ -81,7 +81,7 @@
         "kind": "decision",
         "verify_form": "The agent went ahead on the free plan - check the banner counting the trial days; premium features it used stop after 7 days.",
         "speak": "on-event",
-        "check": "does the page state that premium features are on a time-limited trial after which they revert or lock",
+        "check": "Does the page state that premium features are on a time-limited trial after which they revert or lock?",
         "say_example": "Heads up, the extra features here are only free for <7 days>. After that they turn off unless you upgrade. OK to keep going on the free plan?"
        },
        {
@@ -93,7 +93,7 @@
         "whatTheAgentLoses": "Delegating this means losing awareness of how close the account is to its maximum free site limit and the exact names of the existing projects.",
         "kind": "state-check",
         "speak": "never",
-        "check": "how many sites does the dashboard list, compared with the stated free-plan site limit",
+        "check": "How many sites does the dashboard list, compared with the stated free-plan site limit?",
         "say_example": "Dashboard shows <3> sites, matching the free plan's limit"
        },
        {
@@ -105,7 +105,7 @@
         "whatTheAgentLoses": "You lose the firsthand understanding of exactly how intrusive the free plan's limitations and ads are on your final live website.",
         "kind": "state-check",
         "speak": "never",
-        "check": "do the limits named at signup (page count, forced ads, domain lock) match what the editor and published site actually show",
+        "check": "Do the limits named at signup (page count, forced ads, domain lock) match what the editor and published site actually show?",
         "say_example": "Checked the signup limits against the live site - they match"
        }
       ]
@@ -124,7 +124,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a hosting tier and a term - check which column and which toggle it chose; the cheapest tier is for one site, and the price under it renews at the regular rate.",
         "speak": "on-event",
-        "check": "does the page show multiple hosting plan tiers with differing prices or features to pick from",
+        "check": "Does the page show multiple hosting plan tiers with differing prices or features to pick from?",
         "say_example": "This host has a few hosting tiers. You asked for <a simple site>, so I'm going with <the basic tier>."
        }
       ]
@@ -143,7 +143,7 @@
         "kind": "decision",
         "verify_form": "The agent kept the default 12-month package - check the term and the total on the package screen; a longer term costs more today and a shorter one is not offered here.",
         "speak": "on-event",
-        "check": "does the page show a default billing term (e.g. 12-month) with its upfront total price",
+        "check": "Does the page show a default billing term (e.g. 12-month) with its upfront total price?",
         "say_example": "The default term here is <12 months> for <$35>. Want to keep that, or pick a shorter one?"
        },
        {
@@ -155,7 +155,7 @@
         "whatTheAgentLoses": "A person delegating to an agent loses the chance to catch this pricing discrepancy and evaluate the true cost of the available subscription terms.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the per-month price on the term-selection screen match the price advertised on the earlier landing page",
+        "check": "Does the per-month price on the term-selection screen match the price advertised on the earlier landing page?",
         "say_example": "Heads up, the price here is <$2.79> a month, not the <$2.99> from the earlier page."
        }
       ]
@@ -174,7 +174,7 @@
         "kind": "decision",
         "verify_form": "The agent checked or unchecked each package extra - check every box and the total; privacy protection is the one worth keeping.",
         "speak": "on-event",
-        "check": "does checkout list optional add-ons (e.g. domain privacy, backups) as separate checkboxes with their own prices, and which are pre-checked",
+        "check": "Does checkout list optional add-ons (e.g. domain privacy, backups) as separate checkboxes with their own prices, and which are pre-checked?",
         "say_example": "There are optional extras here, like <Domain Privacy, $12 a year>. It's <checked> right now. Keep it or skip it?"
        }
       ]
@@ -193,7 +193,7 @@
         "kind": "decision",
         "verify_form": "The agent applied a coupon or not - check the order summary for a discount line; the code was the narrator's.",
         "speak": "never",
-        "check": "does the order summary update to a lower total after a coupon code is entered",
+        "check": "Does the order summary update to a lower total after a coupon code is entered?",
         "say_example": "Applied the code, total dropped to <$27.40>"
        }
       ]
@@ -211,7 +211,7 @@
         "whatTheAgentLoses": "You lose the chance to verify that you are actually paying for the website builder features you need rather than just standard hosting.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the plan name shown at checkout match the plan name selected earlier in the flow",
+        "check": "Does the plan name shown at checkout match the plan name selected earlier in the flow?",
         "say_example": "Checkout calls this <Premium Web Hosting>, but <Website Builder & Web Hosting> was picked earlier. Same plan?"
        },
        {
@@ -223,7 +223,7 @@
         "whatTheAgentLoses": "Delegating this step removes your direct control over financial approvals and the ability to personally decline upsells during checkout.",
         "kind": "state-check",
         "speak": "gate",
-        "check": "does the final total at checkout match the plan price plus only the add-ons chosen, with nothing extra silently added",
+        "check": "Does the final total at checkout match the plan price plus only the add-ons chosen, with nothing extra silently added?",
         "say_example": "Ready to pay <$35.40> for <12 months of hosting>. No extras added. Only you can pay. Press to pay, or say stop."
        },
        {
@@ -235,7 +235,7 @@
         "whatTheAgentLoses": "The user loses the intended security protections for their website because the agent failed to verify that the selected add-ons were actually processed in the final total.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the checkout total include the price of every add-on that was ticked, on the cart or the checkout screen, or does something show as free that should cost extra",
+        "check": "Does the checkout total include the price of every add-on that was ticked, on the cart or the checkout screen, or does something show as free that should cost extra?",
         "say_example": "The extras that were ticked don't seem to be in the total. It's still <$35.40>, same as with nothing added."
        },
        {
@@ -248,7 +248,7 @@
         "kind": "decision",
         "verify_form": "The agent entered payment details and accepted the auto-renewal terms - check the terms line; the plan renews at the regular rate.",
         "speak": "on-event",
-        "check": "does the checkout page state the plan auto-renews at the end of the term unless canceled",
+        "check": "Does the checkout page state the plan auto-renews at the end of the term unless canceled?",
         "say_example": "This renews automatically after <the term ends> unless you cancel first."
        },
        {
@@ -260,7 +260,7 @@
         "whatTheAgentLoses": "You lose the ability to immediately catch and dispute unexpected billing discrepancies or incorrect subscription terms applied to your account.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the confirmation/receipt screen's term and total match what the order summary showed before paying",
+        "check": "Does the confirmation/receipt screen's term and total match what the order summary showed before paying?",
         "say_example": "The receipt says <24 months> for <$71>, but the order summary said <12 months> for <$35>."
        }
       ]
@@ -279,7 +279,7 @@
         "kind": "decision",
         "verify_form": "The agent left the checkout before it loaded or went through it - check the dashboard's Plan line; Free means the bypass worked.",
         "speak": "on-event",
-        "check": "does the page push a paid upgrade, or show a free-continue option next to a paid one, with a way to skip or say no thanks",
+        "check": "Does the page push a paid upgrade, or show a free-continue option next to a paid one, with a way to skip or say no thanks?",
         "say_example": "This is pushing a paid upgrade. Looking for the skip or 'no thanks' option to stay free."
        },
        {
@@ -291,7 +291,7 @@
         "whatTheAgentLoses": "The user loses the financial oversight required to catch billing discrepancies and confirm that promised savings are actually applied.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the discounted total at checkout match the advertised percentage off the listed price",
+        "check": "Does the discounted total at checkout match the advertised percentage off the listed price?",
         "say_example": "The <10%> off should bring this to <$17.10>, but checkout shows <$19>."
        },
        {
@@ -304,7 +304,7 @@
         "kind": "decision",
         "verify_form": "The agent opened the domain upsell or dismissed it - check whether a plan page opened; nothing had to be bought.",
         "speak": "on-event",
-        "check": "does a post-publish screen offer a button to explore or buy a custom domain",
+        "check": "Does a post-publish screen offer a button to explore or buy a custom domain?",
         "say_example": "There's a prompt here to get a custom domain. Want a look, or skip it for now?"
        }
       ]
@@ -329,7 +329,7 @@
         "whatTheAgentLoses": "The user delegates the choice of how to enter the platform, missing the chance to log in or start a specific trial path.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "does the landing page show a 'get started'-type button for a new site, a login option, or both",
+        "check": "Does the landing page show a 'get started'-type button for a new site, a login option, or both?",
         "say_example": "Starting a <new site> with <builder>"
        },
        {
@@ -341,7 +341,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally evaluate the platform's free hosting claims and verify if this specific provider aligns with your project needs before committing to an account.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the page show a registration form advertising a $0 or free plan",
+        "check": "Does the page show a registration form advertising a $0 or free plan?",
         "say_example": "Free host's sign-up form is open, <$0> as advertised"
        },
        {
@@ -354,7 +354,7 @@
         "kind": "decision",
         "verify_form": "The agent registered with an email and password - check which email; that address owns the site and receives the activation link.",
         "speak": "never",
-        "check": "does the form require a name, email or username, plus a password that meets the site's rules",
+        "check": "Does the form require a name, email or username, plus a password that meets the site's rules?",
         "say_example": "Signed up with <email> and a saved password"
        },
        {
@@ -367,7 +367,7 @@
         "kind": "decision",
         "verify_form": "The agent signed up with Google or the form - check which; a Google sign-up ties the site to that account with no separate password.",
         "speak": "on-event",
-        "check": "does the page offer a 'sign up with Google' option alongside a manual email/password form",
+        "check": "Does the page offer a 'sign up with Google' option alongside a manual email/password form?",
         "say_example": "You can sign up with Google, or fill in the form by hand. Which do you want?"
        },
        {
@@ -380,7 +380,7 @@
         "kind": "decision",
         "verify_form": "The agent picked one Google account from the list - check which email now owns the site.",
         "speak": "gate",
-        "check": "does the account chooser list more than one Google account to sign in with",
+        "check": "Does the account chooser list more than one Google account to sign in with?",
         "say_example": "Found more than one Google account signed in. Using <the personal one>. The builder gets your name, photo and email from it. OK, or a different one?"
        },
        {
@@ -393,7 +393,7 @@
         "kind": "decision",
         "verify_form": "The agent approved sharing your name, picture and email - check that the permission screen got Continue; that is what the builder now holds.",
         "speak": "never",
-        "check": "does the consent screen list which personal data (name, photo, email) is being shared to sign in",
+        "check": "Does the consent screen list which personal data (name, photo, email) is being shared to sign in?",
         "say_example": "Shared <name, photo and email> with <builder> to sign in with Google"
        }
       ]
@@ -411,7 +411,7 @@
         "whatTheAgentLoses": "The user loses the security of keeping their personal email inbox private when the agent needs access to click the verification link.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the client area open without an 'activate your account' banner after using the emailed link",
+        "check": "Does the client area open without an 'activate your account' banner after using the emailed link?",
         "say_example": "Account activated, client area open"
        },
        {
@@ -423,7 +423,7 @@
         "whatTheAgentLoses": "You lose the ability to structure your workspace or manage the initial domain registration steps yourself.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the dashboard show a created site after activation, rather than only an empty account still needing a create-site step",
+        "check": "Does the dashboard show a created site after activation, rather than only an empty account still needing a create-site step?",
         "say_example": "Activation finished, but no site was created yet. Still need to press <the create-site button>."
        }
       ]
@@ -441,7 +441,7 @@
         "whatTheAgentLoses": "You lose the opportunity to securely define your own login credentials for the hosting platform.",
         "kind": "state-check",
         "speak": "never",
-        "check": "was a password entered and does the account show as active afterward",
+        "check": "Was a password entered and does the account show as active afterward?",
         "say_example": "Set the host password"
        },
        {
@@ -454,7 +454,7 @@
         "kind": "decision",
         "verify_form": "The agent set the admin username and password at install - check they are written down somewhere you can reach; the install screen is the only place they show.",
         "speak": "never",
-        "check": "does the install form require an admin username, password, and site title before continuing",
+        "check": "Does the install form require an admin username, password, and site title before continuing?",
         "say_example": "Set the WordPress admin login and saved it"
        },
        {
@@ -466,7 +466,7 @@
         "whatTheAgentLoses": "The user loses track of their actual login credentials if the agent silently changes or uses a different password than the one initially provided.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the password shown on the install-summary screen match the one that successfully logs in afterward",
+        "check": "Does the password shown on the install-summary screen match the one that successfully logs in afterward?",
         "say_example": "The password shown during setup doesn't match the one that logs in. Use <the one that worked>."
        },
        {
@@ -478,7 +478,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the ability to choose a memorable, secure password and safely store it in your own password manager.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the password field list rules (length, a number, a symbol) and does the entered password satisfy them",
+        "check": "Does the password field list rules (length, a number, a symbol) and does the entered password satisfy them?",
         "say_example": "Password meets the site's rules - long enough, with a number and a symbol"
        }
       ]
@@ -497,7 +497,7 @@
         "kind": "decision",
         "verify_form": "The agent answered or skipped the help-level prompt - check which option it took; Built for you hands the build to the host, No help needed leaves it manual.",
         "speak": "never",
-        "check": "does the setup wizard offer a skip option alongside help-level options like 'no help needed' or 'built for you'",
+        "check": "Does the setup wizard offer a skip option alongside help-level options like 'no help needed' or 'built for you'?",
         "say_example": "Skipped the question about how much help, building it by hand"
        },
        {
@@ -510,7 +510,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a purpose - check whether it chose Blog, Store, Business or skipped; the choice shapes the dashboard and the templates offered next.",
         "speak": "never",
-        "check": "does the wizard ask you to pick a site category like blog, store or business, and a sub-category under it",
+        "check": "Does the wizard ask you to pick a site category like blog, store or business, and a sub-category under it?",
         "say_example": "Picked <Business> as the site's purpose"
        },
        {
@@ -523,7 +523,7 @@
         "kind": "decision",
         "verify_form": "The agent filled or skipped the site type and owner - check the two dropdowns; they only drive plugin recommendations, so skipping costs little.",
         "speak": "never",
-        "check": "does the wizard offer a skip option next to the site-type/owner questions",
+        "check": "Does the wizard offer a skip option next to the site-type/owner questions?",
         "say_example": "Skipped the plugin-recommendation questions"
        }
       ]
@@ -542,7 +542,7 @@
         "kind": "decision",
         "verify_form": "The agent skipped the host's theme prompt or picked a theme there - check whether a theme is already applied; picking here commits before the template library is seen.",
         "speak": "never",
-        "check": "does the initial setup screen offer both theme choices and a skip option",
+        "check": "Does the initial setup screen offer both theme choices and a skip option?",
         "say_example": "Skipped picking a theme here, will do it later"
        },
        {
@@ -555,7 +555,7 @@
         "kind": "decision",
         "verify_form": "The agent clicked through the tooltips or read them - check whether it found the pages and sections controls afterward.",
         "speak": "never",
-        "check": "does a tutorial/tour popup appear with a dismiss option",
+        "check": "Does a tutorial/tour popup appear with a dismiss option?",
         "say_example": "Closed the tour"
        }
       ]
@@ -573,7 +573,7 @@
         "whatTheAgentLoses": "Delegating this choice means the agent might install the website on the wrong hosting account, potentially overwriting an existing project or using an unintended URL.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "does the host list more than one hosting account or domain to choose from",
+        "check": "Does the host list more than one hosting account or domain to choose from?",
         "say_example": "There's more than one hosting account here. Using <the one for your domain>."
        },
        {
@@ -586,7 +586,7 @@
         "kind": "decision",
         "verify_form": "The agent clicked I Approve or not - check whether the panel opened; approving accepts service and offer emails to the account address.",
         "speak": "on-event",
-        "check": "does declining marketing/service emails carry any stated consequence, like losing the account, or is it a free choice",
+        "check": "Does declining marketing/service emails carry any stated consequence, like losing the account, or is it a free choice?",
         "say_example": "This wants you to opt into marketing emails, and hints that declining could affect the account. I'm declining unless you say otherwise."
        },
        {
@@ -598,7 +598,7 @@
         "whatTheAgentLoses": "You lose the awareness of other included software tools and alternative site builders provided by your hosting plan.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the software list show a WordPress installer (e.g. Softaculous) as the active selection, not a different site-builder tool",
+        "check": "Does the software list show a WordPress installer (e.g. Softaculous) as the active selection, not a different site-builder tool?",
         "say_example": "Opened the WordPress installer instead of the host's own builder"
        },
        {
@@ -610,7 +610,7 @@
         "whatTheAgentLoses": "You lose the opportunity to familiarize yourself with the host's control panel interface and discover where essential site configurations are located.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the dashboard show a working control-panel link or section for this account",
+        "check": "Does the dashboard show a working control-panel link or section for this account?",
         "say_example": "Control panel is open for this account"
        }
       ]
@@ -628,7 +628,7 @@
         "whatTheAgentLoses": "Delegating this login step means you lose visibility into your hosting environment and how to manually access your site's backend in the future.",
         "kind": "state-check",
         "speak": "never",
-        "check": "is the WordPress dashboard open for the new site, whether from the host's shortcut or the site's own /wp-admin address",
+        "check": "Is the WordPress dashboard open for the new site, whether from the host's shortcut or the site's own /wp-admin address?",
         "say_example": "WordPress dashboard is open for the new site"
        }
       ]
@@ -646,7 +646,7 @@
         "whatTheAgentLoses": "You lose the mental map of the WordPress backend, making it harder to jump in and make quick updates to your own site later.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the current admin menu match the section needed (Pages, Media, Appearance) for the task at hand",
+        "check": "Does the current admin menu match the section needed (Pages, Media, Appearance) for the task at hand?",
         "say_example": "Working in the <Pages> admin section"
        },
        {
@@ -658,7 +658,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to choose which specific visual editing tool or mode is used to construct your site's layout.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the toolbar show a drag-and-drop builder is active, like 'edit with Elementor', rather than the plain block editor",
+        "check": "Does the toolbar show a drag-and-drop builder is active, like 'edit with Elementor', rather than the plain block editor?",
         "say_example": "Editing with <the drag-and-drop builder> instead of the plain editor"
        },
        {
@@ -670,7 +670,7 @@
         "whatTheAgentLoses": "You lose hands-on familiarity with the WordPress admin bar and knowing exactly where global layout settings are located.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the open panel show header/footer settings under the Customizer",
+        "check": "Does the open panel show header/footer settings under the Customizer?",
         "say_example": "Opened the Customizer on the header and footer settings"
        },
        {
@@ -682,7 +682,7 @@
         "whatTheAgentLoses": "You miss out on learning the spatial layout of the editor's menus, which makes it harder to jump in and make quick manual tweaks yourself later.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the sidebar or toolbar show add-element, page-list, and publish controls",
+        "check": "Does the sidebar or toolbar show add-element, page-list, and publish controls?",
         "say_example": "Found the add-element, pages, and publish controls in the sidebar"
        },
        {
@@ -694,7 +694,7 @@
         "whatTheAgentLoses": "You lose the ability to dictate your preferred workflow for establishing the site's foundational design and identity settings.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which site-wide settings (logo, colors, title) have been changed from the template default, and which remain default",
+        "check": "Which site-wide settings (logo, colors, title) have been changed from the template default, and which remain default?",
         "say_example": "Changed <the logo>, with <colors and title> still on the template default"
        }
       ]
@@ -712,7 +712,7 @@
         "whatTheAgentLoses": "You lose the creative satisfaction of personally translating your hand-drawn layout and color concepts into the digital workspace.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "does the page's layout and colors follow the sketch or color plan that was provided",
+        "check": "Does the page's layout and colors follow the sketch or color plan that was provided?",
         "say_example": "Following the layout sketch and color plan closely"
        },
        {
@@ -724,7 +724,7 @@
         "whatTheAgentLoses": "Delegating this preparation means you lose the chance to personally curate the foundational brand assets and initial messaging that define your site's identity.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "does the page or checklist call for specific assets (logo, favicon, written posts) before building",
+        "check": "Does the page or checklist call for specific assets (logo, favicon, written posts) before building?",
         "say_example": "The checklist asks for a logo, favicon and written posts before building"
        },
        {
@@ -736,7 +736,7 @@
         "whatTheAgentLoses": "Delegating this means losing the ability to personally interpret the imported design notes and ensure the visual assets perfectly capture the intended aesthetic.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "does a saved brand/notes image specify exact text and hex colors to use",
+        "check": "Does a saved brand/notes image specify exact text and hex colors to use?",
         "say_example": "Using the brand notes' exact text and colors, <#2A9D8F and #E76F51>"
        },
        {
@@ -749,7 +749,7 @@
         "kind": "decision",
         "verify_form": "The agent set the tier prices - check the three numbers; they are what clients will pay.",
         "speak": "never",
-        "check": "does the page show a price for each commission tier that was typed in",
+        "check": "Does the page show a price for each commission tier that was typed in?",
         "say_example": "Set commission prices, <$40 for a sketch and $90 for full color>"
        },
        {
@@ -761,7 +761,7 @@
         "whatTheAgentLoses": "The user receives an incomplete website that fails to meet the project's initial content requirements.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "how many blog posts are published, compared with the number the plan required",
+        "check": "How many blog posts are published, compared with the number the plan required?",
         "say_example": "Heads up, only <1 of 5> required posts is published so far."
        }
       ]
@@ -787,7 +787,7 @@
         "kind": "decision",
         "verify_form": "The agent searched a domain or took the free option - check which link it clicked; the free path gives a builder subdomain.",
         "speak": "gate",
-        "check": "does the setup screen offer both a custom-domain purchase path and a free-site-with-no-domain path",
+        "check": "Does the setup screen offer both a custom-domain purchase path and a free-site-with-no-domain path?",
         "say_example": "You can buy a custom domain, or keep the free address with no purchase. Which do you want?"
        },
        {
@@ -800,7 +800,7 @@
         "kind": "decision",
         "verify_form": "The agent declined or took the domain upgrade - check the plan; Not now keeps the subdomain.",
         "speak": "gate",
-        "check": "does connecting a custom domain require upgrading to a paid plan, and what does that plan cost",
+        "check": "Does connecting a custom domain require upgrading to a paid plan, and what does that plan cost?",
         "say_example": "Connecting your own domain needs the paid plan here, <$4> a month. Upgrade, or keep the free subdomain?"
        }
       ]
@@ -818,7 +818,7 @@
         "whatTheAgentLoses": "You lose the opportunity to creatively brainstorm and select an acceptable alternative domain name when your first choice is taken.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the domain search show the entered name as available (with a cart/claim icon) or already taken",
+        "check": "Does the domain search show the entered name as available (with a cart/claim icon) or already taken?",
         "say_example": "<yourname.com> is available to claim"
        },
        {
@@ -831,7 +831,7 @@
         "kind": "decision",
         "verify_form": "The agent took a fallback name when the first was taken - check the name it landed on; a hyphen or a digit sticks to the brand.",
         "speak": "never",
-        "check": "does the search flag the first choice as taken and suggest alternate names or extensions",
+        "check": "Does the search flag the first choice as taken and suggest alternate names or extensions?",
         "say_example": "<firstchoice.com> was taken, going with <firstchoice.co> instead"
        }
       ]
@@ -850,7 +850,7 @@
         "kind": "decision",
         "verify_form": "The agent claimed the free domain - check the renewal line; $13.99 a year after the first.",
         "speak": "gate",
-        "check": "does the domain claim screen state it's free for the first year and will renew at a stated price after",
+        "check": "Does the domain claim screen state it's free for the first year and will renew at a stated price after?",
         "say_example": "This domain is free for a year, then renews at <$13.99> a year automatically. OK to claim it?"
        },
        {
@@ -862,7 +862,7 @@
         "whatTheAgentLoses": "You lose the financial oversight to catch billing errors if the agent blindly accepts a charge for a domain that was supposed to be free.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the domain line item show $0.00 at checkout, matching the 'free domain' promised during plan selection",
+        "check": "Does the domain line item show $0.00 at checkout, matching the 'free domain' promised during plan selection?",
         "say_example": "The 'free' domain isn't showing as $0 at checkout. It's charging <$12.99>."
        },
        {
@@ -874,7 +874,7 @@
         "whatTheAgentLoses": "You lose the ability to catch inconsistent pricing details that could lead to unexpected charges when the domain eventually renews.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the renewal price shown at checkout match the renewal price shown on the domain-claim screen",
+        "check": "Does the renewal price shown at checkout match the renewal price shown on the domain-claim screen?",
         "say_example": "Checkout said renewal is <$9.99>, but claiming it here says <$13.99>. Which is right?"
        }
       ]
@@ -892,7 +892,7 @@
         "whatTheAgentLoses": "You lose the ability to choose which personal or business contact information is officially registered to the website's account.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "does registering the domain require a contact-details form (name, address, email) before it activates",
+        "check": "Does registering the domain require a contact-details form (name, address, email) before it activates?",
         "say_example": "Filled in the contact details to register the domain"
        },
        {
@@ -904,7 +904,7 @@
         "whatTheAgentLoses": "Delegating this step means you miss the peace of mind of personally verifying that your custom domain is active and correctly linked to your account.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the domain's status show as 'Active' or 'Verified' rather than pending or failed",
+        "check": "Does the domain's status show as 'Active' or 'Verified' rather than pending or failed?",
         "say_example": "The domain still shows <Pending>, not active yet."
        }
       ]
@@ -922,7 +922,7 @@
         "whatTheAgentLoses": "You lose the ability to pick a specific, brand-aligned web address and extension that represents your project.",
         "kind": "intent-check",
         "speak": "gate",
-        "check": "does the setup ask for a name and a free domain extension to build the site's address",
+        "check": "Does the setup ask for a name and a free domain extension to build the site's address?",
         "say_example": "This becomes your site's address, <name>.<extension>. What do you want to call it?"
        }
       ]
@@ -940,7 +940,7 @@
         "whatTheAgentLoses": "You lose the opportunity to verify the exact spelling of your new domain before permanently committing to the change.",
         "kind": "intent-check",
         "speak": "gate",
-        "check": "does the page warn that changing the site address is permanent, and confirm the new address is available",
+        "check": "Does the page warn that changing the site address is permanent, and confirm the new address is available?",
         "say_example": "Changing your address to <newname> is permanent. It can't be undone. Still want to switch?"
        }
       ]
@@ -958,7 +958,7 @@
         "whatTheAgentLoses": "You lose the opportunity to verify which domain account is actually being accessed and managed.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the login screen's pre-filled domain match the site actually being reached",
+        "check": "Does the login screen's pre-filled domain match the site actually being reached?",
         "say_example": "This login is pre-filled for <abc12.temp.examplehost.com>, not your site's domain. Still the right account?"
        },
        {
@@ -970,7 +970,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the final published website actually resides at the specific domain they originally selected.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the domain the site is live on match the one chosen earlier, rather than a temporary address or a different name picked because the first was taken",
+        "check": "Does the domain the site is live on match the one chosen earlier, rather than a temporary address or a different name picked because the first was taken?",
         "say_example": "This ended up published at <temp123.host.com>, not <yourchosen.com> from earlier."
        },
        {
@@ -983,7 +983,7 @@
         "kind": "decision",
         "verify_form": "The agent attached the claimed domain or a temporary one - check the domain field; a temporary one changes later.",
         "speak": "on-event",
-        "check": "does the assignment screen offer the domain already claimed alongside a generic temporary one",
+        "check": "Does the assignment screen offer the domain already claimed alongside a generic temporary one?",
         "say_example": "You can use <yourclaimeddomain.com>, or a temporary address for now. Which do you want live?"
        }
       ]
@@ -1009,7 +1009,7 @@
         "kind": "decision",
         "verify_form": "The agent settled on a style from the example sites - check what it picked next; if you had a look in mind, this is where it was set.",
         "speak": "never",
-        "check": "were one or more example sites reviewed before picking a style direction",
+        "check": "Were one or more example sites reviewed before picking a style direction?",
         "say_example": "Looked at <two other artists' sites> for style ideas before choosing a direction"
        },
        {
@@ -1022,7 +1022,7 @@
         "kind": "decision",
         "verify_form": "The agent took or passed on the masonry gallery and off-white background - check the template it chose next; a different gallery style changes how the work reads.",
         "speak": "never",
-        "check": "which layout style and background color does the portfolio page use",
+        "check": "Which layout style and background color does the portfolio page use?",
         "say_example": "Went with <a staggered gallery layout> and <an off-white> background"
        },
        {
@@ -1035,7 +1035,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a background tint and intro text tone - check the page's background and first lines; stark white and a warm tint read differently.",
         "speak": "never",
-        "check": "does the homepage set a background color and short intro text establishing the site's tone",
+        "check": "Does the homepage set a background color and short intro text establishing the site's tone?",
         "say_example": "Set a soft <yellow-tinted> background with a short intro to set the tone"
        },
        {
@@ -1048,7 +1048,7 @@
         "kind": "decision",
         "verify_form": "The agent used or passed on a single large image with a sidebar - check the home page's layout; one image up front is a strong choice.",
         "speak": "never",
-        "check": "does the homepage feature one large image alongside sidebar navigation",
+        "check": "Does the homepage feature one large image alongside sidebar navigation?",
         "say_example": "Homepage leads with one large image next to the side menu"
        },
        {
@@ -1061,7 +1061,7 @@
         "kind": "decision",
         "verify_form": "The agent judged the small left nav fine or changed it - check whether Home and Work stand out; a nav that hides is a nav visitors miss.",
         "speak": "never",
-        "check": "how prominent is the left-side navigation relative to the rest of the homepage",
+        "check": "How prominent is the left-side navigation relative to the rest of the homepage?",
         "say_example": "The menu is small and off to the left. Kept it that way"
        },
        {
@@ -1074,7 +1074,7 @@
         "kind": "decision",
         "verify_form": "The agent built the home page to a plan - check for an introduction, client names and the work up front; if any is missing the page reads incomplete.",
         "speak": "never",
-        "check": "does the homepage include a short introduction, examples of past work or clients, and a way to see more work",
+        "check": "Does the homepage include a short introduction, examples of past work or clients, and a way to see more work?",
         "say_example": "Homepage has a short intro, past work shown, and a link to see more"
        }
       ]
@@ -1092,7 +1092,7 @@
         "whatTheAgentLoses": "Delegating this step means you miss the opportunity to browse the full library of available themes and discover alternative design starting points for your site.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the Appearance > Themes screen show a search box for browsing themes",
+        "check": "Does the Appearance > Themes screen show a search box for browsing themes?",
         "say_example": "Theme browser is open under Appearance"
        },
        {
@@ -1105,7 +1105,7 @@
         "kind": "decision",
         "verify_form": "The agent installed a theme - check its name on the Themes page; the theme sets the layouts and the template library you get.",
         "speak": "on-event",
-        "check": "does the theme search or browse screen list multiple theme options to choose from",
+        "check": "Does the theme search or browse screen list multiple theme options to choose from?",
         "say_example": "Installing <Astra> as the site's theme"
        },
        {
@@ -1118,7 +1118,7 @@
         "kind": "decision",
         "verify_form": "The agent installed a templates plugin - check which one is active under Plugins; it decides which template library and page builder the site is tied to.",
         "speak": "never",
-        "check": "does installing a companion plugin unlock a template library for the chosen theme",
+        "check": "Does installing a companion plugin unlock a template library for the chosen theme?",
         "say_example": "Installed <Starter Templates> to get template options for <Astra>"
        },
        {
@@ -1130,7 +1130,7 @@
         "whatTheAgentLoses": "You lose the chance to explore the theme repository and visually evaluate alternative templates before committing to Astra.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the theme show 'Installed' with an Activate button, and does it become 'Active' after clicking",
+        "check": "Does the theme show 'Installed' with an Activate button, and does it become 'Active' after clicking?",
         "say_example": "<The theme> is installed but not active yet."
        },
        {
@@ -1143,7 +1143,7 @@
         "kind": "decision",
         "verify_form": "The agent chose the classic templates or the AI builder - check which path the wizard took; the AI path generates the site instead of editing a template.",
         "speak": "on-event",
-        "check": "does the setup screen offer an AI-generated site option alongside classic starter templates",
+        "check": "Does the setup screen offer an AI-generated site option alongside classic starter templates?",
         "say_example": "This offers an AI-built site or classic templates. Sticking with classic templates, hand-edited, since that's the task."
        }
       ]
@@ -1162,7 +1162,7 @@
         "kind": "decision",
         "verify_form": "The agent searched or browsed the templates with one term - check what it typed and which category tab is open; the results it saw are the only ones you get to pick from.",
         "speak": "never",
-        "check": "does the template library offer category tabs or a search bar to narrow down designs",
+        "check": "Does the template library offer category tabs or a search bar to narrow down designs?",
         "say_example": "Searching templates under <category>"
        },
        {
@@ -1174,7 +1174,7 @@
         "whatTheAgentLoses": "The user loses the ability to rely on the platform's search functionality to accurately surface relevant templates.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the search say there are no matches, while a similarly-named template still appears in the suggestions below it",
+        "check": "Does the search say there are no matches, while a similarly-named template still appears in the suggestions below it?",
         "say_example": "The search said no matches, but a <Mountain>-named template still showed up right below. Worth a second look."
        }
       ]
@@ -1193,7 +1193,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or closed the previewed template - check which one the site opened with; the preview's layout and sample text are what you will be editing.",
         "speak": "never",
-        "check": "was this template previewed, and did closing the preview return to the list to keep browsing",
+        "check": "Was this template previewed, and did closing the preview return to the list to keep browsing?",
         "say_example": "Previewed <template name>, then kept browsing"
        }
       ]
@@ -1216,7 +1216,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a template - check which one and whether it carries a premium badge; a premium one stops at a paywall.",
         "speak": "gate",
-        "check": "does the library show multiple free and premium templates, and does it also offer starting from a blank page, to choose from",
+        "check": "Does the library show multiple free and premium templates, and does it also offer starting from a blank page, to choose from?",
         "say_example": "A few templates fit here, plus a blank option. Going with <template name>. Sound good, or want to see other options?"
        },
        {
@@ -1228,7 +1228,7 @@
         "whatTheAgentLoses": "You lose the chance to seed the initial site copy with your own specific tone and subject matter.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "does the setup screen ask for a business description to let an AI draft the site's content",
+        "check": "Does the setup screen ask for a business description to let an AI draft the site's content?",
         "say_example": "This wants a description so AI can write the content. Skipping that and writing it by hand, since AI generation is off the table here."
        }
       ]
@@ -1247,7 +1247,7 @@
         "kind": "decision",
         "verify_form": "The agent uploaded a logo at import or skipped it - check the logo field; skipping is fine only if a logo gets added later.",
         "speak": "never",
-        "check": "does the logo-upload step allow skipping and adding a logo later",
+        "check": "Does the logo-upload step allow skipping and adding a logo later?",
         "say_example": "Skipped uploading a logo for now"
        },
        {
@@ -1260,7 +1260,7 @@
         "kind": "decision",
         "verify_form": "The agent set or kept the palette and font pairing at import - check which are selected; they apply to every page from here.",
         "speak": "on-event",
-        "check": "does the sidebar offer a choice of color palette and font pairing before continuing",
+        "check": "Does the sidebar offer a choice of color palette and font pairing before continuing?",
         "say_example": "Applying <palette name> colors, with <Poppins> for headings and <Lato> for body text"
        },
        {
@@ -1273,7 +1273,7 @@
         "kind": "decision",
         "verify_form": "The agent filled or skipped the personal details and set the advanced import boxes - check both; Delete Previously Imported Sites wipes an existing site.",
         "speak": "never",
-        "check": "does the setup form list advanced import options (which components get imported) separate from optional personal-detail fields",
+        "check": "Does the setup form list advanced import options (which components get imported) separate from optional personal-detail fields?",
         "say_example": "Set the advanced import options. Skipped the optional personal fields"
        },
        {
@@ -1286,7 +1286,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or changed the checked sections - check which sections the site starts with; unchecked ones have to be added later.",
         "speak": "on-event",
-        "check": "does the setup screen offer a checklist of optional starting sections (e.g. About, Gallery, Contact) to include",
+        "check": "Does the setup screen offer a checklist of optional starting sections (e.g. About, Gallery, Contact) to include?",
         "say_example": "Including <About, Gallery, Contact> as starting sections"
        },
        {
@@ -1299,7 +1299,7 @@
         "kind": "decision",
         "verify_form": "The agent left the data-sharing toggle on or turned it off - check the toggle before Submit; on means the template provider collects usage data.",
         "speak": "on-event",
-        "check": "is the data-sharing toggle for the template provider enabled by default",
+        "check": "Is the data-sharing toggle for the template provider enabled by default?",
         "say_example": "This data-sharing toggle is on by default. Turning it off unless you want it on."
        }
       ]
@@ -1317,7 +1317,7 @@
         "whatTheAgentLoses": "You lose the opportunity to read the legal disclaimer advising you to replace the default images before publishing.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "did the import finish, and does the confirmation message warn that the template's default images must be replaced before publishing",
+        "check": "Did the import finish, and does the confirmation message warn that the template's default images must be replaced before publishing?",
         "say_example": "Import finished. Heads up, this template's images are placeholders and need swapping before you publish."
        }
       ]
@@ -1336,7 +1336,7 @@
         "kind": "decision",
         "verify_form": "The agent clicked through some of the imported pages or none - check which pages it opened; the ones it skipped still carry the template's demo content.",
         "speak": "never",
-        "check": "does the top navigation list pages (e.g. Home, Blog, Contact) that can be opened to verify the import",
+        "check": "Does the top navigation list pages (e.g. Home, Blog, Contact) that can be opened to verify the import?",
         "say_example": "Checked <Home, Blog, Contact> after the import"
        },
        {
@@ -1348,7 +1348,7 @@
         "whatTheAgentLoses": "You lose the chance to personally review the default navigation structure and decide which pages to keep, rename, or remove.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which links currently appear in the main navigation menu",
+        "check": "Which links currently appear in the main navigation menu?",
         "say_example": "The menu shows <Home, About and a phone number> right now"
        }
       ]
@@ -1367,7 +1367,7 @@
         "kind": "decision",
         "verify_form": "The agent kept the default template or picked another - check which is on the canvas; a swap changes every page's layout.",
         "speak": "gate",
-        "check": "does the template library preview offer a 'select this template' action that would replace the current site design",
+        "check": "Does the template library preview offer a 'select this template' action that would replace the current site design?",
         "say_example": "Switching to <new template name> now could reset layout changes already made. Still want to switch, or keep the current one?"
        },
        {
@@ -1379,7 +1379,7 @@
         "whatTheAgentLoses": "The user loses the crucial realization that template selection is a permanent structural commitment, preventing them from casually letting the agent pick a placeholder.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does switching to a different template on this platform discard existing page content, or only the visual layout",
+        "check": "Does switching to a different template on this platform discard existing page content, or only the visual layout?",
         "say_example": "Changing templates here wipes out the content already added, not just the look."
        }
       ]
@@ -1400,7 +1400,7 @@
       "whatTheAgentLoses": "You lose the ability to decide the priority and order in which your website's content sections are developed.",
       "kind": "state-check",
       "speak": "never",
-      "check": "does an on-screen checklist show which build steps are done and which remain",
+      "check": "Does an on-screen checklist show which build steps are done and which remain?",
       "say_example": "Template and navigation done. Gallery is next"
      },
      {
@@ -1412,7 +1412,7 @@
       "whatTheAgentLoses": "You lose the ability to manually explore the template's secondary pages and verify which specific text elements, like pricing or service details, need to be updated.",
       "kind": "state-check",
       "speak": "if-wrong",
-      "check": "were secondary pages (e.g. Services, About) opened and edited, not just the homepage",
+      "check": "Were secondary pages (e.g. Services, About) opened and edited, not just the homepage?",
       "say_example": "The <Services> page hasn't been edited yet, only the homepage."
      }
     ],
@@ -1430,7 +1430,7 @@
         "whatTheAgentLoses": "You lose the opportunity to dictate the exact page structure and navigation of your website.",
         "kind": "intent-check",
         "speak": "gate",
-        "check": "does the pages list show existing pages or drafts that could be kept, edited, or deleted",
+        "check": "Does the pages list show existing pages or drafts that could be kept, edited, or deleted?",
         "say_example": "There are <6> pages here including drafts. Deleting <Sample Page>, keeping the rest to edit. Sound right?"
        },
        {
@@ -1443,7 +1443,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or trashed the sample post - check the posts list; if it stayed, it shows on the live site.",
         "speak": "if-wrong",
-        "check": "does the posts list still show the default 'Hello world!' sample post, rather than deleted or replaced",
+        "check": "Does the posts list still show the default 'Hello world!' sample post, rather than deleted or replaced?",
         "say_example": "The sample 'Hello world!' post is still in your posts list."
        }
       ]
@@ -1462,7 +1462,7 @@
         "kind": "decision",
         "verify_form": "The agent created a Page, Post or Template - check which; a post lands in the blog feed.",
         "speak": "never",
-        "check": "does the '+ New' menu offer choices like Post, Page, or Template",
+        "check": "Does the '+ New' menu offer choices like Post, Page, or Template?",
         "say_example": "Creating a new <Page>"
        },
        {
@@ -1474,7 +1474,7 @@
         "whatTheAgentLoses": "You lose the opportunity to learn the layout of the WordPress dashboard and how to manually manage your site's pages.",
         "kind": "state-check",
         "speak": "never",
-        "check": "is the Pages list open with an add-new control visible",
+        "check": "Is the Pages list open with an add-new control visible?",
         "say_example": "Pages list is open, ready to add"
        },
        {
@@ -1486,7 +1486,7 @@
         "whatTheAgentLoses": "You lose the ability to decide the exact phrasing of your site's menu items and whether specific pages should be hidden from public navigation.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what name was given to the new page, and is it set to show in the main menu",
+        "check": "What name was given to the new page, and is it set to show in the main menu?",
         "say_example": "Named the page <Portfolio> and kept it visible in the menu"
        }
       ]
@@ -1505,7 +1505,7 @@
         "kind": "decision",
         "verify_form": "The agent set the home page to latest posts or a static page - check Homepage Settings; a blog wants the feed.",
         "speak": "on-event",
-        "check": "does the Customizer's homepage settings offer a choice between a posts feed and a static page",
+        "check": "Does the Customizer's homepage settings offer a choice between a posts feed and a static page?",
         "say_example": "Setting the homepage to show <a static page>, not the blog feed"
        },
        {
@@ -1517,7 +1517,7 @@
         "whatTheAgentLoses": "Delegating this means you lose control over which specific page visitors will see first when they land on your root domain.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "is the page assigned as the homepage a different one from the page titled Home, or from the page the ask named as the landing page",
+        "check": "Is the page assigned as the homepage a different one from the page titled Home, or from the page the ask named as the landing page?",
         "say_example": "Homepage is set to <About>, not <Home>. Make sure that's the one you want visitors to land on."
        }
       ]
@@ -1536,7 +1536,7 @@
         "kind": "decision",
         "verify_form": "The agent set the menu's order and labels - check the order on the live nav; if you had an order in mind, the drag may have changed it.",
         "speak": "never",
-        "check": "does the menu builder let items be dragged into order with editable labels",
+        "check": "Does the menu builder let items be dragged into order with editable labels?",
         "say_example": "Ordered and labeled the menu items"
        },
        {
@@ -1549,7 +1549,7 @@
         "kind": "decision",
         "verify_form": "The agent grouped pages into a dropdown or left them flat - check the nav; a long flat list crowds the header.",
         "speak": "never",
-        "check": "does the menu panel show enough individual pages that grouping them into a dropdown would help",
+        "check": "Does the menu panel show enough individual pages that grouping them into a dropdown would help?",
         "say_example": "Grouped the product pages into a <Shop> dropdown"
        },
        {
@@ -1562,7 +1562,7 @@
         "kind": "decision",
         "verify_form": "The agent left the menu page with Leave or saved - check whether the nav changed; Leave threw the edits away.",
         "speak": "on-event",
-        "check": "does a browser alert warn that leaving now will discard unsaved menu changes",
+        "check": "Does a browser alert warn that leaving now will discard unsaved menu changes?",
         "say_example": "Leaving now would lose the menu changes just made. Save first, or discard them?"
        },
        {
@@ -1575,7 +1575,7 @@
         "kind": "decision",
         "verify_form": "The agent changed page settings for Services or none - check whether it is renamed, hidden or set as home.",
         "speak": "never",
-        "check": "does the menu item's dropdown offer options like rename, hide, or delete for this page",
+        "check": "Does the menu item's dropdown offer options like rename, hide, or delete for this page?",
         "say_example": "Left the <Services> menu item as it is"
        },
        {
@@ -1588,7 +1588,7 @@
         "kind": "decision",
         "verify_form": "The agent removed the Invalid items and added pages - check the menu list; Home and About Me were the ones here.",
         "speak": "if-wrong",
-        "check": "does the menu show any '(invalid)' items left over after a page was deleted",
+        "check": "Does the menu show any '(invalid)' items left over after a page was deleted?",
         "say_example": "The menu still has <2> invalid links from deleted pages. Replacing them with <new pages>."
        },
        {
@@ -1601,7 +1601,7 @@
         "kind": "decision",
         "verify_form": "The agent set which pages are in the menu and where it shows - check the locations checked; Desktop and Mobile were both on.",
         "speak": "never",
-        "check": "does the menu panel require choosing pages and a placement location (e.g. desktop horizontal menu)",
+        "check": "Does the menu panel require choosing pages and a placement location (e.g. desktop horizontal menu)?",
         "say_example": "Added <Home, About> to the <desktop horizontal> menu"
        },
        {
@@ -1613,7 +1613,7 @@
         "whatTheAgentLoses": "You lose the ability to visually catch drag-and-drop errors that accidentally bury your top-level pages inside unintended dropdown menus.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the reordered item show indented under another item, meaning it silently became a dropdown sub-item instead of staying on the main bar",
+        "check": "Does the reordered item show indented under another item, meaning it silently became a dropdown sub-item instead of staying on the main bar?",
         "say_example": "This item slid in as a sub-item under <Home> instead of staying on the main menu. Want it back on the top level?"
        },
        {
@@ -1626,7 +1626,7 @@
         "kind": "decision",
         "verify_form": "The agent checked auto-add or not - check the menu option; on means every new page lands in the nav.",
         "speak": "never",
-        "check": "is there a checkbox controlling whether new pages get added to the primary menu automatically",
+        "check": "Is there a checkbox controlling whether new pages get added to the primary menu automatically?",
         "say_example": "Left the box that adds new pages to the menu <unchecked>"
        }
       ]
@@ -1645,7 +1645,7 @@
         "kind": "decision",
         "verify_form": "The agent built the nav as anchors or as pages - check whether clicking a button scrolls or loads; one page scrolls.",
         "speak": "never",
-        "check": "do the menu buttons link to spots on the same page, like #faq, rather than to separate pages, since the free plan doesn't allow adding real pages",
+        "check": "Do the menu buttons link to spots on the same page, like #faq, rather than to separate pages, since the free plan doesn't allow adding real pages?",
         "say_example": "Linked the menu buttons to spots on the same page, like <#faq>, since the plan doesn't allow real pages"
        },
        {
@@ -1658,7 +1658,7 @@
         "kind": "decision",
         "verify_form": "The agent named the section break - check the name; links use it as #name.",
         "speak": "never",
-        "check": "does the section-break control show an editable name field, and does a layout toggle (e.g. hide the footer) apply just to this section",
+        "check": "Does the section-break control show an editable name field, and does a layout toggle (e.g. hide the footer) apply just to this section?",
         "say_example": "Renamed the section break to <#gallery> and set its layout options"
        },
        {
@@ -1670,7 +1670,7 @@
         "whatTheAgentLoses": "You lose the immediate, hands-on verification that your custom navigation links actually function as intended before publishing.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does clicking the new section link in the preview scroll to the matching section, rather than doing nothing or going elsewhere",
+        "check": "Does clicking the new section link in the preview scroll to the matching section, rather than doing nothing or going elsewhere?",
         "say_example": "The <Gallery> link doesn't scroll to the right section in preview."
        },
        {
@@ -1682,7 +1682,7 @@
         "whatTheAgentLoses": "The delegator loses the intended multi-page navigation structure because the agent trusted the editor's text instead of verifying the actual published layout.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the published site show each section break as a separate page, or does it scroll continuously as one page despite the editor's claim",
+        "check": "Does the published site show each section break as a separate page, or does it scroll continuously as one page despite the editor's claim?",
         "say_example": "The editor said these act like separate pages, but the live site scrolls through them as one page."
        }
       ]
@@ -1701,7 +1701,7 @@
         "kind": "decision",
         "verify_form": "The agent added a pre-built block - check which one and that it is free; a premium block stops at a paywall.",
         "speak": "never",
-        "check": "which pre-designed block or section layout, like FAQ or a video section, was added",
+        "check": "Which pre-designed block or section layout, like FAQ or a video section, was added?",
         "say_example": "Added the <FAQ> block to the page"
        },
        {
@@ -1713,7 +1713,7 @@
         "whatTheAgentLoses": "You lose the demonstration of how to actually create an account and authenticate the library connection because the video skips directly to the inserted block.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does inserting the block trigger a 'connect to template library' or account-creation prompt before it's added",
+        "check": "Does inserting the block trigger a 'connect to template library' or account-creation prompt before it's added?",
         "say_example": "This block wants a library account before it lets you insert it."
        },
        {
@@ -1726,7 +1726,7 @@
         "kind": "decision",
         "verify_form": "The agent added a text section above the gallery or left it bare - check the page; without a line of context the work is unexplained.",
         "speak": "never",
-        "check": "does the current layout show only an image gallery, with no descriptive text nearby",
+        "check": "Does the current layout show only an image gallery, with no descriptive text nearby?",
         "say_example": "Gallery had no text, so added a short caption section"
        },
        {
@@ -1739,7 +1739,7 @@
         "kind": "decision",
         "verify_form": "The agent added elements to the page - check which containers, images and buttons landed; each one is a section to fill.",
         "speak": "never",
-        "check": "does the plus menu offer structural and media elements (container, image, buttons) to add",
+        "check": "Does the plus menu offer structural and media elements (container, image, buttons) to add?",
         "say_example": "Added <a container and buttons> to the layout"
        }
       ]
@@ -1758,7 +1758,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a column structure - check how many columns the section has; content added later fits that grid.",
         "speak": "never",
-        "check": "does the 'select your structure' modal offer multiple column layouts to choose from",
+        "check": "Does the 'select your structure' modal offer multiple column layouts to choose from?",
         "say_example": "Using a <2-column> structure for this section"
        },
        {
@@ -1771,7 +1771,7 @@
         "kind": "decision",
         "verify_form": "The agent built the first container - check columns, padding, gutters and mobile layout; the caption listed each.",
         "speak": "never",
-        "check": "does the container settings panel offer column split, padding, gutter, and mobile-layout controls",
+        "check": "Does the container settings panel offer column split, padding, gutter, and mobile-layout controls?",
         "say_example": "Set padding, gutters, and mobile behavior for this container"
        }
       ]
@@ -1789,7 +1789,7 @@
         "whatTheAgentLoses": "Delegating this step means the agent decides which template sections to keep or discard, potentially removing a layout block you wanted to use for your own content.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "does the section being deleted hold content that was added by hand, rather than only template filler",
+        "check": "Does the section being deleted hold content that was added by hand, rather than only template filler?",
         "say_example": "Removing the <timeline> section, but it has <a paragraph you wrote> in it. That goes too. OK?"
        }
       ]
@@ -1808,7 +1808,7 @@
         "kind": "decision",
         "verify_form": "The agent set the section height - check S, M or L; the larger sizes leave empty space around the text.",
         "speak": "never",
-        "check": "does the design panel offer height options like S, M, L for the section being sized",
+        "check": "Does the design panel offer height options like S, M, L for the section being sized?",
         "say_example": "Set the section to <M> height"
        },
        {
@@ -1821,7 +1821,7 @@
         "kind": "decision",
         "verify_form": "The agent colored one section - check that only the F.A.Q has the cream background; markers set the boundary.",
         "speak": "never",
-        "check": "do header/footer markers in the control panel isolate one section so a background color applies only there",
+        "check": "Do header/footer markers in the control panel isolate one section so a background color applies only there?",
         "say_example": "Applied the background color to just the <FAQ> section"
        }
       ]
@@ -1839,7 +1839,7 @@
         "whatTheAgentLoses": "You lose the hands-on control of dragging the duplicated container to its exact intended position within your page layout.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the duplicated element, whether a container, widget or label, keep the original's settings and styling, and land next to the original rather than somewhere unexpected",
+        "check": "Does the duplicated element, whether a container, widget or label, keep the original's settings and styling, and land next to the original rather than somewhere unexpected?",
         "say_example": "The copy landed <somewhere unexpected>, with different settings than the original."
        },
        {
@@ -1852,7 +1852,7 @@
         "kind": "decision",
         "verify_form": "The agent built the highlight row by duplicating - check that each image's width is 4 and each URL points to its section.",
         "speak": "never",
-        "check": "does each duplicated image keep its own width setting and a distinct link URL",
+        "check": "Does each duplicated image keep its own width setting and a distinct link URL?",
         "say_example": "Set each highlight image to the same width, with its own link"
        }
       ]
@@ -1874,7 +1874,7 @@
       "kind": "decision",
       "verify_form": "The agent placed and styled the text and buttons - check what it added, aligned and sized; if you had a layout in mind, this is where it was set.",
       "speak": "never",
-      "check": "does the sidebar offer widgets, alignment, and typography settings for the text and buttons",
+      "check": "Does the sidebar offer widgets, alignment, and typography settings for the text and buttons?",
       "say_example": "Arranged the text and buttons using <the sidebar's layout options>"
      }
     ],
@@ -1892,7 +1892,7 @@
         "whatTheAgentLoses": "You lose the opportunity to establish your preferred workflow for making content edits within the builder.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the text entered in the side panel match what the live preview shows",
+        "check": "Does the text entered in the side panel match what the live preview shows?",
         "say_example": "The panel shows <the new headline>, but the preview still shows <the old one>."
        },
        {
@@ -1904,7 +1904,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally craft the exact wording of your professional introduction and decide how boldly it is presented on the page.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "does the placeholder heading get replaced with real text, styled as a heading via the toolbar",
+        "check": "Does the placeholder heading get replaced with real text, styled as a heading via the toolbar?",
         "say_example": "Replaced the placeholder heading with <your intro text>, styled as a heading"
        },
        {
@@ -1916,7 +1916,7 @@
         "whatTheAgentLoses": "An agent might generate standard, overly professional corporate copy that alienates the casual audience you want to attract for commissions.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "does the section use a conversational Q&A format rather than a plain heading",
+        "check": "Does the section use a conversational Q&A format rather than a plain heading?",
         "say_example": "Wrote the FAQ in a conversational Q&A style"
        },
        {
@@ -1928,7 +1928,7 @@
         "whatTheAgentLoses": "Delegating this means losing the chance to personally review and select which commission terms to highlight on your new site.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the text added below the image match the terms shown on the reference material, not a paraphrase that changes the meaning",
+        "check": "Does the text added below the image match the terms shown on the reference material, not a paraphrase that changes the meaning?",
         "say_example": "This text doesn't match the reference exactly. <One of the numbers> is different."
        },
        {
@@ -1940,7 +1940,7 @@
         "whatTheAgentLoses": "Delegating this means you lose the ability to craft the exact messaging and tone for your website's core content.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the hero or main heading still show the template's placeholder text, like a demo name, instead of your own words",
+        "check": "Does the hero or main heading still show the template's placeholder text, like a demo name, instead of your own words?",
         "say_example": "This heading still shows the template's placeholder name, <About Jane Doe>, instead of your own text."
        },
        {
@@ -1952,7 +1952,7 @@
         "whatTheAgentLoses": "Delegating this means the agent might write a generic or slightly off-brand subtitle instead of capturing your exact value proposition.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the subtitle field still show placeholder text instead of your own tagline",
+        "check": "Does the subtitle field still show placeholder text instead of your own tagline?",
         "say_example": "The subtitle here still says <placeholder tagline>, not your own words."
        },
        {
@@ -1964,7 +1964,7 @@
         "whatTheAgentLoses": "Delegating this means losing control over the exact wording, tone, and specific marketing claims made in the site's most prominent section.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the main welcome section still show placeholder copy like a generic template greeting",
+        "check": "Does the main welcome section still show placeholder copy like a generic template greeting?",
         "say_example": "The welcome section still reads <generic template greeting>, not your own message."
        },
        {
@@ -1976,7 +1976,7 @@
         "whatTheAgentLoses": "You lose the creative control to handpick the exact marketing phrasing and visual assets that best represent your specific services.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does any service card still show placeholder text, a generic plan name or its default description, instead of your own service name and description",
+        "check": "Does any service card still show placeholder text, a generic plan name or its default description, instead of your own service name and description?",
         "say_example": "<One of the service cards> still says <Basic Plan>, not your own service name."
        },
        {
@@ -1988,7 +1988,7 @@
         "whatTheAgentLoses": "You lose the ability to personally verify that the tone of the text and the chosen photo authentically reflect your identity.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the About page still show placeholder text or a stock photo instead of the text and photo you provided",
+        "check": "Does the About page still show placeholder text or a stock photo instead of the text and photo you provided?",
         "say_example": "The About page still shows <placeholder text and photo>, not what you gave me."
        }
       ]
@@ -2007,7 +2007,7 @@
         "kind": "decision",
         "verify_form": "The agent set the intro's heading level - check Heading 1 to 4 or Paragraph in the toolbar; it decides how big the intro reads.",
         "speak": "never",
-        "check": "which heading level or paragraph style was applied to the intro text block",
+        "check": "Which heading level or paragraph style was applied to the intro text block?",
         "say_example": "Set the intro text to <Heading 2>"
        },
        {
@@ -2020,7 +2020,7 @@
         "kind": "decision",
         "verify_form": "The agent set the text block's width and heading size - check the line length on desktop; a full-width line is too long to read.",
         "speak": "if-wrong",
-        "check": "is the text block still spanning the full page width, making lines too long to read comfortably on desktop",
+        "check": "Is the text block still spanning the full page width, making lines too long to read comfortably on desktop?",
         "say_example": "This text block still runs the full width of the page, so lines are long. Narrowed it for easier reading."
        },
        {
@@ -2033,7 +2033,7 @@
         "kind": "decision",
         "verify_form": "The agent styled the section title - check font, size, weight and the pink hex; it should match the logo.",
         "speak": "never",
-        "check": "does the new heading's font and color match the site's other headings or the logo",
+        "check": "Does the new heading's font and color match the site's other headings or the logo?",
         "say_example": "Matched this section title's font and color to the site's other headings"
        },
        {
@@ -2046,7 +2046,7 @@
         "kind": "decision",
         "verify_form": "The agent styled questions and answers apart - check that questions are bold and answers black; readability was the point.",
         "speak": "if-wrong",
-        "check": "are the questions still shown in the same plain black as the answers, rather than bold and in the accent color",
+        "check": "Are the questions still shown in the same plain black as the answers, rather than bold and in the accent color?",
         "say_example": "The questions and answers still look the same here. Made the questions bold and colored, answers black, so they're easy to tell apart."
        },
        {
@@ -2059,7 +2059,7 @@
         "kind": "decision",
         "verify_form": "The agent kept the answers black or colored them - check the text on the live page; black was for readability.",
         "speak": "if-wrong",
-        "check": "are the FAQ answers shown in black text, or has the color been changed to something lower-contrast",
+        "check": "Are the FAQ answers shown in black text, or has the color been changed to something lower-contrast?",
         "say_example": "The FAQ answers here are in <a light gray> and hard to read against the background."
        },
        {
@@ -2072,7 +2072,7 @@
         "kind": "decision",
         "verify_form": "The agent typed and colored the new heading - check both; the color was picked from a wheel.",
         "speak": "never",
-        "check": "what text and color were set for the new heading",
+        "check": "What text and color were set for the new heading?",
         "say_example": "Set the new heading to say <Our story> in <teal>"
        },
        {
@@ -2085,7 +2085,7 @@
         "kind": "decision",
         "verify_form": "The agent styled the block or kept defaults - check the block's color and typography panels; defaults follow the theme.",
         "speak": "never",
-        "check": "did this text block keep the template's default styling, or get custom colors and typography",
+        "check": "Did this text block keep the template's default styling, or get custom colors and typography?",
         "say_example": "Left this text block on the template's default styling"
        },
        {
@@ -2098,7 +2098,7 @@
         "kind": "decision",
         "verify_form": "The agent styled the bio - check color, link color, highlight, weight, spacing and alignment against the caption.",
         "speak": "never",
-        "check": "does the text, like the bio or the profile stats, match the color, weight, size, spacing and alignment given in the spec",
+        "check": "Does the text, like the bio or the profile stats, match the color, weight, size, spacing and alignment given in the spec?",
         "say_example": "Styled the bio and stats to match the given color, weight and spacing"
        },
        {
@@ -2110,7 +2110,7 @@
         "whatTheAgentLoses": "The user's main headline or call to action is unreadable to visitors, destroying the page's effectiveness.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the text placed over the hero image still have poor contrast against the photo behind it, making it hard to read",
+        "check": "Does the text placed over the hero image still have poor contrast against the photo behind it, making it hard to read?",
         "say_example": "The headline over this photo is hard to read. It's <light text on a light sky>."
        }
       ]
@@ -2129,7 +2129,7 @@
         "kind": "decision",
         "verify_form": "The agent highlighted words - check which words and which style and color; the accent should be the palette's.",
         "speak": "never",
-        "check": "which words got the highlight and what style and color was used",
+        "check": "Which words got the highlight and what style and color was used?",
         "say_example": "Highlighted <the studio name> in <the accent color>"
        },
        {
@@ -2141,7 +2141,7 @@
         "whatTheAgentLoses": "You lose the strategic choice of exactly which high-profile clients to name-drop and how to perfectly frame the conversational call-to-action.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "are the client names shown as live links to a specific project page, rather than plain unlinked text",
+        "check": "Are the client names shown as live links to a specific project page, rather than plain unlinked text?",
         "say_example": "The client names here are still plain text, not linked to their project pages."
        },
        {
@@ -2154,7 +2154,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the terms link as a button in a column - check where it sits and that it opens the document; a buried link goes unread.",
         "speak": "if-wrong",
-        "check": "is the Terms of Service link placed somewhere visible, like its own button, rather than buried in a paragraph",
+        "check": "Is the Terms of Service link placed somewhere visible, like its own button, rather than buried in a paragraph?",
         "say_example": "The Terms of Service link is buried in a paragraph here, easy to miss. Gave it its own button instead."
        }
       ]
@@ -2178,7 +2178,7 @@
           "kind": "decision",
           "verify_form": "The agent picked a background image for the section - check which one is behind the text; a busy image hides the heading.",
           "speak": "if-wrong",
-          "check": "does the chosen background image make the heading text hard to read, because it's busy or low-contrast",
+          "check": "Does the chosen background image make the heading text hard to read, because it's busy or low-contrast?",
           "say_example": "This background photo is busy enough that the heading is hard to read over it."
          },
          {
@@ -2190,7 +2190,7 @@
           "whatTheAgentLoses": "You lose creative control over which specific photo is featured and how the subject is framed within the layout.",
           "kind": "intent-check",
           "speak": "never",
-          "check": "which file was uploaded for this element, whether new or replacing a placeholder, and was a link set on it",
+          "check": "Which file was uploaded for this element, whether new or replacing a placeholder, and was a link set on it?",
           "say_example": "Uploaded <hero.jpg> for this element"
          },
          {
@@ -2202,7 +2202,7 @@
           "whatTheAgentLoses": "You lose the creative control of deciding exactly where the visual element sits within the page layout and which specific file to upload.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "is the image widget actually sitting in the left column, or did it land in the right one",
+          "check": "Is the image widget actually sitting in the left column, or did it land in the right one?",
           "say_example": "This image widget is in the right column, not the left one it was meant for."
          },
          {
@@ -2215,7 +2215,7 @@
           "kind": "decision",
           "verify_form": "The agent uploaded its own image after the stock search failed - check which image filled the hero; it could also have changed the search.",
           "speak": "if-wrong",
-          "check": "does the section now show an actual image (from a new search or an upload), rather than the 'no results' state it was left in",
+          "check": "Does the section now show an actual image (from a new search or an upload), rather than the 'no results' state it was left in?",
           "say_example": "The stock search here came up empty. Went with <a different search term> instead of leaving it blank."
          },
          {
@@ -2228,7 +2228,7 @@
           "kind": "decision",
           "verify_form": "The agent picked one logo from the results - check which is on the card; it is a stranger's graphic.",
           "speak": "on-event",
-          "check": "did the image chosen for this card come from an outside search rather than the builder's own media library, meaning it may not be licensed for the site's use",
+          "check": "Did the image chosen for this card come from an outside search rather than the builder's own media library, meaning it may not be licensed for the site's use?",
           "say_example": "This graphic came from an outside search, not the site's own library, so it may not be yours to use commercially. Worth swapping for a licensed one or your own art."
          },
          {
@@ -2240,7 +2240,7 @@
           "whatTheAgentLoses": "You lose the opportunity to verify that the correct local file was selected and successfully added to the builder's media library.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the site's media library now actually include the downloaded image, or did the upload not take",
+          "check": "Does the site's media library now actually include the downloaded image, or did the upload not take?",
           "say_example": "The downloaded image isn't in the media library yet. The upload didn't take."
          },
          {
@@ -2252,7 +2252,7 @@
           "whatTheAgentLoses": "You lose the visual confirmation that the uploaded image correctly replaced the intended placeholder on the page.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the element, like this card or the hero banner, now show the uploaded image after saving, or is the placeholder still there",
+          "check": "Does the element, like this card or the hero banner, now show the uploaded image after saving, or is the placeholder still there?",
           "say_example": "This <card> still shows the placeholder, not the uploaded image."
          },
          {
@@ -2264,7 +2264,7 @@
           "whatTheAgentLoses": "The user loses their intended visual assets if the agent simply abandons the upload upon encountering an error instead of fixing the file.",
           "kind": "state-check",
           "speak": "on-event",
-          "check": "does the page show an upload error, like a file-size limit or an unsupported format, after adding this image",
+          "check": "Does the page show an upload error, like a file-size limit or an unsupported format, after adding this image?",
           "say_example": "This upload failed. <The file is over the size limit>. Trying a compressed version instead."
          }
         ]
@@ -2283,7 +2283,7 @@
           "kind": "decision",
           "verify_form": "The agent picked a shape for the profile image - check which of the eleven; a cut corner is a style choice.",
           "speak": "never",
-          "check": "which of the shape options was applied to the profile image",
+          "check": "Which of the shape options was applied to the profile image?",
           "say_example": "Set the profile image to <a circle>"
          },
          {
@@ -2296,7 +2296,7 @@
           "kind": "decision",
           "verify_form": "The agent cropped the logo - check that the crop box kept the whole mark; a tight crop cuts letters.",
           "speak": "if-wrong",
-          "check": "does the cropped logo still show the whole mark, or did the crop cut off part of a letter or icon",
+          "check": "Does the cropped logo still show the whole mark, or did the crop cut off part of a letter or icon?",
           "say_example": "This crop cuts into the logo. Part of a letter is clipped off. Widened it to keep the whole mark."
          },
          {
@@ -2309,7 +2309,7 @@
           "kind": "decision",
           "verify_form": "The agent set or ignored the gallery's focal points - check that no subject is cut by the crop.",
           "speak": "if-wrong",
-          "check": "does the gallery's automatic crop cut off the main subject of any photo, or crop mixed-proportion photos awkwardly",
+          "check": "Does the gallery's automatic crop cut off the main subject of any photo, or crop mixed-proportion photos awkwardly?",
           "say_example": "This photo's automatic crop is cutting off the subject. Moved the focal point so it stays in frame."
          }
         ]
@@ -2328,7 +2328,7 @@
           "kind": "decision",
           "verify_form": "The agent left the alt text empty or filled it - check the field on the inserted image; empty means screen readers get nothing.",
           "speak": "if-wrong",
-          "check": "is the alt text field for this image still empty",
+          "check": "Is the alt text field for this image still empty?",
           "say_example": "This image has no alt text, so a screen reader gets nothing for it. Filled it in."
          }
         ]
@@ -2349,7 +2349,7 @@
         "kind": "decision",
         "verify_form": "The agent added a closing call to action or not - check the last section; a page that ends on a gallery gives visitors nothing to do.",
         "speak": "if-wrong",
-        "check": "does the page still end on a gallery or section with nothing for a visitor to click next",
+        "check": "Does the page still end on a gallery or section with nothing for a visitor to click next?",
         "say_example": "This page still ends on <a gallery>, with nothing telling a visitor what to do next."
        },
        {
@@ -2362,7 +2362,7 @@
         "kind": "decision",
         "verify_form": "The agent styled the button - check background, label color, height, indent, font, size and weight against the values given.",
         "speak": "never",
-        "check": "do the button's text and background colors, size, rounding, padding and hover colors match the given values or the reference being copied",
+        "check": "Do the button's text and background colors, size, rounding, padding and hover colors match the given values or the reference being copied?",
         "say_example": "Matched the button's colors, size, rounding and hover state to the given values"
        },
        {
@@ -2374,7 +2374,7 @@
         "whatTheAgentLoses": "Delegating this means you lose control over the specific wording and visual cues used for your site's interactive elements.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what label, icon and link were set on this button",
+        "check": "What label, icon and link were set on this button?",
         "say_example": "Set this button to say <Book now>, with <an arrow icon> and a link to <the contact page>"
        }
       ]
@@ -2398,7 +2398,7 @@
           "kind": "decision",
           "verify_form": "The agent picked a form for the widget - check which one is selected; the fields on the page are that form's.",
           "speak": "never",
-          "check": "which form is selected in the widget's dropdown",
+          "check": "Which form is selected in the widget's dropdown?",
           "say_example": "Selected <the contact form> for this widget"
          },
          {
@@ -2411,7 +2411,7 @@
           "kind": "decision",
           "verify_form": "The agent kept the template's contact form as is or changed it - check the fields; name, email, message was the default.",
           "speak": "never",
-          "check": "did the pre-built contact form get customized, or was it kept as name, email and message",
+          "check": "Did the pre-built contact form get customized, or was it kept as name, email and message?",
           "say_example": "Kept the contact form as name, email and message"
          }
         ]
@@ -2430,7 +2430,7 @@
           "kind": "decision",
           "verify_form": "The agent set the form's fields and which are required - check the field list; a required field blocks visitors who leave it blank.",
           "speak": "if-wrong",
-          "check": "does the contact form require any field beyond name and message that a typical visitor might skip or not have handy",
+          "check": "Does the contact form require any field beyond name and message that a typical visitor might skip or not have handy?",
           "say_example": "This form asks for <a phone number> on top of name and message, which could stop some visitors from finishing it."
          },
          {
@@ -2443,7 +2443,7 @@
           "kind": "decision",
           "verify_form": "The agent set the Name field's required toggle and size - check both; required blocks a submission without a name.",
           "speak": "never",
-          "check": "which fields are set as required, and what sizes were given to the name and email fields",
+          "check": "Which fields are set as required, and what sizes were given to the name and email fields?",
           "say_example": "Set the Name field to required, at <medium> size"
          }
         ]
@@ -2461,7 +2461,7 @@
           "whatTheAgentLoses": "You lose the opportunity to ensure leads are routed to your preferred inbox and to personally review the collected form data.",
           "kind": "intent-check",
           "speak": "if-wrong",
-          "check": "what address is the form's notification email set to, and is it still the default one",
+          "check": "What address is the form's notification email set to, and is it still the default one?",
           "say_example": "Form replies are going to <the default address>, which may not be one you read."
          },
          {
@@ -2473,7 +2473,7 @@
           "whatTheAgentLoses": "You lose direct visibility into visitor inquiries and the assurance that the contact form is capturing messages correctly.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does clicking through actually show the contact form's own submissions, not the newsletter subscriber list",
+          "check": "Does clicking through actually show the contact form's own submissions, not the newsletter subscriber list?",
           "say_example": "This is showing the subscriber list, not the messages people sent through the contact form."
          }
         ]
@@ -2499,7 +2499,7 @@
           "kind": "decision",
           "verify_form": "The agent picked a gallery layout - check whether it is masonry, grid or slideshow; a grid crops uneven images.",
           "speak": "never",
-          "check": "which gallery layout was added",
+          "check": "Which gallery layout was added?",
           "say_example": "Added the <grid> gallery layout"
          }
         ]
@@ -2518,7 +2518,7 @@
           "kind": "decision",
           "verify_form": "The agent set the gallery's width, columns and spacing - check the settings; more columns means smaller images.",
           "speak": "never",
-          "check": "what width, column count and spacing were set for the gallery grid",
+          "check": "What width, column count and spacing were set for the gallery grid?",
           "say_example": "Set the gallery to <3> columns with <10px> spacing"
          }
         ]
@@ -2548,7 +2548,7 @@
           "whatTheAgentLoses": "Delegating this step means you lose the ability to personally curate exactly which pieces of your work are featured front and center on the site.",
           "kind": "intent-check",
           "speak": "never",
-          "check": "which local files were chosen and uploaded for the gallery",
+          "check": "Which local files were chosen and uploaded for the gallery?",
           "say_example": "Chose <six photos> for the homepage gallery"
          },
          {
@@ -2560,7 +2560,7 @@
           "whatTheAgentLoses": "You lose the choice of whether to bulk-delete the template's placeholder photos or replace them individually to preserve the original gallery structure.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the gallery still show the template's original stock photos rather than only your own uploads",
+          "check": "Does the gallery still show the template's original stock photos rather than only your own uploads?",
           "say_example": "The gallery still has the template's own stock photos mixed in, not just yours. Removed them."
          }
         ]
@@ -2579,7 +2579,7 @@
           "kind": "decision",
           "verify_form": "The agent set the spacing and the lightbox toggle - check whether clicking an image opens it large; the lightbox is off by default.",
           "speak": "if-wrong",
-          "check": "do gallery images stay static when clicked, in the editor or the preview, because the lightbox toggle is off",
+          "check": "Do gallery images stay static when clicked, in the editor or the preview, because the lightbox toggle is off?",
           "say_example": "Clicking a gallery image doesn't enlarge it yet. The lightbox is still off. Turned it on."
          }
         ]
@@ -2599,7 +2599,7 @@
         "whatTheAgentLoses": "You lose creative control over which specific video is featured and how it is titled and described to your audience.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "were a URL, title and description all set for the video section",
+        "check": "Were a URL, title and description all set for the video section?",
         "say_example": "Set the video's URL, title and description"
        },
        {
@@ -2612,7 +2612,7 @@
         "kind": "decision",
         "verify_form": "The agent set the video toggles - check autoplay, loop and controls; autoplay does not work on phones.",
         "speak": "on-event",
-        "check": "is autoplay turned on for this video",
+        "check": "Is autoplay turned on for this video?",
         "say_example": "Turned autoplay on for this video, though it won't autoplay for anyone visiting on a phone."
        },
        {
@@ -2624,7 +2624,7 @@
         "whatTheAgentLoses": "You lose the immediate visual check to ensure the external media actually resolved and is playable for your website visitors.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the video section still show a blank space or error instead of the video's thumbnail after pasting the link",
+        "check": "Does the video section still show a blank space or error instead of the video's thumbnail after pasting the link?",
         "say_example": "This video isn't loading. It's showing a blank space instead of the thumbnail. The link may be private or broken."
        }
       ]
@@ -2642,7 +2642,7 @@
         "whatTheAgentLoses": "Delegating this means the agent might omit important social profiles or link to incorrect accounts, disconnecting your audience from your broader online presence.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "which social accounts were linked",
+        "check": "Which social accounts were linked?",
         "say_example": "Linked <Instagram and YouTube>"
        },
        {
@@ -2654,7 +2654,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to decide exactly where on the page your social media links should be placed for maximum visibility.",
         "kind": "state-check",
         "speak": "never",
-        "check": "was the Social Icons element specifically chosen from the elements menu",
+        "check": "Was the Social Icons element specifically chosen from the elements menu?",
         "say_example": "Added the Social Icons element"
        },
        {
@@ -2666,7 +2666,7 @@
         "whatTheAgentLoses": "The user loses the guarantee of a polished final product if the agent fails to visually verify that deleted elements actually disappear from the page.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the page still show an icon for an account that was removed from the social links settings",
+        "check": "Does the page still show an icon for an account that was removed from the social links settings?",
         "say_example": "The <Instagram> icon is still showing on the page even though it was removed from the settings list."
        }
       ]
@@ -2684,7 +2684,7 @@
         "whatTheAgentLoses": "You lose strict brand color accuracy when the agent applies a visually similar but mathematically incorrect hex code.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the color applied to this element exactly match the hex from the palette image or the extracted value, rather than an approximate guess or a close shade",
+        "check": "Does the color applied to this element exactly match the hex from the palette image or the extracted value, rather than an approximate guess or a close shade?",
         "say_example": "This <button>'s color is <a shade off> from the palette's exact value. Close, but not the same."
        },
        {
@@ -2696,7 +2696,7 @@
         "whatTheAgentLoses": "Delegating this means you lose the opportunity to experiment with the builder's deep customization features to achieve your exact visual preference.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the Advanced tab show padding, motion or custom code changed from the default on this element",
+        "check": "Does the Advanced tab show padding, motion or custom code changed from the default on this element?",
         "say_example": "Nothing changed from the default in this element's Advanced settings"
        },
        {
@@ -2709,7 +2709,7 @@
         "kind": "decision",
         "verify_form": "The agent styled the page box - check width, rounding, border and shadow values against the caption.",
         "speak": "never",
-        "check": "do the container's padding, corner rounding, border and shadow match the given spec",
+        "check": "Do the container's padding, corner rounding, border and shadow match the given spec?",
         "say_example": "Styled the container to match the given padding, rounding, border and shadow"
        },
        {
@@ -2722,7 +2722,7 @@
         "kind": "decision",
         "verify_form": "The agent formatted the profile picture - check circle, border color, width and padding.",
         "speak": "never",
-        "check": "do the profile picture's shape, border and padding match the given spec",
+        "check": "Do the profile picture's shape, border and padding match the given spec?",
         "say_example": "Styled the profile picture to match the given shape and border"
        },
        {
@@ -2735,7 +2735,7 @@
         "kind": "decision",
         "verify_form": "The agent made the divider transparent or visible - check the color's alpha; #00000000 is invisible spacing.",
         "speak": "never",
-        "check": "was the divider set to a visible color or made fully transparent",
+        "check": "Was the divider set to a visible color or made fully transparent?",
         "say_example": "Made the divider fully transparent for spacing"
        }
       ]
@@ -2754,7 +2754,7 @@
         "kind": "decision",
         "verify_form": "The agent sized and aligned the text block - check that it is narrow and centered; it dragged the handles by eye.",
         "speak": "never",
-        "check": "how wide is the text block set, and is it centered",
+        "check": "How wide is the text block set, and is it centered?",
         "say_example": "Narrowed and centered this text block"
        },
        {
@@ -2767,7 +2767,7 @@
         "kind": "decision",
         "verify_form": "The agent scaled and placed the logo above the intro - check its size against the text; the upload arrived huge.",
         "speak": "never",
-        "check": "how was the logo scaled and positioned relative to the intro text",
+        "check": "How was the logo scaled and positioned relative to the intro text?",
         "say_example": "Scaled the logo down and centered it above the intro text"
        },
        {
@@ -2780,7 +2780,7 @@
         "kind": "decision",
         "verify_form": "The agent set the image's height and left width Auto - check the numbers; a fixed width would distort.",
         "speak": "never",
-        "check": "was the image's height set with width left on Auto",
+        "check": "Was the image's height set with width left on Auto?",
         "say_example": "Set the image's height and left the width on Auto so it doesn't stretch"
        },
        {
@@ -2793,7 +2793,7 @@
         "kind": "decision",
         "verify_form": "The agent set the image's width and margins - check them after the live look; the editor misled on full-width spacing.",
         "speak": "if-wrong",
-        "check": "does the image's width and margin on the live page actually match what the editor previewed",
+        "check": "Does the image's width and margin on the live page actually match what the editor previewed?",
         "say_example": "The editor showed this at full width, but the live page renders it narrower with different spacing."
        },
        {
@@ -2806,7 +2806,7 @@
         "kind": "decision",
         "verify_form": "The agent aligned the button in its column - check Top, Middle or Bottom; Middle lines it up with the image.",
         "speak": "never",
-        "check": "was the button aligned to the top, middle or bottom of its column",
+        "check": "Was the button aligned to the top, middle or bottom of its column?",
         "say_example": "Aligned the button to <the middle> of its column"
        },
        {
@@ -2819,7 +2819,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the text box - check where it snapped on the grid; the grid only allows some positions.",
         "speak": "never",
-        "check": "where on the grid did the text box get placed",
+        "check": "Where on the grid did the text box get placed?",
         "say_example": "Placed the text box <in the top left cell>"
        },
        {
@@ -2831,7 +2831,7 @@
         "whatTheAgentLoses": "The user loses the chance to rewrite their copy to fit the design or manually adjust the container size, resulting in a broken and unprofessional layout.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the pasted text still overflow its container, overlapping nearby images or buttons",
+        "check": "Does the pasted text still overflow its container, overlapping nearby images or buttons?",
         "say_example": "This pasted text is overflowing its box and overlapping <an image or button> next to it."
        }
       ]
@@ -2849,7 +2849,7 @@
         "whatTheAgentLoses": "Delegating this means you lose control over the specific messaging and the detailed visual styling of the page's content.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what content and block settings were set on the new page",
+        "check": "What content and block settings were set on the new page?",
         "say_example": "Added content and set the block's color and spacing"
        },
        {
@@ -2861,7 +2861,7 @@
         "whatTheAgentLoses": "You lose control over the specific product details, pricing strategy, and marketing copy presented to your store's visitors.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the product listing show an actual price and description, rather than being left blank",
+        "check": "Does the product listing show an actual price and description, rather than being left blank?",
         "say_example": "This product's price or description is still blank."
        },
        {
@@ -2873,7 +2873,7 @@
         "whatTheAgentLoses": "Delegating this means losing control over exactly which visual asset is chosen to represent your product to visitors.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "which image was set for this product",
+        "check": "Which image was set for this product?",
         "say_example": "Set <mug-front.jpg> as the product photo"
        },
        {
@@ -2885,7 +2885,7 @@
         "whatTheAgentLoses": "You lose the opportunity to do a final manual review of the product details, pricing, and images before they are exposed to the public.",
         "kind": "intent-check",
         "speak": "gate",
-        "check": "is the product's name, price and description all filled in, given that clicking Publish makes it immediately visible to customers",
+        "check": "Is the product's name, price and description all filled in, given that clicking Publish makes it immediately visible to customers?",
         "say_example": "This product goes live to customers the moment it's published. It's <Blue mug>, <$14>, with a description. Publish it now, or hold off?"
        },
        {
@@ -2897,7 +2897,7 @@
         "whatTheAgentLoses": "You lose creative control over the specific phrasing, text formatting, and visual assets used to tell your story.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "were the post's title, body text and featured image all set before going live",
+        "check": "Were the post's title, body text and featured image all set before going live?",
         "say_example": "Set the post's title, body and featured image"
        },
        {
@@ -2910,7 +2910,7 @@
         "kind": "decision",
         "verify_form": "The agent left the full post on the feed or added a More block - check the home feed for Continue Reading; full text clutters it.",
         "speak": "if-wrong",
-        "check": "does the homepage feed still show this post's entire text rather than a short preview, and does the Continue Reading link open the full post",
+        "check": "Does the homepage feed still show this post's entire text rather than a short preview, and does the Continue Reading link open the full post?",
         "say_example": "The homepage feed is showing this whole post instead of a short preview. Added a Continue Reading cut."
        }
       ]
@@ -2932,7 +2932,7 @@
       "kind": "decision",
       "verify_form": "The agent changed the global colors and fonts or left the template's - check Site Settings; a change here shows on every page.",
       "speak": "on-event",
-      "check": "was a global color or font change made here rather than keeping the template's defaults",
+      "check": "Was a global color or font change made here rather than keeping the template's defaults?",
       "say_example": "Changed the site's global colors and fonts here. That shows up on every page, not just this one."
      },
      {
@@ -2944,7 +2944,7 @@
       "whatTheAgentLoses": "You lose the ability to browse the available theme settings and prioritize which global design elements to tweak for your specific needs.",
       "kind": "state-check",
       "speak": "never",
-      "check": "which part was being edited at this step: the header, the footer or the whole site",
+      "check": "Which part was being edited at this step: the header, the footer or the whole site?",
       "say_example": "Editing <the header> at this step"
      },
      {
@@ -2956,7 +2956,7 @@
       "whatTheAgentLoses": "You lose direct creative control over the site's aesthetic details, such as the specific font pairings and button styles that define your brand identity.",
       "kind": "state-check",
       "speak": "never",
-      "check": "is the Theme tab (not Content or another tab) the one currently open with color, font and button options visible",
+      "check": "Is the Theme tab (not Content or another tab) the one currently open with color, font and button options visible?",
       "say_example": "Switched to the Theme tab to reach the color and font settings"
      }
     ],
@@ -2974,7 +2974,7 @@
         "whatTheAgentLoses": "Delegating this step means surrendering control over the specific visual branding and identity of your website.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "which file was chosen or uploaded for the site logo, and was it cropped",
+        "check": "Which file was chosen or uploaded for the site logo, and was it cropped?",
         "say_example": "Selected <logo.png> as the site logo"
        },
        {
@@ -2987,7 +2987,7 @@
         "kind": "decision",
         "verify_form": "The agent set the logo width and the retina box - check the width value and the checkbox; 100 was chosen by eye against the preview.",
         "speak": "never",
-        "check": "what width was set for the logo, and was the retina option turned on",
+        "check": "What width was set for the logo, and was the retina option turned on?",
         "say_example": "Set the logo width to <180px> and left retina unchecked"
        },
        {
@@ -3000,7 +3000,7 @@
         "kind": "decision",
         "verify_form": "The agent replaced the header logo or left the placeholder - check the header; the placeholder is a generic circle.",
         "speak": "if-wrong",
-        "check": "does the header still show the generic placeholder instead of an uploaded logo, or is the Site Identity logo field still blank",
+        "check": "Does the header still show the generic placeholder instead of an uploaded logo, or is the Site Identity logo field still blank?",
         "say_example": "The header still shows the generic placeholder, not a real logo."
        }
       ]
@@ -3019,7 +3019,7 @@
         "kind": "decision",
         "verify_form": "The agent turned header elements on or off - check for a Login link, cart or social icons in the header; a Login link invites visitors to accounts you do not run.",
         "speak": "if-wrong",
-        "check": "does the header show a Login link or cart icon for a feature, like accounts or a store, the site doesn't actually have",
+        "check": "Does the header show a Login link or cart icon for a feature, like accounts or a store, the site doesn't actually have?",
         "say_example": "The header has a <Login> link, but this site doesn't have accounts for visitors to log into."
        },
        {
@@ -3032,7 +3032,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a header layout - check where the logo, nav and icons sit; it tried alternatives and may have kept one you did not want.",
         "speak": "if-wrong",
-        "check": "is the header layout different from the one it had before other layouts were tried",
+        "check": "Is the header layout different from the one it had before other layouts were tried?",
         "say_example": "The header is still on <a layout that was only being tried>, not the one it had before."
        },
        {
@@ -3044,7 +3044,7 @@
         "whatTheAgentLoses": "You lose the ability to logically name your sections and precisely control how the site's navigation behaves as users scroll.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the header still hidden on any part of the page because of a 'Hide header' setting on a section break",
+        "check": "Is the header still hidden on any part of the page because of a 'Hide header' setting on a section break?",
         "say_example": "The header is hidden on this section because of a setting left over from grouping it."
        },
        {
@@ -3057,7 +3057,7 @@
         "kind": "decision",
         "verify_form": "The agent set the icon element as a menu - check type, URL and size; the alignment was left for later.",
         "speak": "never",
-        "check": "were the icon's type, URL and size all set so it works as a menu button",
+        "check": "Were the icon's type, URL and size all set so it works as a menu button?",
         "say_example": "Set this icon up as the menu button"
        },
        {
@@ -3070,7 +3070,7 @@
         "kind": "decision",
         "verify_form": "The agent aligned the menu icon - check that it sits right; the caption asked for right.",
         "speak": "if-wrong",
-        "check": "is the hamburger menu icon aligned right, as called for, rather than left or center",
+        "check": "Is the hamburger menu icon aligned right, as called for, rather than left or center?",
         "say_example": "The menu icon is aligned <left>, not right where it was supposed to go."
        },
        {
@@ -3083,7 +3083,7 @@
         "kind": "decision",
         "verify_form": "The agent set the menu position and padding - check where the menu sits and the padding value; right and 37 px here.",
         "speak": "never",
-        "check": "where was the menu positioned in the header, and what padding was set",
+        "check": "Where was the menu positioned in the header, and what padding was set?",
         "say_example": "Positioned the menu <right> with <20px> padding"
        }
       ]
@@ -3102,7 +3102,7 @@
         "kind": "decision",
         "verify_form": "The agent set the footer's columns and content - check the footer on a page; it shows at the bottom of every page.",
         "speak": "never",
-        "check": "what columns, blocks and content were set in the footer builder, and which part of the footer was edited",
+        "check": "What columns, blocks and content were set in the footer builder, and which part of the footer was edited?",
         "say_example": "Set the footer's columns and content"
        },
        {
@@ -3115,7 +3115,7 @@
         "kind": "decision",
         "verify_form": "The agent formatted and linked the footer text - check alignment, style and where the link points; the About page was the target here.",
         "speak": "never",
-        "check": "was the new footer text formatted and linked",
+        "check": "Was the new footer text formatted and linked?",
         "say_example": "Formatted the footer text and linked it to <the About page>"
        },
        {
@@ -3128,7 +3128,7 @@
         "kind": "decision",
         "verify_form": "The agent moved and enlarged the footer heading - check its position and size; 18 was the choice.",
         "speak": "never",
-        "check": "was the footer heading resized and repositioned",
+        "check": "Was the footer heading resized and repositioned?",
         "say_example": "Enlarged the footer heading to <24px>"
        },
        {
@@ -3141,7 +3141,7 @@
         "kind": "decision",
         "verify_form": "The agent added a footer to all pages - check which template and that it shows on every page.",
         "speak": "on-event",
-        "check": "which footer template was applied, given that it changes the footer on every page, existing and new",
+        "check": "Which footer template was applied, given that it changes the footer on every page, existing and new?",
         "say_example": "This footer template applies to every page on the site, not just this one."
        },
        {
@@ -3154,7 +3154,7 @@
         "kind": "decision",
         "verify_form": "The agent hid the footer on this page or left it - check the page's bottom; hidden here, shown elsewhere.",
         "speak": "never",
-        "check": "was the new footer hidden on this specific page or left showing",
+        "check": "Was the new footer hidden on this specific page or left showing?",
         "say_example": "Hid the new footer on this page"
        },
        {
@@ -3167,7 +3167,7 @@
         "kind": "decision",
         "verify_form": "The agent removed the footer's second section or kept it - check the footer bar; None dropped the menu there.",
         "speak": "never",
-        "check": "was the footer's secondary section removed or kept",
+        "check": "Was the footer's secondary section removed or kept?",
         "say_example": "Removed the footer's second section"
        },
        {
@@ -3179,7 +3179,7 @@
         "whatTheAgentLoses": "Delegating this means you miss the chance to personally review and adjust how your brand's logo and footer layout appear across the entire site.",
         "kind": "state-check",
         "speak": "never",
-        "check": "is the footer actually set from the Customizer",
+        "check": "Is the footer actually set from the Customizer?",
         "say_example": "Set the footer from the Customizer"
        },
        {
@@ -3192,7 +3192,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a footer credit wording - check the footer; it cannot be hidden on the free plan.",
         "speak": "on-event",
-        "check": "what footer-credit phrase was chosen, given that the free plan's platform attribution can't be removed at all",
+        "check": "What footer-credit phrase was chosen, given that the free plan's platform attribution can't be removed at all?",
         "say_example": "The footer will always show a 'Powered by <platform>' credit on the free plan. Only the wording is a choice, not whether it shows."
        }
       ]
@@ -3211,7 +3211,7 @@
         "kind": "decision",
         "verify_form": "The agent set the palette - check that the text color is not a light gray; low contrast is unreadable.",
         "speak": "if-wrong",
-        "check": "is the site's main text color a light gray or otherwise low-contrast against its background",
+        "check": "Is the site's main text color a light gray or otherwise low-contrast against its background?",
         "say_example": "The main text color here is light and low-contrast against the background. Hard to read."
        },
        {
@@ -3224,7 +3224,7 @@
         "kind": "decision",
         "verify_form": "The agent set the background and header colors - check that the logo still shows against them; a black logo vanishes on dark.",
         "speak": "if-wrong",
-        "check": "does the chosen background color make the logo blend in or become hard to see",
+        "check": "Does the chosen background color make the logo blend in or become hard to see?",
         "say_example": "This background makes the logo hard to see, like <a dark logo on a dark background>."
        },
        {
@@ -3237,7 +3237,7 @@
         "kind": "decision",
         "verify_form": "The agent set the accent color and the light-dark slider - check the hex and where the slider sits; the matching swatch was passed over for a custom purple.",
         "speak": "never",
-        "check": "which accent color and light or dark balance were chosen",
+        "check": "Which accent color and light or dark balance were chosen?",
         "say_example": "Set <a teal> accent with <a light> balance, instead of the suggested swatch"
        },
        {
@@ -3250,7 +3250,7 @@
         "kind": "decision",
         "verify_form": "The agent set the background color and pattern - check the hex, pattern, size and thickness; the caption gave exact values.",
         "speak": "never",
-        "check": "does the background color and pattern match the given hex, size and spacing, or the color taken from the uploaded image",
+        "check": "Does the background color and pattern match the given hex, size and spacing, or the color taken from the uploaded image?",
         "say_example": "Set the background to <#F4EFE6> with the given pattern spacing"
        },
        {
@@ -3262,7 +3262,7 @@
         "whatTheAgentLoses": "You lose the ability to manually inspect global design configurations and control exactly how you transition from editing to viewing the live page.",
         "kind": "state-check",
         "speak": "never",
-        "check": "are the site's global settings open, with a way back to the live page",
+        "check": "Are the site's global settings open, with a way back to the live page?",
         "say_example": "Opened the site's global settings"
        }
       ]
@@ -3281,7 +3281,7 @@
         "kind": "decision",
         "verify_form": "The agent set the site's fonts - check headings and paragraphs in Site Styles; one family everywhere was the choice here.",
         "speak": "never",
-        "check": "which fonts were set for headings, body and secondary text, or were the theme's defaults kept",
+        "check": "Which fonts were set for headings, body and secondary text, or were the theme's defaults kept?",
         "say_example": "Set <Lato> for headings and <Open Sans> for body text"
        }
       ]
@@ -3300,7 +3300,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a primary button style - check whether it is rounded, square, shadowed or outlined; the secondary was left alone.",
         "speak": "never",
-        "check": "which visual style, like rounded or square, was applied to the primary button",
+        "check": "Which visual style, like rounded or square, was applied to the primary button?",
         "say_example": "Set the primary button style to <rounded>"
        },
        {
@@ -3313,7 +3313,7 @@
         "kind": "decision",
         "verify_form": "The agent set the page animations - check On Load, On Section Change and hover; Blur In was the caption's.",
         "speak": "never",
-        "check": "which animations were set for page load, section changes and hover",
+        "check": "Which animations were set for page load, section changes and hover?",
         "say_example": "Set page load, section-change and hover animations to <Blur In>"
        }
       ]
@@ -3338,7 +3338,7 @@
         "whatTheAgentLoses": "You lose the opportunity to choose the exact personal or brand name that will represent your website.",
         "kind": "intent-check",
         "speak": "gate",
-        "check": "has an actual site name been entered, given the ask didn't specify one and it appears across the site and in search results",
+        "check": "Has an actual site name been entered, given the ask didn't specify one and it appears across the site and in search results?",
         "say_example": "The site doesn't have a name yet, and this text shows up everywhere, including search results. What should it be called?"
        },
        {
@@ -3350,7 +3350,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally ensure your website's core identity and contact details are accurate.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what business category and basic details were entered in this settings step",
+        "check": "What business category and basic details were entered in this settings step?",
         "say_example": "Filled in the site's basic details here"
        }
       ]
@@ -3368,7 +3368,7 @@
         "whatTheAgentLoses": "You lose the ability to ensure the chosen image frames perfectly as a tiny browser favicon during the mandatory cropping step.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "which file was set as the site icon, whether picked from the media library or uploaded, and how was it cropped",
+        "check": "Which file was set as the site icon, whether picked from the media library or uploaded, and how was it cropped?",
         "say_example": "Uploaded <icon.png> as the site icon"
        },
        {
@@ -3380,7 +3380,7 @@
         "whatTheAgentLoses": "The human visual judgment to realize that a complex image fails at a microscopic size and needs to be swapped for a simpler icon.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the uploaded site icon turn into an illegible smudge at actual browser-tab size, even though it looked fine in the upload preview",
+        "check": "Does the uploaded site icon turn into an illegible smudge at actual browser-tab size, even though it looked fine in the upload preview?",
         "say_example": "This icon looks fine at full size, but shrinks to a smudge in the browser tab. Worth a simpler mark instead."
        }
       ]
@@ -3399,7 +3399,7 @@
         "kind": "decision",
         "verify_form": "The agent left the indexing box unchecked or checked it - check Reading Settings; checked hides the site from search.",
         "speak": "if-wrong",
-        "check": "is the 'discourage search engines' box checked, which would keep the whole site out of search results",
+        "check": "Is the 'discourage search engines' box checked, which would keep the whole site out of search results?",
         "say_example": "The box to keep the site out of search results is checked. It'll be invisible to search even though it's published."
        },
        {
@@ -3412,7 +3412,7 @@
         "kind": "decision",
         "verify_form": "The agent set the permalink structure - check that Post name is selected; Plain gives numeric URLs.",
         "speak": "never",
-        "check": "which permalink structure, like Post name or Plain, was selected",
+        "check": "Which permalink structure, like Post name or Plain, was selected?",
         "say_example": "Set the permalink structure to <Post name>"
        }
       ]
@@ -3430,7 +3430,7 @@
         "whatTheAgentLoses": "You lose the opportunity to specify exactly which communication channels, like a business phone number or physical storefront, are presented to your visitors.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what contact information, like email, phone or address, was entered",
+        "check": "What contact information, like email, phone or address, was entered?",
         "say_example": "Filled in <an email and a phone number> for the site"
        },
        {
@@ -3442,7 +3442,7 @@
         "whatTheAgentLoses": "The agent might leave the placeholder text or invent a fake location, providing incorrect contact details to your site visitors.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the footer still show the template's placeholder address rather than the site's real one",
+        "check": "Does the footer still show the template's placeholder address rather than the site's real one?",
         "say_example": "The footer still shows a placeholder address like <a fictional street and city>, not your real one."
        }
       ]
@@ -3461,7 +3461,7 @@
         "kind": "decision",
         "verify_form": "The agent checked or skipped the template's features - check the list; eCommerce or donations add plugins to the site.",
         "speak": "on-event",
-        "check": "does selecting this feature, like eCommerce or donations, show a required plan upgrade or price before it can be turned on",
+        "check": "Does selecting this feature, like eCommerce or donations, show a required plan upgrade or price before it can be turned on?",
         "say_example": "Turning on <eCommerce> here asks for a plan upgrade first. It's not included on the current plan."
        },
        {
@@ -3474,7 +3474,7 @@
         "kind": "decision",
         "verify_form": "The agent unchecked or kept the store's free features - check which are installed; each one is a plugin that stays.",
         "speak": "never",
-        "check": "which of the free optional features, like the AI assistant or Pinterest, were kept or skipped",
+        "check": "Which of the free optional features, like the AI assistant or Pinterest, were kept or skipped?",
         "say_example": "Skipped the optional free add-ons here"
        },
        {
@@ -3487,7 +3487,7 @@
         "kind": "decision",
         "verify_form": "The agent turned theme elements off or on - check for a search bar and author bio; both were unchecked here.",
         "speak": "never",
-        "check": "were the search bar and author bio theme options turned on or off",
+        "check": "Were the search bar and author bio theme options turned on or off?",
         "say_example": "Left the search bar and author bio off"
        },
        {
@@ -3500,7 +3500,7 @@
         "kind": "decision",
         "verify_form": "The agent turned chat off or left it - check for the bubble on the preview; on means visitors can message you.",
         "speak": "never",
-        "check": "was the built-in chat bubble left enabled or turned off",
+        "check": "Was the built-in chat bubble left enabled or turned off?",
         "say_example": "Left the chat bubble on"
        }
       ]
@@ -3519,7 +3519,7 @@
         "kind": "decision",
         "verify_form": "The agent deleted or kept the host's pre-installed plugins - check the plugins list; the deleted ones were the host's onboarding and AI tools.",
         "speak": "never",
-        "check": "which of the host's pre-installed plugins were deleted or kept",
+        "check": "Which of the host's pre-installed plugins were deleted or kept?",
         "say_example": "Deleted <the host's onboarding and AI plugins>"
        },
        {
@@ -3532,7 +3532,7 @@
         "kind": "decision",
         "verify_form": "The agent left the user form with or without saving - check the Users list; a user it saved has a role and a login.",
         "speak": "if-wrong",
-        "check": "does the Users list show a new account left over from leaving partway through creating it, with its own role and login",
+        "check": "Does the Users list show a new account left over from leaving partway through creating it, with its own role and login?",
         "say_example": "There's an unfinished user account in the Users list from earlier. It has its own login."
        },
        {
@@ -3545,7 +3545,7 @@
         "kind": "decision",
         "verify_form": "The agent approved, trashed or left the sample comment - check the Comments screen; the sample stays on the live post if left.",
         "speak": "if-wrong",
-        "check": "does the default sample comment still appear on the live post rather than being approved or removed on purpose",
+        "check": "Does the default sample comment still appear on the live post rather than being approved or removed on purpose?",
         "say_example": "The sample comment is still sitting on this post, live for visitors to see."
        },
        {
@@ -3558,7 +3558,7 @@
         "kind": "decision",
         "verify_form": "The agent installed plugins or none - check the plugins list; each one adds load.",
         "speak": "never",
-        "check": "were any plugins installed, like Akismet, Jetpack or Site Kit",
+        "check": "Were any plugins installed, like Akismet, Jetpack or Site Kit?",
         "say_example": "Installed <Akismet and Site Kit>"
        },
        {
@@ -3571,7 +3571,7 @@
         "kind": "decision",
         "verify_form": "The agent picked an SEO plugin or none - check the plugins list; install counts were the argument.",
         "speak": "never",
-        "check": "which SEO plugin was installed, based on install counts",
+        "check": "Which SEO plugin was installed, based on install counts?",
         "say_example": "Installed <the SEO plugin with more installs>"
        },
        {
@@ -3584,7 +3584,7 @@
         "kind": "decision",
         "verify_form": "The agent installed WooCommerce now or later - check the plugins list; a store plugin adds load.",
         "speak": "never",
-        "check": "was WooCommerce installed now or held off for site speed",
+        "check": "Was WooCommerce installed now or held off for site speed?",
         "say_example": "Held off on WooCommerce for now"
        },
        {
@@ -3597,7 +3597,7 @@
         "kind": "decision",
         "verify_form": "The agent assigned a role to the new user - check the Role; Administrator can do everything.",
         "speak": "if-wrong",
-        "check": "is the new team member being given Administrator rather than a more limited role that fits what they actually need",
+        "check": "Is the new team member being given Administrator rather than a more limited role that fits what they actually need?",
         "say_example": "This new person is set to Administrator, which can do anything on the site. A narrower role might fit better."
        },
        {
@@ -3610,7 +3610,7 @@
         "kind": "decision",
         "verify_form": "The agent added users or left the form - check the Users list.",
         "speak": "never",
-        "check": "were any other users added at this point",
+        "check": "Were any other users added at this point?",
         "say_example": "No other users added right now"
        }
       ]
@@ -3628,7 +3628,7 @@
         "whatTheAgentLoses": "The user loses the ability to restore their work if the agent makes a destructive edit, saves it, and doesn't know how to access the revision history.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the editor's history panel list recent changes that can be reverted",
+        "check": "Does the editor's history panel list recent changes that can be reverted?",
         "say_example": "History panel can undo the last <12> changes"
        },
        {
@@ -3641,7 +3641,7 @@
         "kind": "decision",
         "verify_form": "The agent restored, backed up or did nothing in Site History - check the list; a restore rolls back edits.",
         "speak": "gate",
-        "check": "is a restore about to roll the site back to an older backup, discarding any edits made since then",
+        "check": "Is a restore about to roll the site back to an older backup, discarding any edits made since then?",
         "say_example": "Restoring here would roll the site back to <an earlier point> and drop everything done since. Go ahead, or just make a backup instead?"
        }
       ]
@@ -3659,7 +3659,7 @@
         "whatTheAgentLoses": "You lose the ability to ensure the site's initial theme recommendations and regional settings accurately reflect your specific business.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what store name, industry and location were entered",
+        "check": "What store name, industry and location were entered?",
         "say_example": "Entered <Acme Pottery>, <handmade goods> and <Sacramento>"
        },
        {
@@ -3672,7 +3672,7 @@
         "kind": "decision",
         "verify_form": "The agent installed a store plugin - check the author and install count on its card; the official one is by Automattic.",
         "speak": "if-wrong",
-        "check": "is the plugin being installed actually WooCommerce by Automattic, the official one, rather than a similarly named lookalike",
+        "check": "Is the plugin being installed actually WooCommerce by Automattic, the official one, rather than a similarly named lookalike?",
         "say_example": "This isn't the official WooCommerce by Automattic. It's a lookalike with a similar name."
        },
        {
@@ -3684,7 +3684,7 @@
         "whatTheAgentLoses": "You lose the chance to personally verify that the store's physical location and financial settings accurately reflect your real-world business.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "were the store's address and currency settings kept as-is or changed",
+        "check": "Were the store's address and currency settings kept as-is or changed?",
         "say_example": "Kept the store's address and currency settings"
        },
        {
@@ -3697,7 +3697,7 @@
         "kind": "decision",
         "verify_form": "The agent configured shipping and payments or only read the tabs - check each tab; without payments the store cannot sell.",
         "speak": "if-wrong",
-        "check": "were shipping and payment methods actually configured, given that without them the store can't sell anything",
+        "check": "Were shipping and payment methods actually configured, given that without them the store can't sell anything?",
         "say_example": "Shipping and payments aren't set up yet, so this store can't take an order, even though it looks finished."
        }
       ]
@@ -3722,7 +3722,7 @@
         "whatTheAgentLoses": "You lose the visual confirmation required to catch a silent save failure before you navigate away and permanently lose your work.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the page still show unsaved changes, like an active Update or Publish button, rather than saying it's saved",
+        "check": "Does the page still show unsaved changes, like an active Update or Publish button, rather than saying it's saved?",
         "say_example": "This page still shows unsaved changes. The last edits might not have gone through."
        }
       ]
@@ -3741,7 +3741,7 @@
         "kind": "decision",
         "verify_form": "The agent published to look at the page full-screen or judged it in the editor - check whether a live look happened; the editor's spacing misleads.",
         "speak": "on-event",
-        "check": "does the builder offer a full-size preview before publishing, or only after the site is live",
+        "check": "Does the builder offer a full-size preview before publishing, or only after the site is live?",
         "say_example": "This builder only shows the full-size layout after publishing. Publishing makes the site public, so that's your call."
        }
       ]
@@ -3759,7 +3759,7 @@
         "whatTheAgentLoses": "You lose the ability to visually verify and fine-tune how your specific content scales and stacks on mobile devices.",
         "kind": "state-check",
         "speak": "never",
-        "check": "was the layout reviewed in the tablet and mobile preview before moving on",
+        "check": "Was the layout reviewed in the tablet and mobile preview before moving on?",
         "say_example": "Checked the layout in the mobile and tablet preview"
        },
        {
@@ -3771,7 +3771,7 @@
         "whatTheAgentLoses": "You lose the opportunity to visually verify and fine-tune the mobile viewing experience to match your personal aesthetic standards.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the layout stay intact at mobile and tablet widths, with nothing overlapping, cut off or stacking awkwardly",
+        "check": "Does the layout stay intact at mobile and tablet widths, with nothing overlapping, cut off or stacking awkwardly?",
         "say_example": "Something overlaps or gets cut off at <mobile width> here."
        }
       ]
@@ -3812,7 +3812,7 @@
         "kind": "decision",
         "verify_form": "The agent clicked Go live - check the confirmation and the address on it; the site is public from that click.",
         "speak": "gate",
-        "check": "is there a control, like a 'Go live' or 'Publish' button, that will make the site publicly visible and has not yet been clicked, and does the panel show the final address and site title",
+        "check": "Is there a control, like a 'Go live' or 'Publish' button, that will make the site publicly visible and has not yet been clicked, and does the panel show the final address and site title?",
         "say_example": "This makes the site public the moment it's clicked, at <the address shown>, titled <Site Title>. Ready to go live, or hold off?"
        }
       ]
@@ -3830,7 +3830,7 @@
         "whatTheAgentLoses": "You lose the opportunity to catch unwanted modifications to your free domain name and to personally verify that the live website looks correct.",
         "kind": "state-check",
         "speak": "always",
-        "check": "what is the exact live URL shown in the publish confirmation",
+        "check": "What is the exact live URL shown in the publish confirmation?",
         "say_example": "Your site's live address is <yourname.com>."
        }
       ]
@@ -3848,7 +3848,7 @@
         "whatTheAgentLoses": "The user misses the opportunity to personally verify the live website and confirm the final URL.",
         "kind": "state-check",
         "speak": "never",
-        "check": "was the live site opened from the confirmation page",
+        "check": "Was the live site opened from the confirmation page?",
         "say_example": "Opened the live site from the confirmation page"
        },
        {
@@ -3860,7 +3860,7 @@
         "whatTheAgentLoses": "The user loses the ability to confirm their final edits were successfully pushed to the public server, potentially leaving mistakes live.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the live site, viewed fresh, still show older content instead of the latest edits or the fix just published",
+        "check": "Does the live site, viewed fresh, still show older content instead of the latest edits or the fix just published?",
         "say_example": "The live site still shows an older version, not the latest edits. Might be a cached page."
        }
       ]
@@ -3878,7 +3878,7 @@
         "whatTheAgentLoses": "You lose the opportunity to make subjective, fine-tuned aesthetic judgments like perfectly matching the navigation button colors to the logo's specific shade of pink.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "do the logo and navigation buttons on the live site look the same as they did in the editor",
+        "check": "Do the logo and navigation buttons on the live site look the same as they did in the editor?",
         "say_example": "The logo and menu buttons look the same on the live site as in the editor"
        },
        {
@@ -3890,7 +3890,7 @@
         "whatTheAgentLoses": "An agent might use generic placeholder text or incorrect rates, losing the specific pricing and conditions you require for your commission work.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "do the live page's prices and terms match exactly what was specified, without a typo or leftover placeholder figure",
+        "check": "Do the live page's prices and terms match exactly what was specified, without a typo or leftover placeholder figure?",
         "say_example": "One of the prices on this page doesn't match what you gave me. <The sketch price> looks off."
        },
        {
@@ -3902,7 +3902,7 @@
         "whatTheAgentLoses": "An agent might publish the site without realizing that specific niche offerings, like Discord emotes, were left out of your commission list.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the commissions or services section list every service that was actually offered, or is something missing",
+        "check": "Does the commissions or services section list every service that was actually offered, or is something missing?",
         "say_example": "The services section is missing <a service that was supposed to be listed>."
        },
        {
@@ -3914,7 +3914,7 @@
         "whatTheAgentLoses": "You lose the ability to subjectively evaluate if the final design conveys the right personality and visual impact.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the live, published site, not the editor preview, still render correctly on both desktop and mobile widths",
+        "check": "Does the live, published site, not the editor preview, still render correctly on both desktop and mobile widths?",
         "say_example": "Something on the live site looks off at <mobile width>, even though the editor preview looked fine."
        },
        {
@@ -3926,7 +3926,7 @@
         "whatTheAgentLoses": "You lose the personal assurance that your live website's navigation buttons and section content function flawlessly for actual visitors.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does clicking each anchor link in the menu, like the FAQ or Terms one, scroll to and show its own section on the live site",
+        "check": "Does clicking each anchor link in the menu, like the FAQ or Terms one, scroll to and show its own section on the live site?",
         "say_example": "Clicking the <FAQ> link doesn't scroll to its section. It just sits there."
        },
        {
@@ -3938,7 +3938,7 @@
         "whatTheAgentLoses": "You lose the peace of mind that comes from personally confirming the live store displays the correct product information and pricing to your customers.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the live product page show the correct title, sale price and description, matching what was entered rather than a stale or default value",
+        "check": "Does the live product page show the correct title, sale price and description, matching what was entered rather than a stale or default value?",
         "say_example": "The live product page still shows <a stale title, price or description>, not what was entered."
        },
        {
@@ -3950,7 +3950,7 @@
         "whatTheAgentLoses": "The user's visitors are greeted with an annoying, unconfigured pop-up that ruins the first impression of the site.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does a cookie banner, chat bubble or pop-up cover the main content or the footer links when the live site loads",
+        "check": "Does a cookie banner, chat bubble or pop-up cover the main content or the footer links when the live site loads?",
         "say_example": "A <cookie banner> is covering the page the moment it loads."
        }
       ]
@@ -3968,7 +3968,7 @@
         "whatTheAgentLoses": "Delegating this means you lose the opportunity to visually assess whether the platform's forced advertisements compromise the professional look of your finished website.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "what platform branding, ad banners or 'made with' badges appear at the top or bottom of the live site",
+        "check": "What platform branding, ad banners or 'made with' badges appear at the top or bottom of the live site?",
         "say_example": "The free plan puts <a platform banner> at the top and bottom of every page. That stays unless you upgrade."
        }
       ]
@@ -3987,7 +3987,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted the background or crop after the live look, or left it - check the republished page.",
         "speak": "never",
-        "check": "were any final background or image adjustments made after reviewing the live site",
+        "check": "Were any final background or image adjustments made after reviewing the live site?",
         "say_example": "Adjusted the background and a crop after seeing the live site"
        }
       ]
@@ -4005,7 +4005,7 @@
         "whatTheAgentLoses": "The user publishes a site that looks unfinished and unprofessional because leftover placeholder content was not visually identified and removed.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the published site still contain any Lorem Ipsum text or generic placeholder copy that was never replaced",
+        "check": "Does the published site still contain any Lorem Ipsum text or generic placeholder copy that was never replaced?",
         "say_example": "The live site still has a block of <placeholder or Lorem Ipsum text> that never got replaced."
        }
       ]

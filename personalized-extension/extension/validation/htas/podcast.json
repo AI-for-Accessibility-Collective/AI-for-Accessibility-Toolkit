@@ -23,7 +23,7 @@
         "whatTheAgentLoses": "The person loses the opportunity to verify the software source, select a specific version, or control the installation settings on their computer.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "does the page show Audacity needs to be downloaded and installed, or is it already installed",
+        "check": "Does the page show Audacity needs to be downloaded and installed, or is it already installed?",
         "say_example": "Audacity isn't installed yet. Downloading it before we start."
        },
        {
@@ -36,7 +36,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a software tier - check which one and what it costs. The base tier is 95 dollars and covers editing; the pro tier is 375 and adds noise reduction and voice profiling. If you never needed those, that is 280 dollars of nothing.",
         "speak": "gate",
-        "check": "which pricing tier is selected and what does it cost, per the pricing page (e.g. $95 base vs $375 Pro)",
+        "check": "Which pricing tier is selected and what does it cost, per the pricing page (e.g. $95 base vs $375 Pro)?",
         "say_example": "The Pro tier is <$249>, one time. The base tier is <$79> and already does the editing. Spend the extra <$170>, or stay on base?"
        },
        {
@@ -49,7 +49,7 @@
         "kind": "decision",
         "verify_form": "The agent chose to rent or to buy outright - check which. A year's rental is 120 dollars against 375 to own it, so renting is cheaper for the first three years and more expensive after that.",
         "speak": "always",
-        "check": "does the page show a rental price and a purchase price for the same software",
+        "check": "Does the page show a rental price and a purchase price for the same software?",
         "say_example": "Renting is <$99> a year against <$249> to own it. Cheaper for the first two years, dearer after that."
        },
        {
@@ -62,7 +62,7 @@
         "kind": "decision",
         "verify_form": "The agent opened an editor - check which one. They differ in whether you cut a waveform or a transcript, and that decides how the whole edit goes.",
         "speak": "always",
-        "check": "which editing application is open on screen",
+        "check": "Which editing application is open on screen?",
         "say_example": "You're in <Descript>, so cuts happen by editing the text, not the waveform."
        },
        {
@@ -74,7 +74,7 @@
         "whatTheAgentLoses": "The user loses money if the agent unnecessarily upgrades to a more expensive subscription tier based on a misreading of the pricing page.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the base tier's own feature list on the pricing page include normalization or automatic levels, against the claim that Pro is needed for it",
+        "check": "Does the base tier's own feature list on the pricing page include normalization or automatic levels, against the claim that Pro is needed for it?",
         "say_example": "The base tier's own page already lists automatic levels. Pro isn't needed for that one."
        },
        {
@@ -87,7 +87,7 @@
         "kind": "decision",
         "verify_form": "The agent judged whether the trial is worth buying at 95 dollars - check what it decided. The trial does the same job until it expires.",
         "speak": "gate",
-        "check": "what tier's trial is running and what would buying it cost (e.g. a Hindenburg trial vs a $95 purchase)",
+        "check": "What tier's trial is running and what would buying it cost (e.g. a Hindenburg trial vs a $95 purchase)?",
         "say_example": "You're on the trial. Buying it is <$79>, and the trial already does everything you're using. Buy it, or stay on the trial?"
        }
       ]
@@ -106,7 +106,7 @@
         "kind": "decision",
         "verify_form": "The agent started from an empty project or from a voice template - check which. A voice template arrives with processed vocal tracks already on it, and an empty one arrives with nothing.",
         "speak": "on-event",
-        "check": "does the project-open dialog show Empty Project and a factory template (e.g. Voice) as choices, and which is selected",
+        "check": "Does the project-open dialog show Empty Project and a factory template (e.g. Voice) as choices, and which is selected?",
         "say_example": "Starting from the <Voice> template, not empty. It comes with vocal tracks already processed."
        },
        {
@@ -118,7 +118,7 @@
         "whatTheAgentLoses": "You lose the ability to establish a recognizable file name for your podcast episode and to decide whether the default musical grid settings are appropriate for your workflow.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what name is in the Save As field",
+        "check": "What name is in the Save As field?",
         "say_example": "Named the project <episode_12>"
        },
        {
@@ -130,7 +130,7 @@
         "whatTheAgentLoses": "Delegating this means the agent might open the wrong recent project if the file naming conventions are ambiguous or if multiple projects are active.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "which file is selected from the Open Recent list, among the entries shown",
+        "check": "Which file is selected from the Open Recent list, among the entries shown?",
         "say_example": "Two recent projects look alike: <Ep 12 v1> and <My Song>. Opening <Ep 12 v1>."
        }
       ]
@@ -148,7 +148,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the ability to guarantee the project rate matches your specific audio quality standards.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what sample rate/project rate is selected in the dropdown",
+        "check": "What sample rate/project rate is selected in the dropdown?",
         "say_example": "Set the session to <48kHz>"
        }
       ]
@@ -167,7 +167,7 @@
         "kind": "decision",
         "verify_form": "The agent turned the metronome, the count-in and the bars-and-beats ruler off, or left them on - check the control bar. A click track and a beat ruler are for music, and on speech they make it harder to find a cut by the clock.",
         "speak": "on-event",
-        "check": "are the metronome and count-in toggles on or off in the control bar (not the ruler display, covered separately at idx16)",
+        "check": "Are the metronome and count-in toggles on or off in the control bar (not the ruler display, covered separately at idx16)?",
         "say_example": "Metronome and count-in are on. Turning them off, they're for music, not speech."
        },
        {
@@ -180,7 +180,7 @@
         "kind": "decision",
         "verify_form": "The agent set the ruler to clock time or left it on bars and beats - check the counter. An episode is found at 12 minutes 41 seconds, not at bar 197.",
         "speak": "on-event",
-        "check": "is the timeline ruler/counter set to clock time or to bars and beats",
+        "check": "Is the timeline ruler/counter set to clock time or to bars and beats?",
         "say_example": "Switched the counter to minutes and seconds. An episode is found at <12:41>, not at bar <197>."
        }
       ]
@@ -199,7 +199,7 @@
         "kind": "decision",
         "verify_form": "The agent renamed the tracks or left them as Track 1, Track 2 and Track 3 - check the headers. Names for the host, the guest and the music are what stop the wrong processing landing on the wrong voice.",
         "speak": "on-event",
-        "check": "are the tracks still named Track 1/2/3, or renamed for their parts",
+        "check": "Are the tracks still named Track 1/2/3, or renamed for their parts?",
         "say_example": "Renamed the tracks to <Host>, <Guest>, <Music>. Stops the wrong effect landing on the wrong voice."
        },
        {
@@ -212,7 +212,7 @@
         "kind": "decision",
         "verify_form": "The agent gave the track a colour - check which. This only affects how quickly you find the track.",
         "speak": "never",
-        "check": "what color is assigned to the new track",
+        "check": "What color is assigned to the new track?",
         "say_example": "Set the track color to <blue>"
        }
       ]
@@ -231,7 +231,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or deleted the vocal tracks the template supplied - check the track list. Those tracks carry processing you did not choose, and anything dropped onto one inherits it.",
         "speak": "on-event",
-        "check": "does the template's track list still include its preset vocal tracks (e.g. Narration Vocal, Robot Vocal), or were they removed",
+        "check": "Does the template's track list still include its preset vocal tracks (e.g. Narration Vocal, Robot Vocal), or were they removed?",
         "say_example": "The template came with two processed vocal tracks already on it. Keeping them means their effects apply to whatever lands there."
        },
        {
@@ -243,7 +243,7 @@
         "whatTheAgentLoses": "You lose the opportunity to choose a specialized track format that might better suit your specific recording setup or mixing preferences.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which track type is selected for the interview track",
+        "check": "Which track type is selected for the interview track?",
         "say_example": "Set the interview track to Audio"
        },
        {
@@ -255,7 +255,7 @@
         "whatTheAgentLoses": "You lose the ability to ensure the track is correctly configured for microphone-captured voice rather than virtual MIDI instruments.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the track set to Real Instrument or Software Instrument for a microphone recording",
+        "check": "Is the track set to Real Instrument or Software Instrument for a microphone recording?",
         "say_example": "Heads up, this track is set to Software Instrument. A microphone needs Real Instrument to record at all."
        },
        {
@@ -267,7 +267,7 @@
         "whatTheAgentLoses": "You lose the ability to personally verify that the deleted track contains only unwanted material or empty space before it is permanently removed from the arrangement.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which track was removed from the session",
+        "check": "Which track was removed from the session?",
         "say_example": "Deleted the <Test Take> track"
        },
        {
@@ -279,7 +279,7 @@
         "whatTheAgentLoses": "You lose the ability to verify that a standard audio track is created for your music bed instead of a virtual instrument.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the track type set to Audio for importing an existing music file, or to an instrument type",
+        "check": "Is the track type set to Audio for importing an existing music file, or to an instrument type?",
         "say_example": "Heads up, this track is a Drummer track. Importing a music file needs a plain Audio track."
        },
        {
@@ -291,7 +291,7 @@
         "whatTheAgentLoses": "You lose control over how the project tracks are structured and organized for layering your specific production elements.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "was a new track created for the production element (intro/outro/music bed) rather than reusing the speech track",
+        "check": "Was a new track created for the production element (intro/outro/music bed) rather than reusing the speech track?",
         "say_example": "Made a new track for the music bed, so it won't sit on top of the speech."
        }
       ]
@@ -321,7 +321,7 @@
         "whatTheAgentLoses": "You lose the ability to ensure the audio is routed to your specific physical hardware, such as your preferred headphones or external monitors.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "does the toolbar show the correct input and output interfaces selected",
+        "check": "Does the toolbar show the correct input and output interfaces selected?",
         "say_example": "Input and output are both set to <Scarlett 2i2>."
        },
        {
@@ -334,7 +334,7 @@
         "kind": "decision",
         "verify_form": "The agent changed the monitoring volume - check that it moved the output slider and not the track levels. Only one of those changes the file.",
         "speak": "if-wrong",
-        "check": "did the change move the monitoring/output volume slider, or a track's own level fader",
+        "check": "Did the change move the monitoring/output volume slider, or a track's own level fader?",
         "say_example": "Lowered the headphone volume, not the track level. Only the track level changes what's in the file."
        }
       ]
@@ -356,7 +356,7 @@
         "whatTheAgentLoses": "If the agent chooses the name and location, you might not be able to find your podcast template when you need to record future episodes.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what name and folder location are set in the Save Template dialog",
+        "check": "What name and folder location are set in the Save Template dialog?",
         "say_example": "Saved the template as <podcast_default> in <Templates>"
        },
        {
@@ -368,7 +368,7 @@
         "whatTheAgentLoses": "You lose the reassurance of visually confirming your signature audio processing chain is in place.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the loaded session actually show the expected tracks and effects rack presets",
+        "check": "Does the loaded session actually show the expected tracks and effects rack presets?",
         "say_example": "Heads up, the template loaded without its EQ preset. Setting it manually."
        },
        {
@@ -380,7 +380,7 @@
         "whatTheAgentLoses": "You lose the opportunity to enforce your own naming conventions and select the exact custom template that fits your workflow.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "which template is selected in the New Session dropdown",
+        "check": "Which template is selected in the New Session dropdown?",
         "say_example": "Starting the session from the <interview> template."
        }
       ]
@@ -398,7 +398,7 @@
         "whatTheAgentLoses": "You lose the ability to dictate the specific location and naming convention for your personal file organization system.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what folder was created for the raw audio and recurring assets",
+        "check": "What folder was created for the raw audio and recurring assets?",
         "say_example": "Made a <Raw Audio> folder"
        },
        {
@@ -410,7 +410,7 @@
         "whatTheAgentLoses": "The user loses the ability to define their own local file organization structure for archiving completed projects.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what folder was created for the finished episode",
+        "check": "What folder was created for the finished episode?",
         "say_example": "Made a <Finished Episodes> folder"
        },
        {
@@ -422,7 +422,7 @@
         "whatTheAgentLoses": "You lose the ability to enforce a specific, organized naming convention for your show's permanent production assets.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "is the new assets folder still named 'untitled folder', or renamed",
+        "check": "Is the new assets folder still named 'untitled folder', or renamed?",
         "say_example": "Heads up, that folder is still called untitled folder. Naming it <Show Assets> so it's findable later."
        }
       ]
@@ -447,7 +447,7 @@
         "whatTheAgentLoses": "You lose the ability to specify your preferred studio microphone, risking the use of a lower-quality built-in or webcam microphone.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "which device is selected in the microphone input dropdown",
+        "check": "Which device is selected in the microphone input dropdown?",
         "say_example": "Input set to <ATR USB microphone>."
        }
       ]
@@ -466,7 +466,7 @@
         "kind": "decision",
         "verify_form": "The agent set the recording channels to mono or to stereo - check which. Mono puts one voice equally in both ears; stereo on a single microphone can leave the voice sitting in one side of the listener's headphones.",
         "speak": "if-wrong",
-        "check": "is the recording channel set to mono or stereo",
+        "check": "Is the recording channel set to mono or stereo?",
         "say_example": "Recording in mono. On stereo, a single mic can end up sitting in one ear only."
        },
        {
@@ -478,7 +478,7 @@
         "whatTheAgentLoses": "You lose the ability to specify the exact number of microphone inputs required for your unique hardware setup.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "does the selected channel count match the number of microphones actually plugged in",
+        "check": "Does the selected channel count match the number of microphones actually plugged in?",
         "say_example": "Set to <4> channels for <4> microphones."
        }
       ]
@@ -501,7 +501,7 @@
           "whatTheAgentLoses": "You lose the ability to visually confirm that the correct track headers are flashing red and ready to record without accidentally overwriting other audio.",
           "kind": "state-check",
           "speak": "on-event",
-          "check": "which track record-enable buttons are lit (armed)",
+          "check": "Which track record-enable buttons are lit (armed)?",
           "say_example": "Armed <Host> and <Guest> tracks to record together."
          },
          {
@@ -514,7 +514,7 @@
           "kind": "decision",
           "verify_form": "The agent turned input monitoring on or left it off - check the track header. On, you hear yourself in the headphones while recording; off, you do not, and with speakers rather than headphones on it will feed back.",
           "speak": "if-wrong",
-          "check": "is input monitoring on while the output is routed to speakers rather than headphones",
+          "check": "Is input monitoring on while the output is routed to speakers rather than headphones?",
           "say_example": "Heads up, monitoring is on and you're on speakers, not headphones. That's a feedback risk."
          },
          {
@@ -526,7 +526,7 @@
           "whatTheAgentLoses": "You lose the ability to personally time the punch-in and manage your own audio monitoring preferences for a comfortable vocal delivery.",
           "kind": "state-check",
           "speak": "on-event",
-          "check": "is the existing track muted, the new track armed, and the playhead at the intended start point",
+          "check": "Is the existing track muted, the new track armed, and the playhead at the intended start point?",
           "say_example": "Muted the old track, armed the new one, and set the playhead to <0:21>."
          }
         ]
@@ -545,7 +545,7 @@
           "kind": "decision",
           "verify_form": "The agent set the record level slider somewhere - check where it sits against the meter. Aim for peaks around -12 to -6 dB; a quiet take can be raised afterwards and a clipped one cannot be repaired.",
           "speak": "if-wrong",
-          "check": "where does the input level meter sit relative to the target range (e.g. -12 to -6 dB)",
+          "check": "Where does the input level meter sit relative to the target range (e.g. -12 to -6 dB)?",
           "say_example": "Heads up, the input meter is peaking past -6 dB. Lower it now, a clipped take can't be fixed later."
          },
          {
@@ -557,7 +557,7 @@
           "whatTheAgentLoses": "You lose the ability to visually gauge the waveform peaks and make nuanced, on-the-fly adjustments to the input volume to preserve audio quality.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "do the waveform peaks show flat-topped clipping",
+          "check": "Do the waveform peaks show flat-topped clipping?",
           "say_example": "Heads up, the waveform peaks are flat-topped. That's clipping, and it's baked in now."
          }
         ]
@@ -575,7 +575,7 @@
           "whatTheAgentLoses": "You lose the ability to verify that the correct microphone and channel settings are selected before the recording begins.",
           "kind": "state-check",
           "speak": "never",
-          "check": "do the device and channel settings shown in the toolbar at record time match what was set earlier",
+          "check": "Do the device and channel settings shown in the toolbar at record time match what was set earlier?",
           "say_example": "Recorded with <ATR USB mic> in mono, same as the last take"
          },
          {
@@ -587,7 +587,7 @@
           "whatTheAgentLoses": "You lose the ability to visually confirm that the recording will start exactly at the beginning of the track without introducing unwanted gaps.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "is the playhead at 0:00 before recording starts, or somewhere later on the timeline",
+          "check": "Is the playhead at 0:00 before recording starts, or somewhere later on the timeline?",
           "say_example": "Heads up, the playhead was at <0:10>, not the start. Moved it to <0:00> so there's no silent gap."
          },
          {
@@ -599,7 +599,7 @@
           "whatTheAgentLoses": "Delegating this means you lose the ability to decide exactly when the take is complete and the recording should end.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "where does the recording actually stop relative to the speaker's last word",
+          "check": "Where does the recording actually stop relative to the speaker's last word?",
           "say_example": "Heads up, the stop landed mid-word. Re-recording the last line."
          },
          {
@@ -611,7 +611,7 @@
           "whatTheAgentLoses": "You lose the ability to physically speak into the microphone and visually verify that your own voice is being captured properly.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "is a live waveform drawing on screen while the mic is armed and rolling",
+          "check": "Is a live waveform drawing on screen while the mic is armed and rolling?",
           "say_example": "Heads up, no waveform is drawing. The mic isn't actually being captured."
          }
         ]
@@ -629,7 +629,7 @@
           "whatTheAgentLoses": "You lose the hands-on understanding of how the software's transport controls affect the availability of your editing tools.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "was Stop clicked, or is the transport still in Pause with editing tools grayed out",
+          "check": "Was Stop clicked, or is the transport still in Pause with editing tools grayed out?",
           "say_example": "Heads up, that's Pause, not Stop. The cut tools are grayed out until you stop."
          }
         ]
@@ -647,7 +647,7 @@
           "whatTheAgentLoses": "You lose the initial, unfiltered impression of the raw recording's pacing and audio quality.",
           "kind": "state-check",
           "speak": "never",
-          "check": "was the take played back from the very start",
+          "check": "Was the take played back from the very start?",
           "say_example": "Played the take back from 0:00"
          }
         ]
@@ -666,7 +666,7 @@
           "kind": "decision",
           "verify_form": "The agent kept the original take or replaced it - check which. If the take started mid sentence, editing around it is harder than recording it again, and re-recording means a different room and a different day.",
           "speak": "on-event",
-          "check": "was the original abrupt-start take kept, or muted and re-recorded",
+          "check": "Was the original abrupt-start take kept, or muted and re-recorded?",
           "say_example": "The take starts mid-sentence. Muting it and re-recording the opening instead of editing around it."
          },
          {
@@ -678,7 +678,7 @@
           "whatTheAgentLoses": "An agent might blindly follow the spoken instructions to use the shortcut, missing the manual track management and copy-paste workflow you actually used.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "was the new audio appended to the existing take, or does the screen show a new track with clips pasted onto it by hand",
+          "check": "Was the new audio appended to the existing take, or does the screen show a new track with clips pasted onto it by hand?",
           "say_example": "You asked to append to the take, but the screen shows a new track with a pasted copy. That's a different method."
          },
          {
@@ -690,7 +690,7 @@
           "whatTheAgentLoses": "You lose the peace of mind of manually securing your freshly recorded audio from accidental overwriting.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "is the track disarmed (record-enable off) after the take stopped",
+          "check": "Is the track disarmed (record-enable off) after the take stopped?",
           "say_example": "Heads up, record-enable is still on for <Host>. Turning it off so playback doesn't overwrite the new take."
          }
         ]
@@ -711,7 +711,7 @@
         "kind": "decision",
         "verify_form": "The agent used the recording service's automatic hand-off into the editor, or downloaded the files by hand - check which. The hand-off is quicker; the manual download leaves you holding the raw files.",
         "speak": "on-event",
-        "check": "was the recording service's direct hand-off to the editor used, or were the individual high-quality tracks downloaded by hand",
+        "check": "Was the recording service's direct hand-off to the editor used, or were the individual high-quality tracks downloaded by hand?",
         "say_example": "Downloaded the individual high-quality tracks by hand instead of the direct hand-off."
        },
        {
@@ -724,7 +724,7 @@
         "kind": "decision",
         "verify_form": "The agent downloaded a quality of recording for each speaker - check which. The local high-quality files are the uncompressed ones; the cloud copies are smaller and lossier.",
         "speak": "on-event",
-        "check": "which quality was downloaded for each speaker, the high-quality local files or the smaller cloud copies",
+        "check": "Which quality was downloaded for each speaker, the high-quality local files or the smaller cloud copies?",
         "say_example": "Downloaded the high-quality local files for both speakers, not the cloud copies."
        },
        {
@@ -737,7 +737,7 @@
         "kind": "decision",
         "verify_form": "The agent downloaded the aligned format or the plain one - check which. The aligned version pads each track so they start together, and the plain one leaves you to line them up by hand.",
         "speak": "on-event",
-        "check": "was the aligned video format downloaded (padded so tracks start together), or the plain unaligned one",
+        "check": "Was the aligned video format downloaded (padded so tracks start together), or the plain unaligned one?",
         "say_example": "Downloaded the aligned format, so both speakers' tracks already start together."
        }
       ]
@@ -755,7 +755,7 @@
         "whatTheAgentLoses": "You lose the assurance that the correct raw recording was chosen for the core interview rather than an intro or narration clip.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "which file was selected as the interview segment among the files shown",
+        "check": "Which file was selected as the interview segment among the files shown?",
         "say_example": "Imported <interview_raw.wav> as the interview segment."
        },
        {
@@ -767,7 +767,7 @@
         "whatTheAgentLoses": "You lose the creative control of choosing the specific music track that best fits the mood of your episode.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "which music file was selected for the episode's music bed",
+        "check": "Which music file was selected for the episode's music bed?",
         "say_example": "Imported <bed_track_02.mp3> as the music bed."
        },
        {
@@ -779,7 +779,7 @@
         "whatTheAgentLoses": "An agent might fail to notice the discrepancy between the spoken instructions and the visual state, importing the wrong file as a result.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the open file dialog show the folder that was named, or a different one",
+        "check": "Does the open file dialog show the folder that was named, or a different one?",
         "say_example": "You said the desktop, but the dialog is showing <a music folder>."
        }
       ]
@@ -798,7 +798,7 @@
         "kind": "decision",
         "verify_form": "The agent dropped the second file onto the same track as the first or onto a new one - check the timeline. On the same track it plays after; on a new one it plays at the same time.",
         "speak": "on-event",
-        "check": "was the new file dropped onto its own new track, or appended onto the existing track",
+        "check": "Was the new file dropped onto its own new track, or appended onto the existing track?",
         "say_example": "Dropped the second file onto a new track, so it plays alongside the first, not after it."
        },
        {
@@ -811,7 +811,7 @@
         "kind": "decision",
         "verify_form": "The agent dropped the recording onto a track at a particular time - check both. Onto the wrong track it inherits that track's processing, and at the wrong time it lands over something else.",
         "speak": "on-event",
-        "check": "which track and what timestamp did the imported audio land on",
+        "check": "Which track and what timestamp did the imported audio land on?",
         "say_example": "Dropped it on the <Male Voice> track at <0:30>, right after the jingle."
        }
       ]
@@ -829,7 +829,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to automatically conform the audio or handle the conversion manually, as well as the choice to suppress future warnings.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does a sample-rate mismatch dialog appear, and was conform accepted or declined",
+        "check": "Does a sample-rate mismatch dialog appear, and was conform accepted or declined?",
         "say_example": "The file's sample rate doesn't match the session. Making a conformed copy so playback speed stays correct."
        },
        {
@@ -841,7 +841,7 @@
         "whatTheAgentLoses": "The human ear's immediate recognition that a voice sounds unnatural, preventing the entire edit from being done at the wrong speed.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the imported audio's pitch or speed sound off relative to the session rate, per any mismatch warning shown",
+        "check": "Does the imported audio's pitch or speed sound off relative to the session rate, per any mismatch warning shown?",
         "say_example": "Heads up, this file's rate doesn't match the session. Unconformed, it'll play fast or slow."
        },
        {
@@ -853,7 +853,7 @@
         "whatTheAgentLoses": "You lose the opportunity to decide whether to create a new stereo track or convert the copied audio to mono to resolve the mismatch.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page show an error blocking a stereo clip from being pasted into a mono track",
+        "check": "Does the page show an error blocking a stereo clip from being pasted into a mono track?",
         "say_example": "That clip is stereo and this track is mono. The paste won't fit until one of them changes."
        }
       ]
@@ -871,7 +871,7 @@
         "whatTheAgentLoses": "You lose the peace of mind of manually confirming that every participant's track is fully present and uncorrupted before beginning the edit.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does each imported file show its expected duration (e.g. 52:30) after import completes",
+        "check": "Does each imported file show its expected duration (e.g. 52:30) after import completes?",
         "say_example": "Heads up, this file imported at <48:10>, short of the expected <52:30>. Some of it didn't come in."
        },
        {
@@ -883,7 +883,7 @@
         "whatTheAgentLoses": "The ability to recognize that the workspace is referencing broken file paths and that the media needs to be manually relinked before editing can begin.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do all clips show a waveform, or are any offline with a missing file path",
+        "check": "Do all clips show a waveform, or are any offline with a missing file path?",
         "say_example": "Heads up, <interview_2.wav> shows offline. The file moved or was renamed."
        },
        {
@@ -895,7 +895,7 @@
         "whatTheAgentLoses": "The agent might proceed to edit a completely silent track because the system reported a successful file import, whereas a person would immediately see the lack of a visual waveform.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the imported clip show a fluctuating waveform, or a flat line",
+        "check": "Does the imported clip show a fluctuating waveform, or a flat line?",
         "say_example": "Heads up, this clip's waveform is a flat line. It imported, but it's silent."
        },
        {
@@ -908,7 +908,7 @@
         "kind": "decision",
         "verify_form": "The agent balanced the imported music against the voice - listen to them together. Music that sits right on its own is usually too loud under speech.",
         "speak": "on-event",
-        "check": "does the music track's level sit above the voice track's level in the mix",
+        "check": "Does the music track's level sit above the voice track's level in the mix?",
         "say_example": "The music is sitting louder than the voice. Pulling it down under the speaker."
        }
       ]
@@ -926,7 +926,7 @@
         "whatTheAgentLoses": "You lose the opportunity to decide whether these specific files should be synced into a single sequence or treated as separate sequential clips.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "was Create Sequence used to synchronize the separate tracks, rather than dropping them in sequentially",
+        "check": "Was Create Sequence used to synchronize the separate tracks, rather than dropping them in sequentially?",
         "say_example": "Used Create Sequence so the separate tracks line up, instead of just stacking them in order."
        },
        {
@@ -938,7 +938,7 @@
         "whatTheAgentLoses": "You lose the intuitive visual check of the waveforms that quickly confirms the conversation flows naturally without technical sync issues.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the video and audio waveforms line up when compared on the timeline",
+        "check": "Do the video and audio waveforms line up when compared on the timeline?",
         "say_example": "Heads up, the audio and video tracks are visibly out of sync."
        },
        {
@@ -950,7 +950,7 @@
         "whatTheAgentLoses": "An agent might select an individual file instead of the combined sequence, leaving out other speakers and forcing you to restart the project.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "which entry was inserted, an individual recording, or the combined sequence, from the Files panel",
+        "check": "Which entry was inserted, an individual recording, or the combined sequence, from the Files panel?",
         "say_example": "Inserted the combined sequence, not a single recording, so every speaker is included."
        }
       ]
@@ -969,7 +969,7 @@
         "kind": "decision",
         "verify_form": "The agent split the stereo recording into tracks - check whether you got a left and a right track or two mono ones. Only one of those lets you cut and level each speaker without touching the other.",
         "speak": "if-wrong",
-        "check": "was the capture split into separate left/right or mono tracks per speaker",
+        "check": "Was the capture split into separate left/right or mono tracks per speaker?",
         "say_example": "Split the capture into two mono tracks, one per speaker, so each can be cut and leveled on its own."
        }
       ]
@@ -988,7 +988,7 @@
         "kind": "decision",
         "verify_form": "The agent deleted some of the recorded tracks - check which ones went. The first two off a mixer are usually a stereo mix of everybody, and if the wrong pair went you have lost a speaker rather than a duplicate.",
         "speak": "if-wrong",
-        "check": "which tracks were deleted, the redundant stereo mix, or one of the individual speaker tracks",
+        "check": "Which tracks were deleted, the redundant stereo mix, or one of the individual speaker tracks?",
         "say_example": "Heads up, the pair deleted look like individual speaker tracks, not the stereo mix. Check before this is permanent."
        },
        {
@@ -1001,7 +1001,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or deleted the test recording - check the track list. A stray test take left in the project will be mixed into the export along with everything else.",
         "speak": "on-event",
-        "check": "was the stray test recording kept in the session or removed before importing the real files",
+        "check": "Was the stray test recording kept in the session or removed before importing the real files?",
         "say_example": "Deleted the test recording track before bringing in the real files."
        }
       ]
@@ -1023,7 +1023,7 @@
       "kind": "decision",
       "verify_form": "The agent picked an effect to shape the tone - check which. If the recording's problem was background hum, an equaliser is not the tool.",
       "speak": "on-event",
-      "check": "does the effect chosen (compressor, noise reduction, equalizer) match the problem named for this track",
+      "check": "Does the effect chosen (compressor, noise reduction, equalizer) match the problem named for this track?",
       "say_example": "You said the problem is background hum, and an equalizer was picked. An equalizer won't take hum out. Noise reduction will."
      },
      {
@@ -1035,7 +1035,7 @@
       "whatTheAgentLoses": "The ability to catch transient performance errors and realize the system cannot handle the current processing load in real-time.",
       "kind": "state-check",
       "speak": "if-wrong",
-      "check": "does playback stutter or does the page show a system-overload error after the noise plugins were applied",
+      "check": "Does playback stutter or does the page show a system-overload error after the noise plugins were applied?",
       "say_example": "Heads up, playback is stuttering after those plugins. Freezing the track before continuing."
      }
     ],
@@ -1054,7 +1054,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a quiet stretch as the noise sample - check what is in it. If a breath or a chair creak got into the sample, that filter is applied to the whole episode.",
         "speak": "on-event",
-        "check": "what section of the recording was selected to capture the noise print",
+        "check": "What section of the recording was selected to capture the noise print?",
         "say_example": "Captured the noise print from <0:02 to 0:04>, before anyone starts talking."
        },
        {
@@ -1066,7 +1066,7 @@
         "whatTheAgentLoses": "The user loses the critical auditory check to ensure the noise profile is perfectly clean before applying destructive filtering to the whole episode.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the selected noise-print region contain a breath, click or chair sound rather than steady room tone",
+        "check": "Does the selected noise-print region contain a breath, click or chair sound rather than steady room tone?",
         "say_example": "Heads up, that noise sample has a breath in it. The filter will apply that to the whole episode."
        }
       ]
@@ -1085,7 +1085,7 @@
         "kind": "decision",
         "verify_form": "The agent silenced the noise or filtered it - check which. Silence removes everything including the room, so a silenced gap can sound like the recording dropped out.",
         "speak": "on-event",
-        "check": "was Silence applied to the segment, or a noise-reduction filter",
+        "check": "Was Silence applied to the segment, or a noise-reduction filter?",
         "say_example": "Used Silence on that stretch, not a filter. It mutes the room too, not just the noise."
        },
        {
@@ -1098,7 +1098,7 @@
         "kind": "decision",
         "verify_form": "The agent silenced further stretches on the quiet track - check where. Muting the non-speaking microphone cleans the mix, and it also removes the other person's reactions.",
         "speak": "on-event",
-        "check": "which further stretches on the non-speaking track were silenced",
+        "check": "Which further stretches on the non-speaking track were silenced?",
         "say_example": "Silenced <0:32 to 0:34> on the quiet mic, to stop it bleeding into the mix."
        },
        {
@@ -1111,7 +1111,7 @@
         "kind": "decision",
         "verify_form": "The agent set the noise reduction strength - check the knob. Enough removes the hum; too much takes frequencies out of the voice and leaves it sounding underwater.",
         "speak": "if-wrong",
-        "check": "where is the noise-reduction knob/slider set",
+        "check": "Where is the noise-reduction knob/slider set?",
         "say_example": "Noise reduction is set near max. That's usually past where it starts sounding underwater. Pulling it back."
        },
        {
@@ -1124,7 +1124,7 @@
         "kind": "decision",
         "verify_form": "The agent turned a noise gate on and set a threshold - check both. A gate set too high clips the quiet start of words as well as the room tone.",
         "speak": "if-wrong",
-        "check": "is the Noise Gate enabled, and what threshold is set",
+        "check": "Is the Noise Gate enabled, and what threshold is set?",
         "say_example": "Turned on the noise gate at <-40 dB>. Set much higher, it would clip the start of quiet words."
        }
       ]
@@ -1143,7 +1143,7 @@
         "kind": "decision",
         "verify_form": "The agent set the cleanup intensity - check the number. It defaults to 100, and on a decent microphone that is usually too much and the voice comes out over-processed. Around 80 is the usual landing point.",
         "speak": "if-wrong",
-        "check": "what percentage is the cleanup intensity slider set to",
+        "check": "What percentage is the cleanup intensity slider set to?",
         "say_example": "Cleanup was at 100%. Pulling it to about <80>. On a decent mic, full strength over-processes the voice."
        }
       ]
@@ -1162,7 +1162,7 @@
         "kind": "decision",
         "verify_form": "The agent set an equaliser on the voice - check the curve. Rolling off below about 100 Hz takes out rumble, and a lift around 4 kHz adds clarity, but too much of either makes a voice thin or harsh.",
         "speak": "if-wrong",
-        "check": "what frequency and gain are set on the EQ's low-cut and boost filters",
+        "check": "What frequency and gain are set on the EQ's low-cut and boost filters?",
         "say_example": "Rolled off below <100 Hz> for rumble, lifted <4 kHz> a little for clarity."
        },
        {
@@ -1175,7 +1175,7 @@
         "kind": "decision",
         "verify_form": "The agent turned the low, mid and high dials - check where they sit. These are broad, so a small move changes the whole voice and a large one makes it obvious.",
         "speak": "if-wrong",
-        "check": "where are the low, mid and high EQ dials set",
+        "check": "Where are the low, mid and high EQ dials set?",
         "say_example": "Moved the high dial up a couple of steps. These are broad, a small move changes the whole voice."
        }
       ]
@@ -1194,7 +1194,7 @@
         "kind": "decision",
         "verify_form": "The agent set the compressor's ratio and makeup gain - check both. Makeup gain is what actually lifts the voice above the music, and it lifts the room tone with it.",
         "speak": "if-wrong",
-        "check": "what are the compressor's ratio and makeup gain set to",
+        "check": "What are the compressor's ratio and makeup gain set to?",
         "say_example": "Set ratio to <4:1> with makeup gain to bring the voice above the music. That gain lifts the room tone too."
        },
        {
@@ -1207,7 +1207,7 @@
         "kind": "decision",
         "verify_form": "The agent set the compressor - check the threshold and the release. A fast release on speech pumps; a slow one flattens the delivery.",
         "speak": "if-wrong",
-        "check": "what are the compressor's threshold and release time set to",
+        "check": "What are the compressor's threshold and release time set to?",
         "say_example": "Threshold and release are both fast. A fast release on speech can pump between words."
        },
        {
@@ -1219,7 +1219,7 @@
         "whatTheAgentLoses": "The user loses the intended audio dynamics because the agent fails to actually apply the fast compressor settings it described.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the attack and release sliders still show their default values, against the fast settings that were asked for",
+        "check": "Do the attack and release sliders still show their default values, against the fast settings that were asked for?",
         "say_example": "You asked for a fast attack and release, but the sliders are still at their defaults."
        },
        {
@@ -1232,7 +1232,7 @@
         "kind": "decision",
         "verify_form": "The agent used the built-in compressor or a third-party plugin - check which. The plugin gives more control and it also has to be installed wherever the project is opened next.",
         "speak": "on-event",
-        "check": "was the editor's built-in compressor used, or a third-party plugin",
+        "check": "Was the editor's built-in compressor used, or a third-party plugin?",
         "say_example": "Used the <TDR Kotelnikov> plugin instead of the built-in compressor. That plugin has to be installed wherever this project opens next."
        },
        {
@@ -1245,7 +1245,7 @@
         "kind": "decision",
         "verify_form": "The agent chose between two plugins from the same maker - check which. They do different jobs, and one of them is not a compressor.",
         "speak": "if-wrong",
-        "check": "which plugin was selected from the Tokyo Dawn Labs submenu, and is it actually a compressor",
+        "check": "Which plugin was selected from the Tokyo Dawn Labs submenu, and is it actually a compressor?",
         "say_example": "Picked <TDR Kotelnikov>, the compressor. <TDR Nova> is a different tool."
        },
        {
@@ -1258,7 +1258,7 @@
         "kind": "decision",
         "verify_form": "The agent applied makeup gain after compression - listen to the pauses. Makeup gain lifts the silence between words as much as the words.",
         "speak": "if-wrong",
-        "check": "what does the level meter read during a pause, after makeup gain was applied",
+        "check": "What does the level meter read during a pause, after makeup gain was applied?",
         "say_example": "Heads up, the meter during pauses reads <-30 dB> now, up from <-48>. Makeup gain lifted the room noise too."
        }
       ]
@@ -1277,7 +1277,7 @@
         "kind": "decision",
         "verify_form": "The agent applied a voice treatment to some regions and not others - check which are covered. A filter on half the episode makes the speaker's voice change halfway through.",
         "speak": "on-event",
-        "check": "which regions on the timeline have the filter applied, and which don't",
+        "check": "Which regions on the timeline have the filter applied, and which don't?",
         "say_example": "The filter's only on the first half of the track. The voice will change partway through."
        },
        {
@@ -1290,7 +1290,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a voice preset - check which one is highlighted. A narration preset is flat and close; a radio one is heavily coloured, and on a quiet recording it will bring the room up with the voice.",
         "speak": "on-event",
-        "check": "which voice filter/preset is highlighted as selected",
+        "check": "Which voice filter/preset is highlighted as selected?",
         "say_example": "Selected the <Narration> preset, not <Radio>. Radio would color a quiet recording more than it needs."
        },
        {
@@ -1303,7 +1303,7 @@
         "kind": "decision",
         "verify_form": "The agent applied a generic voice profile or trained one on this speaker - check which. A trained profile fits that voice; the generic one is a broadcast-sounding lift applied to anybody.",
         "speak": "on-event",
-        "check": "was a generic voice profile applied, or a custom one trained on this speaker",
+        "check": "Was a generic voice profile applied, or a custom one trained on this speaker?",
         "say_example": "Trained a custom profile on this speaker instead of using the generic one."
        }
       ]
@@ -1321,7 +1321,7 @@
         "whatTheAgentLoses": "You lose the ability to customize the loudness standards to match the specific requirements of your podcast host or network.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "what loudness target and tolerance are set (e.g. -23 LUFS, 0.5 LU)",
+        "check": "What loudness target and tolerance are set (e.g. -23 LUFS, 0.5 LU)?",
         "say_example": "Set the loudness target to <-23 LUFS>, so both clips match."
        },
        {
@@ -1334,7 +1334,7 @@
         "kind": "decision",
         "verify_form": "The agent normalised the audio to a peak - check the target. Minus one dB is the usual ceiling, and normalising to zero leaves no headroom for the mix.",
         "speak": "if-wrong",
-        "check": "what peak amplitude is the normalize target set to, and is Remove DC Offset checked",
+        "check": "What peak amplitude is the normalize target set to, and is Remove DC Offset checked?",
         "say_example": "Normalized to <-1.0 dB>, not 0. Zero would leave no headroom for the mix."
        },
        {
@@ -1347,7 +1347,7 @@
         "kind": "decision",
         "verify_form": "The agent let the editor level the new recording automatically - check the result. It matches the loudness of what is already there, which is right only if what is already there is right.",
         "speak": "if-wrong",
-        "check": "did auto-normalize change the new recording's level to match the existing track's loudness",
+        "check": "Did auto-normalize change the new recording's level to match the existing track's loudness?",
         "say_example": "Auto-leveling dropped the new take by <4.5 dB> to match what's already there. That's only right if the existing track is right."
        },
        {
@@ -1360,7 +1360,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted the editor's automatic levels or set them itself - check which. Automatic levelling maximises loudness without clipping, and it flattens the moments you wanted loud.",
         "speak": "if-wrong",
-        "check": "does the auto-leveled mix show peaks flattened to the same height across louder and quieter moments",
+        "check": "Does the auto-leveled mix show peaks flattened to the same height across louder and quieter moments?",
         "say_example": "Auto-leveling maxed the volume across the board. The moment you wanted louder is now the same height as everything else."
        },
        {
@@ -1372,7 +1372,7 @@
         "whatTheAgentLoses": "You lose the immediate visual reassurance of seeing the waveform shrink, which builds trust that the software's automated mixing tools are working correctly.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "did the music clip's level visibly drop on being placed on the timeline (auto-level on import)",
+        "check": "Did the music clip's level visibly drop on being placed on the timeline (auto-level on import)?",
         "say_example": "The music clip auto-leveled down on drop, from its original loudness."
        }
       ]
@@ -1390,7 +1390,7 @@
         "whatTheAgentLoses": "You lose the ability to personally hear and evaluate how the applied filters change the nuances of the speaker's voice during continuous playback.",
         "kind": "state-check",
         "speak": "never",
-        "check": "is a loop/cycle region active over the comparison section",
+        "check": "Is a loop/cycle region active over the comparison section?",
         "say_example": "Looped <0:14 to 0:18> to compare presets on the same words"
        },
        {
@@ -1403,7 +1403,7 @@
         "kind": "decision",
         "verify_form": "The agent previewed an equaliser curve and applied it - check whether the change is one you would have kept. Applied to the whole track, this is on every word the speaker says.",
         "speak": "if-wrong",
-        "check": "was the previewed EQ curve actually applied (committed) to the track, and what does the curve show (e.g. a 100Hz drop-off and a bass bump)",
+        "check": "Was the previewed EQ curve actually applied (committed) to the track, and what does the curve show (e.g. a 100Hz drop-off and a bass bump)?",
         "say_example": "Applied that curve to the whole track. Every word now has the <100Hz> drop-off and the bass lift, not just the preview section."
        },
        {
@@ -1416,7 +1416,7 @@
         "kind": "decision",
         "verify_form": "The agent applied the cleanup destructively to the waveform or as a chain that can be switched off - check which. Destructive means the only way back is undo, and undo does not survive closing the project.",
         "speak": "on-event",
-        "check": "was the noise reduction applied directly to the waveform (destructive), or through a real-time effects chain that can be removed later",
+        "check": "Was the noise reduction applied directly to the waveform (destructive), or through a real-time effects chain that can be removed later?",
         "say_example": "Applied that noise reduction straight to the waveform. Undo works now, but not after the project's closed and reopened."
        },
        {
@@ -1428,7 +1428,7 @@
         "whatTheAgentLoses": "Delegating this means losing the ability to quickly recognize and correct unintended playback settings that interrupt the flow of reviewing the audio.",
         "kind": "state-check",
         "speak": "never",
-        "check": "is the loop/cycle tool still toggled on",
+        "check": "Is the loop/cycle tool still toggled on?",
         "say_example": "Turned the loop tool back off"
        }
       ]
@@ -1447,7 +1447,7 @@
         "kind": "decision",
         "verify_form": "The agent copied the host's processing onto the guest's channel - check whether it suits that voice. Two people rarely need the same equalisation.",
         "speak": "if-wrong",
-        "check": "were the host's EQ and dynamics settings copied directly onto the guest's channel",
+        "check": "Were the host's EQ and dynamics settings copied directly onto the guest's channel?",
         "say_example": "Copied the host's EQ and compressor straight onto the guest's channel. Two different voices rarely want the same settings."
        }
       ]
@@ -1472,7 +1472,7 @@
         "whatTheAgentLoses": "You lose the immediate visual context of the episode's overall length and structure that comes from manually adjusting the timeline view.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "was the full waveform viewed at a zoomed-out scale before making cut decisions, or only a partially scrolled view",
+        "check": "Was the full waveform viewed at a zoomed-out scale before making cut decisions, or only a partially scrolled view?",
         "say_example": "Heads up, cuts were being marked from a scrolled-in view. Zooming out first so nothing off-screen gets missed."
        }
       ]
@@ -1491,7 +1491,7 @@
         "kind": "decision",
         "verify_form": "The agent marked a noise spike for removal - check what is inside the selection. A cough and a laugh look similar on a waveform, and one of them belongs in the episode.",
         "speak": "if-wrong",
-        "check": "is the highlighted spike a noise sound or a natural vocal sound like a laugh",
+        "check": "Is the highlighted spike a noise sound or a natural vocal sound like a laugh?",
         "say_example": "Heads up, what's selected there looks like a laugh, not a noise spike. Check before it's cut."
        },
        {
@@ -1504,7 +1504,7 @@
         "kind": "decision",
         "verify_form": "The agent found filler words on a waveform with no transcript to read - check what it took out. Without the text, an um and the first sound of the next word look the same.",
         "speak": "if-wrong",
-        "check": "is a transcript available, or is the filler word being identified purely from the waveform shape",
+        "check": "Is a transcript available, or is the filler word being identified purely from the waveform shape?",
         "say_example": "No transcript here, finding filler words by eye on the waveform alone. An 'um' and the start of the next word look the same."
        },
        {
@@ -1517,7 +1517,7 @@
         "kind": "decision",
         "verify_form": "The agent kept, cut or corrected the arithmetic mistake in the speech - check which. Leaving it in publishes a wrong figure; cutting it can leave the sentence unfinished.",
         "speak": "gate",
-        "check": "does the recording contain a factual/arithmetic error, and is the plan to cut it, leave it, or fix it with a new take",
+        "check": "Does the recording contain a factual/arithmetic error, and is the plan to cut it, leave it, or fix it with a new take?",
         "say_example": "The speaker's numbers are wrong here. <$99> a year isn't three years to <$249>. Leave the error in, cut it, or record a correction?"
        }
       ]
@@ -1536,7 +1536,7 @@
         "kind": "decision",
         "verify_form": "The agent removed a filler word - listen to the sentence without it. Some fillers carry the pause that makes the sentence land, and taking them out makes the speech abrupt.",
         "speak": "if-wrong",
-        "check": "was this specific filler-word deletion undone after being tested",
+        "check": "Was this specific filler-word deletion undone after being tested?",
         "say_example": "Cut 'you know' there, then undid it. Without it, the line landed too abruptly."
        },
        {
@@ -1549,7 +1549,7 @@
         "kind": "decision",
         "verify_form": "The agent deleted a filler phrase - check the sentence around it. Removing a phrase changes the rhythm even when it changes nothing else.",
         "speak": "on-event",
-        "check": "which words are marked as filler for removal",
+        "check": "Which words are marked as filler for removal?",
         "say_example": "Marked <'like', 'you know', 'um'> for removal in this passage."
        }
       ]
@@ -1568,7 +1568,7 @@
         "kind": "decision",
         "verify_form": "The agent split the recording at particular points - check where the boundaries are. A split a syllable early takes the front off the next word.",
         "speak": "if-wrong",
-        "check": "where exactly does the split fall relative to the surrounding words",
+        "check": "Where exactly does the split fall relative to the surrounding words?",
         "say_example": "Heads up, that split lands a syllable early. It'll take the front off the next word."
        },
        {
@@ -1581,7 +1581,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the first cut point - check where. The start of the unwanted part is usually a breath earlier than it looks.",
         "speak": "if-wrong",
-        "check": "where is the first cut boundary placed, relative to where the unwanted audio starts",
+        "check": "Where is the first cut boundary placed, relative to where the unwanted audio starts?",
         "say_example": "Placed the start cut at <0:40>. The unwanted part usually starts a breath earlier than it looks."
        },
        {
@@ -1594,7 +1594,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the second cut point - check where. Cutting on the first sound of the next word is what makes an edit audible.",
         "speak": "if-wrong",
-        "check": "where is the second cut boundary placed, relative to where the next word begins",
+        "check": "Where is the second cut boundary placed, relative to where the next word begins?",
         "say_example": "Placed the end cut right at the next word's first sound, that's what makes an edit audible. Pulling it back slightly."
        },
        {
@@ -1607,7 +1607,7 @@
         "kind": "decision",
         "verify_form": "The agent isolated a stretch of speech to remove - check its edges. The good audio either side of it should still be there.",
         "speak": "if-wrong",
-        "check": "does the isolated selection contain only the unwanted speech, with good audio intact on both sides",
+        "check": "Does the isolated selection contain only the unwanted speech, with good audio intact on both sides?",
         "say_example": "The isolated span runs from <4.1s to 7.0s>. The good audio on either side is untouched."
        },
        {
@@ -1619,7 +1619,7 @@
         "whatTheAgentLoses": "You lose the tactile awareness of exactly where to click on the interface to trigger a selection rather than a loop.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the current selection on the audio clip itself, or on the ruler (a loop region)",
+        "check": "Is the current selection on the audio clip itself, or on the ruler (a loop region)?",
         "say_example": "Heads up, that's a loop region on the ruler, not a selection on the clip. Nothing will actually cut."
        },
        {
@@ -1631,7 +1631,7 @@
         "whatTheAgentLoses": "The user loses the awareness to check their track selection, risking unintended destructive edits to overlapping audio on other tracks.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is only the intended track selected before trimming, or are both the voice and music tracks selected",
+        "check": "Is only the intended track selected before trimming, or are both the voice and music tracks selected?",
         "say_example": "Heads up, both tracks are selected. Trimming now would move the music along with the voice."
        },
        {
@@ -1643,7 +1643,7 @@
         "whatTheAgentLoses": "The awareness of a hidden timeline setting that, if accidentally enabled, fundamentally restricts the precision of all selection and cutting tools.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "is Snap-To turned off in the toolbar",
+        "check": "Is Snap-To turned off in the toolbar?",
         "say_example": "Snap-To is off, so cuts can land on the exact breath, not the nearest grid line."
        },
        {
@@ -1655,7 +1655,7 @@
         "whatTheAgentLoses": "You lose the direct visual confirmation of knowing exactly which piece of audio is currently active for editing.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which clip is selected on the timeline",
+        "check": "Which clip is selected on the timeline?",
         "say_example": "Selected the <interview> clip"
        }
       ]
@@ -1674,7 +1674,7 @@
         "kind": "decision",
         "verify_form": "The agent removed a stretch of the recording - check what is gone. The check is whether the speaker would still recognise what they said.",
         "speak": "if-wrong",
-        "check": "what does the removed stretch contain, and is the sentence around it still complete",
+        "check": "What does the removed stretch contain, and is the sentence around it still complete?",
         "say_example": "Removed <3 seconds> there. The sentence on either side still reads as one complete thought."
        },
        {
@@ -1687,7 +1687,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or discarded the piece it separated out - check what it was. A tangent to one person is the best part of the episode to another.",
         "speak": "gate",
-        "check": "what does the span about to be removed contain - a conclusion, a verdict, a caveat, a tangent, a story or an aside - rather than noise or filler",
+        "check": "What does the span about to be removed contain - a conclusion, a verdict, a caveat, a tangent, a story or an aside - rather than noise or filler?",
         "say_example": "That span is <a whole aside about how they got started>, not noise. Cutting it takes out something they actually said. Cut it, or keep it?"
        },
        {
@@ -1699,7 +1699,7 @@
         "whatTheAgentLoses": "The user loses the tactile control and speed of using their preferred keyboard shortcuts to instantly remove unwanted audio segments.",
         "kind": "state-check",
         "speak": "never",
-        "check": "was the selected audio removed",
+        "check": "Was the selected audio removed?",
         "say_example": "Removed the selected span"
        },
        {
@@ -1711,7 +1711,7 @@
         "whatTheAgentLoses": "You lose the tactile control of rapidly testing and undoing specific cuts to ensure the pacing feels natural.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is anything still selected elsewhere on the timeline before the delete key is pressed",
+        "check": "Is anything still selected elsewhere on the timeline before the delete key is pressed?",
         "say_example": "Heads up, another region further down is still selected too. Clearing that before deleting."
        }
       ]
@@ -1730,7 +1730,7 @@
         "kind": "decision",
         "verify_form": "The agent split around the piece before deleting it, or just deleted it - check whether everything after the cut moved. On a multi-speaker recording, moving one track and not the others puts the conversation out of sync for good.",
         "speak": "if-wrong",
-        "check": "did the technique used (split-then-delete vs direct delete) leave the rest of this track shifted or in place",
+        "check": "Did the technique used (split-then-delete vs direct delete) leave the rest of this track shifted or in place?",
         "say_example": "Split around the clip before deleting it, so the timing of everything else on this track held."
        },
        {
@@ -1743,7 +1743,7 @@
         "kind": "decision",
         "verify_form": "The agent used a delete that closes the gap, or one that leaves it - check the timeline. Closing it tightens the pace; leaving it keeps everything after in the same place.",
         "speak": "if-wrong",
-        "check": "was Delete (leaves a gap) or Delete and Move (closes the gap) used",
+        "check": "Was Delete (leaves a gap) or Delete and Move (closes the gap) used?",
         "say_example": "Used Delete and Move, so the clips after it shifted earlier and the gap closed."
        },
        {
@@ -1756,7 +1756,7 @@
         "kind": "decision",
         "verify_form": "The agent deleted the piece and pulled the next clip up to meet it - listen to the seam. Snapped together, two clips can leave a click or swallow a breath.",
         "speak": "if-wrong",
-        "check": "do the two clips meet exactly at the join, with no overlap or gap left",
+        "check": "Do the two clips meet exactly at the join, with no overlap or gap left?",
         "say_example": "Heads up, dragging that clip left a sliver of silence at the join. Snapping it tighter."
        },
        {
@@ -1768,7 +1768,7 @@
         "whatTheAgentLoses": "The structural awareness to ensure edits are applied globally across a multitrack session to preserve conversational timing.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did all the speaker tracks stay aligned with each other after this cut, or only the one that was edited",
+        "check": "Did all the speaker tracks stay aligned with each other after this cut, or only the one that was edited?",
         "say_example": "Heads up, only this speaker's track shifted. The others are now out of sync with it."
        }
       ]
@@ -1787,7 +1787,7 @@
         "kind": "decision",
         "verify_form": "The agent deleted the filler words or struck them through - check the transcript. Struck through, the audio is cut and the text stays so you can see what went; deleted, both are gone.",
         "speak": "on-event",
-        "check": "were the filler words struck through (Ignore, text stays visible) or fully deleted from the transcript",
+        "check": "Were the filler words struck through (Ignore, text stays visible) or fully deleted from the transcript?",
         "say_example": "Struck those words through instead of deleting them, so the text still shows what was cut."
        },
        {
@@ -1819,7 +1819,7 @@
         "kind": "decision",
         "verify_form": "The agent removed some filler words by hand rather than with the bulk pass - check which ones. The bulk pass is even-handed and the manual one is a judgment about pacing.",
         "speak": "on-event",
-        "check": "which filler words were removed by hand instead of through the bulk pass",
+        "check": "Which filler words were removed by hand instead of through the bulk pass?",
         "say_example": "Removed <two> filler words by hand here instead of the bulk pass. The bulk pass would have cut the pause with them."
        },
        {
@@ -1831,7 +1831,7 @@
         "whatTheAgentLoses": "You lose the ability to catch this software discrepancy and manually verify if the remaining 500 filler words were actually removed.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the bulk-removal tool's initial count of filler words match the count shown in its confirmation popup",
+        "check": "Does the bulk-removal tool's initial count of filler words match the count shown in its confirmation popup?",
         "say_example": "The tool found <868> filler words at first. The confirmation only lists <368>. The rest aren't accounted for."
        }
       ]
@@ -1850,7 +1850,7 @@
         "kind": "decision",
         "verify_form": "The agent made a text-driven cut - listen to it. A cut taken from the transcript often clips the head of the next word, and the fix is to drag the boundary back.",
         "speak": "if-wrong",
-        "check": "does the waveform show a clipped, abrupt edge at the automated cut boundary, or a natural taper",
+        "check": "Does the waveform show a clipped, abrupt edge at the automated cut boundary, or a natural taper?",
         "say_example": "Heads up, that automated cut clips right into the next word's waveform. Dragging the boundary back a touch."
        },
        {
@@ -1863,7 +1863,7 @@
         "kind": "decision",
         "verify_form": "The agent dragged the clip boundary to fine-tune the cut - check where it landed. A syllable either way is the difference between speech and a stutter.",
         "speak": "if-wrong",
-        "check": "where does the dragged clip boundary land relative to the word it's trimming",
+        "check": "Where does the dragged clip boundary land relative to the word it's trimming?",
         "say_example": "Dragged the boundary to <0:42.1>. A syllable either way and this reads as a stutter."
        },
        {
@@ -1875,7 +1875,7 @@
         "whatTheAgentLoses": "The user loses the technical precision of ensuring every edit is clean and artifact-free at the microscopic waveform level.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the cut point align with a zero-crossing on the waveform",
+        "check": "Does the cut point align with a zero-crossing on the waveform?",
         "say_example": "Heads up, that cut isn't on a zero-crossing. It'll click. Nudging it a few samples."
        }
       ]
@@ -1894,7 +1894,7 @@
         "kind": "decision",
         "verify_form": "The agent played the end of the region before joining the next one - check that it did. The words either side of a join decide whether it sounds like a conversation.",
         "speak": "never",
-        "check": "was the end of the region played back before the next segment begins",
+        "check": "Was the end of the region played back before the next segment begins?",
         "say_example": "Played back the end of that region"
        },
        {
@@ -1907,7 +1907,7 @@
         "kind": "decision",
         "verify_form": "The agent cut close to a word - listen for the breath. Half a breath left in sounds worse than the whole one, and none at all sounds mechanical.",
         "speak": "if-wrong",
-        "check": "does the waveform at the cut edge show a truncated or partial breath shape",
+        "check": "Does the waveform at the cut edge show a truncated or partial breath shape?",
         "say_example": "Heads up, the waveform right at that cut shows half a breath. Either extend it or take the rest with it."
        }
       ]
@@ -1925,7 +1925,7 @@
         "whatTheAgentLoses": "You lose the ability to quickly toggle an edit on and off to hear the difference and verify the cut was made in exactly the right spot.",
         "kind": "state-check",
         "speak": "never",
-        "check": "was undo/redo used to compare the cut both ways",
+        "check": "Was undo/redo used to compare the cut both ways?",
         "say_example": "Toggled undo and redo to compare the cut both ways"
        }
       ]
@@ -1944,7 +1944,7 @@
         "kind": "decision",
         "verify_form": "The agent replaced a stretch with other audio - listen across the join. A pasted replacement carries its own room tone and its own pace, and both are audible.",
         "speak": "if-wrong",
-        "check": "does the replacement clip come from a different take or file than the surrounding audio",
+        "check": "Does the replacement clip come from a different take or file than the surrounding audio?",
         "say_example": "The patch here is from <a different take>, recorded on another day. It'll carry its own room tone."
        },
        {
@@ -1957,7 +1957,7 @@
         "kind": "decision",
         "verify_form": "The agent copied a section rather than deleting it - check what it kept. Some cut audio is worth reusing elsewhere in the episode.",
         "speak": "on-event",
-        "check": "was the section copied and kept, rather than deleted outright",
+        "check": "Was the section copied and kept, rather than deleted outright?",
         "say_example": "Copied that section instead of deleting it. Might reuse it later in the episode."
        }
       ]
@@ -1976,7 +1976,7 @@
         "kind": "decision",
         "verify_form": "The agent removed audio from the end of the take - check what went. There is usually silence and chair noise there, and sometimes the last thing the speaker said.",
         "speak": "if-wrong",
-        "check": "what does the trimmed portion at the end of the track actually contain",
+        "check": "What does the trimmed portion at the end of the track actually contain?",
         "say_example": "Heads up, the trimmed end included the speaker's last sentence, not just chair noise. Check before this is final."
        },
        {
@@ -1988,7 +1988,7 @@
         "whatTheAgentLoses": "You lose the visual feedback of the cursor changing and the precise control over dragging the trim tool to the exact desired length.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the cursor on the lower half of the region's edge (trim) or the upper half (loop) before dragging",
+        "check": "Is the cursor on the lower half of the region's edge (trim) or the upper half (loop) before dragging?",
         "say_example": "Cursor's on the loop half of that edge. Dropping to the lower half so dragging trims instead of loops."
        },
        {
@@ -2001,7 +2001,7 @@
         "kind": "decision",
         "verify_form": "The agent chose where the episode stops - check the last thing that is in it. What sounds like an ending in the room is often a false one on the recording.",
         "speak": "if-wrong",
-        "check": "what is the last clip or word at the very end of the timeline",
+        "check": "What is the last clip or word at the very end of the timeline?",
         "say_example": "The episode now ends on <'...and that's the show'>, not the earlier false ending."
        },
        {
@@ -2014,7 +2014,7 @@
         "kind": "decision",
         "verify_form": "The agent trimmed the head of the episode audio and butted it against the intro - check where it starts. The first words matter more than any other cut in the episode.",
         "speak": "if-wrong",
-        "check": "where does the trimmed head of the episode sit relative to where the intro region ends",
+        "check": "Where does the trimmed head of the episode sit relative to where the intro region ends?",
         "say_example": "Trimmed the start to <0:35> and butted it right against the intro's end. No dead air between them."
        }
       ]
@@ -2040,7 +2040,7 @@
         "kind": "decision",
         "verify_form": "The agent put each segment on its own track or stacked them on one - check the layout. One per track means each keeps its own level; one track means one level for everything.",
         "speak": "on-event",
-        "check": "is each segment on its own track, or stacked together on one track",
+        "check": "Is each segment on its own track, or stacked together on one track?",
         "say_example": "Each segment has its own track, so each keeps its own level."
        },
        {
@@ -2052,7 +2052,7 @@
         "whatTheAgentLoses": "The user loses the ability to visually verify that the interview tracks are perfectly synchronized with each other and properly sequenced after the intro tag.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the interview audio start exactly where the Audio Tag region ends",
+        "check": "Does the interview audio start exactly where the Audio Tag region ends?",
         "say_example": "Lined the interview up right at the end of the audio tag, so it starts without a gap."
        },
        {
@@ -2065,7 +2065,7 @@
         "kind": "decision",
         "verify_form": "The agent shortened the last clip to fit - check what came off. A clip trimmed to fit the timeline can lose the end of a sentence.",
         "speak": "if-wrong",
-        "check": "does the trimmed edge of the shortened clip cut into spoken words, and how much speech does it take, rather than only trailing silence",
+        "check": "Does the trimmed edge of the shortened clip cut into spoken words, and how much speech does it take, rather than only trailing silence?",
         "say_example": "The trim on the <outro> clip took the end of a word, not just the silence after it."
        },
        {
@@ -2077,7 +2077,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the agent can accurately track the identity and purpose of specific audio clips throughout a complex editing session.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the clip's track name or region label identify it as the outro rather than the main episode",
+        "check": "Does the clip's track name or region label identify it as the outro rather than the main episode?",
         "say_example": "The clip being treated as the episode is the one labeled <outro>."
        }
       ]
@@ -2096,7 +2096,7 @@
         "kind": "decision",
         "verify_form": "The agent made room at the front of the timeline - check how much. That space is what the intro has to fit into.",
         "speak": "if-wrong",
-        "check": "does the empty space left at the front of the timeline match or exceed the length of the intro file being inserted",
+        "check": "Does the empty space left at the front of the timeline match or exceed the length of the intro file being inserted?",
         "say_example": "There's <12> seconds open at the front, but the intro file runs <18>."
        },
        {
@@ -2108,7 +2108,7 @@
         "whatTheAgentLoses": "You lose the ability to visually verify that the correct tool was selected to shift the audio rather than accidentally trimming it.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the toolbar show the Time Shift Tool selected rather than a trim tool",
+        "check": "Does the toolbar show the Time Shift Tool selected rather than a trim tool?",
         "say_example": "The tool selected there moves audio, it doesn't trim it."
        },
        {
@@ -2120,7 +2120,7 @@
         "whatTheAgentLoses": "You lose the visual confirmation of exactly which clips are highlighted and grouped together on the timeline.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "which clips are currently shown in the selected color on the timeline, and does that set match only the clips this step is meant to move",
+        "check": "Which clips are currently shown in the selected color on the timeline, and does that set match only the clips this step is meant to move?",
         "say_example": "The highlighted group includes <the ad clip>, which this move wasn't supposed to touch."
        },
        {
@@ -2132,7 +2132,7 @@
         "whatTheAgentLoses": "Delegating this step means you might miss the software's inconsistent duration reporting, potentially throwing off the precise timing of your episode.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the length shown for the audio tag when it was first placed match the length shown later when it is being moved",
+        "check": "Does the length shown for the audio tag when it was first placed match the length shown later when it is being moved?",
         "say_example": "The audio tag read <2.0>s when it went in, and <2.9>s now that it's being moved."
        },
        {
@@ -2145,7 +2145,7 @@
         "kind": "decision",
         "verify_form": "The agent delayed the first voice clip so the music opens alone - check how long. That is how long a listener waits before anybody speaks.",
         "speak": "if-wrong",
-        "check": "how many seconds pass between the start of the episode and the first spoken word, and how does that compare with the length of the music intro",
+        "check": "How many seconds pass between the start of the episode and the first spoken word, and how does that compare with the length of the music intro?",
         "say_example": "There's <9> seconds of music before anyone starts talking."
        }
       ]
@@ -2163,7 +2163,7 @@
         "whatTheAgentLoses": "You lose the ability to choose your preferred method and precise placement when reorganizing clips across the timeline.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the clip present on the destination track and absent from the original track it was moved from",
+        "check": "Is the clip present on the destination track and absent from the original track it was moved from?",
         "say_example": "The clip is on the new track, but the old track still shows a copy of it."
        }
       ]
@@ -2182,7 +2182,7 @@
         "kind": "decision",
         "verify_form": "The agent inserted a silence of a particular length - check the number. A pause that reads as thoughtful at 1.4 seconds reads as a dropout at 4.",
         "speak": "if-wrong",
-        "check": "how many seconds does the inserted silence span, per the dialog or timeline",
+        "check": "How many seconds does the inserted silence span, per the dialog or timeline?",
         "say_example": "The pause it inserted there runs <4.1> seconds, more like a dropout than a beat."
        },
        {
@@ -2195,7 +2195,7 @@
         "kind": "decision",
         "verify_form": "The agent opened a gap in the speech so the music plays alone - check its length. That gap is a deliberate pause in the conversation.",
         "speak": "if-wrong",
-        "check": "how many seconds of silence in the speech track does the opened gap span",
+        "check": "How many seconds of silence in the speech track does the opened gap span?",
         "say_example": "The gap it opened for the music to play alone runs <6> seconds."
        },
        {
@@ -2208,7 +2208,7 @@
         "kind": "decision",
         "verify_form": "The agent tightened the joins between clips - listen through them. Removing every micro-silence makes the speech run together with no room to breathe.",
         "speak": "if-wrong",
-        "check": "what is the length of the shortest remaining gap between adjacent clips after the joins were tightened",
+        "check": "What is the length of the shortest remaining gap between adjacent clips after the joins were tightened?",
         "say_example": "Tightening those joins left no gap at all between two clips. There's nothing to breathe there."
        },
        {
@@ -2221,7 +2221,7 @@
         "kind": "decision",
         "verify_form": "The agent set the pause between two clips - listen to it. That is the conversational pace, and half a second either way is audible.",
         "speak": "if-wrong",
-        "check": "what is the length of the gap between these two clips, per the timeline",
+        "check": "What is the length of the gap between these two clips, per the timeline?",
         "say_example": "The pause between those two clips is <2.1> seconds now."
        },
        {
@@ -2233,7 +2233,7 @@
         "whatTheAgentLoses": "The meticulous visual and auditory inspection required to ensure clip boundaries abut perfectly.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do any two adjacent clips overlap in time on the timeline, rather than sitting edge to edge",
+        "check": "Do any two adjacent clips overlap in time on the timeline, rather than sitting edge to edge?",
         "say_example": "Two clips overlap by <40>ms where they meet, enough for a click."
        }
       ]
@@ -2252,7 +2252,7 @@
         "kind": "decision",
         "verify_form": "The agent handled two segments that overlap - check what it did. Left overlapping, they play at once; pulled apart, there is a hole where the overlap was.",
         "speak": "if-wrong",
-        "check": "do the two segments still overlap in time, or is there now a gap where the overlap used to be",
+        "check": "Do the two segments still overlap in time, or is there now a gap where the overlap used to be?",
         "say_example": "Those two clips still overlap by <1.2> seconds; both will play at once there."
        },
        {
@@ -2264,7 +2264,7 @@
         "whatTheAgentLoses": "You lose the creative control of timing the exact overlap and fade duration to make the transition feel perfectly paced.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the outro region overlap the end of the main audio, and by how much, and does a fade handle appear on either clip at the join",
+        "check": "Does the outro region overlap the end of the main audio, and by how much, and does a fade handle appear on either clip at the join?",
         "say_example": "The outro starts <0.8>s before the last line ends, and there's no fade. It'll sound like it cuts in."
        }
       ]
@@ -2282,7 +2282,7 @@
         "whatTheAgentLoses": "You lose the final visual check of the timeline boundaries that ensures the exported episode ends cleanly without an unprofessional block of silence.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the project's end marker sit at the same timestamp as the end of the trimmed audio, or later",
+        "check": "Does the project's end marker sit at the same timestamp as the end of the trimmed audio, or later?",
         "say_example": "The end marker sits at <1:04>, but the audio stops at <0:20>. Exporting now would add <44> seconds of silence."
        }
       ]
@@ -2300,7 +2300,7 @@
         "whatTheAgentLoses": "The user loses the human intuition to catch and investigate conflicting information between the visual interface and the audio commentary to ensure no content was accidentally deleted.",
         "kind": "state-check",
         "speak": "always",
-        "check": "what total length does the timeline show, against the run time given for the episode",
+        "check": "What total length does the timeline show, against the run time given for the episode?",
         "say_example": "The episode runs <42> minutes, against the <45> you were aiming for."
        }
       ]
@@ -2326,7 +2326,7 @@
         "kind": "decision",
         "verify_form": "The agent handled a music bed longer than the speech - check what it did with the tail. Trimmed, faded or left running are three different endings.",
         "speak": "if-wrong",
-        "check": "does the music track's end show a fade or a trim, or does it simply continue unedited past the voice's end",
+        "check": "Does the music track's end show a fade or a trim, or does it simply continue unedited past the voice's end?",
         "say_example": "The music just keeps running after the last line, with no fade or cut at the end."
        },
        {
@@ -2339,7 +2339,7 @@
         "kind": "decision",
         "verify_form": "The agent set how long the music runs past the last spoken word - check the tail. A short one cuts the episode off; a long one is dead air.",
         "speak": "if-wrong",
-        "check": "how many seconds does the music continue after the last spoken word",
+        "check": "How many seconds does the music continue after the last spoken word?",
         "say_example": "The music keeps going for <14> seconds after the last line. That's long enough to feel like dead air."
        },
        {
@@ -2352,7 +2352,7 @@
         "kind": "decision",
         "verify_form": "The agent positioned the music against the pause in the intro - check the alignment. The music is meant to fill the gap, not to talk over the line before it.",
         "speak": "if-wrong",
-        "check": "does the music clip's placement line up with the visual gap in the intro track rather than overlapping the spoken line before it",
+        "check": "Does the music clip's placement line up with the visual gap in the intro track rather than overlapping the spoken line before it?",
         "say_example": "The music comes in <0.5>s before the intro line finishes, not during the gap after it."
        },
        {
@@ -2365,7 +2365,7 @@
         "kind": "decision",
         "verify_form": "The agent split the music where the voice ends - check the point. That decides whether the music carries on under the last words or stops with them.",
         "speak": "if-wrong",
-        "check": "does the music track's split point align with the end of the voice clip it's meant to match",
+        "check": "Does the music track's split point align with the end of the voice clip it's meant to match?",
         "say_example": "The music splits <1.3>s after the voice clip actually ends."
        },
        {
@@ -2378,7 +2378,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or cut the music through the long gap between spoken segments - check which. Silence and a musical bridge say different things about that transition.",
         "speak": "never",
-        "check": "does the music track continue playing, unmuted and uncut, through the gap in the vocal track",
+        "check": "Does the music track continue playing, unmuted and uncut, through the gap in the vocal track?",
         "say_example": "Left music playing through a <14>-second gap between voice clips"
        },
        {
@@ -2391,7 +2391,7 @@
         "kind": "decision",
         "verify_form": "The agent split the music into an intro half and an outro half - check the point. The same track is being asked to do two jobs.",
         "speak": "if-wrong",
-        "check": "does the music track's split point fall where the intro half ends and the outro half is meant to begin",
+        "check": "Does the music track's split point fall where the intro half ends and the outro half is meant to begin?",
         "say_example": "The split for reusing this track as intro and outro sits <3>s into what should be the outro half."
        },
        {
@@ -2404,7 +2404,7 @@
         "kind": "decision",
         "verify_form": "The agent cut the intro music before the interview begins - check the point. That is the moment the episode proper starts.",
         "speak": "if-wrong",
-        "check": "does the intro music track's cut point align with the start of the interview content, and is there a fade there",
+        "check": "Does the intro music track's cut point align with the start of the interview content, and is there a fade there?",
         "say_example": "The intro music is cut <2>s after the interview has already started."
        }
       ]
@@ -2422,7 +2422,7 @@
         "whatTheAgentLoses": "The creator loses the ability to personally verify that the correct branding audio is selected for the episode's introduction.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the file placed on the Intro track have a name indicating it's the intro, rather than another production file",
+        "check": "Does the file placed on the Intro track have a name indicating it's the intro, rather than another production file?",
         "say_example": "The file on the Intro track is named <Audio Tag.mp3>, not the one named for the intro."
        },
        {
@@ -2434,7 +2434,7 @@
         "whatTheAgentLoses": "You lose the assurance that the correct, up-to-date outro file was selected from your local folders.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the file placed on the outro track match the file meant to be the outro",
+        "check": "Does the file placed on the outro track match the file meant to be the outro?",
         "say_example": "The outro track has <a different production file> on it instead of the outro."
        },
        {
@@ -2446,7 +2446,7 @@
         "whatTheAgentLoses": "You lose the ability to precisely time the transition between the final spoken words and the start of the outro music.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the outro region's start time come after the last spoken line of the conversation",
+        "check": "Does the outro region's start time come after the last spoken line of the conversation?",
         "say_example": "The outro sits at <22:10>, but the conversation runs to <46:16>. That puts it in the middle of the episode."
        },
        {
@@ -2459,7 +2459,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the intro before the first spoken words - check the order. The intro either opens the episode or interrupts it.",
         "speak": "if-wrong",
-        "check": "does the intro sit before any spoken dialogue in the sequence, or after dialogue has already started",
+        "check": "Does the intro sit before any spoken dialogue in the sequence, or after dialogue has already started?",
         "say_example": "The intro is placed after <the first line>, not before it."
        },
        {
@@ -2472,7 +2472,7 @@
         "kind": "decision",
         "verify_form": "The agent dropped the media into the scene or at the cursor - check where it landed. Those are different positions in the episode.",
         "speak": "if-wrong",
-        "check": "did the media get added across the whole scene or only at the cursor position, per the tool's confirmation",
+        "check": "Did the media get added across the whole scene or only at the cursor position, per the tool's confirmation?",
         "say_example": "That media landed across the whole scene, not just at the cursor."
        },
        {
@@ -2484,7 +2484,7 @@
         "whatTheAgentLoses": "You lose the ability to personally verify that the correct, most up-to-date intro and outro files were chosen from your folder hierarchy.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "do the selected files' names match the standard intro/outro branding files rather than a different file",
+        "check": "Do the selected files' names match the standard intro/outro branding files rather than a different file?",
         "say_example": "The files picked are from <a different folder>, not the standard intro and outro pair."
        },
        {
@@ -2496,7 +2496,7 @@
         "whatTheAgentLoses": "The delegator loses the assurance that the correct historical project was chosen to source the standard intro audio.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the opened project's name or date match the most recent finalized episode rather than an older or draft one",
+        "check": "Does the opened project's name or date match the most recent finalized episode rather than an older or draft one?",
         "say_example": "The project opened is <an older draft>, not the latest finalized episode."
        },
        {
@@ -2508,7 +2508,7 @@
         "whatTheAgentLoses": "You lose the ability to visually confirm that the correct colored audio region was identified and copied as the intro.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the region selected and copied actually positioned and labeled as the intro, at the start of that episode",
+        "check": "Is the region selected and copied actually positioned and labeled as the intro, at the start of that episode?",
         "say_example": "The region copied is the <purple> one, but it sits mid-episode, not at the start."
        },
        {
@@ -2520,7 +2520,7 @@
         "whatTheAgentLoses": "The user loses the ability to organize the audio by choosing exactly which track the intro belongs on.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the track the intro was pasted onto match a track meant for spoken intro content, not a music-only track",
+        "check": "Does the track the intro was pasted onto match a track meant for spoken intro content, not a music-only track?",
         "say_example": "The intro landed on the <Jingles> track, not <Male Voice>."
        }
       ]
@@ -2538,7 +2538,7 @@
         "whatTheAgentLoses": "You lose control over verifying that the correct signature branding audio is added to the episode.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the file placed on the audio tag track match the one meant to be the tag",
+        "check": "Does the file placed on the audio tag track match the one meant to be the tag?",
         "say_example": "The audio tag track has <a different file> on it, not the tag."
        },
        {
@@ -2550,7 +2550,7 @@
         "whatTheAgentLoses": "You lose the creative choice of which specific sound effect to use and the precise timing of how it transitions from the final music track.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "is the chosen closing-sound file positioned after the music track ends, per the timeline",
+        "check": "Is the chosen closing-sound file positioned after the music track ends, per the timeline?",
         "say_example": "<jingle.wav> sits before the music ends, not after it."
        }
       ]
@@ -2569,7 +2569,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the newly recorded segment - check where it sits against the take before it. The transition between the two is the seam a listener hears.",
         "speak": "if-wrong",
-        "check": "does the new segment's start align with the end of the previous take, without a gap or overlap",
+        "check": "Does the new segment's start align with the end of the previous take, without a gap or overlap?",
         "say_example": "The new segment starts <0.6>s before the previous take ends."
        },
        {
@@ -2582,7 +2582,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the playhead before recording the new segment - check where. Started too early, the new take records over the audio that is already there.",
         "speak": "if-wrong",
-        "check": "does the playhead sit at or after the end of the existing region on this track, rather than earlier",
+        "check": "Does the playhead sit at or after the end of the existing region on this track, rather than earlier?",
         "say_example": "The playhead is at <0:22>, but the take there runs to <0:30>. Recording now would record over it."
        },
        {
@@ -2594,7 +2594,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to test your microphone and record your own voice directly into the project.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the Intro track the one selected or armed before recording begins",
+        "check": "Is the Intro track the one selected or armed before recording begins?",
         "say_example": "The track armed for recording is <Main Voice>, not <Intro>."
        },
        {
@@ -2607,7 +2607,7 @@
         "kind": "decision",
         "verify_form": "The agent stopped the new recording at a particular point - check the length. The clip has to fit the gap it was recorded for.",
         "speak": "if-wrong",
-        "check": "does the length of the newly recorded region match the length of the gap it needs to fill",
+        "check": "Does the length of the newly recorded region match the length of the gap it needs to fill?",
         "say_example": "The new take runs <4>s, but the gap it needs to fill is <6>s."
        },
        {
@@ -2620,7 +2620,7 @@
         "kind": "decision",
         "verify_form": "The agent recorded a fresh intro or dropped in an existing file - check which. A fresh one is in the moment; the file is the one you already approved.",
         "speak": "never",
-        "check": "was a new region recorded live into the script, or was an existing file dragged in",
+        "check": "Was a new region recorded live into the script, or was an existing file dragged in?",
         "say_example": "Recorded a fresh intro directly into the script"
        },
        {
@@ -2633,7 +2633,7 @@
         "kind": "decision",
         "verify_form": "The agent put the playhead where the outro will be recorded - check that it is past the end of the conversation. Anywhere earlier records over the episode.",
         "speak": "if-wrong",
-        "check": "does the playhead sit at or after the end of the existing conversation audio",
+        "check": "Does the playhead sit at or after the end of the existing conversation audio?",
         "say_example": "The playhead is at <18:02>, and the conversation runs to <18:40>. Recording now would overwrite the end of it."
        },
        {
@@ -2646,7 +2646,7 @@
         "kind": "decision",
         "verify_form": "The agent recorded the outro or imported one - check which. A recorded one matches the episode's room; an imported one matches every other episode.",
         "speak": "never",
-        "check": "was the outro created via a newly recorded region or an imported file, per the track's history",
+        "check": "Was the outro created via a newly recorded region or an imported file, per the track's history?",
         "say_example": "Recorded the outro directly into the timeline"
        },
        {
@@ -2659,7 +2659,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the newly recorded outro - check where it sits. The gap between the last words and the sign-off is the pacing of the ending.",
         "speak": "if-wrong",
-        "check": "does the new outro region start right after the last spoken line, without a large gap or overlap",
+        "check": "Does the new outro region start right after the last spoken line, without a large gap or overlap?",
         "say_example": "The new outro starts <8>s after the last line. That's a long silence before the sign-off."
        }
       ]
@@ -2678,7 +2678,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the mid-roll advert - check where it landed. Halfway by the clock and halfway by the conversation are rarely the same second.",
         "speak": "if-wrong",
-        "check": "does the ad's insertion point fall at a natural break in the conversation rather than mid-sentence",
+        "check": "Does the ad's insertion point fall at a natural break in the conversation rather than mid-sentence?",
         "say_example": "The ad lands at <12:41>, mid-sentence in the middle of an answer."
        },
        {
@@ -2690,7 +2690,7 @@
         "whatTheAgentLoses": "The user loses the human intuition to choose a natural conversational pause for an ad break over a rigid timestamp.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the split point for the ad match the timestamp that was named for it, or does it sit elsewhere",
+        "check": "Does the split point for the ad match the timestamp that was named for it, or does it sit elsewhere?",
         "say_example": "The split for the ad is at <12:41>, but you named <14:00>."
        },
        {
@@ -2702,7 +2702,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the correct, episode-specific sponsor message is inserted rather than a generic or outdated advertisement.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the ad file placed match the one saved specifically for this episode rather than a different or generic one",
+        "check": "Does the ad file placed match the one saved specifically for this episode rather than a different or generic one?",
         "say_example": "The ad file used is <from a different episode's folder>, not this one's."
        },
        {
@@ -2714,7 +2714,7 @@
         "whatTheAgentLoses": "An agent might place the ad on an existing track to save space, accidentally applying the host's vocal effects to the pre-processed advertisement.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the ad file placed on a track without existing volume or effect settings already applied",
+        "check": "Is the ad file placed on a track without existing volume or effect settings already applied?",
         "say_example": "The ad landed on <Track 2>, which already has the voice compressor applied to it."
        },
        {
@@ -2727,7 +2727,7 @@
         "kind": "decision",
         "verify_form": "The agent faded out of the advert back into the show - check the transition. Coming straight out of an ad at full level is jarring.",
         "speak": "if-wrong",
-        "check": "does the end of the ad clip have a fade-out applied, or does it cut abruptly back to the show",
+        "check": "Does the end of the ad clip have a fade-out applied, or does it cut abruptly back to the show?",
         "say_example": "The ad clip ends with no fade. It cuts straight back into the show."
        }
       ]
@@ -2746,7 +2746,7 @@
         "kind": "decision",
         "verify_form": "The agent saved a clip to this project's clipboard or to the global favourites - check which. The clipboard goes when the project closes; the favourites follow every episode.",
         "speak": "if-wrong",
-        "check": "was the standing intro saved to favorites, which persist across episodes, or only to the clipboard, which clears when the project closes, and does the copied-in file still carry its original levels",
+        "check": "Was the standing intro saved to favorites, which persist across episodes, or only to the clipboard, which clears when the project closes, and does the copied-in file still carry its original levels?",
         "say_example": "That went to the clipboard, not to favorites. The clipboard clears when this project closes."
        },
        {
@@ -2759,7 +2759,7 @@
         "kind": "decision",
         "verify_form": "The agent brought assets over from another episode - check how. Only one project can be open at a time, so the only route is the global favourites.",
         "speak": "on-event",
-        "check": "is the standing intro missing from this project because it only exists in another one, and was it brought in through the favorites panel",
+        "check": "Is the standing intro missing from this project because it only exists in another one, and was it brought in through the favorites panel?",
         "say_example": "This project doesn't have the standing intro in it yet, and the editor only opens one project at a time."
        },
        {
@@ -2772,7 +2772,7 @@
         "kind": "decision",
         "verify_form": "The agent moved assets between projects - check the method. Exporting and re-importing loses the levels the clip had.",
         "speak": "if-wrong",
-        "check": "was the asset moved in through export-and-reimport, which strips its level settings, rather than through the favorites panel",
+        "check": "Was the asset moved in through export-and-reimport, which strips its level settings, rather than through the favorites panel?",
         "say_example": "That asset came in through export and reimport, which drops the level settings it had."
        }
       ]
@@ -2796,7 +2796,7 @@
           "kind": "decision",
           "verify_form": "The agent ordered the speaker layers - check which is on top. The top layer is the one that covers the others when the layouts overlap.",
           "speak": "if-wrong",
-          "check": "is the host's layer positioned above the guests' in the layer stack",
+          "check": "Is the host's layer positioned above the guests' in the layer stack?",
           "say_example": "The <guest>'s layer sits above the host's in the stack."
          }
         ]
@@ -2815,7 +2815,7 @@
           "kind": "decision",
           "verify_form": "The agent applied a visual template and a speaker layout - check both. The colourway is your show's branding and the layout has to match the number of people talking.",
           "speak": "if-wrong",
-          "check": "does the applied color theme match the show's standard branding, and does the layout match the number of speakers in the scene",
+          "check": "Does the applied color theme match the show's standard branding, and does the layout match the number of speakers in the scene?",
           "say_example": "The layout picked fits <2> people, but there are <3> speakers in this scene."
          },
          {
@@ -2828,7 +2828,7 @@
           "kind": "decision",
           "verify_form": "The agent applied a built-in multi-camera layout or built one - check which. The built-in ones are quick and they look like everybody else's.",
           "speak": "never",
-          "check": "was a pre-built multi-camera template applied, per the template panel, or was a custom layout built",
+          "check": "Was a pre-built multi-camera template applied, per the template panel, or was a custom layout built?",
           "say_example": "Applied the built-in <Picture in Picture> template"
          }
         ]
@@ -2847,7 +2847,7 @@
           "kind": "decision",
           "verify_form": "The agent cropped and zoomed a speaker's frame - check the headroom. Too much space above the head and the shot looks accidental; too little and the head is cut off.",
           "speak": "if-wrong",
-          "check": "does the speaker's framing show excess space above the head, or is the head cropped at the frame edge",
+          "check": "Does the speaker's framing show excess space above the head, or is the head cropped at the frame edge?",
           "say_example": "The zoom is at <95%>, leaving a lot of empty space above <the guest's> head."
          }
         ]
@@ -2866,7 +2866,7 @@
           "kind": "decision",
           "verify_form": "The agent set the layout to follow whoever is speaking, or locked it to one person - check which. Following the speaker is the default and it misses reactions.",
           "speak": "never",
-          "check": "is the multi-cam mode set to follow the active speaker or locked to one person, per the dropdown",
+          "check": "Is the multi-cam mode set to follow the active speaker or locked to one person, per the dropdown?",
           "say_example": "Set to follow whoever is speaking"
          },
          {
@@ -2879,7 +2879,7 @@
           "kind": "decision",
           "verify_form": "The agent assigned a camera feed to a layout box - check which. A box locked to a silent person is a long shot of somebody listening.",
           "speak": "if-wrong",
-          "check": "does the camera feed assigned to this layout box match the speaker who is actually talking at that point",
+          "check": "Does the camera feed assigned to this layout box match the speaker who is actually talking at that point?",
           "say_example": "That box is locked to <a guest> who isn't speaking in this stretch."
          }
         ]
@@ -2898,7 +2898,7 @@
           "kind": "decision",
           "verify_form": "The agent made one speaker fill the screen and hid the others - check who is on screen. That is a deliberate choice about who the moment belongs to.",
           "speak": "if-wrong",
-          "check": "is the speaker shown full-screen the one who is actually speaking at that point in the transcript",
+          "check": "Is the speaker shown full-screen the one who is actually speaking at that point in the transcript?",
           "say_example": "The speaker shown full-screen is <the host>, but <the guest> is talking at this point."
          }
         ]
@@ -2917,7 +2917,7 @@
           "kind": "decision",
           "verify_form": "The agent started a new scene at a particular point in the transcript - check where. That is where the picture changes, so it should land on a change of subject.",
           "speak": "if-wrong",
-          "check": "does the new scene boundary fall at a point where the topic changes in the transcript, rather than mid-thought",
+          "check": "Does the new scene boundary fall at a point where the topic changes in the transcript, rather than mid-thought?",
           "say_example": "The new scene starts mid-sentence, not at a change of subject."
          },
          {
@@ -2930,7 +2930,7 @@
           "kind": "decision",
           "verify_form": "The agent copied a layout to the other scenes or re-applied the template - check the framing. Re-applying the template throws away the crops you set.",
           "speak": "if-wrong",
-          "check": "was the layout copied over, preserving the crops already set, or was the template re-applied, resetting them",
+          "check": "Was the layout copied over, preserving the crops already set, or was the template re-applied, resetting them?",
           "say_example": "The template was re-applied there, which reset the crop and zoom already set for <the guest>."
          }
         ]
@@ -2949,7 +2949,7 @@
           "kind": "decision",
           "verify_form": "The agent laid visual clips over particular passages of speech - check the alignment. B-roll a sentence late illustrates the wrong point.",
           "speak": "if-wrong",
-          "check": "does the visual clip's start time align with the transcript passage it's meant to illustrate",
+          "check": "Does the visual clip's start time align with the transcript passage it's meant to illustrate?",
           "say_example": "That clip starts <5>s after the line it's meant to illustrate."
          }
         ]
@@ -2973,7 +2973,7 @@
       "kind": "decision",
       "verify_form": "The agent used the track's static level control to try to duck the music - check the result. A static level cannot come down only while the voice is speaking, so either the music is too loud under the voice or too quiet on its own.",
       "speak": "if-wrong",
-      "check": "was a static track volume change used to try to lower the music only during speech, rather than automation or an auto-duck effect",
+      "check": "Was a static track volume change used to try to lower the music only during speech, rather than automation or an auto-duck effect?",
       "say_example": "That's a flat volume drop on the whole track, so the music is either too loud under the host or too quiet on its own."
      }
     ],
@@ -2991,7 +2991,7 @@
         "whatTheAgentLoses": "You lose the visual confirmation that the dynamic range of the conversation is safely contained without harsh clipping.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does any track's meter show levels reaching into the red or clipping zone",
+        "check": "Does any track's meter show levels reaching into the red or clipping zone?",
         "say_example": "The <guest> track's meter is hitting red."
        },
        {
@@ -3003,7 +3003,7 @@
         "whatTheAgentLoses": "The holistic awareness to check the master bus levels during the busiest parts of the mix, not just individual track levels.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the master or output meter clip when all tracks play together, even if individual tracks read safely",
+        "check": "Does the master or output meter clip when all tracks play together, even if individual tracks read safely?",
         "say_example": "Each track reads fine alone, but the master meter clips when they all play together."
        },
        {
@@ -3015,7 +3015,7 @@
         "whatTheAgentLoses": "The visual safety net that flags momentary distortion, which might be missed by ear or if the person looks away during playback.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the sticky clip indicator lit at the top of the master meter, showing a clip occurred at some point",
+        "check": "Is the sticky clip indicator lit at the top of the master meter, showing a clip occurred at some point?",
         "say_example": "The clip light at the top of the master meter is lit, from a peak somewhere in the mix."
        }
       ]
@@ -3034,7 +3034,7 @@
         "kind": "decision",
         "verify_form": "The agent panned the tracks or left them centred - check the pan controls. For a podcast centred is normal, and panned speakers put one person in one ear.",
         "speak": "if-wrong",
-        "check": "are the L or R pan sliders set away from center on the voice tracks",
+        "check": "Are the L or R pan sliders set away from center on the voice tracks?",
         "say_example": "The <host> track is panned <full left>. That voice will only play in one ear."
        },
        {
@@ -3047,7 +3047,7 @@
         "kind": "decision",
         "verify_form": "The agent set the music bed's level - check the number. Around -16 dB under a voice is usual; a few dB either way is the difference between a bed and a distraction.",
         "speak": "if-wrong",
-        "check": "what is the music track's gain level in dB, relative to the voice tracks",
+        "check": "What is the music track's gain level in dB, relative to the voice tracks?",
         "say_example": "The music bed sits <4> dB under the voice. The usual for a bed is more like <16> dB under."
        },
        {
@@ -3060,7 +3060,7 @@
         "kind": "decision",
         "verify_form": "The agent changed this track's level - check the number against the others. A quiet interview lifted too far brings its room up with it.",
         "speak": "if-wrong",
-        "check": "does this track's level now sit close to the other tracks' levels, or still noticeably off",
+        "check": "Does this track's level now sit close to the other tracks' levels, or still noticeably off?",
         "say_example": "This track is still reading <6> dB quieter than the others after the adjustment."
        },
        {
@@ -3073,7 +3073,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted a track that sat too loud - check where it ended up. Matching by eye on the waveform and matching by ear are not the same thing.",
         "speak": "if-wrong",
-        "check": "does this track's meter read noticeably louder, such as into yellow, compared to the rest of the mix",
+        "check": "Does this track's meter read noticeably louder, such as into yellow, compared to the rest of the mix?",
         "say_example": "This track peaks in yellow while the rest of the mix sits in green."
        },
        {
@@ -3085,7 +3085,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the agent followed through on their spoken intention to properly mix the background music.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does a gain or amplification effect show a reduction applied to the music bed track, against the reduction that was asked for",
+        "check": "Does a gain or amplification effect show a reduction applied to the music bed track, against the reduction that was asked for?",
         "say_example": "The music bed shows no gain reduction applied, though you asked for it to come down."
        },
        {
@@ -3098,7 +3098,7 @@
         "kind": "decision",
         "verify_form": "The agent set the intro's level and stereo position - check both against the rest of the mix. An intro louder than the episode makes listeners reach for the volume twice.",
         "speak": "if-wrong",
-        "check": "is the intro track's volume noticeably louder than the rest of the mix, per the track header's level and pan controls",
+        "check": "Is the intro track's volume noticeably louder than the rest of the mix, per the track header's level and pan controls?",
         "say_example": "The intro is <5> dB above the rest of the mix. It'll jump out when the episode starts."
        }
       ]
@@ -3116,7 +3116,7 @@
         "whatTheAgentLoses": "You lose the opportunity to decide exactly how close to the maximum safe volume threshold you want to push this specific segment.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the resulting peak amplitude after amplification stay at or below 0 dB",
+        "check": "Does the resulting peak amplitude after amplification stay at or below 0 dB?",
         "say_example": "Amplifying by <+4> dB would push the peak to <+1.2> dB. That's over the ceiling."
        },
        {
@@ -3129,7 +3129,7 @@
         "kind": "decision",
         "verify_form": "The agent pulled one phrase down with the envelope - check how far. A phrase levelled flat against its neighbours takes the emphasis out of it.",
         "speak": "if-wrong",
-        "check": "does the pulled-down section's level now sit flush with its neighbors rather than clearly standing out",
+        "check": "Does the pulled-down section's level now sit flush with its neighbors rather than clearly standing out?",
         "say_example": "That section is still reading <3> dB louder than the lines around it."
        },
        {
@@ -3141,7 +3141,7 @@
         "whatTheAgentLoses": "You lose the opportunity to mathematically cross-check the software's level readings to ensure the underlying audio remains consistent between adjustments.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the original peak amplitude reported in one Amplify dialog match the value reported in another dialog for the same selection",
+        "check": "Does the original peak amplitude reported in one Amplify dialog match the value reported in another dialog for the same selection?",
         "say_example": "One Amplify dialog reads the original peak as <-0.84> dB and the other as <-1.1> dB, for the same selection."
        },
        {
@@ -3154,7 +3154,7 @@
         "kind": "decision",
         "verify_form": "The agent lowered the whole clip's level - check the number. This moves everything in the clip, including the quiet parts you may have wanted to keep quiet.",
         "speak": "if-wrong",
-        "check": "did lowering the clip's overall volume also pull down a part that was already at the right level",
+        "check": "Did lowering the clip's overall volume also pull down a part that was already at the right level?",
         "say_example": "That drop also pulled the quieter part of the clip down further, not just the loud part."
        },
        {
@@ -3166,7 +3166,7 @@
         "whatTheAgentLoses": "You lose the opportunity to manually verify that the software's volume adjustments are mathematically consistent across different edits.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the relative change shown, applied to the clip's original baseline, equal the absolute value shown in the tooltip",
+        "check": "Does the relative change shown, applied to the clip's original baseline, equal the absolute value shown in the tooltip?",
         "say_example": "The tooltip says <+3> dB from a <-12.5> dB baseline, then reports <-8> dB absolute. Those don't add up."
        },
        {
@@ -3179,7 +3179,7 @@
         "kind": "decision",
         "verify_form": "The agent switched to a combined selection and level tool - check the toolbar. It saves swapping tools and it also makes an accidental drag change a level.",
         "speak": "never",
-        "check": "is the Multi-tool the one currently active in the toolbar",
+        "check": "Is the Multi-tool the one currently active in the toolbar?",
         "say_example": "Switched to the Multi-tool"
        },
        {
@@ -3192,7 +3192,7 @@
         "kind": "decision",
         "verify_form": "The agent used an amplify effect or the envelope to lift the track - check which. The envelope shows the amount as you drag it; the effect applies it and leaves no trace.",
         "speak": "never",
-        "check": "was the boost applied via the Amplify effect or the Envelope tool",
+        "check": "Was the boost applied via the Amplify effect or the Envelope tool?",
         "say_example": "Boosted using the Amplify effect"
        }
       ]
@@ -3212,7 +3212,7 @@
         "kind": "decision",
         "verify_form": "The agent ducked the music automatically or drew the level by hand - check which. The automatic pass is even and it does not follow a clip that moves afterwards.",
         "speak": "never",
-        "check": "was the music lowered via an Auto Duck effect or via manually drawn envelope points",
+        "check": "Was the music lowered via an Auto Duck effect or via manually drawn envelope points?",
         "say_example": "Used Auto Duck to lower the music"
        }
       ],
@@ -3231,7 +3231,7 @@
           "kind": "decision",
           "verify_form": "The agent drew control points to taper the level - check where they sit. The slope decides whether the change is heard as a fade or as a step.",
           "speak": "if-wrong",
-          "check": "are there at least two spaced-out control points forming a slope, rather than a single point making a step",
+          "check": "Are there at least two spaced-out control points forming a slope, rather than a single point making a step?",
           "say_example": "There's only one control point there. That makes a sudden step rather than a taper."
          },
          {
@@ -3244,7 +3244,7 @@
           "kind": "decision",
           "verify_form": "The agent placed automation points to duck the music under the narration - check where they land against the first and last words. Late and the music covers the opening.",
           "speak": "if-wrong",
-          "check": "does the first automation point, where the music starts ducking, fall at or before the first spoken word of the intro",
+          "check": "Does the first automation point, where the music starts ducking, fall at or before the first spoken word of the intro?",
           "say_example": "The first duck point lands <1.5>s after the intro's first word. The music covers the opening line."
          },
          {
@@ -3256,7 +3256,7 @@
           "whatTheAgentLoses": "The agent might generate an automation envelope that mathematically achieves the target volume but visually looks (and audibly sounds) jagged and unnatural.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the drawn automation curve show smooth transitions between points, or sharp stair-step jumps",
+          "check": "Does the drawn automation curve show smooth transitions between points, or sharp stair-step jumps?",
           "say_example": "The curve has a hard stair-step jump around <the second verse>, not a smooth ramp."
          },
          {
@@ -3269,7 +3269,7 @@
           "kind": "decision",
           "verify_form": "The agent set how steeply the music drops as the voice starts - check the slope. A steep drop is heard as a cut; a slow one leaves the music over the first sentence.",
           "speak": "if-wrong",
-          "check": "how many seconds does the duck take to reach its low point once the voice begins",
+          "check": "How many seconds does the duck take to reach its low point once the voice begins?",
           "say_example": "The duck takes <3.5>s to come down. The first sentence plays over full music."
          },
          {
@@ -3282,7 +3282,7 @@
           "kind": "decision",
           "verify_form": "The agent brought the music back up after the voice - check where. Too early and it steps on the last words.",
           "speak": "if-wrong",
-          "check": "does the music's fade-in point begin at or after the end of the voiceover's last word",
+          "check": "Does the music's fade-in point begin at or after the end of the voiceover's last word?",
           "say_example": "The music starts climbing back up <0.4>s before the last word finishes."
          }
         ]
@@ -3301,7 +3301,7 @@
           "kind": "decision",
           "verify_form": "The agent set the automatic ducking - check the duck amount and the fade times. Around -12 dB with half-second fades is usual; deeper or faster is heard as pumping.",
           "speak": "if-wrong",
-          "check": "what duck amount in dB and what fade times in seconds are set in the Auto Duck dialog",
+          "check": "What duck amount in dB and what fade times in seconds are set in the Auto Duck dialog?",
           "say_example": "Auto Duck is set to <-20> dB with <0.1>s fades. That's deep and fast enough to sound like pumping."
          }
         ]
@@ -3319,7 +3319,7 @@
           "whatTheAgentLoses": "The user loses the ability to fine-tune the specific threshold and fade parameters of the ducking effect to match their desired audio aesthetic.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the track order show the music track at the top, and does it have the Auto Duck effect applied",
+          "check": "Does the track order show the music track at the top, and does it have the Auto Duck effect applied?",
           "say_example": "The music track is still <third> in the list, and no Auto Duck effect shows applied."
          }
         ]
@@ -3338,7 +3338,7 @@
           "kind": "decision",
           "verify_form": "The agent set where and how far the music ducks - check both. The depth is the balance and the bounds are the timing.",
           "speak": "if-wrong",
-          "check": "does the ducked span's start and end align with the actual speech, and is the ducked level low enough that the voice isn't masked",
+          "check": "Does the ducked span's start and end align with the actual speech, and is the ducked level low enough that the voice isn't masked?",
           "say_example": "The duck only covers part of the line. The music comes back up while <the guest> is still talking."
          },
          {
@@ -3351,7 +3351,7 @@
           "kind": "decision",
           "verify_form": "The agent shaped the ducking envelope by hand - check the slopes and the floor. This is where a long tail or an abrupt drop gets decided.",
           "speak": "if-wrong",
-          "check": "does the envelope's floor level and slope timing align with the start and end of the dialogue it's meant to duck under",
+          "check": "Does the envelope's floor level and slope timing align with the start and end of the dialogue it's meant to duck under?",
           "say_example": "The envelope floor sits at <-6> dB, still audible over quieter dialogue."
          }
         ]
@@ -3382,7 +3382,7 @@
           "kind": "decision",
           "verify_form": "The agent kept a hand-drawn fade or replaced it with the menu fade - check which. The hand-drawn one can be shaped and it can also come out uneven.",
           "speak": "if-wrong",
-          "check": "does the manually drawn envelope curve show smooth transitions, or a visibly jagged, uneven shape",
+          "check": "Does the manually drawn envelope curve show smooth transitions, or a visibly jagged, uneven shape?",
           "say_example": "The hand-drawn curve has a jagged jump around <0:42> instead of a smooth taper."
          },
          {
@@ -3395,7 +3395,7 @@
           "kind": "decision",
           "verify_form": "The agent applied automatic ducking - listen to the gaps in the speech. Ducking reads silence as room to swell back up, and a brief pause becomes a volume jump.",
           "speak": "if-wrong",
-          "check": "does the ducked music level rise back up during a pause within a single speaker's dialogue, before that speaker resumes",
+          "check": "Does the ducked music level rise back up during a pause within a single speaker's dialogue, before that speaker resumes?",
           "say_example": "The music swells back up during a <1.2>s pause mid-sentence, then ducks again once talking resumes."
          }
         ]
@@ -3416,7 +3416,7 @@
         "kind": "decision",
         "verify_form": "The agent put a fade on the start of the clip - check its length. Too short and there is a click; too long and the first word is swallowed.",
         "speak": "if-wrong",
-        "check": "how long is the fade-in applied at the start of the clip",
+        "check": "How long is the fade-in applied at the start of the clip?",
         "say_example": "The fade-in there runs <400>ms, long enough to swallow the first word."
        },
        {
@@ -3428,7 +3428,7 @@
         "whatTheAgentLoses": "You lose the opportunity to visually verify that the fade's slope and duration match your desired pacing for the audio.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the waveform at the clip's start show a gradually increasing shape, or does it start at full amplitude immediately",
+        "check": "Does the waveform at the clip's start show a gradually increasing shape, or does it start at full amplitude immediately?",
         "say_example": "The waveform jumps straight to full height at the start. There's no fade on it."
        },
        {
@@ -3440,7 +3440,7 @@
         "whatTheAgentLoses": "The user loses the intended audio mix because the agent fails to actually apply the necessary volume reduction to the track.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the music track's waveform show any amplitude reduction after the point the fade was applied",
+        "check": "Does the music track's waveform show any amplitude reduction after the point the fade was applied?",
         "say_example": "The waveform there stays flat. No fade-down shows after that point."
        },
        {
@@ -3453,7 +3453,7 @@
         "kind": "decision",
         "verify_form": "The agent applied a fade effect to the selection - check which direction and how far it reaches. A fade applied to the wrong end does the opposite of what was wanted.",
         "speak": "if-wrong",
-        "check": "does the applied effect match a fade-out, decreasing toward the end, rather than a fade-in, given the selection is at the end of the clip",
+        "check": "Does the applied effect match a fade-out, decreasing toward the end, rather than a fade-in, given the selection is at the end of the clip?",
         "say_example": "That applied a fade-in at the end of the clip. A fade-out is what's needed there."
        },
        {
@@ -3466,7 +3466,7 @@
         "kind": "decision",
         "verify_form": "The agent turned a level step into a fade - check the slope. Without the fade the drop is heard as a click.",
         "speak": "if-wrong",
-        "check": "does the level change between these two clips ramp gradually rather than jump instantly to the new dB level",
+        "check": "Does the level change between these two clips ramp gradually rather than jump instantly to the new dB level?",
         "say_example": "The level drops straight to <-26.4> dB there. It's a step, with no ramp into it."
        },
        {
@@ -3479,7 +3479,7 @@
         "kind": "decision",
         "verify_form": "The agent put a fade on the end of the music - check its length. Without one the music stops dead.",
         "speak": "if-wrong",
-        "check": "does the music clip's end show a fade-out, or does it stop abruptly at full level",
+        "check": "Does the music clip's end show a fade-out, or does it stop abruptly at full level?",
         "say_example": "The music just stops at full volume. There's no fade-out on the end."
        },
        {
@@ -3492,7 +3492,7 @@
         "kind": "decision",
         "verify_form": "The agent selected a stretch of music to fade - check its bounds. A fade applied to the wrong stretch takes the music down while the voice still needs it.",
         "speak": "if-wrong",
-        "check": "does the selected fade-out region start after the last spoken word, rather than overlapping speech that still needs the music",
+        "check": "Does the selected fade-out region start after the last spoken word, rather than overlapping speech that still needs the music?",
         "say_example": "The fade-out selection starts while <the host> is still talking, <2>s before the last line."
        },
        {
@@ -3505,7 +3505,7 @@
         "kind": "decision",
         "verify_form": "The agent set the music's fade in and fade out - check both. They are the first and last thing the listener hears of the bed.",
         "speak": "if-wrong",
-        "check": "are both a fade-in and a fade-out present on the music clip's start and end",
+        "check": "Are both a fade-in and a fade-out present on the music clip's start and end?",
         "say_example": "The music has a fade-in at the start but no fade-out at the end."
        },
        {
@@ -3518,7 +3518,7 @@
         "kind": "decision",
         "verify_form": "The agent set how gradual the fade out is - check its length. A short fade reads as an ending, a long one as a fade into the next thing.",
         "speak": "if-wrong",
-        "check": "how many seconds does the music's fade-out span",
+        "check": "How many seconds does the music's fade-out span?",
         "say_example": "The fade-out there runs <0.3>s. That reads as a cutoff rather than an ending."
        },
        {
@@ -3531,7 +3531,7 @@
         "kind": "decision",
         "verify_form": "The agent faded the tail of the intro - check its length. Without a fade the intro cuts straight into the conversation.",
         "speak": "if-wrong",
-        "check": "does the intro's end show a fade-out, or does it cut directly into the conversation at full level",
+        "check": "Does the intro's end show a fade-out, or does it cut directly into the conversation at full level?",
         "say_example": "The intro cuts straight into the first line. There's no fade at the join."
        }
       ]
@@ -3550,7 +3550,7 @@
         "kind": "decision",
         "verify_form": "The agent balanced the two voices after processing - listen to them together. The test is whether you have to change the volume when the other person starts talking.",
         "speak": "if-wrong",
-        "check": "do the two tracks' post-compression levels, by peak or average dB per the meters, read within a similar range of each other",
+        "check": "Do the two tracks' post-compression levels, by peak or average dB per the meters, read within a similar range of each other?",
         "say_example": "After compression, <the host> averages <-14> dB and <the guest> <-20> dB. One will sound quieter all the way through."
        }
       ]
@@ -3569,7 +3569,7 @@
         "kind": "decision",
         "verify_form": "The agent applied a fade to the whole mix or to one track - check which. A whole-mix fade takes the last spoken words down with the music.",
         "speak": "never",
-        "check": "was the whole-project fade-out created via the Mix menu's automatic command",
+        "check": "Was the whole-project fade-out created via the Mix menu's automatic command?",
         "say_example": "Used the Mix menu to fade the whole project out"
        },
        {
@@ -3582,7 +3582,7 @@
         "kind": "decision",
         "verify_form": "The agent applied a mastering preset and then adjusted it - check the reverb. Presets commonly arrive with reverb at 20 percent, and speech wants zero.",
         "speak": "if-wrong",
-        "check": "does the applied mastering preset's default reverb setting sit above zero on this spoken-word track",
+        "check": "Does the applied mastering preset's default reverb setting sit above zero on this spoken-word track?",
         "say_example": "The preset applied adds <20%> reverb, left at its default for speech."
        },
        {
@@ -3594,7 +3594,7 @@
         "whatTheAgentLoses": "You lose the ability to manually structure the project's track layout for final loudness targeting.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does a master track exist on the timeline for the whole mix to run through",
+        "check": "Does a master track exist on the timeline for the whole mix to run through?",
         "say_example": "There's no master track yet, and the whole-mix processing needs one to run through."
        },
        {
@@ -3607,7 +3607,7 @@
         "kind": "decision",
         "verify_form": "The agent put an effect on the master track - check which. Everything in the episode goes through it, including the intro and the advert that were already processed.",
         "speak": "if-wrong",
-        "check": "does the effect applied to the master track apply extra processing to segments, like the intro or an ad, that were already individually processed",
+        "check": "Does the effect applied to the master track apply extra processing to segments, like the intro or an ad, that were already individually processed?",
         "say_example": "That EQ on the master also reshapes the <intro>, which was already processed on its own."
        },
        {
@@ -3620,7 +3620,7 @@
         "kind": "decision",
         "verify_form": "The agent put the fade on the master or on the music track - check which. On the master it fades the voice too.",
         "speak": "if-wrong",
-        "check": "is the fade-out curve applied to the master track, affecting everything, or specifically to the music track",
+        "check": "Is the fade-out curve applied to the master track, affecting everything, or specifically to the music track?",
         "say_example": "That fade-out is on the master track, so it fades the voice out along with the music."
        },
        {
@@ -3633,7 +3633,7 @@
         "kind": "decision",
         "verify_form": "The agent hid the master track again - check the layout. This only affects what you can see.",
         "speak": "never",
-        "check": "was the master track hidden from view after the fade-out was set",
+        "check": "Was the master track hidden from view after the fade-out was set?",
         "say_example": "Hid the master track from view"
        }
       ]
@@ -3651,7 +3651,7 @@
         "whatTheAgentLoses": "You lose the ability to specify the exact audio format and loudness standard required by your specific podcast host or distribution platform.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the loudness target selected match a standard spoken-word podcast target rather than a music-streaming target",
+        "check": "Does the loudness target selected match a standard spoken-word podcast target rather than a music-streaming target?",
         "say_example": "The loudness target is set to <-9> LUFS, which is a music-streaming target, not the usual spoken-word one."
        }
       ]
@@ -3670,7 +3670,7 @@
         "kind": "decision",
         "verify_form": "The agent muted a track - check which one and whether it stays muted. A track muted to hear something else and never unmuted is missing from the export.",
         "speak": "if-wrong",
-        "check": "does the track being muted match the one meant to be silenced, not an unrelated track",
+        "check": "Does the track being muted match the one meant to be silenced, not an unrelated track?",
         "say_example": "The track muted is <Speak 4>, but the one meant to be silenced is <the guest track>."
        },
        {
@@ -3683,7 +3683,7 @@
         "kind": "decision",
         "verify_form": "The agent soloed the music to check its fade - check that it did. A fade that is right on its own can still be wrong under the voice.",
         "speak": "if-wrong",
-        "check": "was the music track soloed to check the fade-out on its own",
+        "check": "Was the music track soloed to check the fade-out on its own?",
         "say_example": "The music track was played mixed with the voice, never soloed, before calling the fade-out done."
        },
        {
@@ -3695,7 +3695,7 @@
         "whatTheAgentLoses": "The procedural discipline to reset the mixing board state before committing to the final render.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "are all tracks unmuted and all solo buttons cleared before the export begins",
+        "check": "Are all tracks unmuted and all solo buttons cleared before the export begins?",
         "say_example": "The <music> track is still soloed. Exporting now would leave out everything else."
        }
       ]
@@ -3720,7 +3720,7 @@
         "whatTheAgentLoses": "You lose control over your local file organization and naming conventions for the editable project workspace.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the save dialog's filename and destination folder make this findable later as this episode's project file",
+        "check": "Does the save dialog's filename and destination folder make this findable later as this episode's project file?",
         "say_example": "This is saving as <Untitled1.aup3> to <Downloads>, not named for the episode."
        },
        {
@@ -3732,7 +3732,7 @@
         "whatTheAgentLoses": "You lose control over the specific naming convention and folder location used to organize your local project files.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "was 'Save Project' or 'Save Project As' used, and does saving trigger a prompt about copying in external files",
+        "check": "Was 'Save Project' or 'Save Project As' used, and does saving trigger a prompt about copying in external files?",
         "say_example": "That used Save Project As, and the copy-in-external-files prompt hasn't been answered yet."
        },
        {
@@ -3744,7 +3744,7 @@
         "whatTheAgentLoses": "The delegator loses confidence that the agent's stated actions match what was actually executed in the software.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did a Save Project click actually register, rather than the menu simply closing",
+        "check": "Did a Save Project click actually register, rather than the menu simply closing?",
         "say_example": "The file menu closed there, but nothing shows a save actually went through."
        },
        {
@@ -3757,7 +3757,7 @@
         "kind": "decision",
         "verify_form": "The agent saved or discarded the session's changes on closing - check which. Discarding loses the edit, not the exported file.",
         "speak": "if-wrong",
-        "check": "did the session save its changes before closing, per the warning dialog's outcome",
+        "check": "Did the session save its changes before closing, per the warning dialog's outcome?",
         "say_example": "The session closed without saving. The edits made since the last save aren't kept."
        },
        {
@@ -3769,7 +3769,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to permanently dismiss this warning by checking the 'Don't show this warning again' box.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "was it acknowledged that Save Project creates an editor-specific project file rather than a standard playable audio file",
+        "check": "Was it acknowledged that Save Project creates an editor-specific project file rather than a standard playable audio file?",
         "say_example": "That saved an Audacity project file, not a playable audio file. The episode still needs exporting."
        },
        {
@@ -3782,7 +3782,7 @@
         "kind": "decision",
         "verify_form": "The agent saved the project before exporting or after - check that the editable session exists. Without it, the next change means editing from the raw files again.",
         "speak": "if-wrong",
-        "check": "was the project saved before the export was run, so an editable session still exists after",
+        "check": "Was the project saved before the export was run, so an editable session still exists after?",
         "say_example": "The export ran without saving the project first. There's no editable session to come back to."
        }
       ]
@@ -3800,7 +3800,7 @@
         "whatTheAgentLoses": "You lose the ability to choose exactly how and where the final audio file is saved locally on your computer.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "was an export command, like 'Export Song to Disk', used, rather than a Save or Save Project command",
+        "check": "Was an export command, like 'Export Song to Disk', used, rather than a Save or Save Project command?",
         "say_example": "That used Save Project rather than Export. No playable audio file was written."
        },
        {
@@ -3813,7 +3813,7 @@
         "kind": "decision",
         "verify_form": "The agent exported one file or several - check the range setting. Split by track you get stems; whole project you get the episode.",
         "speak": "if-wrong",
-        "check": "is the export range or mode set to produce one combined file rather than split by track or label",
+        "check": "Is the export range or mode set to produce one combined file rather than split by track or label?",
         "say_example": "This is set to split the output into separate track files, not one combined episode file."
        },
        {
@@ -3825,7 +3825,7 @@
         "whatTheAgentLoses": "The contextual awareness to verify the export boundaries match the intended episode length.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the export range set to the entire project rather than a specific highlighted selection",
+        "check": "Is the export range set to the entire project rather than a specific highlighted selection?",
         "say_example": "The export range is set to the highlighted <10-second> selection, not the whole project."
        }
       ]
@@ -3843,7 +3843,7 @@
         "whatTheAgentLoses": "You lose control over the final audio quality format and the specific folder where the finished episode is saved.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the export format match a standard podcast delivery format, and is the destination folder one meant for finished episodes",
+        "check": "Does the export format match a standard podcast delivery format, and is the destination folder one meant for finished episodes?",
         "say_example": "This is exporting as <WAV> to <the Downloads folder>, not the usual finished-episodes location."
        },
        {
@@ -3856,7 +3856,7 @@
         "kind": "decision",
         "verify_form": "The agent chose an export format - check which. A lossless file is an archive and an MP3 is what gets uploaded.",
         "speak": "if-wrong",
-        "check": "is the export format set to a delivery format like MP3 appropriate for hosting, rather than a large lossless archive format",
+        "check": "Is the export format set to a delivery format like MP3 appropriate for hosting, rather than a large lossless archive format?",
         "say_example": "The format picked is <FLAC>, which most podcast hosts won't accept directly."
        }
       ]
@@ -3875,7 +3875,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a bit rate for the MP3 - check the number. 192 kbps is the usual podcast setting; 64 halves the file and is audibly worse on music.",
         "speak": "if-wrong",
-        "check": "what bitrate, in kbps, is selected for the MP3 export",
+        "check": "What bitrate, in kbps, is selected for the MP3 export?",
         "say_example": "The bitrate is set to <64> kbps, well below the usual <192> for podcasts."
        },
        {
@@ -3887,7 +3887,7 @@
         "whatTheAgentLoses": "You lose the chance to verify that the specific bitrate, format, and loudness targets meet your podcast host's requirements before generating the file.",
         "kind": "state-check",
         "speak": "always",
-        "check": "what format, bitrate, and loudness settings are shown in this export dialog",
+        "check": "What format, bitrate, and loudness settings are shown in this export dialog?",
         "say_example": "Exporting as <MP3>, <192> kbps, targeting <-16> LUFS."
        },
        {
@@ -3900,7 +3900,7 @@
         "kind": "decision",
         "verify_form": "The agent set the format and the encoding quality - check both. Mono at 64 kbps is a quarter the size of stereo at 192 and it is audibly worse on music.",
         "speak": "if-wrong",
-        "check": "do the format and encoding settings match a standard mono or stereo podcast delivery spec rather than an unusual combination",
+        "check": "Do the format and encoding settings match a standard mono or stereo podcast delivery spec rather than an unusual combination?",
         "say_example": "This is set to <mono> at <64> kbps. The usual for an episode is stereo at <192>."
        },
        {
@@ -3912,7 +3912,7 @@
         "whatTheAgentLoses": "You lose the ability to manually verify that the technical export parameters exactly match your podcast's distribution standards.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the selected sample rate match a standard rate rather than an unusually low one",
+        "check": "Does the selected sample rate match a standard rate rather than an unusually low one?",
         "say_example": "The sample rate is set to <8000> Hz. That's well below what an episode is normally written at."
        },
        {
@@ -3924,7 +3924,7 @@
         "whatTheAgentLoses": "You lose the opportunity to manually verify that the software accurately updates its file size estimation in response to your chosen export settings.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the displayed estimated file size at the lower bitrate equal half of the size shown at the original bitrate",
+        "check": "Does the displayed estimated file size at the lower bitrate equal half of the size shown at the original bitrate?",
         "say_example": "The estimate reads <1.6> MB at <128> kbps and <1.0> MB at <64> kbps. Halving the bitrate didn't halve the size."
        },
        {
@@ -3937,7 +3937,7 @@
         "kind": "decision",
         "verify_form": "The agent included chapter markers or left them out - check the box. Chapters give listeners something to skip to and they need to have been set in the first place.",
         "speak": "never",
-        "check": "is the 'Add Chapter' option checked in the export dialog",
+        "check": "Is the 'Add Chapter' option checked in the export dialog?",
         "say_example": "Exported without chapter markers"
        },
        {
@@ -3949,7 +3949,7 @@
         "whatTheAgentLoses": "The user loses the chance to catch a file that is too large before the export finishes, resulting in a failed upload and wasted rendering time.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the estimated export file size stay under the stated upload limit for the hosting platform",
+        "check": "Does the estimated export file size stay under the stated upload limit for the hosting platform?",
         "say_example": "The estimated file is <620> MB against a <500> MB host limit."
        }
       ]
@@ -3967,7 +3967,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose control over your personal file organization system and might struggle to find the exported episode.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the file name in the export dialog identify this episode, and is it saving to the folder kept for finished episodes rather than a default location",
+        "check": "Does the file name in the export dialog identify this episode, and is it saving to the folder kept for finished episodes rather than a default location?",
         "say_example": "The file is named <untitled.mp3>, saved to <Desktop> rather than the episodes folder."
        }
       ]
@@ -3985,7 +3985,7 @@
         "whatTheAgentLoses": "You lose control over the episode's ID3 tags, risking the final file being published with the background music's metadata instead of your podcast's details.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "do the Title, Artist, and Album tag fields reflect the current episode rather than leftover values from an imported file",
+        "check": "Do the Title, Artist, and Album tag fields reflect the current episode rather than leftover values from an imported file?",
         "say_example": "The tags still read <Artist: sample loop pack> and <Album: royalty free beats>. Those came in with the music file, not from the show."
        },
        {
@@ -3997,7 +3997,7 @@
         "whatTheAgentLoses": "The delegator loses proper track labeling and discoverability because the episode will be published without its identifying metadata.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "are the Title, Artist and Album fields filled in, or still blank as the export runs",
+        "check": "Are the Title, Artist and Album fields filled in, or still blank as the export runs?",
         "say_example": "The Title, Artist and Album fields are still blank."
        }
       ]
@@ -4015,7 +4015,7 @@
         "whatTheAgentLoses": "You lose the chance to decide whether to suppress this mixdown warning for future exports or keep it active as a safety check.",
         "kind": "state-check",
         "speak": "never",
-        "check": "is the export mixing down to stereo, as expected for a podcast release",
+        "check": "Is the export mixing down to stereo, as expected for a podcast release?",
         "say_example": "Mixed down to stereo for export"
        },
        {
@@ -4028,7 +4028,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted the warning about exporting to a lossy format - check whether a lossless copy exists anywhere. MP3 is what a podcast host wants and it is not an archive.",
         "speak": "if-wrong",
-        "check": "does a lossless or full-quality project or export exist anywhere before proceeding with a lossy MP3 export",
+        "check": "Does a lossless or full-quality project or export exist anywhere before proceeding with a lossy MP3 export?",
         "say_example": "There's no lossless copy saved anywhere. This MP3 would be the only version of the episode."
        }
       ]
@@ -4046,7 +4046,7 @@
         "whatTheAgentLoses": "You lose the final visual confirmation that the correct audio quality settings were successfully applied to the export.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the export progress window's displayed info match the bitrate chosen earlier in the options dialog",
+        "check": "Does the export progress window's displayed info match the bitrate chosen earlier in the options dialog?",
         "say_example": "The progress window shows <128> kbps, not the <192> that was selected."
        },
        {
@@ -4058,7 +4058,7 @@
         "whatTheAgentLoses": "The user loses the reassurance of watching the progress bar to confirm the final audio file renders without the software freezing.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the progress bar advancing and the remaining-time estimate decreasing, rather than stalled",
+        "check": "Is the progress bar advancing and the remaining-time estimate decreasing, rather than stalled?",
         "say_example": "The progress bar hasn't moved from <40%> in over a minute."
        }
       ]
@@ -4076,7 +4076,7 @@
         "whatTheAgentLoses": "Delegating this check means losing the direct confirmation that the final deliverable perfectly reflects the intended timeline boundaries.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the exported file's duration match the project's end marker timestamp",
+        "check": "Does the exported file's duration match the project's end marker timestamp?",
         "say_example": "The exported file runs <0:52>, not the <0:40.834> the end marker was set to."
        },
        {
@@ -4088,7 +4088,7 @@
         "whatTheAgentLoses": "The user loses the majority of their podcast episode because the agent only exported a fraction of the final edit.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the exported file's total length match the full project timeline length",
+        "check": "Does the exported file's total length match the full project timeline length?",
         "say_example": "The project timeline runs <21> minutes, but the exported file is only <5>."
        },
        {
@@ -4100,7 +4100,7 @@
         "whatTheAgentLoses": "You lose the immediate visual reassurance of seeing the final audio file sitting correctly in your own file system.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the exported file actually appear in the destination folder shown",
+        "check": "Does the exported file actually appear in the destination folder shown?",
         "say_example": "No file shows up in <the Desktop> folder after the export finished."
        },
        {
@@ -4112,7 +4112,7 @@
         "whatTheAgentLoses": "The agent might successfully execute the export command without realizing the workspace was left in a stale state, producing a file that is missing half the conversation.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "when the exported file is played back, are all speaker tracks and the music audible",
+        "check": "When the exported file is played back, are all speaker tracks and the music audible?",
         "say_example": "Playing back the export, <the guest's> voice is missing entirely."
        }
       ]
@@ -4131,7 +4131,7 @@
         "kind": "decision",
         "verify_form": "The agent published a link or downloaded the file - check which. A link is hosted for you and a file is yours.",
         "speak": "gate",
-        "check": "does the dialog offer a choice between publishing a link and downloading the file, and if it publishes, what platform, account and access level does it show",
+        "check": "Does the dialog offer a choice between publishing a link and downloading the file, and if it publishes, what platform, account and access level does it show?",
         "say_example": "Ready to publish <episode 12> to <Buzzsprout>, under <the show's account>, visible to <anyone with the link>. Say publish, or say download instead to keep it private."
        }
       ]

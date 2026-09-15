@@ -24,7 +24,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a surface to cancel from - check which one; only you know where this subscription was originally billed, and the cancel control only exists where the money actually moves.",
         "speak": "gate",
-        "check": "what surfaces for managing this subscription does the current screen show (the service's own app, a device settings/subscription-manager app, other)",
+        "check": "What surfaces for managing this subscription does the current screen show (the service's own app, a device settings/subscription-manager app, other)?",
         "say_example": "This phone shows more than one way to manage <service> - its own app, and the phone's subscription settings. Which one did you actually sign up through? I'll cancel there."
        }
       ]
@@ -42,7 +42,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the knowledge of where your device-level subscription controls are located on your own phone.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the home screen show a Settings (or App Store) icon among the installed apps",
+        "check": "Does the home screen show a Settings (or App Store) icon among the installed apps?",
         "say_example": "Opened Settings to reach the subscription manager"
        }
       ]
@@ -71,7 +71,7 @@
         "whatTheAgentLoses": "You lose the peace of mind of knowing the agent correctly navigated to the login portal instead of the account creation flow.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the page show a Sign In control separate from a Get Started/Sign Up or download button",
+        "check": "Does the page show a Sign In control separate from a Get Started/Sign Up or download button?",
         "say_example": "Clicked Sign In, not Get Started, so it opens your existing account"
        }
       ]
@@ -89,7 +89,7 @@
         "whatTheAgentLoses": "Delegating this step requires sharing your personal login credentials with the agent.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "what email or username is shown already filled into the login form",
+        "check": "What email or username is shown already filled into the login form?",
         "say_example": "The login box is already filled in for <email>. That's whose account I'd be opening."
        }
       ]
@@ -108,7 +108,7 @@
         "kind": "decision",
         "verify_form": "A biometric or device-auth prompt gated the account and the flow got past it - check how; only your fingerprint or passcode should be able to do that, and an agent that cleared it was holding credentials of yours.",
         "speak": "gate",
-        "check": "what kind of prompt is on screen (biometric/passcode device-auth) and whether it is still waiting or already cleared",
+        "check": "What kind of prompt is on screen (biometric/passcode device-auth) and whether it is still waiting or already cleared?",
         "say_example": "Your phone is asking for Face ID or your passcode to open this. Only you can do that part - go ahead, and let me know when it's through."
        }
       ]
@@ -126,7 +126,7 @@
         "whatTheAgentLoses": "You lose the ability to visually confirm that the agent is operating under your specific profile rather than another user's account.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "what site/domain the browser is on and whose name or account avatar is shown as signed in",
+        "check": "What site/domain the browser is on and whose name or account avatar is shown as signed in?",
         "say_example": "Confirmed <site>, signed in as <account>"
        }
       ]
@@ -155,7 +155,7 @@
         "whatTheAgentLoses": "You lose the opportunity to learn exactly where subscription management is located within your device's settings menu.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which settings menu entries are shown and is one of them the subscriptions/App Store option",
+        "check": "Which settings menu entries are shown and is one of them the subscriptions/App Store option?",
         "say_example": "Opened iTunes & App Store, not Battery or Privacy"
        },
        {
@@ -167,7 +167,7 @@
         "whatTheAgentLoses": "You lose the opportunity to review your current plan details and upcoming payment date before initiating the cancellation process.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which options are listed on the account overview tab and is Manage Membership among them",
+        "check": "Which options are listed on the account overview tab and is Manage Membership among them?",
         "say_example": "Selected Manage Membership, not Change Plan"
        }
       ]
@@ -185,7 +185,7 @@
         "whatTheAgentLoses": "You lose the ability to verify exactly which Apple ID account is being accessed before navigating into its specific settings.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "is the Apple ID row visible at the top of the settings screen",
+        "check": "Is the Apple ID row visible at the top of the settings screen?",
         "say_example": "Tapped your Apple ID to open your account settings"
        },
        {
@@ -197,7 +197,7 @@
         "whatTheAgentLoses": "You lose the ability to verify that the agent is accessing the correct Apple ID account rather than accidentally signing out.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the popup menu list View Apple ID as an option separate from Sign Out",
+        "check": "Does the popup menu list View Apple ID as an option separate from Sign Out?",
         "say_example": "Chose View Apple ID, not Sign Out"
        }
       ]
@@ -215,7 +215,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the agent is acting on actual visual confirmation rather than blindly guessing that the target screen has loaded.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the screen show the actual subscription manager, or a washed-out/partial screen consistent with a mid-transition state",
+        "check": "Does the screen show the actual subscription manager, or a washed-out/partial screen consistent with a mid-transition state?",
         "say_example": "This screen still looks like it's loading - I'll wait rather than act on it"
        }
       ]
@@ -234,7 +234,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a subscription off the list - check it is the one you meant to end and not another active row or an expired one; the page shows both kinds side by side.",
         "speak": "gate",
-        "check": "which subscriptions are listed as active vs expired on this screen",
+        "check": "Which subscriptions are listed as active vs expired on this screen?",
         "say_example": "This account has <3> active subscriptions: <Netflix, Hulu, and Spotify>. Which one do you want to end?"
        }
       ]
@@ -252,7 +252,7 @@
         "whatTheAgentLoses": "The user loses the direct confirmation that no active subscriptions exist on this account before the agent decides how to proceed.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the screen show a 'Discover subscriptions'/'Get started' message with no active subscriptions listed",
+        "check": "Does the screen show a 'Discover subscriptions'/'Get started' message with no active subscriptions listed?",
         "say_example": "This account shows no active subscriptions here at all"
        },
        {
@@ -264,7 +264,7 @@
         "whatTheAgentLoses": "The user loses the ability to recognize that their subscription isn't actually canceled, but rather hidden in a separate account created by a single-sign-on alias.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "is the signed-in account shown with a masked/private-relay address (e.g. an @privaterelay.appleid.com or similar alias) rather than a standard email",
+        "check": "Is the signed-in account shown with a masked/private-relay address (e.g. an @privaterelay.appleid.com or similar alias) rather than a standard email?",
         "say_example": "You're signed in with a private relay address, not your usual email - the paid subscription may be sitting under that one instead"
        }
       ]
@@ -289,7 +289,7 @@
         "whatTheAgentLoses": "You lose direct visibility into your trial timeline and the exact date your payment method will be billed.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what date does the page give for the trial ending or converting to paid",
+        "check": "What date does the page give for the trial ending or converting to paid?",
         "say_example": "Free trial ends <date>"
        },
        {
@@ -301,7 +301,7 @@
         "whatTheAgentLoses": "You lose the understanding that your card remains locked on file and cannot be removed until the subscription itself is formally terminated.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page state that removing the payment method alone will not stop billing and that the subscription itself must be cancelled",
+        "check": "Does the page state that removing the payment method alone will not stop billing and that the subscription itself must be cancelled?",
         "say_example": "This page says removing your card alone won't stop it - the subscription itself has to be cancelled"
        }
       ]
@@ -323,7 +323,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to notice they have unused prepaid credits and decide to spend them before officially closing the account.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the account page show an unused credit or balance",
+        "check": "Does the account page show an unused credit or balance?",
         "say_example": "You have <amount> in unused credit here that goes away once this is cancelled"
        },
        {
@@ -335,7 +335,7 @@
         "whatTheAgentLoses": "The user loses the chance to avoid a surprise penalty fee by choosing to wait out the remainder of the contract.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page mention an early termination fee for cancelling before the term ends",
+        "check": "Does the page mention an early termination fee for cancelling before the term ends?",
         "say_example": "Cancelling now carries an early termination fee of <amount>"
        }
       ]
@@ -360,7 +360,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review your current billing details or consider alternative plans like the family upgrade before terminating the service.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which account action is labelled as cancel/deactivate among the options shown",
+        "check": "Which account action is labelled as cancel/deactivate among the options shown?",
         "say_example": "Selected the deactivate option, not upgrade or edit payment"
        },
        {
@@ -372,7 +372,7 @@
         "whatTheAgentLoses": "You lose direct visibility of the exact renewal amount and date before the cancellation is initiated.",
         "kind": "state-check",
         "speak": "always",
-        "check": "what upcoming charge amount does the page show if the subscription isn't cancelled",
+        "check": "What upcoming charge amount does the page show if the subscription isn't cancelled?",
         "say_example": "Heads up, if this isn't cancelled you'll be charged <amount> next."
        },
        {
@@ -385,7 +385,7 @@
         "kind": "decision",
         "verify_form": "The agent went straight for Cancel Membership - check whether you wanted the other billing options looked at first; there is no plain stop-auto-payments toggle on this page, so full cancellation was chosen on your behalf.",
         "speak": "on-event",
-        "check": "does the account page offer only a full Cancel Membership action with no separate stop-auto-pay toggle",
+        "check": "Does the account page offer only a full Cancel Membership action with no separate stop-auto-pay toggle?",
         "say_example": "There's no simple stop-billing toggle here, only Cancel Membership - going with that since that's what you asked for"
        }
       ]
@@ -403,7 +403,7 @@
         "whatTheAgentLoses": "The user loses the awareness that the cancellation process cannot be completed within the app and requires navigating to an external web browser.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page say the cancellation continues outside the app at an external link",
+        "check": "Does the page say the cancellation continues outside the app at an external link?",
         "say_example": "This can't finish in the app - it hands off to a link you open in a browser"
        },
        {
@@ -415,7 +415,7 @@
         "whatTheAgentLoses": "The user loses the awareness that the agent is stuck on the website and needs to pivot to a different device or platform's subscription manager.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "what does the account page say is billing this subscription - a card/PayPal on file, or a third party like Apple, Google, or Roku",
+        "check": "What does the account page say is billing this subscription - a card/PayPal on file, or a third party like Apple, Google, or Roku?",
         "say_example": "This is billed through <Apple>, not this site directly"
        }
       ]
@@ -433,7 +433,7 @@
         "whatTheAgentLoses": "The user loses the awareness that they must update their payment method and clear a debt before the agent can actually stop the subscription.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "is the cancel control disabled or hidden, and does the page mention an outstanding balance or failed payment",
+        "check": "Is the cancel control disabled or hidden, and does the page mention an outstanding balance or failed payment?",
         "say_example": "The cancel option is locked here until <the outstanding balance> is cleared"
        },
        {
@@ -445,7 +445,7 @@
         "whatTheAgentLoses": "The user loses the awareness that the digital agent has hit a hard roadblock and that they must personally make a phone call to stop the charges.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page say cancellation requires calling customer service or visiting a location",
+        "check": "Does the page say cancellation requires calling customer service or visiting a location?",
         "say_example": "This one can't be cancelled online - it says to call or visit in person"
        },
        {
@@ -457,7 +457,7 @@
         "whatTheAgentLoses": "The user loses the awareness that their cancellation requires manual follow-up with customer service rather than being instantly processed by the system.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "did clicking the cancel button open an email draft or contact form instead of a completed cancellation",
+        "check": "Did clicking the cancel button open an email draft or contact form instead of a completed cancellation?",
         "say_example": "That button just opened an email draft - nothing's actually cancelled until support processes it"
        }
       ]
@@ -483,7 +483,7 @@
         "kind": "decision",
         "verify_form": "The site offered a pause instead of a cancel and the agent continued to cancel - check you did not want the pause; it stops the billing for months while keeping the account and its history.",
         "speak": "gate",
-        "check": "does the screen offer pausing the membership as an alternative to cancelling, and for how long",
+        "check": "Does the screen offer pausing the membership as an alternative to cancelling, and for how long?",
         "say_example": "This screen offers pausing for a while instead of cancelling - your account and history stay. Do you want that, or should I keep going with cancelling?"
        },
        {
@@ -515,7 +515,7 @@
         "kind": "decision",
         "verify_form": "A Change plan option sat beside Cancel membership and the agent skipped it - check the downgrade it declined; a cheaper tier might have been what you actually wanted.",
         "speak": "gate",
-        "check": "does this screen offer anything other than a plain cancel - a cheaper or different plan, a new billing date, or an extension - instead of ending the subscription",
+        "check": "Does this screen offer anything other than a plain cancel - a cheaper or different plan, a new billing date, or an extension - instead of ending the subscription?",
         "say_example": "This screen offers <a cheaper plan> instead of cancelling. Want that, or should I keep going with cancelling?"
        },
        {
@@ -540,7 +540,7 @@
         "whatTheAgentLoses": "You lose the opportunity to evaluate if the retention offer is actually a good deal before the agent automatically bypasses it.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the retention offer's price match the amount the page says you'd be charged next",
+        "check": "Does the retention offer's price match the amount the page says you'd be charged next?",
         "say_example": "The 'discount' offer is <amount> - the same as what you'd be charged anyway, so it isn't actually cheaper"
        }
       ]
@@ -559,7 +559,7 @@
         "kind": "decision",
         "verify_form": "The screen said 19 trial days remained and offered Remind me later - check what the agent chose; waiting out the trial you already have costs nothing, and only you know if you are done with it.",
         "speak": "on-event",
-        "check": "does the screen say trial days remain and offer a 'remind me later' instead of cancelling now",
+        "check": "Does the screen say trial days remain and offer a 'remind me later' instead of cancelling now?",
         "say_example": "You have some free trial days left and could wait it out for free instead - going ahead with cancelling now like you asked"
        },
        {
@@ -572,7 +572,7 @@
         "kind": "decision",
         "verify_form": "The guilt screen listed the benefits you lose and some alternative plans before Continue to cancel - check the agent read past them the way you would have; still-cancel is your decision to make.",
         "speak": "gate",
-        "check": "does the screen list specific benefits you'd lose and present alternative plans instead of a plain cancel",
+        "check": "Does the screen list specific benefits you'd lose and present alternative plans instead of a plain cancel?",
         "say_example": "This screen lists what you'd lose - <ad-free viewing and offline downloads> - and offers <a discounted six-month rate> instead. Still want to cancel, or look at one of those?"
        },
        {
@@ -584,7 +584,7 @@
         "whatTheAgentLoses": "You lose the ability to spot date discrepancies that could result in losing a day of your free trial or being billed prematurely.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the trial days remaining shown on the page match the actual gap between today's date and the trial end date",
+        "check": "Do the trial days remaining shown on the page match the actual gap between today's date and the trial end date?",
         "say_example": "The page says <5> days left, but today to <the trial end date> only adds up to <3>"
        }
       ]
@@ -603,7 +603,7 @@
         "kind": "decision",
         "verify_form": "A cancellation reason was required to proceed and the agent picked one for you - check what it told the company; that answer is feedback in your name, and some reasons trigger different retention offers.",
         "speak": "on-event",
-        "check": "does the survey modal offer a skip/close/'no thanks' control in addition to the required-looking reason list",
+        "check": "Does the survey modal offer a skip/close/'no thanks' control in addition to the required-looking reason list?",
         "say_example": "This survey looks required, but there's a way to skip it in the corner"
        }
       ]
@@ -621,7 +621,7 @@
         "whatTheAgentLoses": "The user loses the vigilance required to navigate deceptive button layouts, risking accidentally aborting the cancellation.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "which button on the warning modal is styled as primary, and which one actually completes the cancellation",
+        "check": "Which button on the warning modal is styled as primary, and which one actually completes the cancellation?",
         "say_example": "The highlighted button says Keep Membership - the actual cancel is the smaller <Continue to cancel> link"
        }
       ]
@@ -646,7 +646,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to realize they are about to lose access to secondary services tied to this subscription.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "does the confirmation page mention other bundled services or apps being affected",
+        "check": "Does the confirmation page mention other bundled services or apps being affected?",
         "say_example": "Cancelling this also affects <bundled service>, which comes with this plan"
        },
        {
@@ -658,7 +658,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to realize they are giving up a permanent discount that cannot be recovered if they change their mind later.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the cancellation warning mention losing a legacy or grandfathered price if you resubscribe later",
+        "check": "Does the cancellation warning mention losing a legacy or grandfathered price if you resubscribe later?",
         "say_example": "If you resubscribe later, you won't get this <legacy price> back"
        },
        {
@@ -670,7 +670,7 @@
         "whatTheAgentLoses": "You lose the awareness that your action will cut off service for your family members, depriving you of the chance to coordinate with them.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the confirmation screen say other people on this plan lose access immediately",
+        "check": "Does the confirmation screen say other people on this plan lose access immediately?",
         "say_example": "Cancelling this ends access right away for <the other people on this plan>, not just you"
        }
       ]
@@ -689,7 +689,7 @@
         "kind": "decision",
         "verify_form": "Amazon preselected Cancel today with a partial refund and the agent accepted the default silently - check which radio button actually went through; money back now versus access to the end of the cycle is your trade to make.",
         "speak": "gate",
-        "check": "does the final screen offer a choice between cancelling today for a prorated refund and keeping access until the billing cycle ends",
+        "check": "Does the final screen offer a choice between cancelling today for a prorated refund and keeping access until the billing cycle ends?",
         "say_example": "You can cancel now for a partial refund of <amount>, or keep access until <date> with nothing back. Which do you want?"
        }
       ]
@@ -708,7 +708,7 @@
         "kind": "decision",
         "verify_form": "The final dialog names exactly what goes away and the agent clicked the cancel side - check the loss it accepted for you is one you had already made peace with; Never mind was one click away.",
         "speak": "gate",
-        "check": "does the final confirm name specific benefits or features you'd lose, and does it state an end date with no refund",
+        "check": "Does the final confirm name specific benefits or features you'd lose, and does it state an end date with no refund?",
         "say_example": "Confirming this loses <named benefits>, and you'll keep access only until <end date> with no refund. Still want to confirm?"
        },
        {
@@ -720,7 +720,7 @@
         "whatTheAgentLoses": "The user loses the guarantee that the subscription was successfully terminated and that future billing has stopped.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the page show the final 'Finish Cancellation' button was actually clicked, or is the flow still sitting on an earlier screen",
+        "check": "Does the page show the final 'Finish Cancellation' button was actually clicked, or is the flow still sitting on an earlier screen?",
         "say_example": "The flow stopped before the final Finish Cancellation button was ever pressed"
        }
       ]
@@ -745,7 +745,7 @@
         "whatTheAgentLoses": "You lose the immediate reassurance of seeing the final end date yourself and the opportunity to provide personal feedback on why you left the service.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the page confirm the cancellation and what end date does it give",
+        "check": "Does the page confirm the cancellation and what end date does it give?",
         "say_example": "Cancelled, confirmed - you keep access until <date>."
        },
        {
@@ -757,7 +757,7 @@
         "whatTheAgentLoses": "The user loses the ability to catch fleeting visual confirmations that prove the action succeeded before the screen state changes.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "did a 'Cancellation Successful' message appear as a toast that then vanished, versus the main page text itself updating",
+        "check": "Did a 'Cancellation Successful' message appear as a toast that then vanished, versus the main page text itself updating?",
         "say_example": "That success message was just a toast that's now gone - checking whether the actual page still shows it too"
        }
       ]
@@ -775,7 +775,7 @@
         "whatTheAgentLoses": "Delegating this step means losing the peace of mind of personally verifying the exact date the service ends and ensuring future billing has stopped.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the screen show an expiration date confirming the subscription is cancelled",
+        "check": "Does the screen show an expiration date confirming the subscription is cancelled?",
         "say_example": "This shows an expiration date of <date>, confirming it's cancelled"
        },
        {
@@ -787,7 +787,7 @@
         "whatTheAgentLoses": "You lose the direct reassurance of seeing the 'Inactive' status and understanding exactly when your premium access is cut off.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the status say benefits already ended immediately, even though an earlier screen promised access until a later end date",
+        "check": "Does the status say benefits already ended immediately, even though an earlier screen promised access until a later end date?",
         "say_example": "This says your benefits already ended, but you were told earlier you'd keep access until <date> - those don't match"
        },
        {
@@ -799,7 +799,7 @@
         "whatTheAgentLoses": "The user risks being charged for another billing cycle because the agent failed to fully execute and verify the cancellation.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the final screen show an expiration date, or does it still show a renewal date",
+        "check": "Does the final screen show an expiration date, or does it still show a renewal date?",
         "say_example": "This still shows a renewal date of <date> instead of an expiration date - the cancellation may not have gone through"
        },
        {
@@ -811,7 +811,7 @@
         "whatTheAgentLoses": "The user cannot easily verify the purely visual state of a toggle switch, which might be the only proof that auto-renew was successfully disabled.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the auto-renew toggle's visual position and color change to off/grey, even if nearby text still says active",
+        "check": "Did the auto-renew toggle's visual position and color change to off/grey, even if nearby text still says active?",
         "say_example": "The toggle moved to off and turned grey, but the text next to it still says Active"
        }
       ]
@@ -829,7 +829,7 @@
         "whatTheAgentLoses": "The user loses the ability to notice discrepancies in their account status that might indicate a billing error.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do different sections of the account show the same subscription tier/status, or do they disagree",
+        "check": "Do different sections of the account show the same subscription tier/status, or do they disagree?",
         "say_example": "The account page and the billing page name different tiers for the same subscription - <Premium> on one, <Standard> on the other"
        },
        {
@@ -841,7 +841,7 @@
         "whatTheAgentLoses": "You lose the chance to spot platform glitches regarding your billing cycle that might affect your actual service end date.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the dates shown for service ending, next billing, or trial expiry agree with each other across every screen and step seen so far",
+        "check": "Do the dates shown for service ending, next billing, or trial expiry agree with each other across every screen and step seen so far?",
         "say_example": "The dates don't agree - the account page says <14 March>, the billing page says a different date"
        }
       ]
@@ -859,7 +859,7 @@
         "whatTheAgentLoses": "The user loses the certainty that their specific active subscription was actually terminated and might continue being billed for it.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the name of the subscription shown as cancelled exactly match the one you picked to cancel",
+        "check": "Does the name of the subscription shown as cancelled exactly match the one you picked to cancel?",
         "say_example": "The confirmation names <a different tier> than the one you picked, <your tier>"
        },
        {
@@ -883,7 +883,7 @@
         "whatTheAgentLoses": "The user loses the certainty that their specific subscription was successfully canceled if the agent accepts a mismatched or static image as proof.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the confirmation shown actually name the subscription you're cancelling, or does it look like a stale or generic screenshot for a different app",
+        "check": "Does the confirmation shown actually name the subscription you're cancelling, or does it look like a stale or generic screenshot for a different app?",
         "say_example": "That confirmation names a different app's renewal date, not <your subscription> - it doesn't look like a live confirmation"
        },
        {
@@ -895,7 +895,7 @@
         "whatTheAgentLoses": "The user risks assuming the task is done and being billed again because the agent didn't flag the system failure.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "did the cancellation attempt end in a system error or a prompt to call customer support instead of a confirmation",
+        "check": "Did the cancellation attempt end in a system error or a prompt to call customer support instead of a confirmation?",
         "say_example": "That ended in <a system error>, not a confirmation - billing may still be active"
        }
       ]
@@ -913,7 +913,7 @@
         "whatTheAgentLoses": "The user loses the verifiable paper trail needed to fight a chargeback if the company's system fails to honor the cancellation.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the confirmation say a cancellation email will be sent",
+        "check": "Does the confirmation say a cancellation email will be sent?",
         "say_example": "This page says a cancellation email is on its way - worth checking your inbox for it, in case you need proof later."
        }
       ]
@@ -932,7 +932,7 @@
         "kind": "decision",
         "verify_form": "A post-cancel survey asked why you left - check whether the agent answered and what it said; the survey is optional and whatever went in speaks in your name.",
         "speak": "on-event",
-        "check": "does the post-cancellation screen ask for a reason, and is it optional",
+        "check": "Does the post-cancellation screen ask for a reason, and is it optional?",
         "say_example": "This exit survey is optional - want me to answer it, or just close it?"
        },
        {
@@ -945,7 +945,7 @@
         "kind": "decision",
         "verify_form": "A free-text feedback box followed the cancellation - check whether the agent typed anything into it; words submitted there are yours.",
         "speak": "on-event",
-        "check": "does the confirmation screen offer an optional free-text feedback box",
+        "check": "Does the confirmation screen offer an optional free-text feedback box?",
         "say_example": "There's an optional feedback box here too - want to add anything, or just close it?"
        }
       ]

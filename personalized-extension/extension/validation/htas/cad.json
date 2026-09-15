@@ -4521,7 +4521,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to troubleshoot the failure by either reducing the shell thickness or modifying the base geometry to accommodate the required wall size.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page show a shell/compute-failed error message",
+        "check": "Does the page show a shell/compute-failed error message?",
         "say_example": "The shell didn't go through. A <5 mm> wall doesn't work where the part's only <8 mm> thick there."
        }
       ]
@@ -4540,7 +4540,7 @@
         "kind": "decision",
         "verify_form": "The agent removed one face for the shell - check which; the removed face is the opening and every other face becomes a wall.",
         "speak": "never",
-        "check": "which face is shown removed/selected in the SHELL dialog",
+        "check": "Which face is shown removed/selected in the SHELL dialog?",
         "say_example": "Removed <the bottom face> as the shell opening"
        },
        {
@@ -4553,7 +4553,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the face to remove and the wall thickness - check both; the wrong face leaves the part open on the wrong side.",
         "speak": "never",
-        "check": "which face is removed and what wall thickness value is set in the SHELL dialog",
+        "check": "Which face is removed and what wall thickness value is set in the SHELL dialog?",
         "say_example": "Removed <the bottom face>, wall thickness set to <1.5 mm>"
        },
        {
@@ -4566,7 +4566,7 @@
         "kind": "decision",
         "verify_form": "The agent removed two faces so the shade is open at both ends - check both were selected; one alone leaves a cup.",
         "speak": "never",
-        "check": "how many faces are marked removed in the SHELL dialog - one or two",
+        "check": "How many faces are marked removed in the SHELL dialog - one or two?",
         "say_example": "Removed the top and bottom faces - shade open at both ends"
        }
       ]
@@ -4584,7 +4584,7 @@
         "whatTheAgentLoses": "Delegating this step means losing direct control over which specific faces are selected and removed to properly shape the interior of the part.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did a cut/hole feature get added producing an actual opening, rather than leaving just a sketched line on the face",
+        "check": "Did a cut/hole feature get added producing an actual opening, rather than leaving just a sketched line on the face?",
         "say_example": "That's still just a line on the face. The wall isn't actually open there yet."
        },
        {
@@ -4596,7 +4596,7 @@
         "whatTheAgentLoses": "You lose the intuitive, visual feedback of dragging the profile to see exactly how the cut interacts with the existing solid.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the extrude/press-pull dialog show the operation type set to Cut",
+        "check": "Does the extrude/press-pull dialog show the operation type set to Cut?",
         "say_example": "That's set to join, not cut. It'll add material instead of making the hole."
        },
        {
@@ -4609,7 +4609,7 @@
         "kind": "decision",
         "verify_form": "The agent set the pocket's depth - check it; too shallow and it does not go through, too deep and it cuts into what is behind.",
         "speak": "never",
-        "check": "what depth value was set for the pocket",
+        "check": "What depth value was set for the pocket?",
         "say_example": "Set the pocket depth to <6 mm>"
        },
        {
@@ -4622,7 +4622,7 @@
         "kind": "decision",
         "verify_form": "The agent pushed the planter's inside down - check the depth; it decides both the soil volume and how much floor is left.",
         "speak": "never",
-        "check": "what depth value was entered for the planter's interior push",
+        "check": "What depth value was entered for the planter's interior push?",
         "say_example": "Pushed the planter's interior down <6 in>"
        },
        {
@@ -4635,7 +4635,7 @@
         "kind": "decision",
         "verify_form": "The agent set the decorative recess's depth - check it matches the adjacent faces.",
         "speak": "never",
-        "check": "what depth value was set for the decorative recess",
+        "check": "What depth value was set for the decorative recess?",
         "say_example": "Set the recess depth to <2 mm>"
        },
        {
@@ -4648,7 +4648,7 @@
         "kind": "decision",
         "verify_form": "The agent pushed a protruding corner away - check what went with it; push-pull removes whatever the face was attached to.",
         "speak": "if-wrong",
-        "check": "does the resulting geometry match only the marked corner region, or did an unintended larger face go with it",
+        "check": "Does the resulting geometry match only the marked corner region, or did an unintended larger face go with it?",
         "say_example": "That took more than the corner. The whole side face went with it."
        },
        {
@@ -4661,7 +4661,7 @@
         "kind": "decision",
         "verify_form": "The agent set the compartments' depths - check them; the two numbers together are what leaves a consistent internal depth.",
         "speak": "never",
-        "check": "what depth values were entered for the two compartment cuts",
+        "check": "What depth values were entered for the two compartment cuts?",
         "say_example": "Set the compartment depths to <4 mm> and <22 mm>"
        }
       ]
@@ -4680,7 +4680,7 @@
         "kind": "decision",
         "verify_form": "The agent left the thread as a decal or ticked modelled - check which; a decal is an image on the surface and will not print as a thread.",
         "speak": "always",
-        "check": "does the THREAD dialog show the Modeled checkbox ticked or unticked",
+        "check": "Does the THREAD dialog show the Modeled checkbox ticked or unticked?",
         "say_example": "That thread's set as a <decal> right now, not real geometry. It'll show but won't function as a thread unless Modeled is ticked."
        },
        {
@@ -4693,7 +4693,7 @@
         "kind": "decision",
         "verify_form": "The agent applied the thread to a face - check which; the thread only exists on the face that was selected.",
         "speak": "never",
-        "check": "which face was selected to apply the thread",
+        "check": "Which face was selected to apply the thread?",
         "say_example": "Applied the thread to <the inner bore face>"
        },
        {
@@ -4706,7 +4706,7 @@
         "kind": "decision",
         "verify_form": "The agent ran the thread full length or over a section - check which; a partial thread means the nut only goes on from one end.",
         "speak": "never",
-        "check": "is the thread set to run the full length of the cylinder or only a section",
+        "check": "Is the thread set to run the full length of the cylinder or only a section?",
         "say_example": "Set the thread to run <the full length> of the cylinder"
        },
        {
@@ -4719,7 +4719,7 @@
         "kind": "decision",
         "verify_form": "The agent kept a standard thread profile - check it against the fastener you will use; the profiles are not interchangeable.",
         "speak": "never",
-        "check": "which thread profile was selected from the dropdown",
+        "check": "Which thread profile was selected from the dropdown?",
         "say_example": "Set the thread profile to <ISO Metric>"
        },
        {
@@ -4732,7 +4732,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted or changed the auto-detected thread size - check it against the cylinder's own diameter.",
         "speak": "if-wrong",
-        "check": "does the selected thread's nominal size match the cylinder's own diameter shown in the model",
+        "check": "Does the selected thread's nominal size match the cylinder's own diameter shown in the model?",
         "say_example": "That thread's sized for <20 mm> but the hole measures <18 mm>. Pick the one that matches."
        },
        {
@@ -4745,7 +4745,7 @@
         "kind": "decision",
         "verify_form": "The agent set the thread pitch - check it against what your printer can resolve; a fine pitch on a printed part comes out as a smooth cylinder.",
         "speak": "never",
-        "check": "what thread pitch was selected",
+        "check": "What thread pitch was selected?",
         "say_example": "Set the thread pitch to <1.0 mm>"
        },
        {
@@ -4758,7 +4758,7 @@
         "kind": "decision",
         "verify_form": "The agent set the tolerance class - check it; the class assumes a machining tolerance your printer does not have.",
         "speak": "never",
-        "check": "what tolerance class was selected for the thread",
+        "check": "What tolerance class was selected for the thread?",
         "say_example": "Set the thread tolerance class to <6H>"
        },
        {
@@ -4771,7 +4771,7 @@
         "kind": "decision",
         "verify_form": "The agent set the thread direction - check it; a left-hand thread is only right where the part would otherwise unscrew itself.",
         "speak": "never",
-        "check": "which direction (right-hand or left-hand) was set for the thread",
+        "check": "Which direction (right-hand or left-hand) was set for the thread?",
         "say_example": "Set the thread direction to <right-hand>"
        },
        {
@@ -4784,7 +4784,7 @@
         "kind": "decision",
         "verify_form": "The agent ticked or left the remember-size option - check it; remembering carries these settings into the next thread you make.",
         "speak": "never",
-        "check": "is the Remember Size option ticked or left unticked",
+        "check": "Is the Remember Size option ticked or left unticked?",
         "say_example": "Left Remember Size unticked"
        },
        {
@@ -4797,7 +4797,7 @@
         "kind": "decision",
         "verify_form": "The agent modelled the internal thread with a specification - check it matches the bolt exactly; the two have to be the same designation to meet.",
         "speak": "if-wrong",
-        "check": "does the entered thread designation match the bolt's stated designation, and is Modeled ticked rather than left as a decal",
+        "check": "Does the entered thread designation match the bolt's stated designation, and is Modeled ticked rather than left as a decal?",
         "say_example": "That's cut as <M14x2> but the bolt calls for <M16x2>. They won't mate."
        }
       ]
@@ -4816,7 +4816,7 @@
         "kind": "decision",
         "verify_form": "The agent split the body with a plane - check where the plane sits; the split is where the two halves will part.",
         "speak": "never",
-        "check": "where is the midplane positioned for the split-body operation",
+        "check": "Where is the midplane positioned for the split-body operation?",
         "say_example": "Split with a plane at <the vertical midpoint>"
        },
        {
@@ -4829,7 +4829,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the body and the splitting tool - check both; splitting the wrong body cuts something you meant to keep whole.",
         "speak": "never",
-        "check": "which body and which splitting tool were selected in the SPLIT BODY dialog",
+        "check": "Which body and which splitting tool were selected in the SPLIT BODY dialog?",
         "say_example": "Split <Body1> using <the sketch plane> as the tool"
        }
       ]
@@ -4848,7 +4848,7 @@
         "kind": "decision",
         "verify_form": "The agent offset the thread flanks for clearance - check the value; it is split across both parts and the total is what actually clears.",
         "speak": "never",
-        "check": "what distance was entered in the OFFSET FACE dialog for the thread flank",
+        "check": "What distance was entered in the OFFSET FACE dialog for the thread flank?",
         "say_example": "Set the thread flank offset to <0.1 mm>"
        },
        {
@@ -4861,7 +4861,7 @@
         "kind": "decision",
         "verify_form": "The agent offset a face to make room for a bigger fillet - check the distance; it moves real material to allow a feature.",
         "speak": "never",
-        "check": "what offset distance was entered to make room for the fillet",
+        "check": "What offset distance was entered to make room for the fillet?",
         "say_example": "Offset the face by <-0.5 mm> to clear room for the fillet"
        }
       ]
@@ -4892,7 +4892,7 @@
         "kind": "decision",
         "verify_form": "The agent set the label's wording, font and height - check all three; it has to be legible at the size the part will be made.",
         "speak": "never",
-        "check": "what text string, font, and height were set in the TEXT dialog",
+        "check": "What text string, font, and height were set in the TEXT dialog?",
         "say_example": "Set the text to <REV B>, <Arial>, <3 mm> high"
        },
        {
@@ -4905,7 +4905,7 @@
         "kind": "decision",
         "verify_form": "The agent set how deep the text is cut - check it; too shallow and it disappears in the print, too deep and it weakens the face.",
         "speak": "never",
-        "check": "what depth value was set for the text cut",
+        "check": "What depth value was set for the text cut?",
         "say_example": "Cut the text <-0.4 mm> deep"
        },
        {
@@ -4918,7 +4918,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or changed the second variant's label - check it is different from the first; identical labels make the printed parts impossible to tell apart.",
         "speak": "if-wrong",
-        "check": "does the second nut's text label differ from the first nut's label",
+        "check": "Does the second nut's text label differ from the first nut's label?",
         "say_example": "Both nuts are labeled <\"-0.1\">. You won't be able to tell them apart once printed."
        }
       ]
@@ -4942,7 +4942,7 @@
           "kind": "decision",
           "verify_form": "The agent patterned the solid feature rather than the sketch - check which; a sketch pattern is slower and much harder to change afterwards.",
           "speak": "if-wrong",
-          "check": "does the pattern dialog show the solid/feature pattern option selected rather than the sketch pattern option",
+          "check": "Does the pattern dialog show the solid/feature pattern option selected rather than the sketch pattern option?",
           "say_example": "That's set to pattern the sketch, not the solid feature. Sketch patterns are slower and harder to edit later."
          },
          {
@@ -4955,7 +4955,7 @@
           "kind": "decision",
           "verify_form": "The agent set the pattern's object type to features - check it; patterning the body copies the whole part instead of the one feature.",
           "speak": "if-wrong",
-          "check": "does the pattern dialog's object type show Features rather than Bodies, with an edge set as the axis",
+          "check": "Does the pattern dialog's object type show Features rather than Bodies, with an edge set as the axis?",
           "say_example": "Object type's on Bodies. That'll copy the whole part, not just the one feature."
          },
          {
@@ -4967,7 +4967,7 @@
           "whatTheAgentLoses": "You lose the immediate visual feedback in the canvas that confirms your timeline selection matches the physical feature you intend to duplicate.",
           "kind": "state-check",
           "speak": "never",
-          "check": "does the canvas show the corresponding geometry highlighted for the feature selected in the timeline",
+          "check": "Does the canvas show the corresponding geometry highlighted for the feature selected in the timeline?",
           "say_example": "Confirmed the feature highlighted in the canvas before patterning"
          }
         ]
@@ -4986,7 +4986,7 @@
           "kind": "decision",
           "verify_form": "The agent picked edges to define the pattern's two directions - check which; the copies run along whatever edges were selected.",
           "speak": "never",
-          "check": "which edges were selected to define the pattern's two directions",
+          "check": "Which edges were selected to define the pattern's two directions?",
           "say_example": "Set the pattern directions along <the length and width> edges"
          }
         ]
@@ -5018,7 +5018,7 @@
           "kind": "decision",
           "verify_form": "The agent set the first axis's count and distance - check both; the last copy lands where these two put it.",
           "speak": "never",
-          "check": "what count and distance were set for the first axis of the rectangular pattern",
+          "check": "What count and distance were set for the first axis of the rectangular pattern?",
           "say_example": "Set the first axis to <3> copies at <16 mm>"
          },
          {
@@ -5031,7 +5031,7 @@
           "kind": "decision",
           "verify_form": "The agent set the second axis's count and distance - check them against the first axis.",
           "speak": "never",
-          "check": "what count and distance were set for the second axis",
+          "check": "What count and distance were set for the second axis?",
           "say_example": "Set the second axis to <2> copies at <8 mm>"
          },
          {
@@ -5044,7 +5044,7 @@
           "kind": "decision",
           "verify_form": "The agent patterned the tubes - check the count and the distance; they have to line up with the studs on the other face.",
           "speak": "never",
-          "check": "what count and distance were set to pattern the tube feature",
+          "check": "What count and distance were set to pattern the tube feature?",
           "say_example": "Set the tube pattern to <3> copies at <16 mm>"
          },
          {
@@ -5057,7 +5057,7 @@
           "kind": "decision",
           "verify_form": "The agent patterned the studs across the face - check the counts and distances fit inside the face's own size.",
           "speak": "never",
-          "check": "what counts and distances were set to pattern the studs across the face",
+          "check": "What counts and distances were set to pattern the studs across the face?",
           "say_example": "Patterned the studs <2 by 4> across the face"
          },
          {
@@ -5070,7 +5070,7 @@
           "kind": "decision",
           "verify_form": "The agent spaced the window array and set how many copies - check both; the multiplier repeats the last move rather than filling a span.",
           "speak": "never",
-          "check": "what spacing and copy count were set for the window array",
+          "check": "What spacing and copy count were set for the window array?",
           "say_example": "Set the window array to <2> copies, <2 m> apart"
          },
          {
@@ -5083,7 +5083,7 @@
           "kind": "decision",
           "verify_form": "The agent spaced the railing bars - check the gap; a gap a child could get through is the wrong answer.",
           "speak": "never",
-          "check": "what gap distance is set between the railing bars",
+          "check": "What gap distance is set between the railing bars?",
           "say_example": "Spaced the railing bars <100 mm> apart"
          },
          {
@@ -5096,7 +5096,7 @@
           "kind": "decision",
           "verify_form": "The agent set how many more bars to make - check the count; the last one has to land before the end of the railing.",
           "speak": "never",
-          "check": "how many additional railing bars were set in the multiplier",
+          "check": "How many additional railing bars were set in the multiplier?",
           "say_example": "Added <4> more railing bars"
          },
          {
@@ -5109,7 +5109,7 @@
           "kind": "decision",
           "verify_form": "The agent divided the window into panes with a divisor - check the number; it splits the last move into that many equal parts.",
           "speak": "never",
-          "check": "what divisor was entered to split the window into panes",
+          "check": "What divisor was entered to split the window into panes?",
           "say_example": "Divided the window into <4> equal panes"
          }
         ]
@@ -5128,7 +5128,7 @@
           "kind": "decision",
           "verify_form": "The agent patterned the strip around an axis - check the count; it decides how open the shade is.",
           "speak": "never",
-          "check": "what count was set for the circular pattern around the axis",
+          "check": "What count was set for the circular pattern around the axis?",
           "say_example": "Patterned the strip <22> times around the Z-axis"
          },
          {
@@ -5141,7 +5141,7 @@
           "kind": "decision",
           "verify_form": "The agent patterned the second strip the same way - check its count matches the first; different counts make the two sets drift apart.",
           "speak": "if-wrong",
-          "check": "does the second circular pattern's count match the first pattern's count",
+          "check": "Does the second circular pattern's count match the first pattern's count?",
           "say_example": "Second pattern's set to <20> but the first ran <22>. They'll drift apart."
          }
         ]
@@ -5160,7 +5160,7 @@
           "kind": "decision",
           "verify_form": "The agent chose to mirror rather than redraw the tab - check it; a mirrored feature follows the original when the original changes.",
           "speak": "never",
-          "check": "was the Mirror command used to duplicate the tab, rather than redrawing it",
+          "check": "Was the Mirror command used to duplicate the tab, rather than redrawing it?",
           "say_example": "Used Mirror to duplicate the tab, not a redraw"
          },
          {
@@ -5173,7 +5173,7 @@
           "kind": "decision",
           "verify_form": "The agent set the pattern type and the mirror plane - check the plane; mirroring about the wrong one puts the copy somewhere else entirely.",
           "speak": "if-wrong",
-          "check": "does the selected mirror plane match the part's own center/origin plane rather than an arbitrary one",
+          "check": "Does the selected mirror plane match the part's own center/origin plane rather than an arbitrary one?",
           "say_example": "That mirrored about <the front plane> instead of the part's own center plane. The copy landed somewhere else."
          },
          {
@@ -5186,7 +5186,7 @@
           "kind": "decision",
           "verify_form": "The agent flipped the group along one of its axes - check which; the wrong axis puts the handle on the same side as the original.",
           "speak": "if-wrong",
-          "check": "which axis was used for Flip Along, and does the door land on the correct side opposite the original",
+          "check": "Which axis was used for Flip Along, and does the door land on the correct side opposite the original?",
           "say_example": "That flipped along <red>, which put the handle on the same side as the original. Should be <green>."
          }
         ]
@@ -5214,7 +5214,7 @@
         "whatTheAgentLoses": "You lose the ability to visually spot the inverted face color and correct the surface normals before they cause downstream modeling errors.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the face show the darker back-face color before the push/pull operation, and was it reversed before pulling",
+        "check": "Does the face show the darker back-face color before the push/pull operation, and was it reversed before pulling?",
         "say_example": "That face is showing its back side, darker in the view. Flip it before pulling or the geometry comes out inverted."
        }
       ]
@@ -5240,7 +5240,7 @@
         "kind": "decision",
         "verify_form": "The agent changed the base extrusion's distance - check the new value; every feature built on this face moves with it.",
         "speak": "never",
-        "check": "what new value was entered for the base extrusion distance",
+        "check": "What new value was entered for the base extrusion distance?",
         "say_example": "Changed the base extrusion to <20 mm>"
        },
        {
@@ -5253,7 +5253,7 @@
         "kind": "decision",
         "verify_form": "The agent thinned the posts after looking at the model - check the new value; nothing was calculated, it was judged by eye.",
         "speak": "never",
-        "check": "what value was the mounting post thickness set to",
+        "check": "What value was the mounting post thickness set to?",
         "say_example": "Reset the post thickness to <6 mm>"
        },
        {
@@ -5266,7 +5266,7 @@
         "kind": "decision",
         "verify_form": "The agent changed the pattern's count - check the new number; the strips respace themselves across the same span.",
         "speak": "never",
-        "check": "what new quantity was set for the patterned strips",
+        "check": "What new quantity was set for the patterned strips?",
         "say_example": "Changed the strip pattern count to <24>"
        },
        {
@@ -5278,7 +5278,7 @@
         "whatTheAgentLoses": "The user loses trust in the agent's attention to detail if it only updates one feature after promising to update multiple related features.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do both pattern features in the timeline show the same quantity value",
+        "check": "Do both pattern features in the timeline show the same quantity value?",
         "say_example": "One pattern's at <20>, the other's still at <16>. Only one of them got updated."
        },
        {
@@ -5291,7 +5291,7 @@
         "kind": "decision",
         "verify_form": "The agent went back and revised an earlier extrusion length - check the new value against what has been built since.",
         "speak": "if-wrong",
-        "check": "does the new extrusion length conflict with any feature built on top of it since the original length was set",
+        "check": "Does the new extrusion length conflict with any feature built on top of it since the original length was set?",
         "say_example": "Posts are now <8 mm>, but a feature built on top assumed <15 mm>. Check it still clears."
        }
       ]
@@ -5310,7 +5310,7 @@
         "kind": "decision",
         "verify_form": "The agent reopened a placed dimension to change it - check the new value; the geometry moves rather than the dimension.",
         "speak": "never",
-        "check": "what new value was entered for the reopened dimension",
+        "check": "What new value was entered for the reopened dimension?",
         "say_example": "Changed the dimension to <22.5 mm>, and the geometry updated to match"
        },
        {
@@ -5323,7 +5323,7 @@
         "kind": "decision",
         "verify_form": "The agent cancelled the shell to fix the sketch first - check the order; shelling before the opening is dimensioned gives a different wall.",
         "speak": "if-wrong",
-        "check": "was the shell applied before or after the sketch's opening dimension was set and confirmed",
+        "check": "Was the shell applied before or after the sketch's opening dimension was set and confirmed?",
         "say_example": "Shell went on before the opening size was locked in. The wall thickness there depends on the order."
        },
        {
@@ -5335,7 +5335,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the final part will have the correct dimensions to fit its intended real-world application.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the sketch's opening radius, doubled, equal the stated target diameter",
+        "check": "Does the sketch's opening radius, doubled, equal the stated target diameter?",
         "say_example": "Radius is <45 mm>. Doubled that's <90 mm>, not the <95 mm> you're after."
        }
       ]
@@ -5354,7 +5354,7 @@
         "kind": "decision",
         "verify_form": "The agent moved a feature earlier in the history so a later one picks it up - check the order; nothing was redrawn, only rearranged.",
         "speak": "never",
-        "check": "was the extrude feature moved to before the mirror feature in the timeline",
+        "check": "Was the extrude feature moved to before the mirror feature in the timeline?",
         "say_example": "Moved the cutout earlier in the timeline, ahead of the mirror"
        },
        {
@@ -5367,7 +5367,7 @@
         "kind": "decision",
         "verify_form": "The agent rolled the timeline back so the fillet lands before the shell - check the order; filleting after the shell leaves an uneven wall.",
         "speak": "if-wrong",
-        "check": "does the timeline show the fillet feature positioned before the shell feature",
+        "check": "Does the timeline show the fillet feature positioned before the shell feature?",
         "say_example": "That fillet landed after the shell. The wall will be uneven where the curve is. Move it before the shell."
        }
       ]
@@ -5385,7 +5385,7 @@
         "whatTheAgentLoses": "You lose the immediate awareness of which specific keystrokes will destructively cancel your current tool instead of just deselecting it.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the canvas still show the spline geometry after pressing escape",
+        "check": "Does the canvas still show the spline geometry after pressing escape?",
         "say_example": "Escape cleared that spline. It's gone, not just deselected. You'll need to redraw it."
        },
        {
@@ -5397,7 +5397,7 @@
         "whatTheAgentLoses": "You lose the awareness of the software's modal state, risking accidental geometry creation if you assume the tool auto-cancels.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the toolbar or status bar show the sketch tool still active/running",
+        "check": "Does the toolbar or status bar show the sketch tool still active/running?",
         "say_example": "That tool's still live. The next click adds another circle. Press escape first."
        },
        {
@@ -5409,7 +5409,7 @@
         "whatTheAgentLoses": "You lose the intuitive ability to gracefully back out of accidental tool selections without cluttering the feature history.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the extrude feature get added to the timeline instead of being cancelled",
+        "check": "Did the extrude feature get added to the timeline instead of being cancelled?",
         "say_example": "That extrude got applied at the default <25 mm> instead of cancelling. There's a new feature in the timeline you didn't mean to add."
        },
        {
@@ -5422,7 +5422,7 @@
         "kind": "decision",
         "verify_form": "The agent deleted a face and then put it back - check whether the gable is solid or hollow now; both are valid and they are different parts.",
         "speak": "never",
-        "check": "does the roof gable currently read as hollow or solid, after the face was deleted",
+        "check": "Does the roof gable currently read as hollow or solid, after the face was deleted?",
         "say_example": "Left the gable <hollow> after that face was deleted"
        }
       ]
@@ -5441,7 +5441,7 @@
         "kind": "decision",
         "verify_form": "The agent pasted the copy as linked or unlinked - check which; a linked copy changes whenever the original does.",
         "speak": "if-wrong",
-        "check": "was the copy pasted as an independent copy rather than a linked instance",
+        "check": "Was the copy pasted as an independent copy rather than a linked instance?",
         "say_example": "That's linked. Changing this copy will also change the original, so it can't be tested as a separate variant."
        },
        {
@@ -5454,7 +5454,7 @@
         "kind": "decision",
         "verify_form": "The agent moved the copy clear of the original - check the distance; overlapping copies make everything after this ambiguous to click.",
         "speak": "never",
-        "check": "what distance was the copied assembly moved to clear the original",
+        "check": "What distance was the copied assembly moved to clear the original?",
         "say_example": "Moved the copy <36 mm> clear of the original"
        },
        {
@@ -5467,7 +5467,7 @@
         "kind": "decision",
         "verify_form": "The agent made a third independent variation - check it is unlinked; a linked third copy would take the second one's clearance.",
         "speak": "if-wrong",
-        "check": "was the third copy pasted as an independent copy rather than a linked instance",
+        "check": "Was the third copy pasted as an independent copy rather than a linked instance?",
         "say_example": "This third copy's linked to the second. Edit it and the second one moves too."
        },
        {
@@ -5480,7 +5480,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the copied wardrobe a distance away - check it; the copies are only there to be compared side by side.",
         "speak": "never",
-        "check": "what distance was the copied wardrobe placed from the original",
+        "check": "What distance was the copied wardrobe placed from the original?",
         "say_example": "Placed the copy <220 cm> from the original"
        },
        {
@@ -5493,7 +5493,7 @@
         "kind": "decision",
         "verify_form": "The agent copied the body to show different states - check how many copies and how far apart; they are a presentation rather than a design.",
         "speak": "never",
-        "check": "how many copies were made and how far apart, to show the wardrobe's different states",
+        "check": "How many copies were made and how far apart, to show the wardrobe's different states?",
         "say_example": "Made <2> copies, <60 cm> apart, to show different states"
        },
        {
@@ -5505,7 +5505,7 @@
         "whatTheAgentLoses": "The user loses the tactile feedback and practical insight gained from physically comparing different printed tolerances.",
         "kind": "state-check",
         "speak": "never",
-        "check": "are there multiple distinct copies present with different offset values, for comparing clearance",
+        "check": "Are there multiple distinct copies present with different offset values, for comparing clearance?",
         "say_example": "Made three copies at <-0.1>, <-0.15> and <-0.2 mm> offsets to compare fit"
        }
       ]
@@ -5523,7 +5523,7 @@
         "whatTheAgentLoses": "You lose the peace of mind that comes from manually verifying the software registered the new solid geometry in the project tree.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the Bodies folder in the browser show a solid body present, not zero bodies and not a surface",
+        "check": "Does the Bodies folder in the browser show a solid body present, not zero bodies and not a surface?",
         "say_example": "No body showed up in the Bodies folder. That extrude or revolve may have made a surface instead of a solid, or failed silently."
        },
        {
@@ -5535,7 +5535,7 @@
         "whatTheAgentLoses": "The user loses a reliable parametric model if the final geometry contains unexplained features that contradict the recorded tool parameters.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the resulting geometry match a one-sided extrude, or did it produce two separate features",
+        "check": "Does the resulting geometry match a one-sided extrude, or did it produce two separate features?",
         "say_example": "That extrude was set one-sided, but two separate tabs came out. Something's doubled up."
        },
        {
@@ -5547,7 +5547,7 @@
         "whatTheAgentLoses": "The user loses the immediate awareness that a planned feature failed to generate, which could lead to a cascading series of errors in later steps.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page show a \"No target body found to cut\" warning",
+        "check": "Does the page show a \"No target body found to cut\" warning?",
         "say_example": "That cut came back with \"no target body found\". The direction's flipped, or the target body's hidden."
        },
        {
@@ -5571,7 +5571,7 @@
         "whatTheAgentLoses": "You lose the reassurance of visually confirming that the software is correctly logging your foundational features for future editing.",
         "kind": "state-check",
         "speak": "never",
-        "check": "do the timeline icons' tooltips show the expected sketch and extrude features in the right order",
+        "check": "Do the timeline icons' tooltips show the expected sketch and extrude features in the right order?",
         "say_example": "Confirmed the timeline order, sketch then extrude"
        }
       ]
@@ -5600,7 +5600,7 @@
         "whatTheAgentLoses": "You lose the direct visual confirmation of the internal cross-section that proves the part's hidden dimensions are correct.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the section view's measured thickness at the bottom match the shell thickness value that was set",
+        "check": "Does the section view's measured thickness at the bottom match the shell thickness value that was set?",
         "say_example": "Section shows <3.6 mm> there, but the shell was set to <4 mm>. Check why they don't match."
        },
        {
@@ -5613,7 +5613,7 @@
         "kind": "decision",
         "verify_form": "The agent set up a section through the part - check the plane and the offsets; a section on the wrong plane shows a place where nothing interesting happens.",
         "speak": "never",
-        "check": "which plane and what offset/angle values are set for the section analysis",
+        "check": "Which plane and what offset/angle values are set for the section analysis?",
         "say_example": "Set the section on <the XZ plane>, offsets at <0>"
        }
       ]
@@ -5631,7 +5631,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the agent correctly calculated the spatial constraints to size and position the garage door opening accurately.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the two guide positions on the wall leave exactly the intended opening width between them",
+        "check": "Do the two guide positions on the wall leave exactly the intended opening width between them?",
         "say_example": "Those guides leave <11.5 ft> between them, not the <12 ft> opening you need."
        },
        {
@@ -5643,7 +5643,7 @@
         "whatTheAgentLoses": "The delegator loses the guarantee that the part's internal geometry is mathematically consistent, which could result in a physical part that fails to fit its mating components.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the sketch's diameter and offset combine to the correct inner diameter and wall thickness",
+        "check": "Does the sketch's diameter and offset combine to the correct inner diameter and wall thickness?",
         "say_example": "Offset gives a <4.1 mm> wall, not the <1 mm> you meant. The diameter and offset don't agree."
        },
        {
@@ -5655,7 +5655,7 @@
         "whatTheAgentLoses": "The delegator loses explicit control over the central cutout's size, risking a poor fit if the implied dimension does not match the actual design requirements.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the overall width minus the two side segment widths equal the intended central cutout width",
+        "check": "Does the overall width minus the two side segment widths equal the intended central cutout width?",
         "say_example": "Overall's <200>, sides take <40> each. That leaves <120> for the middle, worth confirming that's what you meant."
        },
        {
@@ -5667,7 +5667,7 @@
         "whatTheAgentLoses": "The user loses control over critical part tolerances if the agent places dimensions without verifying the resulting implied geometry.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the total height minus the bottom cutout dimension equal the intended top cutout depth",
+        "check": "Does the total height minus the bottom cutout dimension equal the intended top cutout depth?",
         "say_example": "Total height's <90>, bottom cut's <50>. That leaves <40> up top, worth confirming."
        },
        {
@@ -5679,7 +5679,7 @@
         "whatTheAgentLoses": "The user receives a part that fails to meet the specified design dimensions and may not fit its intended assembly.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the applied fillet radius match the radius called out on the reference drawing shown on screen",
+        "check": "Does the applied fillet radius match the radius called out on the reference drawing shown on screen?",
         "say_example": "Reference calls for <R2>, but <R3> got applied."
        },
        {
@@ -5691,7 +5691,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the agent correctly calculated the pattern extents to maintain the required geometric spacing for the part.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the pattern's extent setting produce the same spacing between studs in both directions",
+        "check": "Does the pattern's extent setting produce the same spacing between studs in both directions?",
         "say_example": "That extent works out to <8 mm> gaps in this row but a different gap in the other, not uniform."
        },
        {
@@ -5703,7 +5703,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the patterned features are mathematically aligned to mate correctly with the corresponding studs.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the tube pattern's spacing match the stud pattern's spacing",
+        "check": "Does the tube pattern's spacing match the stud pattern's spacing?",
         "say_example": "Tubes are spaced <8 mm> apart, studs are spaced <9 mm>. They won't line up."
        },
        {
@@ -5715,7 +5715,7 @@
         "whatTheAgentLoses": "The delegator loses the guarantee of dimensional accuracy, which could result in manufacturing a part that cannot accept the intended hardware.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the thread feature's size match the hole diameter dimensioned in the sketch",
+        "check": "Does the thread feature's size match the hole diameter dimensioned in the sketch?",
         "say_example": "Hole's sketched at <4.0 mm> but the thread dialog's applying <4.5 mm>. That's a different hole."
        },
        {
@@ -5727,7 +5727,7 @@
         "whatTheAgentLoses": "Delegating this means losing the assurance that the applied dimensional offsets mathematically match the specific clearance requirements for a proper physical fit.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the internal and external thread offsets sum to the stated target total clearance",
+        "check": "Do the internal and external thread offsets sum to the stated target total clearance?",
         "say_example": "Offsets add up to <0.15 mm> total, not the <0.2 mm> clearance you were after."
        },
        {
@@ -5739,7 +5739,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the agent is using precise mathematical relationships from earlier sketches to drive feature dimensions rather than just guessing a depth.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the pocket depth clear the combined width and position of the posts it needs to fit around",
+        "check": "Does the pocket depth clear the combined width and position of the posts it needs to fit around?",
         "say_example": "Posts sit <13 mm> off-center and are <8 mm> wide. That pocket needs to reach at least <17 mm>, and it's set to <15 mm>."
        },
        {
@@ -5751,7 +5751,7 @@
         "whatTheAgentLoses": "The user loses the ability to verify that the combination of the base sketch and subsequent shell feature yields the correct final internal dimensions for the part.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the outer radius minus the shell thickness equal the required inner radius",
+        "check": "Does the outer radius minus the shell thickness equal the required inner radius?",
         "say_example": "Outer's <11 mm>, shell's <2.5 mm>. That gives an <8.5 mm> inner radius, not what's called for."
        },
        {
@@ -5763,7 +5763,7 @@
         "whatTheAgentLoses": "The user loses the assurance that dependent features in the model are dimensionally consistent with the base geometry.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the roof ridge length match the foundation depth it needs to span",
+        "check": "Does the roof ridge length match the foundation depth it needs to span?",
         "say_example": "Ridge is set to <18 ft>, foundation's <20 ft> deep. They don't match."
        },
        {
@@ -5775,7 +5775,7 @@
         "whatTheAgentLoses": "The user loses the assurance that early dimensional choices are deliberately planned to fit specific off-the-shelf components added later.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the offset plane distance match the length of the hardware being inserted there",
+        "check": "Does the offset plane distance match the length of the hardware being inserted there?",
         "say_example": "Plane's offset <10 mm>, but the screw going in there is <13 mm> long."
        },
        {
@@ -5787,7 +5787,7 @@
         "whatTheAgentLoses": "The delegator loses the assurance that implicit dimensions resulting from combined operations actually meet the required design specifications.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the base extrusion depth combined with the cut offset produce the intended cavity depth",
+        "check": "Does the base extrusion depth combined with the cut offset produce the intended cavity depth?",
         "say_example": "Base is <38 mm>, cut goes in <-4 mm>. That's a <34 mm> cavity, confirm that's the target."
        },
        {
@@ -5799,7 +5799,7 @@
         "whatTheAgentLoses": "The delegator loses the assurance that implicit dimensions created by offsets actually meet the required design specifications.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the outer dimensions minus the wall offset equal the intended inner cavity size",
+        "check": "Do the outer dimensions minus the wall offset equal the intended inner cavity size?",
         "say_example": "Outer's <83 by 34 mm>, offset's <-4 mm>. Inner cavity comes to <75 by 26 mm>."
        },
        {
@@ -5811,7 +5811,7 @@
         "whatTheAgentLoses": "You lose the opportunity to manually verify the reference geometry and decide exactly how the pattern should be distributed across that specific space.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what distances does the measure dialog show for the area to be filled",
+        "check": "What distances does the measure dialog show for the area to be filled?",
         "say_example": "Measured area at <52 by 49 mm> for the grill pattern"
        },
        {
@@ -5835,7 +5835,7 @@
         "whatTheAgentLoses": "The delegator receives a part that might fail to fit its mating assembly due to a mathematical error in the modeled dimensions.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the extruded pin's length minus the base thickness equal the intended intersection depth",
+        "check": "Does the extruded pin's length minus the base thickness equal the intended intersection depth?",
         "say_example": "Pin's <15 mm> from an <11 mm> base. That's a <4 mm> protrusion, not the <3 mm> intersection stated."
        },
        {
@@ -5847,7 +5847,7 @@
         "whatTheAgentLoses": "The delegator loses confidence in the part's dimensional accuracy if the agent fails to notice that its input formulas and final measurements contradict each other.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the typed pattern-distance formula's result match the actual measured gap shown",
+        "check": "Does the typed pattern-distance formula's result match the actual measured gap shown?",
         "say_example": "The formula works out to <42.4 mm>, but the measured gap reads <43.4 mm>. They don't agree."
        },
        {
@@ -5859,7 +5859,7 @@
         "whatTheAgentLoses": "The user loses the assurance of a perfectly flush internal structure, which could compromise the mechanical strength or fit of the final manufactured part.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the support column height match the internal depth left after shelling",
+        "check": "Does the support column height match the internal depth left after shelling?",
         "say_example": "Shelled interior's <8.11 mm> deep, columns are cut to <8.1 mm>. That's a <0.01 mm> gap, probably won't sit flush."
        },
        {
@@ -5871,7 +5871,7 @@
         "whatTheAgentLoses": "The user loses the ability to verify that the agent correctly translates 2D radial dimensions into the intended 3D physical size.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the revolved solid's diameter equal twice the sketch's radius dimension",
+        "check": "Does the revolved solid's diameter equal twice the sketch's radius dimension?",
         "say_example": "Sketch radius is <30 mm>. Revolved around, that should give a <60 mm> diameter. Worth checking what actually came out."
        },
        {
@@ -5883,7 +5883,7 @@
         "whatTheAgentLoses": "Delegating this step means losing the direct assurance that the modeled tolerances correctly match the real-world hardware requirements for a proper fit.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the hole diameter minus the mating part's size equal the intended clearance",
+        "check": "Does the hole diameter minus the mating part's size equal the intended clearance?",
         "say_example": "Hole's <42 mm> for a <40 mm> socket. That leaves <1 mm> of clearance. Is that enough for the fit you want?"
        },
        {
@@ -5895,7 +5895,7 @@
         "whatTheAgentLoses": "The user loses the ability to catch dimensional errors that will cause the final manufactured part to not fit the intended physical assembly.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the guide placed from the outer edge correctly account for the panel thickness relative to the inner opening",
+        "check": "Does the guide placed from the outer edge correctly account for the panel thickness relative to the inner opening?",
         "say_example": "Guide's measured from the outside edge, but the opening's sized as if it started from the inside face. Those don't line up."
        },
        {
@@ -5907,7 +5907,7 @@
         "whatTheAgentLoses": "The user loses the mathematical certainty that the internal features of the model correctly align with the overall external constraints.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the total inner height minus the other shelf thicknesses and gaps equal the remaining bottom space",
+        "check": "Does the total inner height minus the other shelf thicknesses and gaps equal the remaining bottom space?",
         "say_example": "Shelves and gaps use up <140 cm> of the <186 cm> inner height. That leaves <46 cm>, not <45 cm>, at the bottom."
        },
        {
@@ -5919,7 +5919,7 @@
         "whatTheAgentLoses": "The user loses the physical intuition to recognize that a center-to-center measurement does not reflect the actual physical clearance needed between mating parts.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the measurement readout show minimum surface-to-surface distance rather than center-to-center",
+        "check": "Does the measurement readout show minimum surface-to-surface distance rather than center-to-center?",
         "say_example": "That's reading center-to-center at <12 mm>. The actual clearance between the surfaces is less."
        },
        {
@@ -5931,7 +5931,7 @@
         "whatTheAgentLoses": "The ability to ground the on-screen geometry in real-world physical scale, which is otherwise hidden when viewing a floating model in an infinite digital workspace.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the Mass Properties volume look consistent with the units the part was modeled in, rather than suggesting a units mix-up",
+        "check": "Does the Mass Properties volume look consistent with the units the part was modeled in, rather than suggesting a units mix-up?",
         "say_example": "Mass properties show <16,000 mm3>. That's too small for a part this size. Usually that means inches got typed where the file expects millimeters."
        },
        {
@@ -5943,7 +5943,7 @@
         "whatTheAgentLoses": "The user loses the final sanity check that the overall part hasn't accidentally exceeded the physical manufacturing constraints of their equipment.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the part's overall bounding-box dimensions fit within the stated build volume",
+        "check": "Do the part's overall bounding-box dimensions fit within the stated build volume?",
         "say_example": "Part's bounding box comes to <310 by 210 by 180 mm>. That's bigger than a <220 by 220 by 250 mm> bed on one axis."
        }
       ]
@@ -5962,7 +5962,7 @@
         "kind": "decision",
         "verify_form": "The agent snapped the door into its opening corner to corner - check the points it used; a door snapped to the wrong corner overlaps the frame.",
         "speak": "if-wrong",
-        "check": "do the snapped endpoint coordinates for the door and the frame corner actually coincide, not merely appear close",
+        "check": "Do the snapped endpoint coordinates for the door and the frame corner actually coincide, not merely appear close?",
         "say_example": "Those endpoints look close but the tooltip shows a small gap. They didn't actually snap together."
        },
        {
@@ -5975,7 +5975,7 @@
         "kind": "decision",
         "verify_form": "The agent placed the second door on its hinge side - check the corner it grabbed; that corner becomes the hinge.",
         "speak": "if-wrong",
-        "check": "do the snapped endpoints for the hinge-side door and frame corner coincide exactly",
+        "check": "Do the snapped endpoints for the hinge-side door and frame corner coincide exactly?",
         "say_example": "The hinge corner's still off by a hair. The tooltip shows they didn't fully snap."
        },
        {
@@ -5987,7 +5987,7 @@
         "whatTheAgentLoses": "You lose the intuitive visual reassurance of seeing the modeled components physically fit together in 3D space.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the tab's position measure flush against the box's inside wall, once it's made visible",
+        "check": "Does the tab's position measure flush against the box's inside wall, once it's made visible?",
         "say_example": "Tab's sitting <0.4 mm> proud of the inside wall, not flush."
        },
        {
@@ -5999,7 +5999,7 @@
         "whatTheAgentLoses": "You lose the direct visual confirmation of the thread clearance that guarantees the physical parts will actually fit together.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the section view show a visible gap between the internal and external thread profiles",
+        "check": "Does the section view show a visible gap between the internal and external thread profiles?",
         "say_example": "No gap shows in the section. The offset didn't actually clear the threads."
        },
        {
@@ -6012,7 +6012,7 @@
         "kind": "decision",
         "verify_form": "The agent scaled the doors so their top edges snap to the frame - check whether it scaled or moved them; scaling changes the door's proportions.",
         "speak": "if-wrong",
-        "check": "was the door resized using Scale, changing its proportions, rather than Move",
+        "check": "Was the door resized using Scale, changing its proportions, rather than Move?",
         "say_example": "That used Scale to close the gap. The door's now stretched, not just repositioned."
        }
       ]
@@ -6031,7 +6031,7 @@
         "kind": "decision",
         "verify_form": "The agent grounded one component - check which; whatever is grounded is what everything else is positioned against.",
         "speak": "never",
-        "check": "which component is shown grounded/fixed in the browser tree",
+        "check": "Which component is shown grounded/fixed in the browser tree?",
         "say_example": "Grounded <the main body> as the fixed reference"
        },
        {
@@ -6044,7 +6044,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a joint type between the lid and the box - check it; a rigid joint locks them and a revolute one lets the lid swing.",
         "speak": "never",
-        "check": "what motion type is set in the AS-BUILT JOINT dialog",
+        "check": "What motion type is set in the AS-BUILT JOINT dialog?",
         "say_example": "Set the lid joint to <revolute>"
        },
        {
@@ -6057,7 +6057,7 @@
         "kind": "decision",
         "verify_form": "The agent moved the imported part out of the body so it could be seen - check where it went; it still has to be jointed afterwards.",
         "speak": "never",
-        "check": "where was the imported part moved to, relative to the main body",
+        "check": "Where was the imported part moved to, relative to the main body?",
         "say_example": "Pulled the screw clear of the body, <40 mm> away"
        },
        {
@@ -6070,7 +6070,7 @@
         "kind": "decision",
         "verify_form": "The agent answered a prompt about components that had been moved - check whether it captured the position or reverted; capturing makes the temporary arrangement permanent.",
         "speak": "always",
-        "check": "does the dialog show Capture or Revert selected for the moved components' position",
+        "check": "Does the dialog show Capture or Revert selected for the moved components' position?",
         "say_example": "That's set to capture. The temporary spot they're in becomes permanent once you accept."
        },
        {
@@ -6083,7 +6083,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the joint's alignment points and flipped the part - check the orientation; an imported screw often arrives upside down.",
         "speak": "if-wrong",
-        "check": "does the joint preview show the part in the correct orientation, not upside down, after the flip setting",
+        "check": "Does the joint preview show the part in the correct orientation, not upside down, after the flip setting?",
         "say_example": "Preview still shows it upside down. The flip toggle needs to be on."
        },
        {
@@ -6096,7 +6096,7 @@
         "kind": "decision",
         "verify_form": "The agent parked the copied screw somewhere visible - check it is clear of the body it will go into.",
         "speak": "never",
-        "check": "where was the copied screw temporarily placed",
+        "check": "Where was the copied screw temporarily placed?",
         "say_example": "Parked the screw <39 mm> clear of the body"
        },
        {
@@ -6109,7 +6109,7 @@
         "kind": "decision",
         "verify_form": "The agent turned the bodies into components - check that it did; bodies cannot be jointed and components can.",
         "speak": "if-wrong",
-        "check": "were the bodies converted to components, showing as components in the browser, before a joint was attempted",
+        "check": "Were the bodies converted to components, showing as components in the browser, before a joint was attempted?",
         "say_example": "Those are still raw bodies, not components. A joint won't attach to them until they're converted."
        },
        {
@@ -6134,7 +6134,7 @@
         "whatTheAgentLoses": "You lose the intuitive visual check that immediately catches a bad assembly alignment before committing to the operation.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the joint preview show the lid's geometry intersecting the base",
+        "check": "Does the joint preview show the lid's geometry intersecting the base?",
         "say_example": "Preview shows the lid punching into the base. Cancel and re-pick the joint origins."
        },
        {
@@ -6147,7 +6147,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a joint type for the lid and may have previewed a motion - check the type it settled on; a slider left in place lets the lid drift.",
         "speak": "never",
-        "check": "what joint type was selected and was a motion preview run",
+        "check": "What joint type was selected and was a motion preview run?",
         "say_example": "Set the lid joint to <slider> and previewed it by dragging"
        }
       ]
@@ -6166,7 +6166,7 @@
         "kind": "decision",
         "verify_form": "The agent rotated the door to an angle - check it; the angle is only there to show the door open.",
         "speak": "never",
-        "check": "what angle was the door rotated to",
+        "check": "What angle was the door rotated to?",
         "say_example": "Rotated the door to <35 degrees> open"
        },
        {
@@ -6178,7 +6178,7 @@
         "whatTheAgentLoses": "You lose the visual reassurance of manually dragging the components to see exactly how the mechanism behaves in real-time.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "when dragged, do the jointed segments move without the geometry interfering or throwing an error",
+        "check": "When dragged, do the jointed segments move without the geometry interfering or throwing an error?",
         "say_example": "Dragging that joint, the two arms collide near the top. They don't articulate cleanly through the full range."
        },
        {
@@ -6191,7 +6191,7 @@
         "kind": "decision",
         "verify_form": "The agent posed the joints for the final view - check the pose; it is what the part will be shown as.",
         "speak": "never",
-        "check": "what pose was set for the joints in the final view",
+        "check": "What pose was set for the joints in the final view?",
         "say_example": "Posed the stand <upright> for the final view"
        }
       ]
@@ -6209,7 +6209,7 @@
         "whatTheAgentLoses": "You lose the ability to intuitively gauge the physical proportions of the part by experimenting with different thickness values in real-time.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the shell feature's thickness parameter match the intended wall thickness, now visible through the transparent material",
+        "check": "Does the shell feature's thickness parameter match the intended wall thickness, now visible through the transparent material?",
         "say_example": "Through the glass, that shell reads thinner near the neck. The shell parameter's still set to <2.5 mm>, worth confirming it applied evenly."
        }
       ]
@@ -6228,7 +6228,7 @@
         "kind": "decision",
         "verify_form": "The agent decided whether to add clearance beyond the software's default thread - check it; the default is too tight for a printed thread at small sizes.",
         "speak": "if-wrong",
-        "check": "does the thread feature use the software's default clearance, or has an offset been added beyond default",
+        "check": "Does the thread feature use the software's default clearance, or has an offset been added beyond default?",
         "say_example": "That thread's still on the software default clearance. Printed nuts commonly bind at that tightness. An offset would give it room."
        },
        {
@@ -6241,7 +6241,7 @@
         "kind": "decision",
         "verify_form": "The agent added a fillet to the thread edges for durability - check whether it did; the unfilleted version screws just as well and lasts less.",
         "speak": "never",
-        "check": "does the thread feature show a fillet applied to its edges",
+        "check": "Does the thread feature show a fillet applied to its edges?",
         "say_example": "Left the thread edges unfilleted, so they print sharp"
        },
        {
@@ -6254,7 +6254,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a clearance for your printer - check it against a test print rather than the number alone; the right value is different on different machines.",
         "speak": "never",
-        "check": "what thread offset/clearance value was entered",
+        "check": "What thread offset/clearance value was entered?",
         "say_example": "Set the thread clearance to <0.15 mm>"
        },
        {
@@ -6267,7 +6267,7 @@
         "kind": "decision",
         "verify_form": "The agent chose plastic screws rather than metal - check the reason; metal against a bare board can bridge something it should not.",
         "speak": "if-wrong",
-        "check": "does the selected screw/standoff component's material read as plastic or nylon rather than metal, where it mounts against the bare board",
+        "check": "Does the selected screw/standoff component's material read as plastic or nylon rather than metal, where it mounts against the bare board?",
         "say_example": "Those are showing as <steel> standoffs against a bare board. Metal there risks a short."
        }
       ]
@@ -6286,7 +6286,7 @@
         "kind": "decision",
         "verify_form": "The agent placed a figure beside the door for scale - check it; a model with no scale reference looks right at any size.",
         "speak": "never",
-        "check": "is a reference object of known real-world size placed in the scene near the model",
+        "check": "Is a reference object of known real-world size placed in the scene near the model?",
         "say_example": "Placed a <1.8 m> person figure by the front door for scale"
        }
       ]
@@ -6312,7 +6312,7 @@
         "kind": "decision",
         "verify_form": "The agent named the file - check the name; the default is Untitled and you will be looking for this later.",
         "speak": "always",
-        "check": "what name and location are entered in the Save dialog, and does the name differ from the default Untitled",
+        "check": "What name and location are entered in the Save dialog, and does the name differ from the default Untitled?",
         "say_example": "Saved as <bracket_v2>, not left as Untitled."
        }
       ]
@@ -6330,7 +6330,7 @@
         "whatTheAgentLoses": "The user loses the ability to dictate the specific folder hierarchy and organizational structure for their project files.",
         "kind": "state-check",
         "speak": "never",
-        "check": "was a subfolder created and opened before saving",
+        "check": "Was a subfolder created and opened before saving?",
         "say_example": "Created and opened a new subfolder before saving"
        },
        {
@@ -6342,7 +6342,7 @@
         "whatTheAgentLoses": "You lose the immediate reassurance of visually verifying that your work is securely saved in the intended project directory before investing time in modeling.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the file tab tooltip show it was saved successfully and name the folder it landed in",
+        "check": "Does the file tab tooltip show it was saved successfully and name the folder it landed in?",
         "say_example": "Saved as <bracket_v2>, version <v0>, in <the Arm Mount> project folder"
        }
       ]
@@ -6361,7 +6361,7 @@
         "kind": "decision",
         "verify_form": "The agent typed a version description - check it says what state the design is in; the default just says the file was saved.",
         "speak": "never",
-        "check": "what version description text was entered in the Save dialog",
+        "check": "What version description text was entered in the Save dialog?",
         "say_example": "Set the version description to <final - ready to print>"
        },
        {
@@ -6374,7 +6374,7 @@
         "kind": "decision",
         "verify_form": "The agent ticked or left the milestone flag - check it; a milestone is what you will look for when you want to go back to a working state.",
         "speak": "always",
-        "check": "is the Milestone checkbox ticked for this save",
+        "check": "Is the Milestone checkbox ticked for this save?",
         "say_example": "Saved as a milestone. That's the version you'll roll back to if something breaks later."
        }
       ]
@@ -6392,7 +6392,7 @@
         "whatTheAgentLoses": "You lose the ability to verify exactly which body or component is being isolated and exported for manufacturing.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the export attempt show a \"No selection\" warning, or is a specific body highlighted in the tree view",
+        "check": "Does the export attempt show a \"No selection\" warning, or is a specific body highlighted in the tree view?",
         "say_example": "Nothing was selected in the tree. Export threw a \"No selection\" warning."
        }
       ]
@@ -6411,7 +6411,7 @@
         "kind": "decision",
         "verify_form": "The agent picked an export format - check it against what the next tool reads; a format the slicer cannot open is a file you have to make again.",
         "speak": "never",
-        "check": "what file format is selected in the export dropdown",
+        "check": "What file format is selected in the export dropdown?",
         "say_example": "Set the export format to <STL>"
        },
        {
@@ -6437,7 +6437,7 @@
         "kind": "decision",
         "verify_form": "The agent left or set the unit scale in the export dialog - check it; a mismatch here gives a part ten times the size you meant.",
         "speak": "gate",
-        "check": "what unit/scale setting does the export dialog show",
+        "check": "What unit/scale setting does the export dialog show?",
         "say_example": "Export is set to <centimeters>. If your printer or the next tool expects millimeters, this part comes out <10x> too small. What unit should I export in?"
        }
       ]
@@ -6456,7 +6456,7 @@
         "kind": "decision",
         "verify_form": "The agent set the mesh refinement - check it; a coarse setting makes curved surfaces come out faceted and a fine one makes a very large file.",
         "speak": "never",
-        "check": "what refinement/quality setting is chosen in the export dialog",
+        "check": "What refinement/quality setting is chosen in the export dialog?",
         "say_example": "Set the export refinement to <High>"
        },
        {
@@ -6481,7 +6481,7 @@
         "whatTheAgentLoses": "The user loses the ability to catch and repair mesh topology errors before sending a corrupted file to the manufacturing equipment.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the export dialog or downstream tool show a non-manifold or not-watertight warning",
+        "check": "Does the export dialog or downstream tool show a non-manifold or not-watertight warning?",
         "say_example": "That export's flagged non-manifold. There's a gap or overlapping face somewhere that needs fixing before it'll print."
        }
       ]
@@ -6500,7 +6500,7 @@
         "kind": "decision",
         "verify_form": "The agent named the exported file and chose where it goes - check both; the dialog defaults to Untitled on the desktop.",
         "speak": "always",
-        "check": "what file name and folder are set in the export save dialog",
+        "check": "What file name and folder are set in the export save dialog?",
         "say_example": "Exported as <bracket_v2.stl> to <CAD Projects/arm_mount>, not left as Untitled on the Desktop."
        },
        {
@@ -6513,7 +6513,7 @@
         "kind": "decision",
         "verify_form": "The agent either handed the file straight to a slicer or saved it - check which; the hand-off opens another program over what you were doing.",
         "speak": "never",
-        "check": "is \"Send to 3D Print Utility\" checked, launching an external slicer, or is the file just saved locally",
+        "check": "Is \"Send to 3D Print Utility\" checked, launching an external slicer, or is the file just saved locally?",
         "say_example": "Exported and saved locally, without sending to the print utility"
        },
        {
@@ -6525,7 +6525,7 @@
         "whatTheAgentLoses": "You lose the immediate confirmation that the manufacturing file was actually generated successfully rather than just sent to a stalled server queue.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the export status show completed, or still pending/queued",
+        "check": "Does the export status show completed, or still pending/queued?",
         "say_example": "That export's still showing pending. Give it a moment before assuming the file's there."
        }
       ]

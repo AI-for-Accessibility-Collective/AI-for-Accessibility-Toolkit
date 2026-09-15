@@ -23,7 +23,7 @@
         "whatTheAgentLoses": "You lose the foundational understanding of how these distinct AI models differ in their capabilities and outputs.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the video's title card or on-screen text explain how Bing Image Creator and DALL-E 2 differ as tools",
+        "check": "Does the video's title card or on-screen text explain how Bing Image Creator and DALL-E 2 differ as tools?",
         "say_example": "Noted Bing Image Creator and DALL-E 2 are different engines with different prompt behavior"
        },
        {
@@ -36,7 +36,7 @@
         "kind": "decision",
         "verify_form": "The agent chose free Bing access or the paid route to the same model - check which; one costs money for convenience.",
         "speak": "on-event",
-        "check": "does the page show both a free route (like Bing Image Creator) and a paid route (like ChatGPT Plus) to the same model, and which one is being used",
+        "check": "Does the page show both a free route (like Bing Image Creator) and a paid route (like ChatGPT Plus) to the same model, and which one is being used?",
         "say_example": "The free route through <Bing Image Creator> reaches the same <DALL-E 3> model as the paid <ChatGPT Plus> plan. Staying on the free one."
        },
        {
@@ -49,7 +49,7 @@
         "kind": "decision",
         "verify_form": "The agent matched a generator to your artistic style - check the pairing; the comparison it trusted may not share your taste.",
         "speak": "never",
-        "check": "what artistic strengths does the page attribute to each generator being compared, and which one was picked",
+        "check": "What artistic strengths does the page attribute to each generator being compared, and which one was picked?",
         "say_example": "Picked <Bing Image Creator> over <DALL-E 2> for its style match"
        },
        {
@@ -62,7 +62,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the browser - check the ecosystem choice; the venue behaves differently outside its own browser.",
         "speak": "never",
-        "check": "does the page or search results indicate which browser is recommended for accessing Bing's AI tools",
+        "check": "Does the page or search results indicate which browser is recommended for accessing Bing's AI tools?",
         "say_example": "Chose <Microsoft Edge> to open Bing's AI tools"
        },
        {
@@ -75,7 +75,7 @@
         "kind": "decision",
         "verify_form": "The agent navigated to one venue - check the platform choice; the model and its style quirks came with it.",
         "speak": "never",
-        "check": "what URL or navigation destination was entered to reach the image generation tool",
+        "check": "What URL or navigation destination was entered to reach the image generation tool?",
         "say_example": "Navigated to <bing.com> to reach the image generator"
        }
       ]
@@ -93,7 +93,7 @@
         "whatTheAgentLoses": "You lose the opportunity to review the platform's introductory features and alternative offerings like the Developer API before starting your project.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the homepage require clicking a specific button, like 'Launch App', to reach the generation workspace rather than staying on marketing content",
+        "check": "Does the homepage require clicking a specific button, like 'Launch App', to reach the generation workspace rather than staying on marketing content?",
         "say_example": "Skipped the homepage marketing and clicked <Launch App> to reach the workspace"
        },
        {
@@ -105,7 +105,7 @@
         "whatTheAgentLoses": "You lose the opportunity to adapt to interface updates and independently locate the correct tools when tutorials become outdated.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "where does the current page actually show the beta apps tab compared to where the narration says to look",
+        "check": "Where does the current page actually show the beta apps tab compared to where the narration says to look?",
         "say_example": "The Beta tab moved. It's in the top bar now, not the left sidebar like the walkthrough said."
        },
        {
@@ -117,7 +117,7 @@
         "whatTheAgentLoses": "The user loses the ability to verify their software installation status and ensure they are launching the correct beta version.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the app card show an 'Open' button, meaning the app is already installed, rather than an 'Install' button",
+        "check": "Does the app card show an 'Open' button, meaning the app is already installed, rather than an 'Install' button?",
         "say_example": "Found <Photoshop (Beta)> already installed, opened it directly"
        },
        {
@@ -129,7 +129,7 @@
         "whatTheAgentLoses": "You lose the opportunity to choose exactly how you want to enter the AI workspace from the available search and chat options.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "which tab or button was clicked among the presented options, the genuine AI workspace entry or a similarly named alternative",
+        "check": "Which tab or button was clicked among the presented options, the genuine AI workspace entry or a similarly named alternative?",
         "say_example": "Landed in the right place, the actual <Bing Image Creator> tab, not the lookalike search tab"
        },
        {
@@ -142,7 +142,7 @@
         "kind": "decision",
         "verify_form": "The agent typed the prompt before joining, or joined empty-handed - check which; the order changes what the signup flow does with your text.",
         "speak": "on-event",
-        "check": "does the landing page let a prompt be typed into the field before the 'Join & Create' button is pressed",
+        "check": "Does the landing page let a prompt be typed into the field before the 'Join & Create' button is pressed?",
         "say_example": "Typed the prompt before pressing <Join & Create> so it carries through to the first generation"
        },
        {
@@ -154,7 +154,7 @@
         "whatTheAgentLoses": "You lose the chance to discover other Bing features or daily promotions displayed on the homepage navigation menu.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which section of the Bing homepage was clicked to reach the AI image tool",
+        "check": "Which section of the Bing homepage was clicked to reach the AI image tool?",
         "say_example": "Clicked <Images> to reach Bing's AI image generation tool"
        },
        {
@@ -166,7 +166,7 @@
         "whatTheAgentLoses": "You lose the spatial awareness of where the AI creation tool lives within the broader search engine interface.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the interface land on the 'Create' AI generation surface or on regular image search results",
+        "check": "Did the interface land on the 'Create' AI generation surface or on regular image search results?",
         "say_example": "Confirmed landing on the <Create> AI surface, not plain image search"
        }
       ]
@@ -184,7 +184,7 @@
         "whatTheAgentLoses": "You lose the opportunity to verify that the chosen link leads to the official, secure tool rather than a deceptive alternative.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the top search result's title and domain match the platform's own site rather than a third-party or sponsored listing",
+        "check": "Does the top search result's title and domain match the platform's own site rather than a third-party or sponsored listing?",
         "say_example": "Confirmed the top result was the real <Bing Image Creator> site, not a sponsored lookalike"
        },
        {
@@ -196,7 +196,7 @@
         "whatTheAgentLoses": "You lose the ability to confirm that the agent is launching the intended generation tool instead of a different third-party app.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the app card about to be opened say 'Text to Image', matching the intended generation tool",
+        "check": "Does the app card about to be opened say 'Text to Image', matching the intended generation tool?",
         "say_example": "Confirmed the card was <Text to Image>, not a different app, before opening"
        }
       ]
@@ -215,7 +215,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the sign-in method - check which account the generations now live under; work against personal identity was its pick.",
         "speak": "gate",
-        "check": "which sign-in method is being offered, such as Apple, Google, Microsoft, or email, and which one is about to be used",
+        "check": "Which sign-in method is being offered, such as Apple, Google, Microsoft, or email, and which one is about to be used?",
         "say_example": "Signing in with <Google>. That's the account your images and subscription will live under. OK, or use a different one?"
        },
        {
@@ -228,7 +228,7 @@
         "kind": "decision",
         "verify_form": "The agent logged in under a service-disruption banner - check it knew generations might fail; spending credits on a degraded platform was a gamble taken for you.",
         "speak": "on-event",
-        "check": "does the login screen display a banner about service issues or disruptions",
+        "check": "Does the login screen display a banner about service issues or disruptions?",
         "say_example": "Heads up, the site says it's having issues right now. Generations might fail or take longer. Continuing anyway."
        }
       ]
@@ -247,7 +247,7 @@
         "kind": "decision",
         "verify_form": "The agent agreed to the updated terms unread - check what changed; your generations' rights may sit in that diff.",
         "speak": "never",
-        "check": "does the page state that the Terms of Service or Privacy Policy were recently updated",
+        "check": "Does the page state that the Terms of Service or Privacy Policy were recently updated?",
         "say_example": "Accepted the updated <Terms of Service and Privacy Policy> to continue. Didn't read the diff"
        },
        {
@@ -260,7 +260,7 @@
         "kind": "decision",
         "verify_form": "The agent clicked through the join button's fine print - check the marketing consent it accepted; your inbox pays for the free tool.",
         "speak": "on-event",
-        "check": "does the join button's fine print say that continuing opts you into promotional emails",
+        "check": "Does the join button's fine print say that continuing opts you into promotional emails?",
         "say_example": "Using <Join & Create> also opts you into marketing emails about <Rewards and partner offers>. Continuing."
        }
       ]
@@ -279,7 +279,7 @@
         "kind": "decision",
         "verify_form": "The agent dismissed the what's-new modal - check nothing announced (a new model) was something you'd have wanted.",
         "speak": "on-event",
-        "check": "does a 'What's New' modal announce a new feature or model before generation can start",
+        "check": "Does a 'What's New' modal announce a new feature or model before generation can start?",
         "say_example": "A <Sora 2> announcement popped up. Skipping it to keep moving on the image."
        }
       ]
@@ -303,7 +303,7 @@
           "kind": "decision",
           "verify_form": "The agent configured a new private server - check the name and audience; the workspace is now a standing thing on your account.",
           "speak": "on-event",
-          "check": "what name and privacy setting was chosen when creating the new Discord server",
+          "check": "What name and privacy setting was chosen when creating the new Discord server?",
           "say_example": "Created a new private server, <My AI Workspace>, just for this. Visible only to invited members."
          },
          {
@@ -315,7 +315,7 @@
           "whatTheAgentLoses": "Delegating this step means you lose the ability to choose which specific Discord account is linked to your generated images.",
           "kind": "intent-check",
           "speak": "on-event",
-          "check": "which Discord account is signed in, shown by username or avatar, and is it the one that should own these generations",
+          "check": "Which Discord account is signed in, shown by username or avatar, and is it the one that should own these generations?",
           "say_example": "Signed in to Discord as <username>. Generations here will be tied to that account."
          },
          {
@@ -328,7 +328,7 @@
           "kind": "decision",
           "verify_form": "The agent chose browser or app install - check which; an install is new software on your machine.",
           "speak": "on-event",
-          "check": "does the page offer both a downloadable desktop app and a 'continue in browser' option",
+          "check": "Does the page offer both a downloadable desktop app and a 'continue in browser' option?",
           "say_example": "Choosing to open Discord in the browser instead of installing the desktop app"
          },
          {
@@ -340,7 +340,7 @@
           "whatTheAgentLoses": "You lose the security of personally verifying the server's authenticity indicators before joining a massive online community.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the top search result show a verification checkmark and match Midjourney's known member count, distinguishing it from unofficial servers",
+          "check": "Does the top search result show a verification checkmark and match Midjourney's known member count, distinguishing it from unofficial servers?",
           "say_example": "Confirmed the official Midjourney server by its verified checkmark and <15M+> members"
          },
          {
@@ -352,7 +352,7 @@
           "whatTheAgentLoses": "Delegating this step means you lose control over which public Discord communities your account officially joins and associates with.",
           "kind": "state-check",
           "speak": "never",
-          "check": "does the page show a preview-mode banner requiring a 'Join Server' action before full access",
+          "check": "Does the page show a preview-mode banner requiring a 'Join Server' action before full access?",
           "say_example": "Clicked <Join Server> to leave preview mode and join fully"
          }
         ]
@@ -370,7 +370,7 @@
           "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify that the official, secure bot is being added to your personal server rather than a third-party knockoff.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the bot's name and icon match the official Midjourney Bot, not a similarly named third-party bot",
+          "check": "Does the bot's name and icon match the official Midjourney Bot, not a similarly named third-party bot?",
           "say_example": "Confirmed this is the official Midjourney Bot, not a lookalike like <Wirestock>"
          },
          {
@@ -382,7 +382,7 @@
           "whatTheAgentLoses": "Delegating this means an automated agent might fail the visual puzzle and get blocked from generating the image.",
           "kind": "state-check",
           "speak": "never",
-          "check": "does the workflow show a captcha or verification challenge that must be completed before continuing",
+          "check": "Does the workflow show a captcha or verification challenge that must be completed before continuing?",
           "say_example": "Passed the bot's captcha challenge to continue"
          },
          {
@@ -395,7 +395,7 @@
           "kind": "decision",
           "verify_form": "The agent authorized the bot on an account - check which account and what it can read; the grant names your email and servers.",
           "speak": "gate",
-          "check": "which server was the bot added to, which Discord account is connected, and what permissions (such as reading email or server data) are being granted",
+          "check": "Which server was the bot added to, which Discord account is connected, and what permissions (such as reading email or server data) are being granted?",
           "say_example": "Adding the Midjourney Bot to your <personal> server. It'll be able to read your email and server data from here on. OK to add it, or stop here?"
          }
         ]
@@ -413,7 +413,7 @@
           "whatTheAgentLoses": "You lose the knowledge of how to navigate Discord's interface to initiate a direct message with the bot for private generation.",
           "kind": "state-check",
           "speak": "never",
-          "check": "is the generation happening in a direct message with the bot, or in a fast-moving public channel",
+          "check": "Is the generation happening in a direct message with the bot, or in a fast-moving public channel?",
           "say_example": "Working in a direct message with the bot so results stay easy to find"
          }
         ]
@@ -441,7 +441,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a tool from the sidebar - check it is the mode your task needs; realtime, canvas, and motion would each have taken you somewhere else.",
         "speak": "never",
-        "check": "which tool did the agent select from the dashboard, sidebar, or tab menu: the image-generation entry point, or an adjacent tool like video, canvas, audio, vector, or upscaler",
+        "check": "Which tool did the agent select from the dashboard, sidebar, or tab menu: the image-generation entry point, or an adjacent tool like video, canvas, audio, vector, or upscaler?",
         "say_example": "Picked <Image Creation> from the sidebar, not <Realtime Canvas> or <Motion>"
        },
        {
@@ -454,7 +454,7 @@
         "kind": "decision",
         "verify_form": "The agent chose vector or raster output - check the format against how the asset will be used; SVG-or-not decides scalability.",
         "speak": "never",
-        "check": "does the homepage or menu offer a distinct 'Text to vector' or SVG option separate from standard image generation, and which was picked",
+        "check": "Does the homepage or menu offer a distinct 'Text to vector' or SVG option separate from standard image generation, and which was picked?",
         "say_example": "Picked <Text to vector> for a scalable SVG instead of a standard raster image"
        },
        {
@@ -466,7 +466,7 @@
         "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to explore or select other available beta features like web browsing or plugins for your workflow.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the model dropdown require enabling a specific feature, like DALL-E 3 Beta, to generate images within the chat",
+        "check": "Does the model dropdown require enabling a specific feature, like DALL-E 3 Beta, to generate images within the chat?",
         "say_example": "Enabled <DALL-E 3 Beta> from the GPT-4 dropdown to generate images in this chat"
        }
       ]
@@ -485,7 +485,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the model from the dropdown - check the pick's stated strengths match your goal (text, realism, adherence); the engine choice shapes everything after.",
         "speak": "never",
-        "check": "which AI model was selected from the dropdown, and what strengths (such as prompt adherence, text rendering, or realism) does the page attribute to it",
+        "check": "Which AI model was selected from the dropdown, and what strengths (such as prompt adherence, text rendering, or realism) does the page attribute to it?",
         "say_example": "Picked <PhotoReal> from the model dropdown for its realistic look"
        },
        {
@@ -497,7 +497,7 @@
         "whatTheAgentLoses": "You lose the transparency of knowing exactly which AI model is generating your images and influencing their stylistic quirks.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the FAQ or documentation state which underlying AI model powers this tool",
+        "check": "Does the FAQ or documentation state which underlying AI model powers this tool?",
         "say_example": "The FAQ confirms this tool runs on <DALL-E> under the hood"
        },
        {
@@ -510,7 +510,7 @@
         "kind": "decision",
         "verify_form": "The agent dismissed (or tried) the newly advertised model - check the dismissal; the popup promised better faces and editing you may have wanted.",
         "speak": "on-event",
-        "check": "does a popup advertise a new model with specific claimed improvements, such as faster results or better faces",
+        "check": "Does a popup advertise a new model with specific claimed improvements, such as faster results or better faces?",
         "say_example": "A popup is pushing the new <GPT-Image-1.5> model, promising better faces and editing. Sticking with the current model for this run."
        },
        {
@@ -523,7 +523,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the video model - check the engine; the featured names are different films of the same prompt.",
         "speak": "never",
-        "check": "which video engine, such as Kling, Hailuo, or Sora, was picked from the Models modal",
+        "check": "Which video engine, such as Kling, Hailuo, or Sora, was picked from the Models modal?",
         "say_example": "Picked <Kling> as the video engine from the Featured list"
        },
        {
@@ -536,7 +536,7 @@
         "kind": "decision",
         "verify_form": "The agent kept the default model instead of the higher-quality one - check the trade; quality against speed was decided for you.",
         "speak": "on-event",
-        "check": "does the model selection modal offer a higher-quality alternative beside the current default, and which one was kept",
+        "check": "Does the model selection modal offer a higher-quality alternative beside the current default, and which one was kept?",
         "say_example": "Stuck with the faster default model instead of switching to the slower, higher-quality <FLUX Dev>"
        }
       ]
@@ -554,7 +554,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose control over the exact pixel dimensions and aspect ratio of the foundational canvas for your generated image.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what width and height were set for the new canvas or document",
+        "check": "What width and height were set for the new canvas or document?",
         "say_example": "Set the canvas to <2048x2048> for the model's optimal resolution"
        },
        {
@@ -566,7 +566,7 @@
         "whatTheAgentLoses": "The user loses the knowledge of how to troubleshoot and recover essential hidden UI elements needed to complete their workflow.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the Window menu contain an option to show the Contextual Task Bar",
+        "check": "Does the Window menu contain an option to show the Contextual Task Bar?",
         "say_example": "Opened the <Window> menu to bring back the Contextual Task Bar"
        },
        {
@@ -578,7 +578,7 @@
         "whatTheAgentLoses": "You lose the opportunity to browse featured projects or your recent boards for inspiration before starting a new creation.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the page show a '+ Create board' control under an ideation or boards section",
+        "check": "Does the page show a '+ Create board' control under an ideation or boards section?",
         "say_example": "Clicked <+ Create board> under Ideation to start a new mood board"
        },
        {
@@ -591,7 +591,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a template or custom size - check the canvas dimensions match the destination; a wrong preset means redoing the design.",
         "speak": "on-event",
-        "check": "does the dropdown offer preset formats alongside a custom-size option, and which was chosen",
+        "check": "Does the dropdown offer preset formats alongside a custom-size option, and which was chosen?",
         "say_example": "Picked a custom canvas size instead of the suggested <Pinterest pin> preset"
        },
        {
@@ -604,7 +604,7 @@
         "kind": "decision",
         "verify_form": "The agent started blank or from a template - check which; a template imports taste you didn't choose.",
         "speak": "on-event",
-        "check": "does the canvas-start screen offer both a blank canvas and pre-designed templates, and which was picked",
+        "check": "Does the canvas-start screen offer both a blank canvas and pre-designed templates, and which was picked?",
         "say_example": "Started from a blank canvas instead of one of the pre-designed templates"
        }
       ]
@@ -623,7 +623,7 @@
         "kind": "decision",
         "verify_form": "The agent used the default model or went browsing custom GPTs - check which; a specialized generator may fit your style better.",
         "speak": "never",
-        "check": "did the agent stay with the default model or navigate to the 'Explore GPTs' custom library",
+        "check": "Did the agent stay with the default model or navigate to the 'Explore GPTs' custom library?",
         "say_example": "Went to <Explore GPTs> to look for a specialized image generator instead of using the default"
        },
        {
@@ -636,7 +636,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the GPT category - check it landed on image generation, not an adjacent aisle.",
         "speak": "never",
-        "check": "which category was selected on the GPTs page, such as DALL-E, Writing, or Productivity",
+        "check": "Which category was selected on the GPTs page, such as DALL-E, Writing, or Productivity?",
         "say_example": "Filtered to the <DALL-E> category on the GPTs page"
        },
        {
@@ -649,7 +649,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a community GPT - check the one it trusts with your images; ratings and author were the only signals.",
         "speak": "on-event",
-        "check": "which community-made custom GPT was selected, and what rating or author information is shown for it",
+        "check": "Which community-made custom GPT was selected, and what rating or author information is shown for it?",
         "say_example": "Picked the community GPT <PixelCraft>, rated <4.5> stars by an unverified author, to generate the image"
        }
       ]
@@ -674,7 +674,7 @@
         "whatTheAgentLoses": "You lose the awareness of your daily fast-generation limits and how the tool's credit system affects wait times.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does hovering the lightning bolt icon show a tooltip explaining it represents remaining daily boosts",
+        "check": "Does hovering the lightning bolt icon show a tooltip explaining it represents remaining daily boosts?",
         "say_example": "The lightning icon tracks daily boosts, <7> left today, each fast generation uses one"
        },
        {
@@ -686,7 +686,7 @@
         "whatTheAgentLoses": "Delegating this means you might not notice if the platform fails to provision the correct number of tokens for your paid tier.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the token count shown in the tooltip match the number of tokens listed for this plan on the pricing page",
+        "check": "Does the token count shown in the tooltip match the number of tokens listed for this plan on the pricing page?",
         "say_example": "The tooltip's token count doesn't match what the pricing page lists for this plan. Flagging the mismatch."
        },
        {
@@ -698,7 +698,7 @@
         "whatTheAgentLoses": "You lose direct awareness of your account limits and might unexpectedly run out of fast generation hours if the agent does not monitor the usage.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what fast GPU time balance does the account panel show",
+        "check": "What fast GPU time balance does the account panel show?",
         "say_example": "You have <3.5 hours> of fast GPU time left"
        },
        {
@@ -710,7 +710,7 @@
         "whatTheAgentLoses": "An agent might burn through your limited boosts without you realizing how quickly your free generations are being depleted.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the boost counter visibly decrease after a prompt is submitted",
+        "check": "Does the boost counter visibly decrease after a prompt is submitted?",
         "say_example": "The boost counter dropped from <5> to <4> after that one generation"
        },
        {
@@ -722,7 +722,7 @@
         "whatTheAgentLoses": "You lose the awareness of your current credit balance and the opportunity to decide whether to conserve tokens or upgrade your plan.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what free or fast token balance does the token popup show, and which plan is it tied to",
+        "check": "What free or fast token balance does the token popup show, and which plan is it tied to?",
         "say_example": "On the free plan with <150> fast tokens remaining"
        },
        {
@@ -734,7 +734,7 @@
         "whatTheAgentLoses": "The user loses an accurate understanding of the tool's constraints, which could lead to running out of tokens unexpectedly during a project.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the daily free-generation limit stated in the narration match the token limit shown in the interface",
+        "check": "Does the daily free-generation limit stated in the narration match the token limit shown in the interface?",
         "say_example": "The video said <300> free images a day, but the interface caps it at <150> tokens. Going with what's on screen."
        },
        {
@@ -746,7 +746,7 @@
         "whatTheAgentLoses": "You lose the ability to manage your prompt budget if the agent exhausts the message limit without your knowledge.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what message-per-time-window limit does the page show for the selected model",
+        "check": "What message-per-time-window limit does the page show for the selected model?",
         "say_example": "This model allows <40 messages per 3 hours>"
        }
       ]
@@ -765,7 +765,7 @@
         "kind": "decision",
         "verify_form": "The agent stayed on the current plan (or moved to upgrade) with the balance on screen - check no money moved without your say; the tokens-against-dollars call is yours.",
         "speak": "gate",
-        "check": "does the page present an upgrade option alongside the current token or credit balance, and has any purchase happened",
+        "check": "Does the page present an upgrade option alongside the current token or credit balance, and has any purchase happened?",
         "say_example": "You've got <126 tokens> left, plus an upgrade offer on screen. Staying on your current plan for now. Want me to upgrade instead?"
        },
        {
@@ -778,7 +778,7 @@
         "kind": "decision",
         "verify_form": "The agent weighed the subscription tiers - check no purchase happened without you; hours-per-month against dollars is your ledger.",
         "speak": "never",
-        "check": "what Fast GPU hours and Relax access does each plan tier list",
+        "check": "What Fast GPU hours and Relax access does each plan tier list?",
         "say_example": "Compared plans by Fast GPU hours. Noted the tiers without picking one"
        },
        {
@@ -790,7 +790,7 @@
         "whatTheAgentLoses": "An agent might attempt to use restricted privacy features without verifying if the current subscription tier actually supports them.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the account's stated Fast GPU time support being on the plan tier required for the active feature",
+        "check": "Does the account's stated Fast GPU time support being on the plan tier required for the active feature?",
         "say_example": "Your <30 hours> of Fast GPU time confirms you're on the Pro Plan required for Stealth Mode"
        },
        {
@@ -803,7 +803,7 @@
         "kind": "decision",
         "verify_form": "The agent faced tiers and billing cycles - check nothing was subscribed without you; yearly-against-monthly is your cash flow.",
         "speak": "never",
-        "check": "which subscription tier and billing cycle is highlighted or about to be selected",
+        "check": "Which subscription tier and billing cycle is highlighted or about to be selected?",
         "say_example": "Looking at <Apprentice> yearly, 20% off. Nothing purchased yet"
        },
        {
@@ -816,7 +816,7 @@
         "kind": "decision",
         "verify_form": "The agent looked at team plans - check no team seat got bought; the tier is a budget decision.",
         "speak": "never",
-        "check": "what pricing and minimum team size does each team plan tier require",
+        "check": "What pricing and minimum team size does each team plan tier require?",
         "say_example": "Team plans start at <3 seats>. Noted <Starter> versus <Growth> pricing, no purchase made"
        },
        {
@@ -828,7 +828,7 @@
         "whatTheAgentLoses": "You lose the chance to verify that the platform's pricing math actually honors the advertised discount before committing to a subscription.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the annual billing rates correctly reflect the advertised discount off the monthly rates",
+        "check": "Do the annual billing rates correctly reflect the advertised discount off the monthly rates?",
         "say_example": "The annual prices correctly reflect the discount off the monthly rates"
        },
        {
@@ -840,7 +840,7 @@
         "whatTheAgentLoses": "The user loses the privacy of their generated images if the agent proceeds on a public tier without realizing the stealth feature requires a costly upgrade.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the current subscription plan actually support the feature being attempted, such as private generation",
+        "check": "Does the current subscription plan actually support the feature being attempted, such as private generation?",
         "say_example": "Your current plan doesn't actually support private generation. That needs the higher tier."
        },
        {
@@ -852,7 +852,7 @@
         "whatTheAgentLoses": "An agent might ignore the subscription details in the welcome message, leaving you unaware of exactly how your generation limits are calculated.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the allotted time in the welcome message align with the advertised plan limits",
+        "check": "Does the allotted time in the welcome message align with the advertised plan limits?",
         "say_example": "The welcome message's <3.33> hours checks out against the plan's roughly 200 generations a month"
        },
        {
@@ -865,7 +865,7 @@
         "kind": "decision",
         "verify_form": "The agent faced the pay-for-Plus wall - check no subscription started; twenty dollars a month for the generator is your call.",
         "speak": "on-event",
-        "check": "does the model dropdown show a feature, such as DALL-E, gated behind a paid tier",
+        "check": "Does the model dropdown show a feature, such as DALL-E, gated behind a paid tier?",
         "say_example": "DALL-E here needs the paid <Plus> plan. Not subscribing. Want me to?"
        },
        {
@@ -878,7 +878,7 @@
         "kind": "decision",
         "verify_form": "The agent stayed on the free tier's limited generations - check the limit against how much iterating your goal needs; upgrading was the alternative.",
         "speak": "never",
-        "check": "does the plan comparison page state a limit on the free tier's image generation",
+        "check": "Does the plan comparison page state a limit on the free tier's image generation?",
         "say_example": "Free tier caps generations low. Noted, staying on it for now"
        },
        {
@@ -891,7 +891,7 @@
         "kind": "decision",
         "verify_form": "The agent dismissed the premium upsell - check nothing it declined (priority credits, privacy) was something you needed.",
         "speak": "on-event",
-        "check": "does a popup advertise a paid tier with specific perks, such as priority credits or private generation, at a stated price",
+        "check": "Does a popup advertise a paid tier with specific perks, such as priority credits or private generation, at a stated price?",
         "say_example": "A popup wants <16 dollars a month> for priority credits and private generation. Skipping it."
        }
       ]
@@ -910,7 +910,7 @@
         "kind": "decision",
         "verify_form": "The agent rode out the boostless wait or went browsing - check what it did with the dead time; idling and hunting inspiration were both choices about your time.",
         "speak": "on-event",
-        "check": "does the wait screen offer alternate content to browse while the generation processes without a boost",
+        "check": "Does the wait screen offer alternate content to browse while the generation processes without a boost?",
         "say_example": "Generation is slow without boosts. Waiting it out instead of browsing the homepage meanwhile."
        },
        {
@@ -923,7 +923,7 @@
         "kind": "decision",
         "verify_form": "The agent waited in the slow queue rather than paying to skip - check the time-against-money trade matches yours.",
         "speak": "on-event",
-        "check": "does the progress screen offer a paid upgrade option to skip the wait",
+        "check": "Does the progress screen offer a paid upgrade option to skip the wait?",
         "say_example": "There's a paid option to skip this queue. Staying in line for the free wait."
        },
        {
@@ -936,7 +936,7 @@
         "kind": "decision",
         "verify_form": "The agent redeemed 500 rewards points for boosts - check the trade; those points were yours to spend elsewhere.",
         "speak": "on-event",
-        "check": "does a popup offer to redeem a stated number of reward points for additional boosts",
+        "check": "Does a popup offer to redeem a stated number of reward points for additional boosts?",
         "say_example": "There's an offer to trade <500 Rewards points> for 5 more boosts. Those points could go elsewhere. Want me to redeem them?"
        },
        {
@@ -948,7 +948,7 @@
         "whatTheAgentLoses": "An agent might falsely assume a wait period is required and pause the task when the tool is actually ready to generate more images.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the claim that boosts have run out match whether the Create button is active or disabled on screen",
+        "check": "Does the claim that boosts have run out match whether the Create button is active or disabled on screen?",
         "say_example": "The button's still active and pink. You're not actually out of boosts despite what was said."
        }
       ]
@@ -966,7 +966,7 @@
         "whatTheAgentLoses": "An agent might not verify that the UI updated to reflect the transaction, leaving you unaware if the platform failed to actually apply the credits.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the boost counter increase by the redeemed amount after redemption",
+        "check": "Did the boost counter increase by the redeemed amount after redemption?",
         "say_example": "Boost count went from <0> to <5> as expected after redeeming"
        },
        {
@@ -978,7 +978,7 @@
         "whatTheAgentLoses": "You lose the opportunity to verify that your token budget is being consumed at the expected rate.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the token balance decrease by exactly the stated generation cost",
+        "check": "Did the token balance decrease by exactly the stated generation cost?",
         "say_example": "Balance dropped from <150> to <126>, matching the <24>-token cost shown"
        },
        {
@@ -990,7 +990,7 @@
         "whatTheAgentLoses": "The person loses the ability to track their remaining boosts and verify that the generation has successfully started.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does a progress indicator show the image generating, and did the boost count decrease accordingly",
+        "check": "Does a progress indicator show the image generating, and did the boost count decrease accordingly?",
         "say_example": "Generation started and the boost count dropped to <14> as expected"
        },
        {
@@ -1002,7 +1002,7 @@
         "whatTheAgentLoses": "An agent might blindly trust the UI labels and fail to track actual credit usage, leading to inaccurate budgeting for future generations.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the token balance decrease by the amount implied by the selected upscale option, or by a different amount",
+        "check": "Did the token balance decrease by the amount implied by the selected upscale option, or by a different amount?",
         "say_example": "The upscale looked like it should cost <90> tokens, but only <30> were actually deducted. Flagging the mismatch."
        },
        {
@@ -1014,7 +1014,7 @@
         "whatTheAgentLoses": "An agent that fails to monitor the decreasing token balance might unexpectedly run out of credits before finalizing the image.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the token balance at the bottom of the screen update correctly after the generation",
+        "check": "Did the token balance at the bottom of the screen update correctly after the generation?",
         "say_example": "Balance updated correctly from <6,742> to <6,662> after that generation"
        },
        {
@@ -1026,7 +1026,7 @@
         "whatTheAgentLoses": "You lose the ability to manually resolve a conflicting UI state that might cause an automated agent to stall or attempt redundant point redemptions.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the boost tooltip disagree with the success banner or top bar's stated boost count",
+        "check": "Does the boost tooltip disagree with the success banner or top bar's stated boost count?",
         "say_example": "The tooltip says no boosts left, but the banner shows <5> new ones. Refreshing to clear the stale tooltip."
        },
        {
@@ -1038,7 +1038,7 @@
         "whatTheAgentLoses": "The user loses the ability to verify that their reward points were deducted accurately according to the stated cost.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the Rewards points balance decrease by exactly the redeemed amount",
+        "check": "Did the Rewards points balance decrease by exactly the redeemed amount?",
         "say_example": "Points dropped from <1,870> to <1,370>, exactly the <500> redeemed"
        },
        {
@@ -1050,7 +1050,7 @@
         "whatTheAgentLoses": "An agent might fail to verify if the platform is accurately deducting credits, potentially leading to unexpected depletion of the account's token balance.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the token balance decrease by the exact amount the tooltip quoted before generating",
+        "check": "Did the token balance decrease by the exact amount the tooltip quoted before generating?",
         "say_example": "Tooltip quoted <12> tokens, balance moved from <8,192> to <8,180>. Matches."
        },
        {
@@ -1062,7 +1062,7 @@
         "whatTheAgentLoses": "An agent might unnecessarily avoid using a helpful feature because it takes the inaccurate tooltip warning at face value.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does toggling the setting actually change the token cost, or does it stay the same despite a warning that it would increase",
+        "check": "Does toggling the setting actually change the token cost, or does it stay the same despite a warning that it would increase?",
         "say_example": "The tooltip warned of a higher cost, but toggling it made no difference. Still <6> tokens for <6> images."
        },
        {
@@ -1074,7 +1074,7 @@
         "whatTheAgentLoses": "The delegator loses the ability to accurately manage their generation budget if tokens are drained simply by exploring options.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the token balance change just from hovering over options, without submitting a generation",
+        "check": "Did the token balance change just from hovering over options, without submitting a generation?",
         "say_example": "Balance dropped from <105> to <98> just from hovering. Nothing was actually generated yet."
        },
        {
@@ -1086,7 +1086,7 @@
         "whatTheAgentLoses": "The user loses transparency regarding their remaining free usage limits, making it difficult to plan further iterations before hitting a paywall.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the interface show an updated remaining-generations count after a complimentary generation is used",
+        "check": "Does the interface show an updated remaining-generations count after a complimentary generation is used?",
         "say_example": "No updated count shown after using one of the <2> complimentary generations. Can't confirm how many are left."
        },
        {
@@ -1098,7 +1098,7 @@
         "whatTheAgentLoses": "The user loses control over their limited token budget if the agent silently spends premium credits on optional edits.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the token balance decrease by the amount tied to the background removal tool",
+        "check": "Did the token balance decrease by the amount tied to the background removal tool?",
         "say_example": "Background removal cost <2> tokens as expected. Balance went from <86> to <84>."
        },
        {
@@ -1110,7 +1110,7 @@
         "whatTheAgentLoses": "An agent might fail to monitor the credit balance across multiple iterations, potentially running out of credits before finalizing the image.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the credit balance decrease by the stated per-generation cost across multiple generations",
+        "check": "Did the credit balance decrease by the stated per-generation cost across multiple generations?",
         "say_example": "Credits dropped consistently, <2> each time, <10> to <8> to <6>"
        }
       ]
@@ -1136,7 +1136,7 @@
         "kind": "decision",
         "verify_form": "The agent set aspect ratio and image count with the token price updating - check the shape fits where the image will live and the count was worth the spend.",
         "speak": "never",
-        "check": "what aspect ratio and image count were selected, and how did the token cost on the Generate button change as a result",
+        "check": "What aspect ratio and image count were selected, and how did the token cost on the Generate button change as a result?",
         "say_example": "Set <1:1> ratio and <4> images. Cost went up to <8 tokens>"
        },
        {
@@ -1149,7 +1149,7 @@
         "kind": "decision",
         "verify_form": "The agent set the variation count and the privacy toggle - check how many options it bought and whether your images went public.",
         "speak": "never",
-        "check": "how many image variations were set to generate",
+        "check": "How many image variations were set to generate?",
         "say_example": "Set to generate <4> variations per prompt"
        },
        {
@@ -1162,7 +1162,7 @@
         "kind": "decision",
         "verify_form": "The agent set the ratio and pixel dimensions - check they match where the image is going; a wrong shape means cropping later.",
         "speak": "never",
-        "check": "what aspect ratio or pixel dimensions were selected, and do they match a stated destination such as social media or desktop",
+        "check": "What aspect ratio or pixel dimensions were selected, and do they match a stated destination such as social media or desktop?",
         "say_example": "Set dimensions to <1080x1080> for a square social post"
        },
        {
@@ -1175,7 +1175,7 @@
         "kind": "decision",
         "verify_form": "The agent set the aspect parameter - check widescreen is the shape you needed; the default square was the alternative.",
         "speak": "never",
-        "check": "was the '--ar' parameter added to the prompt with a specific ratio",
+        "check": "Was the '--ar' parameter added to the prompt with a specific ratio?",
         "say_example": "Added <--ar 16:9> to the prompt for a widescreen image"
        },
        {
@@ -1188,7 +1188,7 @@
         "kind": "decision",
         "verify_form": "The agent set ratio and visual intensity - check the shape and stylistic weight against the project's needs.",
         "speak": "never",
-        "check": "what aspect ratio and visual intensity level were set",
+        "check": "What aspect ratio and visual intensity level were set?",
         "say_example": "Set <9:16> vertical with intensity at <medium>"
        },
        {
@@ -1201,7 +1201,7 @@
         "kind": "decision",
         "verify_form": "The agent set resolution and ratio for the output - check the technical format; a low pick shows on every screen it lands on.",
         "speak": "never",
-        "check": "what resolution, aspect ratio, frame rate, and duration were selected for the output",
+        "check": "What resolution, aspect ratio, frame rate, and duration were selected for the output?",
         "say_example": "Set <1920x1080>, <24fps>, <4 second> duration for the output"
        },
        {
@@ -1214,7 +1214,7 @@
         "kind": "decision",
         "verify_form": "The agent set count and contrast inside the free plan's limits - check it didn't trip the premium wall or a contrast the model renders badly.",
         "speak": "never",
-        "check": "does the free plan enforce a maximum image count per generation",
+        "check": "Does the free plan enforce a maximum image count per generation?",
         "say_example": "Free plan caps it at <4> images per prompt. That's the max without upgrading"
        },
        {
@@ -1227,7 +1227,7 @@
         "kind": "decision",
         "verify_form": "The agent set the model and dimensions for the next canvas round - check both; they frame everything the frame generates.",
         "speak": "never",
-        "check": "what dimensions were selected for the next batch of generations",
+        "check": "What dimensions were selected for the next batch of generations?",
         "say_example": "Set dimensions to <1024x1024> for the next batch"
        },
        {
@@ -1240,7 +1240,7 @@
         "kind": "decision",
         "verify_form": "The agent heeded (or ignored) the native-resolution warning - check the dimensions; off-native quality loss is the cost.",
         "speak": "if-wrong",
-        "check": "does the tooltip warn that the model's native training resolution differs from the selected dimensions, and which was picked",
+        "check": "Does the tooltip warn that the model's native training resolution differs from the selected dimensions, and which was picked?",
         "say_example": "Tooltip warns the model does best at <640x832>. Picked a different size. Quality may drop."
        }
       ]
@@ -1259,7 +1259,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the base preset - check the platform look it committed to; Anime against Cinematic decides the whole aesthetic.",
         "speak": "never",
-        "check": "which base preset style, such as Anime, Concept Art, or Cinematic, was applied to the generation",
+        "check": "Which base preset style, such as Anime, Concept Art, or Cinematic, was applied to the generation?",
         "say_example": "Applied the <Cinematic Kino> preset to the generation"
        },
        {
@@ -1272,7 +1272,7 @@
         "kind": "decision",
         "verify_form": "The agent skipped (or took) the predefined style tags - check the choice; tags trade your exact words for the tool's polish.",
         "speak": "never",
-        "check": "were any predefined style tags applied, or did the prompt run using only the typed text",
+        "check": "Were any predefined style tags applied, or did the prompt run using only the typed text?",
         "say_example": "Skipped the style tags. Running your exact wording, no extra polish added"
        },
        {
@@ -1285,7 +1285,7 @@
         "kind": "decision",
         "verify_form": "The agent set the content type and styles with the prompt - check Art against Photo; the toggle decides what kind of picture exists.",
         "speak": "never",
-        "check": "which content type toggle, such as Art or Photo, and which style effect were applied alongside the prompt",
+        "check": "Which content type toggle, such as Art or Photo, and which style effect were applied alongside the prompt?",
         "say_example": "Set content type to <Photo> with the <Vivid> style effect"
        },
        {
@@ -1298,7 +1298,7 @@
         "kind": "decision",
         "verify_form": "The agent generated a bare-text baseline or styled it first - check which; the baseline tells you what the prompt alone does.",
         "speak": "never",
-        "check": "was a reference image or effect applied before generating, or did the run use the plain text prompt alone",
+        "check": "Was a reference image or effect applied before generating, or did the run use the plain text prompt alone?",
         "say_example": "Generated from the plain prompt first, no reference image applied yet"
        },
        {
@@ -1311,7 +1311,7 @@
         "kind": "decision",
         "verify_form": "The agent set style, tone, lighting, and camera - check each dropdown; four dials of mood were its taste.",
         "speak": "never",
-        "check": "which style, color/tone, lighting, and camera angle dropdowns were set before generating",
+        "check": "Which style, color/tone, lighting, and camera angle dropdowns were set before generating?",
         "say_example": "Set style to <Moody>, tone <Warm>, lighting <Golden hour>, camera <Wide angle>"
        },
        {
@@ -1324,7 +1324,7 @@
         "kind": "decision",
         "verify_form": "The agent applied a color palette - check the hues; the named themes are the artwork's temperature.",
         "speak": "never",
-        "check": "which named color palette, such as Ember, Jungle, or Magic, was applied",
+        "check": "Which named color palette, such as Ember, Jungle, or Magic, was applied?",
         "say_example": "Applied the <Jungle> color palette"
        },
        {
@@ -1337,7 +1337,7 @@
         "kind": "decision",
         "verify_form": "The agent set the color tone and kept or dropped past effects - check golden-with-oil-paint-removed against your look.",
         "speak": "on-event",
-        "check": "which active tags or effects from the previous prompt remain applied, and were any removed before the next generation",
+        "check": "Which active tags or effects from the previous prompt remain applied, and were any removed before the next generation?",
         "say_example": "The <Oil paint> tag carried over from last time. Keeping it before this run."
        }
       ]
@@ -1356,7 +1356,7 @@
         "kind": "decision",
         "verify_form": "The agent set contrast, mode, and count against the token cost - check the quality-for-tokens trade it struck for you.",
         "speak": "never",
-        "check": "how were contrast, dimensions or count set, and how did the token cost change as a result",
+        "check": "How were contrast, dimensions or count set, and how did the token cost change as a result?",
         "say_example": "Raised contrast to <high> and count to <4>. Cost rose to <10 tokens>"
        },
        {
@@ -1369,7 +1369,7 @@
         "kind": "decision",
         "verify_form": "The agent chose speed or quality with the price difference on screen - check which it paid for; 6 against 22 tokens was your budget.",
         "speak": "on-event",
-        "check": "does switching between generation modes, such as Fast versus Quality or Ultra, change the token cost or require a paid plan, and which was picked",
+        "check": "Does switching between generation modes, such as Fast versus Quality or Ultra, change the token cost or require a paid plan, and which was picked?",
         "say_example": "Quality mode costs <22 tokens> versus <6> for Fast. Sticking with Fast unless you want the higher-quality one."
        },
        {
@@ -1382,7 +1382,7 @@
         "kind": "decision",
         "verify_form": "The agent set the model and the advanced constraints - check the negative prompt and toggles say what you'd exclude, not what it guessed.",
         "speak": "never",
-        "check": "what negative-prompt terms or other advanced constraints were set",
+        "check": "What negative-prompt terms or other advanced constraints were set?",
         "say_example": "Set the negative prompt to exclude <blurry, watermark>"
        },
        {
@@ -1395,7 +1395,7 @@
         "kind": "decision",
         "verify_form": "The agent decided on the transparent-background toggle - check the choice against the tooltip's restrictions; transparency changes what you can prompt.",
         "speak": "on-event",
-        "check": "does enabling transparent background restrict what can be specified in the prompt or which model can be used",
+        "check": "Does enabling transparent background restrict what can be specified in the prompt or which model can be used?",
         "say_example": "Turned on transparent background. Heads up, you can't also describe a background in the prompt now."
        },
        {
@@ -1408,7 +1408,7 @@
         "kind": "decision",
         "verify_form": "The agent toggled Prompt Magic against a tooltip warning of extra cost - check whether it verified the real price; the tooltip and the button disagreed.",
         "speak": "if-wrong",
-        "check": "does enabling this feature actually increase or decrease the token cost, regardless of what any narration claims",
+        "check": "Does enabling this feature actually increase or decrease the token cost, regardless of what any narration claims?",
         "say_example": "Turned on <Prompt Magic V2>. Despite what was said, the real cost went up, not down."
        },
        {
@@ -1421,7 +1421,7 @@
         "kind": "decision",
         "verify_form": "The agent set the guidance scale - check how strictly it bound the AI to your words; adherence against flair was a taste call.",
         "speak": "never",
-        "check": "what guidance scale value was set",
+        "check": "What guidance scale value was set?",
         "say_example": "Set guidance scale to <7>, fairly strict adherence to the prompt"
        },
        {
@@ -1434,7 +1434,7 @@
         "kind": "decision",
         "verify_form": "The agent set the tiling toggle - check whether you wanted a repeating pattern; on by accident ruins a standalone image.",
         "speak": "on-event",
-        "check": "is the Tiling toggle on or off, and does the task call for a repeating pattern or a standalone image",
+        "check": "Is the Tiling toggle on or off, and does the task call for a repeating pattern or a standalone image?",
         "say_example": "Tiling is off. This will render as one standalone image, not a repeating pattern."
        },
        {
@@ -1447,7 +1447,7 @@
         "kind": "decision",
         "verify_form": "The agent set shot size and camera motion - check the framing and movement; the cinematography was its call.",
         "speak": "never",
-        "check": "what shot size and camera motion were selected",
+        "check": "What shot size and camera motion were selected?",
         "say_example": "Set shot size to <medium> with <slow pan> camera motion"
        },
        {
@@ -1460,7 +1460,7 @@
         "kind": "decision",
         "verify_form": "The agent set the contrast level - check the tonal weight; low-against-high is the image's mood.",
         "speak": "never",
-        "check": "what contrast level, such as low, medium, or high, was selected",
+        "check": "What contrast level, such as low, medium, or high, was selected?",
         "say_example": "Set contrast to <medium>"
        },
        {
@@ -1472,7 +1472,7 @@
         "whatTheAgentLoses": "The user loses predictable control over the final image because the agent sends conflicting instructions to the generation tool.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does a toggle setting, such as Tiling, directly conflict with an instruction written into the prompt, such as 'no tiling'",
+        "check": "Does a toggle setting, such as Tiling, directly conflict with an instruction written into the prompt, such as 'no tiling'?",
         "say_example": "Tiling is on, but the prompt says 'no tiling'. Those conflict. Picking one."
        }
       ]
@@ -1491,7 +1491,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted the generation settings - check the model version and speed mode it set; those defaults ride on every later prompt.",
         "speak": "on-event",
-        "check": "which global default settings, such as model version, stylize level, speed mode, or Fast versus Relax GPU time, were changed",
+        "check": "Which global default settings, such as model version, stylize level, speed mode, or Fast versus Relax GPU time, were changed?",
         "say_example": "Set the default model version to <6> and stylize to <250>. This carries into every prompt from here on."
        },
        {
@@ -1504,7 +1504,7 @@
         "kind": "decision",
         "verify_form": "The agent left the auto prompt-refinement setting on (or off) - check it; on means your exact wording can be silently rewritten.",
         "speak": "on-event",
-        "check": "is automatic prompt expansion or refinement turned on or off",
+        "check": "Is automatic prompt expansion or refinement turned on or off?",
         "say_example": "Auto prompt expansion is off. Your exact wording will be used, not a rewritten version."
        },
        {
@@ -1517,7 +1517,7 @@
         "kind": "decision",
         "verify_form": "The agent set the default variation mode - check subtle-or-strong; every later variation obeys it.",
         "speak": "never",
-        "check": "which variation mode, subtle or strong, was set as the default",
+        "check": "Which variation mode, subtle or strong, was set as the default?",
         "say_example": "Set default variation mode to <subtle>"
        }
       ]
@@ -1536,7 +1536,7 @@
         "kind": "decision",
         "verify_form": "The agent met the Alchemy and PhotoReal walls - check it didn't buy an upgrade to pass them; premium fidelity for money is your call.",
         "speak": "on-event",
-        "check": "does toggling a premium feature, such as Alchemy or PhotoReal, show it requires an active paid subscription",
+        "check": "Does toggling a premium feature, such as Alchemy or PhotoReal, show it requires an active paid subscription?",
         "say_example": "Alchemy needs an active subscription that's expired. Not renewing it here, continuing without it."
        },
        {
@@ -1549,7 +1549,7 @@
         "kind": "decision",
         "verify_form": "The agent toggled stealth (or left generations public) - check the visibility you ended up with; public is the default it had to act against.",
         "speak": "on-event",
-        "check": "does the platform default to public generations unless a private toggle, such as Stealth Mode, is explicitly enabled",
+        "check": "Does the platform default to public generations unless a private toggle, such as Stealth Mode, is explicitly enabled?",
         "say_example": "Images are public by default here. Turning on Stealth Mode to keep yours private."
        },
        {
@@ -1562,7 +1562,7 @@
         "kind": "decision",
         "verify_form": "The agent declined (or bought) the private-generation plan - check the visibility of what you're about to generate; public is what declining means.",
         "speak": "gate",
-        "check": "does keeping generations private require upgrading to a paid plan, and at what price",
+        "check": "Does keeping generations private require upgrading to a paid plan, and at what price?",
         "say_example": "Making generations private costs <16 dollars> a month. Without it, everything you generate here is visible in the public gallery. Keeping it public for now. Want me to upgrade?"
        }
       ]
@@ -1592,7 +1592,7 @@
           "whatTheAgentLoses": "An agent might just type 'no dogs' and deliver an image that includes the very thing you explicitly wanted to avoid.",
           "kind": "state-check",
           "speak": "never",
-          "check": "did the prompt use a natural-language negative, such as 'no dogs', or the tool's actual exclusion syntax, such as '--no dogs'",
+          "check": "Did the prompt use a natural-language negative, such as 'no dogs', or the tool's actual exclusion syntax, such as '--no dogs'?",
           "say_example": "Switched from plain 'no dogs' to <--no dogs> since natural negatives don't work here"
          },
          {
@@ -1605,7 +1605,7 @@
           "kind": "decision",
           "verify_form": "The agent set numeric weights in the prompt - check which element got the emphasis; the subject-against-setting balance was your creative call, and it made it.",
           "speak": "never",
-          "check": "what numeric weight was assigned to which prompt element",
+          "check": "What numeric weight was assigned to which prompt element?",
           "say_example": "Weighted <farm::2> over <bull::1> to emphasize the setting"
          },
          {
@@ -1617,7 +1617,7 @@
           "whatTheAgentLoses": "Delegating this step means missing the opportunity to learn the tool's specific recommended syntax for crafting effective prompts.",
           "kind": "state-check",
           "speak": "never",
-          "check": "does the help page recommend a specific prompt structure, such as adjective, noun, verb, style",
+          "check": "Does the help page recommend a specific prompt structure, such as adjective, noun, verb, style?",
           "say_example": "Followed the suggested <adjective, noun, verb, style> template for the prompt"
          },
          {
@@ -1629,7 +1629,7 @@
           "whatTheAgentLoses": "You lose the opportunity to learn the specific syntax and prompting techniques required to get accurate text generation from this tool.",
           "kind": "state-check",
           "speak": "never",
-          "check": "was the desired on-image text enclosed in quotation marks in the prompt",
+          "check": "Was the desired on-image text enclosed in quotation marks in the prompt?",
           "say_example": "Put the target text in quotes, <\"Grand Opening\">"
          },
          {
@@ -1642,7 +1642,7 @@
           "kind": "decision",
           "verify_form": "The agent confirmed the permutation batch - check how many grids it agreed to generate; each one spends.",
           "speak": "on-event",
-          "check": "does the prompt contain bracketed permutation options that will generate multiple separate image grids, and how many",
+          "check": "Does the prompt contain bracketed permutation options that will generate multiple separate image grids, and how many?",
           "say_example": "This prompt's brackets will generate <4> separate grids, not one. Confirming before it spends that much."
          },
          {
@@ -1654,7 +1654,7 @@
           "whatTheAgentLoses": "You lose the opportunity to learn the specific syntax rules required to manually control and fine-tune the tool's generation parameters.",
           "kind": "state-check",
           "speak": "never",
-          "check": "were parameters placed at the end of the prompt with the required double-hyphen syntax",
+          "check": "Were parameters placed at the end of the prompt with the required double-hyphen syntax?",
           "say_example": "Moved the parameters to the end of the prompt with proper spacing"
          },
          {
@@ -1666,7 +1666,7 @@
           "whatTheAgentLoses": "You lose the chance to learn and verify the specific parameter syntax required to make the output function correctly as a seamless texture.",
           "kind": "state-check",
           "speak": "never",
-          "check": "was the '--tile' parameter added to the prompt to generate a repeating pattern",
+          "check": "Was the '--tile' parameter added to the prompt to generate a repeating pattern?",
           "say_example": "Added <--tile> to generate a seamless repeating pattern"
          },
          {
@@ -1679,7 +1679,7 @@
           "kind": "decision",
           "verify_form": "The agent set the weird parameter - check the value against how unconventional you actually wanted this; 0 to 3000 is a personality dial.",
           "speak": "never",
-          "check": "what numeric value, from 0 to 3000, was set for the 'weird' parameter",
+          "check": "What numeric value, from 0 to 3000, was set for the 'weird' parameter?",
           "say_example": "Set <--weird 500> for a moderately unconventional look"
          },
          {
@@ -1691,7 +1691,7 @@
           "whatTheAgentLoses": "An agent might just pass through a basic text string without learning or applying the platform's specific structural recommendations for optimal prompting.",
           "kind": "state-check",
           "speak": "never",
-          "check": "does the official guide list required foundational elements, such as subject and environment, for a good prompt",
+          "check": "Does the official guide list required foundational elements, such as subject and environment, for a good prompt?",
           "say_example": "Checked the guide. Made sure the prompt names both a subject and an environment"
          },
          {
@@ -1703,7 +1703,7 @@
           "whatTheAgentLoses": "You lose the opportunity to manually resolve semantic ambiguities using the specific syntax of the generation tool.",
           "kind": "state-check",
           "speak": "never",
-          "check": "was a double colon used to separate distinct concepts in the prompt",
+          "check": "Was a double colon used to separate distinct concepts in the prompt?",
           "say_example": "Used <::> to split the two ideas so they aren't read as one compound term"
          },
          {
@@ -1715,7 +1715,7 @@
           "whatTheAgentLoses": "The user loses the opportunity to hand-pick the exact stylistic variations they want to test for the new subject.",
           "kind": "state-check",
           "speak": "never",
-          "check": "were curly braces used in the prompt to run multiple style permutations as separate jobs",
+          "check": "Were curly braces used in the prompt to run multiple style permutations as separate jobs?",
           "say_example": "Wrapped the style options in curly braces to run each variation as its own job"
          },
          {
@@ -1727,7 +1727,7 @@
           "whatTheAgentLoses": "You lose the creative control to fine-tune exactly how much of the AI's default artistic flair is applied to your specific concept.",
           "kind": "state-check",
           "speak": "never",
-          "check": "what value was set for the stylize parameter",
+          "check": "What value was set for the stylize parameter?",
           "say_example": "Set <--stylize 0> to reduce Midjourney's default aesthetic influence"
          }
         ]
@@ -1746,7 +1746,7 @@
           "kind": "decision",
           "verify_form": "The agent phrased the scene positively instead of using negatives - check the element list is the scene you wanted; it picked which animals populate your farm.",
           "speak": "never",
-          "check": "were desired elements listed positively, such as naming animals, rather than phrased as exclusions",
+          "check": "Were desired elements listed positively, such as naming animals, rather than phrased as exclusions?",
           "say_example": "Listed <cows, pigs, chickens> directly instead of saying what to exclude"
          },
          {
@@ -1758,7 +1758,7 @@
           "whatTheAgentLoses": "You lose the intuitive grasp of how the AI interprets syntax and word placement, which is crucial for independently crafting precise prompts.",
           "kind": "intent-check",
           "speak": "never",
-          "check": "which subject was placed first in the prompt",
+          "check": "Which subject was placed first in the prompt?",
           "say_example": "Put <the lighthouse> first in the prompt so it gets the most visual weight"
          },
          {
@@ -1771,7 +1771,7 @@
           "kind": "decision",
           "verify_form": "The agent cut words from your prompt for concision - check what it deleted; it judged which of your descriptors were filler.",
           "speak": "never",
-          "check": "which words or phrases were removed from the prompt to shorten it",
+          "check": "Which words or phrases were removed from the prompt to shorten it?",
           "say_example": "Trimmed filler words like <'very'> and <'extremely'> from the prompt"
          },
          {
@@ -1784,7 +1784,7 @@
           "kind": "decision",
           "verify_form": "The agent picked style keywords - check the look they imply is the look you wanted; the aesthetic was its guess.",
           "speak": "never",
-          "check": "which style keywords were added to the prompt",
+          "check": "Which style keywords were added to the prompt?",
           "say_example": "Added <'watercolor, soft lighting'> to the prompt for the desired look"
          },
          {
@@ -1797,7 +1797,7 @@
           "kind": "decision",
           "verify_form": "The agent named artists in the prompt - check whose style it borrowed; the influence list is a taste judgment it made for you.",
           "speak": "never",
-          "check": "was a specific artist's name included in the prompt to influence style",
+          "check": "Was a specific artist's name included in the prompt to influence style?",
           "say_example": "Named <a watercolor illustrator style> in the prompt to steer the look"
          },
          {
@@ -1810,7 +1810,7 @@
           "kind": "decision",
           "verify_form": "The agent combined artist styles - check the blend reads as a look you want; the combination invented an aesthetic on your behalf.",
           "speak": "never",
-          "check": "were multiple artist names combined in the prompt to blend styles",
+          "check": "Were multiple artist names combined in the prompt to blend styles?",
           "say_example": "Blended two artist-style references in the prompt for a new combined look"
          },
          {
@@ -1822,7 +1822,7 @@
           "whatTheAgentLoses": "Delegating this means missing the chance to understand how specific prompt variables influence the AI's creative output.",
           "kind": "state-check",
           "speak": "never",
-          "check": "was a structured formula, changing one variable at a time, used to build the prompt",
+          "check": "Was a structured formula, changing one variable at a time, used to build the prompt?",
           "say_example": "Built the prompt by changing one variable at a time from a fixed formula"
          },
          {
@@ -1834,7 +1834,7 @@
           "whatTheAgentLoses": "You lose the creative control of fine-tuning the AI's visual priorities through exact word placement.",
           "kind": "state-check",
           "speak": "never",
-          "check": "was the style keyword moved to the front of the prompt to strengthen its effect",
+          "check": "Was the style keyword moved to the front of the prompt to strengthen its effect?",
           "say_example": "Moved <'minimalist'> to the front of the prompt to enforce that style"
          },
          {
@@ -1847,7 +1847,7 @@
           "kind": "decision",
           "verify_form": "The agent appended color and lighting modifiers - check the atmosphere words; the palette was its guess at your mood.",
           "speak": "never",
-          "check": "which color and lighting terms were appended to the base prompt",
+          "check": "Which color and lighting terms were appended to the base prompt?",
           "say_example": "Appended <'golden hour, warm tones'> to control color and lighting"
          },
          {
@@ -1860,7 +1860,7 @@
           "kind": "decision",
           "verify_form": "The agent picked the mood keyword - check the atmosphere; eight moods rendered eight different pictures.",
           "speak": "never",
-          "check": "which mood keyword was chosen among the demonstrated variations",
+          "check": "Which mood keyword was chosen among the demonstrated variations?",
           "say_example": "Picked <'melancholic'> as the mood keyword for this version"
          }
         ]
@@ -1881,7 +1881,7 @@
         "kind": "decision",
         "verify_form": "The agent opened community images to study - check what caught its eye is close to your goal; the serendipity was outsourced.",
         "speak": "never",
-        "check": "which community image was opened to inspect its prompt and settings",
+        "check": "Which community image was opened to inspect its prompt and settings?",
         "say_example": "Opened a community image of <a ceramic vase> to see its prompt"
        },
        {
@@ -1894,7 +1894,7 @@
         "kind": "decision",
         "verify_form": "The agent decided what to do with the community image - copy, remix, or download - check the route matches how much of someone else's work you want in yours.",
         "speak": "never",
-        "check": "what did the agent do with the community image's prompt: copy it, use Image2Image, remix it, or download it",
+        "check": "What did the agent do with the community image's prompt: copy it, use Image2Image, remix it, or download it?",
         "say_example": "Copied the prompt text from the community image, then edited it before running"
        },
        {
@@ -1907,7 +1907,7 @@
         "kind": "decision",
         "verify_form": "The agent picked which community feed to study - check Top against Trending; the pick decided the quality of the examples it learned from.",
         "speak": "never",
-        "check": "which community feed, such as Top or Trending, was browsed",
+        "check": "Which community feed, such as Top or Trending, was browsed?",
         "say_example": "Browsed the <Top> feed instead of Trending for higher-quality examples"
        },
        {
@@ -1920,7 +1920,7 @@
         "kind": "decision",
         "verify_form": "The agent judged a community example's look - check its taste call matches yours before its style shapes your prompt.",
         "speak": "never",
-        "check": "what prompt text is shown for this community example",
+        "check": "What prompt text is shown for this community example?",
         "say_example": "This example's cinematic look came from a prompt naming <35mm film, dramatic lighting>"
        },
        {
@@ -1933,7 +1933,7 @@
         "kind": "decision",
         "verify_form": "The agent studied a typo example - check the failure it took away is the one that matters for your text.",
         "speak": "never",
-        "check": "does the rendered text in the selected community image contain a spelling or rendering error",
+        "check": "Does the rendered text in the selected community image contain a spelling or rendering error?",
         "say_example": "Picked an example with garbled text, <'CONGRATULATULATIONS'>, to see where text rendering breaks"
        },
        {
@@ -1946,7 +1946,7 @@
         "kind": "decision",
         "verify_form": "The agent remixed a community creation as the base - check whose prompt it borrowed and whether the borrowed look is yours.",
         "speak": "never",
-        "check": "which community creation was remixed as the starting point, and what was its original prompt",
+        "check": "Which community creation was remixed as the starting point, and what was its original prompt?",
         "say_example": "Remixed a community image's prompt about <a ceramic mug> as the starting point"
        },
        {
@@ -1959,7 +1959,7 @@
         "kind": "decision",
         "verify_form": "The agent ran (or abandoned) the pre-filled remix prompt - check which; someone else's coffee machine against your own idea.",
         "speak": "on-event",
-        "check": "is the prompt box pre-filled with a remixed community prompt, and was it used as-is or replaced before generating",
+        "check": "Is the prompt box pre-filled with a remixed community prompt, and was it used as-is or replaced before generating?",
         "say_example": "The prompt box still has the remixed <coffee machine> text. Running it as-is instead of writing something new."
        },
        {
@@ -1972,7 +1972,7 @@
         "kind": "decision",
         "verify_form": "The agent read the prompt behind the community image - check which keywords it took; the ones that caught its eye may not catch yours.",
         "speak": "never",
-        "check": "what specific keywords are shown in the prompt behind this community image",
+        "check": "What specific keywords are shown in the prompt behind this community image?",
         "say_example": "This community image's prompt uses <'pixel aesthetic, occult symbolism'>"
        },
        {
@@ -1985,7 +1985,7 @@
         "kind": "decision",
         "verify_form": "The agent copied the prompt to dissect - check which parts it kept for the next round; the keep-list is editorial.",
         "speak": "never",
-        "check": "was the prompt text copied from the community image for further editing",
+        "check": "Was the prompt text copied from the community image for further editing?",
         "say_example": "Copied the prompt text to test which parts actually matter"
        }
       ]
@@ -2004,7 +2004,7 @@
         "kind": "decision",
         "verify_form": "The agent picked among the auto-shortened prompt options - check which keywords survived; it decided which of your details were essential.",
         "speak": "never",
-        "check": "which auto-shortened prompt variation was selected to run",
+        "check": "Which auto-shortened prompt variation was selected to run?",
         "say_example": "Picked the second shortened variant, keeping <'neon city, rain'>"
        },
        {
@@ -2017,7 +2017,7 @@
         "kind": "decision",
         "verify_form": "The agent cycled the surprise suggestions for ideas - check the borrowed structure suits your goal rather than the example's.",
         "speak": "never",
-        "check": "was the 'Surprise Me' button used to populate an example prompt",
+        "check": "Was the 'Surprise Me' button used to populate an example prompt?",
         "say_example": "Used <Surprise Me> for an example prompt structure to build from"
        },
        {
@@ -2030,7 +2030,7 @@
         "kind": "decision",
         "verify_form": "The agent picked an AI prompt-assist route - check whether it expanded your text, randomized it, or described an image; each rewrites your intent differently.",
         "speak": "never",
-        "check": "which prompt-assist method, such as expand text, randomize, or describe an image, was selected",
+        "check": "Which prompt-assist method, such as expand text, randomize, or describe an image, was selected?",
         "say_example": "Used the <expand from a short description> assist option"
        },
        {
@@ -2043,7 +2043,7 @@
         "kind": "decision",
         "verify_form": "The agent chose whether to seed the prompt from an uploaded photo - check whose photo, and whether that anchor is yours.",
         "speak": "on-event",
-        "check": "was an uploaded reference photo used to generate the initial prompt via 'Describe With AI'",
+        "check": "Was an uploaded reference photo used to generate the initial prompt via 'Describe With AI'?",
         "say_example": "Used the uploaded photo of <a mountain lake> to auto-generate a starting prompt"
        },
        {
@@ -2056,7 +2056,7 @@
         "kind": "decision",
         "verify_form": "The agent expanded your keywords into prompt ideas - check which brainstormed variant it ran; the pick among ideas was the creative fork.",
         "speak": "never",
-        "check": "were keywords expanded into multiple prompt variations using the Ideate tool",
+        "check": "Were keywords expanded into multiple prompt variations using the Ideate tool?",
         "say_example": "Expanded <'forest, fog'> into <5> prompt variations with Ideate"
        },
        {
@@ -2069,7 +2069,7 @@
         "kind": "decision",
         "verify_form": "The agent picked among the four generated descriptions - check the one it ran reads like your image; each description is a different picture.",
         "speak": "never",
-        "check": "which of the bot's suggested image descriptions was selected to generate",
+        "check": "Which of the bot's suggested image descriptions was selected to generate?",
         "say_example": "Ran the second suggested description, <'a cabin in misty woods'>"
        },
        {
@@ -2082,7 +2082,7 @@
         "kind": "decision",
         "verify_form": "The agent wrote from scratch or took an inspiration image - check which; the inspiration grid auto-fills style choices you never made.",
         "speak": "never",
-        "check": "was a custom prompt written from scratch, or was an inspiration image used to auto-fill style settings",
+        "check": "Was a custom prompt written from scratch, or was an inspiration image used to auto-fill style settings?",
         "say_example": "Wrote the prompt from scratch instead of using one of the 12 inspiration images"
        },
        {
@@ -2095,7 +2095,7 @@
         "kind": "decision",
         "verify_form": "The agent weighed generating the random suggestion - check it didn't burn a credit on an alligator you never asked for.",
         "speak": "on-event",
-        "check": "does the 'Surprise Me' suggestion match the stated goal, or would generating it spend a credit on something unrelated",
+        "check": "Does the 'Surprise Me' suggestion match the stated goal, or would generating it spend a credit on something unrelated?",
         "say_example": "Surprise Me suggested <a random alligator scene>. That's off-goal, skipping it rather than spending a credit."
        },
        {
@@ -2108,7 +2108,7 @@
         "kind": "decision",
         "verify_form": "The agent used (or skipped) the prompt enhancer before a big spend - check which text actually ran; the enhancer rewrites you.",
         "speak": "on-event",
-        "check": "was the prompt enhancer used before generating, and did it change the wording that will actually run",
+        "check": "Was the prompt enhancer used before generating, and did it change the wording that will actually run?",
         "say_example": "Ran the enhancer. The prompt that will actually generate is the rewritten version, not what was typed."
        },
        {
@@ -2121,7 +2121,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a prompt-editing tool with the 200-character limit in play - check the tool it used actually accepted your prompt's length.",
         "speak": "if-wrong",
-        "check": "is the selected prompt under the character limit, such as 200, required for this editing tool to work",
+        "check": "Is the selected prompt under the character limit, such as 200, required for this editing tool to work?",
         "say_example": "Prompt is <230> characters, over the <200> limit this tool needs. It won't actually run."
        },
        {
@@ -2134,7 +2134,7 @@
         "kind": "decision",
         "verify_form": "The agent typed its own prompt or clicked the example - check which text ran; the example's koi pond is not your image.",
         "speak": "never",
-        "check": "was a custom prompt typed, or was the pre-written example used",
+        "check": "Was a custom prompt typed, or was the pre-written example used?",
         "say_example": "Typed a custom prompt instead of using the pre-written koi pond example"
        }
       ]
@@ -2153,7 +2153,7 @@
         "kind": "decision",
         "verify_form": "The agent described lighting, lens, and mood in the prompt - check those photographic choices are your look; cinematic was its interpretation.",
         "speak": "never",
-        "check": "what lighting, lens, and mood terms were included in the prompt",
+        "check": "What lighting, lens, and mood terms were included in the prompt?",
         "say_example": "Added <'85mm lens, cinematic lighting'> to the prompt"
        },
        {
@@ -2166,7 +2166,7 @@
         "kind": "decision",
         "verify_form": "The agent appended a style word to the prompt - check the aesthetic it committed to; graphic design against painting was its call.",
         "speak": "never",
-        "check": "was a style-defining phrase, such as 'graphic design', appended to the prompt",
+        "check": "Was a style-defining phrase, such as 'graphic design', appended to the prompt?",
         "say_example": "Appended <'graphic design'> to the prompt to set the visual style"
        },
        {
@@ -2179,7 +2179,7 @@
         "kind": "decision",
         "verify_form": "The agent typed the realtime test prompt - check the subject it chose to explore was worth the exploration.",
         "speak": "never",
-        "check": "what prompt was entered to test real-time generation",
+        "check": "What prompt was entered to test real-time generation?",
         "say_example": "Typed <'a floating island at sunset'> to test the real-time mode"
        },
        {
@@ -2191,7 +2191,7 @@
         "whatTheAgentLoses": "You lose creative control over the exact phrasing and descriptive details used to shape the initial image concept.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "was the prompt sent using the '/imagine' command rather than as plain chat text",
+        "check": "Was the prompt sent using the '/imagine' command rather than as plain chat text?",
         "say_example": "Sent it through <\"/imagine\">. Plain chat text would have been ignored."
        },
        {
@@ -2204,7 +2204,7 @@
         "kind": "decision",
         "verify_form": "The agent worded the description - check the subject, style, and framing are yours; every noun it chose is in the picture.",
         "speak": "never",
-        "check": "what subject, style, and framing terms were used in the prompt",
+        "check": "What subject, style, and framing terms were used in the prompt?",
         "say_example": "Described <'a red fox in a snowy forest, watercolor style'> as the prompt"
        },
        {
@@ -2217,7 +2217,7 @@
         "kind": "decision",
         "verify_form": "The agent typed the prompt - check it says what you actually want generated; the whole image downstream is those words.",
         "speak": "never",
-        "check": "what text prompt was entered before generating",
+        "check": "What text prompt was entered before generating?",
         "say_example": "Entered <'a cozy reading nook by a window'> as the prompt"
        },
        {
@@ -2230,7 +2230,7 @@
         "kind": "decision",
         "verify_form": "The agent set the prompt with camera and style presets - check subject and style; both were creative decisions.",
         "speak": "never",
-        "check": "what prompt text and camera or style presets were selected",
+        "check": "What prompt text and camera or style presets were selected?",
         "say_example": "Set the prompt with <'2D'> style and a <slow zoom> camera preset"
        },
        {
@@ -2243,7 +2243,7 @@
         "kind": "decision",
         "verify_form": "The agent set model, ratio, content type, and the text - check the whole first-generation recipe against your vision.",
         "speak": "never",
-        "check": "what model, aspect ratio, content type, and prompt text were set for the initial generation",
+        "check": "What model, aspect ratio, content type, and prompt text were set for the initial generation?",
         "say_example": "Set model, <1:1> ratio, <Art> content type, and the prompt text together for the first run"
        },
        {
@@ -2256,7 +2256,7 @@
         "kind": "decision",
         "verify_form": "The agent phrased the prompt knowing it costs a boost - check the aesthetic and details; the spend locked them in.",
         "speak": "never",
-        "check": "what prompt was phrased, knowing it will consume one of the remaining boosts",
+        "check": "What prompt was phrased, knowing it will consume one of the remaining boosts?",
         "say_example": "Phrased the prompt carefully since it'll use one of the <9> remaining boosts"
        },
        {
@@ -2269,7 +2269,7 @@
         "kind": "decision",
         "verify_form": "The agent put exact text into the prompt - check the phrase; the words in the image are now its choice of yours.",
         "speak": "never",
-        "check": "was specific on-image text included in the prompt to test text rendering",
+        "check": "Was specific on-image text included in the prompt to test text rendering?",
         "say_example": "Included the exact phrase <'Est. 1990'> to test text rendering"
        }
       ]
@@ -2293,7 +2293,7 @@
           "kind": "decision",
           "verify_form": "The agent picked the structural reference from your past work - check it grabbed the pose you meant, not a lookalike.",
           "speak": "never",
-          "check": "which past generation or upload was selected as the structural reference",
+          "check": "Which past generation or upload was selected as the structural reference?",
           "say_example": "Picked an earlier generation of <a lighthouse> as the structural reference"
          },
          {
@@ -2306,7 +2306,7 @@
           "kind": "decision",
           "verify_form": "The agent uploaded a reference file - check it is the file you meant; the pick anchors the whole generation.",
           "speak": "never",
-          "check": "which local file was uploaded as the reference image",
+          "check": "Which local file was uploaded as the reference image?",
           "say_example": "Uploaded <sunset-ref.png> as the reference image"
          },
          {
@@ -2319,7 +2319,7 @@
           "kind": "decision",
           "verify_form": "The agent uploaded a guiding photo - check it is the reference you meant; structure and style flow from that file.",
           "speak": "never",
-          "check": "which photo was uploaded to guide the generation, with image guidance toggled on",
+          "check": "Which photo was uploaded to guide the generation, with image guidance toggled on?",
           "say_example": "Uploaded <a street photo> with image guidance on to steer structure and style"
          },
          {
@@ -2332,7 +2332,7 @@
           "kind": "decision",
           "verify_form": "The agent loaded a file onto the canvas - check which image it chose as the base; the pick is the foundation of every edit after.",
           "speak": "never",
-          "check": "which file was selected from the file dialog to load onto the canvas",
+          "check": "Which file was selected from the file dialog to load onto the canvas?",
           "say_example": "Loaded <base-sketch.png> onto the canvas as the starting image"
          },
          {
@@ -2345,7 +2345,7 @@
           "kind": "decision",
           "verify_form": "The agent pasted a web image URL as reference - check the picture behind the link is the aesthetic you meant.",
           "speak": "never",
-          "check": "was a web image URL, such as from Pexels, pasted into the prompt as a reference",
+          "check": "Was a web image URL, such as from Pexels, pasted into the prompt as a reference?",
           "say_example": "Pasted a Pexels URL of <a mountain range> as the visual baseline"
          },
          {
@@ -2357,7 +2357,7 @@
           "whatTheAgentLoses": "The user loses the ability to use their own specific image as a structural or stylistic reference for the generation.",
           "kind": "state-check",
           "speak": "never",
-          "check": "was 'Copy Link' selected from the right-click menu to get the image URL",
+          "check": "Was 'Copy Link' selected from the right-click menu to get the image URL?",
           "say_example": "Used <Copy Link> to get the direct URL for the reference"
          },
          {
@@ -2370,7 +2370,7 @@
           "kind": "decision",
           "verify_form": "The agent picked the images to blend - check the pair; the blend's whole character comes from that choice.",
           "speak": "never",
-          "check": "which image files were selected for the /blend command",
+          "check": "Which image files were selected for the /blend command?",
           "say_example": "Selected <two vacation photos> to blend together"
          },
          {
@@ -2383,7 +2383,7 @@
           "kind": "decision",
           "verify_form": "The agent used an external photo as the character reference - check whose face or figure it locked your generations to.",
           "speak": "never",
-          "check": "was an external photo URL added as a character reference, such as via '--cref'",
+          "check": "Was an external photo URL added as a character reference, such as via '--cref'?",
           "say_example": "Added a Pexels photo as the <--cref> character reference"
          },
          {
@@ -2395,7 +2395,7 @@
           "whatTheAgentLoses": "An agent following the narrator's flawed instructions might artificially limit its inputs to five images, missing out on the full capabilities of the tool.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the autocomplete interface show six total image slots, required plus optional, rather than the five the narration stated",
+          "check": "Does the autocomplete interface show six total image slots, required plus optional, rather than the five the narration stated?",
           "say_example": "The interface actually allows <6> images to blend, not the <5> the narration claimed"
          },
          {
@@ -2408,7 +2408,7 @@
           "kind": "decision",
           "verify_form": "The agent picked the image-to-image reference - check the base image; its composition is now your starting point.",
           "speak": "never",
-          "check": "which source, past generations, uploads, or community, was chosen for the Image to Image reference",
+          "check": "Which source, past generations, uploads, or community, was chosen for the Image to Image reference?",
           "say_example": "Picked a past generation of <a canyon> as the Image to Image reference"
          },
          {
@@ -2421,7 +2421,7 @@
           "kind": "decision",
           "verify_form": "The agent attached (or skipped) a reference image on the first prompt - check which; visual context changes what the model draws.",
           "speak": "never",
-          "check": "was a reference image attached to the initial prompt, or was the prompt sent as text only",
+          "check": "Was a reference image attached to the initial prompt, or was the prompt sent as text only?",
           "say_example": "Sent the first prompt as text only, no reference image attached"
          },
          {
@@ -2434,7 +2434,7 @@
           "kind": "decision",
           "verify_form": "The agent staged the face photo and the meme template - check both files; the joke and the face are personal picks.",
           "speak": "if-wrong",
-          "check": "were the specific face photo and meme template that were staged the ones actually needed for this generation",
+          "check": "Were the specific face photo and meme template that were staged the ones actually needed for this generation?",
           "say_example": "Uploaded <a photo> and <a meme template> to test the face-swap generation"
          },
          {
@@ -2447,7 +2447,7 @@
           "kind": "decision",
           "verify_form": "The agent uploaded your reference into a Discord channel to get a link - check where that image now lives; a public server can see it.",
           "speak": "gate",
-          "check": "was the reference image uploaded directly into a Discord channel, making it visible to others there",
+          "check": "Was the reference image uploaded directly into a Discord channel, making it visible to others there?",
           "say_example": "This photo is about to go into the Discord channel, where other members can see it. Still OK to use it as the reference?"
          },
          {
@@ -2460,7 +2460,7 @@
           "kind": "decision",
           "verify_form": "The agent picked the stock image to vary - check pose, light, and mood; the variations inherit all three.",
           "speak": "never",
-          "check": "which stock image from the search results was selected as the base for variations",
+          "check": "Which stock image from the search results was selected as the base for variations?",
           "say_example": "Picked the second stock photo of <a viking in a forest> to generate variations from"
          }
         ]
@@ -2479,7 +2479,7 @@
           "kind": "decision",
           "verify_form": "The agent applied style elements or guidance options - check the modifiers it stacked; each one bends the output away from plain text.",
           "speak": "never",
-          "check": "which style or image-guidance modifiers were applied to the prompt",
+          "check": "Which style or image-guidance modifiers were applied to the prompt?",
           "say_example": "Applied the <'Soft Retro Futurism'> style modifier"
          },
          {
@@ -2492,7 +2492,7 @@
           "kind": "decision",
           "verify_form": "The agent set the element's strength before spending - check the dial; 0.70 against 0.80 is a visible difference it chose.",
           "speak": "never",
-          "check": "what strength value was set for this element before generating",
+          "check": "What strength value was set for this element before generating?",
           "say_example": "Set strength to <0.70> before spending the tokens"
          },
          {
@@ -2505,7 +2505,7 @@
           "kind": "decision",
           "verify_form": "The agent picked how the reference is used - check image-to-image against style reference; one copies your structure, the other your palette.",
           "speak": "never",
-          "check": "which guidance method, such as Image to Image or Style Reference, was selected for the reference image",
+          "check": "Which guidance method, such as Image to Image or Style Reference, was selected for the reference image?",
           "say_example": "Chose <Style Reference> instead of Image to Image for this reference"
          },
          {
@@ -2517,7 +2517,7 @@
           "whatTheAgentLoses": "A person delegating to an agent loses the nuanced creative judgment to harmonize the text prompt with the specific visual elements of a reference image.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the prompt's described setting match the subject named in the reference image's filename or caption",
+          "check": "Does the prompt's described setting match the subject named in the reference image's filename or caption?",
           "say_example": "The reference file is named <basilica-ref.jpg> but the prompt still says 'river'. Updated the prompt to match."
          },
          {
@@ -2530,7 +2530,7 @@
           "kind": "decision",
           "verify_form": "The agent set guidance type and strength on the reference - check what it chose to preserve of the old image; style, character, and content are different loyalties.",
           "speak": "never",
-          "check": "which guidance type, such as Style, Character, or Content, and strength level were set for the reference image",
+          "check": "Which guidance type, such as Style, Character, or Content, and strength level were set for the reference image?",
           "say_example": "Set guidance to <Character> reference at <high> strength"
          },
          {
@@ -2543,7 +2543,7 @@
           "kind": "decision",
           "verify_form": "The agent set the source-image influence - check the dial; high copies your reference, low abandons it.",
           "speak": "never",
-          "check": "what strength value was set for how much the source image influences the new generation",
+          "check": "What strength value was set for how much the source image influences the new generation?",
           "say_example": "Set source-image strength to <0.4>, mostly letting the new prompt take over"
          }
         ]
@@ -2564,7 +2564,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the clip duration with the cost doubling on screen - check the length it paid for; twice the tokens for ten seconds was a budget call.",
         "speak": "on-event",
-        "check": "does increasing the clip duration significantly increase the token cost shown",
+        "check": "Does increasing the clip duration significantly increase the token cost shown?",
         "say_example": "10 seconds costs <700 tokens> versus <350> for 5 seconds."
        },
        {
@@ -2576,7 +2576,7 @@
         "whatTheAgentLoses": "You lose the opportunity to catch and fix typos that could lead to inaccurate image generations.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the prompt text show a spellcheck-flagged word before generating",
+        "check": "Does the prompt text show a spellcheck-flagged word before generating?",
         "say_example": "Spellcheck flagged <'cubical'> in the prompt. Fixed it before spending the boost."
        },
        {
@@ -2589,7 +2589,7 @@
         "kind": "decision",
         "verify_form": "The agent clicked Create on the styled prompt - check the style suffix it committed a boost to was the one you wanted tried first.",
         "speak": "never",
-        "check": "what style suffix was in the prompt when Create was clicked, spending a boost",
+        "check": "What style suffix was in the prompt when Create was clicked, spending a boost?",
         "say_example": "Clicked Create with <'photorealistic painting'> appended to the prompt, spending one boost"
        },
        {
@@ -2602,7 +2602,7 @@
         "kind": "decision",
         "verify_form": "The agent generated on pure defaults at a 3-token price - check the left-sidebar settings it never opened; every default was a choice it made by not looking.",
         "speak": "never",
-        "check": "what were the left-sidebar settings when the generation was triggered at its stated token cost",
+        "check": "What were the left-sidebar settings when the generation was triggered at its stated token cost?",
         "say_example": "Generated at default settings, <Fast mode, 1:1 ratio>, for <3 tokens>"
        },
        {
@@ -2615,7 +2615,7 @@
         "kind": "decision",
         "verify_form": "The agent spent a boost on the typed prompt - check the exact text it committed; the boost is gone either way.",
         "speak": "never",
-        "check": "what exact prompt text was submitted when the boost was spent",
+        "check": "What exact prompt text was submitted when the boost was spent?",
         "say_example": "Spent a boost on the prompt exactly as typed, <'a neon-lit alley at night'>"
        },
        {
@@ -2628,7 +2628,7 @@
         "kind": "decision",
         "verify_form": "The agent typed the prompt and clicked generate at the listed token price - check both the words and the bill.",
         "speak": "never",
-        "check": "does the prompt field show the entered text, and does the generate button display a token, credit, or boost cost",
+        "check": "Does the prompt field show the entered text, and does the generate button display a token, credit, or boost cost?",
         "say_example": "Generated with '<a watercolor fox>' - spent <1250> tokens"
        },
        {
@@ -2640,7 +2640,7 @@
         "whatTheAgentLoses": "The user receives a completely irrelevant image because the agent failed to actually input the intended instructions.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the prompt text field empty even though the agent stated a prompt was entered",
+        "check": "Is the prompt text field empty even though the agent stated a prompt was entered?",
         "say_example": "Prompt field is empty - generated anyway"
        },
        {
@@ -2653,7 +2653,7 @@
         "kind": "decision",
         "verify_form": "The agent typed the prompt with the boost count on screen - check the words and the remaining budget it acted on.",
         "speak": "never",
-        "check": "does the page show a boost counter, and how many boosts remain after this generation",
+        "check": "Does the page show a boost counter, and how many boosts remain after this generation?",
         "say_example": "Used a boost - <6> boosts left"
        },
        {
@@ -2665,7 +2665,7 @@
         "whatTheAgentLoses": "You lose the ability to catch typos and personally refine the specific phrasing of the prompt before submission.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the prompt text in the input field contain a typo, such as 'ideo' instead of 'video'",
+        "check": "Does the prompt text in the input field contain a typo, such as 'ideo' instead of 'video'?",
         "say_example": "Prompt reads '<generate intro for youtube ideo>' - looks like a typo"
        },
        {
@@ -2678,7 +2678,7 @@
         "kind": "decision",
         "verify_form": "The agent confirmed prompt, style, and ratio and generated - check all three; the combination is the image.",
         "speak": "if-wrong",
-        "check": "do the prompt text, style, and aspect ratio shown before generating match what was set earlier, or did one silently revert to a prior value",
+        "check": "Do the prompt text, style, and aspect ratio shown before generating match what was set earlier, or did one silently revert to a prior value?",
         "say_example": "Aspect ratio reset to <1:1> from your <16:9>"
        },
        {
@@ -2690,7 +2690,7 @@
         "whatTheAgentLoses": "An agent might paste a detailed prompt and proceed, completely unaware that the tool chopped off the final sentences containing your essential lighting and rendering instructions.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the prompt field show your full pasted text, or does it cut off before the end with no error shown",
+        "check": "Does the prompt field show your full pasted text, or does it cut off before the end with no error shown?",
         "say_example": "Pasted prompt cut off after <180> characters - no error shown"
        }
       ]
@@ -2709,7 +2709,7 @@
         "kind": "decision",
         "verify_form": "The agent hit a content-policy wall - check how it responded; reporting, retrying, or rewording each carry account risk.",
         "speak": "gate",
-        "check": "does the page show a content-policy violation warning that also mentions repeated violations risking account suspension",
+        "check": "Does the page show a content-policy violation warning that also mentions repeated violations risking account suspension?",
         "say_example": "Prompt blocked for a policy violation - another one risks account suspension. Report it as a mistake, reword, or go back?"
        },
        {
@@ -2721,7 +2721,7 @@
         "whatTheAgentLoses": "You lose the opportunity to see the tool's minimum prompt requirements and how it handles invalid inputs.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page show an error message explaining the prompt was rejected, and is a recovery action like 'Go back' available",
+        "check": "Does the page show an error message explaining the prompt was rejected, and is a recovery action like 'Go back' available?",
         "say_example": "Prompt rejected as too vague - a 'Go back' button is shown"
        },
        {
@@ -2734,7 +2734,7 @@
         "kind": "decision",
         "verify_form": "The agent reworded the prompt after a policy flag - check the rewrite still aims at your palette; dropping the flagged word changed the ask.",
         "speak": "on-event",
-        "check": "does the page show a flagged word being removed from the prompt, and does the rewritten prompt still aim at what was asked for",
+        "check": "Does the page show a flagged word being removed from the prompt, and does the rewritten prompt still aim at what was asked for?",
         "say_example": "Removed the flagged word '<nude>' from the prompt before retrying"
        }
       ]
@@ -2759,7 +2759,7 @@
         "whatTheAgentLoses": "An agent might sit waiting indefinitely for a hanging generation to complete instead of recognizing the silent failure and switching to a different tool.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the progress indicator stay unchanged for an extended stretch with no error message shown",
+        "check": "Does the progress indicator stay unchanged for an extended stretch with no error message shown?",
         "say_example": "Progress stuck at <0%> for <4> minutes - no error shown"
        },
        {
@@ -2771,7 +2771,7 @@
         "whatTheAgentLoses": "The user loses the chance to browse the Bing Image Creator homepage for inspiration while waiting for the images to generate.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the page show a waiting or processing message",
+        "check": "Does the page show a waiting or processing message?",
         "say_example": "Still generating"
        },
        {
@@ -2783,7 +2783,7 @@
         "whatTheAgentLoses": "An agent might wait indefinitely for a hung job or fail the task entirely instead of simply clicking retry or switching to a less congested model.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the page show an explicit timeout or failure error requiring a manual retry or a slower queue",
+        "check": "Does the page show an explicit timeout or failure error requiring a manual retry or a slower queue?",
         "say_example": "Generation failed after timing out - retry needed"
        }
       ]
@@ -2802,7 +2802,7 @@
         "kind": "decision",
         "verify_form": "The agent enlarged one candidate first - check the others too; the first look framed the whole comparison.",
         "speak": "never",
-        "check": "did the agent open more than the first candidate before moving on, when more than one was generated",
+        "check": "Did the agent open more than the first candidate before moving on, when more than one was generated?",
         "say_example": "Opened <1> of <4> candidates before deciding"
        },
        {
@@ -2814,7 +2814,7 @@
         "whatTheAgentLoses": "You cannot easily verify if the agent clicked the button for the correct image, risking spending credits to upscale or vary the wrong candidate because the spatial mapping was misunderstood.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the tile position the agent selected (e.g. top-left) match the position of the candidate it described choosing in the 2x2 grid",
+        "check": "Does the tile position the agent selected (e.g. top-left) match the position of the candidate it described choosing in the 2x2 grid?",
         "say_example": "Clicked U2 (top-right) but described liking the bottom-left image"
        },
        {
@@ -2844,7 +2844,7 @@
         "whatTheAgentLoses": "An agent might accept the high-quality images in the grid without realizing they fail to meet a specific preference for the subject's size.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the generated subjects match the size named in the full prompt, after a size descriptor was removed",
+        "check": "Do the generated subjects match the size named in the full prompt, after a size descriptor was removed?",
         "say_example": "Monkeys shown oversized after 'small' was dropped from the prompt"
        },
        {
@@ -2856,7 +2856,7 @@
         "whatTheAgentLoses": "An agent might blindly select a visually appealing image from a shortened prompt without realizing it dropped a key element of your desired scene.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the named image still include the background element (e.g. forest) that was in the original prompt",
+        "check": "Does the named image still include the background element (e.g. forest) that was in the original prompt?",
         "say_example": "<Image 5> dropped the forest background from the original prompt"
        },
        {
@@ -2868,7 +2868,7 @@
         "whatTheAgentLoses": "An agent might fail to count the outputs and miss that the tool silently skipped some of the requested prompt variations.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the number of generated images equal the number of comma-separated options in the prompt's curly braces",
+        "check": "Does the number of generated images equal the number of comma-separated options in the prompt's curly braces?",
         "say_example": "Prompt named <7> options, only <5> images generated"
        },
        {
@@ -2880,7 +2880,7 @@
         "whatTheAgentLoses": "The user receives a final image that includes the exact element they explicitly wanted to avoid, rendering the result unusable for their specific needs.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the generated image show something the prompt explicitly excluded",
+        "check": "Does the generated image show something the prompt explicitly excluded?",
         "say_example": "Prompt said 'no dogs' - a dog appears in the image"
        },
        {
@@ -2892,7 +2892,7 @@
         "whatTheAgentLoses": "An agent might blindly accept a technically accurate result, missing your subjective judgment on whether the artistic quality is satisfying enough to keep or if a new style should be explored.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the image contain the specific stylistic elements the prompt named, such as bold color, halftone dots, or comic outlines",
+        "check": "Does the image contain the specific stylistic elements the prompt named, such as bold color, halftone dots, or comic outlines?",
         "say_example": "No halftone or bold outlines visible despite the pop-art prompt"
        },
        {
@@ -2904,7 +2904,7 @@
         "whatTheAgentLoses": "An agent might blindly accept the output without noticing the slight timing discrepancy, which could cause synchronization issues if exact timing is required for a larger project.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the video's shown duration match the length stated for it",
+        "check": "Does the video's shown duration match the length stated for it?",
         "say_example": "Video shows <5.2> seconds, not the <5> seconds stated"
        },
        {
@@ -2916,7 +2916,7 @@
         "whatTheAgentLoses": "You lose the human judgment needed to recognize when the AI hallucinates completely wrong subjects and the intuition to know how to fix the prompt.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does any candidate show the named subject, or does it show something unrelated",
+        "check": "Does any candidate show the named subject, or does it show something unrelated?",
         "say_example": "Candidates show a cat and a skull, not the requested robot"
        },
        {
@@ -2928,7 +2928,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the creative judgment to decide if the generated style matches your vision or if you should try another variation.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the variations show the specific colors and style named (e.g. pink and purple, 3D rendered)",
+        "check": "Do the variations show the specific colors and style named (e.g. pink and purple, 3D rendered)?",
         "say_example": "Variations render in grayscale, not the pink-and-purple 3D style asked for"
        },
        {
@@ -2940,7 +2940,7 @@
         "whatTheAgentLoses": "Delegating this review means you lose the opportunity to personally evaluate the artistic nuances and decide which candidate best matches your vision.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "do the images show the style setting that was applied, or does it look like a different style was used",
+        "check": "Do the images show the style setting that was applied, or does it look like a different style was used?",
         "say_example": "Style setting says '<painterly>' but the image looks photographic"
        },
        {
@@ -2952,7 +2952,7 @@
         "whatTheAgentLoses": "Delegating this review means losing your personal judgment on whether the generated robots truly match the specific aesthetic and vibe you envisioned.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "do the candidates show the specific style named in the prompt (e.g. cute cartoon vector), or a different style",
+        "check": "Do the candidates show the specific style named in the prompt (e.g. cute cartoon vector), or a different style?",
         "say_example": "Candidates render as realistic, not the cartoon-vector style named"
        },
        {
@@ -2964,7 +2964,7 @@
         "whatTheAgentLoses": "The user loses the ability to ensure the final image fits their specific layout or dimensional requirements.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the generated image's shape match the aspect ratio setting shown (e.g. widescreen vs. square)",
+        "check": "Does the generated image's shape match the aspect ratio setting shown (e.g. widescreen vs. square)?",
         "say_example": "Ratio set to 16:9, images generated square"
        },
        {
@@ -2976,7 +2976,7 @@
         "whatTheAgentLoses": "An agent might proceed with the irrelevant output, resulting in content that completely misses the intended topic.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the generated content address the specific subject named in the prompt, or a different one",
+        "check": "Does the generated content address the specific subject named in the prompt, or a different one?",
         "say_example": "Prompt named 'Midjourney' - the reply describes a road trip instead"
        },
        {
@@ -2988,7 +2988,7 @@
         "whatTheAgentLoses": "The user loses the ability to personally judge whether the AI's artistic interpretation aligns with the intent of their original drawing.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "do the generated images preserve the pose and shape of the uploaded sketch",
+        "check": "Do the generated images preserve the pose and shape of the uploaded sketch?",
         "say_example": "Generated giraffe pose doesn't match the uploaded sketch"
        },
        {
@@ -3000,7 +3000,7 @@
         "whatTheAgentLoses": "An agent might drift from the original objective during the generation process and produce a generic image that fails to incorporate the user's initial sketch.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the final image still contain the elements from the original uploaded sketch and stated goal, or has it drifted into something generic",
+        "check": "Does the final image still contain the elements from the original uploaded sketch and stated goal, or has it drifted into something generic?",
         "say_example": "Final image no longer resembles the original sketch after several rounds"
        },
        {
@@ -3012,7 +3012,7 @@
         "whatTheAgentLoses": "The user loses control over the exact character likeness they wanted when the AI overrides their specific request with a generic description.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the tool's own restated prompt name the specific character requested, or a generic substitute",
+        "check": "Does the tool's own restated prompt name the specific character requested, or a generic substitute?",
         "say_example": "Requested 'Rocket Raccoon' - restated prompt says 'a spacefaring raccoon'"
        },
        {
@@ -3024,7 +3024,7 @@
         "whatTheAgentLoses": "The user loses the ability to subjectively judge whether the AI's interpretation of the requested style matches their personal aesthetic preferences.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the restyled image keep the recognizable features of the uploaded photo in the new style",
+        "check": "Does the restyled image keep the recognizable features of the uploaded photo in the new style?",
         "say_example": "Restyled anime image no longer resembles the uploaded photo"
        },
        {
@@ -3036,7 +3036,7 @@
         "whatTheAgentLoses": "Delegating this step means losing your critical eye to spot unwanted trademarked logos and your personal judgment on whether the vintage aesthetic was successfully captured.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the image contain any element not named in the prompt, such as an extra logo",
+        "check": "Does the image contain any element not named in the prompt, such as an extra logo?",
         "say_example": "Image includes an Apple logo that wasn't in the prompt"
        },
        {
@@ -3048,7 +3048,7 @@
         "whatTheAgentLoses": "An agent might select one of the new images at random without verifying if the specific visual flaws from the previous batch were actually resolved.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the new grid show the corrected size and posture the added words were meant to fix",
+        "check": "Does the new grid show the corrected size and posture the added words were meant to fix?",
         "say_example": "Added 'small, standing' - new grid still shows an oversized, seated monkey"
        }
       ]
@@ -3066,7 +3066,7 @@
         "whatTheAgentLoses": "An agent might blindly select the first result or fail to notice the slight spelling error in the generated text.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "which candidate, if any, spells the requested text correctly",
+        "check": "Which candidate, if any, spells the requested text correctly?",
         "say_example": "Only the third candidate spells '<Bloom>' correctly"
        },
        {
@@ -3078,7 +3078,7 @@
         "whatTheAgentLoses": "An agent might select a visually appealing candidate without noticing a glaring spelling error in the generated text.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the text rendered in the image match the exact spelling requested in the prompt",
+        "check": "Does the text rendered in the image match the exact spelling requested in the prompt?",
         "say_example": "Prompt asked for 'garten' - image renders 'GARRTEN'"
        },
        {
@@ -3090,7 +3090,7 @@
         "whatTheAgentLoses": "An agent might accept the flawed image without realizing the text is misspelled gibberish, missing the opportunity to refine the prompt for better placement.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the rendered text spelled correctly and placed where the prompt described",
+        "check": "Is the rendered text spelled correctly and placed where the prompt described?",
         "say_example": "Text reads 'STIEAL I WILL' - heart placed on the character instead of in the words"
        },
        {
@@ -3102,7 +3102,7 @@
         "whatTheAgentLoses": "The user loses the ability to personally inspect the candidates for subtle errors and select the one that best fits their aesthetic preference.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the rendered text in each variation match the exact spelling requested",
+        "check": "Does the rendered text in each variation match the exact spelling requested?",
         "say_example": "Variations render 'SCRAATCH' and 'NY' instead of the requested text"
        },
        {
@@ -3114,7 +3114,7 @@
         "whatTheAgentLoses": "The user receives a flawed final product because the agent failed to accurately verify the generated text before proceeding.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the text actually rendered in the image match what was claimed about it",
+        "check": "Does the text actually rendered in the image match what was claimed about it?",
         "say_example": "Claimed perfect spelling - image reads 'VACATION S II WILL TAKE'"
        }
       ]
@@ -3132,7 +3132,7 @@
         "whatTheAgentLoses": "Delegating this means losing your personal judgment on whether a subtle visual artifact is acceptable or requires a stylistic pivot.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "are there visible artifacts in the generated faces, such as distorted eyes",
+        "check": "Are there visible artifacts in the generated faces, such as distorted eyes?",
         "say_example": "Distorted eye visible on the top-left candidate"
        },
        {
@@ -3144,7 +3144,7 @@
         "whatTheAgentLoses": "An agent might evaluate the image purely on composition and prompt adherence, delivering a final asset ruined by a garbled watermark that a human would immediately reject.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the image contain a distorted watermark, stock-photo logo, or fake signature",
+        "check": "Does the image contain a distorted watermark, stock-photo logo, or fake signature?",
         "say_example": "Faint stock-photo watermark visible in the corner"
        },
        {
@@ -3156,7 +3156,7 @@
         "whatTheAgentLoses": "An agent might verify that the image contains the requested subjects semantically, but fail to notice that a character has six fingers or an object is fused into their body.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the image show anatomically impossible details, such as extra fingers or malformed hands",
+        "check": "Does the image show anatomically impossible details, such as extra fingers or malformed hands?",
         "say_example": "Hand shows six fingers on the left figure"
        },
        {
@@ -3168,7 +3168,7 @@
         "whatTheAgentLoses": "An agent might deliver a final asset with a visible competitor's logo or AI watermark that you cannot use in your project without manual cropping.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the image carry a visible platform watermark or logo in a corner",
+        "check": "Does the image carry a visible platform watermark or logo in a corner?",
         "say_example": "Small logo visible in the bottom-right corner"
        }
       ]
@@ -3186,7 +3186,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to verify the image's exact prompt and resolution before deciding on the next step.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what resolution and file type does the page state for this image",
+        "check": "What resolution and file type does the page state for this image?",
         "say_example": "Shown as <1024x1024 jpg>"
        },
        {
@@ -3198,7 +3198,7 @@
         "whatTheAgentLoses": "The user loses the chance to personally scrutinize the downloaded file for artifacts or resolution issues in their preferred local viewer.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the download option let you inspect the actual file's resolution and size outside the web page",
+        "check": "Does the download option let you inspect the actual file's resolution and size outside the web page?",
         "say_example": "Downloading to check the real file size before deciding"
        },
        {
@@ -3210,7 +3210,7 @@
         "whatTheAgentLoses": "An agent might blindly download the default output without realizing the file size is too small and the resolution too low for your intended purpose.",
         "kind": "state-check",
         "speak": "always",
-        "check": "what file size and resolution does the downloaded file show, and does it meet what was needed",
+        "check": "What file size and resolution does the downloaded file show, and does it meet what was needed?",
         "say_example": "Downloaded file is <87 KB> - may be too small to print at that size"
        }
       ]
@@ -3229,7 +3229,7 @@
         "kind": "decision",
         "verify_form": "The agent chose which of the four to upscale - check the pick; the upscale spends on that one's flaws and virtues.",
         "speak": "if-wrong",
-        "check": "does the candidate the agent upscaled match the one it described preferring",
+        "check": "Does the candidate the agent upscaled match the one it described preferring?",
         "say_example": "Upscaled the top-right image after describing liking the bottom-left one"
        },
        {
@@ -3242,7 +3242,7 @@
         "kind": "decision",
         "verify_form": "The agent kept (or rejected) a striking design with wrong text - check the trade; fixable-later against discard was a judgment call.",
         "speak": "on-event",
-        "check": "does the candidate contain misspelled text that differs from what was requested",
+        "check": "Does the candidate contain misspelled text that differs from what was requested?",
         "say_example": "Text reads '<Lin Atach>' instead of '<Ink Attack>'. Kept it as a candidate anyway."
        },
        {
@@ -3255,7 +3255,7 @@
         "kind": "decision",
         "verify_form": "The agent judged one platform's output better - check the call against your own eye; realism-against-style is taste.",
         "speak": "never",
-        "check": "which platform's output, such as Ideogram's or Midjourney's, did the agent keep using for the next step",
+        "check": "Which platform's output, such as Ideogram's or Midjourney's, did the agent keep using for the next step?",
         "say_example": "Kept going with the <Midjourney> output instead of <Ideogram>'s"
        },
        {
@@ -3268,7 +3268,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the variation that best captures the vision - check the vision was yours, not the model's.",
         "speak": "gate",
-        "check": "does the page show one or more freshly generated candidate images awaiting the person's choice among them",
+        "check": "Does the page show one or more freshly generated candidate images awaiting the person's choice among them?",
         "say_example": "<Four> variations shown - which one matches what you wanted?"
        },
        {
@@ -3281,7 +3281,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted a set missing an asked-for element - check the trade; the figure was in your prompt and not in the picture.",
         "speak": "on-event",
-        "check": "does the image omit an element the prompt explicitly named",
+        "check": "Does the image omit an element the prompt explicitly named?",
         "say_example": "Prompt named Poseidon - the figure is missing from the image"
        },
        {
@@ -3294,7 +3294,7 @@
         "kind": "decision",
         "verify_form": "The agent compared the variations to the original - check its keep-or-revert against your eye.",
         "speak": "if-wrong",
-        "check": "does the new variation actually differ from the original image in the way the iteration intended",
+        "check": "Does the new variation actually differ from the original image in the way the iteration intended?",
         "say_example": "New variation looks identical to the original despite the requested change"
        },
        {
@@ -3307,7 +3307,7 @@
         "kind": "decision",
         "verify_form": "The agent trashed some variations - check what got deleted; a discarded one may have been your pick.",
         "speak": "on-event",
-        "check": "which variations does the page show being deleted from the panel",
+        "check": "Which variations does the page show being deleted from the panel?",
         "say_example": "Deleting variations <2 and 4> from the panel"
        },
        {
@@ -3320,7 +3320,7 @@
         "kind": "decision",
         "verify_form": "The agent weighed output quality against the credits spent - check the worth-it verdict; it was your money's judgment.",
         "speak": "never",
-        "check": "does the page show the credit cost alongside the new result, and did the agent weigh the two",
+        "check": "Does the page show the credit cost alongside the new result, and did the agent weigh the two?",
         "say_example": "Weighed the new result against its <3>-credit cost before continuing"
        }
       ]
@@ -3346,7 +3346,7 @@
         "kind": "decision",
         "verify_form": "The agent chose Customize or Download on the gallery image - check the route; edit-in-Designer against save-as-is are different endings.",
         "speak": "always",
-        "check": "which option did the agent choose - customize further or download now",
+        "check": "Which option did the agent choose - customize further or download now?",
         "say_example": "Chose to customize further rather than download now"
        },
        {
@@ -3359,7 +3359,7 @@
         "kind": "decision",
         "verify_form": "The agent hit the missing image-to-image wall and changed strategy - check the pivot; the consistency of your character depended on it.",
         "speak": "on-event",
-        "check": "does the tool's interface lack an image-to-image or reference-upload option",
+        "check": "Does the tool's interface lack an image-to-image or reference-upload option?",
         "say_example": "No image-to-image option available - switching strategy to keep the character consistent"
        },
        {
@@ -3372,7 +3372,7 @@
         "kind": "decision",
         "verify_form": "The agent opened the canvas workspace next - check the move; the editing detour was its plan for your image.",
         "speak": "never",
-        "check": "did the agent open the canvas workspace next",
+        "check": "Did the agent open the canvas workspace next?",
         "say_example": "Opened the canvas workspace"
        },
        {
@@ -3385,7 +3385,7 @@
         "kind": "decision",
         "verify_form": "The agent picked an iteration option - check subtle-against-strong-against-zoom; how far from the original was its call.",
         "speak": "never",
-        "check": "which iteration option did the agent choose - a subtle change, a strong change, or zooming out",
+        "check": "Which iteration option did the agent choose - a subtle change, a strong change, or zooming out?",
         "say_example": "Chose a subtle variation over a strong one"
        },
        {
@@ -3398,7 +3398,7 @@
         "kind": "decision",
         "verify_form": "The agent picked Vary, Edit, or download from the toolbar - check the fork; refine-or-finalize was the real question.",
         "speak": "never",
-        "check": "which action did the agent choose from the hover toolbar - vary, edit, or download",
+        "check": "Which action did the agent choose from the hover toolbar - vary, edit, or download?",
         "say_example": "Chose Vary from the hover toolbar"
        },
        {
@@ -3411,7 +3411,7 @@
         "kind": "decision",
         "verify_form": "The agent picked an action from the three-dots menu - check the edit it applied is one you wanted at all.",
         "speak": "never",
-        "check": "which action did the agent choose from the three-dot menu",
+        "check": "Which action did the agent choose from the three-dot menu?",
         "say_example": "Chose 'remove background' from the three-dot menu"
        },
        {
@@ -3424,7 +3424,7 @@
         "kind": "decision",
         "verify_form": "The agent picked how the image guides the next round - check composition-against-style-against-fill; each keeps a different thing.",
         "speak": "never",
-        "check": "which reference role did the agent choose for this image - composition, style, or generative fill",
+        "check": "Which reference role did the agent choose for this image - composition, style, or generative fill?",
         "say_example": "Used the image as a style reference for the next generation"
        }
       ]
@@ -3443,7 +3443,7 @@
         "kind": "decision",
         "verify_form": "The agent tuned spatial prepositions in the prompt - check the composition it aimed for; on-against-in-front-of moves the subject.",
         "speak": "never",
-        "check": "what change, if any, did the agent make to the prompt before generating again",
+        "check": "What change, if any, did the agent make to the prompt before generating again?",
         "say_example": "Changed 'sitting on' to 'sitting in front of'"
        },
        {
@@ -3467,7 +3467,7 @@
         "whatTheAgentLoses": "The user loses the intended creative outcome if the agent introduces typos that change the meaning of the prompt during iteration.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the spelling in the typed prompt match the spelling in the reference text",
+        "check": "Does the spelling in the typed prompt match the spelling in the reference text?",
         "say_example": "Reference text says 'dire wold', prompt typed 'dire world'"
        },
        {
@@ -3480,7 +3480,7 @@
         "kind": "decision",
         "verify_form": "The agent spec'd the edit and bought four variations at 160 tokens - check the instruction and the count; both were spends.",
         "speak": "never",
-        "check": "how many variations did the agent request, and what did the page show that cost",
+        "check": "How many variations did the agent request, and what did the page show that cost?",
         "say_example": "Requested <4> variations at <160> tokens"
        },
        {
@@ -3492,7 +3492,7 @@
         "whatTheAgentLoses": "The user loses the creative freedom to decide which new subject or style to explore next.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the prompt field cleared of the previous subject before the new one is typed, or does old text remain appended",
+        "check": "Is the prompt field cleared of the previous subject before the new one is typed, or does old text remain appended?",
         "say_example": "New subject typed after the old prompt, not in a cleared field"
        },
        {
@@ -3505,7 +3505,7 @@
         "kind": "decision",
         "verify_form": "The agent set the edit model and the variation count - check both; quality flavor and credit spend in one dropdown.",
         "speak": "never",
-        "check": "which model did the agent select and how many variations, and what did the page show that would cost",
+        "check": "Which model did the agent select and how many variations, and what did the page show that would cost?",
         "say_example": "Selected <Nano Banana> for <4> variations"
        }
       ]
@@ -3524,7 +3524,7 @@
         "kind": "decision",
         "verify_form": "The agent reran the same prompt for a fresh batch - check rerun was the right lever; a tweak might have been.",
         "speak": "never",
-        "check": "did the agent rerun the same prompt, or tweak the wording first",
+        "check": "Did the agent rerun the same prompt, or tweak the wording first?",
         "say_example": "Reran the same prompt for a fresh batch"
        },
        {
@@ -3536,7 +3536,7 @@
         "whatTheAgentLoses": "You lose direct visibility into your workspace configuration and the assurance of knowing exactly which iteration modes are active.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the settings panel show Remix mode as already enabled or disabled",
+        "check": "Does the settings panel show Remix mode as already enabled or disabled?",
         "say_example": "Remix mode already on before any change was made"
        },
        {
@@ -3549,7 +3549,7 @@
         "kind": "decision",
         "verify_form": "The agent set motion level and edited the prompt for the extension - check the added word; calm redirects the whole clip.",
         "speak": "never",
-        "check": "what motion level and prompt change did the agent set for the video extension",
+        "check": "What motion level and prompt change did the agent set for the video extension?",
         "say_example": "Set motion to 'low' and added '<calm>' to the prompt"
        },
        {
@@ -3562,7 +3562,7 @@
         "kind": "decision",
         "verify_form": "The agent boxed a region and re-prompted it - check the box and the words; a red door is now where the old one was.",
         "speak": "never",
-        "check": "what region did the agent select and what prompt did it use to fill it",
+        "check": "What region did the agent select and what prompt did it use to fill it?",
         "say_example": "Boxed the door and prompted '<a red door>'"
        },
        {
@@ -3575,7 +3575,7 @@
         "kind": "decision",
         "verify_form": "The agent zoomed out 2x - check how much new scene it invited; the borders were your framing.",
         "speak": "never",
-        "check": "how far did the agent expand the image's boundaries",
+        "check": "How far did the agent expand the image's boundaries?",
         "say_example": "Zoomed out 2x from the original frame"
        },
        {
@@ -3588,7 +3588,7 @@
         "kind": "decision",
         "verify_form": "The agent panned with the prompt unchanged - check whether the new strip needed its own description.",
         "speak": "if-wrong",
-        "check": "does the newly panned section look consistent with the unchanged prompt, or does it look mismatched",
+        "check": "Does the newly panned section look consistent with the unchanged prompt, or does it look mismatched?",
         "say_example": "Panned section shows a different setting than the original prompt describes"
        },
        {
@@ -3600,7 +3600,7 @@
         "whatTheAgentLoses": "You lose the opportunity to choose exactly which image's seed to reuse for maintaining specific visual consistency across your iterations.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the page show a seed number being captured for this generation",
+        "check": "Does the page show a seed number being captured for this generation?",
         "say_example": "Seed <2917-6640> captured for later reuse"
        },
        {
@@ -3613,7 +3613,7 @@
         "kind": "decision",
         "verify_form": "The agent asked for more variations of one image - check the favorite it doubled down on.",
         "speak": "never",
-        "check": "did the agent request more variations of a specific favorite image",
+        "check": "Did the agent request more variations of a specific favorite image?",
         "say_example": "Requested more variations of <image 3>"
        },
        {
@@ -3626,7 +3626,7 @@
         "kind": "decision",
         "verify_form": "The agent generated on the watercolor reference - check the style transfer was the direction you wanted.",
         "speak": "never",
-        "check": "did the agent generate using a reference image, and what style did that reference carry",
+        "check": "Did the agent generate using a reference image, and what style did that reference carry?",
         "say_example": "Generated birds using a blue watercolor reference image"
        }
       ]
@@ -3645,7 +3645,7 @@
         "kind": "decision",
         "verify_form": "The agent asked for specific adjustments - check the additions; a blue drone was its embellishment of your city.",
         "speak": "never",
-        "check": "what adjustment did the agent ask for in this turn",
+        "check": "What adjustment did the agent ask for in this turn?",
         "say_example": "Asked to add a blue drone to the skyline"
        },
        {
@@ -3657,7 +3657,7 @@
         "whatTheAgentLoses": "Delegating this step means losing the ability to subjectively judge whether the AI's specific addition aligns with your creative vision.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the new image actually show the change that was confirmed as added",
+        "check": "Does the new image actually show the change that was confirmed as added?",
         "say_example": "Confirmed a blue drone was added - no drone visible in the image"
        },
        {
@@ -3669,7 +3669,7 @@
         "whatTheAgentLoses": "The user loses the creative control and comedic timing of manually steering the story's escalation step-by-step.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the new image keep the composition of the prior turn, or does it start the scene over",
+        "check": "Does the new image keep the composition of the prior turn, or does it start the scene over?",
         "say_example": "New image shows a completely different scene than the prior turn"
        },
        {
@@ -3681,7 +3681,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to choose from multiple variations of the edited concept if the agent accepts the single output without prompting for more.",
         "kind": "state-check",
         "speak": "never",
-        "check": "did the request produce a single new image or a full new grid",
+        "check": "Did the request produce a single new image or a full new grid?",
         "say_example": "Produced <1> new image, not a full grid"
        }
       ]
@@ -3705,7 +3705,7 @@
           "kind": "decision",
           "verify_form": "The agent drew with the prompt field empty (or typed alongside) - check which; sketch-only leaves the AI guessing at your subject.",
           "speak": "never",
-          "check": "is the text prompt field empty or filled in alongside the drawing",
+          "check": "Is the text prompt field empty or filled in alongside the drawing?",
           "say_example": "Drawing submitted with the prompt field left empty"
          },
          {
@@ -3717,7 +3717,7 @@
           "whatTheAgentLoses": "The user loses the ability to decide whether to accept this mode switch and its effect on the input image.",
           "kind": "state-check",
           "speak": "on-event",
-          "check": "does the dialog warn that switching to Inpaint mode will copy the output image to the input",
+          "check": "Does the dialog warn that switching to Inpaint mode will copy the output image to the input?",
           "say_example": "Switching to Inpaint mode - this will copy the current output into the input canvas"
          },
          {
@@ -3730,7 +3730,7 @@
           "kind": "decision",
           "verify_form": "The agent promoted the output to the new input - check the base it locked in; every later edit stacks on it.",
           "speak": "always",
-          "check": "did the agent set this generated image as the new base for further edits",
+          "check": "Did the agent set this generated image as the new base for further edits?",
           "say_example": "Set this image as the new base - later edits build on it"
          },
          {
@@ -3742,7 +3742,7 @@
           "whatTheAgentLoses": "Delegating this step means you lose the ability to manually guide the precise, hands-on edits that the advanced canvas allows.",
           "kind": "state-check",
           "speak": "never",
-          "check": "did the edit continue in the more precise canvas editor",
+          "check": "Did the edit continue in the more precise canvas editor?",
           "say_example": "Switched to the Canvas Editor for finer control"
          },
          {
@@ -3755,7 +3755,7 @@
           "kind": "decision",
           "verify_form": "The agent loaded one past generation into the editor - check it grabbed the image you meant to fix.",
           "speak": "never",
-          "check": "which past generation did the agent load into the canvas editor",
+          "check": "Which past generation did the agent load into the canvas editor?",
           "say_example": "Loaded generation <#4> into the canvas editor"
          },
          {
@@ -3768,7 +3768,7 @@
           "kind": "decision",
           "verify_form": "The agent worded the blend prompt at 12 tokens - check the instruction; the merge follows its words.",
           "speak": "never",
-          "check": "what prompt did the agent use to blend the pasted element, and what token cost did the page show",
+          "check": "What prompt did the agent use to blend the pasted element, and what token cost did the page show?",
           "say_example": "Blended with '<soft shadow beneath the dog>' at <12> tokens"
          },
          {
@@ -3781,7 +3781,7 @@
           "kind": "decision",
           "verify_form": "The agent kept (or changed) the canvas mode - check inpaint against img2img; the mode is what the next generate does to your picture.",
           "speak": "never",
-          "check": "which canvas mode is active - text2img, inpaint/outpaint, or img2img",
+          "check": "Which canvas mode is active - text2img, inpaint/outpaint, or img2img?",
           "say_example": "Switched to Inpaint/Outpaint mode"
          },
          {
@@ -3793,7 +3793,7 @@
           "whatTheAgentLoses": "You lose the ability to confirm that the interface correctly transferred the generated image to the editing canvas for your iteration.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "did the output image actually appear copied into the input canvas as the warning said it would",
+          "check": "Did the output image actually appear copied into the input canvas as the warning said it would?",
           "say_example": "Warning said output would copy to input - input canvas still shows the old image"
          },
          {
@@ -3806,7 +3806,7 @@
           "kind": "decision",
           "verify_form": "The agent placed the mask and worded the addition - check both; the duck lands exactly where it drew.",
           "speak": "never",
-          "check": "where did the agent draw the mask, and what prompt did it use for the new element",
+          "check": "Where did the agent draw the mask, and what prompt did it use for the new element?",
           "say_example": "Masked the sky and prompted '<a mountain range>'"
          },
          {
@@ -3818,7 +3818,7 @@
           "whatTheAgentLoses": "The user loses the subjective judgment of whether the image's current sharpness meets their artistic vision.",
           "kind": "state-check",
           "speak": "on-event",
-          "check": "does the page show an 'Instant Refine' or similar sharpening tool available for a blurry result",
+          "check": "Does the page show an 'Instant Refine' or similar sharpening tool available for a blurry result?",
           "say_example": "Blurry result - 'Instant Refine' tool available"
          },
          {
@@ -3830,7 +3830,7 @@
           "whatTheAgentLoses": "Without seeing the mask overlay, you cannot verify if the agent accidentally painted over a crucial part of the subject's face or missed the edges, leading to a ruined iteration.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "does the translucent mask overlay stay within the intended area, or does it bleed into the background",
+          "check": "Does the translucent mask overlay stay within the intended area, or does it bleed into the background?",
           "say_example": "Mask overlay bleeds past the intended edge into the background"
          }
         ]
@@ -3849,7 +3849,7 @@
           "kind": "decision",
           "verify_form": "The agent accepted the variant that merges the mask - check the seam; a visible edge outlives the accept.",
           "speak": "if-wrong",
-          "check": "does the accepted variant show a visible seam or edge where the mask met the background",
+          "check": "Does the accepted variant show a visible seam or edge where the mask met the background?",
           "say_example": "Visible seam along the mask edge in the accepted variant"
          },
          {
@@ -3862,7 +3862,7 @@
           "kind": "decision",
           "verify_form": "The agent chose among accept, cancel, and regenerate - check the verdict on each variant batch; each regenerate spends.",
           "speak": "never",
-          "check": "did the agent accept a variant, cancel, or regenerate, and did regenerating spend another credit",
+          "check": "Did the agent accept a variant, cancel, or regenerate, and did regenerating spend another credit?",
           "say_example": "Cancelled rather than accept any of the three variants"
          }
         ]
@@ -3880,7 +3880,7 @@
           "whatTheAgentLoses": "Delegating this means losing the hands-on ability to tweak or remove specific details to perfectly match your creative intent.",
           "kind": "state-check",
           "speak": "if-wrong",
-          "check": "are the drawn elements the agent said it removed actually gone from the canvas",
+          "check": "Are the drawn elements the agent said it removed actually gone from the canvas?",
           "say_example": "Said the yellow stripes were removed - they're still visible on the canvas"
          },
          {
@@ -3893,7 +3893,7 @@
           "kind": "decision",
           "verify_form": "The agent sketched color onto the image - check the strokes; yellow on the tower is now part of your picture.",
           "speak": "never",
-          "check": "what tool, color, and location did the agent use to draw on the image",
+          "check": "What tool, color, and location did the agent use to draw on the image?",
           "say_example": "Sketched in yellow on the castle tower"
          },
          {
@@ -3906,7 +3906,7 @@
           "kind": "decision",
           "verify_form": "The agent set the text's font, color, and size - check the typography; red Verdana at 135 was its design.",
           "speak": "never",
-          "check": "what font, color, and size did the agent apply to the text",
+          "check": "What font, color, and size did the agent apply to the text?",
           "say_example": "Applied <red Verdana> at size <135>"
          },
          {
@@ -3919,7 +3919,7 @@
           "kind": "decision",
           "verify_form": "The agent arranged the canvas within the free tools - check the layout, and that no premium unlock got bought for it.",
           "speak": "on-event",
-          "check": "does the page show any layout or editing tool locked behind a premium membership",
+          "check": "Does the page show any layout or editing tool locked behind a premium membership?",
           "say_example": "'Magic Fill' and 'Extend' shown locked behind premium membership"
          }
         ]
@@ -3940,7 +3940,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or deselected the active effects - check the Selected list; a stale effect quietly styles the next batch.",
         "speak": "if-wrong",
-        "check": "does the 'Selected' effects list still include an effect from an earlier round that wasn't intentionally kept",
+        "check": "Does the 'Selected' effects list still include an effect from an earlier round that wasn't intentionally kept?",
         "say_example": "'Layered paper' still selected from an earlier round"
        },
        {
@@ -3953,7 +3953,7 @@
         "kind": "decision",
         "verify_form": "The agent balanced the style sliders - check the blend; kids-illustration-up, anime-down was its recipe.",
         "speak": "never",
-        "check": "how did the agent set the stylistic elements, sliders, or tags to refine the image",
+        "check": "How did the agent set the stylistic elements, sliders, or tags to refine the image?",
         "say_example": "Raised 'Kids Illustration', lowered 'Toon & Anime'"
        },
        {
@@ -3966,7 +3966,7 @@
         "kind": "decision",
         "verify_form": "The agent set how literally the AI reads your drawing - check the strength; your sketch either rules or merely suggests.",
         "speak": "never",
-        "check": "how strongly is the creativity slider set between following the sketch literally and taking liberties from the text",
+        "check": "How strongly is the creativity slider set between following the sketch literally and taking liberties from the text?",
         "say_example": "Creativity strength set to favor the text prompt over the sketch"
        },
        {
@@ -3979,7 +3979,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a gallery reference over uploading your own - check the style source; the gallery's taste is generic.",
         "speak": "if-wrong",
-        "check": "did the agent pick a gallery reference image or upload the person's own",
+        "check": "Did the agent pick a gallery reference image or upload the person's own?",
         "say_example": "Picked a gallery reference instead of uploading your own image"
        },
        {
@@ -3992,7 +3992,7 @@
         "kind": "decision",
         "verify_form": "The agent dropped the reference so effects act alone - check the isolation was wanted; the reference had been steering the color.",
         "speak": "if-wrong",
-        "check": "is a reference image from an earlier step still active while new effects are being applied",
+        "check": "Is a reference image from an earlier step still active while new effects are being applied?",
         "say_example": "Old reference image still active while new text effects were applied"
        }
       ]
@@ -4018,7 +4018,7 @@
         "kind": "decision",
         "verify_form": "The agent set the upscaler style and strength - check the balance it struck between preserving your image and repainting it.",
         "speak": "never",
-        "check": "what upscale style and strength did the agent apply",
+        "check": "What upscale style and strength did the agent apply?",
         "say_example": "Applied '<Realistic>' upscale style at strength <medium>"
        },
        {
@@ -4031,7 +4031,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the upscale resolution by price - check the 33-against-17-token call; the cheaper file may have been enough.",
         "speak": "never",
-        "check": "what does the page show as the token cost for each resolution option",
+        "check": "What does the page show as the token cost for each resolution option?",
         "say_example": "8MP shown at <33> tokens, 4MP at <17> tokens"
        },
        {
@@ -4044,7 +4044,7 @@
         "kind": "decision",
         "verify_form": "The agent picked an upscaling method - check the trade it took; detail-preserving against smoothing is a look.",
         "speak": "never",
-        "check": "which upscaling method did the agent choose, and does the page describe its detail-vs-smoothing trade-off",
+        "check": "Which upscaling method did the agent choose, and does the page describe its detail-vs-smoothing trade-off?",
         "say_example": "Chose the detail-preserving upscaler over the smoothing one"
        },
        {
@@ -4057,7 +4057,7 @@
         "kind": "decision",
         "verify_form": "The agent skipped (or bought) the premium upscalers - check the choice; a lower-resolution final was the price of skipping.",
         "speak": "gate",
-        "check": "does the page show an upscaler locked behind a premium subscription",
+        "check": "Does the page show an upscaler locked behind a premium subscription?",
         "say_example": "'Ultra' and 'Alchemy' upscalers require a premium subscription - upgrade, or use the free one?"
        },
        {
@@ -4070,7 +4070,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted the upscaler's altered details - check the added hair and changed flowers; faithfulness was traded for size.",
         "speak": "if-wrong",
-        "check": "does the upscaled image show new details not present in the original, such as added hair or changed flowers",
+        "check": "Does the upscaled image show new details not present in the original, such as added hair or changed flowers?",
         "say_example": "Upscale added hair and changed the flower color from the original"
        }
       ]
@@ -4089,7 +4089,7 @@
         "kind": "decision",
         "verify_form": "The agent chose the resample algorithm and noise level - check preserve-details-at-100 against the texture you want.",
         "speak": "never",
-        "check": "which resampling method and noise-reduction level did the agent choose",
+        "check": "Which resampling method and noise-reduction level did the agent choose?",
         "say_example": "Chose '<Preserve Details 2.0>' with noise reduction at <20>"
        },
        {
@@ -4102,7 +4102,7 @@
         "kind": "decision",
         "verify_form": "The agent set the scale factor - check 4x against the print size you actually need.",
         "speak": "never",
-        "check": "what scale factor did the agent apply",
+        "check": "What scale factor did the agent apply?",
         "say_example": "Applied a <4x> scale factor"
        },
        {
@@ -4115,7 +4115,7 @@
         "kind": "decision",
         "verify_form": "The agent set the scale and skipped face enhancement - check both; auto-fixed faces change a portrait.",
         "speak": "if-wrong",
-        "check": "did the agent enable or skip automatic face enhancement",
+        "check": "Did the agent enable or skip automatic face enhancement?",
         "say_example": "Face enhancement left off for this upscale"
        },
        {
@@ -4128,7 +4128,7 @@
         "kind": "decision",
         "verify_form": "The agent fell back after the out-of-memory failure - check the fallback resolution is acceptable for your use.",
         "speak": "on-event",
-        "check": "does the page show an out-of-memory error, and what fallback resolution did the agent use instead",
+        "check": "Does the page show an out-of-memory error, and what fallback resolution did the agent use instead?",
         "say_example": "Out-of-memory error - fell back to a <2x> upscale"
        },
        {
@@ -4141,7 +4141,7 @@
         "kind": "decision",
         "verify_form": "The agent compared the upscales by toggling layers - check its winner against your own eye at zoom.",
         "speak": "never",
-        "check": "which version did the agent judge sharper when toggling layers to compare",
+        "check": "Which version did the agent judge sharper when toggling layers to compare?",
         "say_example": "Judged the AI-upscaled layer sharper than the original"
        },
        {
@@ -4166,7 +4166,7 @@
         "whatTheAgentLoses": "The delegator loses pixel-perfect accuracy and might suffer unintended cropping or scaling artifacts.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the upscaled image's dimensions match what the scale factor should mathematically produce",
+        "check": "Do the upscaled image's dimensions match what the scale factor should mathematically produce?",
         "say_example": "Should be 8192px at 4x from 2048px - canvas set to 8000px"
        },
        {
@@ -4178,7 +4178,7 @@
         "whatTheAgentLoses": "The user loses the expected email delivery of their final image because the agent selected an incompatible combination of export settings.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the selected scale actually support the download option being used, such as email delivery",
+        "check": "Does the selected scale actually support the download option being used, such as email delivery?",
         "say_example": "Email delivery is only for 8x scale - 4x is currently selected"
        }
       ]
@@ -4197,7 +4197,7 @@
         "kind": "decision",
         "verify_form": "The agent removed the background - check you wanted the subjects isolated; the scene doesn't come back.",
         "speak": "never",
-        "check": "did the agent remove the background, and does the page make clear the original scene isn't recoverable after",
+        "check": "Did the agent remove the background, and does the page make clear the original scene isn't recoverable after?",
         "say_example": "Removed the background - original scene is gone"
        },
        {
@@ -4210,7 +4210,7 @@
         "kind": "decision",
         "verify_form": "The agent worded the replacement background - check the environment; sandy-beach was its scene for your subject.",
         "speak": "never",
-        "check": "what new background did the agent describe to replace the removed one",
+        "check": "What new background did the agent describe to replace the removed one?",
         "say_example": "Prompted a '<sandy beach>' as the new background"
        },
        {
@@ -4222,7 +4222,7 @@
         "whatTheAgentLoses": "You lose the ability to quickly recognize an irrelevant search result and back out before wasting time trying to use the wrong tool.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the selected app's own description actually offer background removal, or something else",
+        "check": "Does the selected app's own description actually offer background removal, or something else?",
         "say_example": "App description says it makes presentations, not background removal"
        }
       ]
@@ -4241,7 +4241,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the image to animate and the motion strength - check both; 7-of-10 motion was its energy level.",
         "speak": "never",
-        "check": "which image did the agent select to animate, and what motion strength did it set",
+        "check": "Which image did the agent select to animate, and what motion strength did it set?",
         "say_example": "Animated image <2> at motion strength <7 of 10>"
        },
        {
@@ -4254,7 +4254,7 @@
         "kind": "decision",
         "verify_form": "The agent reused an old generation as the new page's background - check which image it promoted.",
         "speak": "never",
-        "check": "which past generation did the agent reuse as the new page's background",
+        "check": "Which past generation did the agent reuse as the new page's background?",
         "say_example": "Reused generation <#3> as the new page background"
        },
        {
@@ -4266,7 +4266,7 @@
         "whatTheAgentLoses": "You lose the chance to manually drag and position the image exactly how you want it to appear within the mockup.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the image actually appear inside the mockup frame, or does it sit beside it",
+        "check": "Does the image actually appear inside the mockup frame, or does it sit beside it?",
         "say_example": "Image sits beside the frame, not inside it"
        },
        {
@@ -4279,7 +4279,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the starting image for the video - check it took the upscaled keeper, not a lookalike from the library.",
         "speak": "if-wrong",
-        "check": "is the image picked for the video the upscaled asset, or a similar-looking one from the library",
+        "check": "Is the image picked for the video the upscaled asset, or a similar-looking one from the library?",
         "say_example": "Picked a similar-looking library image instead of the upscaled one"
        }
       ]
@@ -4305,7 +4305,7 @@
         "kind": "decision",
         "verify_form": "The agent left Discord for the full image and answered the trust dialog - check whether it whitelisted the domain forever; that box outlives the task.",
         "speak": "gate",
-        "check": "does the leaving-Discord dialog offer a checkbox to permanently trust this domain going forward",
+        "check": "Does the leaving-Discord dialog offer a checkbox to permanently trust this domain going forward?",
         "say_example": "Leaving Discord for the full image - also asks to permanently trust Midjourney links from now on. OK to check that box, or just this once?"
        },
        {
@@ -4317,7 +4317,7 @@
         "whatTheAgentLoses": "You lose the ability to verify that the final downloaded file is the highest possible resolution rather than a compressed preview.",
         "kind": "state-check",
         "speak": "never",
-        "check": "did the agent use 'Open in Browser' to reach the full-resolution file rather than a compressed thumbnail",
+        "check": "Did the agent use 'Open in Browser' to reach the full-resolution file rather than a compressed thumbnail?",
         "say_example": "Opened in browser for the full-resolution file"
        }
       ]
@@ -4336,7 +4336,7 @@
         "kind": "decision",
         "verify_form": "The agent chose among share, save, download, and feedback - check the ending; the image's fate was that click.",
         "speak": "always",
-        "check": "which action did the agent choose - share, save, download, or feedback",
+        "check": "Which action did the agent choose - share, save, download, or feedback?",
         "say_example": "Chose to download rather than share or save"
        },
        {
@@ -4349,7 +4349,7 @@
         "kind": "decision",
         "verify_form": "The agent weighed credits against the yearly plan to get the file - check the math it acted on; the per-image prices differ severalfold.",
         "speak": "gate",
-        "check": "does the page show a real-currency price to download, and does it differ between paying per image and a subscription plan",
+        "check": "Does the page show a real-currency price to download, and does it differ between paying per image and a subscription plan?",
         "say_example": "<10 euros> per image with credits, or <1.15 euros> per image on the yearly plan - pay, or close this and skip the download?"
        },
        {
@@ -4362,7 +4362,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted the default name and folder - check where the file went and what it's called; findability is the cost.",
         "speak": "never",
-        "check": "what file name and folder does the save dialog show",
+        "check": "What file name and folder does the save dialog show?",
         "say_example": "Saved as '<a8f3-92c1.png>' to Downloads"
        },
        {
@@ -4375,7 +4375,7 @@
         "kind": "decision",
         "verify_form": "The agent picked PNG-at-100 or JPEG-at-70 - check the format against fidelity and file size; the choice is baked into the pixels.",
         "speak": "never",
-        "check": "which format and quality did the agent choose - e.g. PNG at 100% or JPEG at 70%",
+        "check": "Which format and quality did the agent choose - e.g. PNG at 100% or JPEG at 70%?",
         "say_example": "Chose PNG at 100% over JPEG at 70%"
        },
        {
@@ -4387,7 +4387,7 @@
         "whatTheAgentLoses": "The agent might deliver a file format that the user cannot open or use in their intended workflow, requiring a manual format conversion later.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the file export as a standard format like PNG or JPG, or a web-optimized one like WEBP",
+        "check": "Did the file export as a standard format like PNG or JPG, or a web-optimized one like WEBP?",
         "say_example": "Exported as WEBP, not PNG or JPG"
        }
       ]
@@ -4405,7 +4405,7 @@
         "whatTheAgentLoses": "You lose the peace of mind of personally verifying the download completion notification and file size.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the browser or app show a completion notification confirming the file saved",
+        "check": "Does the browser or app show a completion notification confirming the file saved?",
         "say_example": "Download confirmed - saved to Downloads"
        },
        {
@@ -4417,7 +4417,7 @@
         "whatTheAgentLoses": "The user loses the ability to confirm that the exact same file was transferred without any hidden alterations or measurement discrepancies.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the saved file's size on disk match the size shown where it was uploaded elsewhere",
+        "check": "Does the saved file's size on disk match the size shown where it was uploaded elsewhere?",
         "say_example": "Saved file shows <3.43MB>, upload page showed <3.60MB>"
        },
        {
@@ -4429,7 +4429,7 @@
         "whatTheAgentLoses": "An agent might deliver an image that it claims fulfills the 'no background' prompt, leaving you with a useless solid image containing a fake transparency grid.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the exported file actually carry a transparent alpha channel, or does it just show a checkerboard pattern drawn as pixels",
+        "check": "Does the exported file actually carry a transparent alpha channel, or does it just show a checkerboard pattern drawn as pixels?",
         "say_example": "Checkerboard pattern appears drawn into the image, not a real transparent background"
        }
       ]
@@ -4448,7 +4448,7 @@
         "kind": "decision",
         "verify_form": "The agent opened Creations or Canvas - check where it took the work; review against workspace are different next steps.",
         "speak": "never",
-        "check": "which tab, chat, or history entry did the agent open to find past creations or the workspace",
+        "check": "Which tab, chat, or history entry did the agent open to find past creations or the workspace?",
         "say_example": "Opened 'Creations' rather than the workspace"
        },
        {
@@ -4461,7 +4461,7 @@
         "kind": "decision",
         "verify_form": "The agent saved (or didn't) candidates and prompts to the library - check what got kept; the curation of your account was its call.",
         "speak": "never",
-        "check": "which images and prompts did the agent save to the library",
+        "check": "Which images and prompts did the agent save to the library?",
         "say_example": "Saved candidates 1 and 3, and their prompts, to the library"
        },
        {
@@ -4474,7 +4474,7 @@
         "kind": "decision",
         "verify_form": "The agent opened (or ignored) the finished generation in notifications - check nothing completed got forgotten.",
         "speak": "on-event",
-        "check": "does a notification show a completed generation that hasn't been opened yet",
+        "check": "Does a notification show a completed generation that hasn't been opened yet?",
         "say_example": "Notification shows a completed generation from <13> minutes ago, not yet opened"
        },
        {
@@ -4486,7 +4486,7 @@
         "whatTheAgentLoses": "The user loses the ability to retrieve, review, or iterate on specific past generations if the tool fails to save them to the history.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the generation history list every image actually created this session, or are some missing",
+        "check": "Does the generation history list every image actually created this session, or are some missing?",
         "say_example": "History skips <4> images generated mid-session"
        },
        {
@@ -4498,7 +4498,7 @@
         "whatTheAgentLoses": "The user loses the confirmation that their final animated asset was properly saved and is accessible for download.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the finished video actually appear in the Library as the generation dialog said it would",
+        "check": "Does the finished video actually appear in the Library as the generation dialog said it would?",
         "say_example": "Generation dialog said check the Library - video isn't there yet"
        }
       ]
@@ -4516,7 +4516,7 @@
         "whatTheAgentLoses": "An agent might generate and deliver a perfect logo on a free account, leaving you legally exposed and violating platform terms if you actually use it commercially.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the account's current plan page state commercial usage rights, or restrict generated images to personal use",
+        "check": "Does the account's current plan page state commercial usage rights, or restrict generated images to personal use?",
         "say_example": "Current plan states personal use only, no commercial rights"
        }
       ]

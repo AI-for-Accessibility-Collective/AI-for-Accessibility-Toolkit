@@ -3181,7 +3181,7 @@
         "kind": "decision",
         "verify_form": "The agent chose whether to add subtitles and by which method - check the modal; uploading a file, auto-syncing a transcript and typing them by hand take very different amounts of your time.",
         "speak": "if-wrong",
-        "check": "which subtitle method is selected in the modal - upload a file, auto-sync, or type manually - or whether none was chosen",
+        "check": "Which subtitle method is selected in the modal - upload a file, auto-sync, or type manually - or whether none was chosen?",
         "say_example": "Subtitles are set to <auto-sync>, not what you asked for."
        },
        {
@@ -3211,7 +3211,7 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to trust the platform's auto-sync feature or enforce strict timing from your own file.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "which subtitle upload path is selected in the modal - a timed file, or plain text for auto-sync",
+        "check": "Which subtitle upload path is selected in the modal - a timed file, or plain text for auto-sync?",
         "say_example": "Your file has no timing in it, so it'll be auto-synced to the audio instead of read directly."
        },
        {
@@ -3349,7 +3349,7 @@
         "kind": "decision",
         "verify_form": "The agent set how the end screen's video element behaves - check whether it is the most recent upload, the platform's pick, or one you chose.",
         "speak": "if-wrong",
-        "check": "which end-screen video behavior is selected - most recent upload, best for viewer, or a specific video",
+        "check": "Which end-screen video behavior is selected - most recent upload, best for viewer, or a specific video?",
         "say_example": "The end screen's video is set to <best for viewer>."
        },
        {
@@ -3388,7 +3388,7 @@
         "kind": "decision",
         "verify_form": "The agent changed the template's elements - check what was removed and what replaced it; the template's own video may not be the one you want promoted.",
         "speak": "if-wrong",
-        "check": "which template elements were changed - removed, replaced, or left as-is",
+        "check": "Which template elements were changed - removed, replaced, or left as-is?",
         "say_example": "The template's default video was swapped for <how i fixed my bike>, and the subscribe circle and playlist stayed."
        },
        {
@@ -3401,7 +3401,7 @@
         "kind": "decision",
         "verify_form": "The agent chose which elements go on the end screen - check them; a video, a playlist, a subscribe button and a channel link ask for different things.",
         "speak": "if-wrong",
-        "check": "which end-screen elements were added - video, playlist, subscribe, or channel",
+        "check": "Which end-screen elements were added - video, playlist, subscribe, or channel?",
         "say_example": "Added a video, a playlist and a subscribe button to the end screen."
        }
       ]
@@ -3420,7 +3420,7 @@
         "kind": "decision",
         "verify_form": "The agent arranged the end screen's elements - look at where they sit; badly placed elements cover the part of the frame your outro was built around.",
         "speak": "if-wrong",
-        "check": "where the end-screen elements sit on the frame relative to the outro graphic",
+        "check": "Where the end-screen elements sit on the frame relative to the outro graphic?",
         "say_example": "The end-screen elements sit in the two top corners, clear of your outro graphic."
        },
        {
@@ -3445,7 +3445,7 @@
         "kind": "decision",
         "verify_form": "The agent placed promotional elements in the last twenty seconds - check what and where; that window is all the platform allows and it sits over your ending.",
         "speak": "if-wrong",
-        "check": "which elements were placed within the last 20 seconds of the timeline",
+        "check": "Which elements were placed within the last 20 seconds of the timeline?",
         "say_example": "In the final 20 seconds, a video card and a subscribe button sit from <9:40>."
        }
       ]
@@ -3746,7 +3746,7 @@
         "kind": "decision",
         "verify_form": "The agent chose unlisted over private while the video is held back - check which; unlisted lets the platform analyse the video and private does not.",
         "speak": "if-wrong",
-        "check": "which of unlisted or private is selected while the video is held back",
+        "check": "Which of unlisted or private is selected while the video is held back?",
         "say_example": "Held back as <unlisted>."
        }
       ]
@@ -3982,7 +3982,7 @@
         "kind": "decision",
         "verify_form": "The agent pressed publish on a public video - check the moment; that click sends an alert to every subscriber and it cannot be recalled by switching the video back to private.",
         "speak": "gate",
-        "check": "which button commits the video, Publish or Schedule, and the visibility and time it takes effect under, including whether Premiere is checked",
+        "check": "Which button commits the video, Publish or Schedule, and the visibility and time it takes effect under, including whether Premiere is checked?",
         "say_example": "Ready to publish. <how i fixed my bike> is set to Public, going out now. Every subscriber gets told, and switching it back to private after won't undo that. Press to publish, or say change."
        }
       ]
@@ -4080,7 +4080,7 @@
         "kind": "decision",
         "verify_form": "The agent chose which platforms this video syndicates to - check the list; each connection publishes your video on an account of yours somewhere else.",
         "speak": "on-event",
-        "check": "which platforms are connected to syndicate this video, e.g. Facebook, Twitter, LinkedIn, Pinterest, Shopify",
+        "check": "Which platforms are connected to syndicate this video, e.g. Facebook, Twitter, LinkedIn, Pinterest, Shopify?",
         "say_example": "The video is set to auto-post to <Facebook and X> under your accounts there. Say if that's not what you want."
        },
        {
@@ -4154,7 +4154,7 @@
         "kind": "decision",
         "verify_form": "The agent generated an embed code for an email campaign - check which provider it chose; the code is built for that provider's newsletter.",
         "speak": "if-wrong",
-        "check": "which email provider's embed code was generated",
+        "check": "Which email provider's embed code was generated?",
         "say_example": "Embed code generated for <Mailchimp>."
        },
        {
@@ -4245,7 +4245,7 @@
         "whatTheAgentLoses": "You lose the chance to familiarize yourself with the app's navigation and see exactly where your uploaded content is organized.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which tab is active in the bottom navigation - Dashboard, Analytics, or Content",
+        "check": "Which tab is active in the bottom navigation - Dashboard, Analytics, or Content?",
         "say_example": "Went to the <Content> tab"
        },
        {
@@ -4323,7 +4323,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide which specific existing video or livestream to modify.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "which video is selected from the past videos list",
+        "check": "Which video is selected from the past videos list?",
         "say_example": "Selected <how i fixed my bike> for editing."
        },
        {
@@ -4373,7 +4373,7 @@
         "kind": "decision",
         "verify_form": "The agent opened another app to finish configuring the video - check which; the Studio app carries tags, category and licence that the main app does not.",
         "speak": "if-wrong",
-        "check": "which app was opened from the app drawer to continue configuring the video",
+        "check": "Which app was opened from the app drawer to continue configuring the video?",
         "say_example": "Went into <YT Studio> to finish setting this up."
        },
        {
@@ -4563,7 +4563,7 @@
         "whatTheAgentLoses": "Delegating this means you lose the opportunity to personally review and perfect the video's title, description, and audience settings before advancing.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "which required fields on this screen are filled versus empty",
+        "check": "Which required fields on this screen are filled versus empty?",
         "say_example": "The description is still empty before moving on."
        },
        {
@@ -4600,7 +4600,7 @@
         "kind": "decision",
         "verify_form": "The agent acted on a third-party checklist's warnings or ignored them - check what it flagged; the checklist is an extension's opinion, not the platform's.",
         "speak": "never",
-        "check": "which items the third-party checklist flags as incomplete",
+        "check": "Which items the third-party checklist flags as incomplete?",
         "say_example": "The checklist flags <a short description and no end screen> - that's the extension's opinion, not the platform's"
        },
        {

@@ -23,7 +23,7 @@
         "whatTheAgentLoses": "You lose the opportunity to specify which email service or specific account should be accessed for the cleanup.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what navigation options does the homepage show for reaching the inbox",
+        "check": "What navigation options does the homepage show for reaching the inbox?",
         "say_example": "Opened the inbox from <the direct link> rather than the apps menu"
        },
        {
@@ -35,7 +35,7 @@
         "whatTheAgentLoses": "The user loses the ability to ensure a trusted, preferred email client is used to access their personal messages.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "which mail app does the screen show installed and ready to open",
+        "check": "Which mail app does the screen show installed and ready to open?",
         "say_example": "Opened <the mail app> to manage the inbox"
        }
       ]
@@ -53,7 +53,7 @@
         "whatTheAgentLoses": "Delegating this choice means the agent might clean up the wrong email account or miss the specific inbox you intended to declutter.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "does the opened mailbox or account match the one the task's mail actually lives in",
+        "check": "Does the opened mailbox or account match the one the task's mail actually lives in?",
         "say_example": "Two accounts were on screen. I opened <the one with the marketing mail>"
        }
       ]
@@ -71,7 +71,7 @@
         "whatTheAgentLoses": "You lose the initial context of the inbox size, making it impossible to independently verify how much clutter the agent actually removed.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what does the inbox pagination or count show before any cleanup starts",
+        "check": "What does the inbox pagination or count show before any cleanup starts?",
         "say_example": "Started at <118> emails in the inbox"
        }
       ]
@@ -96,7 +96,7 @@
         "whatTheAgentLoses": "You lose the ability to decide exactly which keywords or specific senders to target when filtering your unwanted mail.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what does the search bar show being typed to find unsubscribe-related mail",
+        "check": "What does the search bar show being typed to find unsubscribe-related mail?",
         "say_example": "Searched the inbox for <unsubscribe>"
        },
        {
@@ -109,7 +109,7 @@
         "kind": "decision",
         "verify_form": "The agent searched broadly rather than field-scoped - check the query it ran; a whole-message match catches receipts that merely mention unsubscribing.",
         "speak": "if-wrong",
-        "check": "did the search use a field-scoped filter like Subject-contains, or a whole-message keyword match",
+        "check": "Did the search use a field-scoped filter like Subject-contains, or a whole-message keyword match?",
         "say_example": "Searched the whole message for <unsubscribe>. That also catches receipts that mention it"
        },
        {
@@ -121,7 +121,7 @@
         "whatTheAgentLoses": "The agent might assume the sender has already been cleaned up and skip the task, leaving the actual unwanted emails hidden in the inbox due to a simple input error.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the search return zero results",
+        "check": "Does the search return zero results?",
         "say_example": "<That search> came back empty. Worth checking the spelling before assuming the inbox is clean"
        }
       ]
@@ -139,7 +139,7 @@
         "whatTheAgentLoses": "You lose the chance to manually review the unread emails to ensure no important messages are accidentally deleted during the bulk cleanup.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what search operator does the bar show for finding unread mail",
+        "check": "What search operator does the bar show for finding unread mail?",
         "say_example": "Searched <is:unread> to gather the unread mail"
        },
        {
@@ -152,7 +152,7 @@
         "kind": "decision",
         "verify_form": "The agent filtered by an attachment type - check which filename: term it used; type-based sweeps take personal photos along with the promos.",
         "speak": "on-event",
-        "check": "does the search use a filename or attachment-type operator like filename:jpg",
+        "check": "Does the search use a filename or attachment-type operator like filename:jpg?",
         "say_example": "That search grabs every email with a <jpg> attached. Personal photos ride along with the promos"
        },
        {
@@ -165,7 +165,7 @@
         "kind": "decision",
         "verify_form": "A size cutoff was used to find deletable mail - check the threshold the agent set; size says nothing about what you would keep.",
         "speak": "on-event",
-        "check": "what size threshold does the search operator set",
+        "check": "What size threshold does the search operator set?",
         "say_example": "Searching for mail over <10MB> finds big attachments, not what you'd actually want gone"
        },
        {
@@ -177,7 +177,7 @@
         "whatTheAgentLoses": "The user loses control over the specific search criteria used to safely isolate the unwanted emails from the rest of the inbox.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the pagination show more emails than fit on one page",
+        "check": "Does the pagination show more emails than fit on one page?",
         "say_example": "Only <100> of <2,406> were on screen, so a filter was needed to reach the rest"
        },
        {
@@ -189,7 +189,7 @@
         "whatTheAgentLoses": "You lose the awareness of exactly how much clutter had accumulated in your inbox before the cleanup.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what total count does the filtered search show in the results header",
+        "check": "What total count does the filtered search show in the results header?",
         "say_example": "The filter returned <275> emails"
        }
       ]
@@ -208,7 +208,7 @@
         "kind": "decision",
         "verify_form": "The agent chose how to search - check whether it used the advanced fields or one bare keyword; the choice decides how much unrelated mail lands in the results.",
         "speak": "on-event",
-        "check": "does the search options panel show advanced fields like From, Subject, or Date within, and did the query use only a bare keyword",
+        "check": "Does the search options panel show advanced fields like From, Subject, or Date within, and did the query use only a bare keyword?",
         "say_example": "The search only used one word. Adding <a From filter> would keep this to the sender you mean"
        },
        {
@@ -220,7 +220,7 @@
         "whatTheAgentLoses": "The user loses the ability to personally identify and protect specific important emails that happen to match the broad search criteria.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "do the search results include mail that is not marketing, such as a security alert",
+        "check": "Do the search results include mail that is not marketing, such as a security alert?",
         "say_example": "<A security alert> is sitting in these results next to the promos"
        },
        {
@@ -233,7 +233,7 @@
         "kind": "decision",
         "verify_form": "The agent moved to the next batch - check what it searched for next; each new target is a fresh chance to sweep mail you keep.",
         "speak": "never",
-        "check": "what does the search view show being changed to move to the next batch",
+        "check": "What does the search view show being changed to move to the next batch?",
         "say_example": "Moved on to search <the next sender>"
        },
        {
@@ -246,7 +246,7 @@
         "kind": "decision",
         "verify_form": "The search scope was set - check whether the agent searched one inbox or everything; scope decides which folders the sweep can reach.",
         "speak": "on-event",
-        "check": "does the search scope show searching All mailboxes or just this inbox",
+        "check": "Does the search scope show searching All mailboxes or just this inbox?",
         "say_example": "Widened the search to <every folder>, not just this inbox"
        }
       ]
@@ -264,7 +264,7 @@
         "whatTheAgentLoses": "You lose the chance to see exactly which of your emails the system automatically sorted into the new Updates category.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the inbox now show a new tab such as Updates that wasn't there before",
+        "check": "Does the inbox now show a new tab such as Updates that wasn't there before?",
         "say_example": "A new <Updates> tab appeared with mail sorted into it"
        },
        {
@@ -277,7 +277,7 @@
         "kind": "decision",
         "verify_form": "The agent picked which tab to clean next - check the tab; marketing hides in Primary and Social too, and the pick decides what gets touched.",
         "speak": "never",
-        "check": "which tabs does the inbox show, and which one is being opened",
+        "check": "Which tabs does the inbox show, and which one is being opened?",
         "say_example": "Opened <the Promotions tab> to look for marketing mail"
        },
        {
@@ -290,7 +290,7 @@
         "kind": "decision",
         "verify_form": "The agent treated social-media notifications as unwanted - check whether those updates are clutter to you before they are gone.",
         "speak": "on-event",
-        "check": "does the tab contain automated platform notifications rather than marketing mail, such as social-network updates",
+        "check": "Does the tab contain automated platform notifications rather than marketing mail, such as social-network updates?",
         "say_example": "This tab is <social-network notifications>, not marketing mail. Worth asking if those count as unwanted too"
        },
        {
@@ -303,7 +303,7 @@
         "kind": "decision",
         "verify_form": "The agent emptied a folder - check which one it picked from the sidebar; a whole folder went with that choice.",
         "speak": "on-event",
-        "check": "which folder does the sidebar show being chosen to empty",
+        "check": "Which folder does the sidebar show being chosen to empty?",
         "say_example": "About to empty <the Example folder>. Everything in it goes"
        },
        {
@@ -316,7 +316,7 @@
         "kind": "decision",
         "verify_form": "The agent chose the view to select in - check that it was not All Mail; selecting there takes the mail you already filed.",
         "speak": "on-event",
-        "check": "is the view set to a specific label or search, or to All Mail, before bulk-selecting",
+        "check": "Is the view set to a specific label or search, or to All Mail, before bulk-selecting?",
         "say_example": "Selecting from <All Mail> would also catch mail you already filed into other folders"
        },
        {
@@ -329,7 +329,7 @@
         "kind": "decision",
         "verify_form": "With Promotions empty the agent moved to Social - check whether wiping that category was on your list at all.",
         "speak": "on-event",
-        "check": "does the page show a second category, like Social, being opened after the first one was already cleared",
+        "check": "Does the page show a second category, like Social, being opened after the first one was already cleared?",
         "say_example": "Promotions is empty now. The plan just expanded to <the Social tab> too, which wasn't the original ask"
        }
       ]
@@ -348,7 +348,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a sender to purge - check which address it typed into the search; if that is not a sender you consider unwanted, it chose your targets for you.",
         "speak": "never",
-        "check": "what sender address is typed into the search bar to target",
+        "check": "What sender address is typed into the search bar to target?",
         "say_example": "Targeted mail from <retailer-newsletter@example.com>"
        },
        {
@@ -361,7 +361,7 @@
         "kind": "decision",
         "verify_form": "The agent decided what counts as unwanted - check the search or filter it used as the boundary; that boundary is your call, not its.",
         "speak": "gate",
-        "check": "what search, filter, or rule does the page show being used to define what counts as unwanted",
+        "check": "What search, filter, or rule does the page show being used to define what counts as unwanted?",
         "say_example": "I need a clear line before I start. Is everything from <the retailer newsletters> unwanted, or just some of it?"
        },
        {
@@ -374,7 +374,7 @@
         "kind": "decision",
         "verify_form": "The agent started with one sender - check which one it isolated; if that sender still matters to you, the sweep starts wrong.",
         "speak": "never",
-        "check": "which sender's mail does the screen show being selected first",
+        "check": "Which sender's mail does the screen show being selected first?",
         "say_example": "Started the cleanup with <the airline newsletter>"
        },
        {
@@ -386,7 +386,7 @@
         "whatTheAgentLoses": "You lose the chance to verify the search results yourself to ensure no important emails were accidentally caught in the filter before bulk deleting.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do all the messages in the search results share the one sender address",
+        "check": "Do all the messages in the search results share the one sender address?",
         "say_example": "One message in this list is from <a different sender>. It doesn't belong in this batch"
        },
        {
@@ -398,7 +398,7 @@
         "whatTheAgentLoses": "You lose the opportunity to manually review the filtered list of emails to ensure no important correspondence is accidentally included in the bulk deletion.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what context-menu option does the screen show for finding all mail from this sender",
+        "check": "What context-menu option does the screen show for finding all mail from this sender?",
         "say_example": "Used <Find emails from this sender> to gather the sender's mail"
        },
        {
@@ -411,7 +411,7 @@
         "kind": "decision",
         "verify_form": "The agent chose how thorough the purge is - check whether it took one email or the sender's whole history.",
         "speak": "on-event",
-        "check": "does the sender's search results include more than the one currently open message",
+        "check": "Does the sender's search results include more than the one currently open message?",
         "say_example": "There's more than just this one message from <this sender>. Want the whole history gone, or just this one?"
        },
        {
@@ -423,7 +423,7 @@
         "whatTheAgentLoses": "You lose the ability to choose the specific method used to locate and group unwanted emails for bulk deletion.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the menu show a 'Filter messages like these' option",
+        "check": "Does the menu show a 'Filter messages like these' option?",
         "say_example": "Used <Filter messages like these> to gather this sender's mail"
        }
       ]
@@ -442,7 +442,7 @@
         "kind": "decision",
         "verify_form": "The list got re-sorted to group senders - check the sort key; grouping by From is what makes the chunks safe to grab.",
         "speak": "never",
-        "check": "what does the sort dropdown show being changed to",
+        "check": "What does the sort dropdown show being changed to?",
         "say_example": "Sorted the inbox by <sender> to group the newsletters"
        }
       ]
@@ -460,7 +460,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally review the junk folder to ensure no legitimate emails were incorrectly flagged.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what count does the Junk Email folder show",
+        "check": "What count does the Junk Email folder show?",
         "say_example": "<4> messages are sitting in Junk"
        },
        {
@@ -473,7 +473,7 @@
         "kind": "decision",
         "verify_form": "The agent chose which junk sender to process first - check which one it opened; if a sender in that folder is not junk to you, the order matters.",
         "speak": "never",
-        "check": "which sender in the junk folder does the screen show being opened first",
+        "check": "Which sender in the junk folder does the screen show being opened first?",
         "say_example": "Opened <the first junk sender> to review it"
        }
       ]
@@ -491,7 +491,7 @@
         "whatTheAgentLoses": "You lose the ability to manually explore your folder structure and identify specific hidden categories that need cleaning.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the sidebar show a 'More' option to reveal hidden folders",
+        "check": "Does the sidebar show a 'More' option to reveal hidden folders?",
         "say_example": "Clicked <More> to see the rest of the folders"
        },
        {
@@ -504,7 +504,7 @@
         "kind": "decision",
         "verify_form": "The agent changed which mailboxes show in your list - check what it added; the view change persists after the cleanup.",
         "speak": "on-event",
-        "check": "does the Edit List screen show a folder like All Mail being added to the visible list",
+        "check": "Does the Edit List screen show a folder like All Mail being added to the visible list?",
         "say_example": "Adding <All Mail> to the sidebar. That stays in your folder list after this cleanup is done"
        }
       ]
@@ -523,7 +523,7 @@
         "kind": "decision",
         "verify_form": "The search results got saved into a Smart Mailbox - check the match count and what the agent did with it; how those thousands get handled is your call.",
         "speak": "on-event",
-        "check": "how many matches does the search show before it gets saved as a Smart Mailbox",
+        "check": "How many matches does the search show before it gets saved as a Smart Mailbox?",
         "say_example": "This search matched <1,275> emails before it was saved"
        },
        {
@@ -536,7 +536,7 @@
         "kind": "decision",
         "verify_form": "A Smart Mailbox was created with defaults - check its conditions; the default includes your Sent mail, which puts your own messages in the deletable pile.",
         "speak": "on-event",
-        "check": "does the Smart Mailbox dialog include Sent or Trash messages by default",
+        "check": "Does the Smart Mailbox dialog include Sent or Trash messages by default?",
         "say_example": "The default here includes <your Sent mail>. Your own messages would land in the deletable pile"
        },
        {
@@ -548,7 +548,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the chance to verify exactly which emails were caught by the filter before they are bulk deleted.",
         "kind": "state-check",
         "speak": "never",
-        "check": "how many emails does the new Smart Mailbox show collected",
+        "check": "How many emails does the new Smart Mailbox show collected?",
         "say_example": "The new Smart Mailbox holds <1,275> emails"
        }
       ]
@@ -570,7 +570,7 @@
       "kind": "decision",
       "verify_form": "Two unsubscribe routes were on screen and the agent picked one - check which; the native button is a clean stop, the footer link can open a preference center with more options.",
       "speak": "on-event",
-      "check": "does the screen show both a native unsubscribe button and a footer link, and which one is used",
+      "check": "Does the screen show both a native unsubscribe button and a footer link, and which one is used?",
       "say_example": "Used <the native unsubscribe button>. The footer link would have opened a preference center with more choices instead"
      }
     ],
@@ -589,7 +589,7 @@
         "kind": "decision",
         "verify_form": "The agent opened one sender to unsubscribe from - check which one; if that sender was not on your list, it decided which mail you stop getting.",
         "speak": "never",
-        "check": "which email does the screen show being opened to reach the unsubscribe option",
+        "check": "Which email does the screen show being opened to reach the unsubscribe option?",
         "say_example": "Opened the message from <the newsletter sender>"
        },
        {
@@ -602,7 +602,7 @@
         "kind": "decision",
         "verify_form": "One sender got unsubscribed - check that it is a sender you are done with; the wrong pick silences mail you wanted.",
         "speak": "never",
-        "check": "which promotional email does the screen show being selected",
+        "check": "Which promotional email does the screen show being selected?",
         "say_example": "Selected <the course promotion email>"
        },
        {
@@ -615,7 +615,7 @@
         "kind": "decision",
         "verify_form": "The agent chose which Promotions senders to drop - read the list it acted on; keep-or-toss per sender is your preference.",
         "speak": "never",
-        "check": "which senders in the tab does the person's action target",
+        "check": "Which senders in the tab does the person's action target?",
         "say_example": "Marked <the retailer newsletters> as unwanted in this tab"
        },
        {
@@ -628,7 +628,7 @@
         "kind": "decision",
         "verify_form": "The agent chose between unsubscribing and junking the sender - check which it did; junking a legitimate service can bury mail you will need.",
         "speak": "on-event",
-        "check": "does the page's own guidance say to use the unsubscribe link rather than junk for a legitimate sender",
+        "check": "Does the page's own guidance say to use the unsubscribe link rather than junk for a legitimate sender?",
         "say_example": "The page itself says to unsubscribe rather than junk <this sender>. Junking it would also bury any mail you'd actually want later"
        },
        {
@@ -640,7 +640,7 @@
         "whatTheAgentLoses": "The awareness that a separate cancellation workflow in a billing portal is required to actually stop the money from moving.",
         "kind": "intent-check",
         "speak": "on-event",
-        "check": "does the email belong to a paid subscription service like a paid newsletter platform, where unsubscribing from the list does not cancel billing",
+        "check": "Does the email belong to a paid subscription service like a paid newsletter platform, where unsubscribing from the list does not cancel billing?",
         "say_example": "This is <a paid newsletter>. Unsubscribing here stops the emails, not the charge"
        },
        {
@@ -652,7 +652,7 @@
         "whatTheAgentLoses": "You lose the opportunity to manually pace the cleanup process and inspect each subsequent email before deciding what to do with it.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the screen show an 'Older' arrow to move to the next message",
+        "check": "Does the screen show an 'Older' arrow to move to the next message?",
         "say_example": "Moved to the next message with the <Older> arrow"
        }
       ]
@@ -670,7 +670,7 @@
         "whatTheAgentLoses": "The user loses the ability to verify the exact sender address and choose the native mail client's secure unsubscribe feature over a potentially unreliable link in the email body.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the screen show a native unsubscribe link next to the sender's address",
+        "check": "Does the screen show a native unsubscribe link next to the sender's address?",
         "say_example": "Used the unsubscribe link next to <the sender's address>"
        }
       ]
@@ -689,7 +689,7 @@
         "kind": "decision",
         "verify_form": "The agent confirmed the unsubscribe - check which sender the dialog named; this was your last chance to keep that sender.",
         "speak": "on-event",
-        "check": "does the confirmation popup name the sender being unsubscribed from",
+        "check": "Does the confirmation popup name the sender being unsubscribed from?",
         "say_example": "This stops mail from <this sender>. Go ahead?"
        }
       ]
@@ -707,7 +707,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify the sender's physical address and observe how they format their mandatory opt-out links.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the bottom of the email show the sender's address and an unsubscribe link",
+        "check": "Does the bottom of the email show the sender's address and an unsubscribe link?",
         "say_example": "Found the unsubscribe link at the bottom of the email"
        },
        {
@@ -720,7 +720,7 @@
         "kind": "decision",
         "verify_form": "The agent went sender by sender through footer links - check which senders it unsubscribed; each click was a per-sender choice that was yours.",
         "speak": "never",
-        "check": "does the opened email show a footer unsubscribe link for this sender",
+        "check": "Does the opened email show a footer unsubscribe link for this sender?",
         "say_example": "Clicked the footer link for <this sender>"
        }
       ]
@@ -739,7 +739,7 @@
         "kind": "decision",
         "verify_form": "The agent clicked the sender's own unsubscribe button - check the page it landed on and what it confirmed; sender pages sometimes offer partial opt-outs it may have skipped.",
         "speak": "on-event",
-        "check": "what does the sender's own unsubscribe page show as the confirming action, and does it mention a partial opt-out",
+        "check": "What does the sender's own unsubscribe page show as the confirming action, and does it mention a partial opt-out?",
         "say_example": "This page's own button says <Unsubscribe me>. No partial option is offered here"
        },
        {
@@ -752,7 +752,7 @@
         "kind": "decision",
         "verify_form": "The link opened a preference center - check which boxes the agent left; all-off kills notifications you may rely on, and partial keeps some marketing.",
         "speak": "gate",
-        "check": "does the unsubscribe link open a preference center with multiple checkboxes rather than a single confirmation",
+        "check": "Does the unsubscribe link open a preference center with multiple checkboxes rather than a single confirmation?",
         "say_example": "This isn't one click, it's a list. Stop everything from <this sender>, or just some of it?"
        }
       ]
@@ -770,7 +770,7 @@
         "whatTheAgentLoses": "Delegating this step means losing the peace of mind of personally seeing the confirmation that the unwanted emails have been successfully stopped.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the page show a success message confirming the unsubscribe request",
+        "check": "Does the page show a success message confirming the unsubscribe request?",
         "say_example": "<This sender> shows unsubscribed"
        }
       ]
@@ -788,7 +788,7 @@
         "whatTheAgentLoses": "The user loses the security check of inspecting the destination URL, risking exposure to phishing or spam validation if the agent clicks a malicious link.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the unsubscribe link's domain match the sender's own domain, or does it point somewhere unrelated",
+        "check": "Does the unsubscribe link's domain match the sender's own domain, or does it point somewhere unrelated?",
         "say_example": "This unsubscribe link points to <a domain that isn't the sender's>. Clicking it just confirms the address is live"
        },
        {
@@ -800,7 +800,7 @@
         "whatTheAgentLoses": "The user loses the defensive judgment to abandon the unsubscribe attempt and block the sender instead when faced with a potentially sketchy email harvesting form.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the unsubscribe page ask you to type in your own email address rather than using a pre-filled token",
+        "check": "Does the unsubscribe page ask you to type in your own email address rather than using a pre-filled token?",
         "say_example": "This page wants you to type in <your email address> by hand. That's how spammers confirm an address is real"
        },
        {
@@ -812,7 +812,7 @@
         "whatTheAgentLoses": "The user loses the ability to visually parse deceptive UI patterns, risking the agent misinterpreting the form and keeping the subscription active.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "are the checkboxes on the preference center styled so that checking a box opts out, or does checking it actually keep you subscribed",
+        "check": "Are the checkboxes on the preference center styled so that checking a box opts out, or does checking it actually keep you subscribed?",
         "say_example": "Check the boxes here carefully. On this page, <a checked box> means you stay subscribed"
        }
       ]
@@ -830,7 +830,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether it is worth the effort to recover an old account just to unsubscribe, or if they should just use the email client's block feature instead.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the unsubscribe page require signing in to an account first",
+        "check": "Does the unsubscribe page require signing in to an account first?",
         "say_example": "This page wants a login for <an account you may not use anymore>. Blocking the sender locally might be easier"
        },
        {
@@ -842,7 +842,7 @@
         "whatTheAgentLoses": "The user loses the awareness that the automated unsubscribe failed, leaving them subscribed unless they intervene with a manual fallback method.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "does the email client show an error saying it could not automatically unsubscribe",
+        "check": "Does the email client show an error saying it could not automatically unsubscribe?",
         "say_example": "The client couldn't unsubscribe automatically here. It'll need the footer link or a block instead"
        },
        {
@@ -854,7 +854,7 @@
         "whatTheAgentLoses": "The ability to verify that the opt-out email is actually sent and uses the correct sender address, preventing the unsubscribe from failing silently.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the unsubscribe link open a pre-filled draft email, and does its From address match the address that's actually subscribed",
+        "check": "Does the unsubscribe link open a pre-filled draft email, and does its From address match the address that's actually subscribed?",
         "say_example": "This draft would send from <a different address> than the one subscribed. It won't work as sent"
        },
        {
@@ -866,7 +866,7 @@
         "whatTheAgentLoses": "The ability to notice a silent failure on the third-party site and take alternative action to actually stop the emails.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the external unsubscribe page show a success message or an error like link expired or server not found",
+        "check": "Does the external unsubscribe page show a success message or an error like link expired or server not found?",
         "say_example": "This page shows <a server error>, not a success message. The unsubscribe didn't go through"
        }
       ]
@@ -885,7 +885,7 @@
         "kind": "decision",
         "verify_form": "The agent also moved the unsubscribed email to spam - check whether training your spam filter on this sender is what you wanted.",
         "speak": "on-event",
-        "check": "does the confirmation banner offer a 'move to spam' action after the unsubscribe",
+        "check": "Does the confirmation banner offer a 'move to spam' action after the unsubscribe?",
         "say_example": "The banner is also offering to mark <this sender> as spam. That trains your filter beyond just unsubscribing"
        }
       ]
@@ -910,7 +910,7 @@
         "whatTheAgentLoses": "You lose the ability to personally decide which specific sender is considered unwanted and should be blocked.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "which email does the screen show being opened to reach the block option",
+        "check": "Which email does the screen show being opened to reach the block option?",
         "say_example": "Opened the message from <the sender to block>"
        },
        {
@@ -922,7 +922,7 @@
         "whatTheAgentLoses": "You lose the opportunity to manually inspect the sender's profile and verify their exact email address before taking action.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the expanded header show a tappable From field for contact details",
+        "check": "Does the expanded header show a tappable From field for contact details?",
         "say_example": "Tapped the From field to see <the sender's> contact card"
        },
        {
@@ -934,7 +934,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to verify the underlying email address, risking blocking a legitimate service if the display name was spoofed.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the actual email address on the contact card match the display name shown in the inbox",
+        "check": "Does the actual email address on the contact card match the display name shown in the inbox?",
         "say_example": "The display name says <one thing>, but the address underneath is <something else>. Check which one you meant to block"
        }
       ]
@@ -953,7 +953,7 @@
         "kind": "decision",
         "verify_form": "The client had no block button so the agent picked a workaround - check what it chose from the menu; copy-address-plus-rule and report-spam behave differently.",
         "speak": "on-event",
-        "check": "does the sender's menu lack a direct block option, requiring a workaround like copying the address into a filter or reporting spam",
+        "check": "Does the sender's menu lack a direct block option, requiring a workaround like copying the address into a filter or reporting spam?",
         "say_example": "There's no direct block here. The two workarounds are <copy the address into a rule> or <report as spam>, and they don't do the same thing"
        },
        {
@@ -966,7 +966,7 @@
         "kind": "decision",
         "verify_form": "In the junk folder the agent chose block or not-junk - check which way; one exiles the sender, the other invites them back.",
         "speak": "on-event",
-        "check": "does the context menu offer both 'block sender' and 'mark as not junk'",
+        "check": "Does the context menu offer both 'block sender' and 'mark as not junk'?",
         "say_example": "This menu offers <block> or <mark not junk>. One shuts this sender out for good, the other lets them straight back in"
        },
        {
@@ -979,7 +979,7 @@
         "kind": "decision",
         "verify_form": "The junk submenu offered block, never-block and domain scopes - check the one the agent clicked; scope decides how much mail the rule swallows.",
         "speak": "on-event",
-        "check": "does the junk submenu show scope options like block sender, never block, or a domain-level block",
+        "check": "Does the junk submenu show scope options like block sender, never block, or a domain-level block?",
         "say_example": "This menu can block just <the address> or all of <the domain>. The domain option catches a lot more mail"
        },
        {
@@ -991,7 +991,7 @@
         "whatTheAgentLoses": "The user loses the ability to recognize a pattern of rotating sender addresses and apply a more robust domain-wide filter to actually stop the clutter.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the sender's mail show multiple different addresses or subdomains rather than one consistent address",
+        "check": "Does the sender's mail show multiple different addresses or subdomains rather than one consistent address?",
         "say_example": "This sender mails from <several different addresses>. Blocking just one won't stop the rest"
        }
       ]
@@ -1010,7 +1010,7 @@
         "kind": "decision",
         "verify_form": "The block confirmation was accepted - check the sender it named; blocked senders vanish without telling you.",
         "speak": "gate",
-        "check": "does the confirmation dialog name the contact being blocked",
+        "check": "Does the confirmation dialog name the contact being blocked?",
         "say_example": "This blocks <this sender> for good. Go ahead?"
        },
        {
@@ -1023,7 +1023,7 @@
         "kind": "decision",
         "verify_form": "The do-not-show-this-again box was in reach - check whether the agent ticked it; ticked means future blocks skip the confirmation you would want to see.",
         "speak": "on-event",
-        "check": "does the block dialog include a 'don't show this message again' checkbox, and is it checked",
+        "check": "Does the block dialog include a 'don't show this message again' checkbox, and is it checked?",
         "say_example": "This box would skip the block warning <every time after this one>. Leaving it unchecked keeps you in the loop"
        },
        {
@@ -1035,7 +1035,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to fully clear the unwanted email from their view if the agent assumes blocking automatically deletes existing messages.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the page say whether blocking removes the current email automatically or leaves it in the inbox",
+        "check": "Does the page say whether blocking removes the current email automatically or leaves it in the inbox?",
         "say_example": "Blocking <this sender> left the current message sitting in the inbox"
        }
       ]
@@ -1053,7 +1053,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to review their current list of blocked addresses and active filters before new rules are applied.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which settings tab does the screen show being opened for filters",
+        "check": "Which settings tab does the screen show being opened for filters?",
         "say_example": "Opened <the Filters tab> in settings"
        }
       ]
@@ -1072,7 +1072,7 @@
         "kind": "decision",
         "verify_form": "A filter was created from the word 'unsubscribe' - check the criteria the agent left in place; unedited defaults make the filter match more than you may want.",
         "speak": "on-event",
-        "check": "does the filter dialog still show only the default word, or were other conditions added to narrow it",
+        "check": "Does the filter dialog still show only the default word, or were other conditions added to narrow it?",
         "say_example": "This filter only has <the one word> in it. Nothing narrows it beyond that"
        },
        {
@@ -1085,7 +1085,7 @@
         "kind": "decision",
         "verify_form": "A standing filter on the word 'unsubscribe' was created - check its criteria; from now on it acts on matching mail without asking.",
         "speak": "gate",
-        "check": "does the confirmation dialog show the exact word or condition this standing filter will match on future mail",
+        "check": "Does the confirmation dialog show the exact word or condition this standing filter will match on future mail?",
         "say_example": "This rule keeps running after today, on every email containing <this word>. That includes mail you haven't seen yet. Set it up?"
        },
        {
@@ -1098,7 +1098,7 @@
         "kind": "decision",
         "verify_form": "Only the From field drove the filter - check the address in it; every other field was left open on your behalf.",
         "speak": "on-event",
-        "check": "which field does the filter dialog show driving the match - From only, or also Subject and other fields",
+        "check": "Which field does the filter dialog show driving the match - From only, or also Subject and other fields?",
         "say_example": "Only <the From field> is set here. Every other field is left wide open"
        },
        {
@@ -1110,7 +1110,7 @@
         "whatTheAgentLoses": "You lose the chance to verify that the specific email address chosen for the filter won't accidentally catch important messages.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the auto-filled From address in the filter dialog match the sender you actually meant to filter",
+        "check": "Does the auto-filled From address in the filter dialog match the sender you actually meant to filter?",
         "say_example": "The filter auto-filled <a different address> than the one you meant to target"
        }
       ]
@@ -1129,7 +1129,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the filter's action - check whether it is Delete, a label or archive; Delete makes the filter a silent shredder.",
         "speak": "on-event",
-        "check": "what action does the filter dialog show - delete, archive, or a label",
+        "check": "What action does the filter dialog show - delete, archive, or a label?",
         "say_example": "This filter's action is set to <permanently delete>. Every future match disappears with no further asking"
        }
       ]
@@ -1148,7 +1148,7 @@
         "kind": "decision",
         "verify_form": "The apply-to-existing dialog was answered - check which way; applied means the rule just ran over everything already in the box.",
         "speak": "on-event",
-        "check": "does the dialog ask whether to apply the new rule to messages already in the mailbox",
+        "check": "Does the dialog ask whether to apply the new rule to messages already in the mailbox?",
         "say_example": "This rule is also offering to run over <everything already in your mailbox>, not just future mail"
        },
        {
@@ -1161,7 +1161,7 @@
         "kind": "decision",
         "verify_form": "The filter labels the sender's past mail retroactively - check the label and the checkbox; your whole history with this sender was just refiled.",
         "speak": "never",
-        "check": "what label name does the dialog show being applied",
+        "check": "What label name does the dialog show being applied?",
         "say_example": "Filed this batch under <Business Newsletters>"
        }
       ]
@@ -1179,7 +1179,7 @@
         "whatTheAgentLoses": "You lose the ability to personally audit and customize the specific rules dictating how your incoming mail is filtered or blocked.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the settings menu show a 'Filters and blocked addresses' tab",
+        "check": "Does the settings menu show a 'Filters and blocked addresses' tab?",
         "say_example": "Opened <Filters and blocked addresses> to review the rules"
        },
        {
@@ -1191,7 +1191,7 @@
         "whatTheAgentLoses": "You lose the certainty of visually confirming the filter's exact rules and knowing where to manage or delete it in the future.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the saved filter in settings show the same conditions and actions that were just set up",
+        "check": "Does the saved filter in settings show the same conditions and actions that were just set up?",
         "say_example": "The saved rule shows <different conditions> than what was set up a moment ago"
        }
       ]
@@ -1210,7 +1210,7 @@
         "kind": "decision",
         "verify_form": "A sender came off the block list - check which address; unblocking reopens your inbox to them.",
         "speak": "never",
-        "check": "which address does the blocked list show being selected to unblock",
+        "check": "Which address does the blocked list show being selected to unblock?",
         "say_example": "Selected <this address> from the blocked list"
        },
        {
@@ -1222,7 +1222,7 @@
         "whatTheAgentLoses": "You lose the opportunity to manually confirm that the correct email address is being unblocked before the action is executed.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the row show an 'unblock' link for the selected address",
+        "check": "Does the row show an 'unblock' link for the selected address?",
         "say_example": "Used the <unblock> link on that row"
        },
        {
@@ -1235,7 +1235,7 @@
         "kind": "decision",
         "verify_form": "The unblock confirmation was accepted - check the sender it named; their mail lands in your inbox again from now on.",
         "speak": "on-event",
-        "check": "does the confirmation dialog name the sender being unblocked",
+        "check": "Does the confirmation dialog name the sender being unblocked?",
         "say_example": "This lets <this sender> back into the inbox. Go ahead?"
        }
       ]
@@ -1257,7 +1257,7 @@
       "kind": "decision",
       "verify_form": "The agent chose the selection method - check whether it went one-by-one or used the all-at-once trick; the trick has no confirmation step anywhere.",
       "speak": "on-event",
-      "check": "does the screen offer both a manual per-email selection and a bulk selection method with no confirmation step",
+      "check": "Does the screen offer both a manual per-email selection and a bulk selection method with no confirmation step?",
       "say_example": "There's a one-click way to select everything here, and it has no confirmation dialog of its own"
      }
     ],
@@ -1275,7 +1275,7 @@
         "whatTheAgentLoses": "You lose the opportunity to manually review the batch of selected emails to ensure no important messages are accidentally included in the deletion.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the top checkbox select every email visible on the current page",
+        "check": "Does the top checkbox select every email visible on the current page?",
         "say_example": "Selected all <50> emails on this page"
        }
       ]
@@ -1294,7 +1294,7 @@
         "kind": "decision",
         "verify_form": "The agent chose the selection's scope - check whether the banner says this page or every conversation; the difference is 50 versus thousands.",
         "speak": "gate",
-        "check": "does the banner offer to extend the selection from just this page to every conversation matching the search",
+        "check": "Does the banner offer to extend the selection from just this page to every conversation matching the search?",
         "say_example": "Right now <50> are selected. There's a link that would make it all <142> that match this search. Which do you want?"
        },
        {
@@ -1306,7 +1306,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review the filtered emails before bulk selecting them for deletion.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the new label's list show a master checkbox for selecting everything under it",
+        "check": "Does the new label's list show a master checkbox for selecting everything under it?",
         "say_example": "Selected everything under <the new label>"
        },
        {
@@ -1318,7 +1318,7 @@
         "whatTheAgentLoses": "The user loses the awareness of exactly how many emails are being deleted in this batch versus how many remain.",
         "kind": "state-check",
         "speak": "always",
-        "check": "what exact number does the selection banner show as currently selected",
+        "check": "What exact number does the selection banner show as currently selected?",
         "say_example": "<142> are selected right now"
        },
        {
@@ -1330,7 +1330,7 @@
         "whatTheAgentLoses": "The user loses the visual confirmation that the agent successfully expanded the selection beyond the first page before hitting the destructive delete button.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the banner's text change to say all matching conversations are selected, rather than just the page count",
+        "check": "Does the banner's text change to say all matching conversations are selected, rather than just the page count?",
         "say_example": "The banner still reads <the page count>, not <all matching>. The wider selection may not have actually taken"
        }
       ]
@@ -1348,7 +1348,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to personally verify that the targeted emails are actually unwanted rather than important notifications.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "do the sender and subject lines currently on screen match what you intend to process",
+        "check": "Do the sender and subject lines currently on screen match what you intend to process?",
         "say_example": "These are <the retailer newsletters> you meant to target"
        },
        {
@@ -1361,7 +1361,7 @@
         "kind": "decision",
         "verify_form": "The agent unchecked some emails before deleting - check what it kept and what it did not; only you know which of those were worth saving.",
         "speak": "never",
-        "check": "which emails in this list does the person's action leave unchecked",
+        "check": "Which emails in this list does the person's action leave unchecked?",
         "say_example": "Left <the tutorial emails> unchecked so they survive the sweep"
        },
        {
@@ -1374,7 +1374,7 @@
         "kind": "decision",
         "verify_form": "The selection dropdown got a choice - check whether the agent took all or only unread; read mail may be mail you meant to keep.",
         "speak": "on-event",
-        "check": "does the selection dropdown offer an 'unread only' option, and was it used, or does the selection include already-read mail",
+        "check": "Does the selection dropdown offer an 'unread only' option, and was it used, or does the selection include already-read mail?",
         "say_example": "This selection includes <mail you've already read>, not just unread. Read mail may be mail you meant to keep"
        },
        {
@@ -1387,7 +1387,7 @@
         "kind": "decision",
         "verify_form": "The sender's history held receipts as well as promos - check what the agent kept; account records do not come back with a resubscribe.",
         "speak": "gate",
-        "check": "does this sender's mail include non-promotional messages like receipts or account notices alongside the marketing mail",
+        "check": "Does this sender's mail include non-promotional messages like receipts or account notices alongside the marketing mail?",
         "say_example": "This sender also sent <a receipt>. Take everything, or keep the account records?"
        },
        {
@@ -1400,7 +1400,7 @@
         "kind": "decision",
         "verify_form": "A saved-mail label sat inside the wipe's blast radius - check whether the agent protected it; the wipe takes labeled mail too.",
         "speak": "on-event",
-        "check": "does a saved-mail label sit inside the scope of this bulk delete",
+        "check": "Does a saved-mail label sit inside the scope of this bulk delete?",
         "say_example": "<8 emails under Saved Email> are sitting inside this batch. The wipe takes labeled mail too unless it's excluded"
        },
        {
@@ -1431,7 +1431,7 @@
         "kind": "decision",
         "verify_form": "A range-select started at one email - check the top boundary; one row too high and a keeper is inside the range.",
         "speak": "never",
-        "check": "which email does the screen show as the top of the selection range",
+        "check": "Which email does the screen show as the top of the selection range?",
         "say_example": "Started the range at <the earliest message shown>"
        },
        {
@@ -1444,7 +1444,7 @@
         "kind": "decision",
         "verify_form": "The range's bottom boundary was set - check the last selected row; everything between the two clicks goes together.",
         "speak": "never",
-        "check": "which email does the screen show as the bottom of the selection range",
+        "check": "Which email does the screen show as the bottom of the selection range?",
         "say_example": "Ended the range at <the most recent message shown>"
        },
        {
@@ -1457,7 +1457,7 @@
         "kind": "decision",
         "verify_form": "A consecutive chunk from one sender was grabbed - check its first and last dates; the chunk boundary is where mistakes hide.",
         "speak": "never",
-        "check": "what date range does the consecutive chunk from this sender span",
+        "check": "What date range does the consecutive chunk from this sender span?",
         "say_example": "Selected the run of messages from <this sender> spanning <several months>"
        }
       ]
@@ -1475,7 +1475,7 @@
         "whatTheAgentLoses": "The user loses the chance to decide whether to delete or archive the currently selected emails before navigating away.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the screen show emails currently selected in edit mode that need to be cancelled first",
+        "check": "Does the screen show emails currently selected in edit mode that need to be cancelled first?",
         "say_example": "Cancelled the selection to open <a different email>"
        },
        {
@@ -1487,7 +1487,7 @@
         "whatTheAgentLoses": "The user loses the ability to manually tap the avatars and verify exactly which specific emails are being selected for deletion.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the mobile app lack a bulk-select option, requiring tapping each avatar individually",
+        "check": "Does the mobile app lack a bulk-select option, requiring tapping each avatar individually?",
         "say_example": "Tapped each avatar to select mail one at a time"
        }
       ]
@@ -1505,7 +1505,7 @@
         "whatTheAgentLoses": "You lose the ability to utilize undocumented multi-touch gestures to quickly manage and clean up your inbox.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the screen show the hold-and-uncheck sequence used to select everything at once",
+        "check": "Does the screen show the hold-and-uncheck sequence used to select everything at once?",
         "say_example": "Used the hold-and-uncheck trick to select the whole list"
        }
       ]
@@ -1523,7 +1523,7 @@
         "whatTheAgentLoses": "You lose the ability to verify the exact total volume of emails the agent is about to handle before the cleanup begins.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the folder show fully synced, or still checking for mail",
+        "check": "Does the folder show fully synced, or still checking for mail?",
         "say_example": "The folder still says <checking for mail>, so the count isn't final yet"
        },
        {
@@ -1535,7 +1535,7 @@
         "whatTheAgentLoses": "The user loses the ability to monitor the email dates as they scroll to ensure they aren't loading and subsequently deleting messages from a timeframe they want to keep.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the screen say you need to scroll to load more mail before it can be selected",
+        "check": "Does the screen say you need to scroll to load more mail before it can be selected?",
         "say_example": "Scrolled down to load the older mail before selecting"
        }
       ]
@@ -1561,7 +1561,7 @@
         "kind": "decision",
         "verify_form": "Check whether the batch was deleted or archived - recovery later depends entirely on that choice.",
         "speak": "gate",
-        "check": "does the interface offer both delete and archive for the selected mail, and which one is chosen",
+        "check": "Does the interface offer both delete and archive for the selected mail, and which one is chosen?",
         "say_example": "Delete or archive <these>? Archive keeps a searchable copy, delete doesn't"
        },
        {
@@ -1573,7 +1573,7 @@
         "whatTheAgentLoses": "The user loses the ability to decide whether to permanently destroy these messages or keep them hidden but searchable.",
         "kind": "state-check",
         "speak": "never",
-        "check": "did the toolbar action taken show delete rather than archive",
+        "check": "Did the toolbar action taken show delete rather than archive?",
         "say_example": "Chose delete over archive for <this sender's mail>"
        },
        {
@@ -1586,7 +1586,7 @@
         "kind": "decision",
         "verify_form": "The dropdown offered delete, block and report-spam - check which the agent used on this email; they escalate very differently.",
         "speak": "on-event",
-        "check": "does the dropdown offer delete, block sender, and report spam for this one message, and which was chosen",
+        "check": "Does the dropdown offer delete, block sender, and report spam for this one message, and which was chosen?",
         "say_example": "This dropdown offers <delete>, <block>, or <report spam> for one message. They escalate differently"
        },
        {
@@ -1599,7 +1599,7 @@
         "kind": "decision",
         "verify_form": "The toolbar action on the selection was the agent's pick - check whether it archived, deleted or marked; each leaves your inbox in a different state.",
         "speak": "on-event",
-        "check": "does the toolbar offer archive, delete, and mark-as-read for the selection, and which was applied",
+        "check": "Does the toolbar offer archive, delete, and mark-as-read for the selection, and which was applied?",
         "say_example": "Applied <archive> to the selection rather than delete or mark-as-read"
        }
       ]
@@ -1617,7 +1617,7 @@
         "whatTheAgentLoses": "The user loses the ability to utilize fast, hover-based visual shortcuts for inbox management that are not exposed in the static DOM.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does hovering over a row reveal a quick-delete icon without opening or selecting the email",
+        "check": "Does hovering over a row reveal a quick-delete icon without opening or selecting the email?",
         "say_example": "Used the hover trash icon to remove <one message> without opening it"
        },
        {
@@ -1629,7 +1629,7 @@
         "whatTheAgentLoses": "You lose the immediate visual reassurance of the confirmation banner proving that the correct number of emails were successfully deleted.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the banner state a specific count of conversations moved to the trash",
+        "check": "Does the banner state a specific count of conversations moved to the trash?",
         "say_example": "The banner confirms <275> conversations moved to trash"
        },
        {
@@ -1642,7 +1642,7 @@
         "kind": "decision",
         "verify_form": "830 selected emails went to the delete button - check the count before it fired; that is the whole Social tab.",
         "speak": "never",
-        "check": "what count does the delete button's selection show before it's clicked",
+        "check": "What count does the delete button's selection show before it's clicked?",
         "say_example": "<830> were selected before the delete button was used"
        },
        {
@@ -1655,7 +1655,7 @@
         "kind": "decision",
         "verify_form": "The wipe ran with or without a backup - check whether anything was exported first; after Empty Trash there is no copy.",
         "speak": "on-event",
-        "check": "does the tool's warning screen advise backing up mail before this mass-deletion method runs, and was anything exported first",
+        "check": "Does the tool's warning screen advise backing up mail before this mass-deletion method runs, and was anything exported first?",
         "say_example": "This tool warns to back up first. Nothing was exported before running it"
        },
        {
@@ -1668,7 +1668,7 @@
         "kind": "decision",
         "verify_form": "The trash tap took the selected batch - check the count in the bar before it went; on mobile there was no confirm dialog after it.",
         "speak": "on-event",
-        "check": "does tapping delete here skip straight to removal with no confirmation dialog afterward",
+        "check": "Does tapping delete here skip straight to removal with no confirmation dialog afterward?",
         "say_example": "This trash tap has no confirm dialog after it. What's in the selection bar right now is what goes"
        }
       ]
@@ -1687,7 +1687,7 @@
         "kind": "decision",
         "verify_form": "The confirm-bulk-action dialog was accepted - check the count and scope it named; that dialog was the last stop before the sweep.",
         "speak": "gate",
-        "check": "what count and scope does the confirm-bulk-action dialog state for this delete or archive",
+        "check": "What count and scope does the confirm-bulk-action dialog state for this delete or archive?",
         "say_example": "This affects <all conversations matching this search>, <1,660> of them. Go ahead?"
        },
        {
@@ -1700,7 +1700,7 @@
         "kind": "decision",
         "verify_form": "The archive-selected popup was confirmed - check the count; archived mail leaves the inbox but keeps existing, which may or may not be what you meant.",
         "speak": "never",
-        "check": "does the popup confirm archiving the selected messages, and how many",
+        "check": "Does the popup confirm archiving the selected messages, and how many?",
         "say_example": "Confirmed archiving <the selected messages>. They stay, just out of the inbox"
        }
       ]
@@ -1718,7 +1718,7 @@
         "whatTheAgentLoses": "You lose the ability to decide whether to trust the system to finish the delayed deletion or to manually intervene and retry.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "are the supposedly-deleted emails still visible in the list after the toast says the delete is processing",
+        "check": "Are the supposedly-deleted emails still visible in the list after the toast says the delete is processing?",
         "say_example": "The toast says it's processing, but <these emails> are still showing in the list"
        },
        {
@@ -1730,7 +1730,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the bulk deletion fully completed if the agent navigates away before the system confirms the action.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the screen still show a 'Loading...' indicator, or has the confirmation toast appeared",
+        "check": "Does the screen still show a 'Loading...' indicator, or has the confirmation toast appeared?",
         "say_example": "Waited for <the loading indicator> to clear before moving on"
        },
        {
@@ -1742,7 +1742,7 @@
         "whatTheAgentLoses": "The user loses the time saved by navigating away to other tasks if the agent unnecessarily idles on the page waiting for the visible email count to drop to zero.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the banner say the remaining conversations will keep moving to Trash in the background",
+        "check": "Does the banner say the remaining conversations will keep moving to Trash in the background?",
         "say_example": "Left the tab open while the rest moved to Trash in the background"
        }
       ]
@@ -1761,7 +1761,7 @@
         "kind": "decision",
         "verify_form": "The agent named a new label - check the name; it is your filing system it just extended.",
         "speak": "never",
-        "check": "what name does the new-label dialog show being entered",
+        "check": "What name does the new-label dialog show being entered?",
         "say_example": "Named the new label <Business Newsletters>"
        },
        {
@@ -1774,7 +1774,7 @@
         "kind": "decision",
         "verify_form": "A label color was picked - check that it reads correctly against the labels you already use.",
         "speak": "never",
-        "check": "which color does the label's options menu show being chosen",
+        "check": "Which color does the label's options menu show being chosen?",
         "say_example": "Picked <teal> for the label color"
        },
        {
@@ -1787,7 +1787,7 @@
         "kind": "decision",
         "verify_form": "The label landed on an email - check which label on which mail; a filing mistake hides mail rather than deleting it.",
         "speak": "never",
-        "check": "does the Labels dropdown show a specific label being applied to this email",
+        "check": "Does the Labels dropdown show a specific label being applied to this email?",
         "say_example": "Applied <Business Newsletters> to this email"
        },
        {
@@ -1800,7 +1800,7 @@
         "kind": "decision",
         "verify_form": "The agent created a label instead of deleting - check that the category it invented matches how you actually organize.",
         "speak": "never",
-        "check": "does the sidebar show a new-label dialog being opened for this sender",
+        "check": "Does the sidebar show a new-label dialog being opened for this sender?",
         "say_example": "Created a new label for <this sender's> mail"
        },
        {
@@ -1813,7 +1813,7 @@
         "kind": "decision",
         "verify_form": "One label went onto several emails at once - check the batch; everything selected got filed the same way.",
         "speak": "never",
-        "check": "how many emails does the screen show selected when the label is applied",
+        "check": "How many emails does the screen show selected when the label is applied?",
         "say_example": "Applied the label to all <4> selected emails at once"
        },
        {
@@ -1826,7 +1826,7 @@
         "kind": "decision",
         "verify_form": "The agent named and nested the label - check the parent it chose; nesting decides where you will look for this mail later.",
         "speak": "never",
-        "check": "what name does the new-label dialog show being entered",
+        "check": "What name does the new-label dialog show being entered?",
         "say_example": "Named the new label <Monday Digests>"
        },
        {
@@ -1839,7 +1839,7 @@
         "kind": "decision",
         "verify_form": "The agent chose which emails get the new sub-label - check the picks against your own filing.",
         "speak": "never",
-        "check": "which email does the screen show being filed under the new sub-label",
+        "check": "Which email does the screen show being filed under the new sub-label?",
         "say_example": "Filed <this message> under the new sub-label"
        },
        {
@@ -1852,7 +1852,7 @@
         "kind": "decision",
         "verify_form": "The label name collided and the agent invented a new one - check the name it settled on; it is now part of your system.",
         "speak": "never",
-        "check": "does the dialog show a naming-conflict error requiring a new name",
+        "check": "Does the dialog show a naming-conflict error requiring a new name?",
         "say_example": "Renamed the label to <Newsletters 2> after the conflict"
        },
        {
@@ -1865,7 +1865,7 @@
         "kind": "decision",
         "verify_form": "Label appearance was set - check the color against the labels you already scan for.",
         "speak": "never",
-        "check": "does the label's options menu show color or appearance settings being changed",
+        "check": "Does the label's options menu show color or appearance settings being changed?",
         "say_example": "Changed the new label's color to <stand out from the others>"
        },
        {
@@ -1878,7 +1878,7 @@
         "kind": "decision",
         "verify_form": "The agent labeled rather than deleted - check the label it applied; filing changes where mail lives, not whether it exists.",
         "speak": "never",
-        "check": "does the toolbar show a Labels option being used instead of archive or delete",
+        "check": "Does the toolbar show a Labels option being used instead of archive or delete?",
         "say_example": "Filed <this email> under a label instead of deleting it"
        },
        {
@@ -1891,7 +1891,7 @@
         "kind": "decision",
         "verify_form": "A label was chosen from your list - check that it is the one that means what this mail is.",
         "speak": "never",
-        "check": "which label from the dropdown does the screen show being chosen",
+        "check": "Which label from the dropdown does the screen show being chosen?",
         "say_example": "Applied <the Action Required label> to these emails"
        }
       ]
@@ -1910,7 +1910,7 @@
         "kind": "decision",
         "verify_form": "The agent saved one email from the sweep - check which one and where it went; keep-worthiness is yours to judge.",
         "speak": "never",
-        "check": "which email does the person's action move to another folder rather than delete",
+        "check": "Which email does the person's action move to another folder rather than delete?",
         "say_example": "Kept <this receipt> by moving it to another folder"
        },
        {
@@ -1923,7 +1923,7 @@
         "kind": "decision",
         "verify_form": "A destination was picked for the moved email - check the folder; filed wrong is functionally lost.",
         "speak": "never",
-        "check": "which folder does the dropdown show being chosen as the destination",
+        "check": "Which folder does the dropdown show being chosen as the destination?",
         "say_example": "Moved this email to <the Reference folder>"
        },
        {
@@ -1936,7 +1936,7 @@
         "kind": "decision",
         "verify_form": "The mass-selected mail went to a folder - check which one on the picker; Trash, Junk and a save folder are one tap apart.",
         "speak": "on-event",
-        "check": "does the folder picker list Trash or Junk alongside ordinary save folders",
+        "check": "Does the folder picker list Trash or Junk alongside ordinary save folders?",
         "say_example": "Trash, Junk, and <a save folder> are all one tap apart on this picker. Moved to <the save folder>"
        }
       ]
@@ -1955,7 +1955,7 @@
         "kind": "decision",
         "verify_form": "The agent changed which category tabs are on - check which boxes it ticked in Settings; tab changes re-sort your whole inbox, not just this batch.",
         "speak": "on-event",
-        "check": "which category checkboxes does the settings screen show enabled, such as Promotions or Updates",
+        "check": "Which category checkboxes does the settings screen show enabled, such as Promotions or Updates?",
         "say_example": "Turned on <the Promotions category>. That re-sorts the whole inbox, not just this batch"
        },
        {
@@ -1967,7 +1967,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally review and customize the specific filtering and blocking rules applied to your inbox.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the quick settings panel show a 'see all settings' option",
+        "check": "Does the quick settings panel show a 'see all settings' option?",
         "say_example": "Opened full settings for more cleanup options"
        },
        {
@@ -1980,7 +1980,7 @@
         "kind": "decision",
         "verify_form": "The agent changed which category tabs your inbox shows - check the checkboxes it saved; the layout change outlives the cleanup.",
         "speak": "on-event",
-        "check": "which category checkbox does the settings screen show unchecked or hidden",
+        "check": "Which category checkbox does the settings screen show unchecked or hidden?",
         "say_example": "Hid <the Social category>. That layout change stays after this cleanup"
        }
       ]
@@ -2005,7 +2005,7 @@
         "whatTheAgentLoses": "You lose the chance to review the contents of the Trash before the emails are permanently and irreversibly removed.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the sidebar show a Trash folder to navigate to before permanently deleting",
+        "check": "Does the sidebar show a Trash folder to navigate to before permanently deleting?",
         "say_example": "Opened the Trash folder"
        },
        {
@@ -2017,7 +2017,7 @@
         "whatTheAgentLoses": "You lose the chance to visually confirm that only the intended marketing emails were deleted before they are permanently removed.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the toast confirm messages were moved to Trash, prompting a check of that folder",
+        "check": "Does the toast confirm messages were moved to Trash, prompting a check of that folder?",
         "say_example": "Checked Trash to confirm <the deleted mail> landed there"
        }
       ]
@@ -2036,7 +2036,7 @@
         "kind": "decision",
         "verify_form": "The agent chose between emptying the Bin now and the 30-day wait - check which; emptying now forfeits your recovery window.",
         "speak": "on-event",
-        "check": "does the banner offer 'empty now' as an alternative to the normal 30-day automatic deletion",
+        "check": "Does the banner offer 'empty now' as an alternative to the normal 30-day automatic deletion?",
         "say_example": "Trash normally clears in 30 days on its own. Emptying it now gives up that window early"
        },
        {
@@ -2049,7 +2049,7 @@
         "kind": "decision",
         "verify_form": "Empty Trash now was clicked - check the count it named; permanent means the 30-day recovery is gone.",
         "speak": "never",
-        "check": "does the 'Empty Trash now' link state a message count before it's clicked",
+        "check": "Does the 'Empty Trash now' link state a message count before it's clicked?",
         "say_example": "Clicked 'Empty Trash now' on <41,320> messages"
        }
       ]
@@ -2068,7 +2068,7 @@
         "kind": "decision",
         "verify_form": "The permanent-delete confirmation was accepted - check the count; nothing after this dialog can bring those back.",
         "speak": "gate",
-        "check": "what message count does the permanent-delete warning dialog state",
+        "check": "What message count does the permanent-delete warning dialog state?",
         "say_example": "This permanently deletes <41,320> messages. Nothing after this brings them back. Go ahead?"
        }
       ]
@@ -2086,7 +2086,7 @@
         "whatTheAgentLoses": "You lose the chance to review the deleted items and rescue specific emails from permanent deletion.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the Trash folder show a move-back option like Inbox for recovering a message",
+        "check": "Does the Trash folder show a move-back option like Inbox for recovering a message?",
         "say_example": "Moved <a mistakenly deleted message> back to the inbox"
        }
       ]
@@ -2105,7 +2105,7 @@
         "kind": "decision",
         "verify_form": "The undo window was open after the delete - check whether anything in that batch needed rescuing while the toast still offered it.",
         "speak": "on-event",
-        "check": "is the undo option for the bulk delete still available on screen right now",
+        "check": "Is the undo option for the bulk delete still available on screen right now?",
         "say_example": "The undo option is still up. Anything in <that batch> worth rescuing before it closes?"
        }
       ]
@@ -2130,7 +2130,7 @@
         "whatTheAgentLoses": "You lose the ability to ensure the agent uses your existing account rather than unnecessarily signing up for a new trial.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "does the homepage offer both Sign In and a free trial, and which is chosen",
+        "check": "Does the homepage offer both Sign In and a free trial, and which is chosen?",
         "say_example": "Chose <start a free trial> over signing in"
        },
        {
@@ -2143,7 +2143,7 @@
         "kind": "decision",
         "verify_form": "The agent brought in a third-party service - confirm you wanted an outside tool involved at all; the alternative was doing it inside the mailbox.",
         "speak": "on-event",
-        "check": "is a third-party service being brought in to bulk-unsubscribe, rather than working inside the mailbox itself",
+        "check": "Is a third-party service being brought in to bulk-unsubscribe, rather than working inside the mailbox itself?",
         "say_example": "This would hand <an outside tool> access to bulk-unsubscribe. The alternative is doing it inside the mailbox"
        }
       ]
@@ -2162,7 +2162,7 @@
         "kind": "decision",
         "verify_form": "The terms box got checked - check whether anyone read what the tool may do with your mail data; agreeing is yours to give.",
         "speak": "never",
-        "check": "does the screen require checking a box agreeing to terms and a privacy policy before continuing",
+        "check": "Does the screen require checking a box agreeing to terms and a privacy policy before continuing?",
         "say_example": "Checked the terms and privacy box without opening either"
        },
        {
@@ -2175,7 +2175,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted the tool's terms and privacy policy - check whether that trade of your email data is one you would make.",
         "speak": "on-event",
-        "check": "does the privacy popup describe how the tool will use your email data, and is 'I Accept' being clicked",
+        "check": "Does the privacy popup describe how the tool will use your email data, and is 'I Accept' being clicked?",
         "say_example": "This popup describes how <the tool> can use your email data. Accepted it to continue"
        }
       ]
@@ -2195,7 +2195,7 @@
         "kind": "decision",
         "verify_form": "The automatic connection was unavailable and the agent took the manual path - check that you accept the app-password route it committed to; that path mints a full-access credential.",
         "speak": "on-event",
-        "check": "does the screen offer an automatic upgrade or a manual app-password route, and which is chosen",
+        "check": "Does the screen offer an automatic upgrade or a manual app-password route, and which is chosen?",
         "say_example": "The automatic option isn't available here. Going the app-password route mints a full-access credential instead"
        }
       ],
@@ -2213,7 +2213,7 @@
           "whatTheAgentLoses": "The user loses control over which specific personal email account the agent accesses and modifies.",
           "kind": "intent-check",
           "speak": "if-wrong",
-          "check": "does the provider chosen to sign in with match the account that actually holds the marketing mail",
+          "check": "Does the provider chosen to sign in with match the account that actually holds the marketing mail?",
           "say_example": "Signed in with <Provider>. Check that's the account with the mail you're cleaning"
          },
          {
@@ -2225,7 +2225,7 @@
           "whatTheAgentLoses": "You lose the ability to control which of your specific email accounts is shared with and scanned by this third-party service.",
           "kind": "intent-check",
           "speak": "if-wrong",
-          "check": "does the email address entered to link match the account intended for this cleanup",
+          "check": "Does the email address entered to link match the account intended for this cleanup?",
           "say_example": "Linked <this address> to the tool. Check that's the mailbox you meant to hand over"
          }
         ]
@@ -2244,7 +2244,7 @@
           "kind": "decision",
           "verify_form": "The agent granted the tool permission to read and permanently delete your mail - confirm that grant is one you accept; it outlives this session.",
           "speak": "gate",
-          "check": "does the consent screen state the tool can read, compose, send, and permanently delete all mail in this account",
+          "check": "Does the consent screen state the tool can read, compose, send, and permanently delete all mail in this account?",
           "say_example": "This tool is asking to read, send, and permanently delete mail in this account, for good, not just today. Grant it?"
          },
          {
@@ -2257,7 +2257,7 @@
           "kind": "decision",
           "verify_form": "The consent screen listed mail, profile and contacts - check what the agent granted; contacts were not needed to unsubscribe from anything.",
           "speak": "on-event",
-          "check": "does the consent screen ask for contacts or profile access in addition to mail",
+          "check": "Does the consent screen ask for contacts or profile access in addition to mail?",
           "say_example": "This is also asking for <contacts and profile>, not just mail. None of that was needed to unsubscribe from anything"
          }
         ]
@@ -2276,7 +2276,7 @@
           "kind": "decision",
           "verify_form": "The agent turned on 2-Step Verification to satisfy the tool - check your Google security settings for the change; it reshapes how you sign in everywhere, not just here.",
           "speak": "on-event",
-          "check": "does the screen require enabling 2-Step Verification before an app password can be created",
+          "check": "Does the screen require enabling 2-Step Verification before an app password can be created?",
           "say_example": "Turning on 2-Step Verification here changes how you sign in everywhere, not just for this tool"
          },
          {
@@ -2289,7 +2289,7 @@
           "kind": "decision",
           "verify_form": "A password prompt was satisfied mid-flow - check who typed it; an agent that cleared it was holding your password.",
           "speak": "gate",
-          "check": "does the sign-in screen ask for the account password",
+          "check": "Does the sign-in screen ask for the account password?",
           "say_example": "This needs your password. That's yours to type, not mine"
          }
         ]
@@ -2308,7 +2308,7 @@
           "kind": "decision",
           "verify_form": "The agent named the new app password - check the label on the App passwords page; an unrecognizable name is the one you fail to revoke later.",
           "speak": "never",
-          "check": "what label does the App passwords page show being entered for the new password",
+          "check": "What label does the App passwords page show being entered for the new password?",
           "say_example": "Named the app password <Unroll cleanup>"
          },
          {
@@ -2321,7 +2321,7 @@
           "kind": "decision",
           "verify_form": "A full-access app password was generated - check where the agent put the copy; a credential it kept is one you cannot see or revoke from memory.",
           "speak": "on-event",
-          "check": "does the screen show a 16-character app password, and where does it get copied to",
+          "check": "Does the screen show a 16-character app password, and where does it get copied to?",
           "say_example": "This 16-character password grants full account access. It should go straight to <the tool>, not sit anywhere it was kept"
          }
         ]
@@ -2340,7 +2340,7 @@
           "kind": "decision",
           "verify_form": "The agent handed the tool a Google app password - confirm you accept that grant; it gives the service complete access to the account, not just this cleanup.",
           "speak": "gate",
-          "check": "is a Google app password being entered to grant this third-party service access to the inbox",
+          "check": "Is a Google app password being entered to grant this third-party service access to the inbox?",
           "say_example": "This app password gives <the tool> full access to the account, not just today's cleanup. Enter it?"
          },
          {
@@ -2352,7 +2352,7 @@
           "whatTheAgentLoses": "You lose the ability to securely handle the sensitive app password yourself and verify exactly which third-party service is receiving it.",
           "kind": "state-check",
           "speak": "never",
-          "check": "does the screen point back to the third-party tool's tab to paste the password",
+          "check": "Does the screen point back to the third-party tool's tab to paste the password?",
           "say_example": "Went back to <the tool's tab> to paste the password"
          },
          {
@@ -2364,7 +2364,7 @@
           "whatTheAgentLoses": "A person delegating to an agent loses the chance to visually confirm that the app password was successfully generated and applied before moving forward.",
           "kind": "state-check",
           "speak": "never",
-          "check": "do both setup steps show a green checkmark before Continue is clicked",
+          "check": "Do both setup steps show a green checkmark before Continue is clicked?",
           "say_example": "Both steps show green. Clicked Continue"
          }
         ]
@@ -2384,7 +2384,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally review the 10 identified subscriptions and decide which specific senders to keep.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the screen confirm a specific number of subscriptions found, with a 'Start Editing' option",
+        "check": "Does the screen confirm a specific number of subscriptions found, with a 'Start Editing' option?",
         "say_example": "Found <10> subscriptions. Started editing them"
        },
        {
@@ -2397,7 +2397,7 @@
         "kind": "decision",
         "verify_form": "The agent chose how to wait out the scan - check whether it parked on the screen or asked for the email notice; only you know if the wait was worth it.",
         "speak": "never",
-        "check": "does the screen offer waiting on the page or an email notification once the scan finishes",
+        "check": "Does the screen offer waiting on the page or an email notification once the scan finishes?",
         "say_example": "Waited on the page rather than requesting an email notice"
        }
       ]
@@ -2416,7 +2416,7 @@
         "kind": "decision",
         "verify_form": "The agent picked one of the tool's cleanup features - check which card it clicked; stopping all spam and unsubscribing do very different things to your mail.",
         "speak": "on-event",
-        "check": "does the dashboard show multiple distinct features, like stopping spam versus unsubscribing, and which was picked",
+        "check": "Does the dashboard show multiple distinct features, like stopping spam versus unsubscribing, and which was picked?",
         "say_example": "Picked <unsubscribe> off this dashboard, not <stop all spam>. They do very different things to the mail"
        }
       ]
@@ -2435,7 +2435,7 @@
         "kind": "decision",
         "verify_form": "The agent ticked senders in the tool's list - read the list it removed; a wanted newsletter in that batch is gone with one click.",
         "speak": "gate",
-        "check": "which senders does the subscription list show ticked for removal",
+        "check": "Which senders does the subscription list show ticked for removal?",
         "say_example": "This list has <Coverr>, <Feedspot>, and <7 others> ticked. All of them get unsubscribed at once. Confirm the list?"
        },
        {
@@ -2448,7 +2448,7 @@
         "kind": "decision",
         "verify_form": "The agent applied an action to the selected subscriptions - check whether it chose unsubscribe, pause or a folder; those differ in what you can undo.",
         "speak": "on-event",
-        "check": "does the tool offer unsubscribe, pause, or move-to-folder for the selected subscriptions, and which is chosen",
+        "check": "Does the tool offer unsubscribe, pause, or move-to-folder for the selected subscriptions, and which is chosen?",
         "say_example": "Chose <unsubscribe> for these, not pause or a folder. Those undo differently"
        },
        {
@@ -2461,7 +2461,7 @@
         "kind": "decision",
         "verify_form": "The agent picked which mailing list to drop first - read the row it chose; the order only matters if a wrong row is in it.",
         "speak": "never",
-        "check": "which mailing list does the list show being processed first",
+        "check": "Which mailing list does the list show being processed first?",
         "say_example": "Started with <the first list in the row>"
        },
        {
@@ -2474,7 +2474,7 @@
         "kind": "decision",
         "verify_form": "The confirmation-suppressing toggle got set - check it; every unsubscribe after this one happens without asking you.",
         "speak": "on-event",
-        "check": "does the unsubscribe modal include checkboxes for skipping future confirmations and trashing existing messages",
+        "check": "Does the unsubscribe modal include checkboxes for skipping future confirmations and trashing existing messages?",
         "say_example": "This box would skip asking you again, and this one trashes past mail from every sender you unsubscribe from here. Both stay checked?"
        },
        {
@@ -2487,7 +2487,7 @@
         "kind": "decision",
         "verify_form": "The agent stopped at some number of removals - check the remaining list; where to stop is a judgment about which of the rest still matter to you.",
         "speak": "never",
-        "check": "what count does the screen show as removed versus how many active subscriptions remain",
+        "check": "What count does the screen show as removed versus how many active subscriptions remain?",
         "say_example": "Stopped after <37> removals, <82> still active"
        }
       ]
@@ -2506,7 +2506,7 @@
         "kind": "decision",
         "verify_form": "The agent narrowed the tool's view with filters - check which label, size or date bounds it set; those bounds decide what the next trash click takes.",
         "speak": "never",
-        "check": "what filter fields does the screen show - labels, size, or dates",
+        "check": "What filter fields does the screen show - labels, size, or dates?",
         "say_example": "Adjusted the <label> filter to narrow the list"
        },
        {
@@ -2519,7 +2519,7 @@
         "kind": "decision",
         "verify_form": "A date cutoff was set on the calendar - check the end date the agent picked; one day off moves this year's mail into the deletable pile.",
         "speak": "on-event",
-        "check": "what end date does the calendar picker show being selected",
+        "check": "What end date does the calendar picker show being selected?",
         "say_example": "Set the end date to <a date one day before this year's mail>. That's the difference between last year and this one"
        },
        {
@@ -2532,7 +2532,7 @@
         "kind": "decision",
         "verify_form": "The agent filtered by one of your labels - check which label it chose; the label picked is the category that gets emptied.",
         "speak": "on-event",
-        "check": "which label does the dropdown show being selected as the filter",
+        "check": "Which label does the dropdown show being selected as the filter?",
         "say_example": "Filtered to <the Coupons label>. Whatever's in that category gets swept"
        },
        {
@@ -2545,7 +2545,7 @@
         "kind": "decision",
         "verify_form": "The agent set the age, read and star filters - check what each dropdown says; starred mail is only safe if the filter says so.",
         "speak": "on-event",
-        "check": "do the age, read-status, or star filters show being set, and does the star filter include or exclude starred mail",
+        "check": "Do the age, read-status, or star filters show being set, and does the star filter include or exclude starred mail?",
         "say_example": "The star filter is set to <include starred mail>. Starring usually means you meant to keep it"
        },
        {
@@ -2557,7 +2557,7 @@
         "whatTheAgentLoses": "You lose the ability to verify if a filter's results actually match your broader cleanup goals before taking destructive action.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the count of emails caught by the date filter match the total available for that period",
+        "check": "Does the count of emails caught by the date filter match the total available for that period?",
         "say_example": "The date filter only caught <73> of <131>. Some of what you want gone would be left behind"
        },
        {
@@ -2569,7 +2569,7 @@
         "whatTheAgentLoses": "You lose the ability to manually review the filtered list and adjust the search criteria to ensure no important emails are accidentally included.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the selected count under this filter match the total shown available",
+        "check": "Does the selected count under this filter match the total shown available?",
         "say_example": "Only <99> of <126> Coupons emails are selected. The rest would stay behind"
        }
       ]
@@ -2588,7 +2588,7 @@
         "kind": "decision",
         "verify_form": "The tool offered a standing auto-clean rule and the agent picked one option - check which radio was active; the rule version keeps acting after you stop watching.",
         "speak": "gate",
-        "check": "does the popup offer deleting just the selected emails or creating a standing rule for future ones from this sender",
+        "check": "Does the popup offer deleting just the selected emails or creating a standing rule for future ones from this sender?",
         "say_example": "This can just trash <what's selected>, or set up a rule that keeps trashing <this sender's> future mail on its own. Which one?"
        }
       ]
@@ -2607,7 +2607,7 @@
         "kind": "decision",
         "verify_form": "The agent hit the paywall and picked the trial - check what it signed you up for; trials attached to your mailbox have a way of billing later.",
         "speak": "on-event",
-        "check": "does the screen require a paid account or free trial to use the unsubscribe feature, and what message or subscription caps does the trial state",
+        "check": "Does the screen require a paid account or free trial to use the unsubscribe feature, and what message or subscription caps does the trial state?",
         "say_example": "Unsubscribing here needs <a paid account or trial>. The trial caps you at <1,000 messages and 25 subscriptions>"
        },
        {
@@ -2619,7 +2619,7 @@
         "whatTheAgentLoses": "An agent might get stuck on a paywall or unexpectedly agree to charges because it cannot resolve the contradiction between the audio instructions and the visual warning.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does an on-screen popup say the unsubscribe feature needs a paid account, even though the flow was described as free",
+        "check": "Does an on-screen popup say the unsubscribe feature needs a paid account, even though the flow was described as free?",
         "say_example": "This was framed as free, but the popup on screen says <unsubscribing needs a paid account>"
        },
        {
@@ -2632,7 +2632,7 @@
         "kind": "decision",
         "verify_form": "The agent set the unsubscribe modal's toggles and took the trial - check both switches; move-existing-to-trash deletes history, and do-not-ask-again removes your future say.",
         "speak": "on-event",
-        "check": "does the trial signup include a toggle for moving existing messages to trash",
+        "check": "Does the trial signup include a toggle for moving existing messages to trash?",
         "say_example": "Starting this trial also offered to trash <existing messages> from every sender selected. That toggle was left <on>"
        },
        {
@@ -2645,7 +2645,7 @@
         "kind": "decision",
         "verify_form": "The tool demanded a share to continue and the agent picked a channel - check what was posted where; your accounts should not advertise a tool as payment.",
         "speak": "on-event",
-        "check": "what does the share modal require to unlock more unsubscribes, and which channels does it offer",
+        "check": "What does the share modal require to unlock more unsubscribes, and which channels does it offer?",
         "say_example": "This tool wants a post on <a social account> to unlock more than 5 unsubscribes. That's advertising the tool from your own account, not a normal payment"
        },
        {
@@ -2658,7 +2658,7 @@
         "kind": "decision",
         "verify_form": "A promotional post went toward your Facebook - check its audience and whether it actually posted; Only Me was the least bad setting, but posting at all was your call.",
         "speak": "on-event",
-        "check": "does the share dialog show a specific post about to go out on a named social account, and to which audience",
+        "check": "Does the share dialog show a specific post about to go out on a named social account, and to which audience?",
         "say_example": "This would post about <the tool> to <Only Me> on your account. Still counts as posting, even at that audience setting"
        }
       ]
@@ -2677,7 +2677,7 @@
         "kind": "decision",
         "verify_form": "The tool's summary offered social sharing and the agent moved on - check the stats it skipped past; the numbers are your record of what happened.",
         "speak": "never",
-        "check": "does the summary screen offer sharing cleanup stats on social media before continuing",
+        "check": "Does the summary screen offer sharing cleanup stats on social media before continuing?",
         "say_example": "Skipped sharing the stats and went straight to the dashboard"
        },
        {
@@ -2689,7 +2689,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the chance to personally review the unsubscribed list and catch any important senders that were removed by mistake.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does the dashboard default to a 'New' tab rather than 'Unsubscribed'",
+        "check": "Does the dashboard default to a 'New' tab rather than 'Unsubscribed'?",
         "say_example": "Switched to <the Unsubscribed tab> to see what was just done"
        },
        {
@@ -2702,7 +2702,7 @@
         "kind": "decision",
         "verify_form": "The tool flagged more subscriptions to sort - check whether the agent went back or stopped; the remainder stays live either way.",
         "speak": "never",
-        "check": "does an 'Edit Subscriptions' link show a badge for more subscriptions to review",
+        "check": "Does an 'Edit Subscriptions' link show a badge for more subscriptions to review?",
         "say_example": "<3> more subscriptions are flagged as new, still unreviewed"
        },
        {
@@ -2715,7 +2715,7 @@
         "kind": "decision",
         "verify_form": "The rollup delivery time was set and the summary shown - check both; the digest now arrives on the agent's schedule, not yours, unless you change it.",
         "speak": "if-wrong",
-        "check": "does the summary screen's stated counts match what was actually unsubscribed and rolled up",
+        "check": "Does the summary screen's stated counts match what was actually unsubscribed and rolled up?",
         "say_example": "This summary says <37> unsubscribed, but the count run through the flow was <different>"
        }
       ]
@@ -2734,7 +2734,7 @@
         "kind": "decision",
         "verify_form": "The agent asked the tool to delete your account and data - check the confirmation and the error that followed; an errored deletion may mean your data is still there.",
         "speak": "on-event",
-        "check": "does the Data Removal tab offer deleting the account and data from this third-party service",
+        "check": "Does the Data Removal tab offer deleting the account and data from this third-party service?",
         "say_example": "Requested account and data deletion from <the tool>"
        },
        {
@@ -2747,7 +2747,7 @@
         "kind": "decision",
         "verify_form": "A data-integrity error appeared and the agent clicked past it - check the error text; dismissed errors do not resolve themselves.",
         "speak": "on-event",
-        "check": "does the screen show a data integrity error, and was it dismissed or investigated",
+        "check": "Does the screen show a data integrity error, and was it dismissed or investigated?",
         "say_example": "A <data integrity> error appeared and was dismissed without being read"
        },
        {
@@ -2760,7 +2760,7 @@
         "kind": "decision",
         "verify_form": "The agent picked logout from the account menu - check that the session actually ended; staying signed in leaves the tool live on your mailbox.",
         "speak": "on-event",
-        "check": "does the account menu show a logout option, and was it used before leaving",
+        "check": "Does the account menu show a logout option, and was it used before leaving?",
         "say_example": "Left the account menu without logging out. The tool stays connected to the mailbox"
        }
       ]
@@ -2785,7 +2785,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the immediate opportunity to click the 'Undo' link if the wrong emails were accidentally deleted.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the toast notification confirm the selected conversations moved to trash",
+        "check": "Does the toast notification confirm the selected conversations moved to trash?",
         "say_example": "Toast confirms <these> moved to trash"
        }
       ]
@@ -2803,7 +2803,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the agent is handling the correct scope of emails if it fails to notice the discrepancy in the unread count.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the unread total from the search match the inbox's own unread count",
+        "check": "Does the unread total from the search match the inbox's own unread count?",
         "say_example": "The search says <18,940> unread, the inbox sidebar says <18,400>. Those don't agree"
        },
        {
@@ -2815,7 +2815,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the task was completed in a single, continuous session on their specific account without unexpected context switches.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the same mailbox and account stay on screen throughout, with counts that agree step to step",
+        "check": "Does the same mailbox and account stay on screen throughout, with counts that agree step to step?",
         "say_example": "The Drafts count changed from <19> to <a different number> without an account switch to explain it"
        },
        {
@@ -2827,7 +2827,7 @@
         "whatTheAgentLoses": "You lose the mathematical certainty that only the intended emails were removed and nothing else was accidentally deleted.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the Bin's total match the sum of everything just deleted in this run",
+        "check": "Does the Bin's total match the sum of everything just deleted in this run?",
         "say_example": "Bin shows <21>, which matches the <9> and <12> just deleted"
        },
        {
@@ -2839,7 +2839,7 @@
         "whatTheAgentLoses": "The user loses certainty that their inbox was managed safely if emails disappear without a clear reason during the cleanup process.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the inbox counts before and after adding and removing the Updates tab add up",
+        "check": "Do the inbox counts before and after adding and removing the Updates tab add up?",
         "say_example": "Primary dropped from <252> to <81> when the tab appeared, then only reached <159> instead of the expected <240> after deleting and removing it"
        },
        {
@@ -2851,7 +2851,7 @@
         "whatTheAgentLoses": "You lose the ability to personally verify that the math between the search results, the sidebar, and the deleted items perfectly aligns to confirm no unintended emails were removed.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the unread search count reconcile with the sidebar's inbox count given what was just deleted",
+        "check": "Does the unread search count reconcile with the sidebar's inbox count given what was just deleted?",
         "say_example": "The unread search shows <25>, the sidebar shows <24>. Those should match after <3> were trashed"
        },
        {
@@ -2863,7 +2863,7 @@
         "whatTheAgentLoses": "The user loses an accurate accounting of their inbox cleanup if the agent hallucinates or miscalculates the subscription totals.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the initial scan's count of subscriptions match the final tally of unsubscribed plus remaining",
+        "check": "Does the initial scan's count of subscriptions match the final tally of unsubscribed plus remaining?",
         "say_example": "The scan found <8> subscriptions, but the summary later claims <10>"
        },
        {
@@ -2875,7 +2875,7 @@
         "whatTheAgentLoses": "The user loses certainty that the inbox was properly cleaned if the agent ignores conflicting email counts.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "did the inbox count drop by the same number of emails that were moved to the bin",
+        "check": "Did the inbox count drop by the same number of emails that were moved to the bin?",
         "say_example": "<4> were moved to the bin, but the inbox count only dropped by <2>"
        },
        {
@@ -2887,7 +2887,7 @@
         "whatTheAgentLoses": "If an agent deletes more emails than expected without noticing the discrepancy, you might lose important messages that were accidentally caught in the bulk action.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the actual drop in inbox count match the number of emails expected to be removed",
+        "check": "Does the actual drop in inbox count match the number of emails expected to be removed?",
         "say_example": "Expected around <50> gone, the inbox count actually dropped by <100>"
        },
        {
@@ -2899,7 +2899,7 @@
         "whatTheAgentLoses": "The user loses the assurance that their inbox is fully cleaned and accurately represented if the agent ignores conflicting email counts.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the sidebar's inbox count match the count shown elsewhere on the same screen, like a top-right counter",
+        "check": "Does the sidebar's inbox count match the count shown elsewhere on the same screen, like a top-right counter?",
         "say_example": "Sidebar says <1,118>, the counter in the corner says <7,648>. Same inbox, two different numbers"
        },
        {
@@ -2911,7 +2911,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to notice minor interface glitches that could cause confusion about exactly how many emails were actually processed.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the Trash folder's count match the number of messages just moved into it",
+        "check": "Does the Trash folder's count match the number of messages just moved into it?",
         "say_example": "<50> were just moved in, but Trash now shows <19>"
        },
        {
@@ -2923,7 +2923,7 @@
         "whatTheAgentLoses": "You lose the mathematical assurance that the agent only deleted the exact batch of unwanted emails and nothing else.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the final inbox count equal the starting count minus everything deleted this run",
+        "check": "Does the final inbox count equal the starting count minus everything deleted this run?",
         "say_example": "Started at <3,650>, deleted <106>, ended at <3,544>. That checks out"
        }
       ]
@@ -2941,7 +2941,7 @@
         "whatTheAgentLoses": "You lose the reassurance of visually confirming exactly where the unwanted sender's emails are currently landing in your mailbox.",
         "kind": "state-check",
         "speak": "never",
-        "check": "does mail from this sender still appear in the inbox after the block or filter was set up",
+        "check": "Does mail from this sender still appear in the inbox after the block or filter was set up?",
         "say_example": "<This sender's> mail is still landing in the inbox"
        },
        {
@@ -2953,7 +2953,7 @@
         "whatTheAgentLoses": "You lose the direct visual reassurance of the blocked status banner and icon, leaving you to trust the agent actually applied the restriction.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the blocked-senders list show a strikethrough or banner confirming this sender is blocked",
+        "check": "Does the blocked-senders list show a strikethrough or banner confirming this sender is blocked?",
         "say_example": "The blocked list shows <this sender> with the strikethrough icon next to it"
        }
       ]
@@ -2975,7 +2975,7 @@
         "whatTheAgentLoses": "The user loses the guarantee of a fully cleaned inbox if the agent blindly accepts a partial deletion without noticing the mismatched email counts.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the deletion confirmation's count match the number of emails originally selected",
+        "check": "Does the deletion confirmation's count match the number of emails originally selected?",
         "say_example": "<165> were selected, but the confirmation only asks to move <27> to trash"
        },
        {
@@ -2987,7 +2987,7 @@
         "whatTheAgentLoses": "The user is left with hundreds of unwanted emails still cluttering their inbox because the agent failed to properly execute the bulk deletion.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the number of emails actually selected match the full total available, or only the first page",
+        "check": "Does the number of emails actually selected match the full total available, or only the first page?",
         "say_example": "Only <50> of <351> conversations were ever selected. The rest weren't touched"
        },
        {
@@ -2999,7 +2999,7 @@
         "whatTheAgentLoses": "The user loses the assurance that the unwanted emails were permanently deleted rather than just moved to the trash folder.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the Trash folder show zero messages after an empty-trash attempt, or does it still list messages",
+        "check": "Does the Trash folder show zero messages after an empty-trash attempt, or does it still list messages?",
         "say_example": "Trash still shows <messages> after the empty-trash step was supposed to run"
        },
        {
@@ -3011,7 +3011,7 @@
         "whatTheAgentLoses": "The user loses a fully cleaned inbox if the agent assumes a single massive bulk-delete command succeeded perfectly without verifying the final count.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the count of emails remaining after the bulk delete match zero, or does some of the original batch remain",
+        "check": "Does the count of emails remaining after the bulk delete match zero, or does some of the original batch remain?",
         "say_example": "<18,940> were supposed to go, but some are still showing after the delete ran"
        }
       ]
@@ -3029,7 +3029,7 @@
         "whatTheAgentLoses": "The user loses the visual confirmation that their inbox is now clean and free of unwanted promotional emails.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the inbox still show any of the promotional mail that was targeted",
+        "check": "Does the inbox still show any of the promotional mail that was targeted?",
         "say_example": "The inbox no longer shows <the retailer newsletters> that were targeted"
        },
        {
@@ -3041,7 +3041,7 @@
         "whatTheAgentLoses": "You lose the peace of mind that comes from personally seeing the empty inbox confirmation message.",
         "kind": "state-check",
         "speak": "always",
-        "check": "does the primary inbox show an empty-tab message",
+        "check": "Does the primary inbox show an empty-tab message?",
         "say_example": "Primary tab says <empty>"
        }
       ]

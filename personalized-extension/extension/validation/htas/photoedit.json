@@ -23,7 +23,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally verify the visual preview and metadata to confirm it is the exact shot you want to spend time correcting.",
         "kind": "intent-check",
         "speak": "gate",
-        "check": "what filename, size and format the file browser shows as the currently selected/highlighted item",
+        "check": "What filename, size and format the file browser shows as the currently selected/highlighted item?",
         "say_example": "The browser has <DSC_0412.CR2> highlighted. I'll open that one. OK, or is it a different file?"
        },
        {
@@ -36,7 +36,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a reference frame for the style - check it sits between the contrasty and the backlit shots so the style fits both.",
         "speak": "never",
-        "check": "which thumbnail is highlighted/selected in the panel as the style reference",
+        "check": "Which thumbnail is highlighted/selected in the panel as the style reference?",
         "say_example": "Picked <thumbnail 4 of 9> as the style reference"
        }
       ]
@@ -93,7 +93,7 @@
         "kind": "decision",
         "verify_form": "The agent picked frames from the shoot - check they are the poses and expressions you wanted and not just the first few.",
         "speak": "gate",
-        "check": "which frames the filmstrip shows as currently selected/flagged for editing",
+        "check": "Which frames the filmstrip shows as currently selected/flagged for editing?",
         "say_example": "The filmstrip has <4 frames> flagged for editing, out of <22> in the shoot. OK, or a different set?"
        }
       ]
@@ -111,7 +111,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to review the photo's original location and timestamp metadata before entering the editing interface.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "what location and date the info panel displays for the photo about to be opened",
+        "check": "What location and date the info panel displays for the photo about to be opened?",
         "say_example": "The info panel shows <March 2024, San Diego>. Not the shot you meant? I'll find the right one first."
        },
        {
@@ -123,7 +123,7 @@
         "whatTheAgentLoses": "You lose the opportunity to browse your file system and visually confirm you are selecting the correct original photograph.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "what filename the open dialog shows being loaded into Camera Raw",
+        "check": "What filename the open dialog shows being loaded into Camera Raw?",
         "say_example": "The dialog is opening <DSC_0412.CR2>."
        },
        {
@@ -136,7 +136,7 @@
         "kind": "decision",
         "verify_form": "The agent picked how the import handles the file - check whether it added it in place, copied it or moved it; a move changes where your original lives.",
         "speak": "on-event",
-        "check": "which handling option (Copy as DNG, Copy, Move, Add) is selected in the import dialog's top bar",
+        "check": "Which handling option (Copy as DNG, Copy, Move, Add) is selected in the import dialog's top bar?",
         "say_example": "Import is set to <Move>. That takes the file out of its current folder. OK, or keep it as <Add>?"
        },
        {
@@ -148,7 +148,7 @@
         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to verify that the correct source file was chosen before the editing process begins.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "what filename or thumbnail the import dialog shows selected right before the Import button is pressed",
+        "check": "What filename or thumbnail the import dialog shows selected right before the Import button is pressed?",
         "say_example": "The file about to import is <DSC_0412.CR2>."
        },
        {
@@ -172,7 +172,7 @@
         "whatTheAgentLoses": "You lose the creative choice of deciding which specific editing interface or toolset best fits your personal color grading workflow.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "which tool or panel the screen shows open (for example, the Camera Raw Filter) and whether that matches the adjustment being asked for",
+        "check": "Which tool or panel the screen shows open (for example, the Camera Raw Filter) and whether that matches the adjustment being asked for?",
         "say_example": "The Camera Raw Filter is what's open now."
        }
       ]
@@ -234,7 +234,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a colour space and bit depth for the hand-off - check which; ProPhoto RGB at 16 bits keeps the most data, and a smaller choice throws some away for good.",
         "speak": "if-wrong",
-        "check": "what the Workflow Options dialog shows selected for Color Space and Depth",
+        "check": "What the Workflow Options dialog shows selected for Color Space and Depth?",
         "say_example": "Color space is set to <sRGB> at <8 Bits/Channel>. That throws away colour data this correction could use."
        },
        {
@@ -247,7 +247,7 @@
         "kind": "decision",
         "verify_form": "The agent answered the profile-mismatch dialog - check whether it kept the embedded profile or converted; converting changes how every colour displays from here on.",
         "speak": "if-wrong",
-        "check": "what the Embedded Profile Mismatch dialog shows was chosen - keep the embedded profile, or convert it",
+        "check": "What the Embedded Profile Mismatch dialog shows was chosen - keep the embedded profile, or convert it?",
         "say_example": "The mismatch dialog was answered with <Convert>. Every colour on screen from here is different from the file's own profile."
        },
        {
@@ -259,7 +259,7 @@
         "whatTheAgentLoses": "You lose the peace of mind that comes from personally verifying the technical foundation of your file before investing time in complex edits.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "what bit depth the Image Mode menu shows for the open photo",
+        "check": "What bit depth the Image Mode menu shows for the open photo?",
         "say_example": "Image Mode shows <8-bit>, not 16. Heavy correction on 8-bit can band."
        },
        {
@@ -271,7 +271,7 @@
         "whatTheAgentLoses": "You lose the reassurance of personally verifying that the file contains the optimal color data for high-quality editing.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "what the 'Source Space' field shows in the Convert to Profile dialog",
+        "check": "What the 'Source Space' field shows in the Convert to Profile dialog?",
         "say_example": "Source Space reads <sRGB>, not ProPhoto RGB."
        },
        {
@@ -309,7 +309,7 @@
         "kind": "decision",
         "verify_form": "The agent configured the hand-off settings - check colour space, bit depth, resolution.",
         "speak": "if-wrong",
-        "check": "what the Workflow Options link shows for color space, bit depth, and resolution before the hand-off",
+        "check": "What the Workflow Options link shows for color space, bit depth, and resolution before the hand-off?",
         "say_example": "The hand-off is set to <ProPhoto RGB, 16 Bits/Channel, 300 DPI>."
        },
        {
@@ -353,7 +353,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a colour profile - check which; it sets the base contrast and colour before any slider.",
         "speak": "if-wrong",
-        "check": "which profile name the dropdown shows selected (for example, Adobe Standard, Camera Standard, Camera Vivid)",
+        "check": "Which profile name the dropdown shows selected (for example, Adobe Standard, Camera Standard, Camera Vivid)?",
         "say_example": "Profile is set to <Adobe Standard>. That's the base every slider from here builds on."
        }
       ]
@@ -372,7 +372,7 @@
         "kind": "decision",
         "verify_form": "The agent set the denoise amount - check noise is gone without the feathers going plastic.",
         "speak": "if-wrong",
-        "check": "what value the Amount slider shows in the Enhance Preview window",
+        "check": "What value the Amount slider shows in the Enhance Preview window?",
         "say_example": "Denoise amount is at <60>."
        },
        {
@@ -398,7 +398,7 @@
         "kind": "decision",
         "verify_form": "The agent chose the denoising algorithm - check which and the detail it keeps.",
         "speak": "if-wrong",
-        "check": "which denoising algorithm the panel shows selected",
+        "check": "Which denoising algorithm the panel shows selected?",
         "say_example": "The algorithm selected is <DeepPRIME>."
        },
        {
@@ -411,7 +411,7 @@
         "kind": "decision",
         "verify_form": "The agent enabled or disabled the optical corrections - check which were left on.",
         "speak": "if-wrong",
-        "check": "which optical correction toggles (lens sharpness, vignetting, chromatic aberration, distortion) the panel shows on or off",
+        "check": "Which optical correction toggles (lens sharpness, vignetting, chromatic aberration, distortion) the panel shows on or off?",
         "say_example": "Vignetting correction is off, the other three are on."
        },
        {
@@ -424,7 +424,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted the processing time and the new DNG - check the extra file is wanted.",
         "speak": "on-event",
-        "check": "what estimated processing time the dialog shows, and whether it states a new DNG file will be created",
+        "check": "What estimated processing time the dialog shows, and whether it states a new DNG file will be created?",
         "say_example": "This will take about <4 minutes> and creates a new DNG alongside the original. OK to go ahead?"
        }
       ]
@@ -442,7 +442,7 @@
         "whatTheAgentLoses": "The user loses control over which specific photo editor is used to open and edit the file.",
         "kind": "intent-check",
         "speak": "if-wrong",
-        "check": "which application's window the photo opens into after the 'Open With' choice",
+        "check": "Which application's window the photo opens into after the 'Open With' choice?",
         "say_example": "It opened in <Preview>, not Photoshop."
        },
        {
@@ -455,7 +455,7 @@
         "kind": "decision",
         "verify_form": "The agent answered the compatibility warning - check the render choice.",
         "speak": "on-event",
-        "check": "what the compatibility warning dialog shows was chosen for how the image renders",
+        "check": "What the compatibility warning dialog shows was chosen for how the image renders?",
         "say_example": "The compatibility warning was answered with <Render Using Lightroom>. That's what keeps the edits intact going into Photoshop."
        },
        {
@@ -467,7 +467,7 @@
         "whatTheAgentLoses": "The user loses the opportunity to learn the specific Lightroom technique they expected because the agent switches to a completely different program.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "which application's window the screen shows the spot-removal work happening in",
+        "check": "Which application's window the screen shows the spot-removal work happening in?",
         "say_example": "This is happening in <Photoshop>, not Lightroom as said."
        },
        {
@@ -574,7 +574,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally analyze the raw tonal data and form your own judgment on what exposure corrections the image needs.",
         "kind": "state-check",
         "speak": "always",
-        "check": "what shape the histogram shows - where the data is bunched between shadows on the left and highlights on the right",
+        "check": "What shape the histogram shows - where the data is bunched between shadows on the left and highlights on the right?",
         "say_example": "The histogram is stacked to the left, so this frame reads dark with the highlights untouched."
        },
        {
@@ -605,7 +605,7 @@
         "whatTheAgentLoses": "You lose the opportunity to personally inspect the raw details and decide which blown-out areas actually matter for your creative vision.",
         "kind": "state-check",
         "speak": "on-event",
-        "check": "where the clipping-warning overlay (the 'blinkies') lights up on the zoomed image",
+        "check": "Where the clipping-warning overlay (the 'blinkies') lights up on the zoomed image?",
         "say_example": "The clipping overlay is lighting up <across the sky>. Those highlights have gone pure white."
        },
        {
@@ -635,7 +635,7 @@
         "whatTheAgentLoses": "The agent might blindly edit a 2-megapixel proxy, resulting in a useless final image, whereas a human would notice the lack of detail and find the correct source file.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "what file size and resolution the import screen displays for the loaded file",
+        "check": "What file size and resolution the import screen displays for the loaded file?",
         "say_example": "The imported file is only <1.2 MB at 1600x1067>. That's preview-size, not the original RAW."
        }
       ]
@@ -658,7 +658,7 @@
         "kind": "decision",
         "verify_form": "The agent is working toward a look - check the before and after it is aiming at is the style you asked for, not a dark dramatic default.",
         "speak": "if-wrong",
-        "check": "what style the on-screen before/after example shows as the target, compared with what was asked for",
+        "check": "What style the on-screen before/after example shows as the target, compared with what was asked for?",
         "say_example": "The before/after shown is a dark, dramatic edit. That's not the look that was asked for."
        },
        {
@@ -671,7 +671,7 @@
         "kind": "decision",
         "verify_form": "The agent set a plan for the photo - check what it decided to brighten and what to darken, and that the subject it chose is the one you care about.",
         "speak": "if-wrong",
-        "check": "what the on-screen plan or annotations mark for brightening or darkening, and which subject they're centered on",
+        "check": "What the on-screen plan or annotations mark for brightening or darkening, and which subject they're centered on?",
         "say_example": "The on-screen plan is built around <the cat>, brightening it and darkening the background. That's not the subject you named."
        },
        {
@@ -703,7 +703,7 @@
         "kind": "decision",
         "verify_form": "The agent started with Auto - check what it changed; Auto is a proposal, and the values it set should be read before anything else moves.",
         "speak": "always",
-        "check": "what values the Auto adjustment sets once applied",
+        "check": "What values the Auto adjustment sets once applied?",
         "say_example": "Auto set exposure to <+0.8> and shadows to <+22>. That's a starting point. I'll keep adjusting from there."
        },
        {
@@ -728,7 +728,7 @@
         "whatTheAgentLoses": "You lose the opportunity to see exactly how the software interpreted your image's lighting flaws and to decide if its automated baseline aligns with your creative vision.",
         "kind": "state-check",
         "speak": "never",
-        "check": "what specific values the panel shows the Auto function set (for example Highlights, Shadows)",
+        "check": "What specific values the panel shows the Auto function set (for example Highlights, Shadows)?",
         "say_example": "Auto set highlights to <-78>, shadows to <+56>"
        },
        {
@@ -767,7 +767,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a crop ratio and composition guide - check the ratio matches where the photo is going, 4 x 5 for a feed, 16 x 9 for a screen.",
         "speak": "if-wrong",
-        "check": "what aspect ratio the dropdown shows selected, and which composition guide overlay is active",
+        "check": "What aspect ratio the dropdown shows selected, and which composition guide overlay is active?",
         "say_example": "Aspect ratio is set to <4 x 5>, with the thirds grid overlay on."
        },
        {
@@ -812,7 +812,7 @@
         "kind": "decision",
         "verify_form": "The agent straightened or skewed the frame - check the horizon and verticals look level.",
         "speak": "if-wrong",
-        "check": "what angle the straighten/level grid overlay shows the horizon sitting at after the adjustment",
+        "check": "What angle the straighten/level grid overlay shows the horizon sitting at after the adjustment?",
         "say_example": "The grid overlay still shows the horizon tilted by <1.5 degrees> after the straighten."
        },
        {
@@ -825,7 +825,7 @@
         "kind": "decision",
         "verify_form": "The agent rotated the frame - check the angle; a fraction of a degree is usually enough.",
         "speak": "if-wrong",
-        "check": "what angle value the rotation dial displays",
+        "check": "What angle value the rotation dial displays?",
         "say_example": "Rotation is set to <0.8 degrees>."
        }
       ]
@@ -857,7 +857,7 @@
         "kind": "decision",
         "verify_form": "The agent set the distortion - check the shapes look natural, not stretched.",
         "speak": "if-wrong",
-        "check": "what value the distortion slider shows",
+        "check": "What value the distortion slider shows?",
         "say_example": "Distortion is set to <+18>."
        },
        {
@@ -870,7 +870,7 @@
         "kind": "decision",
         "verify_form": "The agent rotated and changed the aspect - check the proportions are what you wanted.",
         "speak": "if-wrong",
-        "check": "what values the Geometry tab's rotation and aspect sliders show",
+        "check": "What values the Geometry tab's rotation and aspect sliders show?",
         "say_example": "Rotation is at <+2>, aspect at <-5>."
        },
        {
@@ -915,7 +915,7 @@
         "kind": "decision",
         "verify_form": "The agent chose a composition overlay - check the subject sits where the guide says.",
         "speak": "if-wrong",
-        "check": "which composition overlay (grid, spiral, or other) the crop tool shows active",
+        "check": "Which composition overlay (grid, spiral, or other) the crop tool shows active?",
         "say_example": "The <golden spiral> overlay is active now."
        }
       ]
@@ -937,7 +937,7 @@
       "kind": "decision",
       "verify_form": "The agent moved the tone sliders to brighten the frame and lift the subject - check exposure, highlights and shadows together; the background should sit back without going muddy.",
       "speak": "if-wrong",
-      "check": "what the exposure, highlights and shadows sliders show together, and whether the subject reads brighter than the background",
+      "check": "What the exposure, highlights and shadows sliders show together, and whether the subject reads brighter than the background?",
       "say_example": "Exposure is at <+0.6>, highlights at <-40>, shadows at <+25>. The subject is brighter now, and the background hasn't gone muddy."
      },
      {
@@ -950,7 +950,7 @@
       "kind": "decision",
       "verify_form": "The agent picked the next tool - check it is the tool the flaw you named needs, not the next one in the menu.",
       "speak": "if-wrong",
-      "check": "which tool the Tools menu shows selected next, compared with the flaw already named",
+      "check": "Which tool the Tools menu shows selected next, compared with the flaw already named?",
       "say_example": "The flaw named was uneven exposure, but the next tool opened is <Curves>, not the exposure tool."
      },
      {
@@ -976,7 +976,7 @@
       "kind": "decision",
       "verify_form": "The agent picked the next Tune Image parameter - check it is the one the photo needs.",
       "speak": "if-wrong",
-      "check": "which parameter the panel shows selected next, compared with what the photo still needs",
+      "check": "Which parameter the panel shows selected next, compared with what the photo still needs?",
       "say_example": "Saturation is next in line, but this photo's biggest problem is still the flat contrast."
      },
      {
@@ -989,7 +989,7 @@
       "kind": "decision",
       "verify_form": "The agent started correction in the Basic panel - check the order matches your workflow.",
       "speak": "if-wrong",
-      "check": "which panel is shown open at the start of the correction (Basic first, versus a different panel)",
+      "check": "Which panel is shown open at the start of the correction (Basic first, versus a different panel)?",
       "say_example": "Work started in <the Color Mixer>, not the Basic panel."
      },
      {
@@ -1002,7 +1002,7 @@
       "kind": "decision",
       "verify_form": "The agent set clarity and the curve for base contrast - check the mood.",
       "speak": "if-wrong",
-      "check": "what values the Clarity slider and Tone Curve show together",
+      "check": "What values the Clarity slider and Tone Curve show together?",
       "say_example": "Clarity is at <-15> with a lifted curve midpoint. That's a soft, low-contrast starting point."
      },
      {
@@ -1015,7 +1015,7 @@
       "kind": "decision",
       "verify_form": "The agent pushed highlights and shadows to balance the histogram - check how flat the result is.",
       "speak": "if-wrong",
-      "check": "how far the highlights and shadows sliders moved, and whether the histogram shape reads flatter/more centered afterward",
+      "check": "How far the highlights and shadows sliders moved, and whether the histogram shape reads flatter/more centered afterward?",
       "say_example": "Highlights and shadows moved in, and the histogram is no longer stacked at either edge."
      }
     ],
@@ -1034,7 +1034,7 @@
         "kind": "decision",
         "verify_form": "The agent clicked the eyedropper on a neutral - check the point was truly grey.",
         "speak": "if-wrong",
-        "check": "what RGB values the panel shows at the point the eyedropper sampled, and whether they read as neutral gray",
+        "check": "What RGB values the panel shows at the point the eyedropper sampled, and whether they read as neutral gray?",
         "say_example": "The sampled point reads <R210 G195 B140>. That's not a neutral gray."
        },
        {
@@ -1066,7 +1066,7 @@
         "kind": "decision",
         "verify_form": "The agent set the white balance by eye after the eyedropper - check the temperature it landed on; skin and white cloth should look neutral, not yellow or blue.",
         "speak": "if-wrong",
-        "check": "what temperature value the eyedropper landed on, and whether skin or white cloth in the frame reads neutral at that value",
+        "check": "What temperature value the eyedropper landed on, and whether skin or white cloth in the frame reads neutral at that value?",
         "say_example": "The eyedropper landed on <4,250K>, and the white shirt still reads yellow at that setting."
        },
        {
@@ -1092,7 +1092,7 @@
         "kind": "decision",
         "verify_form": "The agent set tint and sharpness - check the tint first; the sharpness half is checked zoomed in.",
         "speak": "if-wrong",
-        "check": "what value the sharpness slider shows, checked against the image zoomed in",
+        "check": "What value the sharpness slider shows, checked against the image zoomed in?",
         "say_example": "Sharpness is at <45>. Zoomed in, the edges are starting to show a slight halo."
        },
        {
@@ -1105,7 +1105,7 @@
         "kind": "decision",
         "verify_form": "The agent restored the white balance and warmed it - check the cast is gone and the warmth is yours.",
         "speak": "if-wrong",
-        "check": "what white balance preset the panel shows selected (for example Tungsten, As Shot, Custom)",
+        "check": "What white balance preset the panel shows selected (for example Tungsten, As Shot, Custom)?",
         "say_example": "White balance is still set to <Tungsten> on a daylight shot. That's the wrong preset for this scene."
        },
        {
@@ -1118,7 +1118,7 @@
         "kind": "decision",
         "verify_form": "The agent changed the temperature or tint, or left them - check the frame has no cast.",
         "speak": "if-wrong",
-        "check": "what values the Temperature and Tint sliders show, and whether the frame carries a visible colour cast",
+        "check": "What values the Temperature and Tint sliders show, and whether the frame carries a visible colour cast?",
         "say_example": "Temperature is at <5200K>, tint at <+5>. No cast left on the frame."
        },
        {
@@ -1131,7 +1131,7 @@
         "kind": "decision",
         "verify_form": "The agent set the tint - check the face reads healthy, not red.",
         "speak": "if-wrong",
-        "check": "what value the Tint slider shows, and whether the subject's face reads warm and natural or reddish",
+        "check": "What value the Tint slider shows, and whether the subject's face reads warm and natural or reddish?",
         "say_example": "Tint is at <+10>. The face reads warm, not red."
        },
        {
@@ -1144,7 +1144,7 @@
         "kind": "decision",
         "verify_form": "The agent warmed the frame to fix a blue cast on the subject - check the subject looks natural even if the background warmed too.",
         "speak": "if-wrong",
-        "check": "what temperature value the slider shows, and whether the subject (not just the background) reads free of a blue cast",
+        "check": "What temperature value the slider shows, and whether the subject (not just the background) reads free of a blue cast?",
         "say_example": "Temperature is warmed to <6800K>. The subject reads free of blue now, though the background warmed along with it."
        },
        {
@@ -1170,7 +1170,7 @@
         "kind": "decision",
         "verify_form": "The agent accepted the white balance before the Light tab - check the temperature and tint suit the scene.",
         "speak": "if-wrong",
-        "check": "what the Temperature and Tint sliders show at the point the panel switches to the Light tab",
+        "check": "What the Temperature and Tint sliders show at the point the panel switches to the Light tab?",
         "say_example": "The panel moved to the Light tab with temperature at <5200K> and tint at <+5>. Those stay fixed from here."
        },
        {
@@ -1183,7 +1183,7 @@
         "kind": "decision",
         "verify_form": "The agent tested white balance presets and set a tint - check the final cast and that saturation was left for the mixer.",
         "speak": "if-wrong",
-        "check": "which white balance preset was tried, what tint value it settled on, and whether the saturation slider was left untouched for the color mixer",
+        "check": "Which white balance preset was tried, what tint value it settled on, and whether the saturation slider was left untouched for the color mixer?",
         "say_example": "Settled on <Custom> with tint at <+23>. Saturation was left alone for the color mixer later."
        },
        {
@@ -1228,7 +1228,7 @@
         "kind": "decision",
         "verify_form": "The agent's first move was brightness down - check the value; the frame should be darker without the shadows disappearing.",
         "speak": "if-wrong",
-        "check": "what the panel diagnoses the image as (for example overexposed) and what value brightness is set to as the first move",
+        "check": "What the panel diagnoses the image as (for example overexposed) and what value brightness is set to as the first move?",
         "say_example": "The image reads overexposed, and brightness is dropped to <-63> as the first move."
        },
        {
@@ -1241,7 +1241,7 @@
         "kind": "decision",
         "verify_form": "The agent set exposure and brilliance - check the values; brilliance also saturates, and it was left at zero in the recording.",
         "speak": "if-wrong",
-        "check": "what values the Exposure and Brilliance sliders show together",
+        "check": "What values the Exposure and Brilliance sliders show together?",
         "say_example": "Exposure is at <+11>, brilliance left at <0>."
        },
        {
@@ -1267,7 +1267,7 @@
         "kind": "decision",
         "verify_form": "The agent brightened or darkened the whole frame - check the direction and amount.",
         "speak": "if-wrong",
-        "check": "what direction and value the brightness dial settled on after being swept through its range",
+        "check": "What direction and value the brightness dial settled on after being swept through its range?",
         "say_example": "Brightness settled at <-22> after testing both extremes."
        },
        {
@@ -1280,7 +1280,7 @@
         "kind": "decision",
         "verify_form": "The agent set brilliance to 100 - check the frame is not over-processed.",
         "speak": "if-wrong",
-        "check": "what value the Brilliance slider shows, and whether the frame looks over-processed at that value",
+        "check": "What value the Brilliance slider shows, and whether the frame looks over-processed at that value?",
         "say_example": "Brilliance is maxed at <100>. The frame is looking over-processed at that setting."
        },
        {
@@ -1293,7 +1293,7 @@
         "kind": "decision",
         "verify_form": "The agent flattened the exposure and contrast as a base - check the flatness is a starting point and the final look has contrast back.",
         "speak": "if-wrong",
-        "check": "what the exposure and contrast values show, and whether the resulting histogram reads flat/low-contrast as a base for grading",
+        "check": "What the exposure and contrast values show, and whether the resulting histogram reads flat/low-contrast as a base for grading?",
         "say_example": "Exposure is up and highlights pulled down, leaving a flat, low-contrast histogram. That's the base before grading, not the final look."
        },
        {
@@ -1306,7 +1306,7 @@
         "kind": "decision",
         "verify_form": "The agent nudged the exposure after the colour work - check the final brightness.",
         "speak": "if-wrong",
-        "check": "what the Exposure slider reads at this later nudge, compared with its value before the color work",
+        "check": "What the Exposure slider reads at this later nudge, compared with its value before the color work?",
         "say_example": "Exposure nudged from <+1.80> to <+2.00> after the color pass."
        },
        {
@@ -1319,7 +1319,7 @@
         "kind": "decision",
         "verify_form": "The agent dragged exposure on the plugin's false-colour zones - check the sky and trees look natural, not flattened to the map's colours.",
         "speak": "if-wrong",
-        "check": "which areas the false-colour map marks, and whether those areas still show detail after the exposure drag",
+        "check": "Which areas the false-colour map marks, and whether those areas still show detail after the exposure drag?",
         "say_example": "The false-color map marks <the sky> red for overexposed. After the drag, it still shows texture, not a flat white."
        },
        {
@@ -1332,7 +1332,7 @@
         "kind": "decision",
         "verify_form": "The agent set the exposure while watching the histogram - check neither end is clipped.",
         "speak": "if-wrong",
-        "check": "what the histogram shows at each end while the exposure slider is being set",
+        "check": "What the histogram shows at each end while the exposure slider is being set?",
         "say_example": "Exposure is set with the histogram checked at both ends. Neither end is touching the wall."
        },
        {
@@ -1345,7 +1345,7 @@
         "kind": "decision",
         "verify_form": "The agent lowered the global exposure - check the frame is not too dark.",
         "speak": "if-wrong",
-        "check": "what value the Exposure slider is lowered to, and whether the brightest areas hold detail as a result",
+        "check": "What value the Exposure slider is lowered to, and whether the brightest areas hold detail as a result?",
         "say_example": "Exposure is lowered to <-0.16>, and the brightest area now holds some detail back."
        },
        {
@@ -1390,7 +1390,7 @@
         "kind": "decision",
         "verify_form": "The agent pushed the white point until it clipped - check the highlights you care about still hold detail; only speculars should go pure white.",
         "speak": "if-wrong",
-        "check": "how far the white point slider is pushed, and where the clipping mask shows pixels turning solid white",
+        "check": "How far the white point slider is pushed, and where the clipping mask shows pixels turning solid white?",
         "say_example": "White point is pushed to <+35>. The clipping mask shows only <the sun's reflection> going pure white. Nothing else."
        },
        {
@@ -1403,7 +1403,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened the highlights - check the amount; too far makes the bright areas grey.",
         "speak": "if-wrong",
-        "check": "what value the Highlights slider shows, and whether the bright areas still hold colour or have gone flat grey",
+        "check": "What value the Highlights slider shows, and whether the bright areas still hold colour or have gone flat grey?",
         "say_example": "Highlights are dropped to <-55>. The sky still holds some blue, it hasn't gone grey."
        },
        {
@@ -1416,7 +1416,7 @@
         "kind": "decision",
         "verify_form": "The agent dropped the Whites for the sky - check the sky's colour came back without the frame going dull.",
         "speak": "if-wrong",
-        "check": "what value the Whites slider shows, and whether colour has returned to the previously overexposed area",
+        "check": "What value the Whites slider shows, and whether colour has returned to the previously overexposed area?",
         "say_example": "Whites are dropped to <-100>. The sky's blue has come back."
        },
        {
@@ -1429,7 +1429,7 @@
         "kind": "decision",
         "verify_form": "The agent set highlights and vibrance - check the sky's detail and the colour boost.",
         "speak": "if-wrong",
-        "check": "what value the Highlights slider shows, and whether the sky's detail has returned",
+        "check": "What value the Highlights slider shows, and whether the sky's detail has returned?",
         "say_example": "Highlights are pulled back and the sky's texture is visible again."
        },
        {
@@ -1442,7 +1442,7 @@
         "kind": "decision",
         "verify_form": "The agent kept or recovered the sky's detail - check whether the rays are meant to stay bright.",
         "speak": "if-wrong",
-        "check": "what value the Highlights slider shows, and whether the sky/sun rays are being kept bright by choice or recovered for detail",
+        "check": "What value the Highlights slider shows, and whether the sky/sun rays are being kept bright by choice or recovered for detail?",
         "say_example": "Highlights are left high on purpose here, keeping <the sun rays> as a bright burst rather than recovering detail."
        },
        {
@@ -1486,7 +1486,7 @@
         "kind": "decision",
         "verify_form": "The agent pulled the shadows down to separate the subject - check the background still holds detail and did not go to black.",
         "speak": "if-wrong",
-        "check": "what value the Shadows slider shows, and whether the background still holds visible detail rather than going solid black",
+        "check": "What value the Shadows slider shows, and whether the background still holds visible detail rather than going solid black?",
         "say_example": "Shadows are pulled down to <-30>. The background is darker now, and it still shows some texture."
        },
        {
@@ -1499,7 +1499,7 @@
         "kind": "decision",
         "verify_form": "The agent added a Levels layer for punch - check that is the adjustment you wanted rather than curves or exposure.",
         "speak": "if-wrong",
-        "check": "which type of adjustment layer the Layers panel shows was added (Levels, Curves, or Exposure)",
+        "check": "Which type of adjustment layer the Layers panel shows was added (Levels, Curves, or Exposure)?",
         "say_example": "The layer added is <a Levels layer>."
        },
        {
@@ -1512,7 +1512,7 @@
         "kind": "decision",
         "verify_form": "The agent set the black point with the clipping view - check where the first black pixels appear and that no shadow detail you care about went with them.",
         "speak": "if-wrong",
-        "check": "where the clipping mask shows the first pixels going solid black, and whether any shadow detail named as important is caught in that",
+        "check": "Where the clipping mask shows the first pixels going solid black, and whether any shadow detail named as important is caught in that?",
         "say_example": "The first black pixels show up in <the corner shadow>. Nothing the plan called out sits there."
        },
        {
@@ -1525,7 +1525,7 @@
         "kind": "decision",
         "verify_form": "The agent lifted the shadows - check the amount; detail should appear without the frame going flat.",
         "speak": "if-wrong",
-        "check": "what value the Shadows slider is raised to, and whether detail has returned without the frame looking washed out",
+        "check": "What value the Shadows slider is raised to, and whether detail has returned without the frame looking washed out?",
         "say_example": "Shadows raised to <+40>. Detail is back in the dark areas without the frame looking flat."
        },
        {
@@ -1538,7 +1538,7 @@
         "kind": "decision",
         "verify_form": "The agent lifted the black point - check whether the shadows still read as black or went faded.",
         "speak": "if-wrong",
-        "check": "what value the Black slider shows, and whether the darkest areas still read as black or have faded to grey",
+        "check": "What value the Black slider shows, and whether the darkest areas still read as black or have faded to grey?",
         "say_example": "Blacks are lifted to <+15>. The darkest areas now read as a soft grey rather than true black."
        },
        {
@@ -1551,7 +1551,7 @@
         "kind": "decision",
         "verify_form": "The agent set the black point and saturation - check the shadows hold detail and the colours are not neon.",
         "speak": "if-wrong",
-        "check": "what values the Black point and Saturation sliders settled on after being pushed to their extremes",
+        "check": "What values the Black point and Saturation sliders settled on after being pushed to their extremes?",
         "say_example": "Black point settled at <-20>, saturation at <+15>. Shadows still hold detail, and colours aren't neon."
        },
        {
@@ -1564,7 +1564,7 @@
         "kind": "decision",
         "verify_form": "The agent lifted the shadows and trimmed the exposure - check the dark areas opened without the rest going bright.",
         "speak": "if-wrong",
-        "check": "what values the Shadows and Exposure sliders show together after crushed blacks were compensated",
+        "check": "What values the Shadows and Exposure sliders show together after crushed blacks were compensated?",
         "say_example": "Shadows lifted to <+35> to bring back the crushed blacks, with exposure trimmed slightly to match."
        },
        {
@@ -1590,7 +1590,7 @@
         "kind": "decision",
         "verify_form": "The agent dialled the shadows back from 100 - check the frame is not flat.",
         "speak": "if-wrong",
-        "check": "what value the Shadows slider is dialed back to from its extreme, and whether the frame looks flat at that value",
+        "check": "What value the Shadows slider is dialed back to from its extreme, and whether the frame looks flat at that value?",
         "say_example": "Shadows were dialed back from <+100> to <+55>. The frame isn't reading flat anymore."
        },
        {
@@ -1603,7 +1603,7 @@
         "kind": "decision",
         "verify_form": "The agent balanced a backlit subject against the sky - check which was sacrificed.",
         "speak": "if-wrong",
-        "check": "what the screen shows was sacrificed - the subject's exposure or the sky's detail - when balancing a backlit shot",
+        "check": "What the screen shows was sacrificed - the subject's exposure or the sky's detail - when balancing a backlit shot?",
         "say_example": "Raising exposure and shadows brightened the subject, and the sky blew out again to do it."
        }
       ]
@@ -1622,7 +1622,7 @@
         "kind": "decision",
         "verify_form": "The agent set the contrast - check the value; in a correction pass a few points either way is enough, and more starts to stylize.",
         "speak": "if-wrong",
-        "check": "what value the Contrast slider shows during this correction pass",
+        "check": "What value the Contrast slider shows during this correction pass?",
         "say_example": "Contrast is nudged to <-4>. That's a correction, not a restyle."
        },
        {
@@ -1635,7 +1635,7 @@
         "kind": "decision",
         "verify_form": "The agent set contrast and brightness - check both against the original; the frame should not look over-processed.",
         "speak": "if-wrong",
-        "check": "what values Contrast and Brightness show, compared against how the original photo looked before either was touched",
+        "check": "What values Contrast and Brightness show, compared against how the original photo looked before either was touched?",
         "say_example": "Contrast is at <+12>, brightness at <+8>. Checked against the original, it's not reading over-processed."
        },
        {
@@ -1648,7 +1648,7 @@
         "kind": "decision",
         "verify_form": "The agent set contrast and blacks on a flat raw - check the depth came back without crushing.",
         "speak": "if-wrong",
-        "check": "what values Contrast and Blacks show on the flat raw file, and whether depth has returned to the image",
+        "check": "What values Contrast and Blacks show on the flat raw file, and whether depth has returned to the image?",
         "say_example": "Contrast is up to <+20> and blacks lifted, bringing depth back into a flat-looking raw file."
        },
        {
@@ -1674,7 +1674,7 @@
         "kind": "decision",
         "verify_form": "The agent set the contrast - check the histogram did not squeeze to the edges.",
         "speak": "if-wrong",
-        "check": "what value Contrast shows, and whether the histogram is squeezed against either edge",
+        "check": "What value Contrast shows, and whether the histogram is squeezed against either edge?",
         "say_example": "Contrast is at <+18>. The histogram isn't pressed against either wall."
        },
        {
@@ -1705,7 +1705,7 @@
         "kind": "decision",
         "verify_form": "The agent shaped the RGB curve - check the S and whether the black point was lifted; a lifted black gives a faded film look you may not want.",
         "speak": "if-wrong",
-        "check": "what shape the RGB curve is drawn into (an S-curve), and whether the black point on the curve was lifted",
+        "check": "What shape the RGB curve is drawn into (an S-curve), and whether the black point on the curve was lifted?",
         "say_example": "The curve is shaped into an S, with the black point lifted. That gives a faded film look rather than deep blacks."
        },
        {
@@ -1718,7 +1718,7 @@
         "kind": "decision",
         "verify_form": "The agent chose deep blacks or a faded look - check which mood you get.",
         "speak": "if-wrong",
-        "check": "how far the black point is swept on the curve, and whether the result reads as deep/punchy or soft/faded",
+        "check": "How far the black point is swept on the curve, and whether the result reads as deep/punchy or soft/faded?",
         "say_example": "The black point is set low on the curve. The result reads deep and punchy, not faded."
        },
        {
@@ -1731,7 +1731,7 @@
         "kind": "decision",
         "verify_form": "The agent shaped the tone curve for contrast and colour - check the fade and the shadow tint.",
         "speak": "if-wrong",
-        "check": "what input/output points the curve shows on the RGB and individual colour channels",
+        "check": "What input/output points the curve shows on the RGB and individual colour channels?",
         "say_example": "The curve's shadow region is pulled toward <blue> on the blue channel."
        },
        {
@@ -1756,7 +1756,7 @@
         "kind": "decision",
         "verify_form": "The agent dragged the midtone point on the curve - check the midtones darkened just enough.",
         "speak": "if-wrong",
-        "check": "how far the midtone control point is dragged on the curve, watched against the live preview",
+        "check": "How far the midtone control point is dragged on the curve, watched against the live preview?",
         "say_example": "The midtone point is dragged down until the preview shows the midtones just noticeably darker."
        },
        {
@@ -1769,7 +1769,7 @@
         "kind": "decision",
         "verify_form": "The agent brought the top of the curve down - check the highlights roll off softly.",
         "speak": "if-wrong",
-        "check": "how far the top point of the curve is brought down, and whether the highlights roll off softly rather than clipping hard",
+        "check": "How far the top point of the curve is brought down, and whether the highlights roll off softly rather than clipping hard?",
         "say_example": "The top point is brought down, and the brightest area now rolls off softly instead of hitting a hard wall."
        },
        {
@@ -1782,7 +1782,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened with the curve before masking - check the baseline darkness.",
         "speak": "if-wrong",
-        "check": "how far the top-right point of the curve is dragged down before any mask is applied",
+        "check": "How far the top-right point of the curve is dragged down before any mask is applied?",
         "say_example": "The curve's top point is dragged down, darkening the whole frame before a mask narrows it to just <the stairs>."
        },
        {
@@ -1827,7 +1827,7 @@
         "kind": "decision",
         "verify_form": "The agent set the clarity - check the value; past about +30 faces and edges start to look crunchy.",
         "speak": "if-wrong",
-        "check": "what value the Clarity slider shows",
+        "check": "What value the Clarity slider shows?",
         "say_example": "Clarity is at <+64>. Past about +30 is where faces start to look crunchy."
        },
        {
@@ -1840,7 +1840,7 @@
         "kind": "decision",
         "verify_form": "The agent set the structure - check the value; it is texture, and too much looks gritty.",
         "speak": "if-wrong",
-        "check": "what value the Structure slider shows, checked zoomed in for a gritty look",
+        "check": "What value the Structure slider shows, checked zoomed in for a gritty look?",
         "say_example": "Structure is set to <+20>. Zoomed in, the texture reads fine, not gritty."
        },
        {
@@ -1853,7 +1853,7 @@
         "kind": "decision",
         "verify_form": "The agent set the presence sliders before masking - check the mood is the one you asked for.",
         "speak": "if-wrong",
-        "check": "what values Texture, Clarity and Dehaze show together before any masking is applied",
+        "check": "What values Texture, Clarity and Dehaze show together before any masking is applied?",
         "say_example": "Texture is at <-10>, Clarity at <-15>, Dehaze at <-5>. A soft base set before any mask narrows it down."
        },
        {
@@ -1866,7 +1866,7 @@
         "kind": "decision",
         "verify_form": "The agent balanced clarity, texture and vibrance for a soft look - check the snow kept its detail.",
         "speak": "if-wrong",
-        "check": "what values Clarity, Texture and Vibrance show together, and whether fine detail like snow still reads clearly",
+        "check": "What values Clarity, Texture and Vibrance show together, and whether fine detail like snow still reads clearly?",
         "say_example": "Clarity is down and Texture is up together. <The snow> still shows its detail at those values."
        },
        {
@@ -1892,7 +1892,7 @@
         "kind": "decision",
         "verify_form": "The agent set the texture - check the frame is dreamy without losing detail.",
         "speak": "if-wrong",
-        "check": "what value the Texture slider shows, and whether fine detail is still visible at that setting",
+        "check": "What value the Texture slider shows, and whether fine detail is still visible at that setting?",
         "say_example": "Texture is reduced to <-12>. The fine detail is still visible at that setting."
        },
        {
@@ -1905,7 +1905,7 @@
         "kind": "decision",
         "verify_form": "The agent lowered the clarity - check the value; -20 or so softens, more looks blurred.",
         "speak": "if-wrong",
-        "check": "what value the Clarity slider is lowered to, and whether the image reads soft or blurred at that value",
+        "check": "What value the Clarity slider is lowered to, and whether the image reads soft or blurred at that value?",
         "say_example": "Clarity is lowered to <-20>. It reads soft, not blurred."
        },
        {
@@ -1918,7 +1918,7 @@
         "kind": "decision",
         "verify_form": "The agent set the dehaze for the light rays - check the shadows did not wash out.",
         "speak": "if-wrong",
-        "check": "what value the Dehaze slider shows, and whether the shadows still hold detail rather than washing out",
+        "check": "What value the Dehaze slider shows, and whether the shadows still hold detail rather than washing out?",
         "say_example": "Dehaze is lowered to <-25> to bring out the light rays. The shadows still hold some detail."
        },
        {
@@ -1931,7 +1931,7 @@
         "kind": "decision",
         "verify_form": "The agent added texture and contrast to compensate - check the frame is not muddy.",
         "speak": "if-wrong",
-        "check": "what values Texture and Contrast show, added back after the negative Clarity setting, and whether the frame reads muddy",
+        "check": "What values Texture and Contrast show, added back after the negative Clarity setting, and whether the frame reads muddy?",
         "say_example": "Texture and contrast were nudged back up after lowering clarity. The frame doesn't read muddy."
        }
       ]
@@ -1970,7 +1970,7 @@
       "whatTheAgentLoses": "You lose the creative judgment of deciding exactly which specific colors to emphasize to achieve your personal aesthetic vision.",
       "kind": "intent-check",
       "speak": "if-wrong",
-      "check": "which panel the screen shows open (Color Mixer, versus a different panel)",
+      "check": "Which panel the screen shows open (Color Mixer, versus a different panel)?",
       "say_example": "The Color Mixer panel is open now."
      },
      {
@@ -1983,7 +1983,7 @@
       "kind": "decision",
       "verify_form": "The agent adjusted hue or luminance of specific colours - check which and that it is what the photo needed.",
       "speak": "if-wrong",
-      "check": "which colour channel is being adjusted (hue or luminance) and what value it's set to",
+      "check": "Which colour channel is being adjusted (hue or luminance) and what value it's set to?",
       "say_example": "The Aqua hue slider is shifted to <-15>."
      },
      {
@@ -1995,7 +1995,7 @@
       "whatTheAgentLoses": "You lose the ability to visually judge exactly how much to adjust the specific color sliders to restore a natural look to the image.",
       "kind": "intent-check",
       "speak": "if-wrong",
-      "check": "which tool or panel is open to correct the unwanted colour shift, and whether the white balance sliders were left untouched",
+      "check": "Which tool or panel is open to correct the unwanted colour shift, and whether the white balance sliders were left untouched?",
       "say_example": "The HSL panel is open to fix the orange tint, and the white balance sliders haven't been touched."
      },
      {
@@ -2040,7 +2040,7 @@
         "kind": "decision",
         "verify_form": "The agent set the saturation - check the value; the recording kept it small, and 100 overcooks.",
         "speak": "if-wrong",
-        "check": "what value the Saturation slider settled on after being swept through its range",
+        "check": "What value the Saturation slider settled on after being swept through its range?",
         "say_example": "Saturation settled at <+18> after testing the full range. That's well short of the neon end."
        },
        {
@@ -2053,7 +2053,7 @@
         "kind": "decision",
         "verify_form": "The agent set the vibrancy - check the colour pop is what you wanted.",
         "speak": "if-wrong",
-        "check": "what value the Vibrancy slider is set to",
+        "check": "What value the Vibrancy slider is set to?",
         "say_example": "Vibrancy is set to <+30>."
        },
        {
@@ -2066,7 +2066,7 @@
         "kind": "decision",
         "verify_form": "The agent boosted vibrance and saturation - check the greens are not neon.",
         "speak": "if-wrong",
-        "check": "what values Vibrance and Saturation show, and whether the greens in the frame look natural or neon at those settings",
+        "check": "What values Vibrance and Saturation show, and whether the greens in the frame look natural or neon at those settings?",
         "say_example": "Vibrance and saturation are both up, and <the greens> are still reading natural, not neon."
        },
        {
@@ -2111,7 +2111,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted the flowers and foliage in the HSL panel - check the reds and greens look the way you wanted and nothing else moved with them.",
         "speak": "if-wrong",
-        "check": "which colour channels were shifted in the HSL panel, and whether other colours in the frame stayed unchanged",
+        "check": "Which colour channels were shifted in the HSL panel, and whether other colours in the frame stayed unchanged?",
         "say_example": "Reds and greens were shifted in HSL. The rest of the frame's colours haven't moved."
        },
        {
@@ -2124,7 +2124,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted the background blues toward aqua - check the amount; the sky and the water move together.",
         "speak": "if-wrong",
-        "check": "which colour channel's hue slider moved and by how much, and whether both the sky and water (or other elements sharing that channel) shifted together",
+        "check": "Which colour channel's hue slider moved and by how much, and whether both the sky and water (or other elements sharing that channel) shifted together?",
         "say_example": "The Blues hue slider moved toward aqua, and both <the sky and the water> shifted together with it."
        },
        {
@@ -2137,7 +2137,7 @@
         "kind": "decision",
         "verify_form": "The agent added yellow to the reds - check the skin's warmth looks natural.",
         "speak": "if-wrong",
-        "check": "what value the Yellow slider within the Reds channel is set to, and whether the subject's skin reads naturally warm at that value",
+        "check": "What value the Yellow slider within the Reds channel is set to, and whether the subject's skin reads naturally warm at that value?",
         "say_example": "Yellow within the Reds channel is nudged up, and the skin reads warm without looking off."
        },
        {
@@ -2150,7 +2150,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted the oranges toward red or yellow - check the skin went the way you wanted.",
         "speak": "if-wrong",
-        "check": "which direction the Oranges hue slider moved (toward red or toward yellow), and how the skin tone reads at that setting",
+        "check": "Which direction the Oranges hue slider moved (toward red or toward yellow), and how the skin tone reads at that setting?",
         "say_example": "The Oranges hue slider moved toward yellow, and the skin tone reads warmer as a result."
        },
        {
@@ -2163,7 +2163,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted several hues - check pink and purple are gone if that is what you wanted.",
         "speak": "if-wrong",
-        "check": "which colour sliders (blue, aqua, purple, magenta) were shifted, and whether the resulting palette reads unified",
+        "check": "Which colour sliders (blue, aqua, purple, magenta) were shifted, and whether the resulting palette reads unified?",
         "say_example": "Blue, aqua, purple and magenta were all nudged toward one consistent tone."
        },
        {
@@ -2176,7 +2176,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted the blue hue and saturation - check the shadows have the teal you wanted, or none.",
         "speak": "if-wrong",
-        "check": "what hue and saturation values are set on the blue channel, and whether the shadows show a teal tint as a result",
+        "check": "What hue and saturation values are set on the blue channel, and whether the shadows show a teal tint as a result?",
         "say_example": "Blue hue and saturation are both shifted, giving the shadows a visible teal tint."
        },
        {
@@ -2189,7 +2189,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted the yellow hue - check the yellows are the tone you wanted.",
         "speak": "if-wrong",
-        "check": "what value the Yellow hue slider is set to",
+        "check": "What value the Yellow hue slider is set to?",
         "say_example": "The Yellow hue slider is nudged toward <a warmer gold>."
        },
        {
@@ -2202,7 +2202,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted yellow and orange hues toward green - check the grass reads as spring, not lime.",
         "speak": "never",
-        "check": "what values are set on the Yellow and Orange hue sliders",
+        "check": "What values are set on the Yellow and Orange hue sliders?",
         "say_example": "Shifted Yellow hue to <-30> and Orange hue to <-22> toward green"
        },
        {
@@ -2215,7 +2215,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted blue and aqua for the river - check the water's colour.",
         "speak": "never",
-        "check": "what values are set on the Blue and Aqua hue sliders, and whether they moved in the same direction",
+        "check": "What values are set on the Blue and Aqua hue sliders, and whether they moved in the same direction?",
         "say_example": "Set Blue hue to <-10> and Aqua hue to <+6> for <the river>"
        },
        {
@@ -2228,7 +2228,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted a hue - check which colour moved and how far.",
         "speak": "never",
-        "check": "which colour channel's hue slider moved, and to what value",
+        "check": "Which colour channel's hue slider moved, and to what value?",
         "say_example": "Shifted the Orange hue slider to <+12>"
        },
        {
@@ -2241,7 +2241,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted red, orange and yellow hues for skin - check the skin and lips.",
         "speak": "never",
-        "check": "what values are set on the Red, Orange and Yellow hue sliders",
+        "check": "What values are set on the Red, Orange and Yellow hue sliders?",
         "say_example": "Set Red, Orange and Yellow hue to <+3>, <-6> and <+2> for the skin"
        },
        {
@@ -2254,7 +2254,7 @@
         "kind": "decision",
         "verify_form": "The agent shifted the green hue - check the yellow tint is gone.",
         "speak": "never",
-        "check": "what value is set on the Green hue slider",
+        "check": "What value is set on the Green hue slider?",
         "say_example": "Shifted Green hue to <-15>"
        }
       ]
@@ -2273,7 +2273,7 @@
         "kind": "decision",
         "verify_form": "The agent raised the orange saturation for the skin - check the amount; a few points reads as healthy, more reads as sunburn.",
         "speak": "never",
-        "check": "what value is set on the Orange saturation slider",
+        "check": "What value is set on the Orange saturation slider?",
         "say_example": "Raised Orange saturation to <+9> for the skin tones"
        },
        {
@@ -2286,7 +2286,7 @@
         "kind": "decision",
         "verify_form": "The agent raised the red saturation for the dress - check it stayed subtle; more was held back for the sampled colour later.",
         "speak": "never",
-        "check": "what value is set on the Red saturation slider in the HSL panel",
+        "check": "What value is set on the Red saturation slider in the HSL panel?",
         "say_example": "Raised Red saturation to <+11> for <the dress>"
        },
        {
@@ -2299,7 +2299,7 @@
         "kind": "decision",
         "verify_form": "The agent raised the blue saturation for the eyeshadow - check the other cool tones did not move with it.",
         "speak": "never",
-        "check": "what value is set on the Blue saturation slider",
+        "check": "What value is set on the Blue saturation slider?",
         "say_example": "Raised Blue saturation to <+8> for <the eyeshadow>"
        },
        {
@@ -2312,7 +2312,7 @@
         "kind": "decision",
         "verify_form": "The agent held the global red saturation back for the sampled colour - check the two together do not over-saturate the dress.",
         "speak": "if-wrong",
-        "check": "what is the global Red saturation value, and what is the separate Point Color saturation value applied to the sampled red",
+        "check": "What is the global Red saturation value, and what is the separate Point Color saturation value applied to the sampled red?",
         "say_example": "Global Red saturation is already at <+9>, and there's a separate sampled-colour boost of <+24> on the same red. Both are pushing the same tone."
        },
        {
@@ -2325,7 +2325,7 @@
         "kind": "decision",
         "verify_form": "The agent raised blue and orange saturation - check both look vivid but real.",
         "speak": "never",
-        "check": "what values are set on the Blue and Orange saturation sliders",
+        "check": "What values are set on the Blue and Orange saturation sliders?",
         "say_example": "Raised Blue saturation to <+14> and Orange to <+10>"
        },
        {
@@ -2338,7 +2338,7 @@
         "kind": "decision",
         "verify_form": "The agent saturated some colours and muted others - check the subject stands out and the background sits back.",
         "speak": "never",
-        "check": "which HSL saturation sliders were raised and which were lowered, and by how much",
+        "check": "Which HSL saturation sliders were raised and which were lowered, and by how much?",
         "say_example": "Raised Orange and Yellow saturation to <+12>, lowered Green and Blue to <-10>"
        },
        {
@@ -2351,7 +2351,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted several colour channels - check the distracting colours are muted and the subject's colours are not.",
         "speak": "never",
-        "check": "which HSL sliders changed and by how much",
+        "check": "Which HSL sliders changed and by how much?",
         "say_example": "Lowered Purple and Magenta saturation to <-15>, raised Orange luminance to <+10>"
        },
        {
@@ -2364,7 +2364,7 @@
         "kind": "decision",
         "verify_form": "The agent desaturated purple, magenta and blue - check the tints are gone and nothing wanted went grey.",
         "speak": "never",
-        "check": "which saturation sliders (Purple, Magenta, Blue) were lowered, and by how much",
+        "check": "Which saturation sliders (Purple, Magenta, Blue) were lowered, and by how much?",
         "say_example": "Lowered Purple, Magenta and Blue saturation to <-20>"
        },
        {
@@ -2377,7 +2377,7 @@
         "kind": "decision",
         "verify_form": "The agent set the yellow saturation - check the yellows are as strong as you wanted.",
         "speak": "never",
-        "check": "what is the final value on the Yellow saturation slider after testing its range",
+        "check": "What is the final value on the Yellow saturation slider after testing its range?",
         "say_example": "Settled the Yellow saturation at <+8> after sweeping the full range"
        },
        {
@@ -2390,7 +2390,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted the red, orange and yellow channels - check rogue reds are gone and the warm tones look right.",
         "speak": "never",
-        "check": "what values are set on the Red, Orange and Yellow hue, saturation and luminance sliders",
+        "check": "What values are set on the Red, Orange and Yellow hue, saturation and luminance sliders?",
         "say_example": "Set Red, Orange and Yellow to hue <+4>, saturation <+8>, luminance <+6>"
        },
        {
@@ -2403,7 +2403,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted the green tones - check the foliage matches the mood you asked for.",
         "speak": "never",
-        "check": "what values are set on the Green hue, saturation and luminance sliders",
+        "check": "What values are set on the Green hue, saturation and luminance sliders?",
         "say_example": "Set Green hue <-10>, saturation <+12>, luminance <-8> for the foliage"
        },
        {
@@ -2416,7 +2416,7 @@
         "kind": "decision",
         "verify_form": "The agent desaturated the aqua - check the sky or water is muted the right amount.",
         "speak": "never",
-        "check": "what value is set on the Aqua saturation slider, up or down",
+        "check": "What value is set on the Aqua saturation slider, up or down?",
         "say_example": "Moved Aqua saturation to <-18>"
        },
        {
@@ -2429,7 +2429,7 @@
         "kind": "decision",
         "verify_form": "The agent dropped purple and magenta saturation for fringing - check there was no real purple in the shot to lose.",
         "speak": "never",
-        "check": "what value is set on the Purple and Magenta saturation sliders",
+        "check": "What value is set on the Purple and Magenta saturation sliders?",
         "say_example": "Lowered Purple and Magenta saturation to <-30> to fix the fringing"
        },
        {
@@ -2442,7 +2442,7 @@
         "kind": "decision",
         "verify_form": "The agent desaturated the sky and water colours - check the blue is muted the right amount.",
         "speak": "never",
-        "check": "which colour sliders aligned with the sky and water were lowered, and by how much",
+        "check": "Which colour sliders aligned with the sky and water were lowered, and by how much?",
         "say_example": "Lowered Blue and Aqua saturation to <-15> for the sky and water"
        },
        {
@@ -2455,7 +2455,7 @@
         "kind": "decision",
         "verify_form": "The agent lowered the blue saturation after the luminance - check the blues are not neon.",
         "speak": "if-wrong",
-        "check": "does the Blue saturation value show a decrease after the luminance edit, or is it still at its earlier, higher setting",
+        "check": "Does the Blue saturation value show a decrease after the luminance edit, or is it still at its earlier, higher setting?",
         "say_example": "Blue saturation is still at <+22> after darkening the luminance. That combination reads neon."
        },
        {
@@ -2468,7 +2468,7 @@
         "kind": "decision",
         "verify_form": "The agent desaturated colours for mood - check which and how far.",
         "speak": "never",
-        "check": "which saturation sliders were lowered for the mood, and by how much",
+        "check": "Which saturation sliders were lowered for the mood, and by how much?",
         "say_example": "Lowered Green and Yellow saturation to <-20> for a moodier look"
        },
        {
@@ -2481,7 +2481,7 @@
         "kind": "decision",
         "verify_form": "The agent set the aqua saturation and luminance for the river - check it looks deeper, not fake.",
         "speak": "never",
-        "check": "what values are set on the Aqua saturation and luminance sliders",
+        "check": "What values are set on the Aqua saturation and luminance sliders?",
         "say_example": "Set Aqua saturation to <+12> and luminance to <-20> for the river"
        },
        {
@@ -2494,7 +2494,7 @@
         "kind": "decision",
         "verify_form": "The agent desaturated colours to keep it true to life - check against the scene.",
         "speak": "never",
-        "check": "which saturation sliders were lowered, and was the before/after view toggled to compare",
+        "check": "Which saturation sliders were lowered, and was the before/after view toggled to compare?",
         "say_example": "Lowered Green and Blue saturation to <-12>, checked the change with the before/after toggle"
        },
        {
@@ -2507,7 +2507,7 @@
         "kind": "decision",
         "verify_form": "The agent set red, orange and yellow saturation for skin - check the skin does not look sick.",
         "speak": "never",
-        "check": "what values are set on the Red, Orange and Yellow saturation sliders",
+        "check": "What values are set on the Red, Orange and Yellow saturation sliders?",
         "say_example": "Set Red, Orange and Yellow saturation to <+6>, <+8> and <+4> for the skin"
        },
        {
@@ -2520,7 +2520,7 @@
         "kind": "decision",
         "verify_form": "The agent saturated the greens - check they are alive, not neon.",
         "speak": "never",
-        "check": "what value is set on the Green saturation slider",
+        "check": "What value is set on the Green saturation slider?",
         "say_example": "Raised Green saturation to <+20>"
        },
        {
@@ -2533,7 +2533,7 @@
         "kind": "decision",
         "verify_form": "The agent desaturated colours to guide the eye - check which.",
         "speak": "on-event",
-        "check": "is the Red saturation slider at its minimum, -100",
+        "check": "Is the Red saturation slider at its minimum, -100?",
         "say_example": "Red saturation is pulled all the way to <-100>, the slider's floor. That's full desaturation of that colour, not a partial fade."
        }
       ]
@@ -2552,7 +2552,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened the blues - check the sky for fringing along edges; the recording stopped at -31 for that reason.",
         "speak": "never",
-        "check": "what value is set on the Blue luminance slider",
+        "check": "What value is set on the Blue luminance slider?",
         "say_example": "Darkened Blue luminance to <-31>"
        },
        {
@@ -2565,7 +2565,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened the oranges for skin contrast - check the skin still looks natural.",
         "speak": "never",
-        "check": "what value is set on the Orange luminance slider",
+        "check": "What value is set on the Orange luminance slider?",
         "say_example": "Darkened Orange luminance to <-15> for skin contrast"
        },
        {
@@ -2578,7 +2578,7 @@
         "kind": "decision",
         "verify_form": "The agent changed the luminance of specific colours - check the contrast between subject and background looks right.",
         "speak": "never",
-        "check": "which colour luminance sliders changed (subject versus background) and by how much",
+        "check": "Which colour luminance sliders changed (subject versus background) and by how much?",
         "say_example": "Darkened the subject's colour luminance to <-15>, brightened the background's to <+10>"
        },
        {
@@ -2591,7 +2591,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened the green luminance for the leaves - check the amount; -100 is extreme.",
         "speak": "on-event",
-        "check": "is the Green luminance slider at its minimum, -100",
+        "check": "Is the Green luminance slider at its minimum, -100?",
         "say_example": "Green luminance is at <-100>, the slider's floor. That's as far as it goes."
        },
        {
@@ -2604,7 +2604,7 @@
         "kind": "decision",
         "verify_form": "The agent set the yellow luminance - check the yellow elements are as bright as you wanted.",
         "speak": "never",
-        "check": "what is the final value on the Yellow luminance slider",
+        "check": "What is the final value on the Yellow luminance slider?",
         "say_example": "Set Yellow luminance to <+35>"
        },
        {
@@ -2617,7 +2617,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted the yellow channel - check the change stayed in the yellows.",
         "speak": "never",
-        "check": "what values are set on the Yellow hue, saturation and luminance sliders",
+        "check": "What values are set on the Yellow hue, saturation and luminance sliders?",
         "say_example": "Set Yellow hue <-6>, saturation <+10>, luminance <+15>"
        },
        {
@@ -2630,7 +2630,7 @@
         "kind": "decision",
         "verify_form": "The agent balanced yellow, green and orange luminance - check the foliage looks rich, not flat.",
         "speak": "never",
-        "check": "what values are set on the Yellow, Green and Orange luminance sliders",
+        "check": "What values are set on the Yellow, Green and Orange luminance sliders?",
         "say_example": "Set Yellow, Green and Orange luminance to <+10>, <-12> and <+5> for the foliage"
        },
        {
@@ -2643,7 +2643,7 @@
         "kind": "decision",
         "verify_form": "The agent separated the greens from the yellows - check the foliage has depth.",
         "speak": "never",
-        "check": "what values are set on the Green and Yellow hue, saturation and luminance sliders",
+        "check": "What values are set on the Green and Yellow hue, saturation and luminance sliders?",
         "say_example": "Shifted Green hue <-12> and Yellow luminance <+15> to separate the foliage"
        },
        {
@@ -2656,7 +2656,7 @@
         "kind": "decision",
         "verify_form": "The agent brightened or darkened the greens - check which way; darker reads richer, brighter can wash the foliage out.",
         "speak": "never",
-        "check": "which direction the Green luminance slider moved, and to what value",
+        "check": "Which direction the Green luminance slider moved, and to what value?",
         "say_example": "Darkened Green luminance to <-20> for richer foliage"
        },
        {
@@ -2669,7 +2669,7 @@
         "kind": "decision",
         "verify_form": "The agent lowered luminance for mood - check the colours are subdued the way you wanted.",
         "speak": "if-wrong",
-        "check": "does the luminance value for the affected colour(s) show a decrease, matching a move toward a darker, moodier tone",
+        "check": "Does the luminance value for the affected colour(s) show a decrease, matching a move toward a darker, moodier tone?",
         "say_example": "The colour luminance sliders are still close to <0>. There's no real move toward a darker, moodier tone yet."
        },
        {
@@ -2682,7 +2682,7 @@
         "kind": "decision",
         "verify_form": "The agent set aqua and blue luminance - check the water's brightness.",
         "speak": "never",
-        "check": "what values are set on the Aqua and Blue luminance sliders",
+        "check": "What values are set on the Aqua and Blue luminance sliders?",
         "say_example": "Raised Aqua and Blue luminance to <+18> for the water"
        },
        {
@@ -2695,7 +2695,7 @@
         "kind": "decision",
         "verify_form": "The agent raised orange luminance - check the skin is not washed out.",
         "speak": "never",
-        "check": "what value is set on the Orange luminance slider",
+        "check": "What value is set on the Orange luminance slider?",
         "say_example": "Raised Orange luminance to <+20> for the skin"
        }
       ]
@@ -2714,7 +2714,7 @@
         "kind": "decision",
         "verify_form": "The agent chose the Mixer or Point Color - check which; the Mixer moves a whole range, Point Color one sampled colour.",
         "speak": "never",
-        "check": "does the page show the Color Mixer/HSL panel active, or the Point Color (sampled-colour) tool active",
+        "check": "Does the page show the Color Mixer/HSL panel active, or the Point Color (sampled-colour) tool active?",
         "say_example": "Used Point Color on a sampled colour, not the Mixer's range sliders"
        },
        {
@@ -2727,7 +2727,7 @@
         "kind": "decision",
         "verify_form": "The agent boosted the sampled dress red - check the saturation and hue it set on that one colour only.",
         "speak": "never",
-        "check": "what values are set on the sampled Point Color's saturation and hue for the sampled red",
+        "check": "What values are set on the sampled Point Color's saturation and hue for the sampled red?",
         "say_example": "Raised the sampled red's saturation to <+18> for <the dress>"
        },
        {
@@ -2740,7 +2740,7 @@
         "kind": "decision",
         "verify_form": "The agent sampled the skin and set its saturation - check the sample point was skin and the result is not blotchy.",
         "speak": "never",
-        "check": "what value is set on the sampled skin Point Color's saturation",
+        "check": "What value is set on the sampled skin Point Color's saturation?",
         "say_example": "Set the sampled skin colour's saturation to <+7>"
        },
        {
@@ -2753,7 +2753,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted red and orange in the Color Editor - check the lips and skin.",
         "speak": "never",
-        "check": "what values are set on the Color Editor's red and orange saturation and lightness for the lips and skin",
+        "check": "What values are set on the Color Editor's red and orange saturation and lightness for the lips and skin?",
         "say_example": "Raised red saturation to <+12> for the lips, orange lightness to <+8> for the skin"
        }
       ]
@@ -2772,7 +2772,7 @@
         "kind": "decision",
         "verify_form": "The agent moved the calibration primaries for the skin - check the skin looks golden and natural, not orange or green.",
         "speak": "never",
-        "check": "what values are set on the calibration Red, Green and Blue primary hue and saturation sliders",
+        "check": "What values are set on the calibration Red, Green and Blue primary hue and saturation sliders?",
         "say_example": "Set Red primary hue <-8>, saturation <+10> for the skin tones"
        },
        {
@@ -2784,7 +2784,7 @@
         "whatTheAgentLoses": "The user loses accurate color correction if the agent modifies a different color channel than the one requested.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "which specific slider is actually moving on screen (which primary or HSL channel), and does its name match the colour named in the stated plan",
+        "check": "Which specific slider is actually moving on screen (which primary or HSL channel), and does its name match the colour named in the stated plan?",
         "say_example": "The plan was to lower orange saturation, but the slider actually moving is the Red Primary in Calibration."
        },
        {
@@ -2797,7 +2797,7 @@
         "kind": "decision",
         "verify_form": "The agent raised the blue primary saturation - check the amount; it lifts every colour a little and can tip skin toward magenta.",
         "speak": "never",
-        "check": "what value is set on the Blue primary saturation slider",
+        "check": "What value is set on the Blue primary saturation slider?",
         "say_example": "Raised Blue primary saturation to <+12>"
        },
        {
@@ -2810,7 +2810,7 @@
         "kind": "decision",
         "verify_form": "The agent abandoned the Mixer for Calibration on the skin - check the skin is right in the end and that the Mixer moves were reset.",
         "speak": "if-wrong",
-        "check": "do the Color Mixer's Orange saturation and hue values show they were reset back to zero now that Calibration is handling the skin colour instead",
+        "check": "Do the Color Mixer's Orange saturation and hue values show they were reset back to zero now that Calibration is handling the skin colour instead?",
         "say_example": "The Color Mixer's Orange saturation is still at <+9> even though Calibration is now doing the skin-colour work too. Both are stacking on the same tones."
        },
        {
@@ -2823,7 +2823,7 @@
         "kind": "decision",
         "verify_form": "The agent set the green primary hue and saturation - check the base colour shift.",
         "speak": "never",
-        "check": "what values are set on the Green primary hue and saturation sliders",
+        "check": "What values are set on the Green primary hue and saturation sliders?",
         "say_example": "Set Green primary hue <+10>, saturation <-5> for the base profile"
        },
        {
@@ -2836,7 +2836,7 @@
         "kind": "decision",
         "verify_form": "The agent set the blue primary - check the underlying colour mix.",
         "speak": "never",
-        "check": "what values are set on the Blue primary hue and saturation sliders",
+        "check": "What values are set on the Blue primary hue and saturation sliders?",
         "say_example": "Set Blue primary hue <-15>, saturation <+20>"
        }
       ]
@@ -2855,7 +2855,7 @@
         "kind": "decision",
         "verify_form": "The agent tinted the highlights and shadows - check the two hues; a warm-against-cool pair is the usual choice, and a strong one reads as a filter.",
         "speak": "never",
-        "check": "what hue and saturation values are set on the Highlights and Shadows wheels in Split Toning",
+        "check": "What hue and saturation values are set on the Highlights and Shadows wheels in Split Toning?",
         "say_example": "Tinted Highlights toward <a warm hue> and Shadows toward <a cool hue> in Split Toning"
        },
        {
@@ -2868,7 +2868,7 @@
         "kind": "decision",
         "verify_form": "The agent warmed the midtones toward orange - check the skin looks warm, not tanned or muddy.",
         "speak": "never",
-        "check": "what hue and saturation values are set on the Midtones wheel in Color Grading",
+        "check": "What hue and saturation values are set on the Midtones wheel in Color Grading?",
         "say_example": "Moved Midtones to hue <35>, saturation <25> to warm the skin"
        },
        {
@@ -2881,7 +2881,7 @@
         "kind": "decision",
         "verify_form": "The agent tinted the blacks with cyan - check the shadows read as cool and not as green.",
         "speak": "never",
-        "check": "what value of Cyan is applied to the Blacks channel",
+        "check": "What value of Cyan is applied to the Blacks channel?",
         "say_example": "Tinted Blacks with Cyan at <+15>"
        },
        {
@@ -2894,7 +2894,7 @@
         "kind": "decision",
         "verify_form": "The agent tinted the three tonal wheels - check each hue and that the saturation stayed low.",
         "speak": "never",
-        "check": "what hue and saturation values are set on the Shadows, Midtones and Highlights wheels",
+        "check": "What hue and saturation values are set on the Shadows, Midtones and Highlights wheels?",
         "say_example": "Set Shadows to <teal at 20>, Midtones to <warm at 10>, Highlights to <gold at 15>"
        },
        {
@@ -2907,7 +2907,7 @@
         "kind": "decision",
         "verify_form": "The agent tinted the highlights - check the hue and amount; warm is usual, strong reads as a filter.",
         "speak": "never",
-        "check": "what hue and intensity are set on the Highlights wheel",
+        "check": "What hue and intensity are set on the Highlights wheel?",
         "say_example": "Tinted Highlights toward <orange> at intensity <15>"
        },
        {
@@ -2920,7 +2920,7 @@
         "kind": "decision",
         "verify_form": "The agent applied a global tint - check the hue; a green global shifts everything.",
         "speak": "never",
-        "check": "what hue and saturation are set on the Global wheel in Color Grading",
+        "check": "What hue and saturation are set on the Global wheel in Color Grading?",
         "say_example": "Applied a <green> global tint"
        },
        {
@@ -2933,7 +2933,7 @@
         "kind": "decision",
         "verify_form": "The agent set the blending - check the tints do not bleed into the midtones.",
         "speak": "never",
-        "check": "what value is set on the Blending slider",
+        "check": "What value is set on the Blending slider?",
         "say_example": "Set Blending to <60>"
        },
        {
@@ -2946,7 +2946,7 @@
         "kind": "decision",
         "verify_form": "The agent set the balance - check whether shadows or highlights dominate, or it was left at zero.",
         "speak": "never",
-        "check": "what value is set on the Balance slider, and whether it favours shadows or highlights",
+        "check": "What value is set on the Balance slider, and whether it favours shadows or highlights?",
         "say_example": "Set Balance to <-20>, favouring the shadows"
        },
        {
@@ -2959,7 +2959,7 @@
         "kind": "decision",
         "verify_form": "The agent tinted the shadows - check the hue; warm reads nostalgic, cool reads moody.",
         "speak": "never",
-        "check": "what hue and saturation are set on the Shadows wheel",
+        "check": "What hue and saturation are set on the Shadows wheel?",
         "say_example": "Tinted Shadows toward <a warm amber>"
        },
        {
@@ -2972,7 +2972,7 @@
         "kind": "decision",
         "verify_form": "The agent tinted the midtones and set blending and balance - check the hue and the transitions.",
         "speak": "never",
-        "check": "what hue and saturation are set on the Midtones wheel, and what values are set on Blending and Balance",
+        "check": "What hue and saturation are set on the Midtones wheel, and what values are set on Blending and Balance?",
         "say_example": "Tinted Midtones and set Blending to <50>, Balance to <0>"
        },
        {
@@ -2985,7 +2985,7 @@
         "kind": "decision",
         "verify_form": "The agent set luminance per tonal range - check shadows, midtones and highlights.",
         "speak": "never",
-        "check": "what luminance values are set on the Shadows, Midtones and Highlights wheels",
+        "check": "What luminance values are set on the Shadows, Midtones and Highlights wheels?",
         "say_example": "Set luminance to <-10> on Shadows, <0> on Midtones, <+8> on Highlights"
        },
        {
@@ -2998,7 +2998,7 @@
         "kind": "decision",
         "verify_form": "The agent set the grading wheels and the tint - check the mood and any lingering cast.",
         "speak": "never",
-        "check": "what values are set on the Color Grading wheels and the Basic panel's Tint slider",
+        "check": "What values are set on the Color Grading wheels and the Basic panel's Tint slider?",
         "say_example": "Set the Color Grading wheels, then the Basic panel's Tint to <+4>"
        },
        {
@@ -3011,7 +3011,7 @@
         "kind": "decision",
         "verify_form": "The agent set midtone, highlight and global grading - check warm against cool.",
         "speak": "never",
-        "check": "what values are set on the Midtones, Highlights and Global wheels",
+        "check": "What values are set on the Midtones, Highlights and Global wheels?",
         "say_example": "Set Midtones <warm 12>, Highlights <gold 8>, Global <teal 5>, checked with the panel toggle"
        }
       ]
@@ -3030,7 +3030,7 @@
         "kind": "decision",
         "verify_form": "The agent moved the red, green and blue curves - check the cast it was fixing is gone and no new tint appeared.",
         "speak": "never",
-        "check": "what points are set on the Red, Green and Blue tone curves",
+        "check": "What points are set on the Red, Green and Blue tone curves?",
         "say_example": "Lifted the Red curve's shadows to <+8>, dropped the Blue curve's highlights to <-6>"
        },
        {
@@ -3043,7 +3043,7 @@
         "kind": "decision",
         "verify_form": "The agent brightened with the RGB curve and warmed with the blue curve - check the sunny tint is what you wanted and not a yellow cast.",
         "speak": "never",
-        "check": "what points are set on the master RGB curve and the Blue channel curve",
+        "check": "What points are set on the master RGB curve and the Blue channel curve?",
         "say_example": "Raised the RGB curve's midpoint by <+12> and lowered the Blue curve by <-10> for warmth"
        },
        {
@@ -3055,7 +3055,7 @@
         "whatTheAgentLoses": "You lose the creative choice of deciding whether to perfectly sync the color channels or adjust them independently for a specific color grade.",
         "kind": "state-check",
         "speak": "never",
-        "check": "are the Red, Green and Blue curve shapes identical (copied from one to the others), or does each differ",
+        "check": "Are the Red, Green and Blue curve shapes identical (copied from one to the others), or does each differ?",
         "say_example": "Copied one curve shape onto all three channels"
        },
        {
@@ -3068,7 +3068,7 @@
         "kind": "decision",
         "verify_form": "The agent tried the RGB curves for colour and reset them, or kept them - check which tool the grade came from.",
         "speak": "never",
-        "check": "were the RGB curve adjustments reset to a straight line, or kept as drawn",
+        "check": "Were the RGB curve adjustments reset to a straight line, or kept as drawn?",
         "say_example": "Kept the RGB curve adjustments rather than resetting them"
        },
        {
@@ -3081,7 +3081,7 @@
         "kind": "decision",
         "verify_form": "The agent used the RGB curve or the colour channels - check which; the channels change colour, not just tone.",
         "speak": "never",
-        "check": "is the adjustment on the overall RGB curve, or on the individual Red, Green or Blue channel curves",
+        "check": "Is the adjustment on the overall RGB curve, or on the individual Red, Green or Blue channel curves?",
         "say_example": "Used the individual Red, Green and Blue channel curves, not the overall RGB curve"
        },
        {
@@ -3094,7 +3094,7 @@
         "kind": "decision",
         "verify_form": "The agent moved a single colour channel on the curve - check the frame has no colour cast from it.",
         "speak": "if-wrong",
-        "check": "does the Green channel curve still sit at an extreme point after a colour cast appeared, or was it pulled back to a moderate value",
+        "check": "Does the Green channel curve still sit at an extreme point after a colour cast appeared, or was it pulled back to a moderate value?",
         "say_example": "The Green curve is still pulled down hard to <-80>. That's the setting that caused the magenta cast, and it hasn't been backed off."
        }
       ]
@@ -3113,7 +3113,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a filter - check which one and whether you wanted a filter at all.",
         "speak": "never",
-        "check": "which filter is selected from the presets/filter list",
+        "check": "Which filter is selected from the presets/filter list?",
         "say_example": "Selected the <Vivid Warm> filter"
        },
        {
@@ -3126,7 +3126,7 @@
         "kind": "decision",
         "verify_form": "The agent set the filter's strength - check the value; full strength usually overpowers the photo.",
         "speak": "never",
-        "check": "what value is set on the filter's intensity slider",
+        "check": "What value is set on the filter's intensity slider?",
         "say_example": "Set the filter's intensity to <70>, after trying full strength"
        },
        {
@@ -3139,7 +3139,7 @@
         "kind": "decision",
         "verify_form": "The agent previewed the filters - check which were tried before one was kept.",
         "speak": "never",
-        "check": "which filter options were previewed before one was applied",
+        "check": "Which filter options were previewed before one was applied?",
         "say_example": "Previewed a warm, a dramatic and a black-and-white look before choosing"
        },
        {
@@ -3152,7 +3152,7 @@
         "kind": "decision",
         "verify_form": "The agent picked an HDR preset and strength - check the preset suits the subject and the strength is not over-processed.",
         "speak": "never",
-        "check": "which HDR preset is selected, and what value is set on the Strength slider",
+        "check": "Which HDR preset is selected, and what value is set on the Strength slider?",
         "say_example": "Chose the portrait-style HDR preset at strength <60>"
        },
        {
@@ -3165,7 +3165,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a film filter with grain and strength - check the values; grain doubles if two filters both add it.",
         "speak": "if-wrong",
-        "check": "is more than one grain-adding effect active at once (e.g. a film preset plus a separate Grain slider elsewhere in the panel)",
+        "check": "Is more than one grain-adding effect active at once (e.g. a film preset plus a separate Grain slider elsewhere in the panel)?",
         "say_example": "This film preset adds its own grain, and the Basic panel's Grain slider is also at <+15>. That's grain stacking twice."
        },
        {
@@ -3178,7 +3178,7 @@
         "kind": "decision",
         "verify_form": "The agent applied a preset from the pack, or undid it - check which and whether the pack was bought.",
         "speak": "never",
-        "check": "which preset from the pack is selected or previewed, by name",
+        "check": "Which preset from the pack is selected or previewed, by name?",
         "say_example": "Previewed a preset called <Faded Sunset> from the pack"
        },
        {
@@ -3191,7 +3191,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a pre-made look from the grid - check the look suits the photo and that the plugin was not bought.",
         "speak": "never",
-        "check": "which pre-made look is selected from the grid, by name",
+        "check": "Which pre-made look is selected from the grid, by name?",
         "say_example": "Applied a look called <Amber Reel> from the grid"
        },
        {
@@ -3225,7 +3225,7 @@
       "kind": "decision",
       "verify_form": "The agent masked areas to draw the eye - check which zones were dodged and burned.",
       "speak": "never",
-      "check": "which zones were masked to dodge (brighten) or burn (darken), and with what settings",
+      "check": "Which zones were masked to dodge (brighten) or burn (darken), and with what settings?",
       "say_example": "Dodged <the face> by <+0.4>, burned <the background> by <-0.5> with separate masks"
      },
      {
@@ -3238,7 +3238,7 @@
       "kind": "decision",
       "verify_form": "The agent went on to local adjustments after the grade, or stopped - check whether the regions you named are still untouched.",
       "speak": "never",
-      "check": "does the page show a local/masking tool (brush, gradient, radial) opened after the global-panel edits",
+      "check": "Does the page show a local/masking tool (brush, gradient, radial) opened after the global-panel edits?",
       "say_example": "Opened the Masking panel after finishing the global edits"
      },
      {
@@ -3251,7 +3251,7 @@
       "kind": "decision",
       "verify_form": "The agent masked the cliff light and the road - check the emphasis.",
       "speak": "never",
-      "check": "which masks were created for the areas named to be lit, and with what settings",
+      "check": "Which masks were created for the areas named to be lit, and with what settings?",
       "say_example": "Combined a radial and colour-range mask for <the cliff light>, brushed <the road> separately"
      }
     ],
@@ -3270,7 +3270,7 @@
         "kind": "decision",
         "verify_form": "The agent picked an automated mask for the background - check the selection covers it.",
         "speak": "never",
-        "check": "which automated masking option is selected (Subject, Sky, Background, etc.)",
+        "check": "Which automated masking option is selected (Subject, Sky, Background, etc.)?",
         "say_example": "Selected the Background auto mask"
        },
        {
@@ -3283,7 +3283,7 @@
         "kind": "decision",
         "verify_form": "The agent chose Select Subject for the cat - check the overlay.",
         "speak": "never",
-        "check": "which automated masking option is selected for the subject",
+        "check": "Which automated masking option is selected for the subject?",
         "say_example": "Selected Subject to isolate <the cat>"
        },
        {
@@ -3296,7 +3296,7 @@
         "kind": "decision",
         "verify_form": "The agent used Objects for the eyes - check the rectangles caught only the eyes.",
         "speak": "never",
-        "check": "which masking tool is used for the subject's eyes (e.g. Objects), and how many selection rectangles are drawn",
+        "check": "Which masking tool is used for the subject's eyes (e.g. Objects), and how many selection rectangles are drawn?",
         "say_example": "Used Objects to draw rectangles over <the cat's> eyes"
        },
        {
@@ -3309,7 +3309,7 @@
         "kind": "decision",
         "verify_form": "The agent used the Subject tool - check the focal point it found.",
         "speak": "never",
-        "check": "which masking tool is selected for the main subject (e.g. the AI Subject tool)",
+        "check": "Which masking tool is selected for the main subject (e.g. the AI Subject tool)?",
         "say_example": "Used the AI Subject tool to isolate the main subject"
        },
        {
@@ -3322,7 +3322,7 @@
         "kind": "decision",
         "verify_form": "The agent picked the parts of the person to mask - check only skin is included.",
         "speak": "if-wrong",
-        "check": "which person-mask checkboxes are selected (facial skin, body skin, lips, teeth, eyes, hair, clothing, etc.)",
+        "check": "Which person-mask checkboxes are selected (facial skin, body skin, lips, teeth, eyes, hair, clothing, etc.)?",
         "say_example": "Teeth and Eyes are checked here too, not just skin. The softening will land on them as well."
        }
       ]
@@ -3341,7 +3341,7 @@
         "kind": "decision",
         "verify_form": "The agent brightened the face with an inverted radial - check the light looks natural.",
         "speak": "never",
-        "check": "is a radial mask created over the face, is Invert checked, and what is the Exposure value",
+        "check": "Is a radial mask created over the face, is Invert checked, and what is the Exposure value?",
         "say_example": "Inverted a radial mask on the face, Exposure at <+0.6>"
        },
        {
@@ -3354,7 +3354,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a mask type for the foreground - check the choice.",
         "speak": "never",
-        "check": "which mask type is selected (Linear, Radial, Brush, etc.) for the foreground",
+        "check": "Which mask type is selected (Linear, Radial, Brush, etc.) for the foreground?",
         "say_example": "Chose a Linear gradient for the foreground"
        },
        {
@@ -3367,7 +3367,7 @@
         "kind": "decision",
         "verify_form": "The agent lit the background from above minus the subject - check the light falls where you wanted.",
         "speak": "never",
-        "check": "is the Subject subtracted from the radial mask, leaving it positioned over the background",
+        "check": "Is the Subject subtracted from the radial mask, leaving it positioned over the background?",
         "say_example": "Subtracted the Subject from the radial, leaving only the background lit"
        },
        {
@@ -3380,7 +3380,7 @@
         "kind": "decision",
         "verify_form": "The agent shaped a thin highlight - check the intensity.",
         "speak": "never",
-        "check": "what size and feather are set on the radial, is the Subject subtracted, and what is the Exposure value",
+        "check": "What size and feather are set on the radial, is the Subject subtracted, and what is the Exposure value?",
         "say_example": "Subtracted the subject from a thin radial, Exposure at <+0.8>"
        },
        {
@@ -3393,7 +3393,7 @@
         "kind": "decision",
         "verify_form": "The agent picked a mask for the central subject - check the focal point.",
         "speak": "never",
-        "check": "which mask tool is selected for the central subject (radial, linear, subject, etc.)",
+        "check": "Which mask tool is selected for the central subject (radial, linear, subject, etc.)?",
         "say_example": "Chose a Radial gradient for the central subject"
        },
        {
@@ -3406,7 +3406,7 @@
         "kind": "decision",
         "verify_form": "The agent enhanced the light source - check the sun effect looks realistic.",
         "speak": "never",
-        "check": "what values are set for Feather, Exposure, Dehaze and Temperature on this radial",
+        "check": "What values are set for Feather, Exposure, Dehaze and Temperature on this radial?",
         "say_example": "Set a heavily feathered radial with Exposure <+0.9>, Dehaze <-15> and a warm tint"
        },
        {
@@ -3419,7 +3419,7 @@
         "kind": "decision",
         "verify_form": "The agent stacked a smaller radial for the core - check intensity and spread.",
         "speak": "never",
-        "check": "is a second, smaller radial mask added inside the first, and what are its Exposure and Temperature values",
+        "check": "Is a second, smaller radial mask added inside the first, and what are its Exposure and Temperature values?",
         "say_example": "Added a smaller radial inside the first, Exposure <+1.2>, Temperature <+10>"
        },
        {
@@ -3432,7 +3432,7 @@
         "kind": "decision",
         "verify_form": "The agent brightened the fissure - check the emphasis.",
         "speak": "never",
-        "check": "what values are set for Exposure, Shadows and Whites on the inverted radial over the central feature",
+        "check": "What values are set for Exposure, Shadows and Whites on the inverted radial over the central feature?",
         "say_example": "Set Exposure <+0.7>, Shadows <+30> and Whites <+15> on the inverted radial over <the fissure>"
        },
        {
@@ -3445,7 +3445,7 @@
         "kind": "decision",
         "verify_form": "The agent used a radial to lower exposure for mood - check the darkness.",
         "speak": "never",
-        "check": "what value is set for Exposure (negative) on this radial",
+        "check": "What value is set for Exposure (negative) on this radial?",
         "say_example": "Lowered Exposure on this radial to <-0.7> for mood"
        },
        {
@@ -3458,7 +3458,7 @@
         "kind": "decision",
         "verify_form": "The agent built a vignette from an inverted radial - check shape and intensity.",
         "speak": "never",
-        "check": "is the radial mask inverted, and what is the Exposure reduction value",
+        "check": "Is the radial mask inverted, and what is the Exposure reduction value?",
         "say_example": "Built a vignette from an inverted radial, Exposure at <-0.5>"
        },
        {
@@ -3470,7 +3470,7 @@
         "whatTheAgentLoses": "You lose the ability to visually verify that the inverted mask accurately isolates the background without bleeding into the subject.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the Invert option checked on this mask",
+        "check": "Is the Invert option checked on this mask?",
         "say_example": "Invert is not checked here. The mask is still selecting the subject, not the area around it."
        },
        {
@@ -3483,7 +3483,7 @@
         "kind": "decision",
         "verify_form": "The agent isolated the corner minus the subject - check the mask.",
         "speak": "never",
-        "check": "is the Subject subtracted from the radial mask covering the corner",
+        "check": "Is the Subject subtracted from the radial mask covering the corner?",
         "say_example": "Subtracted the Subject from the radial over the corner"
        },
        {
@@ -3496,7 +3496,7 @@
         "kind": "decision",
         "verify_form": "The agent isolated the foreground with a gradient - check placement and exposure.",
         "speak": "never",
-        "check": "what is the position and Exposure value of the linear gradient over the foreground",
+        "check": "What is the position and Exposure value of the linear gradient over the foreground?",
         "say_example": "Placed a linear gradient over the foreground, Exposure at <-0.6>"
        },
        {
@@ -3509,7 +3509,7 @@
         "kind": "decision",
         "verify_form": "The agent used a radial on the dark spot - check the tool suits it.",
         "speak": "never",
-        "check": "which mask tool is selected for the dark spot (radial, brush, etc.)",
+        "check": "Which mask tool is selected for the dark spot (radial, brush, etc.)?",
         "say_example": "Used a radial for the dark spot"
        },
        {
@@ -3522,7 +3522,7 @@
         "kind": "decision",
         "verify_form": "The agent used a graduated filter for the sky - check the placement.",
         "speak": "never",
-        "check": "is the Graduated Filter tool selected, and where is it placed",
+        "check": "Is the Graduated Filter tool selected, and where is it placed?",
         "say_example": "Placed a Graduated Filter over the sky"
        }
       ]
@@ -3541,7 +3541,7 @@
         "kind": "decision",
         "verify_form": "The agent chose Dodge and Burn at -5 for the stairs - check the darkening.",
         "speak": "never",
-        "check": "what value is set on the Dodge & Burn brush (negative for darkening) on the area being darkened",
+        "check": "What value is set on the Dodge & Burn brush (negative for darkening) on the area being darkened?",
         "say_example": "Set Dodge & Burn to <-5> and painted <the stairs>"
        },
        {
@@ -3554,7 +3554,7 @@
         "kind": "decision",
         "verify_form": "The agent set the brush to +5 for the centre - check the lightening.",
         "speak": "never",
-        "check": "is the Dodge & Burn value set positive (lighten) or negative (darken) for the centre",
+        "check": "Is the Dodge & Burn value set positive (lighten) or negative (darken) for the centre?",
         "say_example": "Set Dodge & Burn to <+5> to lighten the centre"
        },
        {
@@ -3567,7 +3567,7 @@
         "kind": "decision",
         "verify_form": "The agent dodged and burned specific areas - check legs, hair and skirt.",
         "speak": "never",
-        "check": "which specific areas were dodged or burned (legs, hair, skirt, etc.)",
+        "check": "Which specific areas were dodged or burned (legs, hair, skirt, etc.)?",
         "say_example": "Dodged <the legs>, burned <the hair and skirt>"
        },
        {
@@ -3592,7 +3592,7 @@
         "kind": "decision",
         "verify_form": "The agent framed with a brush instead of a vignette - check the edges.",
         "speak": "never",
-        "check": "what values are set for Clarity, Texture and Exposure on the brush along the edges",
+        "check": "What values are set for Clarity, Texture and Exposure on the brush along the edges?",
         "say_example": "Brushed Clarity <-20>, Texture <-15> and Exposure <-0.4> along the edges instead of a vignette"
        },
        {
@@ -3605,7 +3605,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened some bright edges and corners - check which ones, and that the centre was left alone.",
         "speak": "never",
-        "check": "which bright edges or corners were brushed with negative Exposure",
+        "check": "Which bright edges or corners were brushed with negative Exposure?",
         "say_example": "Brushed negative Exposure along the bottom edge"
        },
        {
@@ -3618,7 +3618,7 @@
         "kind": "decision",
         "verify_form": "The agent brightened the foreground with a brush - check the mask and exposure.",
         "speak": "never",
-        "check": "what values are set for Exposure and Shadows on the foreground brush",
+        "check": "What values are set for Exposure and Shadows on the foreground brush?",
         "say_example": "Brushed Exposure <+0.6> and Shadows <+25> onto the dark foreground"
        },
        {
@@ -3631,7 +3631,7 @@
         "kind": "decision",
         "verify_form": "The agent used Auto Mask on the brush for the bridge - check the selection.",
         "speak": "never",
-        "check": "is Auto Mask enabled on the Brush tool for that object",
+        "check": "Is Auto Mask enabled on the Brush tool for that object?",
         "say_example": "Turned on Auto Mask for <the bridge> brush"
        },
        {
@@ -3644,7 +3644,7 @@
         "kind": "decision",
         "verify_form": "The agent set flow and feather and painted the body - check the face stayed.",
         "speak": "never",
-        "check": "what values are set for Flow and Feather on the brush, and which area was painted",
+        "check": "What values are set for Flow and Feather on the brush, and which area was painted?",
         "say_example": "Set Flow <50>, Feather <70>, painted the body and avoided the already-bright face"
        },
        {
@@ -3657,7 +3657,7 @@
         "kind": "decision",
         "verify_form": "The agent brightened parts of the bird - check it was the flank, tail and throat and not the already bright face.",
         "speak": "never",
-        "check": "which specific areas of the subject were brushed",
+        "check": "Which specific areas of the subject were brushed?",
         "say_example": "Brightened <the flank, tail and throat>, left <the face> alone"
        },
        {
@@ -3670,7 +3670,7 @@
         "kind": "decision",
         "verify_form": "The agent brushed the cast fix - check belly, face and flank.",
         "speak": "never",
-        "check": "which areas were brushed to fix the green colour cast",
+        "check": "Which areas were brushed to fix the green colour cast?",
         "say_example": "Brushed the cast fix onto <the belly, face and flank>"
        },
        {
@@ -3683,7 +3683,7 @@
         "kind": "decision",
         "verify_form": "The agent set size, feather and flow - check the blend.",
         "speak": "never",
-        "check": "what values are set for Size, Feather and Flow on the brush",
+        "check": "What values are set for Size, Feather and Flow on the brush?",
         "say_example": "Set brush Size <40>, Feather <60>, Flow <50> for this adjustment"
        },
        {
@@ -3696,7 +3696,7 @@
         "kind": "decision",
         "verify_form": "The agent accentuated an area - check it is the one that guides the eye.",
         "speak": "never",
-        "check": "which area was targeted with the Adjustment Brush (e.g. the path)",
+        "check": "Which area was targeted with the Adjustment Brush (e.g. the path)?",
         "say_example": "Brushed <the dirt path> to draw the eye"
        },
        {
@@ -3708,7 +3708,7 @@
         "whatTheAgentLoses": "The user loses the ability to keep their local adjustments separated, risking the destruction of previous careful masking work if the agent paints over it.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is a New mask created for this brush stroke, or is an existing mask/pin still selected in the mask list",
+        "check": "Is a New mask created for this brush stroke, or is an existing mask/pin still selected in the mask list?",
         "say_example": "Mask 2 is still the selected pin. These new strokes are adding onto it, not starting a new mask."
        }
       ]
@@ -3727,7 +3727,7 @@
         "kind": "decision",
         "verify_form": "The agent set the selective point on the left foliage - check the greens pop.",
         "speak": "never",
-        "check": "what values are set for Centre Size, Brightness, Contrast and Saturation on this selective point",
+        "check": "What values are set for Centre Size, Brightness, Contrast and Saturation on this selective point?",
         "say_example": "Set the left foliage's point to size <60>, brightness <+15>, contrast <+10>, saturation <+8>"
        },
        {
@@ -3740,7 +3740,7 @@
         "kind": "decision",
         "verify_form": "The agent set a smaller brightness boost on the right - check the lighting is not symmetrical.",
         "speak": "never",
-        "check": "what value is set for Brightness on the right foliage's selective point",
+        "check": "What value is set for Brightness on the right foliage's selective point?",
         "say_example": "Brightened the right foliage's point by <+8>, less than the left"
        },
        {
@@ -3753,7 +3753,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted the stairs point - check brightness, contrast, saturation, structure.",
         "speak": "never",
-        "check": "what values are set for Brightness, Contrast, Saturation and Structure on this selective point",
+        "check": "What values are set for Brightness, Contrast, Saturation and Structure on this selective point?",
         "say_example": "Set brightness <+10>, contrast <+12>, saturation <-5> and structure <+15> on <the stairs'> point"
        },
        {
@@ -3766,7 +3766,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened the far left - check the distractions are reduced.",
         "speak": "never",
-        "check": "what value is set for Brightness (negative) on the far-left control point",
+        "check": "What value is set for Brightness (negative) on the far-left control point?",
         "say_example": "Darkened the far-left foliage's control point to <-20>"
        },
        {
@@ -3778,7 +3778,7 @@
         "whatTheAgentLoses": "A person delegating this task loses accurate execution if the agent targets the wrong area of the photo while claiming to edit another.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "where is the selective control point actually placed, and does that match the area named in the stated plan",
+        "check": "Where is the selective control point actually placed, and does that match the area named in the stated plan?",
         "say_example": "The plan was to darken the sky, but the point landed on the foliage at the edge of the frame instead."
        },
        {
@@ -3790,7 +3790,7 @@
         "whatTheAgentLoses": "Delegating this choice means losing the creative control to decide exactly which specific colors need enhancement to match your personal vision for the photo.",
         "kind": "intent-check",
         "speak": "never",
-        "check": "is the Selective tool chosen from the tools menu",
+        "check": "Is the Selective tool chosen from the tools menu?",
         "say_example": "Selected the Selective tool"
        },
        {
@@ -3803,7 +3803,7 @@
         "kind": "decision",
         "verify_form": "The agent toned down the orange scooter - check brightness and saturation.",
         "speak": "never",
-        "check": "what values are set for Brightness and Saturation on the distracting object's selective point",
+        "check": "What values are set for Brightness and Saturation on the distracting object's selective point?",
         "say_example": "Lowered Brightness to <-25> and Saturation to <-30> on <the orange scooter's> point"
        },
        {
@@ -3816,7 +3816,7 @@
         "kind": "decision",
         "verify_form": "The agent set size, brightness and saturation on the grass - check the blend.",
         "speak": "never",
-        "check": "what values are set for Centre Size, Brightness and Saturation on the grass point",
+        "check": "What values are set for Centre Size, Brightness and Saturation on the grass point?",
         "say_example": "Set size <45>, brightness <-10> and saturation <+12> on the grass point"
        },
        {
@@ -3829,7 +3829,7 @@
         "kind": "decision",
         "verify_form": "The agent added another selective point - check which element it sits on and that its reach does not overlap the earlier points.",
         "speak": "if-wrong",
-        "check": "does the new selective point's Centre Size circle overlap the area already covered by an earlier point",
+        "check": "Does the new selective point's Centre Size circle overlap the area already covered by an earlier point?",
         "say_example": "The new point's circle overlaps the one already on <the handle>. Both will apply to that spot now."
        }
       ]
@@ -3848,7 +3848,7 @@
         "kind": "decision",
         "verify_form": "The agent inverted and zeroed the mask - check the setup reveals the blur where you paint.",
         "speak": "never",
-        "check": "is the mask inverted, and is the effect amount set to zero",
+        "check": "Is the mask inverted, and is the effect amount set to zero?",
         "say_example": "Inverted the mask and zeroed the effect amount to prep for painting the blur back in"
        },
        {
@@ -3861,7 +3861,7 @@
         "kind": "decision",
         "verify_form": "The agent subtracted a gradient from the background mask - check the protected corner.",
         "speak": "never",
-        "check": "is a linear gradient subtracted from the background mask, and does it cover the top-right corner",
+        "check": "Is a linear gradient subtracted from the background mask, and does it cover the top-right corner?",
         "say_example": "Subtracted a linear gradient from the background mask to protect the top-right corner"
        },
        {
@@ -3874,7 +3874,7 @@
         "kind": "decision",
         "verify_form": "The agent refined the automatic selection - check the rock is out.",
         "speak": "if-wrong",
-        "check": "does the mask overlay still include the foreground rock, or has it been excluded",
+        "check": "Does the mask overlay still include the foreground rock, or has it been excluded?",
         "say_example": "The overlay still reaches onto <the rock in the foreground>. It hasn't been excluded yet."
        },
        {
@@ -3887,7 +3887,7 @@
         "kind": "decision",
         "verify_form": "The agent set tone and feather - check the edges are not harsh.",
         "speak": "never",
-        "check": "what values are set for Tone and Feather",
+        "check": "What values are set for Tone and Feather?",
         "say_example": "Set Tone <-15> and Feather <70> on the central brightness mask"
        },
        {
@@ -3900,7 +3900,7 @@
         "kind": "decision",
         "verify_form": "The agent erased the spill - check the foreground is clear.",
         "speak": "if-wrong",
-        "check": "does the radial's hazy effect still show over the foreground after erasing, or is the foreground clear",
+        "check": "Does the radial's hazy effect still show over the foreground after erasing, or is the foreground clear?",
         "say_example": "The radial's haze is still showing over the foreground. The erase brush hasn't cleared that spill yet."
        },
        {
@@ -3913,7 +3913,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened edges without the subject - check the river stayed bright.",
         "speak": "never",
-        "check": "is the subject (for example <the river>) excluded via subtract from the linear gradient, and what is its Exposure value",
+        "check": "Is the subject (for example <the river>) excluded via subtract from the linear gradient, and what is its Exposure value?",
         "say_example": "Subtracted <the river> from the linear gradient so it stays bright while the edges darken"
        },
        {
@@ -3938,7 +3938,7 @@
         "kind": "decision",
         "verify_form": "The agent intersected a radial with a colour range - check only the red pixels are selected.",
         "speak": "never",
-        "check": "is a Color Range mask intersected with the radial over the area, isolating only the red pixels",
+        "check": "Is a Color Range mask intersected with the radial over the area, isolating only the red pixels?",
         "say_example": "Intersected a Color Range with the radial to catch only the red pixels on <the mountains>"
        },
        {
@@ -3951,7 +3951,7 @@
         "kind": "decision",
         "verify_form": "The agent set auto mask and feather for the road - check the edges.",
         "speak": "never",
-        "check": "is Auto Mask on, and what is the Feather value, for this brush",
+        "check": "Is Auto Mask on, and what is the Feather value, for this brush?",
         "say_example": "Turned on Auto Mask and set Feather to <50> for <the road>"
        },
        {
@@ -3963,7 +3963,7 @@
         "whatTheAgentLoses": "You lose the precise visual control of manually erasing the mask's edges to ensure the local adjustment blends perfectly with the scene.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the mask overlay, after erasing, cover the intended area only, or does it still spill onto the surrounding areas",
+        "check": "Does the mask overlay, after erasing, cover the intended area only, or does it still spill onto the surrounding areas?",
         "say_example": "A sliver of the overlay still spills off <the road's> edge onto <the guardrail>."
        },
        {
@@ -3976,7 +3976,7 @@
         "kind": "decision",
         "verify_form": "The agent subtracted the subject from the gradient - check the bird is unchanged.",
         "speak": "never",
-        "check": "is the Subject subtracted from the linear gradient covering the foreground",
+        "check": "Is the Subject subtracted from the linear gradient covering the foreground?",
         "say_example": "Subtracted <the bird> from the linear gradient over the foreground"
        },
        {
@@ -3989,7 +3989,7 @@
         "kind": "decision",
         "verify_form": "The agent sized and feathered the radial - check the blend.",
         "speak": "never",
-        "check": "what values are set for Size and Feather on this radial",
+        "check": "What values are set for Size and Feather on this radial?",
         "say_example": "Set the radial to size <35>, feather <80> over the dark spot on <the leaf>"
        },
        {
@@ -4014,7 +4014,7 @@
         "whatTheAgentLoses": "You lose the critical human eye needed to spot when an automatic AI mask overreaches and the manual finesse required to correct it.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the mask overlay extend onto the hair or other non-skin areas",
+        "check": "Does the mask overlay extend onto the hair or other non-skin areas?",
         "say_example": "The overlay still catches some hair near the hairline. The automatic skin selection didn't stop cleanly at skin."
        },
        {
@@ -4026,7 +4026,7 @@
         "whatTheAgentLoses": "You lose the precise, creative control of deciding exactly which parts of the image should be manually brushed out of the adjustment area.",
         "kind": "state-check",
         "speak": "never",
-        "check": "which tool is selected to subtract from the current mask (Brush, Linear, Radial, Range, Subject, etc.)",
+        "check": "Which tool is selected to subtract from the current mask (Brush, Linear, Radial, Range, Subject, etc.)?",
         "say_example": "Used the Brush to subtract from the mask"
        },
        {
@@ -4039,7 +4039,7 @@
         "kind": "decision",
         "verify_form": "The agent set the filter to Temp only - check no other sliders carried over.",
         "speak": "never",
-        "check": "is the mask's effect set to a single slider (e.g. Temp only), with the other sliders reset to zero",
+        "check": "Is the mask's effect set to a single slider (e.g. Temp only), with the other sliders reset to zero?",
         "say_example": "Set the mask to Temp only - the other sliders reset to zero automatically"
        },
        {
@@ -4070,7 +4070,7 @@
         "whatTheAgentLoses": "Delegating this step removes your precise visual control over exactly which parts of the subject receive the local adjustment.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the blue mask overlay cover the intended brush area (for example <the legs>) without extending elsewhere",
+        "check": "Does the blue mask overlay cover the intended brush area (for example <the legs>) without extending elsewhere?",
         "say_example": "The blue overlay reaches past <the legs> onto <the hem of the skirt>."
        },
        {
@@ -4106,7 +4106,7 @@
         "whatTheAgentLoses": "You lose the visual reassurance of seeing exactly which pixels the tool will alter before committing to the color adjustments.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "does the red mask overlay cover only the sky, or does it extend onto the horizon or foreground below the graduated filter's line",
+        "check": "Does the red mask overlay cover only the sky, or does it extend onto the horizon or foreground below the graduated filter's line?",
         "say_example": "The overlay dips below the horizon line onto the foreground."
        },
        {
@@ -4118,7 +4118,7 @@
         "whatTheAgentLoses": "The user loses the ability to see the actual photographic result of the local adjustment because the interface's visual aid is blocking it.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "is the mask overlay still turned on, rather than toggled off to view the actual adjustment",
+        "check": "Is the mask overlay still turned on, rather than toggled off to view the actual adjustment?",
         "say_example": "The overlay is still on. What's showing is the mask colour, not the actual exposure and colour change underneath."
        },
        {
@@ -4161,7 +4161,7 @@
         "kind": "decision",
         "verify_form": "The agent set exposure and blacks on the background light - check the light looks soft and not like a spotlight.",
         "speak": "never",
-        "check": "what values are set for Exposure and Blacks on the background light mask",
+        "check": "What values are set for Exposure and Blacks on the background light mask?",
         "say_example": "Set Exposure to <+1.0> and Blacks to <+20> on the background light mask"
        },
        {
@@ -4174,7 +4174,7 @@
         "kind": "decision",
         "verify_form": "The agent balanced the river mask's highlights, whites, shadows and blacks - check the water's contrast.",
         "speak": "never",
-        "check": "what values are set for Highlights, Whites, Shadows and Blacks on this mask",
+        "check": "What values are set for Highlights, Whites, Shadows and Blacks on this mask?",
         "say_example": "Set Highlights <-30>, Whites <+10>, Shadows <+20>, Blacks <-10> on <the river's> mask"
        },
        {
@@ -4186,7 +4186,7 @@
         "whatTheAgentLoses": "The user loses the intended highlight recovery because the agent performs the exact opposite of the requested adjustment.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "which direction is the Highlights slider actually moved, and does that match the stated direction",
+        "check": "Which direction is the Highlights slider actually moved, and does that match the stated direction?",
         "say_example": "The plan was to bring the highlights down, but the Highlights slider is being dragged up to <+25> instead."
        },
        {
@@ -4199,7 +4199,7 @@
         "kind": "decision",
         "verify_form": "The agent brightened a dark corner with a mask - check the corner blends.",
         "speak": "never",
-        "check": "what value is set for Exposure on the corner mask",
+        "check": "What value is set for Exposure on the corner mask?",
         "say_example": "Brightened the dark top-left corner with a mask, Exposure at <+0.5>"
        },
        {
@@ -4212,7 +4212,7 @@
         "kind": "decision",
         "verify_form": "The agent set brush sliders for the eyes - check exposure, temperature and sharpness.",
         "speak": "never",
-        "check": "what values are set for Exposure, Temperature and Sharpness on the eye brush",
+        "check": "What values are set for Exposure, Temperature and Sharpness on the eye brush?",
         "say_example": "Set Exposure <+0.3>, Temperature <+5> and Sharpness <+20> on the brushed eyes"
        },
        {
@@ -4224,7 +4224,7 @@
         "whatTheAgentLoses": "The user loses a reliable record of the edit because an agent might apply the spoken value instead of the visual one, resulting in an incorrect exposure level.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "what is the actual value shown on the mask's Exposure slider, and does it match the value stated out loud",
+        "check": "What is the actual value shown on the mask's Exposure slider, and does it match the value stated out loud?",
         "say_example": "The stated exposure was <0.45>, but the slider only shows <0.10>."
        },
        {
@@ -4237,7 +4237,7 @@
         "kind": "decision",
         "verify_form": "The agent set the background mask's sliders - check the background is dark and cold as you asked.",
         "speak": "never",
-        "check": "what values are set for Exposure, Contrast and Temperature on the background mask",
+        "check": "What values are set for Exposure, Contrast and Temperature on the background mask?",
         "say_example": "Set the background mask's Exposure <-0.5>, Contrast <-10> and Temperature <-15>"
        },
        {
@@ -4250,7 +4250,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted the background mask - check mood, lighting and softness.",
         "speak": "never",
-        "check": "what values are set for Exposure, Clarity, Dehaze and Tint on the background mask",
+        "check": "What values are set for Exposure, Clarity, Dehaze and Tint on the background mask?",
         "say_example": "Set Exposure <-0.4>, Clarity <-10>, Dehaze <-15> and Tint <+5> on the background mask"
        },
        {
@@ -4263,7 +4263,7 @@
         "kind": "decision",
         "verify_form": "The agent set the lighting behind the subject - check softness and warmth.",
         "speak": "never",
-        "check": "what values are set for Exposure, Clarity and Dehaze on the background-light mask",
+        "check": "What values are set for Exposure, Clarity and Dehaze on the background-light mask?",
         "say_example": "Set Exposure <+0.8>, Clarity <-20> and Dehaze <-25> on the light behind the subject"
        },
        {
@@ -4276,7 +4276,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened the subject toward a silhouette - check how dark.",
         "speak": "never",
-        "check": "what values are set for Shadows, Clarity and the mask Amount on the subject mask",
+        "check": "What values are set for Shadows, Clarity and the mask Amount on the subject mask?",
         "say_example": "Set Shadows <-30>, Clarity <+10> and mask Amount <80> to darken the subject's silhouette"
        },
        {
@@ -4289,7 +4289,7 @@
         "kind": "decision",
         "verify_form": "The agent set the foreground gradient's exposure and contrast - check the depth.",
         "speak": "never",
-        "check": "what values are set for Exposure and Contrast on the foreground gradient",
+        "check": "What values are set for Exposure and Contrast on the foreground gradient?",
         "say_example": "Lowered Exposure to <-0.5> and Contrast to <-10> on the foreground gradient for depth"
        },
        {
@@ -4302,7 +4302,7 @@
         "kind": "decision",
         "verify_form": "The agent set exposure and warmth on the valley - check it looks like sun, not an edit.",
         "speak": "never",
-        "check": "what values are set for Exposure and Temperature on this radial mask",
+        "check": "What values are set for Exposure and Temperature on this radial mask?",
         "say_example": "Set Exposure <+0.9> and Temperature <+15> on <the valley's> radial mask"
        },
        {
@@ -4315,7 +4315,7 @@
         "kind": "decision",
         "verify_form": "The agent set the initial darkening exposure - check the strength.",
         "speak": "never",
-        "check": "what value is set for Exposure (negative) before brushing the edges",
+        "check": "What value is set for Exposure (negative) before brushing the edges?",
         "say_example": "Set Exposure to <-0.8> before brushing the edges"
        },
        {
@@ -4328,7 +4328,7 @@
         "kind": "decision",
         "verify_form": "The agent set tone on the inverted radial - check brightness and contrast.",
         "speak": "never",
-        "check": "what values are set for Exposure, Contrast and Highlights on the inverted radial",
+        "check": "What values are set for Exposure, Contrast and Highlights on the inverted radial?",
         "say_example": "Set Exposure <-0.6>, Contrast <+10> and Highlights <-20> on the inverted radial mask"
        },
        {
@@ -4341,7 +4341,7 @@
         "kind": "decision",
         "verify_form": "The agent added contrast back - check the area is not flat.",
         "speak": "never",
-        "check": "what value is set for Contrast on the masked area",
+        "check": "What value is set for Contrast on the masked area?",
         "say_example": "Raised Contrast to <+20> on the masked area to restore depth"
        },
        {
@@ -4354,7 +4354,7 @@
         "kind": "decision",
         "verify_form": "The agent set the brush for the rocks - check exposure, shadows, clarity.",
         "speak": "never",
-        "check": "what values are set for Exposure, Shadows and Clarity on this brush",
+        "check": "What values are set for Exposure, Shadows and Clarity on this brush?",
         "say_example": "Set Exposure <+0.5>, Shadows <+35> and Clarity <+15> on <the brushed rocks>"
        },
        {
@@ -4367,7 +4367,7 @@
         "kind": "decision",
         "verify_form": "The agent set exposure and shadows on the brushed area - check the detail.",
         "speak": "never",
-        "check": "what values are set for Exposure and Shadows on the brushed area",
+        "check": "What values are set for Exposure and Shadows on the brushed area?",
         "say_example": "Set Exposure <+0.4> and Shadows <+20> on the brushed area"
        },
        {
@@ -4380,7 +4380,7 @@
         "kind": "decision",
         "verify_form": "The agent set the graduated filter - check the top is darkened as intended.",
         "speak": "if-wrong",
-        "check": "which way the Highlights, Shadows and Blacks sliders actually moved, against the stated plan to turn the shadows up",
+        "check": "Which way the Highlights, Shadows and Blacks sliders actually moved, against the stated plan to turn the shadows up?",
         "say_example": "The instruction was to turn the shadows up, but the sliders are being dragged negative, darkening the top instead."
        },
        {
@@ -4392,7 +4392,7 @@
         "whatTheAgentLoses": "You lose the creative control to decide exactly how much to dim distracting background elements to keep the viewer's focus on the intended subject.",
         "kind": "state-check",
         "speak": "if-wrong",
-        "check": "do the Highlights and Whites values for this masked hazy area show a decrease from their earlier setting",
+        "check": "Do the Highlights and Whites values for this masked hazy area show a decrease from their earlier setting?",
         "say_example": "Highlights and Whites here are still at their earlier, higher values. No reduction has been made yet for the hazy area."
        },
        {
@@ -4405,7 +4405,7 @@
         "kind": "decision",
         "verify_form": "The agent set the linear gradient's exposure - check the frame closes in naturally.",
         "speak": "never",
-        "check": "what value is set for Exposure on this linear gradient",
+        "check": "What value is set for Exposure on this linear gradient?",
         "say_example": "Lowered Exposure to <-0.7> on the linear gradient to close in the frame"
        },
        {
@@ -4418,7 +4418,7 @@
         "kind": "decision",
         "verify_form": "The agent set the rock formation's mask - check exposure, clarity, contrast.",
         "speak": "never",
-        "check": "what values are set for Exposure, Clarity and Contrast on this radial",
+        "check": "What values are set for Exposure, Clarity and Contrast on this radial?",
         "say_example": "Set Exposure <+0.4>, Clarity <+20> and Contrast <+15> on <the rock formation's> mask"
        },
        {
@@ -4431,7 +4431,7 @@
         "kind": "decision",
         "verify_form": "The agent reduced exposure in the corner gradient - check the balance.",
         "speak": "never",
-        "check": "what value is set for Exposure on this linear gradient over the corner",
+        "check": "What value is set for Exposure on this linear gradient over the corner?",
         "say_example": "Reduced Exposure to <-0.8> on the linear gradient over the corner"
        },
        {
@@ -4444,7 +4444,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened the cliff - check the amount.",
         "speak": "never",
-        "check": "what value is set for Exposure on this mask",
+        "check": "What value is set for Exposure on this mask?",
         "say_example": "Darkened <the bottom-left cliff's> Exposure to <-0.6>"
        },
        {
@@ -4457,7 +4457,7 @@
         "kind": "decision",
         "verify_form": "The agent set exposure and clarity on the mask - check brightness and softness.",
         "speak": "never",
-        "check": "what values are set for Exposure and Clarity on this masked area",
+        "check": "What values are set for Exposure and Clarity on this masked area?",
         "say_example": "Set Exposure <+0.3> and Clarity <+10> on this masked area"
        },
        {
@@ -4470,7 +4470,7 @@
         "kind": "decision",
         "verify_form": "The agent brightened the road - check the mask and contrast.",
         "speak": "never",
-        "check": "what values are set for Exposure and Contrast on this brush",
+        "check": "What values are set for Exposure and Contrast on this brush?",
         "say_example": "Brightened <the road> with a brush, Exposure <+0.5>, Contrast <+15>"
        },
        {
@@ -4483,7 +4483,7 @@
         "kind": "decision",
         "verify_form": "The agent set exposure and contrast on the bridge - check it is not unnaturally bright.",
         "speak": "never",
-        "check": "what values are set for Exposure and Contrast on the masked object",
+        "check": "What values are set for Exposure and Contrast on the masked object?",
         "say_example": "Set Exposure <+0.4> and Contrast <+20> on <the masked bridge>"
        },
        {
@@ -4496,7 +4496,7 @@
         "kind": "decision",
         "verify_form": "The agent darkened the masked foreground with the curve or the exposure slider - check which; the curve compresses the highlights, the slider moves everything.",
         "speak": "never",
-        "check": "is the masked area darkened using the Exposure slider, or the Tone Curve",
+        "check": "Is the masked area darkened using the Exposure slider, or the Tone Curve?",
         "say_example": "Used the Tone Curve, not the Exposure slider, to darken the masked foreground"
        },
        {
@@ -4509,7 +4509,7 @@
         "kind": "decision",
         "verify_form": "The agent set exposure, shadows and dehaze on the bird - check the natural feel.",
         "speak": "never",
-        "check": "what values are set for Exposure, Shadows and Dehaze on the subject's brushed mask",
+        "check": "What values are set for Exposure, Shadows and Dehaze on the subject's brushed mask?",
         "say_example": "Set Exposure <+0.5>, Shadows <+30> and Dehaze <-10> on the brushed areas of <the bird>"
        },
        {
@@ -4522,7 +4522,7 @@
         "kind": "decision",
         "verify_form": "The agent adjusted the subject's contrast - check the balance.",
         "speak": "never",
-        "check": "what values are set for Exposure, Highlights, Shadows and the tone curve on the subject mask",
+        "check": "What values are set for Exposure, Highlights, Shadows and the tone curve on the subject mask?",
         "say_example": "Set Exposure <+0.3>, Highlights <-25>, Shadows <+20> and an S-curve on the subject's mask"
        },
        {
@@ -4535,7 +4535,7 @@
         "kind": "decision",
         "verify_form": "The agent set tones on the masked subject - check the highlight.",
         "speak": "never",
-        "check": "what values are set for Exposure, Shadow and the tone curve points on the masked subject",
+        "check": "What values are set for Exposure, Shadow and the tone curve points on the masked subject?",
         "say_example": "Set Exposure <+0.2>, Shadow <+15> and two curve points on the masked subject"
        },
        {
@@ -4548,7 +4548,7 @@
         "kind": "decision",
         "verify_form": "The agent chose the effect and strength for the path - check the exposure.",
         "speak": "never",
-        "check": "which effect is chosen from the local-adjustment dropdown, and what is its initial strength value",
+        "check": "Which effect is chosen from the local-adjustment dropdown, and what is its initial strength value?",
         "say_example": "Chose the Exposure effect at strength <1.20> for <the path>"
        },
        {
