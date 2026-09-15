@@ -1,0 +1,2259 @@
+{
+ "task": "verify a claim, image, or story online: take a specific claim or viral post and check it — search what fact-checkers say (Snopes, PolitiFact, AP/Reuters fact check), trace the original source and its date/context (lateral reading), and/or reverse-image-search a photo to find its true origin; complete when a supported verdict (true/false/miscaptioned/unproven) is reached with the checked sources on screen. Surface pinned: a live verification session on real claims — media-literacy lectures without a worked example are off-task.",
+ "tree": {
+  "id": "0",
+  "label": "Fact-check a viral claim",
+  "note": "1 runs in every keeper. 2 runs where a fact-checker is asked directly, and fU9D and F6MD go there first and stop there. 3 runs in the ten keepers with an image or a frame, and 3.7 runs the search again. 4 follows every search that finds a page. 5 runs where the user has to judge the source itself - t8lK stays on 5 throughout, and linG runs it on an official account. 6 runs in 4Rh4, 6KeC and VOgi, where the search only dated the footage and the place still has to be found. 7 runs in VxnK and VOgi, where the claim is checked against a reference. 8 closes every run, and 8.7 loops back to 1 for the next claim in qW96, 6KeC, q5N5 and fU9D.",
+  "children": [
+   {
+    "id": "1",
+    "label": "Pin the claim",
+    "note": "1.1 in every keeper. 1.2 in the three keepers that look at who posted it and how far it went. 1.3 where the image or the post itself shows a time, a place or profile details. 1.4 where the image or the chat is read for plausibility before any tool is opened. 1.5 in every keeper, where the user decides what goes into the tool, and F6MD runs it twice because the first phrase found nothing.",
+    "children": [
+     {
+      "id": "1.1",
+      "label": "Read the claim's wording",
+      "questions": [
+       {
+        "question": "Which of these posts is the claim you want checked?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a tweet by [name] about atrocities in Bengal, establishing the specific viral claim that will anchor the verification process.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to select a viral claim that is personally relevant or currently prevalent in your own social media feed.",
+        "kind": "decision",
+        "verify_form": "The agent picked one post to check first - check it is the claim you sent it and not another post on the same feed; the feed showed several.",
+        "speak": "gate",
+        "check": "Does the page show more than one distinct post or claim that the person could mean?",
+        "say_example": "Found more than one post about <the flood>. I'll check <the one about the bridge collapse>. OK, or a different one?"
+       },
+       {
+        "question": "What exactly does the post or its comments claim?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Pausing to read the comments by [name] and [name] establishes the exact details about the moon's rotation and location-based appearance that need to be verified.",
+        "whatTheAgentLoses": "You lose the opportunity to personally read the exact phrasing of the original claims, which helps in understanding the specific nuances to investigate.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "What does the post or its comments state as the claim, in their own words?",
+        "say_example": "The post claims <the moon looks the same from every city>. That's what I'm checking."
+       },
+       {
+        "question": "Does the post carry a warning label or Community Note?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Social media platforms often append visual warning labels or community-contributed context directly below viral misinformation, providing an immediate flag that the claim is disputed.",
+        "whatTheAgentLoses": "The user loses the time-saving benefit of noticing an existing platform-level debunk if the agent only reads the user-generated text and misses the visually distinct warning label.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the post display a platform warning label or Community Note beneath it?",
+        "say_example": "This post has a Community Note under it. It says <the photo is from 2016>."
+       },
+       {
+        "question": "Did the search stay on your claim, or drift to another one in the results?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results show an unrelated claim about PETA and Major League Baseball alongside the Biden quotes, offering a chance to explore a different viral topic.",
+        "whatTheAgentLoses": "You lose the freedom to browse the peripheral search results and spontaneously pivot to a different viral claim that catches your interest.",
+        "kind": "decision",
+        "verify_form": "The agent stayed on your claim or wandered to another one in the results - check it stayed.",
+        "speak": "if-wrong",
+        "check": "Did the search open a different claim from the results instead of staying on the one it was given?",
+        "say_example": "The results also show <a different claim, about a stadium>. I'm staying on yours."
+       }
+      ]
+     },
+     {
+      "id": "1.2",
+      "label": "Read the account's reach",
+      "questions": [
+       {
+        "question": "Do the copies in the results add anything, or just repeat the post's caption?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Examining the grid of YouTube and Instagram results reveals the specific false captions and the viral scale of the claim before you begin debunking it.",
+        "whatTheAgentLoses": "You lose the firsthand visual context of exactly how the misinformation was framed and distributed across different social media platforms.",
+        "kind": "decision",
+        "verify_form": "The agent looked at how far the claim spread, or skipped that - check whether it noted the captions the copies carry; the copies repeat the claim, they do not answer it.",
+        "speak": "on-event",
+        "check": "Do the grid of copies/results found for this post simply repeat the same caption as the original claim, without adding new information?",
+        "say_example": "These <12> results all carry the same caption as the post. They're copies, so they don't settle anything."
+       },
+       {
+        "question": "What source video is being analyzed here?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator explicitly names the Nibiru Channel video on screen and sarcastically notes the creator's financial motive for generating clicks, which establishes the exact claim being investigated.",
+        "whatTheAgentLoses": "You lose direct exposure to the narrator's sarcastic tone and the critical context regarding the original creator's click-driven financial motivations.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the page name a specific video/channel being analyzed (title, uploader)?",
+        "say_example": "Found the source video - <'Strange light over the bay'>, from <a channel with 40k subscribers>"
+       },
+       {
+        "question": "Does the name of the page that shared this suggest satire or novelty rather than news?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The image is posted by 'Weird Tales Magazine', which immediately signals that the content is curated for bizarre or sensational oddities rather than factual news.",
+        "whatTheAgentLoses": "You lose the immediate contextual clue provided by the publisher's name, which helps set the appropriate level of skepticism before starting the verification.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What is the name of the account or page that shared this post, and does that name suggest a satire, meme, or novelty source rather than news?",
+        "say_example": "This was shared by <a page that posts odd stories>. It isn't a news outlet."
+       },
+       {
+        "question": "Were the account's other posts looked at, not just its follower count?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Although the profile shows a massive following of over 277,000 users, checking their timeline would reveal if the account operates as a dedicated misinformation node.",
+        "whatTheAgentLoses": "You lose the contextual understanding of whether this highly followed account has a history of spreading similar false claims.",
+        "kind": "decision",
+        "verify_form": "The agent may have skipped the poster's timeline - check whether it looked at the account's other posts; the follower count alone says nothing about a pattern.",
+        "speak": "if-wrong",
+        "check": "Did the agent open the account's own timeline/other posts, rather than relying on the follower count alone?",
+        "say_example": "A follower count alone shows no pattern. I'm opening the account's other posts to look."
+       },
+       {
+        "question": "What channel, view count and timestamp does the debunking video show?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Examining the channel name, low view count, and on-screen webcam timestamps helps determine the credibility of the debunking evidence.",
+        "whatTheAgentLoses": "You lose the opportunity to independently judge the reliability and bias of the secondary source used to disprove the claim.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What are the channel name, subscriber or view count, and any on-screen timestamp shown on the video used to debunk the original claim?",
+        "say_example": "The debunking video comes from <a small channel, under 500 views>. Its timestamp says <2019>."
+       }
+      ]
+     },
+     {
+      "id": "1.3",
+      "label": "Read the time and place",
+      "questions": [
+       {
+        "question": "What time, date and place does the image's overlay claim?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Capturing the specific time, date, and coordinates shown in the red text is necessary to accurately verify the astronomical conditions for that exact moment and location.",
+        "whatTheAgentLoses": "You lose the firsthand awareness of the exact timestamp and location details needed to independently evaluate the fact-check.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What time, date, and coordinates does the on-screen overlay claim for the photo?",
+        "say_example": "Read the overlay's claim - <11:40 p.m., 3 March 2021>, near <a coastal town>"
+       },
+       {
+        "question": "Were the video's upload date and channel read before the claim was checked?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Noting the upload date, channel name, and playing the video is necessary to establish exactly what claim needs to be verified.",
+        "whatTheAgentLoses": "You lose the opportunity to personally assess the initial tone and context of the source video before the investigation begins.",
+        "kind": "decision",
+        "verify_form": "The agent may not have read the source video's upload date and channel before checking - check that it did; the claim's origin rests on those two.",
+        "speak": "if-wrong",
+        "check": "Did the agent note the video's upload date and channel name before checking the claim itself?",
+        "say_example": "The claim's origin rests on this video's upload date and channel. Neither was read yet."
+       }
+      ]
+     },
+     {
+      "id": "1.4",
+      "label": "Read the image for plausibility",
+      "questions": [
+       {
+        "question": "Do the messages contradict the city or name shown on the profile?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the sender making disjointed statements about being in Miami and Los Angeles, and introducing themselves despite their name already being in the chat header.",
+        "whatTheAgentLoses": "You lose the intuitive human ability to read between the lines and detect unnatural conversational behavior that flags a fake persona.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do the chat messages contradict a detail already shown elsewhere on the page, such as the profile's or header's stated city or name?",
+        "say_example": "The chat says <Denver>. The profile lists <Tampa>. Same person, two cities."
+       },
+       {
+        "question": "Was the photo itself reverse-searched, or only a description of it typed in?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The presenter highlighted generic features in the photo like palm trees, mountains, and a fire, demonstrating that these details alone would produce search results that are too broad.",
+        "whatTheAgentLoses": "You lose the human intuition required to visually assess an image's geographical clues and determine whether a text search or a reverse image search is the better strategy.",
+        "kind": "decision",
+        "verify_form": "The agent chose between a text search on what the photo shows and a reverse image search - check which it ran; loose details give loose results.",
+        "speak": "on-event",
+        "check": "Which method did the agent use to search - a plain text query describing the image's visible details, or a reverse image search on the photo itself?",
+        "say_example": "Details like <palm trees and mountains> are too generic for a text search. I'm running a reverse image search on the photo instead."
+       },
+       {
+        "question": "Does the way the moon sits in the photo fit the place the claim says it was taken?",
+        "cluster": "photos",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Locating the Tycho crater at the bottom of the moon establishes its orientation, which proves the photo could not have been taken from the southern hemisphere as claimed.",
+        "whatTheAgentLoses": "You lose the opportunity to apply your own geographic and astronomical knowledge to independently spot visual inconsistencies in the image.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Where does the identifying feature, such as a crater, sit in the photo, and does that orientation fit the location the claim states?",
+        "say_example": "The crater sits at the bottom of the moon in this photo. That view only happens from the northern hemisphere, and the claim says <a southern city>."
+       }
+      ]
+     },
+     {
+      "id": "1.5",
+      "label": "Choose what to search",
+      "questions": [
+       {
+        "question": "Were all of the profile's photos saved, or only the first?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile page displayed another photo of the woman in sunglasses, which could provide a better match for a reverse-image search.",
+        "whatTheAgentLoses": "You lose the intuitive judgment to proactively gather supplementary evidence that might be the key to definitively verifying the claim.",
+        "kind": "decision",
+        "verify_form": "The agent captured some of the profile's photos - check whether it took all of them or stopped at the first; in the recording only the third one matched.",
+        "speak": "if-wrong",
+        "check": "Did the agent capture all of the profile's photos, or stop after the first one?",
+        "say_example": "Only <1 of 3> profile photos was saved. The other <2> might be the ones that match."
+       },
+       {
+        "question": "Does the search use the claim's own words, or a paraphrase?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing a clear natural language question in the search box, as shown by the autocomplete suggestions for 'Where was Obama born?', sets the foundation for finding relevant fact-checks.",
+        "whatTheAgentLoses": "The user loses the opportunity to decide exactly which specific claim or urban legend they want to prioritize and investigate.",
+        "kind": "decision",
+        "verify_form": "The agent chose one phrase or question to search - check it is the claim's own wording and not a paraphrase; the first phrase tried can find nothing.",
+        "speak": "if-wrong",
+        "check": "Does the search that ran use the claim's own exact wording, or a paraphrase of it?",
+        "say_example": "The search used <a paraphrase> instead of the claim's own words. Re-running it with the exact wording."
+       },
+       {
+        "question": "Is the image taken from the Images tab the one in the post, or a similar photo?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The default search results show text articles about the rumor, but clicking the Images tab is necessary to locate the exact visual material needed for the verification.",
+        "whatTheAgentLoses": "You lose the ability to visually scan the search results and select the exact viral image you want to investigate.",
+        "kind": "decision",
+        "verify_form": "The agent took the image from a text search's Images tab - check the image it took is the one that spread, not a similar photo of the same person.",
+        "speak": "if-wrong",
+        "check": "Is the image taken from the Images tab the one actually attached to the post, or a different photo of the same subject?",
+        "say_example": "The Images tab shows several photos of <the same person>. The one taken isn't the one in the post."
+       },
+       {
+        "question": "Is the second search phrase from the email's body, or the headline again?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting a highly specific string of text from the email body increases the chances of finding an exact match in fact-checking databases if previous queries failed.",
+        "whatTheAgentLoses": "You lose the opportunity to intuitively select the most distinct and searchable phrasing from the raw text based on your own reading comprehension.",
+        "kind": "decision",
+        "verify_form": "The agent picked a second phrase from the email after the first found nothing - check it is a sentence from the body and not the headline again.",
+        "speak": "if-wrong",
+        "check": "Is the next search phrase a sentence from the email's body, distinct from the headline already tried?",
+        "say_example": "The second try used the headline again. A sentence from the body would find more."
+       },
+       {
+        "question": "Which line of the profile's text was searched for copies?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Searching for the exact demographic and preference text shown on the profile helps identify if scammers are reusing the same bio across multiple fake accounts.",
+        "whatTheAgentLoses": "You lose the ability to intuitively select which specific profile details are most likely to expose a copy-pasted scam account.",
+        "kind": "decision",
+        "verify_form": "The agent searched some of the profile's text for cloned accounts - check which lines it used; the boilerplate sentences are the ones scammers reuse.",
+        "speak": "on-event",
+        "check": "Which line of the profile's text did the search use - a boilerplate self-description line, or something else?",
+        "say_example": "I searched <the profile's stock bio line> for copies. That's the line scammers reuse across fake accounts."
+       },
+       {
+        "question": "Was the profile's photo saved, not only its text?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The profile displays text details like a handle and location alongside a main photo, offering different starting points for verification.",
+        "whatTheAgentLoses": "You lose the opportunity to decide whether to prioritize tracing the profile picture or investigating the text-based details.",
+        "kind": "decision",
+        "verify_form": "The agent captured the profile's photo or its text - check which; the photo is what a reverse search needs.",
+        "speak": "if-wrong",
+        "check": "Did the agent capture the profile's photo, not only its text, before starting the reverse search?",
+        "say_example": "The profile's <bio text> was captured, but not its photo. A reverse search needs the photo."
+       },
+       {
+        "question": "Which image from the collage was searched, the most distinctive one or just the first?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Choosing the image with the most distinct visual elements, such as the Pope and the cross, ensures the reverse image search yields the most accurate results.",
+        "whatTheAgentLoses": "You lose the opportunity to apply human intuition to determine which specific visual details are most likely to uncover the true origin of the post.",
+        "kind": "decision",
+        "verify_form": "The agent picked one photo of the collage to search - check it is the one with the most distinct content and not the first.",
+        "speak": "if-wrong",
+        "check": "Is the selected image from the collage the one with the most distinct, searchable content, or just the first one in the set?",
+        "say_example": "The <first> photo in the collage was searched. <The one with the banner> has more to search on."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "2",
+    "label": "Ask the fact-checkers",
+    "note": "2.1 opens a fact-checker directly in fU9D and F6MD. In the other keepers, the fact-check turns up inside the match list instead, which is 3.6. Then 2.2, and 2.3 when the search finds nothing, which F6MD does once. 2.4 picks a result. 2.5 to 2.8 read the ruling: the label, whether it rules on the claim's exact wording, the example and the origins, the date - fU9D reads all four. linG and VOgi read a fact-check last, after their own verdict, and that is 8.3.",
+    "questions": [
+     {
+      "question": "Is a cookie banner, popup or paywall covering the fact-check's text?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "News and fact-checking websites frequently use large overlays that block the content until dismissed, which a sighted user would immediately notice and close so the audience can read along.",
+      "whatTheAgentLoses": "The user loses the assurance that the agent is actually displaying visible, accessible text for the live session rather than scraping hidden DOM elements behind an overlay.",
+      "kind": "state-check",
+      "speak": "on-event",
+      "check": "Is a cookie banner, newsletter popup, or paywall currently covering the fact-check article's text?",
+      "say_example": "A pop-up is covering the article. Closing it so I can read the ruling."
+     }
+    ],
+    "children": [
+     {
+      "id": "2.1",
+      "label": "Open the fact-checker's site",
+      "questions": [
+       {
+        "question": "Is the original post or email still open in a tab while you search?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Keeping the Gmail tab open ensures you can easily reference the exact wording of the 'sales tax on homes' claim while you search.",
+        "whatTheAgentLoses": "You lose the ability to organize your browser tabs to ensure the original source material remains immediately accessible.",
+        "kind": "decision",
+        "verify_form": "The agent searched in the same tab or a new one - check the original email is still open, so its wording can be held against the ruling.",
+        "speak": "if-wrong",
+        "check": "Is the original post or email still open in another tab for comparison, or was it closed when the new search tab opened?",
+        "say_example": "The original email closed when the search tab opened. Reopening it to compare the wording."
+       },
+       {
+        "question": "Which fact-checking site was opened?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Typing a specific, trusted URL into the address bar ensures you bypass potentially biased search results and go straight to an established fact-checker.",
+        "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide which specific fact-checking organization's methodology and editorial standards you trust most for this particular topic.",
+        "kind": "decision",
+        "verify_form": "The agent went to one fact-checking site - check it is one you trust for this kind of claim; it typed the address itself.",
+        "speak": "never",
+        "check": "Which fact-checking site did the agent navigate to?",
+        "say_example": "Opened <Snopes> to check this"
+       },
+       {
+        "question": "Which fact-checkers does this tool actually cover?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Reviewing sections like 'What fact checks are included?' and 'How can I restrict results?' ensures you understand the tool's methodology and limitations.",
+        "whatTheAgentLoses": "You lose the opportunity to personally evaluate the transparency and inclusion criteria of the fact-checking platform being used.",
+        "kind": "decision",
+        "verify_form": "The agent read or skipped the tool's About page - check whether it knows which fact-checkers the tool covers before it treats a missing result as no fact-check.",
+        "speak": "if-wrong",
+        "check": "Did the agent check what the fact-check tool actually covers before treating an empty result as 'no fact-check exists anywhere'?",
+        "say_example": "This tool only covers <a few fact-checking sites>. Finding nothing here doesn't mean nobody has checked it."
+       }
+      ]
+     },
+     {
+      "id": "2.2",
+      "label": "Type in the claim",
+      "questions": [
+       {
+        "question": "Did the search run on what was typed, or on a dropdown suggestion that changed it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Ignoring the auto-populated suggestions ensures your search query remains exactly as you intended without being influenced by popular search trends.",
+        "whatTheAgentLoses": "The user loses the assurance that their exact, unbiased search phrasing was used if the agent defaults to clicking a potentially skewed auto-suggestion.",
+        "kind": "decision",
+        "verify_form": "The agent may have clicked a suggestion from the dropdown - check whether the query that ran is yours or the suggestion's.",
+        "speak": "if-wrong",
+        "check": "Did the search run on a dropdown/autocomplete suggestion that changed or narrowed the typed query, or on the exact text typed?",
+        "say_example": "The search ran on a dropdown suggestion, <'stadium baseball game'>, instead of the term typed."
+       },
+       {
+        "question": "What was typed into the Fact Check Explorer search box?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows the Fact Check Explorer search bar, which is the starting point for finding existing fact-checks on a specific claim.",
+        "whatTheAgentLoses": "The user loses the ability to specify the exact keywords or claim to search for in the fact-checking database.",
+        "kind": "intent-check",
+        "speak": "never",
+        "check": "What topic or person's name is entered in the Fact Check Explorer's search bar?",
+        "say_example": "Searched Fact Check Explorer for <the moon claim>"
+       },
+       {
+        "question": "Are the results limited to the fact-checker you asked for?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the search successfully filtered for 'site:fullfact.org' ensures you are properly targeting a reliable source before refining the query for your specific claim.",
+        "whatTheAgentLoses": "The user loses the peace of mind that the agent is correctly using site-specific search operators to consult trusted fact-checking organizations.",
+        "kind": "intent-check",
+        "speak": "if-wrong",
+        "check": "Do the search results actually come from the specific site requested (e.g. a site: filter), or are they unrestricted?",
+        "say_example": "The results aren't limited to <fullfact.org>. The site filter didn't take."
+       },
+       {
+        "question": "Did clicking the publisher tag keep your search term, or drop it?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Clicking the 'Full Fact' tag replaced the 'brexit' search with just 'site:fullfact.org', bringing up completely unrelated claims like a Roe v Wade protest.",
+        "whatTheAgentLoses": "The user loses accurate verification of their specific claim if the agent fails to notice the search query was overwritten and starts investigating unrelated topics.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Did clicking the publisher/topic tag keep the original search term, or did it replace it with just the site filter, dropping the topic?",
+        "say_example": "Clicking the <Full Fact> tag dropped <the search term>. Now it's all of their articles, not your claim."
+       }
+      ]
+     },
+     {
+      "id": "2.3",
+      "label": "Retry after no matches",
+      "questions": [
+       {
+        "question": "After no matches, was a different or broader phrase tried?",
+        "cluster": "refine",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The search results page explicitly stated that no matches were found for the exact phrase, meaning a broader or different query was needed to find relevant fact-checks.",
+        "whatTheAgentLoses": "The user loses the ability to successfully verify the claim if the agent simply gives up after a single overly specific search fails.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After the search returned no matches, did the agent try a different or broader phrase?",
+        "say_example": "No matches for <the exact phrase>. Retried with <a broader term>."
+       },
+       {
+        "question": "After the fact-checkers turned up nothing, did the search move on to the original sources?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Established fact-checkers take time to publish, so a persistent lack of results for a trending rumor means you must recognize the claim is too new and switch to investigating the raw sources yourself.",
+        "whatTheAgentLoses": "You lose the flexibility to switch verification strategies when relying on established databases fails for breaking rumors.",
+        "kind": "decision",
+        "verify_form": "The fact-checker searches kept finding nothing - check whether the agent moved on to the sources themselves or stopped; a new claim may not be checked anywhere yet.",
+        "speak": "on-event",
+        "check": "After several fact-checker searches return nothing, does the agent switch from searching fact-checker databases to tracing the primary sources directly?",
+        "say_example": "Fact-checkers turned up nothing after <3> tries. Checking the original sources directly instead."
+       }
+      ]
+     },
+     {
+      "id": "2.4",
+      "label": "Pick the fact-check result",
+      "questions": [
+       {
+        "question": "Does a known fact-checker address this exact image?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Finding the Alt News tweet with the 'fact-check' stamp and [address] movie details provides authoritative confirmation that the viral claim is false.",
+        "whatTheAgentLoses": "You lose the direct reassurance of seeing a recognized fact-checker's visual stamp and specific contextual details debunking the claim.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does a recognized fact-checker's post or article address this specific image?",
+        "say_example": "Found a ruling on this exact image from <Snopes>"
+       },
+       {
+        "question": "Was a fact-checker's page opened, or a general news article or blog?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results display both general news sites like Time and dedicated fact-checkers like Snopes, making it important to prioritize the specialized fact-checking source.",
+        "whatTheAgentLoses": "You lose the ability to apply your personal trust preferences and media literacy when selecting which specific fact-checking organization to rely on.",
+        "kind": "decision",
+        "verify_form": "The agent opened one of the results - check it is a fact-checker's page and not a news outlet's or a blog's; the results listed both.",
+        "speak": "if-wrong",
+        "check": "Did the agent open a dedicated fact-checker's page, or a general news/blog article instead?",
+        "say_example": "Opened <a general news article> instead of <the fact-checker's own page> listed below it."
+       },
+       {
+        "question": "Were the other results looked at, or only the first one opened?",
+        "cluster": "refine",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows you immediately clicking the top search result, which skips the crucial step of scanning multiple sources to find the most authoritative context.",
+        "whatTheAgentLoses": "The user loses the assurance that the verification is based on a thorough lateral reading of multiple independent sources rather than just the most search-engine-optimized result.",
+        "kind": "decision",
+        "verify_form": "The agent opened the first result - check whether it scanned the others; the first is the search engine's pick, not the best match.",
+        "speak": "if-wrong",
+        "check": "Did the agent look at more than one search result before opening one, or open only the first result listed?",
+        "say_example": "The first result was opened right away. <A fact-checker's page> further down wasn't looked at."
+       }
+      ]
+     },
+     {
+      "id": "2.5",
+      "label": "Read the rating",
+      "questions": [
+       {
+        "question": "Was the full fact-check opened, or only the cut-off snippet read?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search result summary cuts off mid-sentence, meaning the full explanation of the rating is hidden unless the article is opened.",
+        "whatTheAgentLoses": "The user loses the detailed evidence and context behind the fact-checker's verdict.",
+        "kind": "decision",
+        "verify_form": "The agent read the rating off the results snippet or opened the article - check which; the snippet cuts the explanation mid-sentence.",
+        "speak": "if-wrong",
+        "check": "Did the agent open the full fact-check article, or rely on the search result's truncated snippet?",
+        "say_example": "Only the search snippet was read, and it cuts off mid-sentence. Opening the full article."
+       },
+       {
+        "question": "What rating does the meter or graphic on the fact-checker's page show?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sites like PolitiFact use a visual 'Truth-O-Meter' graphic (e.g., 'Pants on Fire') that conveys the definitive verdict at a glance, which might lack descriptive alt-text for screen readers.",
+        "whatTheAgentLoses": "You lose the immediate, definitive verdict conveyed by the visual rating graphic if the agent only reads the surrounding article text.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the fact-checker's page show its rating through a graphic or meter (e.g. a dial or icon) with a label, and what does that label say?",
+        "say_example": "The rating is shown as a meter graphic. It reads <Pants on Fire>."
+       },
+       {
+        "question": "What is the fact-checker's verdict on the claim?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The Snopes article displays a 'MIXTURE OF TRUE AND FALSE INFORMATION' rating, breaking down exactly which parts of the real estate tax rumor are accurate.",
+        "whatTheAgentLoses": "You lose the nuanced understanding of which specific details in the viral claim are true versus false.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "What rating or verdict label does the fact-checker's page give (e.g. True, False, Mixture)?",
+        "say_example": "The fact-checker rates this <Mixture of True and False>."
+       }
+      ]
+     },
+     {
+      "id": "2.6",
+      "label": "Match the ruling's claim",
+      "questions": [
+       {
+        "question": "Is this fact-check about your claim, or a different one that uses the same photo?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The Yahoo Finance headline addresses a rumor about a 'Muslim leader' and a 'dalit woman,' while the original tweet claimed the image showed violence against Hindus in Bengal, revealing that this same movie still is repeatedly recycled for different sectarian rumors.",
+        "whatTheAgentLoses": "You lose the broader context of how this specific piece of media is weaponized across multiple different misinformation campaigns.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the fact-check's body, not just its headline, rule on the same claim the post makes?",
+        "say_example": "This fact-check covers <a different rumor using the same photo>. It isn't a ruling on the claim in your post."
+       }
+      ]
+     },
+     {
+      "id": "2.7",
+      "label": "Read the example and origins",
+      "questions": [
+       {
+        "question": "What exact wording does the fact-checker quote as the claim it checked?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing the exact 'CAN OBAMA BE PRESIDENT?' text in the example box establishes the precise claim before evaluating the fact-checker's detailed explanation.",
+        "whatTheAgentLoses": "You lose the opportunity to read the original wording of the viral claim, which provides crucial context for understanding the fact-checker's subsequent breakdown.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What is the exact rumor text quoted in the fact-checker's Example box?",
+        "say_example": "Read the ruling's example box - it quotes <'the tax applies to every home sale'>"
+       },
+       {
+        "question": "Is the basis of the ruling stated near the top of the Origins section?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen shows a lengthy 'Origins' section detailing the law, forcing a choice between gathering complete context and saving time.",
+        "whatTheAgentLoses": "The user loses the ability to decide that the specific details of the legislation are personally irrelevant and can be skipped.",
+        "kind": "decision",
+        "verify_form": "The agent read the full origins section or skimmed it - check which; the part that matters is the basis of the tax, near the top.",
+        "speak": "on-event",
+        "check": "Is the key basis of the ruling (e.g. what a tax actually applies to) stated near the top of the Origins/legislation section, or buried further down?",
+        "say_example": "The first lines of Origins give the basis of the ruling, <a tax on gains over a threshold>. I skipped the rest."
+       }
+      ]
+     },
+     {
+      "id": "2.8",
+      "label": "Read the fact-check's date",
+      "questions": [
+       {
+        "question": "When was this fact-check last updated?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking the 'Last updated: 17 October 2008' timestamp at the bottom of the page reveals whether the research might be missing recent developments.",
+        "whatTheAgentLoses": "You lose the intuitive sense of how outdated the evidence might be when evaluating the overall reliability of the verdict.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What last-updated date does the fact-check page show, and is it years old or earlier than the post being checked?",
+        "say_example": "This fact-check was last updated <March 2017>. That's well before the post you sent, so it may not cover this version."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "3",
+    "label": "Run the reverse image search",
+    "note": "3.1 picks the engine - most keepers go straight to Google without considering another engine, qW96 and linG weigh Yandex, ZEyc takes TinEye. then 3.2, where the user puts the image in by one of five routes. 3.3 is where the engine offers a crop. 3.4 and 3.5 happen on every results page. 3.6 picks the match to open. 3.7 runs the search again with a clearer copy, another engine or another route - 6KeC, qW96, lCH7, p5e9, ZEyc and N2gv all run more than one search. 3.8 in qW96 alone. 3.9 does not appear in any of the recordings.",
+    "questions": [
+     {
+      "question": "If the original post or report is gone or paywalled, was an archived copy opened instead?",
+      "cluster": "",
+      "moment": null,
+      "moneyMoving": false,
+      "why": "Misinformers often delete their posts when debunked, so retrieving the archived version is necessary to prove the claim was actually made and see its original context.",
+      "whatTheAgentLoses": "You lose the investigative persistence to use web archives when live links fail, which can prematurely halt an investigation.",
+      "kind": "decision",
+      "verify_form": "The source link was dead and the agent stopped or looked for an archived copy - check which; the archive is where a deleted post survives.",
+      "speak": "if-wrong",
+      "check": "If the original post or the key report is deleted, dead or paywalled, did the agent open an archived or syndicated copy instead of stopping?",
+      "say_example": "The original post is gone. Checking the <Wayback Machine> copy instead of stopping there."
+     }
+    ],
+    "children": [
+     {
+      "id": "3.1",
+      "label": "Choose the engine",
+      "questions": [
+       {
+        "question": "Which reverse image engine was used, and does it show first-found dates?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The screen lists multiple reverse image search options like Google, TinEye, and Pixsy, so you must select one to proceed with tracing the image's origin.",
+        "whatTheAgentLoses": "You lose control over which specific reverse image search engine is used to investigate the visual evidence.",
+        "kind": "decision",
+        "verify_form": "The agent picked one engine from the list - check which; only some report a first-found date.",
+        "speak": "never",
+        "check": "Which reverse image engine did the agent choose, and does that engine report a first-found/upload date for matches?",
+        "say_example": "Searched with <TinEye>, which shows which match came first"
+       }
+      ]
+     },
+     {
+      "id": "3.2",
+      "label": "Give the engine the image",
+      "note": "one route per search: 3.2.1 in qW96, q5N5, linG, ZEyc and p5e9; 3.2.2 in N2gv, ZEyc and p5e9; 3.2.3 in 6KeC, qW96 and p5e9; 3.2.4 wraps 3.2.3 in 6KeC, N2gv and qW96, and 6KeC sets it up across seven decision points; 3.2.5 in lCH7, VOgi and 4Rh4. p5e9 runs three routes on one photo and ZEyc two.",
+      "questions": [
+       {
+        "question": "How did the image get into the search engine?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The context menu provides multiple options like copying the URL, saving the file locally, or using a built-in search tool, which dictates how you will input the image into the search engine.",
+        "whatTheAgentLoses": "You lose the ability to choose your preferred method for handling the image file or URL before feeding it into a reverse search tool.",
+        "kind": "decision",
+        "verify_form": "The agent took the image into the engine one way - check which of the three it used, and that the image it searched is the one from the post.",
+        "speak": "never",
+        "check": "Which route took the image into the engine, and is it the same image the post shows?",
+        "say_example": "Gave the engine <a pasted image address>, the same photo as the post"
+       }
+      ],
+      "children": [
+       {
+        "id": "3.2.1",
+        "label": "Upload the saved file",
+        "questions": [
+         {
+          "question": "Is the file that was uploaded the one saved from the post?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Choosing the correct upload method from the dialog and locating the specific image file on your desktop ensures the search engine analyzes the exact visual claim in question.",
+          "whatTheAgentLoses": "You lose the certainty of knowing exactly which local file was selected and uploaded for the reverse image search.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Is the file selected in the upload dialog actually the image saved from this post, not an older or different saved file?",
+          "say_example": "Selected <an older saved file> instead of the one just saved from this post."
+         },
+         {
+          "question": "Did the search site get clipboard access it doesn't need?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The browser displayed a permission prompt asking if yandex.ru can see text and images copied to the clipboard, which could expose sensitive data if allowed.",
+          "whatTheAgentLoses": "You lose the opportunity to protect your system privacy by manually denying unnecessary clipboard access to a third-party search engine.",
+          "kind": "decision",
+          "verify_form": "The agent answered a clipboard-access prompt from the search site - check it refused; the search does not need it.",
+          "speak": "if-wrong",
+          "check": "Did the agent grant a clipboard-access prompt from the search site, when the search does not require it?",
+          "say_example": "The search site was given clipboard access. The search doesn't need it."
+         },
+         {
+          "question": "Does the save name reuse an existing file's name, so it would overwrite it?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The 'Save As' dialog shows the Desktop location and a pre-filled name matching an existing file, which triggers an overwrite confirmation if you proceed without renaming it.",
+          "whatTheAgentLoses": "You lose the opportunity to choose a memorable filename and prevent the deletion of the previously saved image.",
+          "kind": "decision",
+          "verify_form": "The agent saved the image under some name and may have overwritten an existing file - check the file it uploaded is the one it just saved and not an older take.",
+          "speak": "if-wrong",
+          "check": "Does the filename in the Save dialog match an existing file that would be overwritten, and is that the intended image?",
+          "say_example": "The save dialog reused the name of <an earlier saved file>. Saving would overwrite that one."
+         },
+         {
+          "question": "Is it OK to send this photo to a third-party search engine?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "Uploading a file, such as a dating profile picture, means transmitting it to a company's servers where it might be stored or used for data training, which carries different privacy implications than searching by text.",
+          "whatTheAgentLoses": "The user loses the ability to decide whether the privacy risks of uploading a specific image to a third-party search engine outweigh the need to verify it.",
+          "kind": "decision",
+          "verify_form": "The agent uploaded the photo to a search engine's servers - check you are fine with that for this image; a private person's profile photo is the case to think about.",
+          "speak": "gate",
+          "check": "Would completing this search send the image to a third-party engine's servers, and does the image show someone other than the person being helped (e.g. a stranger's profile photo)?",
+          "say_example": "This would upload <a stranger's dating-profile photo> to the search engine's own servers. OK to search it, or skip the image search?"
+         }
+        ]
+       },
+       {
+        "id": "3.2.2",
+        "label": "Paste the image's address",
+        "questions": [
+         {
+          "question": "Did the search actually run on the pasted image address?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The TinEye homepage requires you to paste the copied image URL into the designated search bar to initiate the reverse image search.",
+          "whatTheAgentLoses": "You lose the chance to verify that the exact, untruncated image URL was pasted into the search bar before executing the query.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Did the pasted image address actually load and run in the search engine, or fail because it was an unsupported format (e.g. a base64 string or temporary blob URL)?",
+          "say_example": "The pasted address didn't load. It was <a temporary blob URL> the engine can't read. Saving and uploading the file instead."
+         }
+        ]
+       },
+       {
+        "id": "3.2.3",
+        "label": "Right-click the image to search",
+        "questions": [
+         {
+          "question": "Which right-click search option was used, the browser's own or an extension's?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Selecting 'Search Google for Image' from the context menu provides a direct, native method to find the image's origin without needing to download or re-upload the file.",
+          "whatTheAgentLoses": "The user loses the chance to learn how to efficiently use built-in browser tools to investigate suspicious images on their own.",
+          "kind": "decision",
+          "verify_form": "The agent picked one search entry from the right-click menu - check whether it was the browser's own or an extension's; they send the image to different engines.",
+          "speak": "never",
+          "check": "Which context-menu option did the agent choose - the browser's built-in image search, or an extension's entry?",
+          "say_example": "Used the browser's built-in image search, not the extension"
+         },
+         {
+          "question": "Was the profile picture itself put through a reverse image search?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The dating profile for '[name]' might be a scam using a stolen photo, so finding its true origin is necessary to verify the account's authenticity.",
+          "whatTheAgentLoses": "Delegating this means you miss the chance to learn how to effectively use reverse image search extensions to investigate suspicious profiles yourself.",
+          "kind": "state-check",
+          "speak": "on-event",
+          "check": "Did the agent run a reverse image search on the profile's main picture?",
+          "say_example": "Ran the reverse search on <the profile's main photo>."
+         }
+        ]
+       },
+       {
+        "id": "3.2.4",
+        "label": "Set up a search extension",
+        "questions": [
+         {
+          "question": "Did the extension run a reverse search, or only its magnifier?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The context menu provides several options ranging from reverse image searches across different engines to forensic tools, and choosing the magnifier lets you closely inspect specific visual details.",
+          "whatTheAgentLoses": "You lose the ability to decide whether the image requires a close manual inspection of its visual anomalies before running a standard reverse image search.",
+          "kind": "decision",
+          "verify_form": "The agent chose one tool from the extension's menu - check whether it ran a reverse search or only the magnifier.",
+          "speak": "if-wrong",
+          "check": "Did the agent run an actual reverse image search from the extension's menu, or only use the magnifier/zoom tool?",
+          "say_example": "Only the magnifier was used to zoom in. No reverse search ran from the extension menu."
+         },
+         {
+          "question": "Is the extension from the browser's official add-on store?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "Selecting the result from addons.mozilla.org ensures you download the reverse image search tool from a safe, verified source.",
+          "whatTheAgentLoses": "You lose the opportunity to verify that the browser extension being installed comes from a secure and official repository.",
+          "kind": "decision",
+          "verify_form": "The agent installed an extension from one result - check it came from the browser's own add-on store and not a third-party download page.",
+          "speak": "if-wrong",
+          "check": "Does the extension come from the browser's official add-on store, and does its page show a Recommended badge, a known developer, or a high user count?",
+          "say_example": "This extension isn't from the browser's own add-on store. It's from <a third-party download page>, and there's no user count or badge on it."
+         },
+         {
+          "question": "OK to give this extension access to your data on every site?",
+          "cluster": "approve",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The prompt explicitly warns that the extension requires broad permissions to read your data across all websites and browser tabs.",
+          "whatTheAgentLoses": "Letting an agent make this choice means it might grant broad data access permissions without considering your personal privacy boundaries.",
+          "kind": "decision",
+          "verify_form": "The agent accepted an extension's permission prompt - check what it agreed to; the prompt asks for your data on all websites.",
+          "speak": "gate",
+          "check": "Does the extension's permission prompt ask for broad, persistent access (e.g. reading and changing data on all websites, and browser tabs) beyond what a single search needs?",
+          "say_example": "This extension wants to read and change your data on every site you visit. OK to install it, or skip it and use the browser's built-in search?"
+         },
+         {
+          "question": "Did the extension install, and which search engines did it add?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "Confirming the extension's installation by checking the new context menu ensures you have access to multiple search engines like Google, Bing, and TinEye to trace the image's origin.",
+          "whatTheAgentLoses": "Delegating this step means you lose the chance to manually verify the tool's installation and familiarize yourself with the specific array of search engines available for your investigation.",
+          "kind": "state-check",
+          "speak": "never",
+          "check": "Did the extension install successfully (new context-menu entries appear), and which search engines does it add?",
+          "say_example": "Installed the extension - added <Google, Bing, TinEye> to the search menu"
+         },
+         {
+          "question": "After removing the extension, does the screen show it reinstalled?",
+          "cluster": "receipts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "At 08:08 you stated you would remove and re-add the extension, but the screen never shows the re-addition taking place.",
+          "whatTheAgentLoses": "The user loses the functionality of the verification tool because the agent failed to reinstall it as promised.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "After the narration describes removing and reinstalling the extension, does the screen actually show it being reinstalled, or does the reinstall never appear?",
+          "say_example": "The extension was removed, but the screen never shows it reinstalled. It may not be installed now."
+         },
+         {
+          "question": "Does the button already say 'Added to Chrome', meaning it's installed?",
+          "cluster": "facts",
+          "moment": "After",
+          "moneyMoving": false,
+          "why": "This matters because the audio instructions contradict the visual state of the browser, which already has the necessary tool installed.",
+          "whatTheAgentLoses": "A user delegating to an agent loses the human ability to recognize that a step is already complete and safely ignore a conflicting audio instruction.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Does the extension's button already read 'Remove from Chrome' or 'Added to Chrome' - meaning it's already installed - even though the narration talks about adding or installing it?",
+          "say_example": "The button already says <Added to Chrome>. It's already installed, so there's nothing to add."
+         }
+        ]
+       },
+       {
+        "id": "3.2.5",
+        "label": "Search a screenshot or frame",
+        "questions": [
+         {
+          "question": "Does the saved screenshot show only the photo, or the toolbars around it too?",
+          "cluster": "hand over",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The interface displays a crop box and a save icon, requiring a choice on whether to isolate the profile picture further before downloading it.",
+          "whatTheAgentLoses": "You lose the ability to manually adjust the crop boundaries to ensure only the relevant image is used for the reverse search.",
+          "kind": "state-check",
+          "speak": "on-event",
+          "check": "Does the saved screenshot show only the photo, or does it also include surrounding app interface such as toolbars or borders?",
+          "say_example": "The screenshot includes <the app's toolbar> around the photo. Cropping to the image alone."
+         },
+         {
+          "question": "Was the screenshot searched as an image, or its file name searched as text?",
+          "cluster": "select",
+          "moment": "Now",
+          "moneyMoving": false,
+          "why": "The search bar displays both microphone and camera icons, requiring you to specifically choose the camera icon to initiate a reverse image search.",
+          "whatTheAgentLoses": "Delegating this step prevents you from controlling exactly which visual elements or specific screenshots are uploaded to the reverse image search tool.",
+          "kind": "decision",
+          "verify_form": "The agent used one tool on the screenshots - check it was the image search and not a text search on the file name.",
+          "speak": "if-wrong",
+          "check": "Did the agent run an image-based search (e.g. a camera icon) on the screenshot, or a text search on its filename?",
+          "say_example": "The file name was searched as text instead of the image itself. Using the camera icon."
+         },
+         {
+          "question": "Was a phone photo of the screen searched, or a clean screenshot?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "The video shows the user physically pointing their phone at a laptop screen to use Google Lens, which introduces screen glare and moiré patterns that can degrade the reverse image search accuracy compared to a clean screenshot.",
+          "whatTheAgentLoses": "You lose the ability to ensure the search engine receives a clean, high-quality image file rather than a distorted photograph of a screen, which could cause the verification search to fail.",
+          "kind": "decision",
+          "verify_form": "The agent searched a phone photo of a screen or a direct screenshot - check which; a photo of a screen adds glare and moire that break the match.",
+          "speak": "if-wrong",
+          "check": "Did the agent search a phone photo taken of the laptop screen, which risks glare or moire, or a clean digital screenshot?",
+          "say_example": "A phone photo of the screen was searched. Glare could throw off the match. A direct screenshot would be cleaner."
+         },
+         {
+          "question": "Did the video tool return keyframes and details, or come back empty?",
+          "cluster": "",
+          "moment": null,
+          "moneyMoving": false,
+          "why": "If the social media post is private, deleted, or uses an unsupported video player, the extraction tool will silently fail, requiring you to check the results table to ensure the keyframes were actually generated.",
+          "whatTheAgentLoses": "The user loses the awareness that the automated extraction failed, which would prompt a human to manually screenshot frames from the video instead.",
+          "kind": "state-check",
+          "speak": "if-wrong",
+          "check": "Did the video analysis tool's results table actually populate with metadata and keyframes, or come back empty?",
+          "say_example": "The tool returned nothing. The results table is empty, so the post may be private or unsupported."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "3.3",
+      "label": "Crop to the telling part",
+      "questions": [
+       {
+        "question": "Does the crop keep the telling detail in, or cut it out?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Isolating a specific element like the smoke plume using the crop tool yields more targeted search results, such as the TambovINFO article, rather than generic matches for the whole scene.",
+        "whatTheAgentLoses": "You lose the opportunity to intuitively identify which specific visual details, like unique smoke patterns or faces, are the most crucial clues to isolate for the investigation.",
+        "kind": "decision",
+        "verify_form": "The agent cropped the image or searched it whole - check what part it cropped to; a crop changes the matches.",
+        "speak": "on-event",
+        "check": "Does the crop area include the specific identifying detail (e.g. a smoke plume or sign), or does it cut that detail out?",
+        "say_example": "The crop cut out <the smoke plume>, the one telling detail. The results came back with nothing specific, so I'm going back to the full image."
+       },
+       {
+        "question": "Was the crop cancelled, so the search ran on the whole image?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The screen shows the user adjusting the crop box but then clicking 'Cancel' instead of completing the action, meaning the subsequent search will run on the entire uncropped image and potentially return noisy results.",
+        "whatTheAgentLoses": "The user loses the precision of a targeted visual search if the agent fails to notice that the crop step was silently aborted and proceeds with the full image.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Was the crop adjustment cancelled or aborted, leaving the search to run on the full uncropped image?",
+        "say_example": "The crop box was opened and then cancelled. The search ran on the whole image instead."
+       }
+      ]
+     },
+     {
+      "id": "3.4",
+      "label": "Read the engine's own label",
+      "questions": [
+       {
+        "question": "Does the engine's own location guess match the place the claim names?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The search engine's automatic text suggestion of 'Myanmar (Burma)' next to the uploaded thumbnail provides an immediate clue that the image's true origin contradicts the assumed location.",
+        "whatTheAgentLoses": "You miss the immediate realization of the location mismatch, which helps build your personal intuition for spotting miscaptioned media.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the search engine's own location suggestion for the image match the location named in the claim?",
+        "say_example": "The engine's own guess is <Chile>. The claim says <Peru>."
+       },
+       {
+        "question": "Do the two search methods report different image sizes?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen showed Google reporting different dimensions (892 x 501 versus 1010 x 572) depending on the search method, which could indicate the image was cropped or altered.",
+        "whatTheAgentLoses": "You lose the human intuition to spot subtle discrepancies in metadata like image dimensions that might reveal an image has been manipulated.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the image dimensions reported differ between the two search methods used (e.g. right-click search vs. manual upload)?",
+        "say_example": "The right-click search reports <800 by 450>. The upload reports <1024 by 576>. Same file, two sizes shown, so one may be a crop."
+       },
+       {
+        "question": "Is the location card on screen from your own saved places?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Although Google Lens restricted facial recognition results, it displayed a location clue based on saved places that could provide alternative context.",
+        "whatTheAgentLoses": "The user loses the opportunity to investigate secondary location clues if the agent prematurely abandons the search when the primary facial recognition fails.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "When facial-recognition results are restricted, does the page still show a secondary location-based clue (e.g. a saved-places card)?",
+        "say_example": "Face results are restricted. A <saved-places> card still shows, but that's from your own account, not evidence about the claim."
+       },
+       {
+        "question": "What does the engine's best guess say, and which matching pages carry a fact-check or a date?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Reviewing the search engine's 'Best guess' alongside the list of matching pages and fact-check articles helps you quickly gauge the image's true origin and spread.",
+        "whatTheAgentLoses": "You lose the opportunity to critically evaluate the credibility of the matching sources and the nuances of the search engine's automated guess for yourself.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "What does the engine's 'best guess' label say, and which of the matching pages below the similar-images block carry a fact-check, a place or a date?",
+        "say_example": "The engine's best guess is <cereal leaf beetle>. One matching page is a fact-check dated <2019>."
+       }
+      ]
+     },
+     {
+      "id": "3.5",
+      "label": "Read the match list sections",
+      "questions": [
+       {
+        "question": "Is the original creator's account among the results, separate from re-posts?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Spotting the exact Instagram match among the Google Lens results allows you to trace the image back to its true creator rather than a secondary source like Amazon.",
+        "whatTheAgentLoses": "You lose the opportunity to personally verify the credibility of the original poster's profile and the context in which the photo was first shared.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Among the results, is there a match that leads to the original creator's account, distinct from a secondary repost such as a retail listing?",
+        "say_example": "Found the original on <the photographer's account>, posted before the copies"
+       },
+       {
+        "question": "Do the visual matches just repeat the post's claim in their titles?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Scanning the titles in the visual matches, like those mentioning 'Pakistan Noor Khan Airbase,' helps establish the specific narrative or misinformation surrounding the image.",
+        "whatTheAgentLoses": "You lose the ability to personally gauge the scale and specific variations of the misinformation spreading across different platforms.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What claims or captions do the titles in the 'visual matches' section repeat?",
+        "say_example": "The visual matches all repeat the post's own claim in their titles. They're copies of the post, so they don't count as a source."
+       },
+       {
+        "question": "Is the original upload in the default results, or only under 'Exact matches'?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Google Lens often defaults to showing visually similar items or related entities, so you must explicitly check if switching to 'Exact matches' is necessary to filter out the noise and find the original upload.",
+        "whatTheAgentLoses": "The user loses the ability to filter out visually similar noise and pinpoint the exact original image if the agent accepts the default search tab.",
+        "kind": "decision",
+        "verify_form": "The agent stayed on the default results tab or switched to Exact matches - check which; the default shows lookalikes and the claim's own copies.",
+        "speak": "if-wrong",
+        "check": "Does the default results view show the original upload, or does the 'Exact matches' tab need to be opened to find it?",
+        "say_example": "The default view only shows similar or lookalike images. The original upload sits under <Exact matches>, which hasn't been opened yet."
+       }
+      ]
+     },
+     {
+      "id": "3.6",
+      "label": "Pick the match to open",
+      "questions": [
+       {
+        "question": "Was a news or fact-checker match opened, or a video or meme page?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting a reputable news site like voanews.com from the search results rather than a YouTube video helps ensure you get factual, verifiable context for the image.",
+        "whatTheAgentLoses": "You lose the opportunity to exercise your own judgment in evaluating which search results come from the most trustworthy sources.",
+        "kind": "decision",
+        "verify_form": "The agent opened one match - check it is a news site or a fact-checker and not a video page or a meme site; the list held both.",
+        "speak": "if-wrong",
+        "check": "Did the agent open a news or fact-checker result, or a video/meme-site result instead?",
+        "say_example": "Opened <a meme-site post> instead of <the news site result> further down."
+       },
+       {
+        "question": "Was the match opened one likely to hold the full-size original, or another re-post?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Selecting a major news outlet like dailymail.co.uk from the matching images section increases the likelihood of finding a high-resolution, uncropped version of the photo.",
+        "whatTheAgentLoses": "You lose the opportunity to use your own intuition to select the most promising source for a high-quality version of the image.",
+        "kind": "decision",
+        "verify_form": "The agent opened one result to find a better copy - check it was a news archive likely to hold the original and not another re-post.",
+        "speak": "if-wrong",
+        "check": "Did the agent open a result likely to hold a higher-resolution original, such as a news archive, or just another re-post?",
+        "say_example": "Opened <another re-post> instead of <the news archive copy>, which is more likely to hold the original at full size."
+       }
+      ]
+     },
+     {
+      "id": "3.7",
+      "label": "Search again another way",
+      "questions": [
+       {
+        "question": "Which copy of the image is sharper, the article's or the post's?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Searching with the clearer, higher-resolution image from the article instead of the blurry tweet image yields better reverse search results.",
+        "whatTheAgentLoses": "You lose the ability to visually compare image quality and strategically select the clearer version to ensure a more accurate reverse image search.",
+        "kind": "decision",
+        "verify_form": "The agent searched with one copy of the image - check whether it used the clearer copy from the article or the blurry one from the post.",
+        "speak": "on-event",
+        "check": "Which copy on screen is sharper, the article's or the original post's?",
+        "say_example": "The article's copy is sharper than the post's. I'm searching with that one."
+       },
+       {
+        "question": "Do uploading the file and pasting its address give the same results?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing exactly '117 results' for both methods confirms that the reverse image search is processing the exact same image without any upload or URL resolution errors.",
+        "whatTheAgentLoses": "You lose the opportunity to double-check the reliability of the search tool's input methods by comparing their exact output counts.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the result count or label from uploading the file match the result count from pasting the image address?",
+        "say_example": "Uploading the file found <120> matches. Pasting the address found <35>. Checking which one is right before trusting either."
+       },
+       {
+        "question": "After this engine found nothing, was a second engine tried?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Tools like TinEye have massive databases but often fail to index recent social media posts, so getting zero results might just expose the tool's blind spots rather than proving the image is original.",
+        "whatTheAgentLoses": "You lose the strategic awareness to recognize a tool's limitations and pivot to a broader engine like Google or Yandex when the initial search comes up empty.",
+        "kind": "decision",
+        "verify_form": "The agent got no matches from one engine and stopped or tried another - check it tried another; one engine's empty result is its blind spot, not proof.",
+        "speak": "if-wrong",
+        "check": "Did a second search engine run after the first one returned zero results?",
+        "say_example": "This engine found nothing. That only shows what this engine indexes. Trying <a second engine> next."
+       }
+      ]
+     },
+     {
+      "id": "3.8",
+      "label": "Narrow by keywords and date",
+      "questions": [
+       {
+        "question": "What keywords replaced the engine's own text beside the image?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Editing the auto-populated text in the Google Image search bar allows you to pivot from merely identifying the location to finding credible context about the incident.",
+        "whatTheAgentLoses": "You lose the opportunity to steer the investigation toward specific angles, like human rights accountability, by manually brainstorming the most effective search terms.",
+        "kind": "decision",
+        "verify_form": "The agent replaced the text beside the image with its own keywords - check what it typed; the words decide what kind of reports come back.",
+        "speak": "never",
+        "check": "What text is now in the search box beside the image, and does it differ from the engine's own guess?",
+        "say_example": "Replaced the engine's guess with <'flooded market 2019'>"
+       },
+       {
+        "question": "Do these results span several years with no date filter?",
+        "cluster": "refine",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results show articles spanning from 2015 to 2020, so applying a date filter helps isolate the exact incident and original source of the photo.",
+        "whatTheAgentLoses": "You lose the opportunity to apply your own contextual intuition about when the photo was likely taken to effectively narrow down the search results.",
+        "kind": "decision",
+        "verify_form": "The agent applied a date filter or left the results as they were - check which, and what range; without one the results mix years.",
+        "speak": "on-event",
+        "check": "Do the current results span more than one year or event, with no date filter applied?",
+        "say_example": "These results span <several years>. Adding a date filter to keep the incidents apart."
+       },
+       {
+        "question": "Does the date range start before the claim's own date, or only from it?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Setting the custom range to May 2020 matches the date from the image caption, helping to filter out later reposts and isolate the original context.",
+        "whatTheAgentLoses": "You lose the ability to decide how strictly to bound the time frame, which could cause you to miss the true origin if the initial caption's date was slightly inaccurate.",
+        "kind": "decision",
+        "verify_form": "The agent set a custom date range - check the two dates; a range copied from the caption can cut off an earlier appearance.",
+        "speak": "if-wrong",
+        "check": "Does the entered date range start before the date the claim itself gives, or only from the claim's own date onward?",
+        "say_example": "The range starts at <the claim's own date>. That could hide an earlier version. Widening it."
+       },
+       {
+        "question": "What place and context do the date-filtered results give the image?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The search results from May 2020 explicitly mention a burning village in Myanmar, providing the true context needed to debunk the original claim.",
+        "whatTheAgentLoses": "You lose the chance to personally examine the historical search results and verify the exact context and location of the original image.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What do the date-filtered results say about the image's true location and context?",
+        "say_example": "Inside that date range, every result places this in <a different country> from the one the claim names."
+       }
+      ]
+     },
+     {
+      "id": "3.9",
+      "label": "Sort the matches by date",
+      "questions": [
+       {
+        "question": "Can these matches be sorted by date, and was the earliest one checked?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Viral images flood search engines with circular reporting, requiring you to actively recognize the echo chamber and apply strict date filters to bypass the noise and find the actual origin.",
+        "whatTheAgentLoses": "You lose the critical judgment to recognize when search results are just a reflection of the current misinformation cycle rather than the original source.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the engine offer a sort by date or oldest, and was it used to find the earliest result?",
+        "say_example": "Every result on this page is a recent re-post. Sorting by oldest to find where this started."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "4",
+    "label": "Read what the match shows",
+    "note": "4.1 happens on every opened match, for the same image or a similar one. 4.2 where the image is not where the result said it was. 4.3 and 4.4 on every page that carries a caption or a date. 4.5 wherever more than one copy exists - VOgi, ZEyc, 4Rh4, 6KeC. 4.6 where the page shows the original beside the copy. 4.7 in the two profile checks. 4.8 where the page is in another language. 4.9 in 6KeC, 4Rh4 and VOgi, which play the footage. 4.10 does not appear in any of the recordings.",
+    "children": [
+     {
+      "id": "4.1",
+      "label": "Confirm the same image",
+      "questions": [
+       {
+        "question": "Do the results connect this photo to its claimed origin, or only to unrelated pages?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Evaluating the Google Lens visual matches, which only show unrelated shopping and TikTok links, is necessary to determine if the true origin was found.",
+        "whatTheAgentLoses": "You lose the ability to independently judge whether the image search results are just irrelevant visual matches or the actual original source.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do the reverse-search results for this photo show anything connected to its claimed origin, or only unrelated matches?",
+        "say_example": "Nothing here traces back to <the claimed origin>. These are unrelated shopping and video links."
+       },
+       {
+        "question": "Are the other suspect photos on this account's grid too?",
+        "cluster": "photos",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Spotting the other suspected photos on the '[handle]' Instagram grid confirms that the scammer stole multiple images from this specific real person.",
+        "whatTheAgentLoses": "Delegating this means you miss the visual certainty of spotting the exact matching photos on the original creator's grid to definitively prove the theft.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the account's own photo grid contain the other photos already suspected of being stolen?",
+        "say_example": "This account's grid has the other two photos too. Same source for all three."
+       },
+       {
+        "question": "Is this result the same image, or only a similar one?",
+        "cluster": "photos",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Using the comparison overlay on the TinEye results confirms that the search actually found the exact image you are verifying among the 117 results.",
+        "whatTheAgentLoses": "You lose the visual confirmation that the search engine's results are exact matches rather than just visually similar images.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the comparison tool actually show this result as the same image, or only a similar one?",
+        "say_example": "The comparison says this result isn't your image, just close to it. I'm not counting it as a match."
+       },
+       {
+        "question": "Do the matches show this event, or only the same person or template elsewhere?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Search engines often return generic photos of a recognized celebrity or template rather than the specific, potentially doctored image you are trying to verify.",
+        "whatTheAgentLoses": "You lose the visual discernment to realize the search engine successfully identified the subject but failed to find the exact image needed for verification.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do these matches show the specific event in the claim, or only the same person or template in an unrelated context?",
+        "say_example": "These results recognize <the politician in the photo>, but none of them show <the rally the claim describes>."
+       }
+      ]
+     },
+     {
+      "id": "4.2",
+      "label": "Find the matched image",
+      "questions": [
+       {
+        "question": "Where on this page does the matching image sit?",
+        "cluster": "photos",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The main article did not contain the image, but its matching thumbnail appeared at the bottom under the related stories section.",
+        "whatTheAgentLoses": "You lose the visual confirmation of spotting the exact thumbnail among the related links to accurately trace the image's true origin.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Where on the page does the matching image sit, in the article body or somewhere like a related-story thumbnail?",
+        "say_example": "The match isn't in the article itself. It's a small thumbnail down in <the related-stories section>."
+       }
+      ]
+     },
+     {
+      "id": "4.3",
+      "label": "Read the caption",
+      "questions": [
+       {
+        "question": "What date, place or explanation does this page give for the image?",
+        "cluster": "photos",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The article displays the target image with a caption stating it shows a May 16, 2020 fire in Let Kar, providing the exact context needed to verify the original claim.",
+        "whatTheAgentLoses": "You lose the chance to personally verify the visual match and extract the specific date and location details from the caption to guide your next search.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "What date, place or explanation does this page's caption or text give for the image, and does it agree with what the claim says?",
+        "say_example": "The caption says <a coastal town>, dated <May 2020>. The claim says <a different country>."
+       }
+      ]
+     },
+     {
+      "id": "4.4",
+      "label": "Read the page's date",
+      "questions": [
+       {
+        "question": "Is the upload date shown earlier than the event the claim ties it to?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Noticing that the video was posted in the 'Funny' category on a meme site and dates back to 2015 proves it is unrelated to the recent coronavirus outbreak.",
+        "whatTheAgentLoses": "You lose the opportunity to independently deduce the video's satirical nature and false context from its platform and historical upload date.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "What category and upload date does the platform display for this video, and is that date earlier than the event the claim attaches it to?",
+        "say_example": "This was posted under <the platform's 'Funny' category> in <2015>. That's years before the event it's now tied to."
+       }
+      ]
+     },
+     {
+      "id": "4.5",
+      "label": "Find the earliest copy",
+      "questions": [
+       {
+        "question": "Was the earliest-dated match opened, or only the top one?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Scanning the dates and domains in the search results, such as the March 2020 link to demotywatory.pl, helps establish the true timeline and original context of the image.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to manually spot patterns in the types of websites, like meme pages, that first circulated the image.",
+        "kind": "decision",
+        "verify_form": "The agent opened one match to find the earliest appearance - check it picked by date and not by position in the list.",
+        "speak": "if-wrong",
+        "check": "Among the matches, was the one opened the earliest-dated, or only the top-listed one?",
+        "say_example": "The <top-listed> match was opened. The oldest one, from <2016>, is further down."
+       }
+      ]
+     },
+     {
+      "id": "4.6",
+      "label": "Compare copy and original",
+      "questions": [
+       {
+        "question": "Side by side, what differs between the original and the viral copy?",
+        "cluster": "photos",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing the doctored and original images side-by-side in the Snopes article proves exactly how the picture was manipulated.",
+        "whatTheAgentLoses": "You miss the firsthand visual proof of seeing the specific alterations made to the original image.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What does the comparison show as the difference between the original and the viral copy?",
+        "say_example": "Side by side, the original sign reads <Road closed for repairs>. The viral copy reads <Road closed for good>."
+       },
+       {
+        "question": "Is it the same footage, with only a caption or overlay added?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Comparing the '[handle]' Instagram post side-by-side with the viral video confirms that the underlying footage is identical and only the text overlay was added.",
+        "whatTheAgentLoses": "Delegating this step means you miss the direct visual confirmation of seeing the unedited footage next to the manipulated viral claim.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do the two videos show the same footage, and what was added to one of them?",
+        "say_example": "Same footage in both. The viral copy has <a caption> added on top."
+       }
+      ]
+     },
+     {
+      "id": "4.7",
+      "label": "Read the source account's profile",
+      "questions": [
+       {
+        "question": "Does this photo show up under other names, with a scam warning?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Seeing the same photo linked to various names like \"[name]\" and \"[name]\" alongside scam warnings confirms the profile picture is stolen and used fraudulently.",
+        "whatTheAgentLoses": "You lose the direct visual confirmation of how widely the image has been misappropriated across different fake profiles and scam warning sites.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does this same photo appear under more than one name, with a scam warning attached to any of them?",
+        "say_example": "This same photo is posted under <two other names> too, one with a scam warning."
+       },
+       {
+        "question": "Do the cities in the real account's bio match the city the messages claim?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The bio explicitly lists 'nyc • cincy • dallas', providing concrete evidence that contradicts the scammer's claims of being in Los Angeles or Miami.",
+        "whatTheAgentLoses": "You lose the opportunity to personally spot the geographical discrepancies in the bio that definitively expose the impersonation.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do the cities listed in the real account's bio match the location the claim gives?",
+        "say_example": "The real account's bio lists <different cities>. The message claims a city that isn't one of them."
+       },
+       {
+        "question": "Does the profile's name match the name on the account the photos trace to?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Spotting that the dating profile is named '[name]' while the matching Instagram photos belong to '[name]' is the key evidence needed to prove the profile is fake.",
+        "whatTheAgentLoses": "Delegating this means missing out on the satisfaction of personally spotting the exact discrepancy that exposes the stolen identity.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the name on the profile being checked match the name on the account the photos actually trace to?",
+        "say_example": "The profile says <one name>. The photos trace back to an account under <a different name>."
+       },
+       {
+        "question": "What post and follower counts does the real account show?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The profile displays 1,269 posts and over 1,400 followers, which provides strong evidence that this is a real person's active account rather than a disposable fake profile.",
+        "whatTheAgentLoses": "You lose the ability to use basic engagement metrics to quickly distinguish between a genuine original source and a secondary stolen account.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What post count and follower count does the account show?",
+        "say_example": "Read the real account's counts - <900> posts, <2,300> followers, an established account"
+       }
+      ]
+     },
+     {
+      "id": "4.8",
+      "label": "Translate the page",
+      "questions": [
+       {
+        "question": "Was the page translated before it was read, and from what language?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Translating the AFP Factuel page allows you to understand the specific details and context regarding the 2018 photos of the Pope's cross.",
+        "whatTheAgentLoses": "You lose the opportunity to personally review the translated text and evaluate the nuances of the international fact-checker's reasoning.",
+        "kind": "decision",
+        "verify_form": "The agent read a fact-check written in French - check it translated the page before reading the rating, and that the rating word came through the translation.",
+        "speak": "never",
+        "check": "Was the page translated, by the browser or an extension, before its text was read, and what language does the banner say it came from?",
+        "say_example": "Translated this page from <French> before reading it"
+       },
+       {
+        "question": "Is there text inside the image that needs recognizing and translating?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Extracting and translating the Arabic text 'جهاز الأمن القومي صنعاء' directly from the image provides critical context for tracing its true origin.",
+        "whatTheAgentLoses": "You lose the ability to manually verify the accuracy of the optical character recognition and ensure the resulting translation makes sense in context.",
+        "kind": "decision",
+        "verify_form": "The agent ran text recognition and translation on the image, or skipped them - check the extracted text against what the image shows before trusting the translation.",
+        "speak": "on-event",
+        "check": "Is there text in another language inside the image that a translation tool could read?",
+        "say_example": "There's text inside the image itself, in <another language>. Running text recognition on it before trusting any translation."
+       },
+       {
+        "question": "Is the page actually in English now, or still in the original language?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Third-party translation extensions sometimes fail to parse dynamically loaded text, requiring you to check if the page is actually readable or if you need to trigger the browser's native translation feature via the context menu.",
+        "whatTheAgentLoses": "The user loses the ability to read the foreign-language source if the agent fails to notice that the first translation attempt silently failed.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "After running the translation extension, does the visible text still show the original language rather than English?",
+        "say_example": "The extension says it translated this. The text on screen is still in <the original language>. Switching to the browser's own translator."
+       },
+       {
+        "question": "Once translated, does the match's caption name a place?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The discovered Instagram video contains a Persian caption, and translating it reveals the video actually depicts Khartoum Airport in Sudan, providing the crucial geographic context needed to debunk the Pakistan claim.",
+        "whatTheAgentLoses": "You lose the ability to independently extract vital contextual clues from foreign-language posts that directly contradict the viral misinformation.",
+        "kind": "decision",
+        "verify_form": "The agent translated the matching post's caption or skipped it - check it translated it; the place name is in the caption.",
+        "speak": "on-event",
+        "check": "Is the matching post's caption in a language other than English, and does it name a place once translated?",
+        "say_example": "The caption is in <another language>. Once translated, it names <a different place> from the one the claim gives."
+       }
+      ]
+     },
+     {
+      "id": "4.9",
+      "label": "Play the source video",
+      "questions": [
+       {
+        "question": "Was the video played to the frame the fact-check names?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The article states the image is actually a scene from the 2014 movie 'Aurat Khilona Nahi', so watching the embedded video lets you independently verify this context.",
+        "whatTheAgentLoses": "You lose the firsthand visual confirmation that the viral image perfectly matches the specific scene from the movie.",
+        "kind": "decision",
+        "verify_form": "The agent may have taken the fact-check's word for the film scene - check whether it played the film to the matching frame.",
+        "speak": "if-wrong",
+        "check": "Did the video actually get played to the specific frame the fact-check names, rather than trusting the fact-check's description alone?",
+        "say_example": "The fact-check says this is a scene from <a film>. The film wasn't played to that frame, so that's still their word."
+       },
+       {
+        "question": "Does the video carry another platform's banner or watermark?",
+        "cluster": "photos",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The Snapchat-style text banner overlaid on the video provides a crucial clue about the platform where this specific version of the clip circulated.",
+        "whatTheAgentLoses": "You lose the chance to spot subtle visual artifacts, like the text banner, that provide context about how the video spread.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the downloaded video carry a banner or watermark from another platform?",
+        "say_example": "This copy has <a platform's> banner across it. That's where it was circulating before it got here."
+       },
+       {
+        "question": "What happens in the footage at the moment the object disappears?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The video shows the supposed planet disappearing exactly when the sun goes behind the clouds, providing visual proof that it is merely a camera artifact.",
+        "whatTheAgentLoses": "You lose the opportunity to watch the footage yourself and independently verify that the visual anomaly behaves exactly like a lens flare.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What does the footage show happening at the moment the object disappears?",
+        "say_example": "The object vanishes the moment <the sun goes behind a cloud>. That points to a camera artifact rather than an object in the sky."
+       }
+      ]
+     },
+     {
+      "id": "4.10",
+      "label": "Check for an AI-generated label",
+      "questions": [
+       {
+        "question": "Does the platform show an AI-generated content label on this image?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "If reverse image search fails to find an original source, the image might not be miscaptioned—it might be entirely fabricated by generative AI.",
+        "whatTheAgentLoses": "You lose the human ability to spot the surreal, subtle artifacts of AI generation that automated reverse-search tools simply register as 'no matches found.'",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Is there an AI-generated or similar label or badge displayed on the image or its page?",
+        "say_example": "No matches came back for this image anywhere. The platform labels it <AI-generated>. That's a different finding from a real photo with a false caption."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "5",
+    "label": "Trace the source itself",
+    "note": "t8lK runs 5.1 to 5.4 twice: search the name, judge the results for independence, take the related search, read what a third party says. 5.5 and 5.6 in linG, which verifies an official account and follows its link to the primary source. 5.7 in 4Rh4, which uses the meme site's category as the sign that the image is not what it claims. linG@1:21 reaches 5 straight from the match list.",
+    "children": [
+     {
+      "id": "5.1",
+      "label": "Search the source's name"
+     },
+     {
+      "id": "5.2",
+      "label": "Judge the results for independence",
+      "questions": [
+       {
+        "question": "Was the source's own name searched before its claim was used?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Although the featured snippet from criticalthinking.org looks authoritative, verifying the organization through a third-party source ensures it is actually reputable.",
+        "whatTheAgentLoses": "You lose the opportunity to practice lateral reading and build your own judgment about which organizations are truly trustworthy.",
+        "kind": "decision",
+        "verify_form": "The agent accepted the source that came up first or checked it - check whether it searched the organization's name before citing it.",
+        "speak": "on-event",
+        "check": "Did a search for the organization's own name run separately, before its claim was cited?",
+        "say_example": "Before citing this, I searched <the National Water Council> on its own."
+       },
+       {
+        "question": "Do these results include anyone besides the organization itself and its publishers?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The search results only showed the organization's own website and publishers selling their books, indicating a lack of objective, outside perspectives on the first page.",
+        "whatTheAgentLoses": "You lose the critical judgment to recognize when search results are merely self-referential promotional materials rather than independent evaluations.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Do these results include anything besides the organization's own site and its own publishers?",
+        "say_example": "Every result here is the organization's own site or its publishers. No outside view yet."
+       },
+       {
+        "question": "Was a third party's page opened, or the organization's own site?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Scrolling past the official website and social media pages to click the Wikipedia link ensures you read an independent evaluation of the organization rather than its own self-promotion.",
+        "whatTheAgentLoses": "You lose the opportunity to personally gauge the source's reputation and potential biases by reading how independent third parties describe it.",
+        "kind": "decision",
+        "verify_form": "The agent opened one result about the outlet - check it was a third party's page and not the outlet's own site or its social accounts.",
+        "speak": "if-wrong",
+        "check": "Is the page that was opened a third party's, or the organization's own site or social account?",
+        "say_example": "The page opened is the organization's own site. Looking for <a third-party entry> instead."
+       }
+      ]
+     },
+     {
+      "id": "5.3",
+      "label": "Take the related search",
+      "questions": [
+       {
+        "question": "Does a related search suggest something the main results left out, like a lawsuit?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The initial search results only showed first-party information, making it necessary to check related searches like the 'lawsuit' query to find external perspectives.",
+        "whatTheAgentLoses": "You lose the opportunity to intuitively spot and investigate red flags in related search suggestions that might uncover hidden controversies about the source.",
+        "kind": "decision",
+        "verify_form": "The agent followed one related search - check which one; the useful one named a lawsuit.",
+        "speak": "on-event",
+        "check": "Does a related-searches suggestion name something the main results didn't, like a legal or controversy term?",
+        "say_example": "The related searches pair <the National Water Council> with the word lawsuit. That's worth a look."
+       }
+      ]
+     },
+     {
+      "id": "5.4",
+      "label": "Read the third-party view",
+      "questions": [
+       {
+        "question": "Was the outlet behind this report checked before it was repeated?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search snippet reveals highly sensational allegations of sexual coercion, making it essential to confirm the reporting outlet is a legitimate news source.",
+        "whatTheAgentLoses": "You lose the opportunity to personally assess the journalistic reputation and reliability of the outlet publishing these lurid claims.",
+        "kind": "decision",
+        "verify_form": "The agent read a damaging report about the source - check whether it verified the outlet before repeating the report.",
+        "speak": "on-event",
+        "check": "Does the page name who publishes this report, and can that publisher be checked on a third-party page?",
+        "say_example": "Before repeating this, I checked who <the news service that published it> actually is."
+       }
+      ]
+     },
+     {
+      "id": "5.5",
+      "label": "Verify the account is official",
+      "questions": [
+       {
+        "question": "What on this page shows it's the organization's own official site?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Verifying the authenticity of the 'Vatican News' homepage ensures the claim originates from a credible, official source rather than a deceptive lookalike.",
+        "whatTheAgentLoses": "You lose the personal assurance of visually verifying the site's official branding and layout to trust its legitimacy.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What on the page confirms this is the organization's own official site, such as its domain, branding or about page?",
+        "say_example": "The domain and the about page confirm this is <the organization>'s real site."
+       },
+       {
+        "question": "Does the handle's profile card confirm it's the official account?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Hovering over the Vatican News handle on the search results page reveals a profile card confirming it is an official service of the Holy See with 176k followers, allowing you to instantly vet the source without opening a new tab.",
+        "whatTheAgentLoses": "You lose the efficiency of using built-in UI previews to quickly establish a source's authority before committing time to investigate their content.",
+        "kind": "decision",
+        "verify_form": "The agent may have skipped the account's profile card - check whether it confirmed the account is official before trusting its post.",
+        "speak": "on-event",
+        "check": "Does a hover profile card on the handle confirm it's the official account, before it's opened?",
+        "say_example": "The handle's profile card says it's <the official service>, with <200k> followers. Confirmed before opening it."
+       }
+      ]
+     },
+     {
+      "id": "5.6",
+      "label": "Follow the primary-source link",
+      "questions": [
+       {
+        "question": "Does the fact-check link to a primary source, or only to other news coverage?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Relying on secondary sources can lead to circular reporting, where a false claim is legitimized by a chain of citations without anyone checking the actual raw data or original document.",
+        "whatTheAgentLoses": "You lose the critical judgment to trace a claim all the way back to its primary source, risking blind trust in a potentially flawed secondary summary.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Does the fact-checking page link to a primary source, or only to other news coverage of the same claim?",
+        "say_example": "Checked this fact-check's links - <news coverage> only, no primary source"
+       },
+       {
+        "question": "Does the post link to a primary source, and was it followed?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The tweet includes a specific URL (pjlatinoamericana.org/simbolos.html) that promises direct context about the cross's colors and origins.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally evaluate the credibility and exact wording of the linked source website.",
+        "kind": "decision",
+        "verify_form": "The agent followed the source's link to the primary page or stopped at the tweet - check it followed it; the explanation is on the linked page.",
+        "speak": "on-event",
+        "check": "Does the post itself contain a link to a primary source, and was it followed?",
+        "say_example": "The post links straight to <the organization's own page>. Following that instead of stopping at the post."
+       },
+       {
+        "question": "What does the primary source say the disputed detail means?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Reading the translated official text reveals that the colors represent geographic regions in Latin America, providing the definitive context needed to debunk the claim.",
+        "whatTheAgentLoses": "You lose the direct experience of discovering the true cultural meaning behind the symbol that definitively disproves the viral post.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "What does the primary source, translated if needed, say the disputed detail means, and does that contradict what the post claims?",
+        "say_example": "The organization's own page says the colours stand for <the four founding regions>. The post says they mean something else."
+       }
+      ]
+     },
+     {
+      "id": "5.7",
+      "label": "Check for a satire site"
+     }
+    ]
+   },
+   {
+    "id": "6",
+    "label": "Place and date the footage",
+    "note": "6.1 comes first, where the user finds a detail in the image that can be searched or matched. then 6.2 or 6.3, a text search on the detail or a map. 6.4 matches the scene to a street or a satellite view, 6.5 steps the imagery timeline, 6.6 checks other footage of the same scene. 4Rh4 runs all of it but 6.6. 6KeC stops at 6.2 with a third party's photo. VOgi runs 6.1 to 6.6.",
+    "children": [
+     {
+      "id": "6.1",
+      "label": "Pick a searchable detail",
+      "questions": [
+       {
+        "question": "Which part of the image was magnified, and is it searchable?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Using the circular lens tool to zoom into specific areas like the burning village helps identify visual inconsistencies or clues about the image's true origin.",
+        "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally spot subtle visual anomalies or AI-generated artifacts that an automated tool might overlook.",
+        "kind": "decision",
+        "verify_form": "The agent magnified some part of the image - check what it looked at; the telling detail may be elsewhere.",
+        "speak": "on-event",
+        "check": "Which part of the image was magnified, and is it something searchable such as a sign, a plate or a landmark?",
+        "say_example": "Zoomed into <a sign> in the image. That's specific enough to search."
+       },
+       {
+        "question": "What in the background is specific enough to search, like a sign or plate?",
+        "cluster": "photos",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Spotting specific background details like the 'KEAN' street sign, American cars, and right-side driving provides the concrete search terms needed to geolocate the video.",
+        "whatTheAgentLoses": "You lose the chance to hone your own observational skills by manually scanning the video for subtle geographical clues.",
+        "kind": "decision",
+        "verify_form": "The agent picked some details in the footage to search - check which; a sign or a shop name is searchable, a car or the side of the road is not.",
+        "speak": "on-event",
+        "check": "Which background details in the footage are specific enough to search, such as a sign, a number plate, or which side of the road cars drive on?",
+        "say_example": "The background shows <a street sign>. That's specific enough to search on its own."
+       }
+      ]
+     },
+     {
+      "id": "6.2",
+      "label": "Search the detail as text",
+      "questions": [
+       {
+        "question": "Was the sign's name searched in quotes for an exact match?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Using double quotes in the search bar forces an exact match for the shop name, preventing the search engine from returning irrelevant partial matches.",
+        "whatTheAgentLoses": "Delegating this step means you lose the opportunity to learn and apply advanced search operators that are crucial for filtering out noise during an investigation.",
+        "kind": "decision",
+        "verify_form": "The agent searched the sign's name - check whether it put the name in quotes; without them the results are partial matches.",
+        "speak": "if-wrong",
+        "check": "Was the shop name or sign searched inside quotation marks for an exact match?",
+        "say_example": "<The sign's name> was searched without quotes. That gives partial matches. Adding quotes for the exact name."
+       },
+       {
+        "question": "Does the sign or landmark from the background show up in these results?",
+        "cluster": "photos",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Spotting the matching 'ZIA CARPET' shop sign in the image search results confirms the exact geographic location of the original photo.",
+        "whatTheAgentLoses": "You lose the opportunity to visually cross-reference the shop signs and street details yourself to confirm the photo's true location.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does a matching sign or landmark from the background appear in these results, and does a second source show the same one?",
+        "say_example": "<The barber shop sign> from the background shows up in these results too, on <two separate pages>."
+       },
+       {
+        "question": "Does searching the detail's text by itself point to a named place?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search results for 'KEAN NJ' identify Kean University, providing concrete geographic evidence that contradicts the claim about the video being from Italy.",
+        "whatTheAgentLoses": "You lose the hands-on experience of piecing together specific visual clues and search results to independently debunk a false geographic claim.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the detail's text, searched on its own, name a specific place such as a university or landmark?",
+        "say_example": "Searching <the word on the sign> on its own finds <a university campus>."
+       },
+       {
+        "question": "Was the town itself searched, or a specific address the search bar suggested?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown offers specific zip codes like '[number]' and '[number]' which could narrow down the exact location of the business faster than a general town search.",
+        "whatTheAgentLoses": "You lose the opportunity to apply local geographic intuition to filter search predictions and pinpoint the exact business location more efficiently.",
+        "kind": "decision",
+        "verify_form": "The agent took a ZIP-code suggestion or searched the town name - check which; the ZIPs are guesses the search engine made.",
+        "speak": "if-wrong",
+        "check": "Was a specific address suggestion taken from the dropdown, or was the general town searched instead?",
+        "say_example": "The search took one of the address guesses the search bar offered, not the town itself. Redoing it with the town."
+       },
+       {
+        "question": "Is the business shown the same kind the claim describes?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The knowledge panel displays an automotive shop rather than a unisex salon, so you must determine if this is the right location or if you need to refine your search.",
+        "whatTheAgentLoses": "You lose the human intuition required to realize that a mismatched business name in the search results might still lead to the correct street or neighboring business.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the result's knowledge panel show the same kind of business the claim described, or a different one?",
+        "say_example": "This panel shows <a different kind of business> from the one the claim describes. Refining the search."
+       },
+       {
+        "question": "Once a result named a city, was the search rerun with that city added?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The first search for the shop in 'bangladesh' surfaced a photo locating it in 'Dhaka', so refining the query to include the city name helps isolate images of the exact street and protest.",
+        "whatTheAgentLoses": "You lose the investigative intuition to iteratively narrow your search terms based on newly uncovered clues, which is crucial for pinpointing an exact location.",
+        "kind": "decision",
+        "verify_form": "The agent found a city name in one result - check whether it searched again with the city added; the narrower query is what confirms the street.",
+        "speak": "on-event",
+        "check": "Did an initial result name a specific city, and was the search repeated with that city added?",
+        "say_example": "That result named <a city>. Searching again with the city added."
+       }
+      ]
+     },
+     {
+      "id": "6.3",
+      "label": "Find it on the map",
+      "questions": [
+       {
+        "question": "On the map, was the town searched, or a suggested street address?",
+        "cluster": "select",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The search dropdown suggested specific addresses like 'New Jersey [address]', which might be too narrow if you only need the general location of the town to verify the claim.",
+        "whatTheAgentLoses": "The user loses the ability to decide whether a broad city overview or a specific street address is more appropriate for verifying the geographic context of the claim.",
+        "kind": "decision",
+        "verify_form": "The agent searched the town or one of the suggested addresses - check which; an address suggestion narrows to a place the footage may not be.",
+        "speak": "if-wrong",
+        "check": "Was the general town searched on the map, or was a specific suggested address taken instead?",
+        "say_example": "The map search took a suggested street address, not the town. That narrows to a spot the footage may not be from."
+       },
+       {
+        "question": "Which detail from the footage was combined with the town name to find the street?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Searching for a partially visible storefront name from the footage alongside the known town name helps narrow down the exact geographical coordinates on the map.",
+        "whatTheAgentLoses": "You lose the opportunity to practice spotting subtle visual clues, like partial business signs, and combining them with search terms to geolocate a scene yourself.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "What detail from the footage was combined with the town name in the map search?",
+        "say_example": "Searched <Fairview, New Jersey> plus <the barber shop's sign> from the footage"
+       }
+      ]
+     },
+     {
+      "id": "6.4",
+      "label": "Match the scene to imagery",
+      "questions": [
+       {
+        "question": "Do the details in the footage match the reference imagery on screen?",
+        "cluster": "photos",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Matching the 'D'Maros Unisex' sign and the colorful building in the Street View confirms the video was filmed in New Jersey rather than Italy.",
+        "whatTheAgentLoses": "You miss the visual confirmation of matching specific architectural details between the video and the map to independently verify the true location.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Do the signs and buildings in the footage match the reference imagery on screen?",
+        "say_example": "<The barber shop sign> and <the red brick building> in the footage match the Street View."
+       }
+      ]
+     },
+     {
+      "id": "6.5",
+      "label": "Step the imagery timeline",
+      "questions": [
+       {
+        "question": "Between which two imagery dates did the damage appear?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Scrubbing the Google Earth slider from April to November 2023 reveals exactly when the planes went from intact to destroyed, establishing a factual timeline for the claim.",
+        "whatTheAgentLoses": "Delegating this means you miss seeing the direct visual evidence of the planes' condition changing between the April and November satellite captures.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "What two dates on the imagery timeline bracket the change, and does the footage's claimed date fall between them?",
+        "say_example": "The imagery shows it intact in <March 2022> and destroyed by <June 2022>. The claimed date falls between them."
+       },
+       {
+        "question": "Does the current satellite view lack what's being checked, so historical imagery is needed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The world changes, and the current satellite view of the airport has likely been updated since the incident, meaning you must actively recognize this discrepancy and engage the historical imagery tool to find the specific timeframe.",
+        "whatTheAgentLoses": "The user fails to verify the location if the agent simply accepts the default, present-day satellite image as proof that the event never happened there.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the default satellite view lack the feature being checked, requiring a switch to historical imagery?",
+        "say_example": "The current satellite view doesn't show this. Switching to historical imagery."
+       }
+      ]
+     },
+     {
+      "id": "6.6",
+      "label": "Check other footage",
+      "questions": [
+       {
+        "question": "Has more than one angle of the same scene been checked?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Checking alternative angles from various social media posts confirms that the imagery depicts the same location and fits the historical context of the event.",
+        "whatTheAgentLoses": "You lose the visual intuition required to match landmarks across different camera angles to confirm they show the exact same event.",
+        "kind": "decision",
+        "verify_form": "The agent may have stopped at one match - check whether it looked at other footage of the same scene; one angle can be a coincidence.",
+        "speak": "on-event",
+        "check": "Has more than one angle or video of the same scene been checked, or only the one match?",
+        "say_example": "Found <another angle> of the same scene. One match alone could be a coincidence."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "7",
+    "label": "Check against a reference",
+    "note": "7.1 sets the tool to the claim's own time and place, and VxnK checks the form before reading anything. 7.2 reads what the tool computes, and 7.3 reads the reason behind it. 7.4 shows up in VOgi, where an official statement confirms the real event that the fake footage is attached to. 7.5 shows up in VxnK, which re-runs both tools for a future date as a test. Only VxnK and VOgi cover this goal.",
+    "children": [
+     {
+      "id": "7.1",
+      "label": "Set the time and place",
+      "questions": [
+       {
+        "question": "Is the tool set to the time and place the claim states?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming the timeanddate.com map is set to 12:26 a.m. Darwin time ensures the moon's position is accurately checked against the video.",
+        "whatTheAgentLoses": "You lose the assurance of personally verifying that the fact-checking tool's parameters perfectly match the original claim.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the tool's displayed time and place match the time and place the claim states?",
+        "say_example": "The tool is set to <a different time> from the one the claim states. Fixing that before reading the result."
+       },
+       {
+        "question": "Did the location box autocomplete to a specific address instead of the town?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "When entering 'Darwin' into MoonCalc, the tool auto-completed to '[business], [address]', meaning the astronomical calculations will be based on that exact street address rather than the city center.",
+        "whatTheAgentLoses": "You lose the ability to catch and correct overly specific or slightly inaccurate location auto-completions that the tool inserts without your explicit choice.",
+        "kind": "decision",
+        "verify_form": "The tool autocompleted the location to a specific business and the agent kept it - check whether the town's center was what you meant.",
+        "speak": "if-wrong",
+        "check": "Did the location field autocomplete to a specific business address, and was that kept rather than corrected to the general town?",
+        "say_example": "This autocompleted to <a specific address>, not the town center. Correcting it before trusting the result."
+       }
+      ]
+     },
+     {
+      "id": "7.2",
+      "label": "Read the computed position",
+      "questions": [
+       {
+        "question": "Where does the tool put the moon relative to the claim's town?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Accurately reading the illuminated portion of the map confirms whether the moon was actually visible from that specific location in Australia during the event.",
+        "whatTheAgentLoses": "Delegating this step means you lose the ability to visually verify the geographic alignment yourself, relying instead on the agent's spatial interpretation of the map.",
+        "kind": "state-check",
+        "speak": "always",
+        "check": "Where does the tool's overlay place the moon relative to the named town?",
+        "say_example": "The overlay puts the moon <south of the town>. The claim says <north>."
+       }
+      ]
+     },
+     {
+      "id": "7.3",
+      "label": "Read the reasoning behind it",
+      "questions": [
+       {
+        "question": "Was a diagram shown to explain the result, separate from the tool's numbers?",
+        "cluster": "approve",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "The inset diagram showing the 23.5-degree equatorial tilt and 5-degree lunar orbit tilt provides the scientific context necessary to debunk claims about the moon's position.",
+        "whatTheAgentLoses": "Delegating this step means you lose control over how deeply the scientific mechanics are explained to justify the final verdict.",
+        "kind": "decision",
+        "verify_form": "The agent explained the position with a diagram or skipped the explanation - check whether the verdict rests on the tool's numbers or on the diagram.",
+        "speak": "never",
+        "check": "Was a diagram shown to explain the finding, separate from the tool's own numbers?",
+        "say_example": "Added a diagram to explain the result. The verdict still rests on the tool's numbers"
+       },
+       {
+        "question": "Do the drawn arrows point where the tool put the moon, and agree with the text beside them?",
+        "cluster": "hand over",
+        "moment": "Now",
+        "moneyMoving": false,
+        "why": "Drawing arrows on the map from Darwin and Tauranga clarifies how the moon's position relative to the equator changes the observer's viewing angle.",
+        "whatTheAgentLoses": "You lose the direct spatial reasoning involved in mapping out the exact viewing angles that explain the visual anomaly.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Do the arrows drawn on screen point toward where the tool placed the moon, and does their direction agree with the text on screen?",
+        "say_example": "These arrows point <north>. The tool puts the moon <south>, and so does the text. Going with the tool's own number."
+       },
+       {
+        "question": "From further south, does the tool put the moon to the north instead?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The map with directional arrows demonstrates how an observer's latitude physically flips the visual orientation of the moon.",
+        "whatTheAgentLoses": "Delegating this step removes your ability to visually verify the spatial reasoning that explains the moon's inverted appearance.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "From the second, more southern location, does the tool place the moon to the north instead?",
+        "say_example": "Checked the second, more southern location - the tool flips the moon to the north there"
+       }
+      ]
+     },
+     {
+      "id": "7.4",
+      "label": "Check the official record",
+      "questions": [
+       {
+        "question": "Does an official statement confirm a real event at the place and date the footage is tied to?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Highlighting the official statement about the Nur Khan Air Base confirms the actual military operation that the fake video is exploiting for credibility.",
+        "whatTheAgentLoses": "You lose the nuanced understanding of how real geopolitical events are weaponized to make fabricated media seem believable.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does an official statement confirm a real event at the place and date this footage is now attached to?",
+        "say_example": "An official statement confirms <a real explosion> at <the port>. This footage isn't from it."
+       }
+      ]
+     },
+     {
+      "id": "7.5",
+      "label": "Make a testable prediction"
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "label": "Reach the verdict",
+    "note": "8.1 happens in every keeper, where they say the label the evidence supports over the source. 8.2 where the ruling is mixed or true - F6MD, fU9D. 8.3 in linG, VOgi and 6KeC, which check their own verdict against a professional one. 8.4 wherever two findings disagree. 8.5 where a search or a source came back empty. 8.6 does not appear in any of the recordings. 8.7 closes every run and loops back to 1 when there is a next claim.",
+    "children": [
+     {
+      "id": "8.1",
+      "label": "State the verdict on screen",
+      "questions": [
+       {
+        "question": "What verdict was given, and what on screen supports it?",
+        "cluster": "facts",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "Locating the explicit 'False' rating on the Snopes page provides the definitive answer needed to complete the verification.",
+        "whatTheAgentLoses": "You lose the reassurance of personally seeing the fact-checker's explicit rating and confirming the exact conclusion yourself.",
+        "kind": "decision",
+        "verify_form": "The agent gave a verdict on the image - check the label matches what the fact-check's rating says, and that the rating was on screen when it said so.",
+        "speak": "always",
+        "check": "What verdict label was stated, and does the page on screen support it with a fact-checker's rating word, or a match's caption and date?",
+        "say_example": "The verdict is <false>. The fact-check on screen rates it <False>, and the earliest copy is <a 2016 news photo>."
+       },
+       {
+        "question": "Are the original post and the checked sources both still on screen?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "The task definition explicitly requires the session to complete 'with the checked sources on screen,' ensuring the audience can visually cross-reference the claim against the evidence.",
+        "whatTheAgentLoses": "The user loses the required visual proof of the worked example if the agent simply states a verdict without arranging the windows to keep the supporting evidence visible.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "When the verdict is given, are the original post and the sources used to check it both still open on screen?",
+        "say_example": "The verdict's ready, but <the original post> isn't open anymore. Reopening it before this counts as done."
+       }
+      ]
+     },
+     {
+      "id": "8.2",
+      "label": "Restate a mixed ruling correctly",
+      "questions": [
+       {
+        "question": "Does the ruling's rule differ from how the claim applied it?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "This matters because the original email applies the 3.8% tax to the total sale price of the home, whereas the Snopes article clarifies it only applies to profits exceeding the capital gains threshold.",
+        "whatTheAgentLoses": "The user loses the specific financial context of why the viral claim's math is deceptive if the agent simply labels it false without explaining the threshold rule.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does the ruling's stated rule differ from how the claim applied it?",
+        "say_example": "The claim applies this to <every home sale>. The ruling says it only applies to <gains above $250,000>."
+       }
+      ]
+     },
+     {
+      "id": "8.3",
+      "label": "Confirm with a fact-check",
+      "questions": [
+       {
+        "question": "Does a professional fact-check reach the same conclusion?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Reviewing the BOOM Live article demonstrates that professional fact-checkers used similar methods to debunk the Pakistan airbase claim, proving the investigation's process is sound.",
+        "whatTheAgentLoses": "You lose the educational reassurance of seeing how independent research methods align with the standards of professional fact-checkers.",
+        "kind": "state-check",
+        "speak": "on-event",
+        "check": "Does a professional fact-checking site reach the same conclusion as the search just completed?",
+        "say_example": "A professional fact-check reaches the same conclusion. Same place, same date."
+       }
+      ]
+     },
+     {
+      "id": "8.4",
+      "label": "Reconcile the disagreeing findings",
+      "questions": [
+       {
+        "question": "Which rating should the verdict follow when two fact-checkers disagree?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The search results show Check Your Fact rating the claim as 'False' while Lead Stories rates it as 'It [name]', requiring you to reconcile the discrepancy.",
+        "whatTheAgentLoses": "You lose the opportunity to personally weigh the nuances of the conflicting verdicts and understand the actual context behind the claim.",
+        "kind": "decision",
+        "verify_form": "Two fact-checkers rated the claim differently and the agent went with one - check it reported both ratings and why they differ, rather than choosing silently.",
+        "speak": "gate",
+        "check": "Do two fact-checking organizations give different ratings for the same claim?",
+        "say_example": "<One fact-checker> rates this <False>. <Another> rates it <Mostly True>. Which one should the verdict follow?"
+       },
+       {
+        "question": "Do two engines put this image in different places?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The Yandex results associate the image with entirely different geopolitical events, such as Syria and Myanmar, which complicates finding the true origin.",
+        "whatTheAgentLoses": "You lose the opportunity to critically compare how different search engines surface distinct historical contexts for the same image.",
+        "kind": "decision",
+        "verify_form": "Two engines put the image in different countries and the agent went with one - check it said which engine and why that one.",
+        "speak": "on-event",
+        "check": "Do two search engines return different countries or contexts for the same image?",
+        "say_example": "<One engine> puts this in <Turkey>. <The other> puts it in <Greece>. I'm reporting both rather than picking one."
+       },
+       {
+        "question": "Is the matched address in a different town than the one searched?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The screen shows the actual address is in Elizabeth, which is crucial for accurately verifying the claim's geographic context despite the initial search query.",
+        "whatTheAgentLoses": "The user loses the exact geographic details of the verified location if the agent silently accepts the mismatched city without flagging the discrepancy.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the address shown in the matched result differ from the place name that was searched?",
+        "say_example": "The search was for <Fairview>. This match is actually in <Ridgewood>. Checking whether it still fits."
+       },
+       {
+        "question": "Do the two tools show slightly different times for the same event?",
+        "cluster": "compare",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The timeanddate.com map displays 12:26 a.m. while the MoonCalc tool shows 00:19 for the same date, indicating a slight inconsistency in the data being used to verify the claim.",
+        "whatTheAgentLoses": "An agent might blindly accept one of the times without noticing the seven-minute discrepancy between the two tools, potentially compromising the precision of the verification.",
+        "kind": "state-check",
+        "speak": "never",
+        "check": "Do the two tools show slightly different times for the same event?",
+        "say_example": "Read <11:40> on one tool and <11:33> on the other. Both agree on the direction"
+       },
+       {
+        "question": "Which date should the verdict rest on, the earliest copy's or the fact-check's?",
+        "cluster": "compare",
+        "moment": "Completion",
+        "moneyMoving": false,
+        "why": "The screen shows the older Instagram upload dated April 1, which contradicts the BOOM fact-check article claiming the video is from March 2025.",
+        "whatTheAgentLoses": "The user loses the ability to catch inconsistencies between primary and secondary sources that could impact the accuracy of the final verdict.",
+        "kind": "state-check",
+        "speak": "gate",
+        "check": "Does the upload date on the earliest copy conflict with the date given in a professional fact-check?",
+        "say_example": "The earliest copy is dated <June 2>. The fact-check says <May>. Which date should the verdict rest on?"
+       }
+      ]
+     },
+     {
+      "id": "8.5",
+      "label": "Say what is not shown",
+      "questions": [
+       {
+        "question": "Does the earliest date on screen match the origin date the verdict gives?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "The narrator claims the video dates back to 2015, but the earliest post actually shown on screen is from February 2020, leaving the true origin unverified.",
+        "whatTheAgentLoses": "The user loses verifiable proof of the claim's origin if the agent states an older date without providing the visual evidence to back it up.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Does the earliest date actually visible on screen match the origin date the verdict states?",
+        "say_example": "The verdict says this goes back to <2014>. The earliest post on screen is from <2019>. Correcting that."
+       }
+      ]
+     },
+     {
+      "id": "8.6",
+      "label": "Settle for unproven",
+      "questions": [
+       {
+        "question": "Should this go down as unproven, or should the search keep going?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Sometimes a thorough investigation yields no concrete proof either way, and accurately labeling it as unproven maintains the integrity of the verification process.",
+        "whatTheAgentLoses": "You lose the nuanced judgment required to accept ambiguity and avoid declaring a false certainty when the evidentiary trail goes cold.",
+        "kind": "decision",
+        "verify_form": "The evidence ran out or contradicted itself and the agent still gave a verdict - check whether it said unproven or forced a true or false.",
+        "speak": "gate",
+        "check": "Do the searches on screen show no copy dated before the post, no fact-check ruling, and sources that disagree or say nothing?",
+        "say_example": "Nothing checked confirms this either way. Call it unproven, or keep searching?"
+       }
+      ]
+     },
+     {
+      "id": "8.7",
+      "label": "Close out the check",
+      "questions": [
+       {
+        "question": "Were all the steps and sources named at the start actually carried out?",
+        "cluster": "facts",
+        "moment": "After",
+        "moneyMoving": false,
+        "why": "Confirming that the reverse image search, visual analysis, geolocation, and timeline checks match the initial 'FOUR STEPS' slide ensures the verification is methodical rather than arbitrary.",
+        "whatTheAgentLoses": "Delegating this process means you miss out on internalizing a structured, step-by-step methodology for independently verifying digital media.",
+        "kind": "state-check",
+        "speak": "if-wrong",
+        "check": "Were all the steps and sources named at the start of the check actually carried out and opened, or was one of them skipped?",
+        "say_example": "Named <three> sources at the start. Only <two> were opened."
+       },
+       {
+        "question": "Was the link to the fact-check saved before the tab closed?",
+        "cluster": "",
+        "moment": null,
+        "moneyMoving": false,
+        "why": "Because the goal of verifying a viral claim or forwarded email is often to correct the misinformation, you need to save the link to the proof (like the Snopes article) to share with others.",
+        "whatTheAgentLoses": "The user loses the tangible evidence needed to prove the verdict to others if the agent simply closes the tab after reading it without saving the link.",
+        "kind": "decision",
+        "verify_form": "The agent closed the tab - check whether it saved the link to the ruling first; you will want it to send to whoever forwarded the claim.",
+        "speak": "on-event",
+        "check": "Before the tab holding the fact-check or source closes, has its address been noted in the log?",
+        "say_example": "Saved the link to <the ruling> before closing this tab, so it's there to send on."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -35850,6 +35850,1121 @@
    ]
   }
  },
+ "factcheck": {
+  "task": "verify a claim, image, or story online: take a specific claim or viral post and check it — search what fact-checkers say (Snopes, PolitiFact, AP/Reuters fact check), trace the original source and its date/context (lateral reading), and/or reverse-image-search a photo to find its true origin; complete when a supported verdict (true/false/miscaptioned/unproven) is reached with the checked sources on screen. Surface pinned: a live verification session on real claims — media-literacy lectures without a worked example are off-task.",
+  "tree": {
+   "id": "0",
+   "label": "Fact-check a viral claim",
+   "note": "1 runs in every keeper. 2 runs where a fact-checker is asked directly, and fU9D and F6MD go there first and stop there. 3 runs in the ten keepers with an image or a frame, and 3.7 runs the search again. 4 follows every search that finds a page. 5 runs where the user has to judge the source itself - t8lK stays on 5 throughout, and linG runs it on an official account. 6 runs in 4Rh4, 6KeC and VOgi, where the search only dated the footage and the place still has to be found. 7 runs in VxnK and VOgi, where the claim is checked against a reference. 8 closes every run, and 8.7 loops back to 1 for the next claim in qW96, 6KeC, q5N5 and fU9D.",
+   "children": [
+    {
+     "id": "1",
+     "label": "Pin the claim",
+     "note": "1.1 in every keeper. 1.2 in the three keepers that look at who posted it and how far it went. 1.3 where the image or the post itself shows a time, a place or profile details. 1.4 where the image or the chat is read for plausibility before any tool is opened. 1.5 in every keeper, where the user decides what goes into the tool, and F6MD runs it twice because the first phrase found nothing.",
+     "children": [
+      {
+       "id": "1.1",
+       "label": "Read the claim's wording",
+       "questions": [
+        {
+         "question": "Which of these posts is the claim you want checked?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows a tweet by [name] about atrocities in Bengal, establishing the specific viral claim that will anchor the verification process.",
+         "whatTheAgentLoses": "Delegating this choice means you lose the opportunity to select a viral claim that is personally relevant or currently prevalent in your own social media feed."
+        },
+        {
+         "question": "What exactly does the post or its comments claim?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Pausing to read the comments by [name] and [name] establishes the exact details about the moon's rotation and location-based appearance that need to be verified.",
+         "whatTheAgentLoses": "You lose the opportunity to personally read the exact phrasing of the original claims, which helps in understanding the specific nuances to investigate."
+        }
+       ]
+      },
+      {
+       "id": "1.2",
+       "label": "Read the account's reach",
+       "questions": [
+        {
+         "question": "Do the copies in the results add anything, or just repeat the post's caption?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Examining the grid of YouTube and Instagram results reveals the specific false captions and the viral scale of the claim before you begin debunking it.",
+         "whatTheAgentLoses": "You lose the firsthand visual context of exactly how the misinformation was framed and distributed across different social media platforms."
+        },
+        {
+         "question": "What source video is being analyzed here?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The narrator explicitly names the Nibiru Channel video on screen and sarcastically notes the creator's financial motive for generating clicks, which establishes the exact claim being investigated.",
+         "whatTheAgentLoses": "You lose direct exposure to the narrator's sarcastic tone and the critical context regarding the original creator's click-driven financial motivations."
+        }
+       ]
+      },
+      {
+       "id": "1.3",
+       "label": "Read the time and place",
+       "questions": [
+        {
+         "question": "What time, date and place does the image's overlay claim?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Capturing the specific time, date, and coordinates shown in the red text is necessary to accurately verify the astronomical conditions for that exact moment and location.",
+         "whatTheAgentLoses": "You lose the firsthand awareness of the exact timestamp and location details needed to independently evaluate the fact-check."
+        },
+        {
+         "question": "Were the video's upload date and channel read before the claim was checked?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Noting the upload date, channel name, and playing the video is necessary to establish exactly what claim needs to be verified.",
+         "whatTheAgentLoses": "You lose the opportunity to personally assess the initial tone and context of the source video before the investigation begins."
+        }
+       ]
+      },
+      {
+       "id": "1.4",
+       "label": "Read the image for plausibility",
+       "questions": [
+        {
+         "question": "Do the messages contradict the city or name shown on the profile?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows the sender making disjointed statements about being in Miami and Los Angeles, and introducing themselves despite their name already being in the chat header.",
+         "whatTheAgentLoses": "You lose the intuitive human ability to read between the lines and detect unnatural conversational behavior that flags a fake persona."
+        },
+        {
+         "question": "Was the photo itself reverse-searched, or only a description of it typed in?",
+         "cluster": "photos",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The presenter highlighted generic features in the photo like palm trees, mountains, and a fire, demonstrating that these details alone would produce search results that are too broad.",
+         "whatTheAgentLoses": "You lose the human intuition required to visually assess an image's geographical clues and determine whether a text search or a reverse image search is the better strategy."
+        }
+       ]
+      },
+      {
+       "id": "1.5",
+       "label": "Choose what to search",
+       "questions": [
+        {
+         "question": "Were all of the profile's photos saved, or only the first?",
+         "cluster": "photos",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The profile page displayed another photo of the woman in sunglasses, which could provide a better match for a reverse-image search.",
+         "whatTheAgentLoses": "You lose the intuitive judgment to proactively gather supplementary evidence that might be the key to definitively verifying the claim."
+        },
+        {
+         "question": "Does the search use the claim's own words, or a paraphrase?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Typing a clear natural language question in the search box, as shown by the autocomplete suggestions for 'Where was Obama born?', sets the foundation for finding relevant fact-checks.",
+         "whatTheAgentLoses": "The user loses the opportunity to decide exactly which specific claim or urban legend they want to prioritize and investigate."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "label": "Ask the fact-checkers",
+     "note": "2.1 opens a fact-checker directly in fU9D and F6MD. In the other keepers, the fact-check turns up inside the match list instead, which is 3.6. Then 2.2, and 2.3 when the search finds nothing, which F6MD does once. 2.4 picks a result. 2.5 to 2.8 read the ruling: the label, whether it rules on the claim's exact wording, the example and the origins, the date - fU9D reads all four. linG and VOgi read a fact-check last, after their own verdict, and that is 8.3.",
+     "children": [
+      {
+       "id": "2.1",
+       "label": "Open the fact-checker's site",
+       "questions": [
+        {
+         "question": "Is the original post or email still open in a tab while you search?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Keeping the Gmail tab open ensures you can easily reference the exact wording of the 'sales tax on homes' claim while you search.",
+         "whatTheAgentLoses": "You lose the ability to organize your browser tabs to ensure the original source material remains immediately accessible."
+        },
+        {
+         "question": "Which fact-checking site was opened?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Typing a specific, trusted URL into the address bar ensures you bypass potentially biased search results and go straight to an established fact-checker.",
+         "whatTheAgentLoses": "Delegating this choice means you lose the ability to decide which specific fact-checking organization's methodology and editorial standards you trust most for this particular topic."
+        }
+       ]
+      },
+      {
+       "id": "2.2",
+       "label": "Type in the claim",
+       "questions": [
+        {
+         "question": "Did the search run on what was typed, or on a dropdown suggestion that changed it?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Ignoring the auto-populated suggestions ensures your search query remains exactly as you intended without being influenced by popular search trends.",
+         "whatTheAgentLoses": "The user loses the assurance that their exact, unbiased search phrasing was used if the agent defaults to clicking a potentially skewed auto-suggestion."
+        },
+        {
+         "question": "What was typed into the Fact Check Explorer search box?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows the Fact Check Explorer search bar, which is the starting point for finding existing fact-checks on a specific claim.",
+         "whatTheAgentLoses": "The user loses the ability to specify the exact keywords or claim to search for in the fact-checking database."
+        }
+       ]
+      },
+      {
+       "id": "2.3",
+       "label": "Retry after no matches",
+       "questions": [
+        {
+         "question": "After no matches, was a different or broader phrase tried?",
+         "cluster": "refine",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The search results page explicitly stated that no matches were found for the exact phrase, meaning a broader or different query was needed to find relevant fact-checks.",
+         "whatTheAgentLoses": "The user loses the ability to successfully verify the claim if the agent simply gives up after a single overly specific search fails."
+        }
+       ]
+      },
+      {
+       "id": "2.4",
+       "label": "Pick the fact-check result",
+       "questions": [
+        {
+         "question": "Does a known fact-checker address this exact image?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Finding the Alt News tweet with the 'fact-check' stamp and [address] movie details provides authoritative confirmation that the viral claim is false.",
+         "whatTheAgentLoses": "You lose the direct reassurance of seeing a recognized fact-checker's visual stamp and specific contextual details debunking the claim."
+        },
+        {
+         "question": "Was a fact-checker's page opened, or a general news article or blog?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search results display both general news sites like Time and dedicated fact-checkers like Snopes, making it important to prioritize the specialized fact-checking source.",
+         "whatTheAgentLoses": "You lose the ability to apply your personal trust preferences and media literacy when selecting which specific fact-checking organization to rely on."
+        }
+       ]
+      },
+      {
+       "id": "2.5",
+       "label": "Read the rating",
+       "questions": [
+        {
+         "question": "Was the full fact-check opened, or only the cut-off snippet read?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search result summary cuts off mid-sentence, meaning the full explanation of the rating is hidden unless the article is opened.",
+         "whatTheAgentLoses": "The user loses the detailed evidence and context behind the fact-checker's verdict."
+        },
+        {
+         "question": "What is the fact-checker's verdict on the claim?",
+         "cluster": "facts",
+         "moment": "Completion",
+         "moneyMoving": false,
+         "why": "The Snopes article displays a 'MIXTURE OF TRUE AND FALSE INFORMATION' rating, breaking down exactly which parts of the real estate tax rumor are accurate.",
+         "whatTheAgentLoses": "You lose the nuanced understanding of which specific details in the viral claim are true versus false."
+        }
+       ]
+      },
+      {
+       "id": "2.6",
+       "label": "Match the ruling's claim"
+      },
+      {
+       "id": "2.7",
+       "label": "Read the example and origins",
+       "questions": [
+        {
+         "question": "What exact wording does the fact-checker quote as the claim it checked?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Seeing the exact 'CAN OBAMA BE PRESIDENT?' text in the example box establishes the precise claim before evaluating the fact-checker's detailed explanation.",
+         "whatTheAgentLoses": "You lose the opportunity to read the original wording of the viral claim, which provides crucial context for understanding the fact-checker's subsequent breakdown."
+        },
+        {
+         "question": "Is the basis of the ruling stated near the top of the Origins section?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen shows a lengthy 'Origins' section detailing the law, forcing a choice between gathering complete context and saving time.",
+         "whatTheAgentLoses": "The user loses the ability to decide that the specific details of the legislation are personally irrelevant and can be skipped."
+        }
+       ]
+      },
+      {
+       "id": "2.8",
+       "label": "Read the fact-check's date",
+       "questions": [
+        {
+         "question": "When was this fact-check last updated?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Checking the 'Last updated: 17 October 2008' timestamp at the bottom of the page reveals whether the research might be missing recent developments.",
+         "whatTheAgentLoses": "You lose the intuitive sense of how outdated the evidence might be when evaluating the overall reliability of the verdict."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "3",
+     "label": "Run the reverse image search",
+     "note": "3.1 picks the engine - most keepers go straight to Google without considering another engine, qW96 and linG weigh Yandex, ZEyc takes TinEye. then 3.2, where the user puts the image in by one of five routes. 3.3 is where the engine offers a crop. 3.4 and 3.5 happen on every results page. 3.6 picks the match to open. 3.7 runs the search again with a clearer copy, another engine or another route - 6KeC, qW96, lCH7, p5e9, ZEyc and N2gv all run more than one search. 3.8 in qW96 alone. 3.9 does not appear in any of the recordings.",
+     "children": [
+      {
+       "id": "3.1",
+       "label": "Choose the engine",
+       "questions": [
+        {
+         "question": "Which reverse image engine was used, and does it show first-found dates?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The screen lists multiple reverse image search options like Google, TinEye, and Pixsy, so you must select one to proceed with tracing the image's origin.",
+         "whatTheAgentLoses": "You lose control over which specific reverse image search engine is used to investigate the visual evidence."
+        }
+       ]
+      },
+      {
+       "id": "3.2",
+       "label": "Give the engine the image",
+       "note": "one route per search: 3.2.1 in qW96, q5N5, linG, ZEyc and p5e9; 3.2.2 in N2gv, ZEyc and p5e9; 3.2.3 in 6KeC, qW96 and p5e9; 3.2.4 wraps 3.2.3 in 6KeC, N2gv and qW96, and 6KeC sets it up across seven decision points; 3.2.5 in lCH7, VOgi and 4Rh4. p5e9 runs three routes on one photo and ZEyc two.",
+       "questions": [
+        {
+         "question": "How did the image get into the search engine?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The context menu provides multiple options like copying the URL, saving the file locally, or using a built-in search tool, which dictates how you will input the image into the search engine.",
+         "whatTheAgentLoses": "You lose the ability to choose your preferred method for handling the image file or URL before feeding it into a reverse search tool."
+        }
+       ],
+       "children": [
+        {
+         "id": "3.2.1",
+         "label": "Upload the saved file",
+         "questions": [
+          {
+           "question": "Is the file that was uploaded the one saved from the post?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Choosing the correct upload method from the dialog and locating the specific image file on your desktop ensures the search engine analyzes the exact visual claim in question.",
+           "whatTheAgentLoses": "You lose the certainty of knowing exactly which local file was selected and uploaded for the reverse image search."
+          },
+          {
+           "question": "Did the search site get clipboard access it doesn't need?",
+           "cluster": "approve",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The browser displayed a permission prompt asking if yandex.ru can see text and images copied to the clipboard, which could expose sensitive data if allowed.",
+           "whatTheAgentLoses": "You lose the opportunity to protect your system privacy by manually denying unnecessary clipboard access to a third-party search engine."
+          }
+         ]
+        },
+        {
+         "id": "3.2.2",
+         "label": "Paste the image's address",
+         "questions": [
+          {
+           "question": "Did the search actually run on the pasted image address?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The TinEye homepage requires you to paste the copied image URL into the designated search bar to initiate the reverse image search.",
+           "whatTheAgentLoses": "You lose the chance to verify that the exact, untruncated image URL was pasted into the search bar before executing the query."
+          }
+         ]
+        },
+        {
+         "id": "3.2.3",
+         "label": "Right-click the image to search",
+         "questions": [
+          {
+           "question": "Which right-click search option was used, the browser's own or an extension's?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Selecting 'Search Google for Image' from the context menu provides a direct, native method to find the image's origin without needing to download or re-upload the file.",
+           "whatTheAgentLoses": "The user loses the chance to learn how to efficiently use built-in browser tools to investigate suspicious images on their own."
+          },
+          {
+           "question": "Was the profile picture itself put through a reverse image search?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The dating profile for '[name]' might be a scam using a stolen photo, so finding its true origin is necessary to verify the account's authenticity.",
+           "whatTheAgentLoses": "Delegating this means you miss the chance to learn how to effectively use reverse image search extensions to investigate suspicious profiles yourself."
+          }
+         ]
+        },
+        {
+         "id": "3.2.4",
+         "label": "Set up a search extension",
+         "questions": [
+          {
+           "question": "Did the extension run a reverse search, or only its magnifier?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The context menu provides several options ranging from reverse image searches across different engines to forensic tools, and choosing the magnifier lets you closely inspect specific visual details.",
+           "whatTheAgentLoses": "You lose the ability to decide whether the image requires a close manual inspection of its visual anomalies before running a standard reverse image search."
+          },
+          {
+           "question": "Is the extension from the browser's official add-on store?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "Selecting the result from addons.mozilla.org ensures you download the reverse image search tool from a safe, verified source.",
+           "whatTheAgentLoses": "You lose the opportunity to verify that the browser extension being installed comes from a secure and official repository."
+          }
+         ]
+        },
+        {
+         "id": "3.2.5",
+         "label": "Search a screenshot or frame",
+         "questions": [
+          {
+           "question": "Does the saved screenshot show only the photo, or the toolbars around it too?",
+           "cluster": "hand over",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The interface displays a crop box and a save icon, requiring a choice on whether to isolate the profile picture further before downloading it.",
+           "whatTheAgentLoses": "You lose the ability to manually adjust the crop boundaries to ensure only the relevant image is used for the reverse search."
+          },
+          {
+           "question": "Was the screenshot searched as an image, or its file name searched as text?",
+           "cluster": "select",
+           "moment": "Now",
+           "moneyMoving": false,
+           "why": "The search bar displays both microphone and camera icons, requiring you to specifically choose the camera icon to initiate a reverse image search.",
+           "whatTheAgentLoses": "Delegating this step prevents you from controlling exactly which visual elements or specific screenshots are uploaded to the reverse image search tool."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "3.3",
+       "label": "Crop to the telling part",
+       "questions": [
+        {
+         "question": "Does the crop keep the telling detail in, or cut it out?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Isolating a specific element like the smoke plume using the crop tool yields more targeted search results, such as the TambovINFO article, rather than generic matches for the whole scene.",
+         "whatTheAgentLoses": "You lose the opportunity to intuitively identify which specific visual details, like unique smoke patterns or faces, are the most crucial clues to isolate for the investigation."
+        }
+       ]
+      },
+      {
+       "id": "3.4",
+       "label": "Read the engine's own label",
+       "questions": [
+        {
+         "question": "Does the engine's own location guess match the place the claim names?",
+         "cluster": "compare",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The search engine's automatic text suggestion of 'Myanmar (Burma)' next to the uploaded thumbnail provides an immediate clue that the image's true origin contradicts the assumed location.",
+         "whatTheAgentLoses": "You miss the immediate realization of the location mismatch, which helps build your personal intuition for spotting miscaptioned media."
+        },
+        {
+         "question": "Do the two search methods report different image sizes?",
+         "cluster": "compare",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The screen showed Google reporting different dimensions (892 x 501 versus 1010 x 572) depending on the search method, which could indicate the image was cropped or altered.",
+         "whatTheAgentLoses": "You lose the human intuition to spot subtle discrepancies in metadata like image dimensions that might reveal an image has been manipulated."
+        }
+       ]
+      },
+      {
+       "id": "3.5",
+       "label": "Read the match list sections",
+       "questions": [
+        {
+         "question": "Is the original creator's account among the results, separate from re-posts?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Spotting the exact Instagram match among the Google Lens results allows you to trace the image back to its true creator rather than a secondary source like Amazon.",
+         "whatTheAgentLoses": "You lose the opportunity to personally verify the credibility of the original poster's profile and the context in which the photo was first shared."
+        },
+        {
+         "question": "Do the visual matches just repeat the post's claim in their titles?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Scanning the titles in the visual matches, like those mentioning 'Pakistan Noor Khan Airbase,' helps establish the specific narrative or misinformation surrounding the image.",
+         "whatTheAgentLoses": "You lose the ability to personally gauge the scale and specific variations of the misinformation spreading across different platforms."
+        }
+       ]
+      },
+      {
+       "id": "3.6",
+       "label": "Pick the match to open",
+       "questions": [
+        {
+         "question": "Was a news or fact-checker match opened, or a video or meme page?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting a reputable news site like voanews.com from the search results rather than a YouTube video helps ensure you get factual, verifiable context for the image.",
+         "whatTheAgentLoses": "You lose the opportunity to exercise your own judgment in evaluating which search results come from the most trustworthy sources."
+        },
+        {
+         "question": "Was the match opened one likely to hold the full-size original, or another re-post?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Selecting a major news outlet like dailymail.co.uk from the matching images section increases the likelihood of finding a high-resolution, uncropped version of the photo.",
+         "whatTheAgentLoses": "You lose the opportunity to use your own intuition to select the most promising source for a high-quality version of the image."
+        }
+       ]
+      },
+      {
+       "id": "3.7",
+       "label": "Search again another way",
+       "questions": [
+        {
+         "question": "Which copy of the image is sharper, the article's or the post's?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Searching with the clearer, higher-resolution image from the article instead of the blurry tweet image yields better reverse search results.",
+         "whatTheAgentLoses": "You lose the ability to visually compare image quality and strategically select the clearer version to ensure a more accurate reverse image search."
+        },
+        {
+         "question": "Do uploading the file and pasting its address give the same results?",
+         "cluster": "compare",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Seeing exactly '117 results' for both methods confirms that the reverse image search is processing the exact same image without any upload or URL resolution errors.",
+         "whatTheAgentLoses": "You lose the opportunity to double-check the reliability of the search tool's input methods by comparing their exact output counts."
+        }
+       ]
+      },
+      {
+       "id": "3.8",
+       "label": "Narrow by keywords and date",
+       "questions": [
+        {
+         "question": "What keywords replaced the engine's own text beside the image?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Editing the auto-populated text in the Google Image search bar allows you to pivot from merely identifying the location to finding credible context about the incident.",
+         "whatTheAgentLoses": "You lose the opportunity to steer the investigation toward specific angles, like human rights accountability, by manually brainstorming the most effective search terms."
+        },
+        {
+         "question": "Do these results span several years with no date filter?",
+         "cluster": "refine",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search results show articles spanning from 2015 to 2020, so applying a date filter helps isolate the exact incident and original source of the photo.",
+         "whatTheAgentLoses": "You lose the opportunity to apply your own contextual intuition about when the photo was likely taken to effectively narrow down the search results."
+        }
+       ]
+      },
+      {
+       "id": "3.9",
+       "label": "Sort the matches by date"
+      }
+     ]
+    },
+    {
+     "id": "4",
+     "label": "Read what the match shows",
+     "note": "4.1 happens on every opened match, for the same image or a similar one. 4.2 where the image is not where the result said it was. 4.3 and 4.4 on every page that carries a caption or a date. 4.5 wherever more than one copy exists - VOgi, ZEyc, 4Rh4, 6KeC. 4.6 where the page shows the original beside the copy. 4.7 in the two profile checks. 4.8 where the page is in another language. 4.9 in 6KeC, 4Rh4 and VOgi, which play the footage. 4.10 does not appear in any of the recordings.",
+     "children": [
+      {
+       "id": "4.1",
+       "label": "Confirm the same image",
+       "questions": [
+        {
+         "question": "Do the results connect this photo to its claimed origin, or only to unrelated pages?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Evaluating the Google Lens visual matches, which only show unrelated shopping and TikTok links, is necessary to determine if the true origin was found.",
+         "whatTheAgentLoses": "You lose the ability to independently judge whether the image search results are just irrelevant visual matches or the actual original source."
+        },
+        {
+         "question": "Are the other suspect photos on this account's grid too?",
+         "cluster": "photos",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Spotting the other suspected photos on the '[handle]' Instagram grid confirms that the scammer stole multiple images from this specific real person.",
+         "whatTheAgentLoses": "Delegating this means you miss the visual certainty of spotting the exact matching photos on the original creator's grid to definitively prove the theft."
+        }
+       ]
+      },
+      {
+       "id": "4.2",
+       "label": "Find the matched image",
+       "questions": [
+        {
+         "question": "Where on this page does the matching image sit?",
+         "cluster": "photos",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The main article did not contain the image, but its matching thumbnail appeared at the bottom under the related stories section.",
+         "whatTheAgentLoses": "You lose the visual confirmation of spotting the exact thumbnail among the related links to accurately trace the image's true origin."
+        }
+       ]
+      },
+      {
+       "id": "4.3",
+       "label": "Read the caption",
+       "questions": [
+        {
+         "question": "What date, place or explanation does this page give for the image?",
+         "cluster": "photos",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The article displays the target image with a caption stating it shows a May 16, 2020 fire in Let Kar, providing the exact context needed to verify the original claim.",
+         "whatTheAgentLoses": "You lose the chance to personally verify the visual match and extract the specific date and location details from the caption to guide your next search."
+        }
+       ]
+      },
+      {
+       "id": "4.4",
+       "label": "Read the page's date",
+       "questions": [
+        {
+         "question": "Is the upload date shown earlier than the event the claim ties it to?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Noticing that the video was posted in the 'Funny' category on a meme site and dates back to 2015 proves it is unrelated to the recent coronavirus outbreak.",
+         "whatTheAgentLoses": "You lose the opportunity to independently deduce the video's satirical nature and false context from its platform and historical upload date."
+        }
+       ]
+      },
+      {
+       "id": "4.5",
+       "label": "Find the earliest copy",
+       "questions": [
+        {
+         "question": "Was the earliest-dated match opened, or only the top one?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Scanning the dates and domains in the search results, such as the March 2020 link to demotywatory.pl, helps establish the true timeline and original context of the image.",
+         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to manually spot patterns in the types of websites, like meme pages, that first circulated the image."
+        }
+       ]
+      },
+      {
+       "id": "4.6",
+       "label": "Compare copy and original",
+       "questions": [
+        {
+         "question": "Side by side, what differs between the original and the viral copy?",
+         "cluster": "photos",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Seeing the doctored and original images side-by-side in the Snopes article proves exactly how the picture was manipulated.",
+         "whatTheAgentLoses": "You miss the firsthand visual proof of seeing the specific alterations made to the original image."
+        },
+        {
+         "question": "Is it the same footage, with only a caption or overlay added?",
+         "cluster": "compare",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Comparing the '[handle]' Instagram post side-by-side with the viral video confirms that the underlying footage is identical and only the text overlay was added.",
+         "whatTheAgentLoses": "Delegating this step means you miss the direct visual confirmation of seeing the unedited footage next to the manipulated viral claim."
+        }
+       ]
+      },
+      {
+       "id": "4.7",
+       "label": "Read the source account's profile",
+       "questions": [
+        {
+         "question": "Does this photo show up under other names, with a scam warning?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Seeing the same photo linked to various names like \"[name]\" and \"[name]\" alongside scam warnings confirms the profile picture is stolen and used fraudulently.",
+         "whatTheAgentLoses": "You lose the direct visual confirmation of how widely the image has been misappropriated across different fake profiles and scam warning sites."
+        },
+        {
+         "question": "Do the cities in the real account's bio match the city the messages claim?",
+         "cluster": "compare",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The bio explicitly lists 'nyc • cincy • dallas', providing concrete evidence that contradicts the scammer's claims of being in Los Angeles or Miami.",
+         "whatTheAgentLoses": "You lose the opportunity to personally spot the geographical discrepancies in the bio that definitively expose the impersonation."
+        }
+       ]
+      },
+      {
+       "id": "4.8",
+       "label": "Translate the page",
+       "questions": [
+        {
+         "question": "Was the page translated before it was read, and from what language?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Translating the AFP Factuel page allows you to understand the specific details and context regarding the 2018 photos of the Pope's cross.",
+         "whatTheAgentLoses": "You lose the opportunity to personally review the translated text and evaluate the nuances of the international fact-checker's reasoning."
+        },
+        {
+         "question": "Is there text inside the image that needs recognizing and translating?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Extracting and translating the Arabic text 'جهاز الأمن القومي صنعاء' directly from the image provides critical context for tracing its true origin.",
+         "whatTheAgentLoses": "You lose the ability to manually verify the accuracy of the optical character recognition and ensure the resulting translation makes sense in context."
+        }
+       ]
+      },
+      {
+       "id": "4.9",
+       "label": "Play the source video",
+       "questions": [
+        {
+         "question": "Was the video played to the frame the fact-check names?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The article states the image is actually a scene from the 2014 movie 'Aurat Khilona Nahi', so watching the embedded video lets you independently verify this context.",
+         "whatTheAgentLoses": "You lose the firsthand visual confirmation that the viral image perfectly matches the specific scene from the movie."
+        },
+        {
+         "question": "Does the video carry another platform's banner or watermark?",
+         "cluster": "photos",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The Snapchat-style text banner overlaid on the video provides a crucial clue about the platform where this specific version of the clip circulated.",
+         "whatTheAgentLoses": "You lose the chance to spot subtle visual artifacts, like the text banner, that provide context about how the video spread."
+        }
+       ]
+      },
+      {
+       "id": "4.10",
+       "label": "Check for an AI-generated label"
+      }
+     ]
+    },
+    {
+     "id": "5",
+     "label": "Trace the source itself",
+     "note": "t8lK runs 5.1 to 5.4 twice: search the name, judge the results for independence, take the related search, read what a third party says. 5.5 and 5.6 in linG, which verifies an official account and follows its link to the primary source. 5.7 in 4Rh4, which uses the meme site's category as the sign that the image is not what it claims. linG@1:21 reaches 5 straight from the match list.",
+     "children": [
+      {
+       "id": "5.1",
+       "label": "Search the source's name"
+      },
+      {
+       "id": "5.2",
+       "label": "Judge the results for independence",
+       "questions": [
+        {
+         "question": "Was the source's own name searched before its claim was used?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Although the featured snippet from criticalthinking.org looks authoritative, verifying the organization through a third-party source ensures it is actually reputable.",
+         "whatTheAgentLoses": "You lose the opportunity to practice lateral reading and build your own judgment about which organizations are truly trustworthy."
+        },
+        {
+         "question": "Do these results include anyone besides the organization itself and its publishers?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The search results only showed the organization's own website and publishers selling their books, indicating a lack of objective, outside perspectives on the first page.",
+         "whatTheAgentLoses": "You lose the critical judgment to recognize when search results are merely self-referential promotional materials rather than independent evaluations."
+        }
+       ]
+      },
+      {
+       "id": "5.3",
+       "label": "Take the related search",
+       "questions": [
+        {
+         "question": "Does a related search suggest something the main results left out, like a lawsuit?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The initial search results only showed first-party information, making it necessary to check related searches like the 'lawsuit' query to find external perspectives.",
+         "whatTheAgentLoses": "You lose the opportunity to intuitively spot and investigate red flags in related search suggestions that might uncover hidden controversies about the source."
+        }
+       ]
+      },
+      {
+       "id": "5.4",
+       "label": "Read the third-party view",
+       "questions": [
+        {
+         "question": "Was the outlet behind this report checked before it was repeated?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search snippet reveals highly sensational allegations of sexual coercion, making it essential to confirm the reporting outlet is a legitimate news source.",
+         "whatTheAgentLoses": "You lose the opportunity to personally assess the journalistic reputation and reliability of the outlet publishing these lurid claims."
+        }
+       ]
+      },
+      {
+       "id": "5.5",
+       "label": "Verify the account is official",
+       "questions": [
+        {
+         "question": "What on this page shows it's the organization's own official site?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Verifying the authenticity of the 'Vatican News' homepage ensures the claim originates from a credible, official source rather than a deceptive lookalike.",
+         "whatTheAgentLoses": "You lose the personal assurance of visually verifying the site's official branding and layout to trust its legitimacy."
+        }
+       ]
+      },
+      {
+       "id": "5.6",
+       "label": "Follow the primary-source link",
+       "questions": [
+        {
+         "question": "Does the post link to a primary source, and was it followed?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The tweet includes a specific URL (pjlatinoamericana.org/simbolos.html) that promises direct context about the cross's colors and origins.",
+         "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally evaluate the credibility and exact wording of the linked source website."
+        },
+        {
+         "question": "What does the primary source say the disputed detail means?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Reading the translated official text reveals that the colors represent geographic regions in Latin America, providing the definitive context needed to debunk the claim.",
+         "whatTheAgentLoses": "You lose the direct experience of discovering the true cultural meaning behind the symbol that definitively disproves the viral post."
+        }
+       ]
+      },
+      {
+       "id": "5.7",
+       "label": "Check for a satire site"
+      }
+     ]
+    },
+    {
+     "id": "6",
+     "label": "Place and date the footage",
+     "note": "6.1 comes first, where the user finds a detail in the image that can be searched or matched. then 6.2 or 6.3, a text search on the detail or a map. 6.4 matches the scene to a street or a satellite view, 6.5 steps the imagery timeline, 6.6 checks other footage of the same scene. 4Rh4 runs all of it but 6.6. 6KeC stops at 6.2 with a third party's photo. VOgi runs 6.1 to 6.6.",
+     "children": [
+      {
+       "id": "6.1",
+       "label": "Pick a searchable detail",
+       "questions": [
+        {
+         "question": "Which part of the image was magnified, and is it searchable?",
+         "cluster": "photos",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Using the circular lens tool to zoom into specific areas like the burning village helps identify visual inconsistencies or clues about the image's true origin.",
+         "whatTheAgentLoses": "Delegating this step means you miss the opportunity to personally spot subtle visual anomalies or AI-generated artifacts that an automated tool might overlook."
+        },
+        {
+         "question": "What in the background is specific enough to search, like a sign or plate?",
+         "cluster": "photos",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Spotting specific background details like the 'KEAN' street sign, American cars, and right-side driving provides the concrete search terms needed to geolocate the video.",
+         "whatTheAgentLoses": "You lose the chance to hone your own observational skills by manually scanning the video for subtle geographical clues."
+        }
+       ]
+      },
+      {
+       "id": "6.2",
+       "label": "Search the detail as text",
+       "questions": [
+        {
+         "question": "Was the sign's name searched in quotes for an exact match?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Using double quotes in the search bar forces an exact match for the shop name, preventing the search engine from returning irrelevant partial matches.",
+         "whatTheAgentLoses": "Delegating this step means you lose the opportunity to learn and apply advanced search operators that are crucial for filtering out noise during an investigation."
+        },
+        {
+         "question": "Does the sign or landmark from the background show up in these results?",
+         "cluster": "photos",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Spotting the matching 'ZIA CARPET' shop sign in the image search results confirms the exact geographic location of the original photo.",
+         "whatTheAgentLoses": "You lose the opportunity to visually cross-reference the shop signs and street details yourself to confirm the photo's true location."
+        }
+       ]
+      },
+      {
+       "id": "6.3",
+       "label": "Find it on the map",
+       "questions": [
+        {
+         "question": "On the map, was the town searched, or a suggested street address?",
+         "cluster": "select",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The search dropdown suggested specific addresses like 'New Jersey [address]', which might be too narrow if you only need the general location of the town to verify the claim.",
+         "whatTheAgentLoses": "The user loses the ability to decide whether a broad city overview or a specific street address is more appropriate for verifying the geographic context of the claim."
+        },
+        {
+         "question": "Which detail from the footage was combined with the town name to find the street?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Searching for a partially visible storefront name from the footage alongside the known town name helps narrow down the exact geographical coordinates on the map.",
+         "whatTheAgentLoses": "You lose the opportunity to practice spotting subtle visual clues, like partial business signs, and combining them with search terms to geolocate a scene yourself."
+        }
+       ]
+      },
+      {
+       "id": "6.4",
+       "label": "Match the scene to imagery",
+       "questions": [
+        {
+         "question": "Do the details in the footage match the reference imagery on screen?",
+         "cluster": "photos",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Matching the 'D'Maros Unisex' sign and the colorful building in the Street View confirms the video was filmed in New Jersey rather than Italy.",
+         "whatTheAgentLoses": "You miss the visual confirmation of matching specific architectural details between the video and the map to independently verify the true location."
+        }
+       ]
+      },
+      {
+       "id": "6.5",
+       "label": "Step the imagery timeline",
+       "questions": [
+        {
+         "question": "Between which two imagery dates did the damage appear?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Scrubbing the Google Earth slider from April to November 2023 reveals exactly when the planes went from intact to destroyed, establishing a factual timeline for the claim.",
+         "whatTheAgentLoses": "Delegating this means you miss seeing the direct visual evidence of the planes' condition changing between the April and November satellite captures."
+        }
+       ]
+      },
+      {
+       "id": "6.6",
+       "label": "Check other footage",
+       "questions": [
+        {
+         "question": "Has more than one angle of the same scene been checked?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Checking alternative angles from various social media posts confirms that the imagery depicts the same location and fits the historical context of the event.",
+         "whatTheAgentLoses": "You lose the visual intuition required to match landmarks across different camera angles to confirm they show the exact same event."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "7",
+     "label": "Check against a reference",
+     "note": "7.1 sets the tool to the claim's own time and place, and VxnK checks the form before reading anything. 7.2 reads what the tool computes, and 7.3 reads the reason behind it. 7.4 shows up in VOgi, where an official statement confirms the real event that the fake footage is attached to. 7.5 shows up in VxnK, which re-runs both tools for a future date as a test. Only VxnK and VOgi cover this goal.",
+     "children": [
+      {
+       "id": "7.1",
+       "label": "Set the time and place",
+       "questions": [
+        {
+         "question": "Is the tool set to the time and place the claim states?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Confirming the timeanddate.com map is set to 12:26 a.m. Darwin time ensures the moon's position is accurately checked against the video.",
+         "whatTheAgentLoses": "You lose the assurance of personally verifying that the fact-checking tool's parameters perfectly match the original claim."
+        }
+       ]
+      },
+      {
+       "id": "7.2",
+       "label": "Read the computed position",
+       "questions": [
+        {
+         "question": "Where does the tool put the moon relative to the claim's town?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Accurately reading the illuminated portion of the map confirms whether the moon was actually visible from that specific location in Australia during the event.",
+         "whatTheAgentLoses": "Delegating this step means you lose the ability to visually verify the geographic alignment yourself, relying instead on the agent's spatial interpretation of the map."
+        }
+       ]
+      },
+      {
+       "id": "7.3",
+       "label": "Read the reasoning behind it",
+       "questions": [
+        {
+         "question": "Was a diagram shown to explain the result, separate from the tool's numbers?",
+         "cluster": "approve",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "The inset diagram showing the 23.5-degree equatorial tilt and 5-degree lunar orbit tilt provides the scientific context necessary to debunk claims about the moon's position.",
+         "whatTheAgentLoses": "Delegating this step means you lose control over how deeply the scientific mechanics are explained to justify the final verdict."
+        },
+        {
+         "question": "Do the drawn arrows point where the tool put the moon, and agree with the text beside them?",
+         "cluster": "hand over",
+         "moment": "Now",
+         "moneyMoving": false,
+         "why": "Drawing arrows on the map from Darwin and Tauranga clarifies how the moon's position relative to the equator changes the observer's viewing angle.",
+         "whatTheAgentLoses": "You lose the direct spatial reasoning involved in mapping out the exact viewing angles that explain the visual anomaly."
+        }
+       ]
+      },
+      {
+       "id": "7.4",
+       "label": "Check the official record",
+       "questions": [
+        {
+         "question": "Does an official statement confirm a real event at the place and date the footage is tied to?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Highlighting the official statement about the Nur Khan Air Base confirms the actual military operation that the fake video is exploiting for credibility.",
+         "whatTheAgentLoses": "You lose the nuanced understanding of how real geopolitical events are weaponized to make fabricated media seem believable."
+        }
+       ]
+      },
+      {
+       "id": "7.5",
+       "label": "Make a testable prediction"
+      }
+     ]
+    },
+    {
+     "id": "8",
+     "label": "Reach the verdict",
+     "note": "8.1 happens in every keeper, where they say the label the evidence supports over the source. 8.2 where the ruling is mixed or true - F6MD, fU9D. 8.3 in linG, VOgi and 6KeC, which check their own verdict against a professional one. 8.4 wherever two findings disagree. 8.5 where a search or a source came back empty. 8.6 does not appear in any of the recordings. 8.7 closes every run and loops back to 1 when there is a next claim.",
+     "children": [
+      {
+       "id": "8.1",
+       "label": "State the verdict on screen",
+       "questions": [
+        {
+         "question": "What verdict was given, and what on screen supports it?",
+         "cluster": "facts",
+         "moment": "Completion",
+         "moneyMoving": false,
+         "why": "Locating the explicit 'False' rating on the Snopes page provides the definitive answer needed to complete the verification.",
+         "whatTheAgentLoses": "You lose the reassurance of personally seeing the fact-checker's explicit rating and confirming the exact conclusion yourself."
+        }
+       ]
+      },
+      {
+       "id": "8.2",
+       "label": "Restate a mixed ruling correctly",
+       "questions": [
+        {
+         "question": "Does the ruling's rule differ from how the claim applied it?",
+         "cluster": "compare",
+         "moment": "Completion",
+         "moneyMoving": false,
+         "why": "This matters because the original email applies the 3.8% tax to the total sale price of the home, whereas the Snopes article clarifies it only applies to profits exceeding the capital gains threshold.",
+         "whatTheAgentLoses": "The user loses the specific financial context of why the viral claim's math is deceptive if the agent simply labels it false without explaining the threshold rule."
+        }
+       ]
+      },
+      {
+       "id": "8.3",
+       "label": "Confirm with a fact-check",
+       "questions": [
+        {
+         "question": "Does a professional fact-check reach the same conclusion?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Reviewing the BOOM Live article demonstrates that professional fact-checkers used similar methods to debunk the Pakistan airbase claim, proving the investigation's process is sound.",
+         "whatTheAgentLoses": "You lose the educational reassurance of seeing how independent research methods align with the standards of professional fact-checkers."
+        }
+       ]
+      },
+      {
+       "id": "8.4",
+       "label": "Reconcile the disagreeing findings",
+       "questions": [
+        {
+         "question": "Which rating should the verdict follow when two fact-checkers disagree?",
+         "cluster": "compare",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The search results show Check Your Fact rating the claim as 'False' while Lead Stories rates it as 'It [name]', requiring you to reconcile the discrepancy.",
+         "whatTheAgentLoses": "You lose the opportunity to personally weigh the nuances of the conflicting verdicts and understand the actual context behind the claim."
+        },
+        {
+         "question": "Do two engines put this image in different places?",
+         "cluster": "compare",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The Yandex results associate the image with entirely different geopolitical events, such as Syria and Myanmar, which complicates finding the true origin.",
+         "whatTheAgentLoses": "You lose the opportunity to critically compare how different search engines surface distinct historical contexts for the same image."
+        }
+       ]
+      },
+      {
+       "id": "8.5",
+       "label": "Say what is not shown",
+       "questions": [
+        {
+         "question": "Does the earliest date on screen match the origin date the verdict gives?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "The narrator claims the video dates back to 2015, but the earliest post actually shown on screen is from February 2020, leaving the true origin unverified.",
+         "whatTheAgentLoses": "The user loses verifiable proof of the claim's origin if the agent states an older date without providing the visual evidence to back it up."
+        }
+       ]
+      },
+      {
+       "id": "8.6",
+       "label": "Settle for unproven"
+      },
+      {
+       "id": "8.7",
+       "label": "Close out the check",
+       "questions": [
+        {
+         "question": "Were all the steps and sources named at the start actually carried out?",
+         "cluster": "facts",
+         "moment": "After",
+         "moneyMoving": false,
+         "why": "Confirming that the reverse image search, visual analysis, geolocation, and timeline checks match the initial 'FOUR STEPS' slide ensures the verification is methodical rather than arbitrary.",
+         "whatTheAgentLoses": "Delegating this process means you miss out on internalizing a structured, step-by-step methodology for independently verifying digital media."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
  "fines": {
   "task": "pay a fine or ticket on a government portal (city parking-ticket sites, court or toll-violation portals): look up the citation by number or plate, verify the details match the notice, pay; complete when the payment receipt or confirmation is on screen. Surface pinned: a city, court, or agency web payment portal. Variants: contesting or appealing a ticket, DMV renewals, and paying ordinary toll-account balances do not belong.",
   "tree": {
