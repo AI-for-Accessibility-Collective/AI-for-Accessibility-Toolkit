@@ -30,6 +30,8 @@ import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
 import { renderShape, shapeCss, setActionHandler } from './agent-watch-shapes.js';
 import { livingPlan, livingPrompt, rulebook, surfaceCss } from './agent-watch-surfaces.js';
+import { decisionPayload, decisionMessage, wireDecisionKeys, findingKey } from '../utils/verification-decisions.js';
+import { renderDecisionChoices } from '../utils/verification-decision-view.js';
 
 const STYLE_ID = 'ai4a11y-agent-watch-style';
 
@@ -79,7 +81,7 @@ export const AgentWatch = {
     this.model = merge(options.model);
     this.spoken = new Set();
     this.settled = new Set();
-    this.openSurfaces = new Set(['plan', 'prompt', 'rules']);
+    this.openSurfaces = new Set();
     this.collapsed = false;
 
     // Presses inside a shape are controls like any other — they go back to
@@ -163,11 +165,18 @@ export const AgentWatch = {
       return;                       // the gate is the only thing worth hearing now
     }
 
+    // Only this page's findings, and never ones already dealt with. The
+    // spoken set is per-page module state - the content script reloads on
+    // every navigation, so without these filters the whole task history was
+    // read aloud again on each new page.
+    const ack = new Set(s.acknowledged || []);
     for (const f of visible(s, m)) {
       // Ambient findings are never spoken. They stay reachable on request,
       // which is the difference between available and announced.
       if (f.level === 'ambient') continue;
-      const key = `${f.widget}|${f.say}`;
+      if (s.phase && f.phase && f.phase !== s.phase) continue;
+      const key = keyOf(f);
+      if (ack.has(key) || this.settled.has(key)) continue;
       if (this.spoken.has(key)) continue;
       this.spoken.add(key);
       announce(phrase(f, m));
@@ -183,18 +192,30 @@ export const AgentWatch = {
     // their place in the panel. bhAgent writes several log entries per step,
     // and each one re-renders - without this, half-typed instructions were
     // erased within seconds. Same treatment panel.js already has.
-    const prevField = this.root.querySelector('.aw-tell-input');
-    const keepText = prevField ? prevField.value : '';
-    const wasTyping = prevField && document.activeElement === prevField
-      ? { start: prevField.selectionStart, end: prevField.selectionEnd }
+    const active = this.root.contains(document.activeElement) ? document.activeElement : null;
+    const activeKey = active?.dataset.awKey;
+    const openDecisions = new Map([...this.root.querySelectorAll('details[data-decision-disclosure]')]
+      .map(node => [node.dataset.decisionDisclosure, node.open]));
+    const drafts = new Map([...this.root.querySelectorAll('input[data-aw-key]')]
+      .map(input => [input.dataset.awKey, input.value]));
+    const wasTyping = active?.tagName === 'INPUT'
+      ? { start: active.selectionStart, end: active.selectionEnd }
       : null;
     const keepScroll = this.root.scrollTop;
     const restore = () => {
-      const nf = this.root.querySelector('.aw-tell-input');
-      if (nf && keepText) nf.value = keepText;
-      if (nf && wasTyping) {
+      for (const node of this.root.querySelectorAll('details[data-decision-disclosure]')) {
+        if (openDecisions.has(node.dataset.decisionDisclosure)) node.open = openDecisions.get(node.dataset.decisionDisclosure);
+      }
+      for (const input of this.root.querySelectorAll('input[data-aw-key]')) {
+        if (drafts.has(input.dataset.awKey)) input.value = drafts.get(input.dataset.awKey);
+      }
+      const nf = activeKey && [...this.root.querySelectorAll('[data-aw-key]')]
+        .find(node => node.dataset.awKey === activeKey);
+      if (nf) {
         nf.focus();
-        try { nf.setSelectionRange(wasTyping.start, wasTyping.end); } catch { /* fine */ }
+        if (wasTyping) {
+          try { nf.setSelectionRange(wasTyping.start, wasTyping.end); } catch { /* fine */ }
+        }
       }
       this.root.scrollTop = keepScroll;
     };
@@ -229,6 +250,7 @@ export const AgentWatch = {
     // ── the header: always the same one line ────────────────────────────────
     const head = document.createElement('button');
     head.className = 'aw-head';
+    head.dataset.awKey = 'head';
     head.type = 'button';
     head.setAttribute('aria-expanded', String(!this.collapsed));
     // The headline is the agent's state - what the person handed the task to
@@ -290,6 +312,7 @@ export const AgentWatch = {
     field.id = tellId;
     field.type = 'text';
     field.className = 'aw-tell-input';
+    field.dataset.awKey = `tell:${s.taskId || ''}`;
     field.placeholder = 'she likes purple, skip that seller, slow down';
     const send = document.createElement('button');
     send.type = 'submit';
@@ -399,6 +422,34 @@ export const AgentWatch = {
       return;
     }
 
+    // ── who has the wheel ───────────────────────────────────────────────────
+    //
+    // handOver() and handBack() shipped without a surface, so a part of the
+    // task could be taken and never given back. Polite rather than assertive:
+    // the person already knows they are driving, they only need the way out.
+    if (s.holder === 'person') {
+      const w = document.createElement('div');
+      w.className = 'aw-wheel';
+      w.setAttribute('role', 'status');
+      const at = s.handOverNodeLabel || s.handOverNode;
+      const p = document.createElement('p');
+      p.textContent = at
+        ? `You have this part: ${at}. The agent is paused and still reading the page.`
+        : 'You have this part. The agent is paused and still reading the page.';
+      w.appendChild(p);
+      const row = document.createElement('div');
+      row.className = 'aw-row';
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'aw-do aw-primary';
+      b.textContent = 'Give it back';
+      b.addEventListener('click', () =>
+        this.onControl?.({ action: 'hand-back', node: s.handOverNode || null }));
+      row.appendChild(b);
+      w.appendChild(row);
+      this.root.appendChild(w);
+    }
+
     // ── the gate ────────────────────────────────────────────────────────────
     if (held) {
       const g = document.createElement('div');
@@ -408,28 +459,46 @@ export const AgentWatch = {
       g.setAttribute('aria-label', 'Waiting for you');
 
       const p = document.createElement('p');
-      p.textContent = s.gate.say || 'Something needs your decision.';
+      p.textContent = decisionMessage(s);
+      p.id = 'aw-decision-message';
+      g.setAttribute('aria-describedby', p.id);
       g.appendChild(p);
 
-      const row = document.createElement('div');
-      row.className = 'aw-row';
-      for (const [label, response, primary] of choices(s)) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'aw-do' + (primary ? ' aw-primary' : '');
-        b.textContent = label;
-        b.addEventListener('click', () => this.onAnswer?.(
-          (s.gate.waitingOn || [])[0], response));
-        row.appendChild(b);
-      }
+      const row = renderDecisionChoices(s, { buttonClass: 'aw-do', keyAttribute: 'data-aw-key',
+        onChoice: payload => this.onAnswer?.(payload.widget, payload.response, payload) });
       g.appendChild(row);
+      const form = document.createElement('form');
+      form.className = 'aw-decision-answer';
+      const input = document.createElement('input');
+      input.className = 'aw-tell-field';
+      input.dataset.awKey = `answer-text:${decisionPayload(s, {}).decisionKey}`;
+      input.placeholder = 'Or tell me something else';
+      input.setAttribute('aria-label', 'Or tell me something else');
+      const send = document.createElement('button');
+      send.type = 'submit';
+      send.className = 'aw-do';
+      send.textContent = 'Send';
+      form.append(input, send);
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const response = input.value.trim();
+        if (!response) return;
+        const payload = decisionPayload(s, { kind: 'custom', response });
+        this.onAnswer?.(payload.widget, response, payload);
+      });
+      g.appendChild(form);
+      wireDecisionKeys(g);
       this.root.appendChild(g);
       // The only place focus moves on its own — the run cannot proceed
       // without an answer, so landing here saves hunting for it.
-      const gateKey = (s.gate?.waitingOn || []).join('|') + (s.gate?.say || '');
+      const gateKey = decisionPayload(s, {}).decisionKey;
       if (gateKey !== this._focusedGate) {
         this._focusedGate = gateKey;
-        requestAnimationFrame(() => g.querySelector('.aw-do')?.focus());
+        const focusBeforeFrame = document.activeElement;
+        requestAnimationFrame(() => {
+          if (g.isConnected && this._focusedGate === gateKey && document.activeElement === focusBeforeFrame
+            && !g.contains(document.activeElement)) g.querySelector('.aw-do')?.focus();
+        });
       }
     }
 
@@ -562,7 +631,11 @@ export const AgentWatch = {
         const oneKey = keyOf(f);
         if (oneKey !== this._focusedOne) {
           this._focusedOne = oneKey;
-          requestAnimationFrame(() => li.querySelector('.aw-do')?.focus());
+          const focusBeforeFrame = document.activeElement;
+          requestAnimationFrame(() => {
+            if (li.isConnected && this._focusedOne === oneKey && document.activeElement === focusBeforeFrame
+              && !li.contains(document.activeElement)) li.querySelector('.aw-do')?.focus();
+          });
         }
       }
     }
@@ -612,6 +685,20 @@ export const AgentWatch = {
 
     this.root.appendChild(tell);
     this.root.appendChild(foot);
+    if (held && !s.probe) {
+      const gate = this.root.querySelector('.aw-gate');
+      const details = document.createElement('details');
+      details.className = 'aw-task-details';
+      const summary = document.createElement('summary');
+      summary.textContent = 'Task details';
+      summary.dataset.awKey = 'task-details';
+      details.appendChild(summary);
+      remember(details, 'details');
+      // Keep the question and its answers together. The history and task
+      // controls remain available without competing with the current choice.
+      while (gate?.nextSibling) details.appendChild(gate.nextSibling);
+      this.root.appendChild(details);
+    }
     restore();
   },
 
@@ -664,7 +751,7 @@ function byPhase(findings, current) {
 }
 
 /** What identifies one finding across re-renders. */
-const keyOf = (f) => `${f.widget}|${f.phase}|${f.say}`;
+const keyOf = findingKey;
 
 const URGENCY = { stop: 0, aside: 1, ambient: 2 };
 
@@ -686,27 +773,6 @@ function phrase(f, m) {
   if (!m.cognition.simplify) return say;
   const first = say.match(/^[^.!?]+[.!?]/);
   return first ? first[0] : say;
-}
-
-/**
- * Answers offered at a gate.
- *
- * Taken from the control the held finding already carries, not from a table of
- * phrasings kept here. Those controls come from the analysis — they are the
- * actions delegation took away, named there — so a hand-written map in this
- * file is the same wording maintained in two places, drifting apart. It also
- * could not keep up: it matched on the widget's name, so a widget the analysis
- * renamed silently fell through to a generic yes/no.
- *
- * The second option is always to stop, because that is the one answer no
- * finding has to supply: a gate you cannot decline is not a checkpoint.
- */
-function choices(s) {
-  const waiting = new Set(s.gate?.waitingOn || []);
-  const held = (s.findings || []).find((f) => waiting.has(f.widget) && f.control?.label);
-  return held
-    ? [[held.control.label, held.control.label, true], ['Stop here', 'stop', false]]
-    : [['Go on', 'go on', true], ['Stop here', 'stop', false]];
 }
 
 // ── the stylesheet, built from the model ────────────────────────────────────
@@ -744,7 +810,13 @@ function css(m) {
   ${m.motion === 'reduced' ? '' : 'transition: box-shadow .18s ease;'}
 }
 #${AgentWatch.containerId}.aw-idle { display: none; }
-#${AgentWatch.containerId}.aw-held { border-color: ${high ? '#000' : '#991b1b'}; }
+#${AgentWatch.containerId} .aw-task-details > summary { padding: 10px 14px; cursor: pointer; }
+#${AgentWatch.containerId} .aw-task-details > summary:focus-visible { outline: 3px solid #1a73e8; outline-offset: -3px; }
+#${AgentWatch.containerId}.aw-held {
+  top: 24px; bottom: auto; right: 50%; transform: translateX(50%);
+  width: 480px; max-width: calc(100vw - 32px); max-height: calc(100vh - 48px);
+  border-color: ${line};
+}
 
 #${AgentWatch.containerId} .aw-head {
   display: block; width: 100%; text-align: left;
@@ -754,13 +826,27 @@ function css(m) {
 }
 #${AgentWatch.containerId} .aw-head:focus-visible { outline: 3px solid #1a73e8; outline-offset: -3px; }
 
+#${AgentWatch.containerId} .aw-wheel {
+  margin: 0 0 10px; padding: 8px 10px;
+  border: 1px solid ${high}; border-radius: 6px;
+  background: ${bg};
+}
+#${AgentWatch.containerId} .aw-wheel p { margin: 0 0 8px; }
+
 #${AgentWatch.containerId} .aw-gate {
   margin: 12px 14px; padding: 12px;
-  border: 1px solid ${high ? '#000' : '#fca5a5'}; border-radius: 8px;
-  background: ${high ? '#fff' : '#fee2e2'};
+  border: 1px solid ${line}; border-radius: 8px;
+  background: ${bg};
 }
 #${AgentWatch.containerId} .aw-gate p { margin: 0 0 10px; font-weight: 500; }
 #${AgentWatch.containerId} .aw-row { display: flex; gap: 8px; flex-wrap: wrap; }
+#${AgentWatch.containerId} .aw-decision-answer { display: flex; gap: 6px; margin-top: 10px; }
+#${AgentWatch.containerId} .aw-tell-field {
+  flex: 1; min-width: 0; width: 100%; font: inherit; color: ${fg}; background: ${bg};
+  padding: 5px 8px; border: 1px solid ${high ? '#000' : '#d1d5db'}; border-radius: 6px;
+}
+#${AgentWatch.containerId} .aw-tell-field:focus { outline: 3px solid #1a73e8; outline-offset: 1px; }
+#${AgentWatch.containerId} .aw-decision-answer .aw-do { margin-top: 0; }
 
 #${AgentWatch.containerId} .aw-list { list-style: none; margin: 0; padding: 4px 0; }
 #${AgentWatch.containerId} .aw-item {
@@ -797,16 +883,16 @@ function css(m) {
 }
 #${AgentWatch.containerId} .aw-do {
   margin-top: 7px; font: inherit; font-size: ${Math.round(base * 0.86)}px;
-  padding: 5px 12px; border: 1px solid ${high ? '#000' : '#d1d5db'};
+  padding: 9px 12px; min-height: 44px; border: 1px solid ${high ? '#000' : '#d1d5db'};
   border-radius: 6px; background: ${bg}; color: ${fg}; cursor: pointer;
 }
 #${AgentWatch.containerId} .aw-row .aw-do { margin-top: 0; }
 #${AgentWatch.containerId} .aw-do:hover { background: ${high ? '#eee' : '#f3f4f6'}; }
 #${AgentWatch.containerId} .aw-do:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; }
 #${AgentWatch.containerId} .aw-primary {
-  background: ${high ? '#000' : '#1a73e8'}; border-color: ${high ? '#000' : '#1a73e8'}; color: #fff;
+  background: ${fg}; border-color: ${fg}; color: #fff;
 }
-#${AgentWatch.containerId} .aw-primary:hover { background: ${high ? '#000' : '#1858b8'}; }
+#${AgentWatch.containerId} .aw-primary:hover { background: #000; }
 #${AgentWatch.containerId} .aw-none {
   margin: 0; padding: 14px; color: ${muted};
 }
