@@ -40,11 +40,13 @@ dimension `simplify` renders to the web setting `autoSimplify`). The
 authoritative web mapping is `WEB_DERIVATION` in
 [`toolkit/platforms/chrome/web-surface.js`](../toolkit/platforms/chrome/web-surface.js);
 this table summarizes it. A dimension with no rendering on a surface is
-reported in that surface's `unmet` list, not silently dropped — but note
-that the convenience wrapper `renderWebSettings()` returns settings only;
-use `deriveWebSettings()` when you need `unmet`. **A dimension outside this
-vocabulary is accepted into the profile but rendered by no surface**, so
-check spelling against this table.
+reported in that surface's `unmet` list, not silently dropped — the
+convenience wrapper `renderWebSettings()` returns settings only and prints
+a console warning naming any dropped dimensions; use
+`renderWebSettingsWithUnmet()` (same module) or `deriveWebSettings()` when
+you need `unmet` programmatically. **A dimension outside this vocabulary is
+accepted into the profile but rendered by no surface**, so check spelling
+against this table.
 
 | Dimension | Value | Renders on web as |
 |---|---|---|

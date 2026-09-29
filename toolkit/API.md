@@ -313,6 +313,7 @@ Every surface renderer takes the SAME input — the needs AbilityModel (libraria
 | --- | --- | --- | --- | --- |
 | `surfaces/mobile.js` | `renderMobileSettings` (named) | `(model)` |  | mobile OS accessibility settings: { text: {scalePercent, lineSpacing, boldText}, display: {darkMode, highContrast, reduceTransparency}, motion: {reduceMotion}, media: {captions}, speech: {rate}, simplifyLanguage, touch: {largeTargets, minTargetPt} } A neutral (empty-needs) model renders every value at its OS default: no phantom adaptations. |
 | `surfaces/web.js` | `renderWebSettings` (named) | `(model)` |  | web settings (subset of the registry's settingsMeta keys) |
+| `surfaces/web.js` | `renderWebSettingsWithUnmet` (named) | `(model)` |  | Same derivation as renderWebSettings, but returns the full `{ settings, strengthByKey, unmet }` triple, so a host can handle the need dimensions the web surface cannot render instead of having them dropped with only a console warning. |
 | `surfaces/xr.js` | `renderXRSettings` (named) | `(model, sensors)` |  | XR rendering parameters |
 
 ## Protocol
@@ -351,6 +352,9 @@ Everything importable from `@ai4a11y/toolkit` (the package root).
 | `SUPPORT_AREAS` | re-export | ./core/ability.js |
 | `STRENGTH_RANK` | re-export | ./core/strength.js |
 | `rankOf` | re-export | ./core/strength.js |
+| `parseSkill` | re-export | ./core/skill.js |
+| `validateSkill` | re-export | ./core/skill.js |
+| `resolveSkill` | re-export | ./core/skill.js |
 | `GRANT_SCOPES` | re-export | ./sync/index.js |
 | `validateScopes` | re-export | ./sync/index.js |
 | `normalizeGrant` | re-export | ./sync/index.js |
