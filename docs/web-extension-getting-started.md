@@ -26,7 +26,7 @@ toolkit profile. The counterpart for non-web hosts:
   [`../toolkit/registry/tools.js`](../toolkit/registry/tools.js)) and the
   parsed builtin skills to `createToolkit`, or `retrieveSkill` and skill
   validation have nothing to work with. The snippet is in
-  [QUICKSTART.md](QUICKSTART.md#enable-the-skill-layer);
+  [QUICKSTART.md](QUICKSTART.md#add-skills);
   `toolkit/hosts/skill-demo/demo.js` is the worked example.
 - **Render and apply.** In your content script, render
   `librarian.getAbilityModel()` with `renderWebSettings(model)`

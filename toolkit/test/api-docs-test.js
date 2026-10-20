@@ -256,12 +256,18 @@ if (!existsSync(BACKGROUND_JS_PATH)) {
     // the assertions below are about the arguments the page actually shows.
     // If either rewrite fails to match, the check fails instead of quietly
     // testing nothing.
+    // The call may be bare or assigned (`const web = renderWebSettings(`);
+    // either way the result is also kept on globalThis for the checks.
     let bound = extracted.replace(
-      /^(\s*)renderWebSettings\(/m, '$1const __web = renderWebSettings(',
+      /^(\s*)(?:const (\w+) = )?renderWebSettings\(/m,
+      (_, ws, name) => `${ws}const ${name || '__web'} = globalThis.__web = renderWebSettings(`,
     );
     const boundWeb = bound !== extracted;
     const beforeXr = bound;
-    bound = bound.replace(/^(\s*)renderXRSettings\(/m, '$1const __xr = renderXRSettings(');
+    bound = bound.replace(
+      /^(\s*)(?:const (\w+) = )?renderXRSettings\(/m,
+      (_, ws, name) => `${ws}const ${name || '__xr'} = globalThis.__xr = renderXRSettings(`,
+    );
     const boundXr = bound !== beforeXr;
     check('the Quick Start calls both surface renderers, so they can be checked', boundWeb && boundXr);
 
