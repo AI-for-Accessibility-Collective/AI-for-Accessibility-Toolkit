@@ -12,9 +12,16 @@
 //     player's CC button is toggled at most once per URL — so if they turn
 //     captions back off, a later mutation never re-enables them.
 //
-// Reversible: native track modes we changed are restored on disable. Player
-// buttons are left as the user last had them (re-clicking could toggle the
-// wrong way if they changed it meanwhile).
+//   • Embedded players are reached through their URL. A YouTube or Vimeo embed
+//     is a cross-origin iframe: no <video>, no CC button, only the embed's own
+//     caption parameter — and reading it means reloading the frame. So that is
+//     done for the embed the person is actually using, not for every one on the
+//     page.
+//
+// Reversible: native track modes we changed are restored on disable, and embeds
+// are reloaded with the URL they arrived with. Player buttons are left as the
+// user last had them (re-clicking could toggle the wrong way if they changed it
+// meanwhile).
 
 import { registerSweep } from '../utils/observe.js';
 
@@ -42,6 +49,41 @@ const PLAYERS = [
   },
 ];
 
+// Embedded players are a different problem again. The player lives in a
+// cross-origin iframe, so there is no <video> to reach into and no CC button to
+// click — the only thing this document can touch is the embed's own URL, and
+// both YouTube and Vimeo take a caption switch as a query parameter.
+//
+// Changing it means reloading the frame, which costs the person their place in
+// what they were watching. That is why this is done for the one embed they are
+// actually using rather than every embed on the page: a travel page with four
+// documentaries on it would otherwise restart all four.
+//
+// Spotify is deliberately absent: its embed has no caption or transcript
+// parameter, so there is nothing to switch and a reload would cost the person
+// their place for nothing.
+const EMBEDS = [
+  {
+    name: 'youtube',
+    match: /(^|\.)(youtube\.com|youtube-nocookie\.com)$/,
+    on: (u) => u.searchParams.set('cc_load_policy', '1'),
+    off: (u) => u.searchParams.set('cc_load_policy', '0'),
+  },
+  {
+    name: 'vimeo',
+    match: /(^|\.)player\.vimeo\.com$/,
+    on: (u) => u.searchParams.set('texttrack', preferredLang()),
+    off: (u) => u.searchParams.delete('texttrack'),
+  },
+];
+
+// The embed spec for a frame, or null for a frame nothing here can caption.
+function embedFor(frame) {
+  let host;
+  try { host = new URL(frame.src, location.href).hostname; } catch { return null; }
+  return EMBEDS.find((e) => e.match.test(host)) || null;
+}
+
 const DATA = 'ai4a11yCaptions'; // dataset marker on a handled <video>
 
 export const ShowCaptions = {
@@ -49,6 +91,8 @@ export const ShowCaptions = {
   _restore: [],        // [{ track, prevMode }] for native tracks we switched on
   _clicked: null,      // Set of "player|url" we've already turned on (once per URL)
   _unregister: null,
+  _current: null,      // the embed the person is using, if they have used one
+  _embedSrc: new Map(),// frame -> the src it had before captions were switched on
 
   // Enable the best caption/subtitle track on each <video> that has one, once.
   _enableNativeTracks() {
@@ -81,10 +125,50 @@ export const ShowCaptions = {
     }
   },
 
+  // Which embed the person is using. A click inside a cross-origin frame never
+  // reaches this document as an event, but it does move focus, and
+  // activeElement then names the frame that took it. That is the only thing
+  // this page is ever told about what someone is watching.
+  //
+  // Read when it is wanted, rather than followed. The obvious signal — a blur
+  // on this window — never arrives: this document is itself framed, so it never
+  // held the focus it would have to lose, and the click moves focus straight
+  // past it into the player. Measured on a page of four embeds: zero blur
+  // events, and activeElement already correct.
+  //
+  // activeElement is per-document, so it keeps naming the player even after the
+  // person has gone off to type "turn on captions" somewhere else entirely —
+  // which is exactly when this gets asked.
+  _currentEmbed() {
+    const a = document.activeElement;
+    if (a && a.tagName === 'IFRAME' && embedFor(a)) this._current = a;
+    return this._current && this._current.isConnected ? this._current : null;
+  },
+
+  // Switch captions on for the embed in use, by reloading it with the parameter
+  // its player reads. Only that one, and only when the parameter would actually
+  // change — a reload the person did not ask for, that changes nothing, is pure
+  // loss of their place.
+  _enableEmbedCaptions() {
+    const frame = this._currentEmbed();
+    if (!frame) return;
+    const spec = embedFor(frame);
+    if (!spec) return;
+    let url;
+    try { url = new URL(frame.src, location.href); } catch { return; }
+    spec.on(url);
+    const next = url.toString();
+    if (next === frame.src) return;
+    if (!this._embedSrc.has(frame)) this._embedSrc.set(frame, frame.src);
+    frame.src = next;
+    logFix('showCaptions', frame, '(embed off)', 'embed on');
+  },
+
   _sweep() {
     if (!this.enabled) return;
     this._enableNativeTracks();
     this._enablePlayerCaptions();
+    this._enableEmbedCaptions();
   },
 
   enable() {
@@ -104,6 +188,13 @@ export const ShowCaptions = {
     for (const { track, prevMode } of this._restore) { try { track.mode = prevMode; } catch {} }
     this._restore = [];
     for (const v of document.querySelectorAll('video[data-ai4a11y-captions]')) delete v.dataset[DATA];
+    // Put the embeds back the way they were, which reloads them again — the
+    // same cost as switching captions on, and the same reason: the parameter
+    // is only read when the player loads.
+    for (const [frame, src] of this._embedSrc) {
+      try { if (frame.isConnected && frame.src !== src) frame.src = src; } catch { /* gone */ }
+    }
+    this._embedSrc = new Map();
     this._clicked = null;
     console.log('[AI4A11y] Show Captions disabled');
   },
