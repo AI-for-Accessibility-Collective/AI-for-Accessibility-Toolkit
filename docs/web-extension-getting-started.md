@@ -49,5 +49,4 @@ toolkit profile. The counterpart for non-web hosts:
   the reference implementation).
 - **Before you rely on it**: this is a pre-alpha research probe; the
   adapters are demonstrations whose effectiveness is not yet validated.
-  Carry that framing into anything you ship on top of it (see "Forks and
-  spin-offs" in [../CONTRIBUTING.md](../CONTRIBUTING.md)).
+  Carry that framing into anything you ship on top of it.

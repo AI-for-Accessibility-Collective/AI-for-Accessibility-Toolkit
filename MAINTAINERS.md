@@ -40,8 +40,7 @@ roles, moderation of outside contributions, how improvements from forks
 are reconciled, and operation of any hosted services — **is being defined
 and will be recorded here when it is.** Until then:
 
-- Review of outside contributions is best-effort (see "What to expect
-  from review" in [CONTRIBUTING.md](CONTRIBUTING.md)).
+- Review of outside contributions is best-effort.
 - A CODEOWNERS file will be added when maintainer roles are designated
   (see [ROADMAP.md](ROADMAP.md), Governance).
 

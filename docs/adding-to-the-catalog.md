@@ -1,20 +1,20 @@
 # Adding to the catalog
 
-This page has the step-by-step instructions for adding a skill, adapter,
-auditor or profile. If you haven't set up the repository yet, start with
-[CONTRIBUTING.md](../CONTRIBUTING.md).
+Step-by-step instructions for adding a skill, adapter, auditor or profile. See
+[CONTRIBUTING.md](../CONTRIBUTING.md) for setting up.
 
-| I want to... | Where |
-|---|---|
-| Combine adapters for a need | A skill in `toolkit/skills/builtin/` |
-| Fix something on a page | An adapter in `tools/adapters/` |
-| Detect a barrier on a page | An auditor in `tools/auditors/` |
-| Tune or add a preset | A profile in `tools/profiles/settings.json` |
+| I want to... | Add a... | In |
+|---|---|---|
+| Combine adapters for a need | skill | `toolkit/skills/builtin/` |
+| Fix something on a page | adapter | `tools/adapters/` |
+| Find accessibility problems on a page | auditor | `tools/auditors/` |
+| Add or change a preset of starting settings | profile | `tools/profiles/settings.json` |
 
 ## Adding a skill
 
-Copy one of the four skills in `toolkit/skills/builtin/` (e.g.,
-`calm-browsing.md`) and change it. A skill looks like this:
+1. Copy one of the skills in `toolkit/skills/builtin/` (e.g., `calm-browsing.md`).
+
+2. Change the name, description and recipe. For example:
 
 ````markdown
 ---
@@ -42,60 +42,58 @@ Shows only the article, so there is less on the page pulling attention away.
 ```
 ````
 
-The JSON under `## Recipe` is what runs, so make sure the text above it says
-the same thing. A few rules that the tests check:
+3. Run the tests.
 
-- Adapter ids and setting keys have to exist in `toolkit/registry/tools.js`.
-- `supportAreas` can only use vision, hearing, motor, cognitive, reading and
-  sensory.
-- `siteRelevance` can only use the categories in `toolkit/core/taxonomy.js`,
-  or `all`.
+```bash
+node toolkit/test/skill-test.js
+npm test
+```
 
-Please use one to four adapters. Start the description with what the skill
-helps with, and only mention conditions as examples (e.g., "common with ADHD
-or dyslexia"). Then run
-`node toolkit/test/skill-test.js` and `npm test`.
+Notes:
+
+- The recipe can only use adapter ids and setting keys from
+  `toolkit/registry/tools.js`.
+- `supportAreas` can be vision, hearing, motor, cognitive, reading or sensory.
+- `siteRelevance` can be any category in `toolkit/core/taxonomy.js`, or `all`.
+- Use one to four adapters.
+- Start the description with what the skill helps with, and mention conditions
+  only as examples (e.g., "common with ADHD or dyslexia").
 
 ## Adding an adapter
 
-We recommend copying `tools/adapters/reading-ruler.js`. An adapter is either an
-object with `enable()` and `disable()`, where `disable()` undoes everything
-(e.g., `ReadingRuler`), or a set of one-way fix functions plus an
-`axeHandlers` map (e.g., `fix-tables.js`).
-
-Several files need to know about a new adapter. This lists them for
-`reading-ruler`:
+An adapter is either an object with `enable()` and `disable()` (e.g.,
+`tools/adapters/reading-ruler.js`), or a set of functions that fix a page once
+(e.g., `tools/adapters/fix-tables.js`). We recommend copying `reading-ruler.js`
+to start. This lists every file that mentions it:
 
 ```bash
 grep -rln "ReadingRuler\|reading-ruler\|readingRuler" tools toolkit cli scripts
 ```
 
-The steps:
-
 1. Write `tools/adapters/<name>.js`.
-2. Export it from `tools/adapters/index.js`, and add its `axeHandlers` to the
-   combined map there if it has any.
-3. List it in `tools/test/adapter-conformance-test.js`, in `TOOL_OBJECTS` or
-   `ADDITIVE_MODULES`.
-4. Add an entry to `toolkit/registry/tools.js` (copy the `reading-ruler` one),
-   and add any new setting key to `settingsMeta` in the same file.
-5. Add a line to `adaptersForTools` in `tools/profiles/settings.js` that maps
-   the setting key to your file.
-6. Write a test in `tools/test/` (e.g., `reading-ruler-test.js`).
-7. Run `npm run build:types` and `npm run build:cli`, and commit what changes.
 
-If you miss a step, the failing check in `npm test` usually says what is
-missing.
+2. Export it from `tools/adapters/index.js`. If it fixes axe rules, add its
+   `axeHandlers` there too.
 
-> **Note**: if your adapter changes layout or styles, also add a check to
-> `tools/test/browser-validate.js` (see [Testing](#testing)), since the
-> regular tests can't see those.
+3. Add it to `TOOL_OBJECTS` in `tools/test/adapter-conformance-test.js` (or
+   `ADDITIVE_MODULES` if it fixes a page once).
+
+4. Add an entry to `toolkit/registry/tools.js`, and add any new setting key to
+   `settingsMeta` in the same file.
+
+5. Add a line for it to `adaptersForTools` in `tools/profiles/settings.js`.
+
+6. Add a test in `tools/test/` (e.g., `reading-ruler-test.js`).
+
+7. Run `npm run build:types` and `npm run build:cli`, and commit the changes.
+
+*(Optional)* If your adapter changes layout or styles, also add a check in
+`tools/test/browser-validate.js`.
 
 ## Adding an auditor
 
-An auditor finds a barrier on a page so an adapter can fix it. We use
-axe-core for standard WCAG checks, so write one only for what axe misses. An
-auditor is usually one function:
+Auditors find accessibility problems that axe-core misses. An auditor is
+usually one function:
 
 ```js
 // tools/auditors/missing-headings.js
@@ -107,19 +105,21 @@ export function findSectionsWithoutHeadings() {
 }
 ```
 
-Then add `export * from './missing-headings.js';` to
-`tools/auditors/index.js`.
+Then export it from `tools/auditors/index.js`:
+
+```js
+export * from './missing-headings.js';
+```
 
 ## Adding a profile
 
-A profile (also called a preset) is a set of starting settings for a new user,
-before they've changed anything themselves. There are twelve, each described in
-[PROFILE-CARDS.md](PROFILE-CARDS.md), and most changes will be tuning one of
-them.
+There are twelve profiles in `tools/profiles/settings.json`, described in
+[PROFILE-CARDS.md](PROFILE-CARDS.md). To change one, edit its `tools`
+settings.
 
-If you want to add a new one, please open an issue first, since it needs to be
-based on published research like the other twelve. It goes inside the
-`"profiles"` object in `tools/profiles/settings.json`:
+To add a new profile, please open an issue first. A new profile also needs:
+
+- An entry in the `"profiles"` object:
 
 ```json
 "myProfile": {
@@ -129,19 +129,18 @@ based on published research like the other twelve. It goes inside the
 }
 ```
 
-You'll also need to update the list and the count of 12 in
-`tools/test/profiles-test.js`, and add a card to
-[PROFILE-CARDS.md](PROFILE-CARDS.md). In the `description`, say what the
-preset does rather than who its users are.
+- The updated list and count of profiles in `tools/test/profiles-test.js`.
+- A card in [PROFILE-CARDS.md](PROFILE-CARDS.md).
+
+In the description, say what the profile does, not who it is for.
 
 ## Testing
 
-`npm test` is the main check. It stops at the first file that fails, so if the
-failure isn't clear, run the test file you changed on its own (e.g.,
-`node tools/test/reading-ruler-test.js`).
+Run `npm test` before opening a PR. It stops at the first failing file, so to
+debug, run one test file at a time (e.g., `node tools/test/reading-ruler-test.js`).
 
 If you changed `onboarding/`, `controller/`, `tools/`, `toolkit/` or
-`server/src/`, please also run the two browser suites:
+`server/src/`, also run the browser tests:
 
 ```bash
 npx playwright install --only-shell chromium   # once
@@ -149,32 +148,30 @@ npm run validate:browser
 npm run test:e2e
 ```
 
-CI runs these in a separate job (`.github/workflows/browser.yml`) that doesn't
-block a merge, but please look at a red result before asking for review.
+These also run in CI (`.github/workflows/browser.yml`), but don't block
+merging.
 
-Some files are generated, so instead of editing them by hand, regenerate them
-and commit the result:
+Regenerate these files instead of editing them by hand:
 
 | If you changed... | Run |
 |---|---|
-| the core API in `toolkit/` | `npm --prefix toolkit run docs` (updates `toolkit/API.md` and the toolkit skill) |
-| any code in `toolkit/`, including the registry | `npm run build:types` |
+| the core API in `toolkit/` | `npm --prefix toolkit run docs` |
+| any code in `toolkit/` | `npm run build:types` |
 | an adapter, or anything else the CLI uses | `npm run build:cli` |
 | a server route | `npm --prefix server run docs` |
 
 ## Package boundaries
 
 `toolkit/`, `tools/`, `server/`, `controller/`, `onboarding/` and `cli/` are
-separate packages, and `scripts/import-boundaries-test.mjs` (part of
-`npm test`) checks four rules for imports between them:
+separate packages, and `toolkit/` and `tools/` don't import from any of the
+others. `scripts/import-boundaries-test.mjs` checks four rules:
 
-1. An import into `toolkit/` or `tools/` only uses paths in that package's
-   `exports` map. Exceptions go in the test's `KNOWN_BREAKS` list.
-2. Every import between packages is allowed by the test's `ALLOWED` table and
-   listed in `KNOWN_EDGES` with a one-line reason.
+1. Imports into `toolkit/` or `tools/` only use paths in their `exports` map
+   (exceptions go in `KNOWN_BREAKS`).
+2. Every import between packages is allowed in `ALLOWED` and listed in
+   `KNOWN_EDGES` with a reason.
 3. There are no cycles.
-4. A new import between packages is mentioned in the PR description.
+4. New imports between packages are mentioned in the PR.
 
-In practice, if you add an import from one package into another and the test
-fails, add the pair it prints to `KNOWN_EDGES` with a reason. If it says the
-direction isn't allowed, please open an issue instead of editing `ALLOWED`.
+If the test fails after you add an import, add the pair it prints to
+`KNOWN_EDGES`. If the import isn't allowed, please open an issue.

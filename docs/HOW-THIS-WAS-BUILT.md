@@ -77,4 +77,4 @@ Structurally, at the level the Collective could do well in a one-year research p
   are all part of the same commitment this page is.
 - Expect the invitation to be real: the Collective's phase ends, the
   repositories remain, and the model is that others fork, build, and send
-  learnings back. See [CONTRIBUTING](../CONTRIBUTING.md).
+  learnings back.

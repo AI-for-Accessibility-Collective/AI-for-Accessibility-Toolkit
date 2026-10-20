@@ -151,7 +151,7 @@ results rather than crash. Details, including the two separate AI seams:
 
 - **Contribute a skill.** Combine adapters into a `SKILL.md` recipe others can pull. No code, and it exercises the whole validation path.
 - **Add an adapter or auditor.** Teach the toolkit to spot a new barrier, or add the adaptation that removes it.
-- **Take the components home.** Everything is Apache 2.0; build it into your own application, on any platform. Forks and spin-off versions are part of how this project is meant to be used; see "Forks and spin-offs" in [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Take the components home.** Everything is Apache 2.0; build it into your own application, on any platform. Forks and spin-off versions are part of how this project is meant to be used.
 - **Shape the benchmarks.** Help define how we verify that an adaptation improved accessibility for the person it was meant for.
 
 Start at [CONTRIBUTING.md](CONTRIBUTING.md). The short version: one feature
