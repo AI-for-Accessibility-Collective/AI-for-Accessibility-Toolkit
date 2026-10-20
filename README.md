@@ -123,6 +123,13 @@ node examples/cross-surface.mjs         # one profile turned into web and XR set
 [docs/QUICKSTART.md](docs/QUICKSTART.md) walks through the code, and
 [`toolkit/API.md`](toolkit/API.md) lists every method.
 
+To see a whole app built on it, run the
+[reader demo](https://github.com/AI-for-Accessibility-Collective/ai4a11y-reader-demo):
+a one-page reading app you talk to ("bigger text", "I'm dyslexic", "read
+this") that keeps the person's needs in the toolkit and renders them with the
+catalog. Its README is a tutorial for building your own host; it needs a
+Gemini key.
+
 ## Building on it
 
 There are four ways to use the toolkit:

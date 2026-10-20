@@ -42,6 +42,13 @@ lockfile integrity hashes in step. Copy it if you want the same
 upgrade-by-deliberate-pin-bump discipline; for a first integration, the
 two `npm pack` commands above are enough.
 
+A **worked example** of a consumer is the
+[reader demo](https://github.com/AI-for-Accessibility-Collective/ai4a11y-reader-demo):
+one page, the toolkit running in the browser over a `localStorage` KVStore
+port, needs rendered with `renderWebSettings` and applied with three catalog
+adapters, the two tarballs in its `vendor/` with a `scripts/vendor.sh` that
+re-packs them from a checkout. Its README walks the code step by step.
+
 Two alternatives, depending on what you are building:
 
 - **Any language, no JS runtime**: run the hosted HTTP service
