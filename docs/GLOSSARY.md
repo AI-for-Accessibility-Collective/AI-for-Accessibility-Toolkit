@@ -103,8 +103,8 @@ tasks to the Engineer; the Engineer's skills reach the store only through
 the Librarian, after the person validates; other applications read the
 profile through the Librarian, with permission, never from the store.
 
-The new-primitive-versus-new-recipe test for contributors is in
-[CONTRIBUTING.md](../CONTRIBUTING.md#skill-or-adapter).
+When to write a skill and when to write an adapter is explained in
+[CONTRIBUTING.md](../CONTRIBUTING.md#add-an-adapter-or-auditor).
 
 ## Principles
 

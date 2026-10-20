@@ -1,22 +1,33 @@
 # Getting help
 
-**Trying to use the browser extension?** Help for that lives in the
-[extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension)
-(its SUPPORT and Getting Started pages). This repository is the developer
-library.
+This repository is the developer toolkit. For help with the browser
+extensions, see the extension repository's
+[SUPPORT.md](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension/blob/main/SUPPORT.md)
+and
+[Getting Started](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension/blob/main/docs/GETTING-STARTED.md)
+guide.
 
-This is a research probe: there is no support SLA. What exists:
+## Docs
 
-1. **Docs first**: the [README](README.md), [docs/](docs/README.md), the
-   generated [toolkit/API.md](toolkit/API.md), and the runnable demos
-   (`node toolkit/hosts/xr-demo/demo.js`, `skill-demo`).
-2. **Bugs and questions**: open an issue here — for the core, catalog,
-   server, controller, onboarding example, or CLI. Extension bugs go to
-   the extension repository. Never used GitHub? Email works too — the
-   current address is in [MAINTAINERS.md](MAINTAINERS.md).
-3. **Security problems**: never a public issue — see
-   [SECURITY.md](SECURITY.md).
-4. **Contact routes**: [MAINTAINERS.md](MAINTAINERS.md).
+- [README.md](README.md): what the toolkit is and how to use it
+- [docs/QUICKSTART.md](docs/QUICKSTART.md): run the demos and use the core in
+  your own code
+- [toolkit/API.md](toolkit/API.md): every method in the core
+- [docs/](docs/README.md): everything else
 
-Reports of what you tried to build and where the toolkit fought you are
-research data, not noise — please send them.
+## Questions and bugs
+
+Open an issue on this repository. For a bug, the bug report template asks
+what you did, what you expected and what happened instead.
+
+If you'd rather not use GitHub, you can email us (the address is in
+[MAINTAINERS.md](MAINTAINERS.md)).
+
+## Security problems
+
+Please don't open a public issue. See [SECURITY.md](SECURITY.md).
+
+## Feedback
+
+If you tried the toolkit, we'd like to know what worked and what didn't. You
+can open an issue or email us.

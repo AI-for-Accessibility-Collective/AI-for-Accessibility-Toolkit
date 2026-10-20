@@ -6,7 +6,7 @@ Step-by-step instructions for adding a skill, adapter, auditor or profile. See
 | I want to... | Add a... | In |
 |---|---|---|
 | Combine adapters for a need | skill | `toolkit/skills/builtin/` |
-| Fix something on a page | adapter | `tools/adapters/` |
+| Change a page in a new way | adapter | `tools/adapters/` |
 | Find accessibility problems on a page | auditor | `tools/auditors/` |
 | Add or change a preset of starting settings | profile | `tools/profiles/settings.json` |
 
@@ -61,31 +61,67 @@ Notes:
 
 ## Adding an adapter
 
-An adapter is either an object with `enable()` and `disable()` (e.g.,
-`tools/adapters/reading-ruler.js`), or a set of functions that fix a page once
-(e.g., `tools/adapters/fix-tables.js`). We recommend copying `reading-ruler.js`
-to start. This lists every file that mentions it:
+Most adapters are an object you turn on and off with `enable()` and
+`disable()`, like `ReadingRuler` in `tools/adapters/reading-ruler.js`. A few
+are functions that fix a page once, like `tools/adapters/fix-tables.js`.
 
-```bash
-grep -rln "ReadingRuler\|reading-ruler\|readingRuler" tools toolkit cli scripts
-```
+The easiest way to start is to copy `reading-ruler.js`. Each step below shows
+the line `reading-ruler` uses, so you can add the same line for your adapter.
 
 1. Write `tools/adapters/<name>.js`.
 
-2. Export it from `tools/adapters/index.js`. If it fixes axe rules, add its
-   `axeHandlers` there too.
+2. Export it in `tools/adapters/index.js`.
 
-3. Add it to `TOOL_OBJECTS` in `tools/test/adapter-conformance-test.js` (or
-   `ADDITIVE_MODULES` if it fixes a page once).
+```js
+export { ReadingRuler } from './reading-ruler.js';
+```
 
-4. Add an entry to `toolkit/registry/tools.js`, and add any new setting key to
-   `settingsMeta` in the same file.
+3. Add its name to `TOOL_OBJECTS` in `tools/test/adapter-conformance-test.js`
+   (for an adapter that fixes a page once, add the file name to
+   `ADDITIVE_MODULES` instead).
 
-5. Add a line for it to `adaptersForTools` in `tools/profiles/settings.js`.
+```js
+const TOOL_OBJECTS = [ ..., 'ReadingRuler', ... ];
+```
 
-6. Add a test in `tools/test/` (e.g., `reading-ruler-test.js`).
+4. Add an entry in `toolkit/registry/tools.js`.
 
-7. Run `npm run build:types` and `npm run build:cli`, and commit the changes.
+```js
+{
+  id: 'reading-ruler',
+  name: 'Reading Ruler',
+  description: 'A soft highlight band that follows your cursor down the page ...',
+  supportAreas: ['reading', 'cognitive'],
+  siteRelevance: ['news', 'education', 'reference'],
+  requiresAI: false,
+  icon: 'horizontal_rule',
+  emoji: '\u{1F4CF}',
+  quickStart: false,
+  settings: { readingRuler: true },
+},
+```
+
+5. Add its setting key to `settingsMeta`, further down the same file.
+
+```js
+readingRuler: { type: 'boolean', description: 'A highlight band that follows your reading line' },
+```
+
+6. In `tools/profiles/settings.js`, add a line to `adaptersForTools` so that
+   the setting turns on your adapter.
+
+```js
+if (tools.readingRuler) enabled.push('reading-ruler');
+```
+
+7. Add a test in `tools/test/` (e.g., `reading-ruler-test.js`).
+
+8. Rebuild the type declarations and the CLI bundle, and commit the changes.
+
+```bash
+npm run build:types
+npm run build:cli
+```
 
 *(Optional)* If your adapter changes layout or styles, also add a check in
 `tools/test/browser-validate.js`.
@@ -105,7 +141,7 @@ export function findSectionsWithoutHeadings() {
 }
 ```
 
-Then export it from `tools/auditors/index.js`:
+Then export it in `tools/auditors/index.js`.
 
 ```js
 export * from './missing-headings.js';
@@ -117,9 +153,9 @@ There are twelve profiles in `tools/profiles/settings.json`, described in
 [PROFILE-CARDS.md](PROFILE-CARDS.md). To change one, edit its `tools`
 settings.
 
-To add a new profile, please open an issue first. A new profile also needs:
+To add a new profile, please open an issue first. A new profile needs:
 
-- An entry in the `"profiles"` object:
+1. An entry in the `"profiles"` object.
 
 ```json
 "myProfile": {
@@ -129,8 +165,9 @@ To add a new profile, please open an issue first. A new profile also needs:
 }
 ```
 
-- The updated list and count of profiles in `tools/test/profiles-test.js`.
-- A card in [PROFILE-CARDS.md](PROFILE-CARDS.md).
+2. The updated list and count of profiles in `tools/test/profiles-test.js`.
+
+3. A card in [PROFILE-CARDS.md](PROFILE-CARDS.md).
 
 In the description, say what the profile does, not who it is for.
 
@@ -140,7 +177,7 @@ Run `npm test` before opening a PR. It stops at the first failing file, so to
 debug, run one test file at a time (e.g., `node tools/test/reading-ruler-test.js`).
 
 If you changed `onboarding/`, `controller/`, `tools/`, `toolkit/` or
-`server/src/`, also run the browser tests:
+`server/src/`, also run the browser tests.
 
 ```bash
 npx playwright install --only-shell chromium   # once
@@ -151,7 +188,8 @@ npm run test:e2e
 These also run in CI (`.github/workflows/browser.yml`), but don't block
 merging.
 
-Regenerate these files instead of editing them by hand:
+Some files are built from other code. Rebuild them instead of editing them by
+hand:
 
 | If you changed... | Run |
 |---|---|

@@ -1,25 +1,22 @@
 ## What does this PR do?
 
-## Which part(s) does it affect?
+## Which parts of the repository does it change?
 
-- [ ] Core (`toolkit/core/` — Librarian, datastore, ability model, broker, skill engine)
-- [ ] Ports / surfaces (`toolkit/ports/`, `toolkit/surfaces/`)
-- [ ] Platform bindings / host port impls (`toolkit/platforms/`)
-- [ ] Catalog: auditors (`tools/auditors/`)
-- [ ] Catalog: adapters (`tools/adapters/`)
-- [ ] Catalog: profiles (`tools/profiles/`)
-- [ ] Registry / built-in skills (`toolkit/registry/`, `toolkit/skills/builtin/`)
+- [ ] Core (`toolkit/`)
+- [ ] Skills or registry (`toolkit/skills/builtin/`, `toolkit/registry/`)
+- [ ] Adapters, auditors or profiles (`tools/`)
 - [ ] Hosted service (`server/`)
+- [ ] Controller (`controller/`)
+- [ ] Onboarding example (`onboarding/`)
+- [ ] CLI (`cli/`)
 - [ ] Docs
 
-## Who benefits?
+## Who does it help?
 
-Which needs/profiles/disabilities does this help?
+Which needs or profiles does this help?
 
-## How to test
+## How did you test it?
 
-1. `npm install`
-2. `npm test` (tools, toolkit, controller, and onboarding suites, plus the import-boundary check)
-3. Relevant demos: `node toolkit/hosts/xr-demo/demo.js`, `node toolkit/hosts/skill-demo/demo.js`, `node server/test/server-test.mjs`
-4. If you touched `onboarding/`, `controller/`, `tools/`, `toolkit/`, or `server/src/`: `npx playwright install chromium` once, then `npm run validate:browser` and `npm run test:e2e` (see Testing in docs/adding-to-the-catalog.md)
-5. If you changed the core API, regenerate `toolkit/API.md` + the skill and commit the result.
+- [ ] `npm test` passes
+- [ ] If I changed `onboarding/`, `controller/`, `tools/`, `toolkit/` or `server/src/`, `npm run validate:browser` and `npm run test:e2e` pass
+- [ ] If I changed code that generated files are built from, I regenerated them (see Testing in docs/adding-to-the-catalog.md)

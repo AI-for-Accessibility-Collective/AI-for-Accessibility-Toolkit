@@ -1,37 +1,55 @@
-# Security Policy
+# Security policy
 
-This policy covers this repository: the toolkit core, the tools catalog, the hosted service (`server/`), and the onboarding example. The browser extensions have their own policy in the [extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension/blob/main/SECURITY.md). This is a pre-alpha research probe; a security review before any public release is an open roadmap item.
+This policy covers this repository: the toolkit core, the tools catalog, the
+hosted service (`server/`) and the onboarding example. The browser extensions
+have their own policy in the
+[extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension/blob/main/SECURITY.md).
 
-## Reporting a Vulnerability
+This is a research prototype and hasn't had a security review yet (it's on the
+[roadmap](ROADMAP.md) before any public release).
 
-1. **Do not** open a public issue
-2. Use GitHub's **Report a vulnerability** button on this repository's
-   Security tab (private vulnerability reporting). If that is unavailable
-   to you, email the maintainer contact listed in
-   [MAINTAINERS.md](MAINTAINERS.md)
-3. Include: a description, steps to reproduce, potential impact, and a suggested fix if you have one
+## Reporting a vulnerability
 
-We aim to acknowledge reports within a week; this is a research project and
-response capacity varies with the project phase. There are no tagged
-releases yet; until the first one, only the current state of the default
-branch is supported.
+Please don't open a public issue.
 
-## Facts worth knowing
+1. Go to this repository's **Security** tab and click **Report a
+   vulnerability**. If you can't, email the address in
+   [MAINTAINERS.md](MAINTAINERS.md).
 
-- **The library never holds an API key.** The AI provider is injected by the host (`tools/utils/ai.js`); key storage and transmission are the host's responsibility. The hosted service is itself such a host: `server/` reads `GEMINI_API_KEY` from its environment and holds it for the life of the deployment, so a deployer owns that key's handling.
-- **Profile ids are credentials.** The onboarding service's routes are unauthenticated by design; the profile id itself is the capability, so treat an id like a private share link. Details in [onboarding/README.md](onboarding/README.md).
-- **The hosted service uses bearer tokens.** See [server/README.md](server/README.md) before deploying. Its Gemini calls send the key in a request header, not in the URL, so it stays out of access logs.
-- **The CLI can fetch axe-core from a CDN.** `cli/axe-core.min.js` is vendored, and `session audit` uses it. If that file is missing from an install, the CLI downloads the same version from cdnjs over HTTPS with no integrity check and writes it next to the package. A deployer who wants no network fetch should confirm the vendored file is present.
-- **Cross-app sharing is gated by explicit, revocable grants** (`toolkit/sync/grants.js`); free text and confidence scores are never exported through them.
+2. Include a description, steps to reproduce, the possible impact, and a fix
+   if you have one.
 
-## Practices for Contributors
+We aim to reply within a week. There are no releases yet, so only the latest
+`main` branch is supported.
 
-1. Never use `innerHTML` with user or AI-generated content without sanitizing
-2. Avoid `eval()`, `Function()`, and similar dynamic code execution
-3. Use `textContent` for text-only insertions
-4. Validate all inputs from external sources (AI responses, user input)
-5. Keep dependencies up to date
+## Things to know
 
-## Acknowledgments
+- The toolkit never stores an API key. The host passes in the AI provider
+  (`tools/utils/ai.js`) and is responsible for its key. For example,
+  `server/` reads `GEMINI_API_KEY` from its environment and keeps it while it
+  runs, so whoever deploys it is responsible for that key.
+- Keep profile ids private. The onboarding service's routes have no login on
+  purpose, so anyone with a profile id can use that profile (see
+  [onboarding/README.md](onboarding/README.md)).
+- The hosted service uses bearer tokens (see
+  [server/README.md](server/README.md) before deploying). It sends the Gemini
+  key in a request header, not in the URL, so the key stays out of access
+  logs.
+- The CLI may download axe-core. `session audit` uses the bundled
+  `cli/axe-core.min.js`. If that file is missing, the CLI downloads the same
+  version from cdnjs over HTTPS without an integrity check and saves it next
+  to the package. If you don't want any network requests, check that the
+  bundled file is there.
+- Sharing a profile with another app needs a grant that the user can revoke
+  (`toolkit/sync/grants.js`). Free text and confidence scores are never shared
+  through a grant.
 
-We thank our security researchers and community members who help keep this project secure.
+## For contributors
+
+1. Don't use `innerHTML` with user or AI-generated content unless you sanitize
+   it.
+2. Don't use `eval()`, `Function()` or similar.
+3. Use `textContent` to insert text.
+4. Validate everything from outside sources, including AI responses and user
+   input.
+5. Keep dependencies up to date.

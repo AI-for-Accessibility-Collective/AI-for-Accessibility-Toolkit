@@ -1,49 +1,48 @@
-# Maintainers, contact routes, and governance
+# Maintainers and contacts
 
-This page is the single place other documents point to for contact routes
-and for who decides. When a route changes, it changes here.
+Other docs link here for contact details, so if a contact changes, update it
+here.
 
-## Current routes
+## Contacts
 
-| Purpose | Route |
+| For | Contact |
 |---|---|
-| Bugs, questions, feedback | This repository's [issues](../../issues) |
-| Security disclosure | GitHub private vulnerability reporting (Security tab) |
-| Code of conduct reports | Email the Collective's current PMO contact point: josephine.chu@dalberg.com |
-| Everything else | Email the Collective's current PMO contact point: josephine.chu@dalberg.com |
+| Bugs, questions and feedback | This repository's [issues](../../issues) |
+| Security problems | **Report a vulnerability** on this repository's Security tab (see [SECURITY.md](SECURITY.md)) |
+| Code of conduct reports | josephine.chu@dalberg.com, the Collective's project management contact |
+| Anything else | josephine.chu@dalberg.com |
 
-## Current maintainers and decision-making
+## Who maintains this
 
-These repositories are outputs of the **AI for Accessibility Collective**,
-a multi-institution research initiative whose funded phase runs through
-November 2026. During this phase the repositories are maintained by the
-Collective's project team, which decides what merges, what gets released,
-and how disclosures are worded. Individual code contributions are recorded
-in the repository history; the citation entry (CITATION.cff) currently
-credits the Collective as a whole.
+These repositories come from the AI for Accessibility Collective, a research
+project across several institutions, funded through November 2026. Until
+then, the Collective's project team maintains them and decides what gets
+merged, what gets released and how disclosures are worded.
+
+Each person's code contributions are in the git history. The citation entry
+([CITATION.cff](CITATION.cff)) credits the Collective as a whole.
 
 ## Repositories
 
-| Repository | Canonical for |
+| Repository | Has |
 |---|---|
-| `AI-for-Accessibility-Toolkit` | The core library, the tools catalog, the hosted service, the CLI, the project inventory (`docs/projects.md`), the contribution-card template, this page |
-| `AI-for-Accessibility-Extension` | The browser extensions, the prototype web apps |
+| `AI-for-Accessibility-Toolkit` | The core library, the tools catalog, the hosted service, the CLI, the project list (`docs/projects.md`), the contribution card template and this page |
+| `AI-for-Accessibility-Extension` | The browser extensions and the prototype web apps |
 
-CODE_OF_CONDUCT.md exists in both repositories and is kept in sync by
-hand, as are the contact routes in the two MAINTAINERS.md files; treat
-this repository's copies as canonical.
+Both repositories have the same `CODE_OF_CONDUCT.md` and the same contacts
+table in `MAINTAINERS.md`, which we keep in sync by hand. If they ever differ,
+the copies in this repository are the right ones.
 
-## After the research phase
+## After November 2026
 
-Longer-term stewardship — custodianship of the repositories, maintainer
-roles, moderation of outside contributions, how improvements from forks
-are reconciled, and operation of any hosted services — **is being defined
-and will be recorded here when it is.** Until then:
+We haven't decided yet who will maintain these repositories after the
+research phase, e.g., who reviews outside contributions, merges changes from
+forks and runs the hosted service. We'll add it here once we have.
 
-- Review of outside contributions is best-effort.
-- A CODEOWNERS file will be added when maintainer roles are designated
-  (see [ROADMAP.md](ROADMAP.md), Governance).
+Until then, we review outside contributions when we have time. We'll add a
+CODEOWNERS file once maintainers are named (see Governance in
+[ROADMAP.md](ROADMAP.md)).
 
-## Raising a governance question
+## Governance questions
 
-Open an issue with the `governance` label on this repository.
+Open an issue on this repository.
