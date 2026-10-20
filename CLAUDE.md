@@ -66,8 +66,8 @@ skill for the full surface.
   deterministically at apply-time (no LLM). Starter recipes: `toolkit/skills/builtin/`.
 - **Auditor** — code in `tools/auditors/` that finds issues for adapters to fix.
 - **Validators** — `tools/validators/`, the verifier engine for agentic flows.
-  Meeting notes may say "validation layer" or "verification agent"; in docs and
-  code the repository's own name, **validators**, is the one to use.
+  In docs, call the layer the **verification layer**, never the "validation
+  layer" (David, 2026-10-20). In code, the module name **validators** stays.
 - **Port / Surface / Host** — a host implements ports and (optionally) a surface;
   the core stays platform-free.
 

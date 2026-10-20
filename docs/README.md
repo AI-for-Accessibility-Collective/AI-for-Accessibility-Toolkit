@@ -75,7 +75,7 @@ and independent of the core.
 - [adapter-robustness-plan.md](design/adapter-robustness-plan.md): Demand × differentiation plan behind the adapter-robustness program (W1–W5).
 - [observable-settings.md](design/observable-settings.md): Survey of OS/browser accessibility settings a host can observe.
 - [adapter-overlap.md](design/adapter-overlap.md): Overlap audit of built-in adapters vs. existing tools.
-- [verifier-architecture.md](design/verifier-architecture.md): The validation layer: validators, human contract, agent overlay.
+- [verifier-architecture.md](design/verifier-architecture.md): The verification layer: validators, human contract, agent overlay.
 - [skill-builder-plan.md](design/skill-builder-plan.md): Original plan for the builder UI (predates the skill/adapter split).
 - [skill-builder-handoff.md](design/skill-builder-handoff.md): Original hand-off spec for that builder implementation.
 - [generative-ephemeral-ui-brainstorm.md](design/generative-ephemeral-ui-brainstorm.md): Brainstorm on generative ephemeral UI for accessibility.
