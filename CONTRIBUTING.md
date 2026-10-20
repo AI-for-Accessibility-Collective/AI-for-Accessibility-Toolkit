@@ -25,16 +25,21 @@ You don't need to write any code. Copy one of the skills in
 `toolkit/skills/builtin/` and follow
 [Adding a skill](docs/adding-to-the-catalog.md#adding-a-skill).
 
-### Add an adapter or auditor
+### Add an adapter
 
 An adapter is code that makes one change to a page. For example,
 `reading-ruler` adds a highlight band that follows your cursor, and
-`generate-alt` writes alt text for images with AI. An auditor is code that
-finds accessibility problems that axe-core misses, e.g., sections without
-headings.
+`generate-alt` writes alt text for images with AI.
 
 If the adapters you need already exist, write a skill instead. Otherwise,
-follow [Adding an adapter](docs/adding-to-the-catalog.md#adding-an-adapter) or
+follow [Adding an adapter](docs/adding-to-the-catalog.md#adding-an-adapter).
+
+### Add an auditor
+
+An auditor is code that finds accessibility problems on a page. For example,
+`findEmptyLinks` finds links with no accessible name. The catalog already runs
+axe-core for the standard WCAG checks, so write a new auditor for problems axe
+doesn't check. Follow
 [Adding an auditor](docs/adding-to-the-catalog.md#adding-an-auditor).
 
 ### Build an example app

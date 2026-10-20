@@ -104,7 +104,7 @@ the Librarian, after the person validates; other applications read the
 profile through the Librarian, with permission, never from the store.
 
 When to write a skill and when to write an adapter is explained in
-[CONTRIBUTING.md](../CONTRIBUTING.md#add-an-adapter-or-auditor).
+[CONTRIBUTING.md](../CONTRIBUTING.md#add-an-adapter).
 
 ## Principles
 

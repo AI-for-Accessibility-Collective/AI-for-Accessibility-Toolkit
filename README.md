@@ -1,32 +1,37 @@
 # AI for Accessibility Toolkit
 
-**An open toolkit for building solutions that adapt digital channels to the person, instead of asking the person to adapt.**
+**An open toolkit for building apps that adapt to each person's accessibility needs.**
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-[How it fits](#what-this-is) · [Four terms](#four-terms-to-know-and-what-they-are-called-in-the-code) · [Who it is for](#who-it-is-for) · [Use it](#how-you-can-use-it) · [Contribute](#contributing) · [Docs](docs/README.md)
+[What it is](#what-it-is) · [Key terms](#key-terms) · [Who it's for](#who-its-for) · [Try it](#try-it) · [Contributing](#contributing) · [Docs](docs/README.md)
 
 ---
 
-**Not a developer?** The browser extensions built on this toolkit live in the
+**Not a developer?** The browser extensions built on this toolkit are in the
 [extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension),
-with an install guide that needs no coding. This page is for developers.
-A plain-words overview of the whole project: [docs/TLDR.md](docs/TLDR.md).
+with an install guide that needs no coding. There's also a plain-language
+overview in [docs/TLDR.md](docs/TLDR.md).
 
-## What this is
+## What it is
 
-The toolkit is not a finished standalone solution: it is the set of components a developer takes, in whatever combination suits what they are building.
+The toolkit is a set of parts a developer can use to make an app adapt to a
+person. It can:
 
-The toolkit contains components that developers can use for learning what a person **needs**, keeping that information about their needs and preferences in a **profile**
-that stays local to their device, and sharing **skills** (sets of **adaptations** that change digital channels to fit a disabled user better) to their application.  The developer can decide how their applications will use these profiles and skills.
+- learn what a person needs, e.g., larger text or fewer animations,
+- keep those needs in a profile on the person's device,
+- and turn the profile into skills, which are sets of adaptations that change
+  the app for that person.
+
+You choose which parts to use and how your app uses them.
 
 ```mermaid
 flowchart LR
   accTitle: How the toolkit fits
-  accDescr: A person says what they need. Inside the toolkit, a profile holds that understanding and a skill says which adaptations fit. The host application applies the adaptation on its own surface. The person approves, corrects or undoes it, and the profile learns from that. A developer takes whichever toolkit components suit their application.
+  accDescr: A person says what they need. Inside the toolkit, a profile stores those needs and a skill says which adaptations fit. The host application applies the adaptation on its own surface. The person approves, corrects or undoes it, and the profile learns from that. A developer takes whichever toolkit components suit their application.
   subgraph T[The toolkit: take the components that fit your application]
     direction LR
-    A[Profile<br/>portable, consent-gated, the person's own] --> S[Skill<br/>which adaptations, at what settings]
+    A[Profile<br/>the person's own, shared only<br/>with their permission] --> S[Skill<br/>which adaptations, at what settings]
   end
   P[A person<br/>says what they need] --> A
   S --> D[Adaptation<br/>the host application applies it,<br/>on its own surface]
@@ -34,12 +39,13 @@ flowchart LR
   V -- the profile learns --> A
 ```
 
-How it could work: a person says what they need; the toolkit has a profile which can translate this into specific skills that fit the need; the host application applies the
-adaptation on its surface; the person approves, corrects or undoes it, and
-the profile learns from that. 
+A person says what they need, the profile picks skills that fit, your app
+applies the adaptations, and the person can approve, correct or undo each one.
+The profile learns from those choices.
 
-The toolkit is built to be channel agnostic. For example, the table below shows what the same profile could share to three different channels: a browser, a mobile application, or a wearable application, rendered by the renderers in [`toolkit/surfaces/`](toolkit/surfaces/)
-(input: `textSize` 1.5 as a floor, `darkTheme`, `reduceMotion`):
+The same profile works across platforms. For example, a profile with larger
+text (`textSize` 1.5), a dark theme and reduced motion becomes these settings
+in the renderers in [`toolkit/surfaces/`](toolkit/surfaces/):
 
 | Surface | What the host receives |
 |---|---|
@@ -47,131 +53,141 @@ The toolkit is built to be channel agnostic. For example, the table below shows 
 | `mobile.js` | `{ "text": { "scalePercent": 150, ... }, "display": { "darkMode": true, ... }, "motion": { "reduceMotion": true }, "touch": { "minTargetPt": 44 }, ... }` |
 | `xr.js` | `{ "text": { "angularSizeDeg": 0.525, "worldHeightM": 0.014 }, "ui": { "maxEccentricityDeg": 20, "darkEnvironmentPreferred": true }, "motion": { "reduced": true, "comfortVignette": true, "snapTurning": true }, ... }` |
 
-The mobile renderer's keys mirror the accessibility settings iOS and Android
-already expose. The XR renderer expresses text as an angle at the eye,
-because a font size means nothing in a headset. This all comes through the same profile: a person using applications across these three channels only needs to be onboarded once. The renderers for each new surface read the same profile.
+The mobile settings use the same names as the accessibility settings in iOS
+and Android. The XR renderer gives text size as an angle at the eye, since a
+font size doesn't mean much in a headset. A person only needs to set up their
+profile once to use it on all three.
 
-### Four terms to know, and what they are called in the code
+### Key terms
 
-Four terms are key to reading this repository. The internal names stay
-where they are in the code; this table is the map between the two. Full
-vocabulary and the design principles: [docs/GLOSSARY.md](docs/GLOSSARY.md).
-How the pieces fit in depth: [docs/architecture.md](docs/architecture.md).
+These four words are used throughout the docs. The code uses its own names for
+them, listed in the last column. See [docs/GLOSSARY.md](docs/GLOSSARY.md) for
+every term and [docs/architecture.md](docs/architecture.md) for how the parts
+fit together.
 
-| Public word | What it means | What it is called in the code |
+| Word | Meaning | In the code |
 |---|---|---|
-| **Need** | What a person says, in their own words | free text, `supportAreas`, onboarding steps, derived `needs[]` entries |
-| **Profile** | The portable understanding of the person, which adjusts its settings based on each person's level of consent | the **AbilityModel** (the device-independent model every surface renders); the **Librarian** (the agent that owns profile and memory, learns from settings over time, and gatekeeps what other applications may read); grants, no-memory zones, the proposal queue |
-| **Skill** | Which adaptations to apply, at what settings, for a need | a `SKILL.md` recipe; the **Engineer** (the skill builder that turns a plain-language need plus the profile into a recipe the person validates before it is saved); the registry in `toolkit/registry/` |
-| **Adaptation** | The change a host makes in response | **adapter** modules in `tools/adapters/`; auditors; validators; ability presets; surface renderers; the **ports** a host implements |
+| **Need** | What a person says they need, in their own words | free text, `supportAreas`, onboarding steps, `needs[]` entries |
+| **Profile** | What the toolkit knows about a person's needs, shared with other apps only with the person's permission | the **AbilityModel** (the profile in a form every renderer can read) and the **Librarian** (the agent that keeps the profile, learns from setting changes, and controls what other apps can read); grants, no-memory zones, the proposal queue |
+| **Skill** | Which adaptations to apply, and with what settings, for a need | a `SKILL.md` recipe; the **Engineer** (the agent that writes a skill from a person's need and profile, which the person checks before it's saved); the registry in `toolkit/registry/` |
+| **Adaptation** | A change an app makes for the person | adapter modules in `tools/adapters/`; auditors; validators; presets; renderers; the ports an app implements |
 
-## What it is not, and where it stands
+## What it isn't
 
-- **Not an auditor.** Auditors scan a site and hand the developer a report.
-  This starts from the person, not the page.
-- **Not an overlay.** Overlays are installed by a site owner and give
-  everyone the same widget. Here the unit of value is a person's portable
-  profile, and nothing is patched on a site owner's behalf.
-- **Not assistive technology.** It does not replace a screen reader, a
-  magnifier, or anything else a person relies on.
-- **Not an application, and not a browser project.** The core ships no user
-  interface. The browser was the first channel we could reach people
-  through for feedback; web, mobile, XR, desktop and server hosts are all
-  first-class.
+- **Not an auditor.** An auditor scans a site and gives the developer a report.
+  This toolkit changes an app for the person using it, based on their profile.
+- **Not an overlay.** An overlay is added by a site owner and gives everyone
+  the same widget. With this toolkit, each person's own profile decides what
+  changes, and site owners don't install anything.
+- **Not assistive technology.** It doesn't replace a screen reader, a
+  magnifier or anything else a person relies on.
+- **Not an app or a browser project.** The core has no user interface. We
+  started with the browser because it was the easiest way to get feedback from
+  people, but web, mobile, XR, desktop and server apps are all supported.
 
-**Status: an active research project, pre-alpha release.** This is a technology
-probe, not a product. It was built to learn from, and things may
-break or change without notice. The adaptations in the catalog are
-demonstrations; their effectiveness for the people they aim to serve has not
-been formally validated. The ability presets are starting points grounded in
-prior research, not boxes anyone fits in; see
-[docs/PROFILE-CARDS.md](docs/PROFILE-CARDS.md). The work comes from the
+## Status
+
+This is a research prototype (pre-alpha), and things may break or change
+without notice. The adaptations in the catalog are demos and haven't been
+formally validated with the people they're meant for. The presets are
+starting points based on published research (see
+[docs/PROFILE-CARDS.md](docs/PROFILE-CARDS.md)).
+
+The toolkit comes from the
 [AI for Accessibility Collective](docs/HOW-THIS-WAS-BUILT.md). The current
-research phase ends in November 2026; the plan for maintenance and
-development after that is still to be confirmed. Open work is tracked in
-[ROADMAP.md](ROADMAP.md).
+research phase ends in November 2026, and plans after that aren't decided yet.
+Open work is listed in [ROADMAP.md](ROADMAP.md).
 
-## Who it is for
+## Who it's for
 
-Every group takes something out and puts something back.
+- People who want pages adapted to them: use the browser extensions in the
+  [extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension),
+  and tell us how they work for you.
+- Developers building an app on the web, mobile, XR, desktop or a server: use
+  any mix of the core, the skills and the catalog.
+- Developers extending the toolkit: add skills, adapters, auditors and presets
+  (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+- Researchers working on AI agents: use the design principles and the
+  architecture, and share benchmarks, evaluation methods and findings.
 
-- **People who want their pages adapted**, including people with
-  disabilities anywhere in the world: take the browser extensions in the
-  [extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension);
-  give feedback, and shape the work as co-designers.
-- **Developers building an application**, on web, mobile, XR, desktop or
-  server: take the core, the skills library and the catalog, in any
-  combination; give back the skills and renderers you write for your
-  surface.
-- **Developers extending the library**: take the contribution guide and the
-  conformance tests; give adapters, auditors, presets and `SKILL.md`
-  recipes.
-- **Researchers and builders of agentic AI**: take the design principles and
-  the architecture; give benchmarks, evaluation methods and findings.
+## Try it
 
-## How you can use it
-
-### Try it in one minute
-
-No install, no API key, no browser. From a clone:
+No install, API key or browser needed. From a clone of the repository:
 
 ```bash
-node toolkit/hosts/xr-demo/demo.js      # onboard on web -> grant -> XR renders -> insight flows back -> accept
-node toolkit/hosts/skill-demo/demo.js   # retrieve -> resolve -> build -> validate -> save a skill
-node examples/cross-surface.mjs         # one profile -> web + XR, side by side
+node toolkit/hosts/xr-demo/demo.js      # a profile made on the web is shared with an XR app
+node toolkit/hosts/skill-demo/demo.js   # finds, builds, checks and saves a skill
+node examples/cross-surface.mjs         # one profile turned into web and XR settings
 ```
 
-The code walkthrough is in [docs/QUICKSTART.md](docs/QUICKSTART.md); the
-method reference is [`toolkit/API.md`](toolkit/API.md).
+[docs/QUICKSTART.md](docs/QUICKSTART.md) walks through the code, and
+[`toolkit/API.md`](toolkit/API.md) lists every method.
 
-### Four ways to build on it
+## Building on it
 
-1. **Embed the core directly (any JS runtime).** `createToolkit({ ports }) -> { datastore, librarian }`. Implement the ports for your platform; the Node bindings in [`toolkit/platforms/node/`](toolkit/platforms/node/) are the template, and a Chrome host lives in [`toolkit/platforms/chrome/`](toolkit/platforms/chrome/).
-2. **Call the hosted HTTP service (any language).** Run [`server/`](server/), locally or on Cloud Run, and use the same Librarian methods over HTTP with a bearer token. See [server/README.md](server/README.md).
-3. **Draw from the library and the catalog.** Use the skills, adapters, auditors and presets in [`tools/`](tools/) and the registry in [`toolkit/registry/`](toolkit/registry/) as building blocks, with or without the core.
-4. **Drop in one of the other experimental components.** Outside the core, these include a Controller that drives applications through text or voice, an example onboarding service, and a command-line interface (CLI).
+There are four ways to use the toolkit:
 
-The longer description of each component you can build on is in
-[docs/COMPONENTS.md](docs/COMPONENTS.md).
+1. Use the core directly in any JavaScript runtime. `createToolkit({ ports })`
+   returns `{ datastore, librarian }`. Implement the ports for your platform,
+   starting from the Node version in
+   [`toolkit/platforms/node/`](toolkit/platforms/node/). There's also a Chrome
+   version in [`toolkit/platforms/chrome/`](toolkit/platforms/chrome/).
+2. Call the hosted service from any language. Run [`server/`](server/) locally
+   or on Cloud Run, and call the same Librarian methods over HTTP with a bearer
+   token (see [server/README.md](server/README.md)).
+3. Use the catalog. The skills, adapters, auditors and presets in
+   [`tools/`](tools/) and the registry in
+   [`toolkit/registry/`](toolkit/registry/) work with or without the core.
+4. Use one of the experimental parts: a Controller that drives apps by text or
+   voice, an example onboarding service, or a command-line tool (CLI).
 
-### What you need to bring together with the toolkit components
+[docs/COMPONENTS.md](docs/COMPONENTS.md) has more on each.
 
-The toolkit is not a complete story on its own. A host brings **ports**
-(`KVStore` is required; `Clock`, `Scheduler` and `Consent` default to
-built-ins and no-ops), an **actuation port** if it applies changes to a live
-surface, an **LLM caller** if it wants the generative features, and an
-**onboarding** step that captures needs into a profile. Mind the `Consent`
-default: it is a no-op, so a host that does not wire a consent surface gets a
-toolkit whose proposals are never shown to anyone. Everything structural
-works with no AI provider at all; when one is missing, adapters narrow their
-results rather than crash. Details, including the two separate AI seams:
-[docs/COMPONENTS.md](docs/COMPONENTS.md#what-a-host-implements).
+### What your app needs to provide
+
+- Ports: a `KVStore` is required, and `Clock`, `Scheduler` and `Consent` have
+  defaults.
+- An actuation port, if your app applies changes to a live page or screen.
+- An LLM caller, if you want the AI features.
+- An onboarding step that records a person's needs in their profile.
+
+> **Note**: the default `Consent` does nothing, so if you don't connect your
+> own, the toolkit's suggested profile changes are never shown to anyone.
+
+Without an AI provider, everything except the AI features still works, and
+adapters return fewer results instead of failing. See
+[docs/COMPONENTS.md](docs/COMPONENTS.md#what-a-host-implements) for details,
+including the two places AI plugs in.
 
 ## Contributing
 
-- **Contribute a skill.** Combine adapters into a `SKILL.md` recipe others can pull. No code, and it exercises the whole validation path.
-- **Add an adapter or auditor.** Teach the toolkit to spot a new barrier, or add the adaptation that removes it.
-- **Take the components home.** Everything is Apache 2.0; build it into your own application, on any platform. Forks and spin-off versions are part of how this project is meant to be used.
-- **Shape the benchmarks.** Help define how we verify that an adaptation improved accessibility for the person it was meant for.
+[CONTRIBUTING.md](CONTRIBUTING.md) explains how to set up the repository and
+open a pull request. The main ways to contribute are:
 
-Start at [CONTRIBUTING.md](CONTRIBUTING.md). The short version: one feature
-per PR, say who benefits (which disability or profile), and involve people
-with disabilities in design and evaluation.
+- [Share feedback](CONTRIBUTING.md#share-feedback) on the toolkit or the
+  extensions
+- [Write a skill](CONTRIBUTING.md#write-a-skill) (no code needed)
+- [Add an adapter](CONTRIBUTING.md#add-an-adapter)
+- [Add an auditor](CONTRIBUTING.md#add-an-auditor)
+- [Build an example app](CONTRIBUTING.md#build-an-example-app)
 
-A note for developers building with this toolkit: it does not remove your
-responsibility to build accessibly. Adapters repair barriers after the fact;
-considering accessibility early is still the cheaper and better path. The
-[W3C WAI guidance on planning accessibility](https://www.w3.org/WAI/planning-and-managing/)
-is a good starting point.
+If you're building an app with the toolkit, it's still your job to make the
+app accessible. Adapters fix problems after the fact, so it's better to plan
+for accessibility from the start. The
+[W3C guide to planning accessibility](https://www.w3.org/WAI/planning-and-managing/)
+is a good place to begin.
 
 ## Security and license
 
-Report vulnerabilities via [SECURITY.md](SECURITY.md), which also states
-this repository's security-relevant facts (host-injected AI providers,
-profile ids as credentials, the hosted service's tokens). The data-handling
-model in one line: single-writer stores, no-memory zones for sensitive
-categories, and cross-application sharing only under explicit, revocable
-grants. Licensed under Apache 2.0 ([LICENSE](LICENSE)).
+To report a vulnerability, see [SECURITY.md](SECURITY.md). It also lists what
+to know before deploying, e.g., how API keys and profile ids are handled.
+
+Only the Librarian writes to a person's profile, the toolkit doesn't keep
+notes on sensitive kinds of sites (finance, health and government by
+default), and other apps can read a profile only with a grant the person can
+revoke.
+
+Licensed under Apache 2.0 ([LICENSE](LICENSE)).
 
 ## Repository layout
 
@@ -191,8 +207,8 @@ docs/        Quick start, glossary, components, architecture, design docs
 scripts/     Repository checks (the packed-package fixture)
 ```
 
-Paths that moved in the repository split: see the top of
-[docs/README.md](docs/README.md). How and by whom this was built:
+The paths that changed when the extensions moved to their own repository are
+listed at the top of [docs/README.md](docs/README.md). Who built this and how:
 [docs/HOW-THIS-WAS-BUILT.md](docs/HOW-THIS-WAS-BUILT.md).
 
 ---

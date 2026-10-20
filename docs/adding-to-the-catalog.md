@@ -184,9 +184,10 @@ if it fixes axe rules, add its `axeHandlers` to the combined map in
 
 ## Adding an auditor
 
-An auditor finds accessibility problems on a page that axe-core doesn't check
-for. It's usually a function that returns the elements with the problem. For
-example, `findEmptyLinks` in `tools/auditors/missing-labels.js` returns links
+An auditor finds accessibility problems on a page. The catalog already runs
+axe-core for the standard WCAG checks (in `tools/auditors/wcag-issues.js`), so
+write a new auditor for problems axe doesn't check. An auditor is usually a
+function that returns the elements with the problem. For example, `findEmptyLinks` in `tools/auditors/missing-labels.js` returns links
 with no accessible name:
 
 ```js
