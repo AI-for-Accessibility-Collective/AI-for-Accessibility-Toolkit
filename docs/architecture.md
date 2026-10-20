@@ -130,12 +130,12 @@ without an API key: keep this as a skill? Accepting saves both the
 auto-replay profile action and a real `SKILL.md` whose recipe carries the
 task as an action step, visible and deletable like any other skill.
 
-The validation *surface* (preview, try-on-page, feedback box) is host UI.
+The verification *surface* (preview, try-on-page, feedback box) is host UI.
 The toolkit ships the machinery: the verifier engine in `tools/validators/`
 with its "how hard to insist" policy, the `contract-mismatch` auditor (does
 this match what the person asked, not is this accessible) and the
 `agent-watch` adapter (reports a delegate's progress). A host that wants a
-validation experience composes those and renders its own.
+verification experience composes those and renders its own.
 
 ## Privacy and consent
 
@@ -181,7 +181,7 @@ one is possible; the rest are reviewed.
 3. **The Controller is optional in both directions.** `controller/` imports
    only `toolkit/registry/tools.js`; the toolkit never imports the
    controller.
-4. **Validation is machinery, not a bundled UI.** No validation panel or
+4. **Verification is machinery, not a bundled UI.** No verification panel or
    overlay ships in this repository.
 5. **Host applications live in their own repositories.** This repository is
    the toolkit and its catalog, not any application.

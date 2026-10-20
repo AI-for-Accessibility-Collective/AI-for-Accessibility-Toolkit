@@ -2,7 +2,7 @@
 
 # The verifier: a second agent that watches the first
 
-A design doc for the validation layer's next stage, written as a gap list
+A design doc for the verification layer's next stage, written as a gap list
 against what is already on this branch. The goal from the 8/6 meeting: a
 verifier that runs alongside the acting agent, consumes its stream, surfaces
 widgets at the right moments, can ask the agent to pause, and keeps a trace
@@ -54,9 +54,9 @@ policy and in the spoken grammar: answer first, four-chunk litanies, the
 pause budget. The person's three modes - interrupt, interrogate, control -
 are the tell box, the on-demand questions, and the handover.
 
-## Gap 1: the loop never talks to the validation layer
+## Gap 1: the loop never talks to the verification layer
 
-The agent and the validation layer live in the same extension, two
+The agent and the verification layer live in the same extension, two
 directories apart, and today neither knows the other exists. `run.js`
 already computes everything worth publishing every step - the actions, the
 screenshot, the page state, its own `next_goal` and memory - and then keeps

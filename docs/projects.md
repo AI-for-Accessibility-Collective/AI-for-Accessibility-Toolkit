@@ -303,7 +303,7 @@ research. The table below provides suggestions for how each project's work could
 
 | Project | What it could contribute or inform |
 |---|---|
-| Stanford — Accessible Interactive Simulations | Sonification adapters for STEM content; validation-layer research |
+| Stanford — Accessible Interactive Simulations | Sonification adapters for STEM content; verification-layer research |
 | The Arc — Cognitive Accessibility | Text-simplification adapters; reviewer network |
 | UCL — Non-Standard Speech AI | Speech recognition for voice input across the toolkit |
 | RNID — Videoconferencing Agent | Meeting-accessibility patterns |
