@@ -33,7 +33,8 @@ def test_every_npm_script_the_readmes_name_exists() -> None:
     named = {
         (path.name, script)
         for path in (REPO_ROOT / "README.md", REPO_ROOT / "cli" / "README.md",
-                     REPO_ROOT / "CONTRIBUTING.md")
+                     REPO_ROOT / "CONTRIBUTING.md",
+                     REPO_ROOT / "docs" / "adding-to-the-catalog.md")
         for script in NPM_SCRIPT.findall(path.read_text())
     }
     missing = {entry for entry in named if entry[1] not in declared}

@@ -1,5 +1,5 @@
 // Import-boundary test: every relative import that crosses a package root is
-// checked against the four rules in CONTRIBUTING.md ("Package boundaries").
+// checked against the four rules in docs/adding-to-the-catalog.md ("Package boundaries").
 //
 //   1. No relative import reaches past another package's public exports.
 //   2. A cross-package import is a dependency the importing package declares.
@@ -36,7 +36,7 @@
 // through package.json today (server/package.json has an empty dependencies
 // block; controller/ and cli/ have no manifest at all), so "declares" cannot
 // mean a dependencies entry yet. Until workspaces land, the declaration is
-// the ALLOWED table below plus the KNOWN_EDGES entry. See CONTRIBUTING.md.
+// the ALLOWED table below plus the KNOWN_EDGES entry. See docs/adding-to-the-catalog.md.
 //
 // This is a static check on relative specifiers. It does not see imports
 // that go through a URL path a server mounts (onboarding/chat.js loads the
