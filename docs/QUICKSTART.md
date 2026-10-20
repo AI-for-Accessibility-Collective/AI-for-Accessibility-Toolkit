@@ -1,28 +1,28 @@
-# Quick Start
+# Quick start
 
-The core is plain ES modules. Wire it to the reference Node platform
-bindings and go: no browser, no build, no API key. What you are doing below
-is the loop from the [README](../README.md): a need becomes a profile, and
-the profile renders to whatever surface you are building.
+This page shows how to run the demos and use the toolkit's core in your own
+code. You don't need a browser, a build step or an API key.
 
-## Run the demos first
+## Run the demos
 
-From a clone, with nothing installed:
+From a clone of the repository, with nothing installed:
 
 ```bash
-node toolkit/hosts/xr-demo/demo.js      # onboard on web -> grant -> XR renders -> insight flows back -> accept
-node toolkit/hosts/skill-demo/demo.js   # retrieve -> resolve -> build -> validate -> save a skill
-node examples/cross-surface.mjs         # one profile -> web + XR, side by side
+node toolkit/hosts/xr-demo/demo.js      # a profile made on the web is shared with an XR app
+node toolkit/hosts/skill-demo/demo.js   # finds, builds, checks and saves a skill
+node examples/cross-surface.mjs         # one profile turned into web and XR settings
 ```
 
-The skill demo installs a stub in place of a model; it shows the plumbing,
-not a model authoring a skill.
+The skill demo uses a stand-in for the AI model, so it shows the steps without
+calling a real model.
 
-## Embed the core
+## Use the core
 
-The snippet's relative imports assume your file sits at the repository
-root; adjust the specifiers if it lives elsewhere (or when consuming the
-packages — see [using-in-your-project.md](using-in-your-project.md)).
+This example creates a profile, adds one need (larger text), and turns the
+profile into settings for the web, mobile and XR. It assumes your file is at
+the root of the repository. If it isn't, change the import paths, or see
+[using-in-your-project.md](using-in-your-project.md) to use the packages
+instead.
 
 <!-- QUICKSTART:START -->
 
@@ -57,18 +57,20 @@ renderXRSettings(model, { fovDegrees: 100 });    // { text: { angularSizeDeg, ..
 ```
 
 <!-- QUICKSTART:END -->
-What each line does: `createToolkit` takes the ports your platform provides
-and returns the datastore and the Librarian; the two `setProfileField` calls
-stand in for onboarding; `getAbilityModel` is the profile as the surfaces
-see it; each `render*` call is a pure function from that model to one
-surface's settings.
+
+- `createToolkit` takes the storage, clock, scheduler and consent functions
+  for your platform (here, the Node versions in `toolkit/platforms/node/`) and
+  returns the datastore and the Librarian.
+- The two `setProfileField` calls set a support area and one need, which
+  onboarding would normally do.
+- `getAbilityModel` returns the profile in the form the renderers use.
+- Each `render*` function turns that model into one platform's settings.
 
 ## Enable the skill layer
 
-The snippet above leaves the skill layer empty: without a tools registry
-and the builtin skills, `retrieveSkill` finds nothing and skill validation
-has no vocabulary to check against. To wire them in, pass both to
-`createToolkit`:
+The example above has no skills. Without the tools registry and the built-in
+skills, `retrieveSkill` finds nothing and skills can't be checked. To add
+them, pass both to `createToolkit`:
 
 ```javascript
 import { asAATools } from './toolkit/registry/tools.js';
@@ -87,14 +89,17 @@ const { datastore, librarian } = createToolkit({
 });
 ```
 
-`toolkit/hosts/skill-demo/demo.js` is the full worked example of this
-wiring (retrieve → resolve → build → validate → save).
+`toolkit/hosts/skill-demo/demo.js` is a full example of this.
 
 ## Next
 
-- Wire it into a real host: [COMPONENTS.md, "What a host implements"](COMPONENTS.md#what-a-host-implements).
-- Method reference: [`toolkit/API.md`](../toolkit/API.md).
-- Embedding walkthrough for coding agents: the [`ai4a11y-toolkit` skill](../.claude/skills/ai4a11y-toolkit/SKILL.md).
-- A browser-extension host, step by step: [web-extension-getting-started.md](web-extension-getting-started.md).
-- A non-web host, step by step: [xr-getting-started.md](xr-getting-started.md).
-- Consuming the packages in your own project: [using-in-your-project.md](using-in-your-project.md).
+- Connect it to a real app:
+  [COMPONENTS.md, "What a host implements"](COMPONENTS.md#what-a-host-implements)
+- Every method in the core: [`toolkit/API.md`](../toolkit/API.md)
+- A walkthrough for coding agents: the
+  [`ai4a11y-toolkit` skill](../.claude/skills/ai4a11y-toolkit/SKILL.md)
+- A browser extension, step by step:
+  [web-extension-getting-started.md](web-extension-getting-started.md)
+- A non-web app, step by step: [xr-getting-started.md](xr-getting-started.md)
+- Using the packages in your own project:
+  [using-in-your-project.md](using-in-your-project.md)

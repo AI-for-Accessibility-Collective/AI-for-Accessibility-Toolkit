@@ -8,9 +8,11 @@ Collective. If you are looking for the browser extensions, see the
 
 ### Share feedback
 
-Try the toolkit or one of the extensions, then open an issue about what worked
-and what didn't. If you'd rather not use GitHub, you can email us instead (see
-[SUPPORT.md](SUPPORT.md)).
+To try the toolkit, run the demos in [docs/QUICKSTART.md](docs/QUICKSTART.md).
+To try the extensions, follow the extension repository's
+[Getting Started](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension/blob/main/docs/GETTING-STARTED.md)
+guide. Then open an issue about what worked and what didn't. If you'd rather
+not use GitHub, you can email us instead (see [SUPPORT.md](SUPPORT.md)).
 
 ### Write a skill
 

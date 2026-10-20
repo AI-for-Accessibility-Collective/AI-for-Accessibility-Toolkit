@@ -1,29 +1,48 @@
 # Adding to the catalog
 
-Step-by-step instructions for adding a skill, adapter, auditor or profile. See
+The catalog is the set of skills, adapters, auditors and profiles that apps
+built on the toolkit can use. This page shows how to add each one. See
 [CONTRIBUTING.md](../CONTRIBUTING.md) for setting up.
 
-| I want to... | Add a... | In |
+| To... | Add a... | In |
 |---|---|---|
-| Combine adapters for a need | skill | `toolkit/skills/builtin/` |
+| Turn on a few existing adapters together, e.g., for reading on a cluttered page | skill | `toolkit/skills/builtin/` |
 | Change a page in a new way | adapter | `tools/adapters/` |
 | Find accessibility problems on a page | auditor | `tools/auditors/` |
 | Add or change a preset of starting settings | profile | `tools/profiles/settings.json` |
 
 ## Adding a skill
 
-1. Copy one of the skills in `toolkit/skills/builtin/` (e.g., `calm-browsing.md`).
+A skill is a markdown file with a header, a short description, and a recipe
+that says which adapters to turn on. You don't need to write any code.
 
-2. Change the name, description and recipe. For example:
+1. Copy one of the skills in `toolkit/skills/builtin/` (e.g.,
+   `calm-browsing.md`) and name the copy after your skill, e.g.,
+   `quiet-reading.md`.
+
+2. Fill in the header.
+
+| Field | What to put | Example |
+|---|---|---|
+| `name` | The file name without `.md` | `quiet-reading` |
+| `description` | What the skill does, then when to use it. Mention conditions only as examples. | `Shows only the article on a cluttered page. Use when ads, sidebars or popups make it hard to keep your place while reading (common with ADHD or dyslexia).` |
+| `supportAreas` | One or more of `vision`, `hearing`, `motor`, `cognitive`, `reading` and `sensory` | `[cognitive, reading]` |
+| `siteRelevance` | The kinds of sites it's for: `news`, `social`, `video`, `shopping`, `education`, `productivity`, `reference`, `finance`, `health`, `government` or `other`, or `all` | `[news, education, reference]` |
+
+3. Pick one to four adapters. To see every adapter and the settings that turn
+   it on, run:
+
+```bash
+node -e "import('./toolkit/registry/tools.js').then(m => m.skillRegistry.forEach(t => console.log(t.id, JSON.stringify(t.settings))))"
+```
+
+   For example, it prints `reader-mode {"readerMode":true}` and
+   `focus-mode {"focusMode":true,"hideDistractions":true,"showProgress":true}`.
+
+4. Write the body: a title, one or two sentences on what the skill does, a
+   list of what each adapter does, and the recipe.
 
 ````markdown
----
-name: quiet-reading
-description: Shows only the article on a cluttered page. Use when ads, sidebars or popups make it hard to keep your place while reading (common with ADHD or dyslexia).
-supportAreas: [cognitive, reading]
-siteRelevance: [news, education, reference]
----
-
 # Quiet Reading
 Shows only the article, so there is less on the page pulling attention away.
 
@@ -42,33 +61,56 @@ Shows only the article, so there is less on the page pulling attention away.
 ```
 ````
 
-3. Run the tests.
+   The recipe is what runs, so keep the list under "What it does" the same as
+   the recipe. You can also add "When to use" and "Notes" sections, like
+   `calm-browsing.md` does.
+
+5. Run the skill tests, then all the tests.
 
 ```bash
 node toolkit/test/skill-test.js
 npm test
 ```
 
-Notes:
-
-- The recipe can only use adapter ids and setting keys from
-  `toolkit/registry/tools.js`.
-- `supportAreas` can be vision, hearing, motor, cognitive, reading or sensory.
-- `siteRelevance` can be any category in `toolkit/core/taxonomy.js`, or `all`.
-- Use one to four adapters.
-- Start the description with what the skill helps with, and mention conditions
-  only as examples (e.g., "common with ADHD or dyslexia").
+   If something in your skill is wrong, the test prints the problem above the
+   failing line, e.g., `unknown adapter "reader-modes"` or
+   `setting "fontScale"=300 out of range 50–200`.
 
 ## Adding an adapter
 
-Most adapters are an object you turn on and off with `enable()` and
-`disable()`, like `ReadingRuler` in `tools/adapters/reading-ruler.js`. A few
-are functions that fix a page once, like `tools/adapters/fix-tables.js`.
+An adapter is code that makes one change to a page. Most adapters are an
+object you turn on with `enable()` and off with `disable()`, like
+`ReadingRuler` in `tools/adapters/reading-ruler.js`. Skills and profiles turn
+an adapter on with its setting key, e.g., `readingRuler: true`.
 
-The easiest way to start is to copy `reading-ruler.js`. Each step below shows
-the line `reading-ruler` uses, so you can add the same line for your adapter.
+Each step below shows the line `reading-ruler` uses, so you can add the same
+line for yours.
 
-1. Write `tools/adapters/<name>.js`.
+1. Write `tools/adapters/<name>.js`. We recommend copying `reading-ruler.js`.
+   The shape is:
+
+```js
+export const MyAdapter = {
+  enabled: false,
+
+  enable(options = {}) {
+    if (this.enabled) return;
+    this.enabled = true;
+    // change the page
+  },
+
+  disable() {
+    if (!this.enabled) return;
+    this.enabled = false;
+    // undo everything enable() did
+  },
+
+  toggle() {
+    if (this.enabled) this.disable();
+    else this.enable();
+  },
+};
+```
 
 2. Export it in `tools/adapters/index.js`.
 
@@ -76,15 +118,16 @@ the line `reading-ruler` uses, so you can add the same line for your adapter.
 export { ReadingRuler } from './reading-ruler.js';
 ```
 
-3. Add its name to `TOOL_OBJECTS` in `tools/test/adapter-conformance-test.js`
-   (for an adapter that fixes a page once, add the file name to
-   `ADDITIVE_MODULES` instead).
+3. Add its name to `TOOL_OBJECTS` in `tools/test/adapter-conformance-test.js`.
+   This test checks that every adapter with `enable()` also has `disable()`.
 
 ```js
 const TOOL_OBJECTS = [ ..., 'ReadingRuler', ... ];
 ```
 
-4. Add an entry in `toolkit/registry/tools.js`.
+4. Add an entry in `toolkit/registry/tools.js`. The Engineer (the part of the
+   toolkit that writes a skill from what someone asks for in their own words)
+   reads the `description` when it picks adapters.
 
 ```js
 {
@@ -108,13 +151,19 @@ readingRuler: { type: 'boolean', description: 'A highlight band that follows you
 ```
 
 6. In `tools/profiles/settings.js`, add a line to `adaptersForTools` so that
-   the setting turns on your adapter.
+   the setting key turns on your adapter.
 
 ```js
 if (tools.readingRuler) enabled.push('reading-ruler');
 ```
 
-7. Add a test in `tools/test/` (e.g., `reading-ruler-test.js`).
+7. Write a test in `tools/test/`. For example, `reading-ruler-test.js` loads a
+   small page in jsdom, turns the adapter on and off, and checks that
+   `disable()` removes everything `enable()` added.
+
+```bash
+node tools/test/reading-ruler-test.js
+```
 
 8. Rebuild the type declarations and the CLI bundle, and commit the changes.
 
@@ -123,35 +172,67 @@ npm run build:types
 npm run build:cli
 ```
 
-*(Optional)* If your adapter changes layout or styles, also add a check in
-`tools/test/browser-validate.js`.
+To see your adapter work in a real browser, add a check to
+`tools/test/browser-validate.js` and run `npm run validate:browser` (see
+[Testing](#testing)).
+
+A few adapters are functions that fix a page once instead of an object you
+turn on and off, e.g., `tools/adapters/fix-tables.js`. For one of those, add
+the file name to `ADDITIVE_MODULES` instead of `TOOL_OBJECTS` in step 3, and
+if it fixes axe rules, add its `axeHandlers` to the combined map in
+`tools/adapters/index.js`.
 
 ## Adding an auditor
 
-Auditors find accessibility problems that axe-core misses. An auditor is
-usually one function:
+An auditor finds accessibility problems on a page that axe-core doesn't check
+for. It's usually a function that returns the elements with the problem. For
+example, `findEmptyLinks` in `tools/auditors/missing-labels.js` returns links
+with no accessible name:
 
 ```js
-// tools/auditors/missing-headings.js
-import { isVisible, wasProcessed } from '../utils/dom.js';
+import { isVisible, wasProcessed, hasAccessibleName } from '../utils/dom.js';
 
-export function findSectionsWithoutHeadings() {
-  return Array.from(document.querySelectorAll('section, article'))
-    .filter(el => !wasProcessed(el) && isVisible(el) && !el.querySelector('h1,h2,h3,h4,h5,h6'));
+export function findEmptyLinks() {
+  return Array.from(document.querySelectorAll('a[href]'))
+    .filter(link => {
+      if (wasProcessed(link)) return false;
+      if (!isVisible(link)) return false;
+      return !hasAccessibleName(link);
+    });
 }
 ```
 
-Then export it in `tools/auditors/index.js`.
+`tools/utils/dom.js` has helpers for this, e.g., `isVisible`, `wasProcessed`
+(true for elements an adapter has already fixed) and `hasAccessibleName`.
+
+1. Write your function in a file in `tools/auditors/`, or add it to an
+   existing file there if it fits.
+
+2. Export the file in `tools/auditors/index.js`.
 
 ```js
-export * from './missing-headings.js';
+export * from './missing-labels.js';
+```
+
+3. Add checks to `tools/test/auditors-test.js`. jsdom doesn't lay out the
+   page, so the test's `mount()` gives every element a size from its `data-w`
+   and `data-h` attributes (200 by 40 if they're not set).
+
+```bash
+node tools/test/auditors-test.js
 ```
 
 ## Adding a profile
 
-There are twelve profiles in `tools/profiles/settings.json`, described in
-[PROFILE-CARDS.md](PROFILE-CARDS.md). To change one, edit its `tools`
-settings.
+A profile is a preset of starting settings. For example, `lowVision` turns on
+larger text (`fontScale: 150`), wider line spacing and contrast fixes. There
+are twelve in `tools/profiles/settings.json`: `blind`, `lowVision`,
+`colorBlind`, `deaf`, `motor`, `dyslexia`, `adhd`, `cognitive`, `olderAdult`,
+`anxiety`, `sensory` and `photosensitive`. Each one is described in
+[PROFILE-CARDS.md](PROFILE-CARDS.md).
+
+To change a profile, edit the settings under its `tools` key. The setting keys
+are the ones in `settingsMeta` in `toolkit/registry/tools.js`.
 
 To add a new profile, please open an issue first. A new profile needs:
 
