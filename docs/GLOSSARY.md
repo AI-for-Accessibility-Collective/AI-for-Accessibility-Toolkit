@@ -104,7 +104,7 @@ the Librarian, after the person validates; other applications read the
 profile through the Librarian, with permission, never from the store.
 
 The new-primitive-versus-new-recipe test for contributors is in
-[CONTRIBUTING.md](../CONTRIBUTING.md#skill-or-adapter--which-am-i-building).
+[CONTRIBUTING.md](../CONTRIBUTING.md#skill-or-adapter).
 
 ## Principles
 

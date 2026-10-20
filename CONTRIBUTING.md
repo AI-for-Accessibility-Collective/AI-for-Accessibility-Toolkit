@@ -1,181 +1,135 @@
 # Contributing
 
-This is a **toolkit**, not an app. Contributions extend one of three layers:
+Thank you for wanting to contribute! This repository holds the developer side
+of the AI for Accessibility Collective's work: the core library (`toolkit/`),
+the catalog of adapters, auditors and profiles (`tools/`), a small hosted
+service (`server/`), and three optional pieces built on them (`controller/`,
+`onboarding/` and `cli/`). This is a research project with a small team, so
+most of what we merge adds one thing to the catalog (e.g., a skill, an
+adapter, an auditor, or a profile).
 
-- the **core** (`toolkit/`) — the Librarian/datastore, ability model, skill
-  engine, ports, surfaces, and reference platform bindings;
-- the **catalog** (`tools/`) — reusable adapters, auditors, and profiles any
-  host can draw from;
-- the **service** (`server/`) — the hosted HTTP surface over the core.
+If you are working on the browser extensions themselves (the popup,
+onboarding, the Adapter and Skill Builders, voice mode, the web apps), that
+code lives in the
+[extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension),
+which has its own guide.
 
-Most contributions add an **adapter, auditor, profile, or skill** to the
-catalog, a **surface** renderer, or a **platform port**.
+## Ways to help
 
-Working on the browser extensions themselves (popup, onboarding, the
-builders, voice mode, the web apps)? That code lives in the
-[extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension)
-— see its CONTRIBUTING for the routing table.
+Many of these don't need any code.
 
-**Want to help without writing code?** You can: tell us what happened when
-you used the toolkit or the extensions ([SUPPORT.md](SUPPORT.md)), or
-improve these docs — typos and unclear sentences are real contributions.
-Neither requires programming, and if GitHub itself is a barrier, the email
-route in [MAINTAINERS.md](MAINTAINERS.md) works for both.
+- Feedback: If you tried the toolkit or one of the extensions, let us know
+  what worked and where it got in your way. We use these reports as research
+  data, and [SUPPORT.md](SUPPORT.md) lists where to send them.
+- Docs: Typos and confusing sentences are both worth a pull request.
+- Accessibility of this repository: Alt text for images and text
+  descriptions for diagrams are the most useful places to start.
+- Skills: The catalog has about 50 adapters but only four built-in skills, so
+  this is where we need the most help. A skill is a markdown file, not code
+  (see [Adding a skill](#adding-a-skill)).
+- Adapters and auditors: These are for things the catalog can't do yet. For
+  example, published review checks for ARIA, contrast, keyboard navigation,
+  forms and tables could each become one.
+- Example applications: Please build them in your own repository and tell us
+  about them, so this one stays small.
 
-## Contributions we're looking for
+If GitHub itself is a barrier, you can also email us about any of these (the
+current address is in [MAINTAINERS.md](MAINTAINERS.md)).
 
-Beyond whatever you are personally interested in building, these are wanted and unowned (see
-[ROADMAP.md](ROADMAP.md) for the full list):
+We don't have any issues labeled `good first issue` yet, so if you are looking
+for a first task, we recommend writing a skill.
 
-- **`SKILL.md` recipes** — the best first contribution: no code, and it
-  exercises the whole validation path. See "Adding a skill" below.
-- **Adapters and auditors** for capabilities the catalog lacks — including
-  translations of published accessibility review patterns (ARIA, contrast,
-  keyboard navigation, forms, tables) into adapters.
-- **Example applications** built on the toolkit — with or without the
-  personalization core. We invite you to build this in a separate repository to keep only core components in this repository.
-- **Per-audience documentation and walkthroughs** — non-code, high value.
-- **Accessibility fixes to this repository itself** — image alt text and
-  diagram descriptions first.
-- **Real-use reports**: what you tried to build, where the API fought you.
+For anything bigger than one skill, one adapter, or a docs fix, it would be
+great if you could open an issue first with what you'd like to change and who
+it helps. That way we can let you know early if someone is already working on
+it, or if it might fit better in a fork (see
+[Forks and spin-offs](#forks-and-spin-offs)).
 
-Issues labeled `good first issue` are kept as on-ramps where they exist.
+## Setting up
 
-### Skills we'd love to see
+1. Install [Node.js](https://nodejs.org/) 20.19 or later (22.13+ and 24+ also
+   work, and CI runs 20 and 22).
 
-*This is a placeholder section which we will build out, based on feedback from community engagement.*
+2. Fork the repository, then clone your fork and install the dependencies:
 
-## Set up
+   ```bash
+   git clone <your fork>
+   cd AI-for-Accessibility-Toolkit
+   npm install
+   ```
 
-```bash
-git clone <your fork>
-cd <your clone> && npm install
-npm test        # tools, toolkit, controller, and onboarding suites, plus the import-boundary check
-```
+3. Run the tests:
 
-Pure ES modules; the core has no build step. There is no browser extension in
-this repo; hosts (web/mobile/XR/server) live in their own projects and consume
-this toolkit. There is an experimental Python CLI in `cli/`, which drives a real
-Chromium page and injects the catalog; see [cli/README.md](cli/README.md) for
-its setup and tests.
+   ```bash
+   npm test
+   ```
 
-## Skill or adapter — which am I building?
+   This runs about 3,000 checks in under half a minute and needs no API key
+   or browser. If you are on Windows, run it from Git Bash or WSL, since the
+   test script is a shell loop.
 
-Usually **one, not both**:
+4. *(Optional)* Run a demo to see the toolkit work before you change anything:
 
-- **Adapter** = executable **code** that performs one adaptation (the "hands").
-  Build one only for a **brand-new capability** no existing adapter provides.
-  Lives in `tools/adapters/`.
-- **Skill** = a `SKILL.md` **recipe** composing existing adapters for a need
-  (the "brain"). Build one for a **reusable combination/tuning** of things that
-  already exist. No code. Lives in `toolkit/skills/builtin/`.
+   ```bash
+   node toolkit/hosts/skill-demo/demo.js   # find, build, check and save a skill
+   node toolkit/hosts/xr-demo/demo.js      # one profile shared from a web host to an XR host
+   ```
 
-Rule of thumb: **new primitive → adapter (code); new recipe → skill (no code).**
-A skill can only reference adapters that already exist. Every other term
-(auditor, validator, preset, port, surface, grant) is defined once, in
-[docs/GLOSSARY.md](docs/GLOSSARY.md).
+The core is plain ES modules with no build step, and there's no browser
+extension in this repository. The Python CLI in `cli/` is experimental and has
+its own setup in [cli/README.md](cli/README.md).
 
-## Cheat sheet
+## Skill or adapter?
 
-| I want to… | Do this |
-|--------------|---------|
-| **Detect an issue** | Add auditor → `tools/auditors/` → export from `index.js` |
-| **Fix an issue** | Add adapter → `tools/adapters/` → add to `axeHandlers` in `index.js` |
-| **Register a tool** | Add its entry to `toolkit/registry/tools.js` (`supportAreas`, `settings`, `description`) + any new keys to `settingsMeta` |
-| **Combine adapters for a need** | Add skill → `toolkit/skills/builtin/<name>.md` |
-| **Add a profile** | Edit `tools/profiles/settings.json` |
-| **Render to a new platform** | Add a surface → `toolkit/surfaces/<name>.js` |
-| **Support a new host runtime** | Implement the ports → `toolkit/platforms/<host>/` (copy `platforms/node/`) |
+Most catalog contributions are one or the other, not both.
 
-## Adding an auditor
+- An **adapter** is code that makes one change to a page, e.g., dark mode, a
+  reading ruler, or AI-written alt text. Adapters live in `tools/adapters/`.
+  Write one only when no existing adapter can do what you need.
+- A **skill** is a `SKILL.md` file that turns on existing adapters, with
+  settings, for one need. For example, `calm-browsing` turns on
+  `motion-reducer`, `dark-mode` and `focus-mode` for people who find motion
+  and clutter overwhelming. Skills live in `toolkit/skills/builtin/` and have
+  no code.
 
-Auditors find accessibility issues (axe-core for standard WCAG; custom for what axe misses).
+So, if the need can be met by switching on adapters that already exist, it
+should be a skill. If the page needs to do something no adapter does yet,
+you'll need to write the adapter first and then a skill that uses it. The
+other terms you'll come across (auditor, validator, port, surface, grant) are
+defined in [docs/GLOSSARY.md](docs/GLOSSARY.md).
 
-```js
-// tools/auditors/missing-headings.js
-import { isVisible, wasProcessed } from '../utils/dom.js';
+## Where things go
 
-export function findSectionsWithoutHeadings() {
-  return Array.from(document.querySelectorAll('section, article'))
-    .filter(el => !wasProcessed(el) && isVisible(el) && !el.querySelector('h1,h2,h3,h4,h5,h6'));
-}
-```
-
-Then `export * from './missing-headings.js';` in `tools/auditors/index.js`.
-
-## Adding an adapter
-
-```js
-// tools/adapters/fix-carousels.js
-import { markProcessed } from '../utils/dom.js';
-
-export const name = 'fix-carousels';
-export const profiles = ['blind', 'motor'];
-
-export function fixCarouselControls(carousel) {
-  if (carousel.dataset.ai4a11yProcessed) return;
-  markProcessed(carousel, 'pending');
-  // ... fix logic ...
-  markProcessed(carousel, 'done');
-}
-
-export const axeHandlers = { 'aria-required-attr': fixCarouselControls };
-```
-
-Then in `tools/adapters/index.js` add the export and spread its handlers, and
-register the tool in `toolkit/registry/tools.js` (id, `supportAreas`,
-`settings`, one-line `description`) plus any new setting keys in `settingsMeta`.
-Then add one line to `adaptersForTools` in `tools/profiles/settings.js` that
-maps the new setting key to the adapter's module name;
-`node tools/test/registry-parity-test.js` fails until the barrel, the registry,
-and that mapping agree, and it checks every key of an entry on its own. Each
-host keeps its own copy of the mapping (for the CLI, `applyProfileByName` in
-`cli/cli-tools.js`), so an adapter a profile switches on needs a line there as
-well. That test carries two lists for the cases the rule cannot express: add a
-key that only shapes another key's adapter to `SUB_SETTINGS` under its entry
-id, and a barrel module that is deliberately left without a registry entry to
-`KNOWN_UNREACHABLE`, with the reason in a comment either way.
-Read `tools/adapters/fix-tables.js` (heuristic + AI fallback) or
-`tools/adapters/fix-landmarks.js` (deterministic) for a full example.
-
-## Adding a profile
-
-```json
-// tools/profiles/settings.json
-"myProfile": {
-  "name": "My Profile",
-  "description": "What it does",
-  "tools": { "fontScale": 130, "darkMode": true, "autoSimplify": true }
-}
-```
-
-The full settings vocabulary — every key, type, and range — is `settingsMeta` in
-[`toolkit/registry/tools.js`](toolkit/registry/tools.js); it's the same vocabulary
-`validateSkill` checks recipes against.
-
-Profiles are starting points assembled from published guidance, not
-characterizations of the people who pick them — say in the `description`
-what the preset does, not who its users are. See
-[docs/PROFILE-CARDS.md](docs/PROFILE-CARDS.md).
+| I want to... | Where |
+|---|---|
+| Combine adapters for a need | A skill in `toolkit/skills/builtin/<name>.md` |
+| Fix something on a page | An adapter in `tools/adapters/` |
+| Detect a barrier on a page | An auditor in `tools/auditors/` |
+| Tune or add a preset | `tools/profiles/settings.json` |
+| Render a profile for a new platform | A surface in `toolkit/surfaces/` |
+| Run the core in a new kind of host | Ports in `toolkit/platforms/<host>/`, starting from `toolkit/platforms/node/` |
+| Change the browser extensions | The extension repository |
 
 ## Adding a skill
 
-A `SKILL.md` composing existing adapters — no code:
+The easiest way to start is to copy one of the four existing skills, e.g.,
+`toolkit/skills/builtin/calm-browsing.md`, and change it. A skill looks like
+this:
 
 ````markdown
 ---
 name: quiet-reading
-description: Distraction-free, high-contrast reading. Use on articles and docs.
-supportAreas: [cognitive, reading, sensory]
+description: Shows only the article on a cluttered page. Use when ads, sidebars or popups make it hard to keep your place while reading (common with ADHD or dyslexia).
+supportAreas: [cognitive, reading]
 siteRelevance: [news, education, reference]
 ---
 
 # Quiet Reading
-Strips clutter and boosts contrast so text is easy to focus on.
+Shows only the article, so there is less on the page pulling attention away.
 
 ## What it does
-1. **reader-mode** — extracts the article into a clean view.
-2. **focus-mode** — hides ads and side content.
+1. **reader-mode** - pulls the article into a clean view.
+2. **focus-mode** - hides ads, popups and side content.
 
 ## Recipe
 ```json
@@ -188,162 +142,298 @@ Strips clutter and boosts contrast so text is easy to focus on.
 ```
 ````
 
-- The `Recipe` JSON is the runnable truth. Reference only adapter ids and setting
-  keys that exist in the registry — `validateSkill` rejects unknown ones.
+A few rules, all checked by `validateSkill`:
+
+- The JSON under `## Recipe` is what runs. The text above it is for people and
+  for the model that picks skills, so make sure the two match.
+- Use only adapter ids and setting keys that exist in
+  `toolkit/registry/tools.js`. The ids are the registry entries, and the
+  setting keys are in `settingsMeta`.
 - `supportAreas` values come from `SUPPORT_AREAS` in
-  [`toolkit/core/ability.js`](toolkit/core/ability.js); `siteRelevance` values
-  are taxonomy categories ([`toolkit/core/taxonomy.js`](toolkit/core/taxonomy.js))
-  or `all`. `validateSkill` rejects anything else, because retrieval matches on
-  these two fields and a skill outside the vocabulary is never found again.
-- Keep it minimal (1–4 adapters). Verify with `node toolkit/test/skill-test.js`.
-- In the description, lead with the need the skill serves; name conditions
-  only as examples ("Use when motion or clutter cause overload — common with
-  migraine, vestibular disorders, or sensory sensitivity").
+  [`toolkit/core/ability.js`](toolkit/core/ability.js) (vision, hearing,
+  motor, cognitive, reading, sensory), and `siteRelevance` values are
+  categories from [`toolkit/core/taxonomy.js`](toolkit/core/taxonomy.js) or
+  `all`. Skills are found by these two fields, so a skill with a value outside
+  these lists is never picked.
+- Use one to four adapters, and only the ones that serve the need.
+- Start the description with the need, and name conditions only as examples,
+  the way `calm-browsing` does.
 
-A host's **Engineer** (`toolkit/core/skill-builder.js`) can also author skills
-from a plain-language need at runtime — the same validation applies.
+You can check it with `node toolkit/test/skill-test.js`, then `npm test`.
 
-## Adding an AI capability
+> **Note**: a new built-in skill shows up in the demos right away, and in the
+> extension once the extension repository rebuilds. The hosted server doesn't
+> load built-in skills.
 
-The core and adapters reach the model through a provider abstraction, never a
-concrete SDK. Add the method to the provider interface (`tools/utils/ai.js` for
-catalog adapters; the toolkit core takes an injected LLM caller) and implement it
-in your host's provider. Keep prompts and the provider host-side.
+Hosts can also have the Engineer (`toolkit/core/skill-builder.js`) write a
+skill from a plain-language need while they run, and those skills go through
+the same checks.
+
+## Adding an adapter
+
+An adapter takes more steps than a skill, because several files need to know
+it exists. The quickest way to see them all is to follow an existing adapter
+through the repository. We recommend copying `tools/adapters/reading-ruler.js`
+(about 120 lines), and this lists every file that mentions it:
+
+```bash
+grep -rln "ReadingRuler\|reading-ruler\|readingRuler" tools toolkit cli scripts
+```
+
+There are two kinds of adapter, and the conformance test treats them
+differently:
+
+- A switchable tool is an exported object with `enabled`, `enable()`,
+  `disable()` and `toggle()`, where `disable()` undoes everything `enable()`
+  did (e.g., `ReadingRuler`).
+- A one-way fix is a set of functions that repair something on the page, plus
+  an `axeHandlers` map from axe rule ids to those functions (e.g.,
+  `fix-tables.js`, which has an AI fallback, and `fix-landmarks.js`, which
+  doesn't use AI).
+
+The steps:
+
+1. Write `tools/adapters/<name>.js`. Shared DOM helpers (`isVisible`,
+   `markProcessed`, `wasProcessed`, ...) are in `tools/utils/dom.js`, and any
+   model call goes through `tools/utils/ai.js` (see
+   [AI features](#surfaces-platforms-and-ai-features)).
+2. Export it from `tools/adapters/index.js`. If it has `axeHandlers`, import
+   them there and spread them into the combined map. Make sure no other
+   adapter already handles the same axe rule (`wcag-fixes.js` covers many),
+   since a later entry silently replaces an earlier one.
+3. Add it to `tools/test/adapter-conformance-test.js`: the object's name goes
+   in `TOOL_OBJECTS`, or the file name goes in `ADDITIVE_MODULES` for a
+   one-way fix.
+4. Add an entry to `toolkit/registry/tools.js`. It needs `id`, `name`,
+   `description`, `supportAreas`, `siteRelevance` and `settings`, and the
+   existing entries also set `requiresAI`, `icon`, `emoji` and `quickStart`.
+   The Engineer reads `description` when it picks adapters for a skill, so
+   please say plainly what the adapter does.
+5. Add each new setting key to `settingsMeta` in the same file. No test
+   catches a missing key, but any skill that uses it will fail validation.
+6. Add a line to `adaptersForTools` in `tools/profiles/settings.js` that maps
+   the setting key to the adapter's file name.
+7. Write a test in `tools/test/` (e.g., `reading-ruler-test.js`). If the
+   adapter changes layout or styles, add a check to
+   `tools/test/browser-validate.js` too, since jsdom can't see those.
+8. Regenerate the type declarations and the CLI bundle (`npm run build:types`
+   and `npm run build:cli`) and commit what changes. Any registry edit changes
+   the types, and any new adapter changes the bundle.
+
+`node tools/test/registry-parity-test.js` checks that steps 2, 4 and 6 agree.
+It has two lists for the rare cases that rule can't express: `SUB_SETTINGS`
+for a key that only tunes another key's adapter, and `KNOWN_UNREACHABLE` for an
+adapter left out of the registry on purpose. If you use either one, please add
+a comment saying why.
+
+*(Optional)* If the CLI should be able to switch your adapter on from a
+profile, also add it to `applyProfileByName` in `cli/cli-tools.js`. This is a
+new import from `cli/` into `tools/`, so it needs a `KNOWN_EDGES` entry too
+(see [Package boundaries](#package-boundaries)).
+
+## Adding an auditor
+
+Auditors find barriers on a page so adapters can fix them. We use axe-core for
+standard WCAG checks, so write a custom auditor only for what axe misses. An
+auditor is usually one function that returns the elements with the problem:
+
+```js
+// tools/auditors/missing-headings.js
+import { isVisible, wasProcessed } from '../utils/dom.js';
+
+export function findSectionsWithoutHeadings() {
+  return Array.from(document.querySelectorAll('section, article'))
+    .filter(el => !wasProcessed(el) && isVisible(el) && !el.querySelector('h1,h2,h3,h4,h5,h6'));
+}
+```
+
+Then add `export * from './missing-headings.js';` to
+`tools/auditors/index.js`. Keep in mind that jsdom does no layout, so in tests
+`isVisible()` returns false unless you stub `getBoundingClientRect` (see
+`tools/test/auditors-test.js` for how).
+
+## Adding a profile
+
+A profile (also called a preset) is a set of starting settings for someone the
+toolkit doesn't know yet. There are twelve in `tools/profiles/settings.json`,
+each built from published guidance and described in
+[docs/PROFILE-CARDS.md](docs/PROFILE-CARDS.md). Most changes will be tuning an
+existing one.
+
+A new profile goes inside the `"profiles"` object:
+
+```json
+"myProfile": {
+  "name": "My Profile",
+  "description": "What it does",
+  "tools": { "fontScale": 130, "darkMode": true, "autoSimplify": true }
+}
+```
+
+The keys under `tools` are the setting keys in `settingsMeta` in
+[`toolkit/registry/tools.js`](toolkit/registry/tools.js), the same list skills
+are checked against. Adding a profile also means updating `EXPECTED_PROFILES`
+and the count of 12 in `tools/test/profiles-test.js`, adding any new keys to
+`RECOGNIZED` there, and writing a card for it in `docs/PROFILE-CARDS.md`.
+Please open an issue first, since a new profile needs the same grounding in
+published research as the existing twelve.
+
+In the `description`, say what the preset does rather than who its users are,
+since two people who pick the same preset can need very different things.
+
+## Surfaces, platforms and AI features
+
+- A surface is a function in `toolkit/surfaces/` that turns a person's ability
+  model into one platform's settings (`web.js`, `mobile.js`, `xr.js`). A new
+  one also needs a line in the `exports` map of `toolkit/package.json`, or
+  people who install the package won't be able to import it.
+- To run the core in a new kind of host, implement the ports in
+  `toolkit/platforms/<host>/`, using `toolkit/platforms/node/` as the
+  template.
+- Code in `tools/` reaches a model only through `tools/utils/ai.js`. The host
+  passes a provider object to `setAIProvider()`, and the comment on each
+  wrapper in `ai.js` says whether that method is required or optional. The
+  core instead takes a function from the host that sends a prompt and returns
+  the model's text. Neither imports a vendor SDK, so please keep it that way.
 
 ## Testing
 
+`npm test` is the main check. It runs the tools, toolkit, controller and
+onboarding suites, plus the import-boundary check. It stops at the first file
+that fails and doesn't print that file's name, so if a failure isn't obvious,
+try running the suite you changed on its own (e.g.,
+`node tools/test/reading-ruler-test.js`).
+
+If you changed the server, also run `node server/test/server-test.mjs`.
+
+Two suites drive a real headless Chromium. They're left out of `npm test`
+because they need a browser download that `npm install` doesn't do:
+
 ```bash
-npm test                                 # tools, toolkit, controller, and onboarding suites, plus the import-boundary check
-node toolkit/hosts/xr-demo/demo.js       # cross-surface + grants loop
-node toolkit/hosts/skill-demo/demo.js    # retrieve → resolve → build → validate → save
-node server/test/server-test.mjs         # hosted service
+npx playwright install --only-shell chromium   # once, about 100 MB
+npm run validate:browser   # each adapter's real effect in a real layout, and that turning it off undoes it
+npm run test:e2e           # the /chat page in onboarding/, end to end
 ```
 
-Two suites drive a real headless Chromium and are kept out of `npm test` on
-purpose, because they need a browser download that `npm install` does not do:
+Please run both before opening a PR that touches `onboarding/`, `controller/`,
+`tools/`, `toolkit/` or `server/src/`. CI runs them for those paths in a
+separate job (`.github/workflows/browser.yml`). That job doesn't block a merge,
+but please look at a red result before asking for review.
 
-```bash
-npx playwright install chromium          # one-time browser download
-npm run validate:browser                 # each adapter's real effect and reversal in a real layout
-npm run test:e2e                         # the /chat page end to end; the only test that runs onboarding/chat.js
-```
+Some files are generated, so instead of editing them by hand, regenerate them
+and commit the result:
 
-Run both before opening a PR that touches `onboarding/`, `controller/`,
-`tools/`, `toolkit/`, or `server/src/`. CI also runs them for such changes in
-a separate job (`.github/workflows/browser.yml`) that does not block a merge;
-a red result there is still worth reading before you ask for review.
+| File | Regenerate with | When |
+|---|---|---|
+| `toolkit/API.md` and `.claude/skills/ai4a11y-toolkit/SKILL.md` | `npm --prefix toolkit run docs` | you changed the core API (`npm test` fails if they're stale) |
+| `toolkit/types/` | `npm run build:types` | you changed code in `toolkit/`, including the registry (CI fails if stale) |
+| `cli/cli-tools.bundle.js` | `npm run build:cli` | you changed an adapter or anything else the CLI imports (CI fails if stale) |
+| `server/API.md` | `npm --prefix server run docs` | you changed a server route. It has a timestamp, so skip it otherwise |
 
-`toolkit/API.md` and the `ai4a11y-toolkit` skill are **generated** — if you
-change the core API, regenerate them (see the note at the top of each file)
-rather than hand-editing. So is `toolkit/types/`, the core's type
-declarations: `npm run build:types` regenerates it from the JSDoc, and CI
-fails when it is stale.
+## Opening a pull request
 
-## PR guidelines
+- Keep it to one change, e.g., one skill, one adapter, or one fix.
+- Say who it helps (which need or profile) and how you tested it. The PR
+  template asks for both.
+- `npm test` has to pass, plus the browser suites if you touched the folders
+  listed under Testing.
+- If you added an import between packages, please mention it in the
+  description.
+- If you worked with people the change is meant for, we'd love to hear how!
 
-- One feature per PR.
-- Tests must pass (`npm test` + the demos above, plus the two browser suites
-  if you touched `onboarding/`, `controller/`, `tools/`, `toolkit/`, or
-  `server/src/`).
-- Regenerate `toolkit/API.md` / the skill if you changed the core surface,
-  and `toolkit/types/` (`npm run build:types`) if you changed a signature.
-- Describe who benefits (which disability/need).
+Using an AI coding assistant is fine (a lot of this repository was written
+with one), but please read and run the code yourself before opening the PR.
+
+There's no linter, formatter or commit message format. Please match the style
+of the file you're editing, write JSDoc on exported functions in `toolkit/`
+(the type declarations are built from it), and link to large binaries instead
+of committing them.
 
 ## What to expect from review
 
-This is a time-boxed research project. During the active phase we review as
-capacity allows; afterwards, review may be slow or paused while longer-term
-maintainership is defined (see [ROADMAP.md](ROADMAP.md), Governance). An
-unreviewed PR is a statement about our capacity, not about your
-contribution.
+This is a research project funded through November 2026, and the people
+reviewing PRs are also doing the research. Until then we review as time
+allows. After that, review may be slow or stop for a while until longer-term
+maintainers are named (see Governance in [ROADMAP.md](ROADMAP.md)). If your PR
+sits without a review, it's probably because we're busy with the research, and
+it's fine to leave a comment to remind us.
 
 ## Forks and spin-offs
 
-This project is a research probe with a deliberately small core. We do not
-expect — or want — every idea to land in this repository. If the toolkit is
-useful to you but you need it to go somewhere we aren't going, **fork it.
-We consider that as a success, not a defection.**
+The core is deliberately small, and we don't expect every idea to land here.
+If the toolkit is useful to you but you need it to do things we aren't
+planning to support, please fork it. That's fine with us, and forks are part of
+how we hope the toolkit gets used.
 
-What we ask in return is the learnings. If your fork or spin-off teaches
-you something — an adapter that worked, a design that didn't, a need the
-ability model can't express, results from testing with the people you built
-it for — open an issue or a short write-up telling us what you found. Code
-back is welcome; understanding back is the part we can't get any other way.
+If you learn something from your fork, we'd love to hear about it (e.g., which
+adapters or designs worked and which didn't, a need the ability model couldn't
+express, or results from testing with the people you built it for). You can
+open an issue or send a short write-up, and pull requests with your changes are
+welcome too.
 
-Practical notes for forkers:
+A few notes for forks:
 
-- The Apache 2.0 license already permits all of this; this section is an
-  invitation, not a condition.
-- Please rename your fork enough that people don't mistake it for this
-  project, and keep the "research probe, not validated, not a replacement
-  for assistive technology" framing anywhere you inherit our claims.
-- If you want your project listed alongside the others building on the
-  toolkit, add it to [docs/projects.md](docs/projects.md) by pull request.
+- The Apache 2.0 license already allows all of this, so nothing here is
+  required.
+- Please rename your fork enough that people won't mistake it for this
+  project, and keep the "research probe, not validated, not a replacement for
+  assistive technology" framing anywhere you reuse our claims.
+- If you'd like us to know about your project, open an issue and tell us about
+  it.
 
-How outside contributions and forks will be handled longer term
-(custodianship, reconciling forks) is still being defined; this section
-will be updated when it is.
-
-## Code style
-
-- ES modules throughout.
-- Use the AI provider abstraction for AI features — no concrete SDK in core/catalog.
-- Document which needs/profiles a feature helps.
-- No large binaries — link externally.
+We're still working out how forks and outside contributions will be handled
+after the research phase, and we'll update this section then.
 
 ## Package boundaries
 
-Six of the top-level directories are packages with one direction of
-dependency: `toolkit/`, `tools/`, `server/`, `controller/`, `onboarding/`, and
-`cli/`. `toolkit/` (the core) and `tools/` (the catalog) import from no sibling.
-`server/`, `controller/`, and `cli/` depend inward on those two. `onboarding/`
-is the one edge between neighbors: it reuses the server's auth, LLM caller,
-store, and toolkit host, and serves the controller's modules to its chat page.
+`toolkit/`, `tools/`, `server/`, `controller/`, `onboarding/` and `cli/` are
+separate packages, and imports between them only go one way. `toolkit/` (the
+core) and `tools/` (the catalog) import from no other package. `server/`,
+`controller/` and `cli/` can import from those two, and `onboarding/` also
+reuses parts of `server/`.
 
-Four rules keep that shape, and `npm test` checks them inside those six
-directories (`scripts/import-boundaries-test.mjs`). `examples/`, `scripts/`,
-and `docs/` are outside the walk, so an import from there into a package is
-not checked; keep it on a path the package's `exports` map exposes.
+`scripts/import-boundaries-test.mjs` checks four rules as part of `npm test`:
 
-1. **No relative import reaches past another package's public exports.**
-   `toolkit/package.json` and `tools/package.json` have `exports` maps; an
-   import into either has to land on a path the map exposes. A deep path the
-   map does not list works in this repository and fails for anyone who
-   installs the package. `server/` and `onboarding/` have a manifest but no
-   exports map yet, and `controller/` and `cli/` have no manifest; the test
-   treats every file as reachable in a package that has a manifest but no
-   map, and only the root `.js` files in a directory with no manifest. An
-   import that has to land on a path the map does not expose goes in the
-   test's `KNOWN_BREAKS` list with the reason it is tolerated, and the test
-   fails again once it stops being a break.
-2. **A cross-package import is a dependency the importing package declares.**
-   There are no npm workspaces yet, so "declares" means the edge is in the
-   test's `ALLOWED` table (which package may import from which) and its
-   `KNOWN_EDGES` list (which file imports what, with a one-line reason). When
-   workspaces land, the declaration moves to `dependencies`.
-3. **The graph stays acyclic.** The test checks both the table and what the
-   code does.
-4. **A new edge gets called out in review.** Add it to `KNOWN_EDGES` with its
-   reason in the same change and say so in the PR description. The test fails
-   until the entry exists, and fails again if the import goes away and the
-   entry stays.
+1. An import into `toolkit/` or `tools/` only uses paths listed in that
+   package's `exports` map. A deeper path works here but breaks for anyone who
+   installs the package. Tolerated exceptions go in the test's `KNOWN_BREAKS`
+   list, with the reason.
+2. Every import between packages is declared: its direction is in the test's
+   `ALLOWED` table, and the file is in `KNOWN_EDGES` with a one-line reason.
+3. There are no cycles.
+4. A new import between packages is called out in the PR description.
 
-The test reads relative import specifiers only. An import through a URL path
-a server mounts (the way `onboarding/chat.js` loads `/controller/lib/...`) is
-an edge too; call it out the same way. A file read by path is not an import
-and is not checked: `toolkit/scripts/generate-skill.mjs` reads
-`server/CONTRACT.md` and the server source when it generates the skill file,
-and that script is not in the package's `files` list, so the published
-package does not carry the reach.
+When the test fails, it prints the two files. Add the pair to `KNOWN_EDGES`
+with a reason and mention it in your PR. If it says the direction isn't in
+`ALLOWED`, please open an issue instead of editing the table. If you remove an
+import, remember to remove its entry too.
 
-## Ethics
+The test only reads relative imports in package code, so please call out
+anything else yourself, e.g., an import from a test file, or the way
+`onboarding/chat.js` loads `/controller/lib/...` through a URL.
 
-- People with disabilities must be involved in design and evaluation.
-- Compensate participants.
-- Handle profiles and personalization data carefully.
-- Don't simulate ability profiles without community input.
+## Working with disabled people
 
-## Questions?
+The project's first principle is "Nothing about us without us"
+([docs/GLOSSARY.md](docs/GLOSSARY.md#principles)). For contributors, that
+means:
 
-Open an issue on this repository (or the extension repository's, for
-extension work). Current contact routes: [MAINTAINERS.md](MAINTAINERS.md).
+- Involve people with disabilities in the design and evaluation of what you
+  build, not only at the end.
+- Pay the people who take part.
+- Handle profile and personalization data carefully. A profile describes
+  someone's needs, so it can reveal a disability.
+- Don't create or simulate an ability profile without input from the
+  community it's meant for.
+
+Testing with a screen reader or other assistive technology yourself is useful,
+but it isn't the same as testing with people who use it every day.
+
+## Questions
+
+Feel free to open an issue here, or in the extension repository for extension
+work. If you'd rather not use GitHub, the email address in
+[MAINTAINERS.md](MAINTAINERS.md) works too. Security problems go through
+[SECURITY.md](SECURITY.md), never a public issue.
+
+Thank you for your contributions!
