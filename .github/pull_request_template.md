@@ -19,4 +19,4 @@ Which needs or profiles does this help?
 
 - [ ] `npm test` passes
 - [ ] If I changed `onboarding/`, `controller/`, `tools/`, `toolkit/` or `server/src/`, `npm run validate:browser` and `npm run test:e2e` pass
-- [ ] If I changed code that generated files are built from, I regenerated them (see Testing in docs/adding-to-the-catalog.md)
+- [ ] If I changed code in `toolkit/`, an adapter or a server route, I rebuilt the generated files (see Testing in docs/adding-to-the-catalog.md)

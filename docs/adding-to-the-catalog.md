@@ -1,8 +1,8 @@
 # Adding to the catalog
 
 The catalog is the set of skills, adapters, auditors and profiles that apps
-built on the toolkit can use. This page shows how to add each one. See
-[CONTRIBUTING.md](../CONTRIBUTING.md) for setting up.
+built on the toolkit can use. See [CONTRIBUTING.md](../CONTRIBUTING.md) for
+setting up the repository.
 
 | To... | Add a... | In |
 |---|---|---|
@@ -16,18 +16,18 @@ built on the toolkit can use. This page shows how to add each one. See
 A skill is a markdown file with a header, a short description, and a recipe
 that says which adapters to turn on. You don't need to write any code.
 
-1. Copy one of the skills in `toolkit/skills/builtin/` (e.g.,
-   `calm-browsing.md`) and name the copy after your skill, e.g.,
-   `quiet-reading.md`.
+1. Copy one of the skills in `toolkit/skills/builtin/`, e.g.,
+   `calm-browsing.md`, and rename the copy after your skill
+   (`quiet-reading.md` in the example below).
 
 2. Fill in the header.
 
 | Field | What to put | Example |
 |---|---|---|
 | `name` | The file name without `.md` | `quiet-reading` |
-| `description` | What the skill does, then when to use it. Mention conditions only as examples. | `Shows only the article on a cluttered page. Use when ads, sidebars or popups make it hard to keep your place while reading (common with ADHD or dyslexia).` |
+| `description` | What the skill does, then when to use it. If you name a condition, give it as an example, e.g., "(common with ADHD or dyslexia)". | `Shows only the article on a cluttered page. Use when ads, sidebars or popups make it hard to keep your place while reading (common with ADHD or dyslexia).` |
 | `supportAreas` | One or more of `vision`, `hearing`, `motor`, `cognitive`, `reading` and `sensory` | `[cognitive, reading]` |
-| `siteRelevance` | The kinds of sites it's for: `news`, `social`, `video`, `shopping`, `education`, `productivity`, `reference`, `finance`, `health`, `government` or `other`, or `all` | `[news, education, reference]` |
+| `siteRelevance` | The kinds of sites it's for. One or more of `news`, `social`, `video`, `shopping`, `education`, `productivity`, `reference`, `finance`, `health`, `government` and `other`, or `all` for any site | `[news, education, reference]` |
 
 3. Pick one to four adapters. To see every adapter and the settings that turn
    it on, run:
@@ -61,9 +61,8 @@ Shows only the article, so there is less on the page pulling attention away.
 ```
 ````
 
-   The recipe is what runs, so keep the list under "What it does" the same as
-   the recipe. You can also add "When to use" and "Notes" sections, like
-   `calm-browsing.md` does.
+   Keep the list under "What it does" the same as the recipe. You can also add
+   "When to use" and "Notes" sections, like `calm-browsing.md` does.
 
 5. Run the skill tests, then all the tests.
 
@@ -78,13 +77,10 @@ npm test
 
 ## Adding an adapter
 
-An adapter is code that makes one change to a page. Most adapters are an
-object you turn on with `enable()` and off with `disable()`, like
+An adapter is code that makes one change to a page. Most adapters are
+objects you turn on with `enable()` and off with `disable()`, like
 `ReadingRuler` in `tools/adapters/reading-ruler.js`. Skills and profiles turn
 an adapter on with its setting key, e.g., `readingRuler: true`.
-
-Each step below shows the line `reading-ruler` uses, so you can add the same
-line for yours.
 
 1. Write `tools/adapters/<name>.js`. We recommend copying `reading-ruler.js`.
    The shape is:
@@ -125,9 +121,9 @@ export { ReadingRuler } from './reading-ruler.js';
 const TOOL_OBJECTS = [ ..., 'ReadingRuler', ... ];
 ```
 
-4. Add an entry in `toolkit/registry/tools.js`. The Engineer (the part of the
-   toolkit that writes a skill from what someone asks for in their own words)
-   reads the `description` when it picks adapters.
+4. Add an entry in `toolkit/registry/tools.js`, and say plainly what the
+   adapter does in `description`. The Engineer (the agent that writes new
+   skills) reads it to pick adapters.
 
 ```js
 {
@@ -150,8 +146,8 @@ const TOOL_OBJECTS = [ ..., 'ReadingRuler', ... ];
 readingRuler: { type: 'boolean', description: 'A highlight band that follows your reading line' },
 ```
 
-6. In `tools/profiles/settings.js`, add a line to `adaptersForTools` so that
-   the setting key turns on your adapter.
+6. In `tools/profiles/settings.js`, add a line to `adaptersForTools` that
+   turns on your adapter when its setting key is set.
 
 ```js
 if (tools.readingRuler) enabled.push('reading-ruler');
@@ -176,19 +172,20 @@ To see your adapter work in a real browser, add a check to
 `tools/test/browser-validate.js` and run `npm run validate:browser` (see
 [Testing](#testing)).
 
-A few adapters are functions that fix a page once instead of an object you
-turn on and off, e.g., `tools/adapters/fix-tables.js`. For one of those, add
-the file name to `ADDITIVE_MODULES` instead of `TOOL_OBJECTS` in step 3, and
-if it fixes axe rules, add its `axeHandlers` to the combined map in
-`tools/adapters/index.js`.
+A few adapters are functions that fix a page once, e.g.,
+`tools/adapters/fix-tables.js`. For one of those, list the file name in
+`ADDITIVE_MODULES` in step 3 (not `TOOL_OBJECTS`). If it fixes axe rules, also
+add its `axeHandlers` to the combined map in `tools/adapters/index.js`.
 
 ## Adding an auditor
 
-An auditor finds accessibility problems on a page. The catalog already runs
-axe-core for the standard WCAG checks (in `tools/auditors/wcag-issues.js`), so
-write a new auditor for problems axe doesn't check. An auditor is usually a
-function that returns the elements with the problem. For example, `findEmptyLinks` in `tools/auditors/missing-labels.js` returns links
-with no accessible name:
+An auditor finds accessibility problems on a page. The standard WCAG checks
+already run through axe-core (in `tools/auditors/wcag-issues.js`). A new
+auditor should look for something axe doesn't check.
+
+An auditor is usually a function that returns the elements with the problem.
+For example, `findEmptyLinks` in `tools/auditors/missing-labels.js` returns
+links with no accessible name:
 
 ```js
 import { isVisible, wasProcessed, hasAccessibleName } from '../utils/dom.js';
@@ -215,9 +212,9 @@ export function findEmptyLinks() {
 export * from './missing-labels.js';
 ```
 
-3. Add checks to `tools/test/auditors-test.js`. jsdom doesn't lay out the
-   page, so the test's `mount()` gives every element a size from its `data-w`
-   and `data-h` attributes (200 by 40 if they're not set).
+3. Add checks to `tools/test/auditors-test.js`. To give an element a size in
+   the test, set its `data-w` and `data-h` attributes (the default is 200 by
+   40).
 
 ```bash
 node tools/test/auditors-test.js
@@ -255,8 +252,9 @@ In the description, say what the profile does, not who it is for.
 
 ## Testing
 
-Run `npm test` before opening a PR. It stops at the first failing file, so to
-debug, run one test file at a time (e.g., `node tools/test/reading-ruler-test.js`).
+Run `npm test` before opening a PR. It stops at the first file that fails. To
+find the problem, run the test file for what you changed on its own, e.g.,
+`node tools/test/reading-ruler-test.js`.
 
 If you changed `onboarding/`, `controller/`, `tools/`, `toolkit/` or
 `server/src/`, also run the browser tests.
@@ -291,7 +289,9 @@ others. `scripts/import-boundaries-test.mjs` checks four rules:
 2. Every import between packages is allowed in `ALLOWED` and listed in
    `KNOWN_EDGES` with a reason.
 3. There are no cycles.
-4. New imports between packages are mentioned in the PR.
+4. `KNOWN_EDGES` matches the code. A new import fails until it's listed, and an
+   entry whose import is gone fails too. Please also mention new imports in
+   your PR.
 
 If the test fails after you add an import, add the pair it prints to
 `KNOWN_EDGES`. If the import isn't allowed, please open an issue.

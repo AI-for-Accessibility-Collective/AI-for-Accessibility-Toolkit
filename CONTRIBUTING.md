@@ -44,11 +44,9 @@ doesn't check. Follow
 
 ### Build an example app
 
-Use the toolkit in your own project, starting from
-[docs/QUICKSTART.md](docs/QUICKSTART.md), and open an issue to tell us about
-it.
-
-For bigger changes, please open an issue first.
+Build an app on the toolkit in your own repository. To get started, follow
+[docs/QUICKSTART.md](docs/QUICKSTART.md), which has the demos and a short code
+example. When you have something working, open an issue with a link to it.
 
 ## Setting up
 
@@ -71,13 +69,38 @@ npm test
 ## Pull requests
 
 Keep each PR to one change, e.g., one skill or one adapter, and make sure
-`npm test` passes. When you open a PR, GitHub fills in our template, which
-asks:
+`npm test` passes.
 
-- What does this PR do?
-- Which parts of the repository does it change?
-- Who does it help?
-- How did you test it?
+GitHub fills in this template when you open a PR. You can also copy it from
+here:
+
+```markdown
+## What does this PR do?
+
+## Which parts of the repository does it change?
+
+- [ ] Core (`toolkit/`)
+- [ ] Skills or registry (`toolkit/skills/builtin/`, `toolkit/registry/`)
+- [ ] Adapters, auditors or profiles (`tools/`)
+- [ ] Hosted service (`server/`)
+- [ ] Controller (`controller/`)
+- [ ] Onboarding example (`onboarding/`)
+- [ ] CLI (`cli/`)
+- [ ] Docs
+
+## Who does it help?
+
+Which needs or profiles does this help?
+
+## How did you test it?
+
+- [ ] `npm test` passes
+- [ ] If I changed `onboarding/`, `controller/`, `tools/`, `toolkit/` or `server/src/`, `npm run validate:browser` and `npm run test:e2e` pass
+- [ ] If I changed code in `toolkit/`, an adapter or a server route, I rebuilt the generated files (see Testing in docs/adding-to-the-catalog.md)
+```
+
+If you're planning a bigger change, e.g., to the core in `toolkit/core/`,
+please open an issue to discuss it before you start.
 
 ## Working with people with disabilities
 

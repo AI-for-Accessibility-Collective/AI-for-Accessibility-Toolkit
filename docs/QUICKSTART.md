@@ -1,7 +1,7 @@
 # Quick start
 
-This page shows how to run the demos and use the toolkit's core in your own
-code. You don't need a browser, a build step or an API key.
+You don't need a browser, a build step or an API key to run the demos or use
+the core.
 
 ## Run the demos
 
