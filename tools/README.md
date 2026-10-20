@@ -57,4 +57,4 @@ const simple = await simplifyText(complexText);
 
 ## Adding Tools
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for details on adding auditors, adapters, and profiles.
+See [docs/adding-to-the-catalog.md](../docs/adding-to-the-catalog.md) for details on adding auditors, adapters, and profiles.

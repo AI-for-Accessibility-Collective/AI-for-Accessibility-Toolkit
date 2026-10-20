@@ -29,7 +29,7 @@ One honest limit of the current convention: an adapter does not report upward wh
 
 ## The skills library and registry
 
-A **skill** is a `SKILL.md` recipe naming which adapters to apply, with what settings, for a need. It resolves deterministically at apply time; no model runs when a skill is applied. Skills are the best first contribution: no code, and they exercise the whole validation path (see [CONTRIBUTING.md](../CONTRIBUTING.md), "Adding a skill").
+A **skill** is a `SKILL.md` recipe naming which adapters to apply, with what settings, for a need. It resolves deterministically at apply time; no model runs when a skill is applied. Skills are the best first contribution: no code, and they exercise the whole validation path (see "Adding a skill" in [adding-to-the-catalog.md](adding-to-the-catalog.md#adding-a-skill)).
 
 - **Starter skills** ([`../toolkit/skills/builtin/`](../toolkit/skills/builtin/)): four recipes composing adapters for common needs.
 - **Registry** ([`../toolkit/registry/tools.js`](../toolkit/registry/tools.js)): the single catalog of tools and their settings vocabulary that grounds the skill builder and any host UI. Every tool declares which abilities it helps and where it applies (46 entries).

@@ -235,7 +235,7 @@ const settings = await loadSettings(storageGetter);
 ```
 
 The `description` says what the preset does, never who its users are — see
-"Adding a profile" in [CONTRIBUTING.md](../CONTRIBUTING.md).
+"Adding a profile" in [adding-to-the-catalog.md](adding-to-the-catalog.md#adding-a-profile).
 
 ### Multi-Profile Merging
 

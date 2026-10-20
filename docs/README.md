@@ -32,6 +32,7 @@ back in this repository under `cli/`.
 - [../.claude/skills/ai4a11y-toolkit/SKILL.md](../.claude/skills/ai4a11y-toolkit/SKILL.md): Embedding walkthrough: wire the ports, call the API, implement a host, or use the HTTP service.
 - [web-extension-getting-started.md](web-extension-getting-started.md): Short path for a browser-extension host: the Chrome port factories, skill-layer wiring, render-and-apply, the two AI seams.
 - [xr-getting-started.md](xr-getting-started.md): Short path for a non-web host: demo, the needs model, embed-vs-HTTP integration, consent-gated write-back.
+- [adding-to-the-catalog.md](adding-to-the-catalog.md): Step-by-step instructions for adding a skill, adapter, auditor or profile, plus testing and package boundaries.
 - [using-in-your-project.md](using-in-your-project.md): Consuming `@ai4a11y/toolkit` and `@ai4a11y/tools` in your own project (not on npm yet — the pack-and-vendor recipe).
 - [HOW-THIS-WAS-BUILT.md](HOW-THIS-WAS-BUILT.md): Who built this, how, and what that means for what you can expect.
 
