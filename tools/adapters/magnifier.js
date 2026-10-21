@@ -81,12 +81,44 @@ export const Magnifier = {
       if (typeof document.elementFromPoint !== 'function') return;
       const el = document.elementFromPoint(e.clientX, e.clientY);
       if (!el || el === lens || lens.contains(el)) return;
-      const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+      const text = this.textAt(e.clientX, e.clientY);
       if (!text) { this.hide(); return; }
-      lens.textContent = text.length > 180 ? `${text.slice(0, 180)}…` : text;
+      lens.textContent = text;
       lens.style.display = 'block';
       this.position(e.clientX, e.clientY);
     } catch { /* elementFromPoint unavailable or hit-testing failed */ }
+  },
+
+  // The text the pointer is actually on. Taking the hit element's
+  // textContent showed a whole card or section, words glued together
+  // ("New in booksThe Weeknight Pantry…"), even over blank space. Use the text
+  // node under the pointer instead: its element's words if short, else the
+  // words around the pointer. Returns '' when the pointer isn't on text.
+  textAt(x, y) {
+    let node = null, offset = 0;
+    if (typeof document.caretPositionFromPoint === 'function') {
+      const p = document.caretPositionFromPoint(x, y);
+      if (p) { node = p.offsetNode; offset = p.offset; }
+    } else if (typeof document.caretRangeFromPoint === 'function') {
+      const r = document.caretRangeFromPoint(x, y);
+      if (r) { node = r.startContainer; offset = r.startOffset; }
+    }
+    if (!node || node.nodeType !== 3 || !node.parentElement) return '';
+    // The caret lands on the nearest text even from blank space beside it.
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const on = Array.from(range.getClientRects()).some(r => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+    if (!on) return '';
+    // innerText, not textContent: it leaves out hidden text (a closed
+    // tooltip inside the element) and keeps blocks apart.
+    const el = node.parentElement;
+    const whole = String(el.innerText ?? el.textContent ?? '').replace(/\s+/g, ' ').trim();
+    if (whole.length <= 180) return whole;
+    const t = node.data;
+    const start = Math.max(0, offset - 80);
+    const end = Math.min(t.length, offset + 100);
+    const part = t.slice(start, end).replace(/\s+/g, ' ').trim();
+    return part ? `${start > 0 ? '…' : ''}${part}${end < t.length ? '…' : ''}` : '';
   },
 
   // Offset the lens from the cursor, flipping to the other side rather than

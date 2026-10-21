@@ -17,6 +17,7 @@
 // wrong way if they changed it meanwhile).
 
 import { registerSweep } from '../utils/observe.js';
+import { announce } from '../utils/ai.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 
@@ -37,7 +38,9 @@ const PLAYERS = [
   },
   {
     name: 'vimeo',
-    button: () => document.querySelector('.vp-captions-button, button[aria-label*="aptions" i]'),
+    // Not the toolkit's own caption buttons (auto-transcriber's "Captions"
+    // toggle): clicking that would pop up its "no captions" message.
+    button: () => document.querySelector('.vp-captions-button, button[aria-label*="aptions" i]:not([class*="ai4a11y"])'),
     isOn: (btn) => btn.getAttribute('aria-pressed') === 'true',
   },
 ];
@@ -53,6 +56,7 @@ export const ShowCaptions = {
   // Enable the best caption/subtitle track on each <video> that has one, once.
   _enableNativeTracks() {
     const lang = preferredLang();
+    let turnedOn = 0;
     for (const v of document.querySelectorAll('video')) {
       if (v.dataset[DATA]) continue; // handled once — never fight a later user toggle
       const list = v.textTracks ? [...v.textTracks] : [];
@@ -60,10 +64,12 @@ export const ShowCaptions = {
       if (!tracks.length) continue;
       const want = tracks.find((t) => (t.language || '').toLowerCase().startsWith(lang)) || tracks[0];
       this._restore.push({ track: want, prevMode: want.mode });
+      if (want.mode !== 'showing') turnedOn++;
       try { want.mode = 'showing'; } catch { /* some players make mode read-only */ }
       v.dataset[DATA] = 'on';
       logFix('showCaptions', v, '(off)', 'showing');
     }
+    return turnedOn;
   },
 
   // Turn on captions for players that own their CC UI — at most once per URL, so
@@ -82,9 +88,21 @@ export const ShowCaptions = {
   },
 
   _sweep() {
-    if (!this.enabled) return;
-    this._enableNativeTracks();
+    if (!this.enabled) return 0;
+    const n = this._enableNativeTracks();
     this._enablePlayerCaptions();
+    return n;
+  },
+
+  // Say what happened, so switching it on is never silent: a video with no
+  // caption track (the store's product video) can't be helped by this one.
+  _report(n) {
+    const videos = document.querySelectorAll('video');
+    if (!videos.length) return;
+    const withTracks = [...videos].filter((v) => v.dataset[DATA]).length;
+    if (n) announce(`Captions turned on for ${n === 1 ? 'the video' : n + ' videos'}`);
+    else if (withTracks) announce('Captions are on');
+    else announce(videos.length === 1 ? 'This video has no captions to turn on' : 'These videos have no captions to turn on');
   },
 
   enable() {
@@ -92,7 +110,7 @@ export const ShowCaptions = {
     this.enabled = true;
     this._restore = [];
     this._clicked = new Set();
-    this._sweep();
+    this._report(this._sweep());
     this._unregister = registerSweep('show-captions', () => this._sweep(), { debounceMs: 400 });
     console.log('[AI4A11y] Show Captions enabled');
   },

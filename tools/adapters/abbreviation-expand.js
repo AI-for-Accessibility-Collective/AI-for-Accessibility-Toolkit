@@ -65,20 +65,86 @@ const DICTIONARY = {
   'i.e.': 'that is',
   'vs.': 'versus',
   'etc.': 'and so on',
+  // Shopping and product-spec abbreviations. Stores lean on these in price
+  // lines, spec tables and order summaries, where there is no room to spell
+  // them out.
+  MSRP: "manufacturer's suggested retail price",
+  OOS: 'out of stock',
+  'S&S': 'Subscribe & Save, a repeat order',
+  Qty: 'quantity',
+  'Qty.': 'quantity',
+  'Incl.': 'includes',
+  'incl.': 'including',
+  'mo.': 'months',
+  'Avail.': 'available',
+  'Cust.': 'customer',
+  BSR: 'Best Sellers Rank',
+  'Mfr.': 'manufacturer',
+  'Mfg.': 'manufacturer',
+  'Cert.': 'certification',
+  'config.': 'configuration',
+  'I/O': 'input and output',
+  'Wt.': 'weight',
+  'Dims.': 'dimensions',
+  'Dia.': 'diameter',
+  'Ht.': 'height',
+  'Thk.': 'thickness',
+  'Vol.': 'volume',
+  'Compat.': 'compatible with',
+  'Batt.': 'battery',
+  'Insul.': 'insulation',
+  'Lum.': 'lumens, how bright it is',
+  'Ingr.': 'ingredients',
+  'Pcs.': 'pieces',
+  'Fmt.': 'format',
+  'pp.': 'pages',
+  'Pp.': 'pages',
+  'Pub. date': 'publication date',
+  'Lang.': 'language',
+  'ver.': 'version',
+  'len.': 'length',
+  PD: 'USB Power Delivery, a fast-charging standard',
+  PPS: 'Programmable Power Supply, a fast-charging standard',
+  GaN: 'gallium nitride, a chip material that runs cooler',
+  LED: 'light-emitting diode',
+  FCC: 'Federal Communications Commission',
+  UL: 'Underwriters Laboratories, a safety testing lab',
+  BT: 'Bluetooth',
+  ANC: 'active noise cancellation',
+  'IP rating': 'Ingress Protection rating, how well it keeps out dust and water',
+  CCT: 'correlated color temperature, how warm or cool the light looks',
+  CRI: 'color rendering index, how true colors look under the light',
+  BPA: 'bisphenol A, a chemical in some plastics',
+  GMO: 'genetically modified organism',
 };
+// Text a screen reader announces as it changes: rewrapping it would make the
+// screen reader read the message again.
+const LIVE_SEL = '[aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
+const RESCAN_MS = 400;
 
 export const AbbreviationExpand = {
   markerClass: 'ai4a11y-abbr',        // the injected <abbr> elements
   wrapperClass: 'ai4a11y-abbr-wrap',  // the text-node replacement wrappers
   enabled: false,
   handle: null,  // transformTextNodes handle (owns the exact-restore)
+  handles: null, // later passes, for text the page adds after enable()
   titled: null,  // pre-existing <abbr> elements whose title WE set
   style: null,   // injectStyle handle
+  observer: null,
+  rescanTimer: null,
+  spellOut: false, // options.spellOut: also write the full form out once, after the first use
+  spelled: null,   // abbreviations already written out on this page
 
   enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
     this.titled = [];
+    // A title shows only on mouse hover: not on a phone, not from the
+    // keyboard, and most screen readers skip it. With spellOut the first use
+    // of each abbreviation also gets its full form in brackets, which
+    // everyone sees and hears ("MSRP (manufacturer's suggested retail price)").
+    this.spellOut = options.spellOut === true;
+    this.spelled = new Set();
 
     // User entries merge over the defaults; a null-prototype object so page
     // text like "constructor" can never hit Object.prototype.
@@ -93,11 +159,8 @@ export const AbbreviationExpand = {
     this.fillTitles(root, dict);
 
     // Part 2: dictionary keys in plain text get wrapped in <abbr title="...">.
-    this.handle = transformTextNodes(root, (text) => this.buildWrapper(text, dict, matcher), {
-      skipTags: SKIP_TAGS,
-      skipClass: this.wrapperClass,
-      cap: MAX_TEXT_NODES,
-    });
+    this.handles = [];
+    this.handle = this.pass(root, dict, matcher, MAX_TEXT_NODES);
 
     this.style = injectStyle(STYLE_ID, `
       .${this.markerClass} {
@@ -110,6 +173,38 @@ export const AbbreviationExpand = {
     if (this.handle.capped) console.log(`[AI4A11y] Abbreviation Expand: capped at ${MAX_TEXT_NODES} text nodes`);
     console.log(`[AI4A11y] Abbreviation Expand enabled (${this.handle.records.length} text blocks, ${this.titled.length} existing abbr titles)`);
     announce(count ? 'Abbreviation expansion on' : 'Abbreviation expansion: no known abbreviations found');
+    this.watch(root, dict, matcher);
+  },
+
+  pass(root, dict, matcher, cap) {
+    return transformTextNodes(root, (text, node) => {
+      const parent = node.parentElement;
+      if (parent && parent.closest && parent.closest(LIVE_SEL)) return null;
+      return this.buildWrapper(text, dict, matcher);
+    }, { skipTags: SKIP_TAGS, skipClass: this.wrapperClass, cap });
+  },
+
+  // Stores re-render parts of the page (a cart line after a quantity change,
+  // search results after a filter). Mark the new text too, a moment after it
+  // lands. Our own wrappers are ignored, so this never reacts to itself.
+  watch(root, dict, matcher) {
+    if (typeof MutationObserver === 'undefined') return;
+    const ours = (n) => n.nodeType === 1 && n.classList && n.classList.contains(this.wrapperClass);
+    this.observer = new MutationObserver((records) => {
+      const fresh = records.some((r) => [...r.addedNodes].some((n) =>
+        !ours(n) && (n.nodeType === 1 || (n.nodeType === 3 && /\S/.test(n.nodeValue)))));
+      if (!fresh || this.rescanTimer) return;
+      this.rescanTimer = setTimeout(() => {
+        this.rescanTimer = null;
+        if (!this.enabled) return;
+        this.fillTitles(root, dict);
+        const used = this.handles.reduce((n, h) => n + h.records.length, this.handle.records.length);
+        if (used >= MAX_TEXT_NODES) return;
+        const h = this.pass(root, dict, matcher, MAX_TEXT_NODES - used);
+        if (h.records.length) this.handles.push(h);
+      }, RESCAN_MS);
+    });
+    this.observer.observe(root, { childList: true, subtree: true });
   },
 
   // One global alternation over the dictionary keys, longest-first so HTTPS
@@ -158,6 +253,9 @@ export const AbbreviationExpand = {
       if (!wrap) {
         wrap = document.createElement('span');
         wrap.className = this.wrapperClass;
+        // Pages style their own spans (".thumb span { position: absolute }"):
+        // ours start from a clean slate.
+        wrap.style.cssText = 'all: unset;';
       }
       if (start > last) wrap.appendChild(document.createTextNode(text.slice(last, start)));
       const abbr = document.createElement('abbr');
@@ -165,6 +263,15 @@ export const AbbreviationExpand = {
       abbr.setAttribute('title', dict[m[0]]);
       abbr.textContent = m[0];
       wrap.appendChild(abbr);
+      if (this.spellOut && !this.spelled.has(m[0])) {
+        this.spelled.add(m[0]);
+        const full = document.createElement('span');
+        full.className = `${this.markerClass}-full`;
+        full.style.cssText = 'all: unset;';
+        // The part before a comma: "USB Power Delivery", not the whole explanation.
+        full.textContent = ` (${dict[m[0]].split(', ')[0]})`;
+        wrap.appendChild(full);
+      }
       logFix('abbr-expand', abbr, m[0], dict[m[0]]);
       last = end;
     }
@@ -176,6 +283,10 @@ export const AbbreviationExpand = {
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
+    if (this.observer) { this.observer.disconnect(); this.observer = null; }
+    if (this.rescanTimer) { clearTimeout(this.rescanTimer); this.rescanTimer = null; }
+    for (const h of (this.handles || []).reverse()) h.restore();
+    this.handles = null;
     if (this.handle) { this.handle.restore(); this.handle = null; }
     if (this.titled) {
       for (const abbr of this.titled) {
@@ -184,6 +295,7 @@ export const AbbreviationExpand = {
       this.titled = null;
     }
     if (this.style) { this.style.remove(); this.style = null; }
+    this.spelled = null;
     console.log('[AI4A11y] Abbreviation Expand disabled');
     announce('Abbreviation expansion off');
   },

@@ -15,7 +15,7 @@ import { announce } from '../utils/ai.js';
 export const FlashGuard = {
   styleId: 'ai4a11y-flash-guard-styles',
   enabled: false,
-  tracked: null,   // Set of { video, hadAutoplay, wasPlaying } for exact restore
+  tracked: null,   // Set of { video, hadAutoplay, wasPlaying, hadControls } for exact restore
   observer: null,
 
   enable(options = {}) {
@@ -67,11 +67,26 @@ export const FlashGuard = {
       this.tracked.add({
         video,
         hadAutoplay: video.hasAttribute('autoplay'),
-        wasPlaying: !video.paused
+        wasPlaying: !video.paused,
+        hadControls: video.controls
       });
-      video.pause();
+      // While a play() the page started is still loading, pausing rejects the
+      // page's promise and it logs "The play() request was interrupted by a
+      // call to pause()". Wait until it is playing, then pause it.
+      if (!video.paused && video.readyState < 3 && video.currentSrc) {
+        // If the page pauses it first, stop waiting: a later play is the person's.
+        const done = () => { video.removeEventListener('playing', onPlaying); video.removeEventListener('pause', done); };
+        const onPlaying = () => { done(); if (this.enabled) video.pause(); };
+        video.addEventListener('playing', onPlaying);
+        video.addEventListener('pause', done);
+      } else {
+        video.pause();
+      }
       video.removeAttribute('autoplay');
       video.autoplay = false;
+      // An autoplaying video often has no controls; paused, it could never be
+      // started again. Show them, so the person can still choose to watch.
+      video.controls = true;
     } catch (e) { /* media element may be detached or mid-load */ }
   },
 
@@ -82,8 +97,9 @@ export const FlashGuard = {
     document.getElementById(this.styleId)?.remove();
 
     if (this.tracked) {
-      for (const { video, hadAutoplay, wasPlaying } of this.tracked) {
+      for (const { video, hadAutoplay, wasPlaying, hadControls } of this.tracked) {
         try {
+          video.controls = hadControls;
           if (hadAutoplay) {
             video.setAttribute('autoplay', '');
             video.autoplay = true;

@@ -15,6 +15,9 @@ import { announce } from '../utils/ai.js';
 // hiding real article sections that merely mention "cookies".
 const OVERLAY_NAME_RE = /(cookie|consent|gdpr|ccpa|newsletter|subscribe|sign[-_]?up|paywall|interstitial|pop[-_]?up|lightbox|backdrop|promo[-_]?(bar|banner)|notification[-_]?bar)/i;
 
+// The person's own input, see lastInput in enable().
+const INPUT_EVENTS = ['pointerdown', 'keydown', 'click'];
+
 function classNameOf(el) {
   const c = el.className;
   if (typeof c === 'string') return c;
@@ -28,6 +31,8 @@ export const DismissOverlays = {
   enabled: false,
   hidden: null,          // Set of elements we hid (for exact restore)
   observer: null,
+  inputHandler: null,
+  lastInput: 0,          // when the person last clicked or pressed a key
   prevBodyOverflow: null,
   prevHtmlOverflow: null,
 
@@ -50,11 +55,20 @@ export const DismissOverlays = {
 
     const count = this.sweep(document);
 
+    // An overlay that opens right after the person's own click or key press
+    // is one they asked for (an "Added to cart" panel, a menu, a dialog), not
+    // a pop-up in their way: leave those. Only the ones that open by
+    // themselves are hidden.
+    this.lastInput = 0;
+    this.inputHandler = (e) => { if (e.isTrusted) this.lastInput = Date.now(); };
+    for (const type of INPUT_EVENTS) document.addEventListener(type, this.inputHandler, true);
+
     // Catch banners injected after load (cookie consent scripts usually run
     // late). Guarded by `enabled` so a disable() mid-callback is a no-op.
     if (typeof MutationObserver !== 'undefined') {
       this.observer = new MutationObserver((mutations) => {
         if (!this.enabled) return;
+        if (Date.now() - this.lastInput < 1000) return;
         for (const m of mutations) {
           for (const node of m.addedNodes) {
             if (node.nodeType === 1) this.consider(node);
@@ -116,6 +130,10 @@ export const DismissOverlays = {
     if (!this.enabled) return;
     this.enabled = false;
     if (this.observer) { this.observer.disconnect(); this.observer = null; }
+    if (this.inputHandler) {
+      for (const type of INPUT_EVENTS) document.removeEventListener(type, this.inputHandler, true);
+      this.inputHandler = null;
+    }
     document.getElementById(this.styleId)?.remove();
     if (this.hidden) {
       for (const el of this.hidden) el.classList?.remove(this.hiddenClass);

@@ -10,6 +10,9 @@ export const MotionReducer = {
   pausedPlayState: new Set(),
   frozenImages: new Map(),
   pausedIframes: new Set(),
+  seenVideos: new WeakSet(), // videos already handled, see pauseAllVideos
+  stillImages: new WeakMap(), // img -> the address it was found not to animate at
+  playHandler: null,
   // Generation counter: incremented on every disable() call so in-flight
   // async freezeSingleImage continuations can detect they've been overtaken
   // and abort before mutating the DOM or repopulating frozenImages.
@@ -56,7 +59,21 @@ export const MotionReducer = {
     style.textContent = css;
     document.head.appendChild(style);
 
-    if (s.pauseVideos) this.pauseAllVideos();
+    this.seenVideos = new WeakSet();
+    this.stillImages = new WeakMap();
+    if (s.pauseVideos) {
+      this.pauseAllVideos();
+      // A video that starts later on its own (autoplay once it has loaded, or a
+      // script's play()) is stopped too. One the person starts (a click or key
+      // press just before) is left playing.
+      this.playHandler = (e) => {
+        const v = e.target;
+        if (!this.enabled || !v || v.tagName !== 'VIDEO') return;
+        if (navigator.userActivation && navigator.userActivation.isActive) return;
+        this.pauseVideo(v);
+      };
+      document.addEventListener('play', this.playHandler, true);
+    }
     if (s.stopGifs) this.freezeImages();
 
     // Web Animations API pass — CSS `animation-duration` overrides above don't
@@ -128,6 +145,8 @@ export const MotionReducer = {
       delete img.dataset.ai4a11yMrFrozen;
     }
     this.frozenImages.clear();
+    // Images whose check failed or is still running carry a mark too.
+    document.querySelectorAll('img[data-ai4a11y-mr-frozen]').forEach(img => { delete img.dataset.ai4a11yMrFrozen; });
 
     // Resume only WAAPI animations this adapter paused
     for (const ref of this.pausedWaapiRefs) {
@@ -157,7 +176,12 @@ export const MotionReducer = {
     }
     this.pausedIframes.clear();
 
-    // Resume videos this adapter paused
+    if (this.playHandler) { document.removeEventListener('play', this.playHandler, true); this.playHandler = null; }
+    // Take off the controls this adapter showed, then resume the videos it paused
+    document.querySelectorAll('video[data-ai4a11y-mr-controls]').forEach(video => {
+      video.controls = false;
+      delete video.dataset.ai4a11yMrControls;
+    });
     document.querySelectorAll('video[data-ai4a11y-was-paused="false"]').forEach(video => {
       video.play().catch(() => {});
       delete video.dataset.ai4a11yWasPaused;
@@ -184,20 +208,23 @@ export const MotionReducer = {
   // file is read first, and only animated ones are frozen.
   freezeImages() {
     document.querySelectorAll('img').forEach(img => {
-      if (img.dataset.ai4a11yMrFrozen) return;
       const url = img.currentSrc || img.src || '';
+      // Still images are remembered by address, not marked on the page: a
+      // photo whose address changes later (a gallery swapping pictures) is
+      // looked at again, and turning off leaves nothing behind.
+      if (this.stillImages.get(img) === url || img.dataset.ai4a11yMrFrozen) return;
       const mightAnimate = /\.(gif|webp|apng)(\?|$)/i.test(url)
         || url.startsWith('data:image/gif')
         || url.startsWith('data:image/webp');
       if (!mightAnimate) {
-        img.dataset.ai4a11yMrFrozen = 'skip';
+        this.stillImages.set(img, url);
         return;
       }
       img.dataset.ai4a11yMrFrozen = 'checking';
       const gen = this.freezeGen;
       isAnimated(url).then(animated => {
         if (this.freezeGen !== gen) { delete img.dataset.ai4a11yMrFrozen; return; }
-        if (animated === false) { img.dataset.ai4a11yMrFrozen = 'skip'; return; }
+        if (animated === false) { delete img.dataset.ai4a11yMrFrozen; this.stillImages.set(img, url); return; }
         // true, or null when the file can't be read (another site's image without CORS
         // headers): freeze it, as before.
         delete img.dataset.ai4a11yMrFrozen;
@@ -328,10 +355,11 @@ export const MotionReducer = {
 
   pauseAllVideos() {
     document.querySelectorAll('video').forEach(video => {
-      if (!video.paused) {
-        video.pause();
-        video.dataset.ai4a11yWasPaused = 'false';
-      }
+      // Each video is stopped once. This runs again on every change to the page,
+      // and pausing again would stop a video the person started themselves.
+      if (this.seenVideos.has(video)) return;
+      this.seenVideos.add(video);
+      if (!video.paused) this.pauseVideo(video);
     });
     document.querySelectorAll('iframe').forEach(iframe => {
       const src = iframe.src || '';
@@ -345,6 +373,28 @@ export const MotionReducer = {
       // A youtube embed without enablejsapi=1 can't be controlled via
       // postMessage — skip it rather than post into the void.
     });
+  },
+
+  pauseVideo(video) {
+    video.dataset.ai4a11yWasPaused = 'false';
+    // While a play() the page started is still loading, pausing rejects the
+    // page's promise and it logs "The play() request was interrupted by a call
+    // to pause()". Wait until the video is playing, then pause it.
+    if (!video.paused && video.readyState < 3 && video.currentSrc) {
+      // If the page pauses it first, stop waiting: a later play is the person's.
+      const done = () => { video.removeEventListener('playing', onPlaying); video.removeEventListener('pause', done); };
+      const onPlaying = () => { done(); if (this.enabled) video.pause(); };
+      video.addEventListener('playing', onPlaying);
+      video.addEventListener('pause', done);
+    } else {
+      video.pause();
+    }
+    // An autoplaying video often has no controls, and once paused there is no
+    // way to start it. Show its controls; disable() takes them off again.
+    if (!video.controls) {
+      video.controls = true;
+      video.dataset.ai4a11yMrControls = 'added';
+    }
   },
 
   toggle() {

@@ -1,6 +1,13 @@
 // Color Blind Mode - applies color correction filters
 import { announce } from '../utils/ai.js';
 
+// dark-mode, reduce-brightness and color-blind all filter <html>, and one
+// filter declaration replaces another: with two of them on, one silently did
+// nothing (dark mode + dim gave a dimmed, light page). Each sets its own
+// variable instead, and the same rule in each stylesheet combines whichever
+// are set, in a fixed order.
+const PAGE_FILTER = 'html { filter: var(--ai4a11y-filter-dark,) var(--ai4a11y-filter-dim,) var(--ai4a11y-filter-color,) !important; }';
+
 export const ColorBlindMode = {
   styleId: 'ai4a11y-color-blind-styles',
   filterId: 'ai4a11y-svg-filters',
@@ -28,8 +35,9 @@ export const ColorBlindMode = {
     style.id = this.styleId;
     style.textContent = `
       html {
-        filter: ${this.filters[mode]} !important;
+        --ai4a11y-filter-color: ${this.filters[mode]};
       }
+      ${PAGE_FILTER}
     `;
     document.head.appendChild(style);
 

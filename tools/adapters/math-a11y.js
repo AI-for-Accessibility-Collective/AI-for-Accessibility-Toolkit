@@ -178,7 +178,11 @@ export const MathA11y = {
       const alt = img.getAttribute('alt');
       if (alt && alt.trim()) continue;
       const src = img.getAttribute('src') || '';
-      if (!MATH_HINT_RE.test(`${img.className} ${alt || ''} ${src}`)) continue;
+      // A data: URL is the picture itself, not an address: an inline SVG's
+      // markup says "<text", which matched "tex", and a store's "Sponsored"
+      // badge was read out as "Mathematical equation".
+      const address = /^data:/i.test(src) ? '' : src;
+      if (!MATH_HINT_RE.test(`${img.className} ${alt || ''} ${address}`)) continue;
       const tex = texFromUrl(src);
       const attrs = [];
       this.setTracked(img, 'alt',

@@ -1,4 +1,4 @@
-import { simplifyText as aiSimplifyText, summarizeText as aiSummarizeText } from '../utils/ai.js';
+import { simplifyText as aiSimplifyText, summarizeText as aiSummarizeText, announce, getAIProvider } from '../utils/ai.js';
 import { rejectRewrite, startsWithRefusal } from '../utils/ai-output.js';
 
 // Output gate bands. A plain-language rewrite does get shorter, since it
@@ -18,6 +18,53 @@ const MIN_SUMMARY_CHARS = 20;
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
+
+// Rewrites kept for the session, and the ones on their way: switching the
+// adapter off and on again, or the same text twice on a page, costs no
+// second AI call. Kept per provider, since another host gives other answers.
+const memories = new WeakMap(); // provider -> { done: Map, asking: Map }
+const MEMORY_MAX = 200;
+function memoryFor() {
+  const p = getAIProvider() || memoryFor;
+  if (!memories.has(p)) memories.set(p, { done: new Map(), asking: new Map() });
+  return memories.get(p);
+}
+function rewrite(text) {
+  const m = memoryFor();
+  if (m.done.has(text)) return Promise.resolve(m.done.get(text));
+  if (!m.asking.has(text)) {
+    m.asking.set(text, Promise.resolve().then(() => aiSimplifyText(text)).finally(() => m.asking.delete(text)));
+  }
+  return m.asking.get(text);
+}
+function keep(text, simplified) {
+  const m = memoryFor();
+  if (m.done.size >= MEMORY_MAX) m.done.delete(m.done.keys().next().value);
+  m.done.set(text, simplified);
+}
+
+// The "Show original" button's focus ring is a box-shadow: pages that switch
+// the focus outline off with !important cannot hide it.
+const STYLE_ID = 'ai4a11y-simplify-styles';
+function addStyles() {
+  if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = '.ai4a11y-toggle-original{margin-left:.5em;font-size:.85em;cursor:pointer}' +
+    '.ai4a11y-toggle-original:focus-visible{outline:2px solid #1a5fb4;outline-offset:2px;box-shadow:0 0 0 2px #fff,0 0 0 4px #1a5fb4}';
+  (document.head || document.documentElement).appendChild(style);
+}
+
+// One message for a batch of rewrites instead of one per paragraph.
+let rewritten = 0, sayTimer = null;
+function tell() {
+  rewritten++;
+  clearTimeout(sayTimer);
+  sayTimer = setTimeout(() => {
+    announce(`Rewrote ${rewritten} passage${rewritten === 1 ? '' : 's'} in plainer words. Each has a Show original button.`);
+    rewritten = 0;
+  }, 400);
+}
 
 // Children whose text is not prose the reader sees: element.textContent
 // includes a <style> or <script> body, a <noscript> or <template>, and
@@ -61,7 +108,9 @@ export async function simplifyText(element) {
   }
 
   try {
-    const simplified = await aiSimplifyText(originalText);
+    const simplified = await rewrite(originalText);
+    // Switched off while the answer was on its way.
+    if (element.dataset.ai4a11ySimplified !== 'pending') return null;
 
     // Gate the answer before it replaces what the reader sees. A refusal
     // sentence or a fragment would stand in for the whole passage with no
@@ -73,6 +122,8 @@ export async function simplifyText(element) {
     }
 
     if (simplified && !rejected) {
+      keep(originalText, simplified);
+      addStyles();
 
       element.dataset.ai4a11yOriginal = originalText;
       element.classList.add('ai4a11y-simplified');
@@ -90,22 +141,23 @@ export async function simplifyText(element) {
       textContainer.textContent = simplified;
 
       const toggleBtn = document.createElement('button');
+      // type=button: inside a form, a plain <button> would submit it.
+      toggleBtn.type = 'button';
       toggleBtn.className = 'ai4a11y-toggle-original';
       toggleBtn.textContent = 'Show original';
-      toggleBtn.setAttribute('aria-pressed', 'false');
+      // The label says what a press does next, so it carries no
+      // aria-pressed: "Show simplified, pressed" contradicts itself.
       toggleBtn.onclick = () => {
         const showingOriginal = element.dataset.ai4a11yShowOriginal === 'true';
         if (showingOriginal) {
           originalWrapper.style.display = 'none';
           textContainer.style.display = '';
           toggleBtn.textContent = 'Show original';
-          toggleBtn.setAttribute('aria-pressed', 'false');
           element.dataset.ai4a11yShowOriginal = 'false';
         } else {
           textContainer.style.display = 'none';
           originalWrapper.style.display = '';
           toggleBtn.textContent = 'Show simplified';
-          toggleBtn.setAttribute('aria-pressed', 'true');
           element.dataset.ai4a11yShowOriginal = 'true';
         }
       };
@@ -118,6 +170,7 @@ export async function simplifyText(element) {
       incrementStat('text');
       logFix('simplify', element, '(complex)', '(simplified)');
       console.log('[AI4A11y] Simplified text');
+      tell();
       return simplified;
     }
 
@@ -125,7 +178,7 @@ export async function simplifyText(element) {
     return null;
   } catch (e) {
     console.warn('[AI4A11y] Failed to simplify:', e);
-    element.dataset.ai4a11ySimplified = 'failed';
+    if (element.dataset.ai4a11ySimplified === 'pending') element.dataset.ai4a11ySimplified = 'failed';
     return null;
   }
 }
@@ -206,6 +259,13 @@ export async function summarizeContent(element) {
 export function restoreOriginal(element) {
   const originalWrapper = element.querySelector('.ai4a11y-original-content');
   if (originalWrapper) {
+    // The button about to go has focus: keep the keyboard in this paragraph.
+    const toggle = element.querySelector('.ai4a11y-toggle-original');
+    if (toggle && toggle === document.activeElement && !element.hasAttribute('tabindex')) {
+      element.setAttribute('tabindex', '-1');
+      element.addEventListener('blur', () => element.removeAttribute('tabindex'), { once: true });
+      queueMicrotask(() => { try { element.focus({ preventScroll: true }); } catch { /* not focusable */ } });
+    }
     element.querySelector('.ai4a11y-text-content')?.remove();
     element.querySelector('.ai4a11y-toggle-original')?.remove();
     while (originalWrapper.firstChild) {
@@ -217,4 +277,6 @@ export function restoreOriginal(element) {
   delete element.dataset.ai4a11ySimplified;
   delete element.dataset.ai4a11yShowOriginal;
   element.classList.remove('ai4a11y-simplified');
+  if (!element.getAttribute('class')) element.removeAttribute('class');
+  if (typeof document !== 'undefined' && !document.querySelector('.ai4a11y-simplified')) document.getElementById(STYLE_ID)?.remove();
 }

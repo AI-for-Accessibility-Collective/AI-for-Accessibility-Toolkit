@@ -12,6 +12,13 @@
 // and restores the page exactly.
 import { announce } from '../utils/ai.js';
 
+// dark-mode, reduce-brightness and color-blind all filter <html>, and one
+// filter declaration replaces another: with two of them on, one silently did
+// nothing (dark mode + dim gave a dimmed, light page). Each sets its own
+// variable instead, and the same rule in each stylesheet combines whichever
+// are set, in a fixed order.
+const PAGE_FILTER = 'html { filter: var(--ai4a11y-filter-dark,) var(--ai4a11y-filter-dim,) var(--ai4a11y-filter-color,) !important; }';
+
 export const ReduceBrightness = {
   styleId: 'ai4a11y-reduce-brightness-styles',
   htmlClass: 'ai4a11y-dimmed',
@@ -30,7 +37,8 @@ export const ReduceBrightness = {
     const style = document.createElement('style');
     style.id = this.styleId;
     style.textContent = `
-html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !important; }`;
+html.${this.htmlClass} { --ai4a11y-filter-dim: brightness(${bright}) saturate(${sat}); }
+${PAGE_FILTER}`;
     (document.head || document.documentElement).appendChild(style);
 
     // Optional extra overlay — off by default. Only for contexts where the CSS

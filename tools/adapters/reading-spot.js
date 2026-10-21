@@ -13,6 +13,7 @@ import { announce } from '../utils/ai.js';
 
 const KEY_PREFIX = 'ai4a11y-spot:';
 const SAVE_DELAY_MS = 500;
+const STYLE_ID = 'ai4a11y-spot-styles';
 
 export const ReadingSpot = {
   buttonId: 'ai4a11y-spot-restore',
@@ -65,11 +66,27 @@ export const ReadingSpot = {
         'padding: 10px 16px; font-size: 16px; border-radius: 8px;' +
         'border: 2px solid #1a5fb4; background: #ffffff; color: #1a5fb4; cursor: pointer;';
       btn.addEventListener('click', () => {
+        const fromKeyboard = document.activeElement === btn;
         window.scrollTo(0, savedY);
         this.restorePending = false;
         btn.remove();
+        // The button that had focus is gone: put the keyboard where the
+        // reader landed, not back at the top of the page.
+        if (fromKeyboard) this.focusAtSpot();
+        announce('Back where you were');
       });
-      (document.body || document.documentElement).appendChild(btn);
+      // The page's focus outline may be switched off; this ring cannot be.
+      if (!document.getElementById(STYLE_ID) && document.head) {
+        const style = document.createElement('style');
+        style.id = STYLE_ID;
+        style.textContent = `#${this.buttonId}:focus-visible{outline:3px solid #1a5fb4 !important;outline-offset:2px;box-shadow:0 0 0 3px #fff,0 0 0 6px #1a5fb4}`;
+        document.head.appendChild(style);
+      }
+      // First in the page, so it is the first thing Tab reaches, like a skip
+      // link; at the end of the page a keyboard user would have to go through
+      // everything to find it. It still shows in the bottom corner.
+      const body = document.body || document.documentElement;
+      body.insertBefore(btn, body.firstChild);
     }
 
     // Save the position as the reader scrolls, debounced so a long scroll
@@ -86,6 +103,8 @@ export const ReadingSpot = {
         // must not overwrite the far spot the reader hasn't returned to yet —
         // only record a position beyond it (they have genuinely read further).
         if (this.restorePending && this.savedY != null && y <= this.savedY) return;
+        // Scrolled there on their own: the jump-back button has done its job.
+        if (this.restorePending) document.getElementById(this.buttonId)?.remove();
         this.restorePending = false;
         this.saveSpot(y);
       }, SAVE_DELAY_MS);
@@ -96,6 +115,21 @@ export const ReadingSpot = {
     announce(savedY !== null && savedY > 0
       ? 'Found your last reading spot — a jump-back button was added'
       : 'Saving your reading spot as you scroll');
+  },
+
+  // Focus something at the middle of the screen, so the next Tab continues
+  // from the spot the reader jumped to.
+  focusAtSpot() {
+    try {
+      let el = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+      while (el && el !== document.body && !el.matches('p, li, h1, h2, h3, h4, h5, h6, section, article, td, div')) el = el.parentElement;
+      if (!el || el === document.body) return;
+      if (!el.hasAttribute('tabindex')) {
+        el.setAttribute('tabindex', '-1');
+        el.addEventListener('blur', () => el.removeAttribute('tabindex'), { once: true });
+      }
+      el.focus({ preventScroll: true });
+    } catch { /* focus stays where the browser puts it */ }
   },
 
   disable() {
@@ -109,6 +143,7 @@ export const ReadingSpot = {
     this.restorePending = false;
     this.savedY = null;
     document.getElementById(this.buttonId)?.remove();
+    document.getElementById(STYLE_ID)?.remove();
     // The saved spot itself stays in storage for the next visit.
     console.log('[AI4A11y] Save Reading Spot disabled');
     announce('Reading spot saving turned off');

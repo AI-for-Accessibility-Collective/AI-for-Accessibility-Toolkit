@@ -9,6 +9,13 @@ const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
 // content — labeling it "main" would swallow the header/nav/footer and make
 // landmark navigation worse than no main at all.
 const LANDMARK_SELECTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
+// What only a page shell holds. Breadcrumbs (<nav>) and a sidebar (<aside>)
+// are normal INSIDE the main content, so they don't disqualify a block: a
+// store's product area with a breadcrumb nav and its cart with an order
+// summary aside were passed over, and the site header or footer, the only
+// blocks left, was labelled "main".
+const SHELL_SELECTOR = 'header, footer, main, [role="banner"], [role="contentinfo"], [role="main"]';
+const MAIN_ID = /^(main|content|main-?content|primary)$/i;
 
 /**
  * Ensure the page has a main landmark. Deterministic (no AI): picks the
@@ -27,8 +34,8 @@ export function ensureMainLandmark() {
     // region/tabpanel/search/form/etc. semantic already on the element.
     if (el.getAttribute('role')) return false;
     if ((el.textContent?.trim().length || 0) <= 100) return false;
-    // Reject wrappers that contain their own landmark regions.
-    if (el.querySelector(LANDMARK_SELECTOR)) return false;
+    // Reject wrappers that contain the page's own header/footer/main.
+    if (el.querySelector(SHELL_SELECTOR)) return false;
     return true;
   };
 
@@ -43,8 +50,12 @@ export function ensureMainLandmark() {
   }
   if (candidates.length === 0) return false;
 
-  // Largest text block wins
-  const main = candidates.reduce((a, b) =>
+  // A block the page itself names main or content wins over raw size: a
+  // site header with a long scrolling ticker can hold more text than a cart
+  // with one item in it. Among those (or all, if none is named), the largest
+  // text block wins.
+  const named = candidates.filter((el) => MAIN_ID.test(el.id || '') || (el.classList && (el.classList.contains('main') || el.classList.contains('content'))));
+  const main = (named.length ? named : candidates).reduce((a, b) =>
     (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b);
 
   main.setAttribute('role', 'main');

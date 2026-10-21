@@ -4,6 +4,9 @@
   function setAIProvider(p) {
     provider = p;
   }
+  function getAIProvider() {
+    return provider;
+  }
   async function describeImage(imageData) {
     if (!provider?.describeImage) {
       throw new Error("AI provider not set or missing describeImage");
@@ -156,7 +159,20 @@
 
   // tools/adapters/visual-assist.js
   var _fontScaleOriginals = /* @__PURE__ */ new WeakMap();
-  var TEXT_ELEMENT_SELECTOR = "p, h1, h2, h3, h4, h5, h6, li, td, th, div, span, a, button, input, textarea, label, blockquote, pre, figcaption, caption, dt, dd, summary, article, section, header, footer, nav, main, aside";
+  var TEXT_ELEMENT_SELECTOR = "p, h1, h2, h3, h4, h5, h6, li, td, th, div, span, a, button, input, select, textarea, label, blockquote, pre, figcaption, caption, dt, dd, summary, article, section, header, footer, nav, main, aside, small, b, strong, em, legend";
+  var FIXED_BOX_ATTR = "data-ai4a11y-fixed-box";
+  function _insetSet(el, side) {
+    try {
+      if (typeof el.computedStyleMap !== "function") return false;
+      const v = el.computedStyleMap().get(side);
+      return !!v && String(v) !== "auto";
+    } catch (_) {
+      return false;
+    }
+  }
+  function _scaledSize(px, scale) {
+    return px + (scale - 1) * Math.min(px, 18);
+  }
   function _shouldSkipScale(el) {
     if (!el || !el.tagName) return true;
     const tag = el.tagName.toUpperCase();
@@ -171,6 +187,10 @@
     const cls = typeof el.className === "string" ? el.className : "";
     if (cls.includes("material-icons") || cls.includes("material-symbols") || cls.includes("icon") || cls.includes("fa-") || tag === "I") return true;
     if (el.getAttribute && el.getAttribute("aria-hidden") === "true") return true;
+    try {
+      if (el.closest && el.closest(`[${FIXED_BOX_ATTR}]`)) return true;
+    } catch (_) {
+    }
     return false;
   }
   var VisualAssist = {
@@ -189,6 +209,14 @@
     // Track the scale currently committed to the DOM.
     appliedScale: null,
     unregisterSweep: null,
+    fixedBoxes: null,
+    // Map: box -> its inline font-size/line-height/letter-spacing before we set them
+    fixedChecked: null,
+    // WeakSet of elements already looked at, so sweeps stay cheap
+    overflowBefore: null,
+    // WeakSet of boxes whose content already overflowed before we changed anything
+    grown: null,
+    // Map: fixed-height box we let grow -> its inline height/min-height before
     // Generation counter: incremented on every apply/restore cycle so in-flight
     // requestIdleCallback traversals that started before a re-apply or restore
     // detect the change and abort, preventing compounding.
@@ -207,6 +235,9 @@
       this.enabled = false;
       this.remove();
       this.restoreFontScale();
+      this.unmarkFixedBoxes();
+      this.ungrowFixedBoxes();
+      this.overflowBefore = null;
       if (this.unregisterSweep) {
         this.unregisterSweep();
         this.unregisterSweep = null;
@@ -216,11 +247,13 @@
     },
     apply() {
       this.remove();
+      if (!this.overflowBefore) this.overflowBefore = this.overflowing();
       const css = this.generateCSS();
       const style = document.createElement("style");
       style.id = this.styleId;
       style.textContent = css;
       document.head.appendChild(style);
+      this.markFixedBoxes();
       const s = this.settings;
       let scale = s.fontScale > 10 ? s.fontScale / 100 : s.fontScale;
       scale = scale && scale > 0 ? Math.max(0.5, Math.min(2, scale)) : 1;
@@ -234,6 +267,7 @@
         if (!this.unregisterSweep) {
           this.unregisterSweep = registerSweep("visual-assist-font", () => {
             if (!this.enabled || this.appliedScale === null) return;
+            this.markFixedBoxes();
             this.applyFontScale(this.appliedScale);
           }, { debounceMs: 500 });
         }
@@ -245,6 +279,7 @@
           this.unregisterSweep();
           this.unregisterSweep = null;
         }
+        this.growFixedBoxes();
       }
       if (s.contrastMode && s.contrastMode !== "none") {
         if (typeof document !== "undefined" && document.getElementById("ai4a11y-dark-mode")) {
@@ -261,33 +296,29 @@
     applyFontScale(scale) {
       this.appliedScale = scale;
       const gen = ++this.scaleGen;
-      const candidates = typeof document !== "undefined" ? Array.from(document.querySelectorAll(TEXT_ELEMENT_SELECTOR)) : [];
+      const candidates = typeof document !== "undefined" ? Array.from(document.querySelectorAll(TEXT_ELEMENT_SELECTOR)).filter((el) => !_shouldSkipScale(el) && !(el.dataset && el.dataset.ai4a11yFontScale === String(scale))) : [];
+      if (!candidates.length) return;
+      const scaled = typeof document !== "undefined" ? Array.from(document.querySelectorAll("[data-ai4a11y-font-scale]")) : [];
+      const scaledNow = scaled.map((el) => el.style.fontSize);
+      scaled.forEach((el) => {
+        const orig = _fontScaleOriginals.get(el);
+        el.style.fontSize = orig === void 0 || orig === null ? "" : orig;
+      });
       const scalePlan = [];
       for (const el of candidates) {
-        if (_shouldSkipScale(el)) continue;
-        if (el.dataset && el.dataset.ai4a11yFontScale === String(scale)) continue;
         if (!_fontScaleOriginals.has(el)) {
           _fontScaleOriginals.set(el, el.style.fontSize);
         }
         try {
-          let baselinePx = parseFloat(getComputedStyle(el).fontSize);
+          const baselinePx = parseFloat(getComputedStyle(el).fontSize);
           if (!baselinePx || baselinePx <= 0) continue;
-          if (!el.dataset.ai4a11yFontScale) {
-            try {
-              const scaledAncestor = el.closest && el.closest("[data-ai4a11y-font-scale]");
-              if (scaledAncestor) {
-                const ancestorScale = parseFloat(scaledAncestor.dataset.ai4a11yFontScale);
-                if (ancestorScale && ancestorScale > 0) {
-                  baselinePx = baselinePx / ancestorScale;
-                }
-              }
-            } catch (_) {
-            }
-          }
           scalePlan.push({ el, baselinePx });
         } catch (_) {
         }
       }
+      scaled.forEach((el, k) => {
+        el.style.fontSize = scaledNow[k];
+      });
       let i = 0;
       const processChunk = (deadline) => {
         if (gen !== this.scaleGen) return;
@@ -303,15 +334,143 @@
           }
           if (gen !== this.scaleGen) return;
           const { el, baselinePx } = scalePlan[i++];
-          el.style.fontSize = `${baselinePx * scale}px`;
+          el.style.fontSize = `${_scaledSize(baselinePx, scale)}px`;
           if (el.dataset) el.dataset.ai4a11yFontScale = String(scale);
         }
+        this.growFixedBoxes();
       };
       if (typeof requestIdleCallback !== "undefined") {
         requestIdleCallback(processChunk, { timeout: 500 });
       } else {
         setTimeout(() => processChunk(null), 0);
       }
+    },
+    // Find boxes that can't grow with their text (see FIXED_BOX_ATTR) and pin
+    // their text size and line and letter spacing to the page's own, which the
+    // text inside inherits; the font traversal and the spacing rules skip what's
+    // inside.
+    markFixedBoxes() {
+      if (typeof document === "undefined" || !document.body) return;
+      if (!this.fixedBoxes) {
+        this.fixedBoxes = /* @__PURE__ */ new Map();
+        this.fixedChecked = /* @__PURE__ */ new WeakSet();
+      }
+      const found = [];
+      for (const el of document.body.querySelectorAll(TEXT_ELEMENT_SELECTOR)) {
+        if (this.fixedChecked.has(el)) continue;
+        this.fixedChecked.add(el);
+        if (_shouldSkipScale(el)) continue;
+        let cs;
+        try {
+          cs = getComputedStyle(el);
+        } catch (_) {
+          continue;
+        }
+        if (cs.position !== "absolute" || !_insetSet(el, "top") || !_insetSet(el, "bottom")) continue;
+        if (!(el.textContent || "").trim()) continue;
+        found.push(el);
+      }
+      if (!found.length) return;
+      const sheet = document.getElementById(this.styleId)?.sheet;
+      if (sheet) sheet.disabled = true;
+      const lifted = /* @__PURE__ */ new Map();
+      for (const el of found) {
+        for (let a = el; a && a.nodeType === 1; a = a.parentElement) {
+          if (!a.dataset || !a.dataset.ai4a11yFontScale || lifted.has(a)) continue;
+          lifted.set(a, a.style.fontSize);
+          const orig = _fontScaleOriginals.get(a);
+          a.style.fontSize = orig === void 0 || orig === null ? "" : orig;
+        }
+      }
+      const own = found.map((el) => {
+        const cs = getComputedStyle(el);
+        const fs = parseFloat(cs.fontSize);
+        const lh = cs.lineHeight === "normal" || !fs || !parseFloat(cs.lineHeight) ? "normal" : String(Math.round(parseFloat(cs.lineHeight) / fs * 1e3) / 1e3);
+        return { "font-size": cs.fontSize, "line-height": lh, "letter-spacing": cs.letterSpacing || "normal" };
+      });
+      for (const [a, v] of lifted) a.style.fontSize = v;
+      if (sheet) sheet.disabled = false;
+      found.forEach((el, k) => {
+        if (el.closest(`[${FIXED_BOX_ATTR}]`)) return;
+        const saved = {};
+        for (const prop of Object.keys(own[k])) {
+          saved[prop] = [el.style.getPropertyValue(prop), el.style.getPropertyPriority(prop)];
+        }
+        for (const t of [el, ...el.querySelectorAll("[data-ai4a11y-font-scale]")]) {
+          if (!t.dataset || !t.dataset.ai4a11yFontScale) continue;
+          const orig = _fontScaleOriginals.get(t);
+          t.style.fontSize = orig === void 0 || orig === null ? "" : orig;
+          _fontScaleOriginals.delete(t);
+          delete t.dataset.ai4a11yFontScale;
+        }
+        this.fixedBoxes.set(el, saved);
+        el.setAttribute(FIXED_BOX_ATTR, "");
+        for (const prop of Object.keys(own[k])) el.style.setProperty(prop, own[k][prop], "important");
+      });
+    },
+    unmarkFixedBoxes() {
+      if (!this.fixedBoxes) return;
+      for (const [el, saved] of this.fixedBoxes) {
+        try {
+          el.removeAttribute(FIXED_BOX_ATTR);
+          for (const prop of Object.keys(saved)) el.style.setProperty(prop, saved[prop][0], saved[prop][1]);
+          if (!el.getAttribute("style")) el.removeAttribute("style");
+        } catch (_) {
+        }
+      }
+      this.fixedBoxes = null;
+      this.fixedChecked = null;
+    },
+    // Boxes whose content overflows them vertically right now.
+    overflowing() {
+      const out = /* @__PURE__ */ new WeakSet();
+      if (typeof document === "undefined" || !document.body) return out;
+      for (const el of document.body.querySelectorAll("*")) {
+        if (el.scrollHeight > el.clientHeight + 1) out.add(el);
+      }
+      return out;
+    },
+    // A box the page gave a fixed height (a 64 px header bar) can't hold
+    // enlarged text that wraps onto another line: the text spilled out above
+    // and below it and was cut off at the top of the page. Let such a box grow
+    // (it keeps at least its old height). Only boxes that overflow now and
+    // didn't before we changed anything, so a page's own overflow is left alone.
+    growFixedBoxes() {
+      if (typeof document === "undefined" || !document.body) return;
+      if (!this.grown) this.grown = /* @__PURE__ */ new Map();
+      for (const el of document.body.querySelectorAll("*")) {
+        if (!(el.scrollHeight > el.clientHeight + 1)) continue;
+        if (this.grown.has(el) || this.overflowBefore && this.overflowBefore.has(el)) continue;
+        if (_shouldSkipScale(el) || typeof el.computedStyleMap !== "function") continue;
+        let cs, h;
+        try {
+          cs = getComputedStyle(el);
+          h = String(el.computedStyleMap().get("height"));
+        } catch (_) {
+          continue;
+        }
+        if (cs.overflowY !== "visible" || cs.display === "inline" || !/^[\d.]+(px|em|rem)$/.test(h)) continue;
+        this.grown.set(el, [
+          el.style.getPropertyValue("height"),
+          el.style.getPropertyPriority("height"),
+          el.style.getPropertyValue("min-height"),
+          el.style.getPropertyPriority("min-height")
+        ]);
+        el.style.setProperty("min-height", cs.height, "important");
+        el.style.setProperty("height", "auto", "important");
+      }
+    },
+    ungrowFixedBoxes() {
+      if (!this.grown) return;
+      for (const [el, v] of this.grown) {
+        try {
+          el.style.setProperty("height", v[0], v[1]);
+          el.style.setProperty("min-height", v[2], v[3]);
+          if (!el.getAttribute("style")) el.removeAttribute("style");
+        } catch (_) {
+        }
+      }
+      this.grown = null;
     },
     restoreFontScale() {
       if (typeof document === "undefined") return;
@@ -365,12 +524,17 @@
         img, video { filter: contrast(1.2) brightness(0.9) !important; }
       `;
       }
+      if (s.fontScale && s.fontScale !== 1 && s.fontScale !== 100) {
+        css += `input[type="radio"], input[type="checkbox"] { flex-shrink: 0 !important; }
+`;
+      }
+      const TEXT = "body, " + ["p", "li", "td", "th", "dd", "dt", "label", "blockquote", "figcaption"].map((t) => `${t}:not([${FIXED_BOX_ATTR}] *)`).join(", ");
       if (s.lineHeight && s.lineHeight !== 1.5) {
-        css += `body, p, li, td, th, div, span, a, label { line-height: ${s.lineHeight} !important; }
+        css += `${TEXT} { line-height: ${s.lineHeight} !important; }
 `;
       }
       if (s.letterSpacing && s.letterSpacing !== 0) {
-        css += `body, p, li, td, th, div, span, a, label { letter-spacing: ${s.letterSpacing}em !important; }
+        css += `${TEXT} { letter-spacing: ${s.letterSpacing}em !important; }
 `;
       }
       if (s.largeCursor) {
@@ -379,13 +543,7 @@
       }
       if (s.enhanceFocus) {
         css += `
-        *:focus-visible {
-          outline: 4px solid #0066ff !important;
-          outline-offset: 3px !important;
-          box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.3) !important;
-        }
-        a:focus-visible, button:focus-visible, input:focus-visible,
-        select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+        *:focus-visible:not(#ai4a11y-focus) {
           outline: 4px solid #0066ff !important;
           outline-offset: 3px !important;
           box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.3) !important;
@@ -461,6 +619,7 @@
   if (typeof window !== "undefined") window.__ai4a11yVisualAssist = VisualAssist;
 
   // tools/adapters/dark-mode.js
+  var PAGE_FILTER = "html { filter: var(--ai4a11y-filter-dark,) var(--ai4a11y-filter-dim,) var(--ai4a11y-filter-color,) !important; }";
   var DarkMode = {
     enabled: false,
     styleId: "ai4a11y-dark-mode",
@@ -496,16 +655,21 @@
       if (document.getElementById(this.styleId)) return;
       const style = document.createElement("style");
       style.id = this.styleId;
+      const BACK = 'img, video, picture, canvas, iframe, [style*="background-image"], [style*="background:"], [style*="background-color"]';
       style.textContent = `
       html {
-        filter: invert(90%) hue-rotate(180deg) !important;
+        --ai4a11y-filter-dark: invert(90%) hue-rotate(180deg);
         background: #111 !important;
       }
-      img, video, picture, canvas, iframe, svg, [style*="background-image"] {
+      ${PAGE_FILTER}
+      ${BACK} {
         filter: invert(100%) hue-rotate(180deg) !important;
       }
       img, video {
         filter: invert(100%) hue-rotate(180deg) contrast(1.1) !important;
+      }
+      :is(${BACK}) :is(img, video, picture, canvas, iframe) {
+        filter: none !important;
       }
     `;
       document.head.appendChild(style);
@@ -552,6 +716,11 @@
     pausedPlayState: /* @__PURE__ */ new Set(),
     frozenImages: /* @__PURE__ */ new Map(),
     pausedIframes: /* @__PURE__ */ new Set(),
+    seenVideos: /* @__PURE__ */ new WeakSet(),
+    // videos already handled, see pauseAllVideos
+    stillImages: /* @__PURE__ */ new WeakMap(),
+    // img -> the address it was found not to animate at
+    playHandler: null,
     // Generation counter: incremented on every disable() call so in-flight
     // async freezeSingleImage continuations can detect they've been overtaken
     // and abort before mutating the DOM or repopulating frozenImages.
@@ -592,7 +761,18 @@
       style.id = this.styleId;
       style.textContent = css;
       document.head.appendChild(style);
-      if (s.pauseVideos) this.pauseAllVideos();
+      this.seenVideos = /* @__PURE__ */ new WeakSet();
+      this.stillImages = /* @__PURE__ */ new WeakMap();
+      if (s.pauseVideos) {
+        this.pauseAllVideos();
+        this.playHandler = (e) => {
+          const v = e.target;
+          if (!this.enabled || !v || v.tagName !== "VIDEO") return;
+          if (navigator.userActivation && navigator.userActivation.isActive) return;
+          this.pauseVideo(v);
+        };
+        document.addEventListener("play", this.playHandler, true);
+      }
       if (s.stopGifs) this.freezeImages();
       this.pauseWaapiAnimations();
       const pauseAnimations = (deadline) => {
@@ -652,6 +832,9 @@
         delete img.dataset.ai4a11yMrFrozen;
       }
       this.frozenImages.clear();
+      document.querySelectorAll("img[data-ai4a11y-mr-frozen]").forEach((img) => {
+        delete img.dataset.ai4a11yMrFrozen;
+      });
       for (const ref of this.pausedWaapiRefs) {
         const anim = ref.deref ? ref.deref() : ref;
         if (anim && anim.playState === "paused") {
@@ -678,6 +861,14 @@
         }
       }
       this.pausedIframes.clear();
+      if (this.playHandler) {
+        document.removeEventListener("play", this.playHandler, true);
+        this.playHandler = null;
+      }
+      document.querySelectorAll("video[data-ai4a11y-mr-controls]").forEach((video) => {
+        video.controls = false;
+        delete video.dataset.ai4a11yMrControls;
+      });
       document.querySelectorAll('video[data-ai4a11y-was-paused="false"]').forEach((video) => {
         video.play().catch(() => {
         });
@@ -697,18 +888,35 @@
       } catch (e) {
       }
     },
-    // Freeze every animatable image (gif/webp/apng) to its first frame.
+    // Freeze every image that really animates to its first frame. A .gif, .webp or .apng
+    // file name only says it might: most .webp files are still photos, and swapping a
+    // still photo for a canvas only risks breaking the page's layout. So the start of the
+    // file is read first, and only animated ones are frozen.
     freezeImages() {
       document.querySelectorAll("img").forEach((img) => {
-        if (img.dataset.ai4a11yMrFrozen) return;
-        const url = img.src || "";
+        const url = img.currentSrc || img.src || "";
+        if (this.stillImages.get(img) === url || img.dataset.ai4a11yMrFrozen) return;
         const mightAnimate = /\.(gif|webp|apng)(\?|$)/i.test(url) || url.startsWith("data:image/gif") || url.startsWith("data:image/webp");
-        if (mightAnimate) {
+        if (!mightAnimate) {
+          this.stillImages.set(img, url);
+          return;
+        }
+        img.dataset.ai4a11yMrFrozen = "checking";
+        const gen = this.freezeGen;
+        isAnimated(url).then((animated) => {
+          if (this.freezeGen !== gen) {
+            delete img.dataset.ai4a11yMrFrozen;
+            return;
+          }
+          if (animated === false) {
+            delete img.dataset.ai4a11yMrFrozen;
+            this.stillImages.set(img, url);
+            return;
+          }
+          delete img.dataset.ai4a11yMrFrozen;
           this.freezeSingleImage(img).catch(() => {
           });
-        } else {
-          img.dataset.ai4a11yMrFrozen = "skip";
-        }
+        });
       });
     },
     async freezeSingleImage(img) {
@@ -737,6 +945,17 @@
       }
       canvas.setAttribute("width", w);
       canvas.setAttribute("height", h);
+      const box = getComputedStyle(img);
+      if (img.getClientRects().length) {
+        canvas.style.width = box.width;
+        canvas.style.height = box.height;
+      } else {
+        canvas.style.maxWidth = "100%";
+      }
+      canvas.style.objectFit = box.objectFit;
+      canvas.style.objectPosition = box.objectPosition;
+      canvas.style.borderRadius = box.borderRadius;
+      if (box.display !== "inline") canvas.style.display = box.display;
       const ctx = canvas.getContext("2d");
       let drawn = false;
       let taintedDraw = false;
@@ -789,10 +1008,9 @@
     },
     pauseAllVideos() {
       document.querySelectorAll("video").forEach((video) => {
-        if (!video.paused) {
-          video.pause();
-          video.dataset.ai4a11yWasPaused = "false";
-        }
+        if (this.seenVideos.has(video)) return;
+        this.seenVideos.add(video);
+        if (!video.paused) this.pauseVideo(video);
       });
       document.querySelectorAll("iframe").forEach((iframe) => {
         const src = iframe.src || "";
@@ -805,19 +1023,101 @@
         }
       });
     },
+    pauseVideo(video) {
+      video.dataset.ai4a11yWasPaused = "false";
+      if (!video.paused && video.readyState < 3 && video.currentSrc) {
+        const done = () => {
+          video.removeEventListener("playing", onPlaying);
+          video.removeEventListener("pause", done);
+        };
+        const onPlaying = () => {
+          done();
+          if (this.enabled) video.pause();
+        };
+        video.addEventListener("playing", onPlaying);
+        video.addEventListener("pause", done);
+      } else {
+        video.pause();
+      }
+      if (!video.controls) {
+        video.controls = true;
+        video.dataset.ai4a11yMrControls = "added";
+      }
+    },
     toggle() {
       if (this.enabled) this.disable();
       else this.enable();
     }
   };
+  var animatedCache = /* @__PURE__ */ new Map();
+  var HEAD_BYTES = 8192;
+  function isAnimated(url) {
+    if (!animatedCache.has(url)) animatedCache.set(url, readHead(url).then(animatedFromHead, () => null));
+    return animatedCache.get(url);
+  }
+  async function readHead(url) {
+    if (url.startsWith("data:")) {
+      const b64 = url.slice(url.indexOf(",") + 1, url.indexOf(",") + 1 + Math.ceil(HEAD_BYTES / 3) * 4);
+      const bin = atob(b64.slice(0, b64.length - b64.length % 4));
+      return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    }
+    const res = await fetch(url, { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` }, credentials: "omit" });
+    if (!res.ok || !res.body) throw new Error("unreadable");
+    const reader = res.body.getReader();
+    const chunks = [];
+    let n = 0;
+    while (n < HEAD_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      n += value.length;
+    }
+    reader.cancel().catch(() => {
+    });
+    const bytes = new Uint8Array(n);
+    let at = 0;
+    for (const c of chunks) {
+      bytes.set(c, at);
+      at += c.length;
+    }
+    return bytes;
+  }
+  function animatedFromHead(b) {
+    const text = (from, len) => String.fromCharCode(...b.subarray(from, from + len));
+    if (text(0, 4) === "RIFF" && text(8, 4) === "WEBP") {
+      return text(12, 4) === "VP8X" ? (b[20] & 2) !== 0 : false;
+    }
+    if (text(0, 3) === "GIF") {
+      const all = text(0, b.length);
+      if (all.includes("NETSCAPE2.0") || all.includes("ANIMEXTS1.0")) return true;
+      return b.length < HEAD_BYTES ? false : null;
+    }
+    if (b[0] === 137 && text(1, 3) === "PNG") {
+      const all = text(0, b.length);
+      const actl = all.indexOf("acTL"), idat = all.indexOf("IDAT");
+      return actl !== -1 && (idat === -1 || actl < idat);
+    }
+    return null;
+  }
   if (typeof window !== "undefined") window.__ai4a11yMotionReducer = MotionReducer;
 
   // tools/adapters/focus-mode.js
+  var HIGHLIGHT = "ai4a11y-focus-mode-highlight";
+  function hasDarkText(el) {
+    const m = (getComputedStyle(el).color || "").match(/[\d.]+/g);
+    if (!m) return false;
+    const [r, g, b] = m.map(Number);
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
+  }
   var FocusMode = {
     styleId: "ai4a11y-focus-mode-styles",
     enabled: false,
     progressEl: null,
     progressHandler: null,
+    hoverHandler: null,
+    leaveHandler: null,
+    hovered: null,
+    // the element carrying the hover highlight
     currentSettings: {
       hideDistractions: false,
       dimBackground: false,
@@ -840,22 +1140,33 @@
       '[class*="subscribe"]',
       '[class*="cookie-banner"]',
       '[class*="consent-banner"]',
-      '[class*="gdpr-banner"]'
+      '[class*="gdpr-banner"]',
+      // Shops mark ads with a "Sponsored" label inside the product card, or with
+      // an "ad" class of their own (brand-ad, ad-row): dim the whole card.
+      ':has(> [class*="sponsored"])',
+      '[class~="ad"]',
+      '[class^="ad-"]',
+      '[class*=" ad-"]',
+      '[class$="-ad"]',
+      '[class*="-ad "]'
     ],
     enable(options = {}) {
       document.getElementById(this.styleId)?.remove();
       this.disableProgressIndicator();
+      this.disableHoverHighlight();
       this.currentSettings = { ...this.currentSettings, ...options };
       this.enabled = true;
       const s = this.currentSettings;
       let css = "";
       if (s.hideDistractions) {
+        const all = this.distractionSelectors.join(", ");
         css += `
-        ${this.distractionSelectors.join(", ")} {
+        :is(${all}) {
           opacity: ${s.dimOpacity} !important;
           transition: opacity 0.3s ease !important;
         }
-        ${this.distractionSelectors.join(":hover, ")}:hover {
+        :is(${all}) :is(${all}),
+        :is(${all}):hover, :is(${all}):focus-within {
           opacity: 1 !important;
         }
       `;
@@ -873,11 +1184,12 @@
       `;
       }
       css += `
-      p:hover, li:hover, td:hover {
+      .${HIGHLIGHT} {
         background-color: ${s.highlightColor} !important;
         transition: background-color 0.2s ease !important;
       }
     `;
+      this.enableHoverHighlight();
       if (s.showProgress) {
         this.enableProgressIndicator();
       }
@@ -892,6 +1204,7 @@
       this.enabled = false;
       document.getElementById(this.styleId)?.remove();
       this.disableProgressIndicator();
+      this.disableHoverHighlight();
       console.log("[AI4A11y] Focus Mode disabled");
       announce("Focus mode disabled");
     },
@@ -937,6 +1250,31 @@
         this.progressHandler = null;
       }
     },
+    // Highlight the paragraph, list item or table cell under the pointer. Light
+    // text (white words on a banner photo, a dark footer's links) would all
+    // but vanish on the light highlight, so only dark text gets it.
+    enableHoverHighlight() {
+      this.hoverHandler = (e) => {
+        const el = e.target && e.target.closest ? e.target.closest("p, li, td") : null;
+        if (el === this.hovered) return;
+        this.hovered?.classList.remove(HIGHLIGHT);
+        this.hovered = el && hasDarkText(el) ? el : null;
+        this.hovered?.classList.add(HIGHLIGHT);
+      };
+      this.leaveHandler = () => {
+        this.hovered?.classList.remove(HIGHLIGHT);
+        this.hovered = null;
+      };
+      document.addEventListener("mouseover", this.hoverHandler, true);
+      document.documentElement.addEventListener("mouseleave", this.leaveHandler);
+    },
+    disableHoverHighlight() {
+      if (this.hoverHandler) document.removeEventListener("mouseover", this.hoverHandler, true);
+      if (this.leaveHandler) document.documentElement.removeEventListener("mouseleave", this.leaveHandler);
+      this.hoverHandler = this.leaveHandler = null;
+      this.hovered?.classList.remove(HIGHLIGHT);
+      this.hovered = null;
+    },
     toggle() {
       if (this.enabled) {
         this.disable();
@@ -948,12 +1286,45 @@
   if (typeof window !== "undefined") window.__ai4a11yFocusMode = FocusMode;
 
   // tools/adapters/read-aloud.js
+  var SKIP_SEL = 'script, style, noscript, template, select, textarea, nav, header, footer, aside, [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"], [aria-hidden="true"], [hidden], [aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
+  var BLOCK_TAGS = /* @__PURE__ */ new Set([
+    "P",
+    "DIV",
+    "LI",
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5",
+    "H6",
+    "TD",
+    "TH",
+    "TR",
+    "DT",
+    "DD",
+    "SECTION",
+    "ARTICLE",
+    "BLOCKQUOTE",
+    "FIGCAPTION",
+    "CAPTION",
+    "LEGEND",
+    "FIELDSET",
+    "LABEL",
+    "BUTTON",
+    "SUMMARY",
+    "BR"
+  ]);
+  var CHUNK_CHARS = 220;
   var ReadAloud = {
     speaking: false,
     paused: false,
     utterance: null,
     currentWord: 0,
     words: [],
+    run: 0,
+    // bumped by stop(); callbacks from an older run are ignored
+    gestureHandler: null,
+    // waiting for a click or key to start (see waitForGesture)
     settings: {
       rate: 1,
       pitch: 1,
@@ -982,17 +1353,99 @@
     },
     speakPage(options = {}) {
       if (options.rate) this.settings.rate = options.rate;
-      const main = document.querySelector('main, article, [role="main"], .content, #content');
+      const main = document.querySelector('main, article, [role="main"], #main, .content, #content');
       const target = main || document.body;
       const text = this.extractReadableText(target);
       if (text) {
         this.speak(text);
+      } else {
+        announce("Read aloud: no text to read on this page");
       }
     },
+    // The text a sighted reader sees in element, in order, with a pause between
+    // blocks. Text hidden on the page (closed menus, error boxes not shown yet)
+    // is left out; visually hidden text meant for listeners is kept.
     extractReadableText(element) {
-      const clone = element.cloneNode(true);
-      clone.querySelectorAll('script, style, nav, header, footer, aside, [aria-hidden="true"]').forEach((el) => el.remove());
-      return clone.textContent?.replace(/\s+/g, " ").trim() || "";
+      if (!element) return "";
+      const parts = [];
+      let lastBlock = null;
+      const visible2 = (el) => typeof el.checkVisibility !== "function" || el.checkVisibility({ visibilityProperty: true });
+      const blockOf = (el) => {
+        for (let e = el; e && e !== element; e = e.parentElement) if (BLOCK_TAGS.has(e.tagName)) return e;
+        return element;
+      };
+      const walk = (el) => {
+        for (let n = el.firstChild; n; n = n.nextSibling) {
+          if (n.nodeType === 3) {
+            const t = n.nodeValue.replace(/\s+/g, " ");
+            if (!t.trim()) {
+              if (parts.length) parts.push(" ");
+              continue;
+            }
+            const block = blockOf(el);
+            if (block !== lastBlock && parts.length) {
+              const prev = parts.join("").trimEnd();
+              parts.push(/[.!?:;,]$/.test(prev) ? " " : ". ");
+            }
+            lastBlock = block;
+            parts.push(t);
+          } else if (n.nodeType === 1 && !(n.matches && n.matches(SKIP_SEL)) && visible2(n)) {
+            walk(n);
+          }
+        }
+      };
+      try {
+        walk(element);
+      } catch {
+      }
+      return parts.join("").replace(/\s+/g, " ").replace(/\s+([.,;:!?])/g, "$1").trim();
+    },
+    // Sentence-sized pieces, none longer than CHUNK_CHARS where a space allows.
+    chunk(text) {
+      const sentences = text.match(/[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g) || [text];
+      const out = [];
+      let cur = "";
+      for (let s of sentences) {
+        while (s.length > CHUNK_CHARS) {
+          const cut = s.lastIndexOf(" ", CHUNK_CHARS);
+          const at = cut > 40 ? cut : CHUNK_CHARS;
+          if (cur) {
+            out.push(cur);
+            cur = "";
+          }
+          out.push(s.slice(0, at));
+          s = s.slice(at);
+        }
+        if ((cur + s).length > CHUNK_CHARS && cur) {
+          out.push(cur);
+          cur = "";
+        }
+        cur += s;
+      }
+      if (cur.trim()) out.push(cur);
+      return out.map((c) => c.trim()).filter(Boolean);
+    },
+    // Browsers only start speech after the person has clicked or pressed a key
+    // on the page. When reading was switched on as the page loaded (a saved
+    // setting, a profile), wait for that first click or key, then start.
+    waitForGesture(text, run) {
+      if (this.gestureHandler) return;
+      this.speaking = false;
+      if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+      announce("Read aloud is ready: click anywhere on the page or press a key to start");
+      console.log("[AI4A11y] Read Aloud: waiting for a click or key press before speaking");
+      this.gestureHandler = () => {
+        this.clearGesture();
+        if (run === this.run) this.speak(text);
+      };
+      document.addEventListener("pointerdown", this.gestureHandler, true);
+      document.addEventListener("keydown", this.gestureHandler, true);
+    },
+    clearGesture() {
+      if (!this.gestureHandler) return;
+      document.removeEventListener("pointerdown", this.gestureHandler, true);
+      document.removeEventListener("keydown", this.gestureHandler, true);
+      this.gestureHandler = null;
     },
     async speak(text) {
       this.stop();
@@ -1041,35 +1494,53 @@
           console.warn("[AI4A11y] EasySpeech failed, falling back to native:", e);
         }
       }
-      this.utterance = new SpeechSynthesisUtterance(text);
-      this.utterance.rate = this.settings.rate;
-      this.utterance.pitch = this.settings.pitch;
-      this.utterance.volume = this.settings.volume;
-      if (this.settings.voice) {
-        this.utterance.voice = this.settings.voice;
+      if (typeof speechSynthesis === "undefined" || typeof SpeechSynthesisUtterance === "undefined") {
+        announce("Text-to-speech is not available in this browser");
+        this.speaking = false;
+        return;
       }
-      this.utterance.onboundary = (event) => {
-        if (event.name === "word" && this.words.length > 0 && text.length > 0) {
+      const run = this.run;
+      const chunks = this.chunk(text);
+      let started = false, offset = 0;
+      chunks.forEach((part, i) => {
+        const u = new SpeechSynthesisUtterance(part);
+        u.rate = this.settings.rate;
+        u.pitch = this.settings.pitch;
+        u.volume = this.settings.volume;
+        if (this.settings.voice) u.voice = this.settings.voice;
+        const base = offset;
+        offset += part.length + 1;
+        u.onboundary = (event) => {
+          if (run !== this.run || event.name !== "word" || !this.words.length) return;
           const avgWordLength = text.length / this.words.length;
           if (avgWordLength > 0) {
-            this.currentWord = Math.min(
-              Math.floor(event.charIndex / avgWordLength),
-              this.words.length - 1
-            );
+            this.currentWord = Math.min(Math.floor((base + event.charIndex) / avgWordLength), this.words.length - 1);
           }
-        }
-      };
-      this.utterance.onend = () => {
-        this.speaking = false;
-        announce("Finished reading");
-      };
-      this.utterance.onerror = (event) => {
-        console.error("[AI4A11y] Speech error:", event.error);
-        this.speaking = false;
-      };
-      if (typeof speechSynthesis !== "undefined") speechSynthesis.speak(this.utterance);
-      console.log("[AI4A11y] Read Aloud started");
-      announce("Reading started");
+        };
+        u.onstart = () => {
+          if (run !== this.run || started) return;
+          started = true;
+          console.log("[AI4A11y] Read Aloud started");
+          announce("Reading started");
+        };
+        u.onend = () => {
+          if (run !== this.run || i !== chunks.length - 1) return;
+          this.speaking = false;
+          announce("Finished reading");
+        };
+        u.onerror = (event) => {
+          if (run !== this.run) return;
+          if (event.error === "interrupted" || event.error === "canceled") return;
+          if (event.error === "not-allowed" && !started) {
+            this.waitForGesture(text, run);
+            return;
+          }
+          console.warn("[AI4A11y] Speech error:", event.error);
+          this.speaking = false;
+        };
+        this.utterance = u;
+        speechSynthesis.speak(u);
+      });
     },
     pause() {
       if (this.speaking && !this.paused && typeof speechSynthesis !== "undefined") {
@@ -1086,6 +1557,8 @@
       }
     },
     stop() {
+      this.run++;
+      this.clearGesture();
       if (typeof EasySpeech !== "undefined" && EasySpeech.cancel) {
         try {
           EasySpeech.cancel();
@@ -1122,11 +1595,21 @@
   if (typeof window !== "undefined") window.__ai4a11yReadAloud = ReadAloud;
 
   // tools/adapters/reader-mode.js
+  var STYLE_ID = "ai4a11y-reader-styles";
+  var AD_SEL = '[class*="sponsor" i], [id*="sponsor" i], [aria-label*="sponsor" i], [alt*="sponsor" i], [class*="advert" i], [id*="advert" i]';
+  var AD_HOLDER = 'a, li, article, aside, [class*="card" i]';
+  var KEEP_LIVE = '[aria-live], [role="status"], [role="alert"], [role="log"], #ws-root';
   var ReaderMode = {
     enabled: false,
     originalContent: null,
     readerOverlay: null,
     escapeHandler: null,
+    inerted: null,
+    // page elements we made inert, to give back on disable
+    focusBefore: null,
+    // what had focus before the reader opened
+    overflowBefore: null,
+    // the body's own inline overflow, put back on disable
     settings: {
       fontSize: 18,
       lineHeight: 1.8,
@@ -1144,6 +1627,7 @@
       }
       this.settings = { ...this.settings, ...options };
       const docClone = document.cloneNode(true);
+      this.declutter(docClone);
       const PLACEHOLDER_PATTERNS = /^(data:image\/gif|about:blank|javascript:|$)/i;
       docClone.querySelectorAll("img, source").forEach((el) => {
         const dataSrc = el.getAttribute("data-src");
@@ -1160,8 +1644,8 @@
       });
       const reader = new Readability(docClone);
       const article = reader.parse();
-      if (!article || !article.content || article.content.length < 200) {
-        announce("Reader mode could not extract the article \u2014 the page may be behind a login or is too short.");
+      if (!article || !article.content || article.content.length < 200 || (article.textContent || "").replace(/\s+/g, " ").trim().length < 400) {
+        announce("Reader mode found no article text on this page");
         return false;
       }
       this.originalContent = document.body.innerHTML;
@@ -1178,7 +1662,18 @@
       container.appendChild(closeBtn);
       const title = document.createElement("h1");
       title.className = "ai4a11y-reader-title";
-      title.textContent = article.title || document.title || "Article";
+      title.tabIndex = -1;
+      let heading = article.title || document.title || "Article";
+      const site = (article.siteName || "").trim();
+      if (site && heading.length > site.length + 3) {
+        for (const sep of [" | ", " - ", " \u2013 ", " \u2014 ", " \xB7 "]) {
+          if (heading.endsWith(sep + site)) {
+            heading = heading.slice(0, -(sep + site).length);
+            break;
+          }
+        }
+      }
+      title.textContent = heading;
       container.appendChild(title);
       if (article.byline) {
         const byline = document.createElement("p");
@@ -1192,9 +1687,22 @@
       container.appendChild(contentDiv);
       this.readerOverlay.appendChild(container);
       this.applyStyles();
+      closeBtn.type = "button";
       closeBtn.onclick = () => this.disable();
+      this.overflowBefore = document.body.hasAttribute("style") ? document.body.style.overflow : null;
       document.body.style.overflow = "hidden";
       document.body.appendChild(this.readerOverlay);
+      this.focusBefore = document.activeElement;
+      this.inerted = [];
+      for (const el of document.body.children) {
+        if (el === this.readerOverlay || el.inert || el.matches(KEEP_LIVE)) continue;
+        el.inert = true;
+        this.inerted.push(el);
+      }
+      try {
+        title.focus({ preventScroll: true });
+      } catch {
+      }
       this.enabled = true;
       console.log("[AI4A11y] Reader Mode enabled");
       announce("Reader mode enabled. Press Escape to exit.");
@@ -1216,6 +1724,10 @@
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = html || "";
       tempDiv.querySelectorAll("script, iframe, object, embed, form, input, svg, style, link, meta, base, noscript, template, math").forEach((el) => el.remove());
+      tempDiv.querySelectorAll("video, audio").forEach((el) => {
+        el.removeAttribute("autoplay");
+        el.setAttribute("controls", "");
+      });
       const dangerousUrlAttrs = ["href", "src", "srcset", "action", "formaction", "srcdoc", "poster", "xlink:href"];
       const dangerousPrefixes = ["javascript:", "vbscript:", "data:text/html", "data:application", "data:image/svg+xml"];
       tempDiv.querySelectorAll("*").forEach((el) => {
@@ -1232,6 +1744,36 @@
         });
       });
       return tempDiv.innerHTML;
+    },
+    // Take out of the copy what the reader never sees on the page, and ads,
+    // before Readability picks the main text. The copy has the same elements
+    // in the same order as the page, so what is hidden is read off the page.
+    declutter(docClone) {
+      try {
+        const live = document.body ? document.body.querySelectorAll("*") : [];
+        const copy = docClone.body ? docClone.body.querySelectorAll("*") : [];
+        if (live.length === copy.length) {
+          const drop = [];
+          live.forEach((el, i) => {
+            if (el.hidden || el.getAttribute("aria-hidden") === "true") {
+              drop.push(copy[i]);
+              return;
+            }
+            const cs = typeof getComputedStyle === "function" ? getComputedStyle(el) : null;
+            if (cs && (cs.display === "none" || cs.visibility === "hidden")) drop.push(copy[i]);
+          });
+          drop.forEach((el) => el.remove());
+        }
+        docClone.querySelectorAll(AD_SEL).forEach((el) => (el.closest(AD_HOLDER) || el).remove());
+        docClone.querySelectorAll("section, aside").forEach((el) => {
+          if (/^\s*(sponsored|advertisement)\b/i.test(el.textContent || "")) el.remove();
+        });
+        const now = document.title;
+        docClone.querySelectorAll('meta[property="og:title"], meta[name="twitter:title"], meta[name="dc.title" i]').forEach((m) => {
+          if (now && m.getAttribute("content") !== now) m.remove();
+        });
+      } catch {
+      }
     },
     applyStyles() {
       const s = this.settings;
@@ -1264,9 +1806,10 @@
       const closeBtn = this.readerOverlay.querySelector(".ai4a11y-reader-close");
       if (closeBtn) {
         closeBtn.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
+        position: sticky;
+        top: 12px;
+        display: block;
+        margin: 0 0 12px auto;
         padding: 10px 20px;
         background: #333;
         color: #fff;
@@ -1274,9 +1817,29 @@
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
-        z-index: 1000000;
+        z-index: 1;
       `;
       }
+      let style = document.getElementById(STYLE_ID);
+      if (!style) {
+        style = document.createElement("style");
+        style.id = STYLE_ID;
+        (document.head || document.documentElement).appendChild(style);
+      }
+      style.textContent = `
+      #ai4a11y-reader-mode img, #ai4a11y-reader-mode video, #ai4a11y-reader-mode picture {
+        max-width: 100% !important; height: auto !important; max-height: 70vh; object-fit: contain;
+      }
+      #ai4a11y-reader-mode a img { max-width: min(160px, 100%) !important; } /* product cards and promos, not article photos */
+      #ai4a11y-reader-mode table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+      #ai4a11y-reader-mode td, #ai4a11y-reader-mode th { padding: 4px 8px; vertical-align: top; text-align: left; }
+      #ai4a11y-reader-mode td > p, #ai4a11y-reader-mode th > p { margin: 0; }
+      #ai4a11y-reader-mode pre { max-width: 100%; overflow-x: auto; white-space: pre-wrap; }
+      #ai4a11y-reader-mode .ai4a11y-reader-content { overflow-wrap: anywhere; }
+      #ai4a11y-reader-mode a { color: #0b57d0; }
+      #ai4a11y-reader-mode :focus-visible { outline: 3px solid #0b57d0 !important; outline-offset: 2px; box-shadow: 0 0 0 5px #fff; }
+      #ai4a11y-reader-mode .ai4a11y-reader-title:focus { outline: none !important; box-shadow: none; }
+    `;
     },
     disable() {
       if (!this.enabled && !this.readerOverlay) return;
@@ -1284,9 +1847,23 @@
         this.readerOverlay.remove();
         this.readerOverlay = null;
       }
-      document.body.style.overflow = "";
+      document.getElementById(STYLE_ID)?.remove();
+      document.body.style.overflow = this.overflowBefore || "";
+      if (this.overflowBefore === null && !document.body.getAttribute("style")) document.body.removeAttribute("style");
+      this.overflowBefore = null;
+      for (const el of this.inerted || []) el.inert = false;
+      this.inerted = null;
+      const back = this.focusBefore;
+      this.focusBefore = null;
+      if (back && back.isConnected && back !== document.body && typeof back.focus === "function") {
+        try {
+          back.focus({ preventScroll: true });
+        } catch {
+        }
+      }
       if (this.escapeHandler) {
         document.removeEventListener("keydown", this.escapeHandler);
+        this.escapeHandler = null;
       }
       this.enabled = false;
       console.log("[AI4A11y] Reader Mode disabled");
@@ -1303,10 +1880,29 @@
   if (typeof window !== "undefined") window.__ai4a11yReaderMode = ReaderMode;
 
   // tools/adapters/voice-commands.js
+  var FATAL = ["not-allowed", "service-not-allowed", "audio-capture"];
+  var MAX_FAILURES = 4;
+  var NOTICE_MS = 6e3;
+  var CLICKABLE = 'a[href], button, input[type="submit"], input[type="button"], input[type="checkbox"], input[type="radio"], summary, label, select, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="checkbox"], [role="radio"], [onclick], [tabindex]:not([tabindex="-1"])';
+  function squash(s) {
+    return String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+  function nameOf(el) {
+    return squash(el.getAttribute("aria-label") || el.textContent || el.value || el.getAttribute("title") || el.querySelector?.("img[alt]")?.getAttribute("alt") || "");
+  }
+  function visible(el) {
+    if (!el.getClientRects().length) return false;
+    const s = getComputedStyle(el);
+    return s.visibility !== "hidden" && s.display !== "none";
+  }
   var VoiceCommands = {
     enabled: false,
     recognition: null,
     feedbackElement: null,
+    _fatal: false,
+    _failures: 0,
+    _restartTimer: null,
+    _noticeTimer: null,
     settings: {
       language: "en-US",
       continuous: true,
@@ -1329,21 +1925,21 @@
         }
       },
       "next link": () => {
-        const links = Array.from(document.querySelectorAll("a[href]"));
+        const links = Array.from(document.querySelectorAll("a[href]")).filter(visible);
         const current = document.activeElement;
         const idx = links.indexOf(current);
         if (idx < links.length - 1) links[idx + 1].focus();
         else if (links.length > 0) links[0].focus();
       },
       "previous link": () => {
-        const links = Array.from(document.querySelectorAll("a[href]"));
+        const links = Array.from(document.querySelectorAll("a[href]")).filter(visible);
         const current = document.activeElement;
         const idx = links.indexOf(current);
         if (idx > 0) links[idx - 1].focus();
         else if (links.length > 0) links[links.length - 1].focus();
       },
       "next button": () => {
-        const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]'));
+        const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]')).filter(visible);
         const current = document.activeElement;
         const idx = buttons.indexOf(current);
         if (idx < buttons.length - 1) buttons[idx + 1].focus();
@@ -1360,12 +1956,14 @@
       }
       this.settings = { ...this.settings, ...options };
       this._fatal = false;
+      this._failures = 0;
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = this.settings.continuous;
       this.recognition.interimResults = this.settings.interimResults;
       this.recognition.lang = this.settings.language;
       this.recognition.onresult = (event) => {
+        this._failures = 0;
         const last = event.results.length - 1;
         const transcript = event.results[last][0].transcript.toLowerCase().trim();
         if (event.results[last].isFinal) {
@@ -1376,33 +1974,68 @@
         }
       };
       this.recognition.onerror = (event) => {
-        if (event.error !== "no-speech") {
-          this.showFeedback(`Error: ${event.error}`, "error");
-        }
-        if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
-          this._fatal = true;
-          announce("Voice commands unavailable \u2014 microphone blocked or missing");
-        }
+        if (event.error === "no-speech") return;
+        this._failures++;
+        if (FATAL.includes(event.error) || this._failures >= MAX_FAILURES) this._giveUp(event.error);
+        else this.showFeedback("Trouble hearing. Trying again\u2026", "error");
       };
       this.recognition.onend = () => {
-        if (this.enabled && !this._fatal) {
+        if (!this.enabled || this._fatal) return;
+        clearTimeout(this._restartTimer);
+        this._restartTimer = setTimeout(() => {
+          this._restartTimer = null;
+          if (!this.enabled || this._fatal || !this.recognition) return;
           try {
             this.recognition.start();
           } catch {
           }
-        }
+        }, this._failures ? 500 * this._failures : 0);
       };
       this.createFeedbackElement();
-      this.recognition.start();
       this.enabled = true;
+      try {
+        this.recognition.start();
+      } catch (e) {
+        this._giveUp(e && e.name);
+        return;
+      }
       console.log("[AI4A11y] Voice Commands enabled");
-      announce('Voice commands enabled. Say "stop listening" to disable.');
+      announce(`Voice commands on. Say "click" and a button's name, "scroll down", or "stop listening".`);
+    },
+    // The microphone can't be used: say so once, stop listening, and take the
+    // note down after a moment instead of leaving a pulsing "Error" on the page.
+    _giveUp(error) {
+      if (this._fatal) return;
+      this._fatal = true;
+      const msg = /not-allowed|NotAllowed|service-not-allowed/.test(String(error)) ? "Voice commands can't use the microphone. Allow it in the browser to use them" : "Voice commands can't hear anything: no microphone or speech service";
+      announce(msg);
+      this.showFeedback(msg, "error");
+      if (this.feedbackElement) this.feedbackElement.classList.add("ai4a11y-voice-off");
+      try {
+        this.recognition && this.recognition.abort();
+      } catch {
+      }
+      clearTimeout(this._noticeTimer);
+      this._noticeTimer = setTimeout(() => {
+        this._noticeTimer = null;
+        if (this.feedbackElement) this.feedbackElement.style.display = "none";
+      }, NOTICE_MS);
     },
     disable() {
+      if (!this.enabled && !this.recognition && !this.feedbackElement) return;
+      this.enabled = false;
+      clearTimeout(this._restartTimer);
+      this._restartTimer = null;
+      clearTimeout(this._noticeTimer);
+      this._noticeTimer = null;
       if (this.recognition) {
-        this.enabled = false;
         this.recognition.onend = null;
-        this.recognition.stop();
+        this.recognition.onresult = null;
+        this.recognition.onerror = null;
+        try {
+          this.recognition.stop();
+        } catch {
+        }
         this.recognition = null;
       }
       if (this.feedbackElement) {
@@ -1411,19 +2044,21 @@
       }
       document.getElementById("ai4a11y-voice-pulse-style")?.remove();
       console.log("[AI4A11y] Voice Commands disabled");
-      announce("Voice commands disabled");
+      announce("Voice commands off");
     },
     createFeedbackElement() {
       if (this.feedbackElement) return;
       this.feedbackElement = document.createElement("div");
       this.feedbackElement.id = "ai4a11y-voice-feedback";
-      this.feedbackElement.setAttribute("role", "status");
-      this.feedbackElement.setAttribute("aria-live", "polite");
+      this.feedbackElement.setAttribute("aria-hidden", "true");
       this.feedbackElement.style.cssText = `
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      box-sizing: border-box;
       background: rgba(0, 0, 0, 0.85);
       color: white;
       padding: 12px 24px;
@@ -1434,9 +2069,11 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      pointer-events: none;
     `;
       const indicator = document.createElement("span");
-      indicator.style.cssText = "display:inline-block;width:12px;height:12px;background:#f00;border-radius:50%;animation:ai4a11y-pulse 1s infinite;";
+      indicator.className = "ai4a11y-voice-dot";
+      indicator.style.cssText = "display:inline-block;flex:none;width:12px;height:12px;background:#f00;border-radius:50%;";
       this.feedbackElement.appendChild(indicator);
       const textSpan = document.createElement("span");
       textSpan.className = "ai4a11y-voice-text";
@@ -1444,7 +2081,7 @@
       this.feedbackElement.appendChild(textSpan);
       const pulseStyle = document.createElement("style");
       pulseStyle.id = "ai4a11y-voice-pulse-style";
-      pulseStyle.textContent = "@keyframes ai4a11y-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }";
+      pulseStyle.textContent = "@keyframes ai4a11y-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }.ai4a11y-voice-dot { animation: ai4a11y-pulse 1s infinite; }.ai4a11y-voice-off .ai4a11y-voice-dot { animation: none; background: #888 !important; }@media (prefers-reduced-motion: reduce) { .ai4a11y-voice-dot { animation: none; } }";
       document.getElementById("ai4a11y-voice-pulse-style")?.remove();
       document.head.appendChild(pulseStyle);
       document.body.appendChild(this.feedbackElement);
@@ -1454,44 +2091,66 @@
       const textEl = this.feedbackElement.querySelector(".ai4a11y-voice-text");
       if (textEl) {
         textEl.textContent = text;
-        textEl.style.color = type === "error" ? "#ff6b6b" : type === "interim" ? "#aaa" : "#fff";
+        textEl.style.color = type === "error" ? "#ff9b9b" : type === "interim" ? "#ccc" : "#fff";
       }
     },
     executeCommand(transcript) {
+      transcript = squash(transcript);
       if (transcript.includes("stop listening")) {
         this.disable();
         return true;
       }
+      const clickMatch = transcript.match(/^(?:click|press|tap)(?: on)? (.+)$/);
+      if (clickMatch && !/^(it|this|that)$/.test(clickMatch[1])) {
+        const el = this.findElementByText(clickMatch[1]);
+        if (el) {
+          el.click();
+          if (el.isConnected) el.focus({ preventScroll: true });
+          announce(`Clicked ${nameOf(el).slice(0, 60)}`);
+        } else {
+          announce(`Nothing called "${clickMatch[1]}" to click`);
+        }
+        return !!el;
+      }
+      const typeMatch = transcript.match(/^type (.+)/);
+      if (typeMatch) {
+        const field = document.activeElement;
+        if (field && field.matches("input, textarea")) {
+          field.value += typeMatch[1];
+          field.dispatchEvent(new Event("input", { bubbles: true }));
+          return true;
+        }
+        announce('Go to a text field first, then say "type" and the words');
+        return false;
+      }
       for (const [phrase, action] of Object.entries(this.commands)) {
-        if (transcript.includes(phrase)) {
+        if (transcript === phrase || transcript.includes(phrase)) {
           action();
           return true;
         }
       }
-      const clickMatch = transcript.match(/click (?:on )?(.+)/);
-      if (clickMatch) {
-        const el = this.findElementByText(clickMatch[1]);
-        if (el) {
-          el.click();
-          el.focus();
-          return true;
-        }
-      }
-      const typeMatch = transcript.match(/type (.+)/);
-      if (typeMatch && document.activeElement.matches("input, textarea")) {
-        document.activeElement.value += typeMatch[1];
-        document.activeElement.dispatchEvent(new Event("input", { bubbles: true }));
-        return true;
-      }
+      announce(`No command for "${transcript}"`);
       return false;
     },
+    // The visible control whose name matches best: the exact name, then one
+    // that starts with it, then one that contains it. Includes things a page
+    // made clickable with a script (a pointer cursor), like a <div> button.
     findElementByText(text) {
-      const elements = document.querySelectorAll('a, button, [role="button"], input[type="submit"]');
-      for (const el of elements) {
-        const elText = (el.textContent || el.value || el.getAttribute("aria-label") || "").toLowerCase();
-        if (elText.includes(text.toLowerCase())) return el;
+      const want = squash(text);
+      if (!want) return null;
+      const seen = new Set(document.querySelectorAll(CLICKABLE));
+      for (const el of document.querySelectorAll("div, span, li, img")) {
+        if (!seen.has(el) && getComputedStyle(el).cursor === "pointer" && !el.parentElement?.closest(CLICKABLE)) seen.add(el);
       }
-      return null;
+      const tiers = [[], [], []];
+      for (const el of seen) {
+        if (el.closest("#ws-root, #ai4a11y-voice-feedback")) continue;
+        const name = nameOf(el);
+        if (!name) continue;
+        const tier = name === want ? 0 : name.startsWith(want) ? 1 : name.includes(want) ? 2 : -1;
+        if (tier >= 0 && visible(el)) tiers[tier].push(el);
+      }
+      return tiers[0][0] || tiers[1][0] || tiers[2][0] || null;
     },
     addCommand(phrase, action) {
       this.commands[phrase.toLowerCase()] = action;
@@ -1525,6 +2184,8 @@
     badgeContainer: null,
     resizeObserver: null,
     resizeTimer: null,
+    scrollHandler: null,
+    badgeFrame: 0,
     lastHeading: null,
     unregisterSweep: null,
     settings: {
@@ -1544,7 +2205,7 @@
         if (reason === "mutation" && this.tabSequenceOverlay) this.repositionBadges();
       }, { debounceMs: 300 });
       console.log("[AI4A11y] Keyboard Navigator enabled");
-      announce("Keyboard navigation enhanced");
+      announce("Keyboard shortcuts on. Alt+1 goes to the main content, Alt+H to the next heading, Alt+O shows the tab order");
     },
     disable() {
       if (!this.enabled) return;
@@ -1586,7 +2247,10 @@
       document.getElementById(this.styleId)?.remove();
       const css = `
       ${this.settings.enhanceFocusVisible ? `
-        *:focus-visible {
+        /* Specific enough to beat a page that turns focus rings off with
+           its own !important rule (e.g. html[data-x] *:focus { outline:
+           none !important }, the store's planted issue 20). */
+        html:root body *:focus-visible {
           outline: 3px solid #0066ff !important;
           outline-offset: 3px !important;
           box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.25) !important;
@@ -1669,7 +2333,7 @@
         });
         container.appendChild(skipToMain);
       }
-      const nav = document.querySelector('nav, [role="navigation"]');
+      const nav = this.findNav();
       if (nav) {
         if (!nav.id) {
           nav.id = "ai4a11y-nav";
@@ -1690,46 +2354,65 @@
       this.skipLinkElement = container;
       document.body.insertBefore(container, document.body.firstChild);
     },
+    // The navigation landmark with the most links: on a page whose only <nav>
+    // is a three-link breadcrumb trail next to a real menu, "navigation"
+    // should still mean the menu when there is one.
+    findNav() {
+      const navs = [...document.querySelectorAll('nav, [role="navigation"]')];
+      navs.sort((a, b) => b.querySelectorAll("a[href]").length - a.querySelectorAll("a[href]").length);
+      return navs[0] || null;
+    },
+    // The layer is position:fixed, so badges are placed in VIEWPORT coordinates
+    // and moved on scroll. (They used to be placed at document coordinates
+    // inside the fixed layer, so after any scroll every number sat a scroll's
+    // height away from its control.) Badges for controls outside the window are
+    // hidden, never pushed past its edge.
     showTabSequence() {
       this.hideTabSequence();
-      const focusables = getFocusable(document.body);
+      const focusables = getFocusable(document.body).filter((el) => !el.closest("#ws-root, #ai4a11y-skip-links"));
       const container = document.createElement("div");
       container.setAttribute("aria-hidden", "true");
       container.className = "ai4a11y-badge-layer";
       this.badgeContainer = container;
       focusables.forEach((el, idx) => {
-        const rect = el.getBoundingClientRect();
         const badge = document.createElement("span");
         badge.className = "ai4a11y-tab-badge";
         badge.setAttribute("aria-hidden", "true");
         badge.textContent = String(idx + 1);
-        badge.style.top = rect.top + window.scrollY - 10 + "px";
-        badge.style.left = rect.left + window.scrollX - 10 + "px";
+        badge._target = el;
         container.appendChild(badge);
       });
       document.body.appendChild(container);
       this.tabSequenceOverlay = true;
-      if (typeof ResizeObserver !== "undefined") {
-        this.resizeObserver = new ResizeObserver(() => {
-          if (!this.tabSequenceOverlay) return;
-          if (this.resizeTimer) clearTimeout(this.resizeTimer);
-          this.resizeTimer = setTimeout(() => {
-            this.resizeTimer = null;
-            if (this.tabSequenceOverlay) this.repositionBadges();
-          }, 100);
+      this.repositionBadges();
+      const schedule = () => {
+        if (!this.tabSequenceOverlay || this.badgeFrame) return;
+        this.badgeFrame = requestAnimationFrame(() => {
+          this.badgeFrame = 0;
+          this.repositionBadges();
         });
+      };
+      this.scrollHandler = schedule;
+      window.addEventListener("scroll", schedule, { capture: true, passive: true });
+      window.addEventListener("resize", schedule, { passive: true });
+      if (typeof ResizeObserver !== "undefined") {
+        this.resizeObserver = new ResizeObserver(schedule);
         this.resizeObserver.observe(document.body);
       }
+      announce(`Tab order numbers shown on ${focusables.length} controls. Alt+O hides them`);
     },
     repositionBadges() {
       if (!this.badgeContainer) return;
-      const focusables = getFocusable(document.body);
       const badges = Array.from(this.badgeContainer.querySelectorAll(".ai4a11y-tab-badge"));
-      focusables.forEach((el, i) => {
-        if (!badges[i]) return;
-        const rect = el.getBoundingClientRect();
-        badges[i].style.top = rect.top + window.scrollY - 10 + "px";
-        badges[i].style.left = rect.left + window.scrollX - 10 + "px";
+      const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+      const rects = badges.map((b) => b._target && b._target.isConnected ? b._target.getBoundingClientRect() : null);
+      badges.forEach((badge, i) => {
+        const r = rects[i];
+        const onScreen = r && r.width > 0 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw;
+        badge.style.display = onScreen ? "" : "none";
+        if (!onScreen) return;
+        badge.style.top = Math.max(0, r.top - 10) + "px";
+        badge.style.left = Math.min(Math.max(0, r.left - 10), vw - 32) + "px";
       });
     },
     hideTabSequence() {
@@ -1738,6 +2421,15 @@
         this.badgeContainer = null;
       }
       this.tabSequenceOverlay = false;
+      if (this.scrollHandler) {
+        window.removeEventListener("scroll", this.scrollHandler, { capture: true });
+        window.removeEventListener("resize", this.scrollHandler);
+        this.scrollHandler = null;
+      }
+      if (this.badgeFrame) {
+        cancelAnimationFrame(this.badgeFrame);
+        this.badgeFrame = 0;
+      }
       if (this.resizeObserver) {
         this.resizeObserver.disconnect();
         this.resizeObserver = null;
@@ -1751,30 +2443,37 @@
       this.shortcutHandler = (e) => {
         if (!e.altKey) return;
         if (e.ctrlKey || e.metaKey) return;
-        const tag = e.target?.tagName;
+        const path = typeof e.composedPath === "function" ? e.composedPath() : [];
+        const target = path[0] || e.target;
+        const tag = target?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-        if (e.target?.isContentEditable) return;
-        const key = (e.key || "").toLowerCase();
+        if (target?.isContentEditable) return;
+        if (/^(textbox|searchbox|combobox)$/.test(target?.getAttribute?.("role") || "")) return;
+        const code = e.code || "";
+        const key = /^(Key|Digit)/.test(code) ? code.replace(/^(Key|Digit)/, "").toLowerCase() : (e.key || "").toLowerCase();
         if (key === "1") {
           e.preventDefault();
           const main = document.querySelector('main, [role="main"], #main, #content');
           if (main) {
             this.setTabindex(main, "-1");
             main.focus();
-          }
+          } else announce("This page has no main content area marked");
         }
         if (key === "2") {
           e.preventDefault();
-          const nav = document.querySelector('nav, [role="navigation"]');
+          const nav = this.findNav();
           if (nav) {
             this.setTabindex(nav, "-1");
             nav.focus();
-          }
+          } else announce("This page has no navigation marked");
         }
         if (key === "h") {
           e.preventDefault();
-          const headings = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5, h6"));
-          if (!headings.length) return;
+          const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"]')).filter((h2) => !h2.closest("#ws-root, [hidden]") && (h2.getClientRects().length || !document.body.getClientRects().length));
+          if (!headings.length) {
+            announce("This page has no headings marked");
+            return;
+          }
           const currentIdx = this.lastHeading ? headings.indexOf(this.lastHeading) : -1;
           const idx = e.shiftKey ? currentIdx <= 0 ? headings.length - 1 : currentIdx - 1 : (currentIdx + 1) % headings.length;
           const h = headings[idx];
@@ -1783,10 +2482,12 @@
           h.focus();
           h.scrollIntoView({ behavior: "smooth", block: "center" });
         }
-        if (key === "f") {
+        if (key === "o") {
           e.preventDefault();
-          if (this.tabSequenceOverlay) this.hideTabSequence();
-          else this.showTabSequence();
+          if (this.tabSequenceOverlay) {
+            this.hideTabSequence();
+            announce("Tab order numbers hidden");
+          } else this.showTabSequence();
         }
       };
       document.addEventListener("keydown", this.shortcutHandler);
@@ -1799,6 +2500,7 @@
   if (typeof window !== "undefined") window.__ai4a11yKeyboardNavigator = KeyboardNavigator;
 
   // tools/adapters/color-blind.js
+  var PAGE_FILTER2 = "html { filter: var(--ai4a11y-filter-dark,) var(--ai4a11y-filter-dim,) var(--ai4a11y-filter-color,) !important; }";
   var ColorBlindMode = {
     styleId: "ai4a11y-color-blind-styles",
     filterId: "ai4a11y-svg-filters",
@@ -1822,8 +2524,9 @@
       style.id = this.styleId;
       style.textContent = `
       html {
-        filter: ${this.filters[mode]} !important;
+        --ai4a11y-filter-color: ${this.filters[mode]};
       }
+      ${PAGE_FILTER2}
     `;
       document.head.appendChild(style);
       console.log("[AI4A11y] Color Blind Mode enabled:", mode);
@@ -1891,6 +2594,7 @@
 
   // tools/adapters/dismiss-overlays.js
   var OVERLAY_NAME_RE = /(cookie|consent|gdpr|ccpa|newsletter|subscribe|sign[-_]?up|paywall|interstitial|pop[-_]?up|lightbox|backdrop|promo[-_]?(bar|banner)|notification[-_]?bar)/i;
+  var INPUT_EVENTS = ["pointerdown", "keydown", "click"];
   function classNameOf(el) {
     const c = el.className;
     if (typeof c === "string") return c;
@@ -1904,6 +2608,9 @@
     hidden: null,
     // Set of elements we hid (for exact restore)
     observer: null,
+    inputHandler: null,
+    lastInput: 0,
+    // when the person last clicked or pressed a key
     prevBodyOverflow: null,
     prevHtmlOverflow: null,
     enable() {
@@ -1919,9 +2626,15 @@
       if (document.body && document.body.style.overflow === "hidden") document.body.style.overflow = "";
       if (document.documentElement && document.documentElement.style.overflow === "hidden") document.documentElement.style.overflow = "";
       const count = this.sweep(document);
+      this.lastInput = 0;
+      this.inputHandler = (e) => {
+        if (e.isTrusted) this.lastInput = Date.now();
+      };
+      for (const type of INPUT_EVENTS) document.addEventListener(type, this.inputHandler, true);
       if (typeof MutationObserver !== "undefined") {
         this.observer = new MutationObserver((mutations) => {
           if (!this.enabled) return;
+          if (Date.now() - this.lastInput < 1e3) return;
           for (const m of mutations) {
             for (const node of m.addedNodes) {
               if (node.nodeType === 1) this.consider(node);
@@ -1979,6 +2692,10 @@
         this.observer.disconnect();
         this.observer = null;
       }
+      if (this.inputHandler) {
+        for (const type of INPUT_EVENTS) document.removeEventListener(type, this.inputHandler, true);
+        this.inputHandler = null;
+      }
       document.getElementById(this.styleId)?.remove();
       if (this.hidden) {
         for (const el of this.hidden) el.classList?.remove(this.hiddenClass);
@@ -1999,37 +2716,71 @@
   if (typeof window !== "undefined") window.__ai4a11yDismissOverlays = DismissOverlays;
 
   // tools/adapters/big-targets.js
-  var TARGET_SELECTORS = ["a", "button", "input", '[role="button"]', "[onclick]"];
+  var TARGET_SELECTORS = [
+    "a[href]",
+    "button",
+    "input",
+    "select",
+    "textarea",
+    "summary",
+    "label",
+    '[role="button"]',
+    '[role="link"]',
+    '[role="tab"]',
+    '[role="menuitem"]',
+    '[role="option"]',
+    '[role="checkbox"]',
+    '[role="radio"]',
+    '[role="switch"]',
+    "[onclick]",
+    '[tabindex]:not([tabindex="-1"])'
+  ];
+  var TARGETS = TARGET_SELECTORS.join(",");
+  var MARK = "data-ai4a11y-bt";
+  var NUM = "data-ai4a11y-bt-n";
+  var NO_PSEUDO = /^(INPUT|SELECT|TEXTAREA|IMG|VIDEO|AUDIO|IFRAME|CANVAS|svg|OBJECT|EMBED)$/;
+  var BOX_TYPES = /^(checkbox|radio)$/;
+  var NO_GROW_TYPES = /^(hidden|range|file|color|image)$/;
+  var GROW_ROLES = /^(button|tab|menuitem|switch|option)$/;
+  function isClear(color) {
+    return !color || color === "transparent" || /rgba\([^)]*,\s*0\)$/.test(color);
+  }
   var BigTargets = {
     styleId: "ai4a11y-big-targets-styles",
     bodyClass: "ai4a11y-big-targets",
     enabled: false,
+    minSize: 44,
+    boxSize: 24,
+    _marked: [],
+    _seen: null,
+    _count: -1,
+    _bodySize: "",
+    _unregister: null,
+    _resizeObs: null,
+    _timer: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
-      const minSize = options.minSize || 44;
-      const gap = options.gap || 6;
-      const scope = (suffix = "") => TARGET_SELECTORS.map((s) => `body.${this.bodyClass} ${s}${suffix}`).join(",\n");
+      this.minSize = Number(options.minSize) > 0 ? Number(options.minSize) : 44;
+      this.boxSize = Math.max(24, Math.round(this.minSize * 0.55));
       const style = document.createElement("style");
       style.id = this.styleId;
-      style.textContent = `
-${scope()} {
-  min-width: ${minSize}px !important;
-  min-height: ${minSize}px !important;
-  padding: 8px 12px !important;
-  margin: ${gap}px !important;
-  box-sizing: border-box !important;
-}
-/* min-width/height are ignored on inline boxes, and bare links are inline. */
-body.${this.bodyClass} a { display: inline-block !important; }
-${scope(":focus")} {
-  outline: 3px solid #1a73e8 !important;
-  outline-offset: 2px !important;
-}`;
       (document.head || document.documentElement).appendChild(style);
+      this._writeStyle("");
       try {
         if (document.body) document.body.classList.add(this.bodyClass);
       } catch {
+      }
+      this._seen = /* @__PURE__ */ new WeakSet();
+      this._apply();
+      this._unregister = registerSweep("big-targets", () => this._maybeApply(), { debounceMs: 400 });
+      if (typeof ResizeObserver !== "undefined" && document.body) {
+        this._resizeObs = new ResizeObserver(() => {
+          if (!this.enabled || this._sizeKey() === this._bodySize) return;
+          clearTimeout(this._timer);
+          this._timer = setTimeout(() => this._apply(), 300);
+        });
+        this._resizeObs.observe(document.body);
       }
       console.log("[AI4A11y] Bigger Click Targets enabled");
       announce("Click targets enlarged");
@@ -2037,6 +2788,20 @@ ${scope(":focus")} {
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
+      if (this._unregister) {
+        this._unregister();
+        this._unregister = null;
+      }
+      if (this._resizeObs) {
+        this._resizeObs.disconnect();
+        this._resizeObs = null;
+      }
+      clearTimeout(this._timer);
+      this._timer = null;
+      this._clearMarks();
+      this._seen = null;
+      this._count = -1;
+      this._bodySize = "";
       try {
         document.getElementById(this.styleId)?.remove();
       } catch {
@@ -2051,24 +2816,315 @@ ${scope(":focus")} {
     toggle() {
       if (this.enabled) this.disable();
       else this.enable();
+    },
+    _sizeKey() {
+      const b = document.body;
+      return b ? b.offsetWidth + "x" + b.offsetHeight : "";
+    },
+    _writeStyle(perElement) {
+      const el = document.getElementById(this.styleId);
+      if (!el) return;
+      const b = `body.${this.bodyClass}`;
+      const focus = TARGET_SELECTORS.map((s) => `${b} ${s}:focus-visible`).join(",\n");
+      el.textContent = `
+${b} [${MARK}~="grow"] { min-width: ${this.minSize}px !important; min-height: ${this.minSize}px !important; }
+${b} [${MARK}~="glyph"] { font-size: ${Math.round(this.minSize * 0.45)}px !important; }
+${b} [${MARK}~="box"] { width: ${this.boxSize}px !important; height: ${this.boxSize}px !important; flex-shrink: 0 !important; }
+${b} [${MARK}~="label"] { pointer-events: auto !important; cursor: pointer; }
+${b} [${MARK}~="rel"] { position: relative !important; }
+${b} [${MARK}~="hit"]::after { content: "" !important; position: absolute !important; }
+${focus} {
+  outline: 3px solid #1a73e8 !important;
+  outline-offset: 2px !important;
+}
+${perElement}`;
+    },
+    _clearMarks() {
+      for (const el of this._marked) {
+        try {
+          el.removeAttribute(MARK);
+          el.removeAttribute(NUM);
+        } catch {
+        }
+      }
+      this._marked = [];
+    },
+    _mark(el, token) {
+      const cur = el.getAttribute(MARK);
+      if (!cur) this._marked.push(el);
+      el.setAttribute(MARK, cur ? cur + " " + token : token);
+    },
+    // Everything a person could click: the structural controls, plus the
+    // outermost element with a pointer cursor that isn't inside one of them.
+    _candidates() {
+      const found = /* @__PURE__ */ new Set();
+      for (const el of document.querySelectorAll(TARGETS)) found.add(el);
+      for (const el of document.body.getElementsByTagName("*")) {
+        if (found.has(el) || el.id === this.styleId) continue;
+        let cs;
+        try {
+          cs = getComputedStyle(el);
+        } catch {
+          continue;
+        }
+        if (cs.cursor !== "pointer") continue;
+        const p = el.parentElement;
+        if (p && p !== document.body && getComputedStyle(p).cursor === "pointer") continue;
+        if (el.closest(TARGETS)) continue;
+        found.add(el);
+      }
+      return [...found].filter((el) => !(el.closest && el.closest("#ws-root")));
+    },
+    _maybeApply() {
+      if (!this.enabled || !document.body) return;
+      const list = this._candidates();
+      if (list.length === this._count && list.every((el) => this._seen.has(el))) return;
+      this._apply(list);
+    },
+    // Reads and writes are kept in separate passes: interleaving them would
+    // make the browser lay out the whole page again once per control.
+    _apply(list) {
+      if (!this.enabled || !document.body || !document.getElementById(this.styleId)) return;
+      const MIN = this.minSize, BOX = this.boxSize;
+      const root = document.documentElement;
+      this._clearMarks();
+      this._writeStyle("");
+      list = list || this._candidates();
+      this._count = list.length;
+      for (const el of list) this._seen.add(el);
+      const items = [];
+      for (const el of list) {
+        const r = el.getBoundingClientRect();
+        if (!r.width || !r.height) continue;
+        const cs = getComputedStyle(el);
+        if (cs.visibility === "hidden" || cs.display === "none") continue;
+        items.push({ el, cs, r, small: r.width < MIN || r.height < MIN });
+      }
+      const docW = root.clientWidth, docSW = root.scrollWidth;
+      const writes = [];
+      const grown = [];
+      for (const it of items) {
+        const { el, cs, r } = it;
+        if (!it.small || el.disabled) continue;
+        const tag = el.tagName, type = (el.getAttribute("type") || "").toLowerCase();
+        if (tag === "INPUT" && BOX_TYPES.test(type)) {
+          if (cs.opacity !== "0" && cs.position !== "absolute" && (r.width < BOX || r.height < BOX)) {
+            writes.push([el, "box"]);
+            it.kind = "box";
+          }
+          const label = el.closest("label") || el.labels && el.labels[0];
+          if (label && getComputedStyle(label).pointerEvents === "none") writes.push([label, "label"]);
+          if (it.kind !== "box") it.kind = "input";
+          continue;
+        }
+        if (cs.display === "inline" || cs.display === "contents") continue;
+        const role = el.getAttribute("role") || "";
+        const text = (el.textContent || "").trim();
+        const iconLike = r.width < MIN && r.height < MIN && text.length <= 2;
+        const looksLikeButton = !isClear(cs.backgroundColor) || parseFloat(cs.borderTopWidth) > 0 && !isClear(cs.borderTopColor);
+        const overlaid = cs.position === "absolute" || cs.position === "fixed";
+        const growable = !overlaid && (tag === "BUTTON" || tag === "SELECT" || tag === "SUMMARY" || tag === "INPUT" && !NO_GROW_TYPES.test(type) || GROW_ROLES.test(role) || iconLike || tag !== "LABEL" && looksLikeButton);
+        if (!growable) continue;
+        const p = el.parentElement, g = p && p.parentElement;
+        it.before = [p, g].filter(Boolean).map((a) => [a, a.scrollWidth - a.clientWidth, a.scrollHeight - a.clientHeight]);
+        it.kind = "grow";
+        writes.push([el, text && parseFloat(cs.fontSize) < this.minSize * 0.45 && iconLike ? "grow glyph" : "grow"]);
+        grown.push(it);
+      }
+      for (const [el, token] of writes) this._mark(el, token);
+      const undo = grown.filter((it) => {
+        const r = it.el.getBoundingClientRect();
+        return it.before.some(([a, w, h]) => a.scrollWidth - a.clientWidth > w + 1 || a.scrollHeight - a.clientHeight > h + 1) || r.right > docW + 0.5 && it.r.right <= docW + 0.5;
+      });
+      const ungrow = (it) => {
+        it.el.setAttribute(MARK, (it.el.getAttribute(MARK) || "").replace(/\b(grow|glyph)\b/g, "").trim() || "none");
+        it.kind = null;
+      };
+      undo.forEach(ungrow);
+      if (grown.length && root.scrollWidth > docSW + 1) grown.filter((it) => it.kind === "grow").forEach(ungrow);
+      const rects = items.map((it) => ({ el: it.el, r: it.el.getBoundingClientRect() }));
+      const hits = [];
+      for (const it of items) {
+        if (!it.small || it.kind) continue;
+        const { el, cs } = it;
+        if (NO_PSEUDO.test(el.tagName) || el.disabled) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width >= MIN && r.height >= MIN) continue;
+        if (el.getClientRects().length > 1) continue;
+        if (cs.overflow !== "visible") continue;
+        const after = getComputedStyle(el, "::after").content;
+        if (after && after !== "none" && after !== "normal") continue;
+        const inner = el.querySelector(TARGETS);
+        if (inner && !(el.tagName === "LABEL" && [...el.querySelectorAll(TARGETS)].every((c) => c.tagName === "INPUT"))) continue;
+        const relative = cs.position === "static";
+        if (relative && [...el.querySelectorAll("*")].some((d) => /absolute|fixed/.test(getComputedStyle(d).position))) continue;
+        const want = { x: Math.max(0, (MIN - r.width) / 2), y: Math.max(0, (MIN - r.height) / 2) };
+        let top = want.y, bottom = want.y, left = want.x, right = want.x;
+        for (const o of rects) {
+          if (o.el === el || o.el.contains(el) || el.contains(o.el)) continue;
+          const q = o.r;
+          const overlapX = q.left < r.right + right && q.right > r.left - left;
+          const overlapY = q.top < r.bottom + bottom && q.bottom > r.top - top;
+          if (overlapX && q.bottom <= r.top + 0.5) top = Math.min(top, (r.top - q.bottom) / 2);
+          if (overlapX && q.top >= r.bottom - 0.5) bottom = Math.min(bottom, (q.top - r.bottom) / 2);
+          if (overlapY && q.right <= r.left + 0.5) left = Math.min(left, (r.left - q.right) / 2);
+          if (overlapY && q.left >= r.right - 0.5) right = Math.min(right, (q.left - r.right) / 2);
+        }
+        let box = { left: 0, right: docW, top: -window.scrollY, bottom: root.scrollHeight - window.scrollY };
+        for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+          const s = getComputedStyle(a);
+          if (s.overflowX !== "visible" || s.overflowY !== "visible") {
+            const ar = a.getBoundingClientRect();
+            const x0 = ar.left + a.clientLeft - a.scrollLeft, y0 = ar.top + a.clientTop - a.scrollTop;
+            box = { left: x0, right: x0 + a.scrollWidth, top: y0, bottom: y0 + a.scrollHeight };
+            break;
+          }
+        }
+        const px = (v) => Math.max(0, Math.floor(v));
+        const t = px(Math.min(top, r.top - box.top)), b = px(Math.min(bottom, box.bottom - r.bottom));
+        const l = px(Math.min(left, r.left - box.left)), rt = px(Math.min(right, box.right - r.right));
+        if (t + b + l + rt < 2) continue;
+        hits.push({ el, relative, t, b, l, rt });
+      }
+      const rules = hits.map((h, i) => {
+        h.el.setAttribute(NUM, String(i + 1));
+        this._mark(h.el, h.relative ? "hit rel" : "hit");
+        return `body.${this.bodyClass} [${NUM}="${i + 1}"]::after { top: -${h.t}px; right: -${h.rt}px; bottom: -${h.b}px; left: -${h.l}px; }`;
+      });
+      this._writeStyle(rules.join("\n"));
+      this._bodySize = this._sizeKey();
     }
   };
   if (typeof window !== "undefined") window.__ai4a11yBigTargets = BigTargets;
+
+  // tools/utils/color.js
+  function parseColor(color) {
+    if (!color || color === "transparent" || color === "rgba(0, 0, 0, 0)") {
+      return null;
+    }
+    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
+      return {
+        r: parseInt(rgbMatch[1]),
+        g: parseInt(rgbMatch[2]),
+        b: parseInt(rgbMatch[3])
+      };
+    }
+    const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (hexMatch) {
+      let hex = hexMatch[1];
+      if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      }
+      return {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16)
+      };
+    }
+    return null;
+  }
+  function getLuminance(color) {
+    const rgb = parseColor(color);
+    if (!rgb) return null;
+    const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function getContrastRatio(color1, color2) {
+    const l1 = getLuminance(color1);
+    const l2 = getLuminance(color2);
+    if (l1 === null || l2 === null) return null;
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+  function meetsContrastAA(foreground, background, isLarge = false) {
+    const ratio = getContrastRatio(foreground, background);
+    if (ratio === null) return false;
+    return ratio >= (isLarge ? 3 : 4.5);
+  }
+  function nearestAccessibleColor(foreground, background, { target = 4.5 } = {}) {
+    const fg = parseColor(foreground);
+    if (!fg) return null;
+    if (getLuminance(background) === null) return null;
+    const STEPS = 50;
+    function stepToward(endpoint) {
+      for (let i = 1; i <= STEPS; i++) {
+        const t = i / STEPS;
+        const r = Math.round(fg.r + (endpoint.r - fg.r) * t);
+        const g = Math.round(fg.g + (endpoint.g - fg.g) * t);
+        const b = Math.round(fg.b + (endpoint.b - fg.b) * t);
+        const candidate = `rgb(${r}, ${g}, ${b})`;
+        const ratio = getContrastRatio(candidate, background);
+        if (ratio !== null && ratio >= target) return { color: candidate, steps: i };
+      }
+      return null;
+    }
+    const dark = stepToward({ r: 0, g: 0, b: 0 });
+    const light = stepToward({ r: 255, g: 255, b: 255 });
+    if (!dark && !light) {
+      const blackRatio = getContrastRatio("rgb(0, 0, 0)", background) ?? 0;
+      const whiteRatio = getContrastRatio("rgb(255, 255, 255)", background) ?? 0;
+      return blackRatio >= whiteRatio ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)";
+    }
+    if (!dark) return light.color;
+    if (!light) return dark.color;
+    return dark.steps <= light.steps ? dark.color : light.color;
+  }
+  function parseRgba(color) {
+    if (!color) return null;
+    const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+    if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== void 0 ? parseFloat(m[4]) : 1 };
+    const rgb = parseColor(color);
+    return rgb ? { ...rgb, a: 1 } : null;
+  }
+  function getEffectiveBackground(element) {
+    const layers = [];
+    let el = element;
+    while (el) {
+      const parsed = parseRgba(getComputedStyle(el).backgroundColor);
+      if (parsed && parsed.a > 0) {
+        layers.push(parsed);
+        if (parsed.a >= 1) break;
+      }
+      if (el === document.documentElement) break;
+      el = el.parentElement;
+    }
+    let base = { r: 255, g: 255, b: 255 };
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const top = layers[i];
+      base = {
+        r: Math.round(top.r * top.a + base.r * (1 - top.a)),
+        g: Math.round(top.g * top.a + base.g * (1 - top.a)),
+        b: Math.round(top.b * top.a + base.b * (1 - top.a))
+      };
+    }
+    return `rgb(${base.r}, ${base.g}, ${base.b})`;
+  }
 
   // tools/adapters/link-highlighter.js
   var LinkHighlighter = {
     styleId: "ai4a11y-link-highlighter-styles",
     bodyClass: "ai4a11y-highlight-links",
     dataAttr: "data-ai4a11y-linkhl",
+    ownColorAttr: "data-ai4a11y-linkhl-own-color",
     enabled: false,
     titled: null,
     // Set of links WE titled (for exact restore)
+    ownColor: null,
+    // Set of links that keep the page's color (see keepOwnColor)
+    color: null,
     observer: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
       this.titled = /* @__PURE__ */ new Set();
+      this.ownColor = /* @__PURE__ */ new Set();
       const color = options && options.color || "#0b57d0";
+      this.color = color;
       const style = document.createElement("style");
       style.id = this.styleId;
       style.textContent = `
@@ -2077,6 +3133,8 @@ ${scope(":focus")} {
         text-decoration-thickness: 2px !important;
         text-underline-offset: 2px !important;
         font-weight: 600 !important;
+      }
+      .${this.bodyClass} a[href]:not([${this.ownColorAttr}]) {
         color: ${color} !important;
       }
       .${this.bodyClass} a[href]:focus,
@@ -2112,14 +3170,34 @@ ${scope(":focus")} {
       } catch {
         return 0;
       }
-      for (const a of links) if (this.reveal(a)) n++;
+      for (const a of links) {
+        this.keepOwnColor(a);
+        if (this.reveal(a)) n++;
+      }
       return n;
+    },
+    // The link color is dark: on a dark header or a colored button it made
+    // links unreadable (dark blue on dark red). Those keep the page's own
+    // color, which the page already made readable there; the underline and
+    // weight still mark them as links.
+    keepOwnColor(a) {
+      if (!a || a.nodeType !== 1 || this.ownColor.has(a)) return;
+      try {
+        const ratio = getContrastRatio(this.color, getEffectiveBackground(a));
+        if (ratio === null || ratio >= 4.5) return;
+        a.setAttribute(this.ownColorAttr, "");
+        this.ownColor.add(a);
+      } catch {
+      }
     },
     // An added node may itself be a link, or contain links.
     consider(node) {
       if (!node || node.nodeType !== 1) return;
       try {
-        if (node.matches && node.matches("a[href]")) this.reveal(node);
+        if (node.matches && node.matches("a[href]")) {
+          this.keepOwnColor(node);
+          this.reveal(node);
+        }
       } catch {
       }
       if (node.querySelectorAll) this.sweep(node);
@@ -2163,6 +3241,15 @@ ${scope(":focus")} {
         }
         this.titled.clear();
         this.titled = null;
+      }
+      if (this.ownColor) {
+        for (const a of this.ownColor) {
+          try {
+            a.removeAttribute(this.ownColorAttr);
+          } catch {
+          }
+        }
+        this.ownColor = null;
       }
       console.log("[AI4A11y] Link Highlighter disabled");
       announce("Link highlighting off");
@@ -2258,10 +3345,20 @@ ${scope(":focus")} {
   }
   function mainRoot(doc = typeof document !== "undefined" ? document : null) {
     if (!doc) return null;
-    return doc.querySelector('main, article, [role="main"], .content, #content') || doc.body || null;
+    return doc.querySelector('main, article, [role="main"], #main, .content, #content') || doc.body || null;
   }
 
   // tools/adapters/page-outline.js
+  var STYLED_HEADINGS = '[role="heading"], .h1, .h2, .h3, .h4, .h5, .h6';
+  function levelOf(el) {
+    const tag = /^H([1-6])$/.exec(el.tagName);
+    if (tag) return Number(tag[1]);
+    const aria = Number(el.getAttribute("aria-level"));
+    if (aria >= 1) return aria;
+    const cls = el.classList && [...el.classList].map((c) => /^h([1-6])$/.exec(c)).find(Boolean);
+    if (cls) return Number(cls[1]);
+    return 2;
+  }
   var PageOutline = {
     containerId: "ai4a11y-page-outline",
     enabled: false,
@@ -2271,11 +3368,19 @@ ${scope(":focus")} {
     // Set of headings we gave a generated id (for exact restore)
     addedTabindex: null,
     // Set of headings we gave tabindex="-1" (for exact restore)
+    nav: null,
+    toggleBtn: null,
+    listBox: null,
+    selector: "h1, h2, h3",
+    maxLevel: 3,
+    _keyHandler: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
       this.addedIds = /* @__PURE__ */ new Set();
       this.addedTabindex = /* @__PURE__ */ new Set();
+      this.selector = options.selector || "h1, h2, h3";
+      this.maxLevel = options.selector ? 6 : 3;
       this.style = injectStyle(`${this.containerId}-styles`, `
 #${this.containerId} { background: #ffffff !important; color: #111111 !important; border-color: #333333 !important; }
 #${this.containerId} p, #${this.containerId} li { color: #111111 !important; }
@@ -2283,22 +3388,67 @@ ${scope(":focus")} {
 #${this.containerId} a:link,
 #${this.containerId} a:visited,
 #${this.containerId} a:hover,
-#${this.containerId} a:focus { color: #0b3d91 !important; background: transparent !important; text-decoration: underline !important; }`);
-      const selector = options.selector || "h1, h2, h3";
-      let headings = [];
-      try {
-        headings = [...document.querySelectorAll(selector)].filter((h) => h.textContent.trim());
-      } catch {
-      }
+#${this.containerId} a:focus { color: #0b3d91 !important; background: transparent !important; text-decoration: underline !important; }
+#${this.containerId} button { all: unset; box-sizing: border-box; display: block; cursor: pointer; padding: 8px 14px; font: 600 14px/1.4 system-ui, sans-serif !important; color: #111111 !important; }
+#${this.containerId} :focus { outline: 3px solid #1a5fb4 !important; outline-offset: 2px !important; }
+#${this.containerId} [hidden] { display: none !important; }`);
       const nav = document.createElement("nav");
       nav.id = this.containerId;
       nav.setAttribute("role", "navigation");
       nav.setAttribute("aria-label", "Page outline");
-      nav.style.cssText = "position: fixed; top: 12px; right: 12px; max-width: 320px; max-height: 70vh; overflow: auto; z-index: 2147483646; background: #fff; color: #111; border: 2px solid #333; border-radius: 8px; padding: 10px 14px; font: 14px/1.6 system-ui, sans-serif;";
+      nav.style.cssText = "position: fixed; bottom: 12px; right: 12px; max-width: min(320px, calc(100vw - 24px)); z-index: 2147483646; background: #fff; color: #111; border: 2px solid #333; border-radius: 8px; font: 14px/1.6 system-ui, sans-serif;";
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.textContent = "Page outline";
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.setAttribute("aria-controls", `${this.containerId}-list`);
+      toggle.addEventListener("click", () => this.setOpen(toggle.getAttribute("aria-expanded") !== "true"));
+      const box = document.createElement("div");
+      box.id = `${this.containerId}-list`;
+      box.hidden = true;
+      box.style.cssText = "max-height: 60vh; overflow: auto; padding: 0 14px 10px;";
+      nav.append(toggle, box);
+      this.nav = nav;
+      this.toggleBtn = toggle;
+      this.listBox = box;
+      const count = this.render();
+      this._keyHandler = (e) => {
+        if (e.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+          this.setOpen(false);
+          toggle.focus();
+        }
+      };
+      nav.addEventListener("keydown", this._keyHandler);
+      try {
+        const parent = document.body || document.documentElement;
+        parent.insertBefore(nav, parent.firstChild);
+      } catch {
+      }
+      console.log(`[AI4A11y] Page Outline enabled (${count} headings)`);
+      announce(count ? `Page outline ready: ${count} heading${count === 1 ? "" : "s"}` : "Page outline: no headings found");
+    },
+    // The page's headings, in document order: real ones, plus ones that are only
+    // styled as headings. Hidden ones (a carousel's other slides) are left out —
+    // their link would jump to nothing.
+    findHeadings() {
+      let found = [];
+      try {
+        found = [...document.querySelectorAll(`${this.selector}, ${STYLED_HEADINGS}`)];
+      } catch {
+      }
+      return found.filter((h) => !(this.nav && this.nav.contains(h)) && levelOf(h) <= this.maxLevel && h.textContent.trim() && !h.closest('[hidden], [aria-hidden="true"]') && (typeof h.checkVisibility !== "function" || h.checkVisibility()));
+    },
+    // (Re)build the list from the page as it is now, so headings the page adds
+    // after load show up the next time the outline is opened.
+    render() {
+      const headings = this.findHeadings();
+      const box = this.listBox;
+      box.replaceChildren();
       if (headings.length === 0) {
         const note = document.createElement("p");
         note.textContent = "No headings on this page";
-        nav.appendChild(note);
+        note.style.margin = "0";
+        box.appendChild(note);
       } else {
         const list = document.createElement("ul");
         list.style.cssText = "list-style: none; margin: 0; padding: 0;";
@@ -2313,23 +3463,29 @@ ${scope(":focus")} {
             this.addedIds.add(heading);
           }
           const item = document.createElement("li");
-          const level = Number(heading.tagName[1]) || 1;
+          const level = levelOf(heading);
           item.style.paddingLeft = `${(level - 1) * 16}px`;
           const link = document.createElement("a");
           link.href = `#${heading.id}`;
-          link.textContent = heading.textContent.trim();
-          link.addEventListener("click", () => this.jumpTo(heading));
+          link.textContent = heading.textContent.replace(/\s+/g, " ").trim();
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            this.setOpen(false);
+            this.jumpTo(heading);
+          });
           item.appendChild(link);
           list.appendChild(item);
         }
-        nav.appendChild(list);
+        box.appendChild(list);
       }
-      try {
-        (document.body || document.documentElement).appendChild(nav);
-      } catch {
-      }
-      console.log(`[AI4A11y] Page Outline enabled (${headings.length} headings)`);
-      announce(headings.length ? `Page outline ready: ${headings.length} heading${headings.length === 1 ? "" : "s"}` : "Page outline: no headings found");
+      this.toggleBtn.textContent = headings.length ? `Page outline (${headings.length})` : "Page outline";
+      return headings.length;
+    },
+    setOpen(open) {
+      if (!this.toggleBtn) return;
+      if (open) this.render();
+      this.toggleBtn.setAttribute("aria-expanded", String(open));
+      this.listBox.hidden = !open;
     },
     // Move both the viewport and keyboard/screen-reader focus to the heading.
     // Headings aren't focusable by default, so add tabindex="-1" — tracked so
@@ -2340,8 +3496,8 @@ ${scope(":focus")} {
           heading.setAttribute("tabindex", "-1");
           this.addedTabindex?.add(heading);
         }
-        if (typeof heading.scrollIntoView === "function") heading.scrollIntoView();
-        heading.focus();
+        if (typeof heading.scrollIntoView === "function") heading.scrollIntoView({ block: "center" });
+        heading.focus({ preventScroll: true });
       } catch {
       }
     },
@@ -2349,6 +3505,8 @@ ${scope(":focus")} {
       if (!this.enabled) return;
       this.enabled = false;
       document.getElementById(this.containerId)?.remove();
+      this.nav = this.toggleBtn = this.listBox = null;
+      this._keyHandler = null;
       try {
         this.style?.remove();
       } catch {
@@ -2380,11 +3538,19 @@ ${scope(":focus")} {
 
   // tools/adapters/bionic-reading.js
   var MAX_TEXT_NODES = 2e3;
+  var LIVE_SEL = '[aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
+  var RESET = "all: unset;";
+  var SR_ONLY = RESET + "position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;user-select:none;-webkit-user-select:none;";
+  var RESCAN_MS = 400;
   var BionicReading = {
     markerClass: "ai4a11y-bionic",
     enabled: false,
     handle: null,
-    // transformTextNodes handle (owns the exact-restore)
+    // transformTextNodes handle for the first pass (owns the exact-restore)
+    handles: null,
+    // later passes, for content the page adds after enable()
+    observer: null,
+    rescanTimer: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
@@ -2394,31 +3560,74 @@ ${scope(":focus")} {
         announce("Bionic reading: no readable text found");
         return;
       }
-      this.handle = transformTextNodes(root, (text) => this.buildSpan(text, ratio), {
-        skipClass: this.markerClass,
-        cap: MAX_TEXT_NODES
-      });
+      this.handles = [];
+      this.handle = this.pass(root, ratio, MAX_TEXT_NODES);
       const count = this.handle.records.length;
       if (this.handle.capped) console.log(`[AI4A11y] Bionic Reading: capped at ${MAX_TEXT_NODES} text nodes`);
       console.log(`[AI4A11y] Bionic Reading enabled (${count} text blocks)`);
       announce(count ? "Bionic reading on" : "Bionic reading: no readable text found");
+      this.watch(root, ratio);
+    },
+    // One walk over root. Skips our own wrappers (the primitive skips code/pre/etc.
+    // by default) and live regions.
+    pass(root, ratio, cap) {
+      return transformTextNodes(root, (text, node) => {
+        const parent = node.parentElement;
+        if (parent && parent.closest && parent.closest(LIVE_SEL)) return null;
+        return this.buildSpan(text, ratio);
+      }, { skipClass: this.markerClass, cap });
+    },
+    // Pages add text after load (search results, a cart sheet, a countdown that
+    // rewrites itself). Wrap that too, a moment after it lands. Our own
+    // wrappers are ignored, so this never reacts to itself.
+    watch(root, ratio) {
+      if (typeof MutationObserver === "undefined") return;
+      const ours = (n) => n.nodeType === 1 && n.classList && n.classList.contains(this.markerClass);
+      this.observer = new MutationObserver((records) => {
+        const fresh = records.some((r) => [...r.addedNodes].some((n) => !ours(n) && !(n.parentElement && n.parentElement.closest && n.parentElement.closest(`.${this.markerClass}`)) && (n.nodeType === 1 || n.nodeType === 3 && /\S/.test(n.nodeValue))));
+        if (!fresh || this.rescanTimer) return;
+        this.rescanTimer = setTimeout(() => {
+          this.rescanTimer = null;
+          if (!this.enabled) return;
+          const used = this.handles.reduce((n, h2) => n + h2.records.length, this.handle.records.length);
+          if (used >= MAX_TEXT_NODES) return;
+          const h = this.pass(root, ratio, MAX_TEXT_NODES - used);
+          if (h.records.length) this.handles.push(h);
+        }, RESCAN_MS);
+      });
+      this.observer.observe(root, { childList: true, subtree: true });
     },
     // Rebuild one text node's content as a marker <span>, bolding each word's
     // prefix. Whitespace runs are preserved verbatim.
+    //
+    // A bold prefix splits each word into two text pieces, and screen readers
+    // that move by element (VoiceOver on iOS and macOS, TalkBack) then read
+    // "Fa ll De als". So the bolded copy is hidden from them and the original
+    // text sits beside it, visually hidden, for them to read whole.
     buildSpan(text, ratio) {
       const span = document.createElement("span");
       span.className = this.markerClass;
+      span.style.cssText = RESET;
+      const shown = document.createElement("span");
+      shown.style.cssText = RESET;
+      shown.setAttribute("aria-hidden", "true");
       for (const part of text.split(/(\s+)/)) {
         if (!part) continue;
-        if (/\s/.test(part)) span.appendChild(document.createTextNode(part));
-        else this.boldWord(span, part, ratio);
+        if (/\s/.test(part)) shown.appendChild(document.createTextNode(part));
+        else this.boldWord(shown, part, ratio);
       }
+      const spoken = document.createElement("span");
+      spoken.style.cssText = SR_ONLY;
+      spoken.textContent = text;
+      span.appendChild(shown);
+      span.appendChild(spoken);
       return span;
     },
     // One word: <b>prefix</b> + plain text node for the rest.
     boldWord(span, word, ratio) {
       const prefixLen = Math.min(word.length, Math.ceil(word.length * ratio));
       const b = document.createElement("b");
+      b.style.cssText = "all: unset; font-weight: 700;";
       b.textContent = word.slice(0, prefixLen);
       span.appendChild(b);
       if (prefixLen < word.length) span.appendChild(document.createTextNode(word.slice(prefixLen)));
@@ -2426,6 +3635,16 @@ ${scope(":focus")} {
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      if (this.rescanTimer) {
+        clearTimeout(this.rescanTimer);
+        this.rescanTimer = null;
+      }
+      for (const h of (this.handles || []).reverse()) h.restore();
+      this.handles = null;
       if (this.handle) {
         this.handle.restore();
         this.handle = null;
@@ -2490,7 +3709,7 @@ ${scope(":focus")} {
     // true if unpinned. Never touches our own injected nodes.
     consider(el) {
       if (!el || el.nodeType !== 1 || this.unpinned.has(el)) return false;
-      if (el.id === this.styleId) return false;
+      if (el.id && el.id.startsWith("ai4a11y-")) return false;
       if (el.classList && el.classList.contains(this.unpinnedClass)) return false;
       let pos = "";
       try {
@@ -2499,6 +3718,14 @@ ${scope(":focus")} {
         return false;
       }
       if (pos !== "fixed" && pos !== "sticky") return false;
+      if (pos === "fixed") {
+        try {
+          if (el.matches('dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"]')) return false;
+          const vh = window.innerHeight || 0;
+          if (vh && el.getBoundingClientRect().height >= vh * 0.5) return false;
+        } catch {
+        }
+      }
       el.classList.add(this.unpinnedClass);
       this.unpinned.add(el);
       return true;
@@ -2618,78 +3845,276 @@ ${scope(":focus")} {
   }
 
   // tools/adapters/translate-page.js
-  var BLOCK_SEL = "p, li, h1, h2, h3, h4, h5, h6, blockquote, figcaption, caption, dd, dt, th, td, summary";
-  var SKIP_ANCESTOR = 'script, style, code, pre, textarea, [contenteditable="true"]';
-  var MAX_BLOCKS = 80;
-  var BATCH = 4;
+  var SKIP_TAGS = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "CODE", "PRE", "TEXTAREA", "KBD", "SAMP"]);
+  var SKIP_SEL2 = '[translate="no"], .notranslate, [contenteditable]:not([contenteditable="false"]), [aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
+  var HTML_NS2 = "http://www.w3.org/1999/xhtml";
+  var MAX_PIECES = 1500;
+  var MAX_CALLS = 40;
+  var BATCH_CHARS = 2e3;
+  var BATCH_LINES = 50;
+  var CONCURRENCY = 4;
+  var RESCAN_MS2 = 800;
+  var MAX_REDOS = 2;
   var MIN_TRANSLATED_RATIO = 0.1;
   var MAX_TRANSLATED_RATIO = 8;
+  var LANG_CODES = {
+    english: "en",
+    spanish: "es",
+    french: "fr",
+    german: "de",
+    italian: "it",
+    portuguese: "pt",
+    dutch: "nl",
+    chinese: "zh",
+    "simplified chinese": "zh-Hans",
+    "traditional chinese": "zh-Hant",
+    japanese: "ja",
+    korean: "ko",
+    vietnamese: "vi",
+    tagalog: "tl",
+    filipino: "fil",
+    hindi: "hi",
+    arabic: "ar",
+    russian: "ru",
+    polish: "pl",
+    ukrainian: "uk",
+    turkish: "tr",
+    persian: "fa",
+    hebrew: "he",
+    greek: "el",
+    thai: "th",
+    indonesian: "id"
+  };
+  var memory = /* @__PURE__ */ new Map();
+  var MEMORY_MAX = 5e3;
+  function remember(key, value) {
+    if (memory.size >= MEMORY_MAX) memory.delete(memory.keys().next().value);
+    memory.set(key, value);
+  }
   var TranslatePage = {
     enabled: false,
     translated: null,
-    // Set of { el, originalNodes: Node[] }
+    // Set of { node, original, value } — one per translated text piece
     targetLang: "English",
+    session: 0,
+    calls: 0,
+    observer: null,
+    rescanTimer: null,
+    redos: null,
+    // WeakMap element -> times its text was translated again
+    values: null,
+    // WeakMap text node -> the translation we put in it
+    tried: null,
+    // WeakMap text node -> the text it had when we last sent it
+    langBefore: void 0,
     async enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
+      const session = ++this.session;
       this.translated = /* @__PURE__ */ new Set();
+      this.redos = /* @__PURE__ */ new WeakMap();
+      this.values = /* @__PURE__ */ new WeakMap();
+      this.tried = /* @__PURE__ */ new WeakMap();
+      this.calls = 0;
       this.targetLang = options.targetLang || options.lang || "English";
-      const root = document.querySelector('main, article, [role="main"]') || document.body;
+      const root = document.body;
       if (!root) {
         announce("Nothing to translate");
         return;
       }
-      let blocks;
-      try {
-        blocks = [...root.querySelectorAll(BLOCK_SEL)].filter((el) => el.textContent.trim().length > 1 && !el.closest(SKIP_ANCESTOR) && !el.querySelector(BLOCK_SEL));
-      } catch {
-        blocks = [];
-      }
-      const targets = blocks.slice(0, MAX_BLOCKS);
-      if (blocks.length > targets.length) {
-        console.log(`[AI4A11y] Translate: translating ${targets.length} of ${blocks.length} blocks (cost cap)`);
-      }
       announce(`Translating to ${this.targetLang}\u2026`);
-      let done = 0;
-      for (let i = 0; i < targets.length && this.enabled; i += BATCH) {
-        await Promise.all(targets.slice(i, i + BATCH).map(async (el) => {
-          const original = el.textContent;
-          let out;
-          try {
-            out = await translateText(original, this.targetLang);
-          } catch (e) {
-            console.warn("[AI4A11y] Translate: left a block untouched, provider error:", e);
-            return;
-          }
-          if (out == null || !this.enabled || !el.isConnected) return;
-          const rejected = rejectRewrite(out, original, { minRatio: MIN_TRANSLATED_RATIO, maxRatio: MAX_TRANSLATED_RATIO });
-          if (rejected) {
-            console.warn(`[AI4A11y] Translate: left a block untouched, rejected model output (${rejected})`);
-            return;
-          }
-          const originalNodes = [...el.childNodes];
-          el.textContent = out;
-          this.translated.add({ el, originalNodes });
-          done++;
-        }));
-      }
-      console.log(`[AI4A11y] Translate Page: ${done} blocks \u2192 ${this.targetLang}`);
+      const done = await this.translateUnder(root, session, false);
+      if (session !== this.session || !this.enabled) return;
+      console.log(`[AI4A11y] Translate Page: ${done} text pieces \u2192 ${this.targetLang}` + (this.calls >= MAX_CALLS ? " (stopped at the AI call limit)" : ""));
       announce(done ? `Translated ${done} passages to ${this.targetLang}` : "Translation unavailable");
+      this.watch(root, session);
+    },
+    // Every text piece under root worth translating: it has letters, and it is
+    // not code, a script, a live region, or text marked not to translate.
+    collect(root) {
+      const out = [];
+      const walk = (el) => {
+        for (let n = el.firstChild; n && out.length < MAX_PIECES; n = n.nextSibling) {
+          if (n.nodeType === 3) {
+            if (/\p{L}/u.test(n.nodeValue) && !this.isOurs(n)) out.push(n);
+          } else if (n.nodeType === 1) {
+            if (SKIP_TAGS.has(n.tagName)) continue;
+            if (n.namespaceURI && n.namespaceURI !== HTML_NS2) continue;
+            if (n.matches && n.matches(SKIP_SEL2)) continue;
+            walk(n);
+          }
+        }
+      };
+      try {
+        walk(root);
+      } catch {
+      }
+      return out;
+    },
+    isOurs(node) {
+      return !!this.values && this.values.get(node) === node.nodeValue;
+    },
+    // Translate every piece under root: answers already in memory land at once,
+    // the rest go to the AI in batches. Returns how many pieces changed.
+    async translateUnder(root, session, later) {
+      const lang = this.targetLang;
+      const nodes = this.collect(root);
+      const pending = /* @__PURE__ */ new Map();
+      let done = 0;
+      for (const node of nodes) {
+        if (this.tried.get(node) === node.nodeValue) continue;
+        this.tried.set(node, node.nodeValue);
+        if (later) {
+          const host = node.parentElement;
+          const n = host && this.redos.get(host) || 0;
+          if (host && n >= MAX_REDOS) continue;
+          if (host) this.redos.set(host, n + 1);
+        }
+        const text = node.nodeValue.replace(/\s+/g, " ").trim();
+        const known = memory.get(lang + "\n" + text);
+        if (known) {
+          done += this.apply(node, known);
+          continue;
+        }
+        if (!pending.has(text)) pending.set(text, []);
+        pending.get(text).push(node);
+      }
+      const batches = [];
+      let batch = [], size = 0;
+      for (const text of pending.keys()) {
+        if (batch.length && (batch.length >= BATCH_LINES || size + text.length > BATCH_CHARS)) {
+          batches.push(batch);
+          batch = [];
+          size = 0;
+        }
+        batch.push(text);
+        size += text.length;
+      }
+      if (batch.length) batches.push(batch);
+      let next = 0;
+      const worker = async () => {
+        while (next < batches.length && this.enabled && session === this.session && this.calls < MAX_CALLS) {
+          const texts = batches[next++];
+          this.calls++;
+          const answers = await this.ask(texts, lang);
+          if (!this.enabled || session !== this.session) return;
+          texts.forEach((text, i) => {
+            const out = answers[i];
+            if (out == null) return;
+            remember(lang + "\n" + text, out);
+            for (const node of pending.get(text)) done += this.apply(node, out);
+          });
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(CONCURRENCY, batches.length) }, worker));
+      if (done && this.langBefore === void 0 && LANG_CODES[lang.toLowerCase()]) {
+        this.langBefore = document.documentElement.getAttribute("lang");
+        document.documentElement.setAttribute("lang", LANG_CODES[lang.toLowerCase()]);
+      }
+      return done;
+    },
+    // One AI call for a batch. A single piece goes as it is; several go as
+    // numbered lines, and each line that comes back is matched to its piece by
+    // its number, so one garbled line costs only that piece. Every answer is
+    // gated before it replaces what the reader sees: a refusal or a fragment
+    // leaves the piece as it was.
+    async ask(texts, lang) {
+      const answers = new Array(texts.length).fill(null);
+      let reply;
+      const input = texts.length === 1 ? texts[0] : texts.map((t, i) => `[${i + 1}] ${t}`).join("\n");
+      try {
+        reply = await translateText(input, lang);
+      } catch (e) {
+        console.warn("[AI4A11y] Translate: left text untouched, provider error:", e);
+        return answers;
+      }
+      if (reply == null) return answers;
+      let outs;
+      if (texts.length === 1) outs = [reply];
+      else {
+        if (typeof reply !== "string") return answers;
+        outs = new Array(texts.length).fill(null);
+        let at = -1;
+        for (const line of reply.split("\n")) {
+          const m = /^\s*\[(\d{1,3})\]\s?(.*)$/.exec(line);
+          if (m) {
+            at = Number(m[1]) - 1;
+            if (at >= 0 && at < outs.length) outs[at] = m[2];
+            else at = -1;
+          } else if (at >= 0 && line.trim()) outs[at] += " " + line.trim();
+        }
+      }
+      let rejectedCount = 0;
+      outs.forEach((out, i) => {
+        if (out == null) return;
+        const rejected = rejectRewrite(out, texts[i], { minRatio: MIN_TRANSLATED_RATIO, maxRatio: MAX_TRANSLATED_RATIO }) || (texts.length > 1 && /\[\d{1,3}\]/.test(out) ? "holds another line" : null);
+        if (rejected) {
+          rejectedCount++;
+          return;
+        }
+        answers[i] = out.trim();
+      });
+      if (rejectedCount) console.warn(`[AI4A11y] Translate: left ${rejectedCount} piece(s) untouched, rejected model output`);
+      return answers;
+    },
+    // Put a translation in one text node, keeping the spaces around it so words
+    // next to links and bold text do not run together.
+    apply(node, out) {
+      if (!node.parentNode) return 0;
+      const original = node.nodeValue;
+      const lead = /^\s*/.exec(original)[0], trail = /\s*$/.exec(original)[0];
+      const value = lead + out + trail;
+      if (value === original) return 0;
+      node.nodeValue = value;
+      this.values.set(node, value);
+      this.translated.add({ node, original, value });
+      return 1;
+    },
+    // Pages add text after load (search results, a cart sheet, an error). It is
+    // translated too, a moment after it lands, within the same call budget.
+    watch(root, session) {
+      if (typeof MutationObserver === "undefined" || this.calls >= MAX_CALLS) return;
+      this.observer = new MutationObserver((records) => {
+        const fresh = records.some((r) => r.type === "characterData" ? !this.isOurs(r.target) : [...r.addedNodes].some((n) => n.nodeType === 1 || n.nodeType === 3 && /\p{L}/u.test(n.nodeValue)));
+        if (!fresh || this.rescanTimer) return;
+        this.rescanTimer = setTimeout(async () => {
+          this.rescanTimer = null;
+          if (!this.enabled || session !== this.session) return;
+          if (this.calls >= MAX_CALLS) {
+            this.observer?.disconnect();
+            return;
+          }
+          await this.translateUnder(root, session, true);
+        }, RESCAN_MS2);
+      });
+      this.observer.observe(root, { childList: true, characterData: true, subtree: true });
     },
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
+      this.session++;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      if (this.rescanTimer) {
+        clearTimeout(this.rescanTimer);
+        this.rescanTimer = null;
+      }
       if (this.translated) {
-        for (const { el, originalNodes } of this.translated) {
+        for (const { node, original, value } of this.translated) {
           try {
-            if (!el.isConnected) continue;
-            el.textContent = "";
-            for (const node of originalNodes) el.appendChild(node);
+            if (node.nodeValue === value) node.nodeValue = original;
           } catch {
           }
         }
         this.translated.clear();
         this.translated = null;
+      }
+      if (this.langBefore !== void 0) {
+        if (this.langBefore === null) document.documentElement.removeAttribute("lang");
+        else document.documentElement.setAttribute("lang", this.langBefore);
+        this.langBefore = void 0;
       }
       announce("Original text restored");
     },
@@ -2707,6 +4132,13 @@ ${scope(":focus")} {
     // Set of elements we muted (for exact restore)
     observer: null,
     playHandler: null,
+    volumeHandler: null,
+    // re-mutes media a script un-mutes
+    inputHandler: null,
+    // remembers the person's last click or key, see volumeHandler
+    lastInput: null,
+    userUnmuted: null,
+    // WeakSet of media the person un-muted with its own controls
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
@@ -2729,6 +4161,25 @@ ${scope(":focus")} {
         if (el && (el.tagName === "VIDEO" || el.tagName === "AUDIO")) this.muteEl(el);
       };
       document.addEventListener("play", this.playHandler, true);
+      this.lastInput = null;
+      this.inputHandler = (e) => {
+        if (e.isTrusted) this.lastInput = { target: e.target, at: Date.now() };
+      };
+      for (const type of ["pointerdown", "keydown"]) document.addEventListener(type, this.inputHandler, true);
+      this.userUnmuted = /* @__PURE__ */ new WeakSet();
+      this.volumeHandler = (e) => {
+        if (!this.enabled) return;
+        const el = e.target;
+        if (!el || el.tagName !== "VIDEO" && el.tagName !== "AUDIO" || el.muted) return;
+        const last = this.lastInput;
+        const own = last && Date.now() - last.at < 1e3 && (last.target === el || el.contains && el.contains(last.target));
+        if (own) {
+          this.userUnmuted.add(el);
+          return;
+        }
+        this.muteEl(el);
+      };
+      document.addEventListener("volumechange", this.volumeHandler, true);
       console.log(`[AI4A11y] Mute Sounds enabled (${count} muted)`);
       announce(count ? `Muted ${count} sound source${count === 1 ? "" : "s"}` : "Watching for sounds to mute");
     },
@@ -2755,6 +4206,7 @@ ${scope(":focus")} {
     // one, and the play listener routes it back here to be re-muted.
     muteEl(el) {
       if (!el) return false;
+      if (this.userUnmuted && this.userUnmuted.has(el)) return false;
       try {
         if (el.muted === false) {
           el.muted = true;
@@ -2776,6 +4228,16 @@ ${scope(":focus")} {
         document.removeEventListener("play", this.playHandler, true);
         this.playHandler = null;
       }
+      if (this.volumeHandler) {
+        document.removeEventListener("volumechange", this.volumeHandler, true);
+        this.volumeHandler = null;
+      }
+      if (this.inputHandler) {
+        for (const type of ["pointerdown", "keydown"]) document.removeEventListener(type, this.inputHandler, true);
+        this.inputHandler = null;
+      }
+      this.lastInput = null;
+      this.userUnmuted = null;
       if (this.muted) {
         for (const el of this.muted) {
           try {
@@ -2797,10 +4259,31 @@ ${scope(":focus")} {
   if (typeof window !== "undefined") window.__ai4a11yMuteSounds = MuteSounds;
 
   // tools/adapters/define-words.js
-  var SKIP_TAGS = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "A", "BUTTON"]);
+  var SKIP_TAGS2 = /* @__PURE__ */ new Set([
+    "SCRIPT",
+    "STYLE",
+    "CODE",
+    "PRE",
+    "TEXTAREA",
+    "INPUT",
+    "A",
+    "BUTTON",
+    "LABEL",
+    "SELECT",
+    "OPTION",
+    "SUMMARY",
+    "NOSCRIPT",
+    "TEMPLATE"
+  ]);
+  var SKIP_SEL3 = '[role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="option"], [role="checkbox"], [role="radio"], [role="switch"], [contenteditable], [aria-hidden="true"], [hidden], [aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
   var MAX_WORDS = 500;
-  var STYLE_ID = "ai4a11y-define-styles";
+  var MAX_TAB_STOPS = 60;
+  var MAX_LOOKUPS = 40;
+  var HOVER_DELAY_MS = 350;
+  var RESCAN_MS3 = 400;
+  var STYLE_ID2 = "ai4a11y-define-styles";
   var TOOLTIP_ID = "ai4a11y-define-tooltip";
+  var HINT_ID = "ai4a11y-define-hint";
   var CONTEXT_SEL = "p, li, blockquote, figcaption, dd, dt, td, th, h1, h2, h3, h4, h5, h6";
   var CONTEXT_CHARS = 200;
   var DefineWords = {
@@ -2812,18 +4295,37 @@ ${scope(":focus")} {
     wrapped: null,
     // Set of { span (wrapper), originalNode } (for exact restore)
     definitions: null,
-    // Map lowercased word -> definition (null cached too, so a dead provider isn't re-asked)
+    // Map lowercased word -> Promise of a definition or null (null cached too, so a dead provider isn't re-asked)
     showHandler: null,
     hideHandler: null,
+    keyHandler: null,
+    current: null,
+    // the word span the reader is on right now
+    hoverTimer: null,
+    observer: null,
+    rescanTimer: null,
+    count: 0,
+    // words wrapped
+    tabStops: 0,
+    seen: null,
+    // lowercased words that already have a Tab stop
+    said: null,
+    // definitions already read out to a keyboard user
+    ready: null,
+    // Map lowercased word -> definition, for lookups that have finished
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
       this.wrapped = /* @__PURE__ */ new Set();
       this.definitions = /* @__PURE__ */ new Map();
+      this.ready = /* @__PURE__ */ new Map();
+      this.seen = /* @__PURE__ */ new Set();
+      this.count = 0;
+      this.tabStops = 0;
       const minLength = typeof options.minLength === "number" && options.minLength > 0 ? options.minLength : 8;
       let root = null;
       try {
-        root = document.querySelector('main, article, [role="main"]') || document.body;
+        root = document.querySelector('main, article, [role="main"]') || document.getElementById("main") || mainRoot();
       } catch {
       }
       if (!root) {
@@ -2831,46 +4333,82 @@ ${scope(":focus")} {
         announce("Define words: no readable text found");
         return;
       }
+      this.injectStyles();
+      this.wrapUnder(root, minLength);
+      if (this.count >= MAX_WORDS) console.log(`[AI4A11y] Define Words: capped at ${MAX_WORDS} words`);
+      this.showHandler = (e) => this.handleShow(e);
+      this.hideHandler = (e) => this.handleHide(e);
+      this.keyHandler = (e) => {
+        if (e.key === "Escape") this.hideTooltip();
+      };
+      document.addEventListener("mouseover", this.showHandler);
+      document.addEventListener("focusin", this.showHandler);
+      document.addEventListener("mouseout", this.hideHandler);
+      document.addEventListener("focusout", this.hideHandler);
+      document.addEventListener("keydown", this.keyHandler);
+      this.watch(root, minLength);
+      console.log(`[AI4A11y] Define Words enabled (${this.count} words)`);
+      announce(this.count ? "Word definitions on: hover or focus an underlined word" : "Define words: no long words found");
+    },
+    // Collect first, then mutate — replacing nodes mid-walk would skip text.
+    wrapUnder(root, minLength) {
       const textNodes = [];
       try {
         this.collect(root, textNodes);
       } catch {
       }
-      let count = 0;
+      let added = 0;
       for (const textNode of textNodes) {
-        if (count >= MAX_WORDS) break;
+        if (this.count >= MAX_WORDS) break;
         try {
           const parent = textNode.parentNode;
           if (!parent) continue;
-          const built = this.buildWrapper(textNode.nodeValue, minLength, MAX_WORDS - count);
+          const built = this.buildWrapper(textNode.nodeValue, minLength, MAX_WORDS - this.count);
           if (!built) continue;
           parent.replaceChild(built.wrap, textNode);
           this.wrapped.add({ span: built.wrap, originalNode: textNode });
-          count += built.wrappedCount;
+          this.count += built.wrappedCount;
+          added += built.wrappedCount;
         } catch {
         }
       }
-      if (count >= MAX_WORDS) console.log(`[AI4A11y] Define Words: capped at ${MAX_WORDS} words`);
-      this.injectStyles();
-      this.showHandler = (e) => this.handleShow(e);
-      this.hideHandler = (e) => this.handleHide(e);
-      document.addEventListener("mouseover", this.showHandler);
-      document.addEventListener("focusin", this.showHandler);
-      document.addEventListener("mouseout", this.hideHandler);
-      document.addEventListener("focusout", this.hideHandler);
-      console.log(`[AI4A11y] Define Words enabled (${count} words)`);
-      announce(count ? "Word definitions on: hover or focus an underlined word" : "Define words: no long words found");
+      return added;
     },
-    // Depth-first text-node collection under root, skipping SKIP_TAGS subtrees
-    // and wrappers we already built.
+    // Depth-first text-node collection under root, skipping SKIP_TAGS subtrees,
+    // SKIP_SEL subtrees, wrappers we already built, and text nobody can see
+    // (a focusable word inside visually hidden text would be an invisible Tab stop).
     collect(el, out) {
       for (const node of el.childNodes) {
         if (node.nodeType === 3) {
-          if (/\S/.test(node.nodeValue)) out.push(node);
-        } else if (node.nodeType === 1 && !SKIP_TAGS.has(node.tagName) && !(node.classList && node.classList.contains(this.wrapperClass))) {
+          if (/\S/.test(node.nodeValue) && this.isVisible(el)) out.push(node);
+        } else if (node.nodeType === 1 && !SKIP_TAGS2.has(node.tagName) && !(node.classList && node.classList.contains(this.wrapperClass)) && !(node.matches && node.matches(SKIP_SEL3))) {
           this.collect(node, out);
         }
       }
+    },
+    // Rendered and bigger than a visually-hidden 1px box. Where there is no
+    // layout (jsdom, a detached tree) everything counts as visible.
+    isVisible(el) {
+      if (typeof el.getClientRects !== "function") return true;
+      if (!el.getClientRects().length) return !document.documentElement.getClientRects().length;
+      const r = el.getBoundingClientRect();
+      return !(r.width <= 1 && r.height <= 1 && (r.width || r.height));
+    },
+    // Pages add text after load (search results, a cart sheet). Wrap that too,
+    // a moment after it lands. Our own wrappers are ignored, so this never
+    // reacts to itself.
+    watch(root, minLength) {
+      if (typeof MutationObserver === "undefined") return;
+      const ours = (n) => n.nodeType === 1 && n.classList && n.classList.contains(this.wrapperClass);
+      this.observer = new MutationObserver((records) => {
+        const fresh = records.some((r) => [...r.addedNodes].some((n) => !ours(n) && n.id !== TOOLTIP_ID && (n.nodeType === 1 || n.nodeType === 3 && /\S/.test(n.nodeValue))));
+        if (!fresh || this.rescanTimer || this.count >= MAX_WORDS) return;
+        this.rescanTimer = setTimeout(() => {
+          this.rescanTimer = null;
+          if (this.enabled) this.wrapUnder(root, minLength);
+        }, RESCAN_MS3);
+      });
+      this.observer.observe(root, { childList: true, subtree: true });
     },
     // Rebuild one text node as a wrapper <span>: qualifying words (alphabetic,
     // long enough, within budget) become interactive spans; everything else —
@@ -2879,6 +4417,7 @@ ${scope(":focus")} {
     buildWrapper(text, minLength, budget) {
       const wrap = document.createElement("span");
       wrap.className = this.wrapperClass;
+      wrap.style.cssText = "all: unset;";
       let last = 0, wrappedCount = 0;
       const re = /[A-Za-z]+/g;
       let m;
@@ -2896,40 +4435,52 @@ ${scope(":focus")} {
     buildWordSpan(word) {
       const span = document.createElement("span");
       span.className = this.markerClass;
+      span.style.cssText = "all: unset; text-decoration: underline dotted; text-underline-offset: 2px; cursor: help;";
+      span.textContent = word;
+      const key = word.toLowerCase();
+      if (!this.seen || this.seen.has(key) || this.tabStops >= MAX_TAB_STOPS) return span;
+      this.seen.add(key);
+      this.tabStops++;
       span.setAttribute("tabindex", "0");
       span.setAttribute("role", "button");
-      span.setAttribute("aria-label", `Define ${word}`);
-      span.textContent = word;
+      span.setAttribute("aria-describedby", HINT_ID);
       return span;
     },
     injectStyles() {
       try {
-        if (document.getElementById(STYLE_ID)) return;
-        const style = document.createElement("style");
-        style.id = STYLE_ID;
-        style.textContent = `
-        .${this.markerClass} {
-          text-decoration: underline dotted;
-          text-underline-offset: 2px;
-          cursor: help;
+        if (!document.getElementById(STYLE_ID2)) {
+          const style = document.createElement("style");
+          style.id = STYLE_ID2;
+          style.textContent = `
+          .${this.markerClass}:focus {
+            outline: 2px solid #1a5fb4 !important;
+            outline-offset: 1px !important;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1a5fb4 !important;
+            border-radius: 2px !important;
+          }
+          #${TOOLTIP_ID} {
+            position: absolute;
+            z-index: 2147483647;
+            box-sizing: border-box;
+            max-width: min(320px, calc(100vw - 16px));
+            padding: 8px 10px;
+            background: #1c1c1e;
+            color: #ffffff;
+            font: 14px/1.4 system-ui, sans-serif;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+            pointer-events: none;
+          }`;
+          (document.head || document.documentElement).appendChild(style);
         }
-        .${this.markerClass}:focus {
-          outline: 2px solid #4A90D9;
-          outline-offset: 1px;
+        if (!document.getElementById(HINT_ID)) {
+          const hint2 = document.createElement("span");
+          hint2.id = HINT_ID;
+          hint2.hidden = true;
+          hint2.style.cssText = "display: none !important;";
+          hint2.textContent = "Shows a short definition";
+          (document.body || document.documentElement).appendChild(hint2);
         }
-        #${TOOLTIP_ID} {
-          position: absolute;
-          z-index: 2147483647;
-          max-width: 320px;
-          padding: 8px 10px;
-          background: #1c1c1e;
-          color: #ffffff;
-          font: 14px/1.4 system-ui, sans-serif;
-          border-radius: 6px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-          pointer-events: none;
-        }`;
-        (document.head || document.documentElement).appendChild(style);
       } catch {
       }
     },
@@ -2937,40 +4488,72 @@ ${scope(":focus")} {
       try {
         const target = event.target;
         const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
-        if (span) this.showDefinition(span).catch(() => {
-        });
+        if (!span) return;
+        clearTimeout(this.hoverTimer);
+        this.current = span;
+        const byKeyboard = event.type === "focusin";
+        if (this.ready && this.ready.has((span.textContent || "").trim().toLowerCase())) {
+          this.showDefinition(span, byKeyboard).catch(() => {
+          });
+          return;
+        }
+        this.hoverTimer = setTimeout(() => {
+          this.hoverTimer = null;
+          if (this.current === span) this.showDefinition(span, byKeyboard).catch(() => {
+          });
+        }, HOVER_DELAY_MS);
       } catch {
       }
     },
     handleHide(event) {
       try {
         const target = event.target;
-        if (target && target.closest && target.closest(`.${this.markerClass}`)) this.hideTooltip();
+        const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
+        if (!span) return;
+        if (event.type === "mouseout" && event.relatedTarget && span.contains(event.relatedTarget)) return;
+        if (this.current === span) this.current = null;
+        clearTimeout(this.hoverTimer);
+        this.hoverTimer = null;
+        this.hideTooltip();
       } catch {
       }
     },
-    async showDefinition(span) {
+    // One lookup per word, shared by every hover and focus that asks while it
+    // is on its way. Returns null once the lookup budget is spent.
+    lookup(word, span) {
+      const key = word.toLowerCase();
+      if (this.definitions.has(key)) return this.definitions.get(key);
+      if (this.definitions.size >= MAX_LOOKUPS) return null;
+      const p = (async () => {
+        let def = null;
+        try {
+          def = await defineWord(word, this.sentenceContext(span)) || null;
+        } catch (e) {
+          console.warn("[AI4A11y] Define Words: no definition shown, provider error:", e);
+        }
+        this.ready?.set(key, def);
+        return def;
+      })();
+      this.definitions.set(key, p);
+      return p;
+    },
+    async showDefinition(span, byKeyboard) {
       if (!this.enabled || !this.definitions) return;
       const word = (span.textContent || "").trim();
       if (!word) return;
       const key = word.toLowerCase();
-      let def;
-      if (this.definitions.has(key)) {
-        def = this.definitions.get(key);
-      } else {
-        let def2;
-        try {
-          def2 = await defineWord(word, this.sentenceContext(span));
-        } catch (e) {
-          console.warn("[AI4A11y] Define Words: no definition shown, provider error:", e);
-          def2 = null;
-        }
-        if (!this.enabled || !this.definitions) return;
-        this.definitions.set(key, def2 || null);
-        def = def2;
-      }
+      const p = this.lookup(word, span);
+      if (!p) return;
+      const def = await p;
+      if (!this.enabled || !this.definitions) return;
       if (!def) return;
+      if (this.current !== span) return;
       this.showTooltip(span, def);
+      if (byKeyboard && !this.said?.has(key)) {
+        this.said = this.said || /* @__PURE__ */ new Set();
+        this.said.add(key);
+        announce(`${word}: ${def}`);
+      }
     },
     // The surrounding sentence(s) for the AI prompt: the enclosing text block's
     // content, whitespace-collapsed and truncated to a bounded prompt size.
@@ -2992,10 +4575,14 @@ ${scope(":focus")} {
           document.body.appendChild(tip);
         }
         tip.textContent = text;
-        const rect = span.getBoundingClientRect();
-        tip.style.left = `${Math.max(0, rect.left + (window.scrollX || 0))}px`;
-        tip.style.top = `${rect.bottom + (window.scrollY || 0) + 6}px`;
         tip.style.display = "block";
+        const rect = span.getBoundingClientRect();
+        const viewW = document.documentElement.clientWidth || window.innerWidth || 0;
+        const tipW = tip.offsetWidth || 0;
+        const left = viewW && tipW ? Math.min(rect.left, viewW - tipW - 8) : rect.left;
+        tip.style.left = `${Math.max(8, left) + (window.scrollX || 0)}px`;
+        tip.style.top = `${rect.bottom + (window.scrollY || 0) + 6}px`;
+        if (span.hasAttribute("tabindex")) span.setAttribute("aria-describedby", TOOLTIP_ID);
       } catch {
       }
     },
@@ -3003,6 +4590,7 @@ ${scope(":focus")} {
       try {
         const tip = document.getElementById(TOOLTIP_ID);
         if (tip) tip.style.display = "none";
+        for (const s of document.querySelectorAll(`[aria-describedby="${TOOLTIP_ID}"]`)) s.setAttribute("aria-describedby", HINT_ID);
       } catch {
       }
     },
@@ -3019,18 +4607,47 @@ ${scope(":focus")} {
         document.removeEventListener("focusout", this.hideHandler);
         this.hideHandler = null;
       }
+      if (this.keyHandler) {
+        document.removeEventListener("keydown", this.keyHandler);
+        this.keyHandler = null;
+      }
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      clearTimeout(this.rescanTimer);
+      this.rescanTimer = null;
+      clearTimeout(this.hoverTimer);
+      this.hoverTimer = null;
+      this.current = null;
       try {
         document.getElementById(TOOLTIP_ID)?.remove();
       } catch {
       }
       try {
-        document.getElementById(STYLE_ID)?.remove();
+        document.getElementById(STYLE_ID2)?.remove();
+      } catch {
+      }
+      try {
+        document.getElementById(HINT_ID)?.remove();
       } catch {
       }
       if (this.wrapped) {
+        const active = document.activeElement;
+        const onWord = active && active.classList && active.classList.contains(this.markerClass);
+        let block = null;
         for (const { span, originalNode } of this.wrapped) {
           try {
+            if (onWord && span.contains(active)) block = span.parentElement;
             span.parentNode?.replaceChild(originalNode, span);
+          } catch {
+          }
+        }
+        if (block && block.isConnected && !block.hasAttribute("tabindex")) {
+          block.setAttribute("tabindex", "-1");
+          block.addEventListener("blur", () => block.removeAttribute("tabindex"), { once: true });
+          try {
+            block.focus({ preventScroll: true });
           } catch {
           }
         }
@@ -3041,6 +4658,9 @@ ${scope(":focus")} {
         this.definitions.clear();
         this.definitions = null;
       }
+      this.seen = null;
+      this.said = null;
+      this.ready = null;
       console.log("[AI4A11y] Define Words disabled");
       announce("Word definitions off");
     },
@@ -3053,6 +4673,33 @@ ${scope(":focus")} {
 
   // tools/adapters/stop-auto-advance.js
   var CAROUSEL_SELECTOR = '[class*="carousel"], [class*="slider"], [class*="rotat"], [class*="ticker"], [class*="marquee"], [aria-roledescription="carousel"]';
+  var ROTATOR_RE = /carousel|slide|swiper|slick|rotat|hero|banner|ticker|marquee/i;
+  var USER_MS = 1500;
+  function classNameOf2(el) {
+    const c = el && el.className;
+    if (typeof c === "string") return c;
+    if (c && typeof c.baseVal === "string") return c.baseVal;
+    return "";
+  }
+  function tokensOf(cls) {
+    return (cls || "").split(/\s+/).filter(Boolean);
+  }
+  function pauseQuietly(media, stillWanted) {
+    if (!media.paused && media.readyState < 3 && media.currentSrc) {
+      const done = () => {
+        media.removeEventListener("playing", onPlaying);
+        media.removeEventListener("pause", done);
+      };
+      const onPlaying = () => {
+        done();
+        if (stillWanted()) media.pause();
+      };
+      media.addEventListener("playing", onPlaying);
+      media.addEventListener("pause", done);
+    } else {
+      media.pause();
+    }
+  }
   var StopAutoAdvance = {
     styleId: "ai4a11y-stop-autoadvance-styles",
     enabled: false,
@@ -3062,13 +4709,33 @@ ${scope(":focus")} {
     // Set of media elements we paused (resume exactly these)
     stoppedMarquees: null,
     // Set of <marquee> elements we stopped
+    addedControls: null,
+    // Set of paused videos we showed controls on
     observer: null,
+    slideObserver: null,
+    // watches slides' classes, see onClassChange
+    rotating: null,
+    // WeakMap slides' parent -> the classes that move between them
+    pageHas: null,
+    // Map slide -> which of those classes the page last gave it
+    scrollPins: null,
+    // WeakMap sideways scroller -> its held scrollLeft
+    scrollHandler: null,
+    inputHandler: null,
+    // these three remember the person's last click or key,
+    focusHandler: null,
+    // focus and pointer move, with where it happened
+    hoverHandler: null,
+    lastInput: null,
+    lastFocus: null,
+    lastHover: null,
     enable() {
       if (this.enabled) return;
       this.enabled = true;
       this.removedMetas = [];
       this.pausedMedia = /* @__PURE__ */ new Set();
       this.stoppedMarquees = /* @__PURE__ */ new Set();
+      this.addedControls = /* @__PURE__ */ new Set();
       let metas = [];
       try {
         metas = Array.from(document.querySelectorAll("meta[http-equiv]"));
@@ -3085,7 +4752,8 @@ ${scope(":focus")} {
       const style = document.createElement("style");
       style.id = this.styleId;
       const descendants = CAROUSEL_SELECTOR.split(", ").map((s) => `${s} *`).join(", ");
-      style.textContent = `${CAROUSEL_SELECTOR}, ${descendants} { animation-play-state: paused !important; }`;
+      style.textContent = `${CAROUSEL_SELECTOR}, ${descendants} { animation-play-state: paused !important; }
+${CAROUSEL_SELECTOR} { scroll-behavior: auto !important; }`;
       (document.head || document.documentElement).appendChild(style);
       const stilled = this.sweep(document);
       if (typeof MutationObserver !== "undefined") {
@@ -3099,6 +4767,7 @@ ${scope(":focus")} {
         });
         this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
       }
+      this.holdScriptedCarousels();
       const total = this.removedMetas.length + stilled;
       console.log(`[AI4A11y] Stop Auto-Advance enabled (${total} stopped)`);
       announce(total ? `Stopped ${total} auto-advancing item${total === 1 ? "" : "s"}; carousels paused` : "Paused carousels; watching for auto-playing media");
@@ -3128,8 +4797,12 @@ ${scope(":focus")} {
     considerMedia(el) {
       try {
         if (!el || el.paused !== false || this.pausedMedia.has(el)) return false;
-        if (typeof el.pause === "function") el.pause();
+        if (typeof el.pause === "function") pauseQuietly(el, () => this.enabled);
         this.pausedMedia.add(el);
+        if (el.tagName === "VIDEO" && !el.controls) {
+          el.controls = true;
+          this.addedControls.add(el);
+        }
         return true;
       } catch {
         return false;
@@ -3157,7 +4830,136 @@ ${scope(":focus")} {
         this.considerMarquee(el);
         return;
       }
-      if (el.querySelectorAll) this.sweep(el);
+      if (el.querySelectorAll) {
+        this.sweep(el);
+        this.pinScrollers(el);
+      }
+    },
+    // Carousels a script moves on a timer: the stylesheet above can't reach
+    // them. Two kinds are held still, each time they move with no click, key
+    // press, touch, wheel or focus inside that carousel just before: a row
+    // whose scrollLeft a timer steps along, and slides where a timer moves a
+    // class such as "is-current" or "active" from one slide to the next. Its
+    // arrow buttons, swipes, the wheel and the keyboard still move it. Only
+    // boxes named like a carousel, slider, banner or ticker are held, so a
+    // page scrolling its own tab strip to the open tab is left alone.
+    holdScriptedCarousels() {
+      if (typeof document === "undefined" || !document.addEventListener || !document.body) return;
+      this.lastInput = this.lastFocus = this.lastHover = null;
+      const note = (key) => (e) => {
+        if (e.isTrusted) this[key] = { at: Date.now(), target: e.target };
+      };
+      this.inputHandler = note("lastInput");
+      this.focusHandler = note("lastFocus");
+      this.hoverHandler = note("lastHover");
+      for (const type of ["pointerdown", "keydown", "wheel", "touchstart"]) {
+        document.addEventListener(type, this.inputHandler, { capture: true, passive: true });
+      }
+      document.addEventListener("focusin", this.focusHandler, true);
+      document.addEventListener("mouseover", this.hoverHandler, { capture: true, passive: true });
+      this.scrollPins = /* @__PURE__ */ new WeakMap();
+      this.pinScrollers(document.body);
+      this.scrollHandler = (e) => this.onScroll(e);
+      document.addEventListener("scroll", this.scrollHandler, { capture: true, passive: true });
+      this.rotating = /* @__PURE__ */ new WeakMap();
+      this.pageHas = /* @__PURE__ */ new Map();
+      if (typeof MutationObserver !== "undefined") {
+        this.slideObserver = new MutationObserver((records) => this.onClassChange(records));
+        this.slideObserver.observe(document.body, { attributes: true, attributeFilter: ["class"], attributeOldValue: true, subtree: true });
+      }
+    },
+    // The carousel around a node: the outermost of it and its two parents
+    // named like one (arrow buttons usually sit there), or null.
+    carouselOf(node) {
+      let box = null;
+      for (let n = node, i = 0; n && n.nodeType === 1 && n !== document.body && i < 3; n = n.parentElement, i++) {
+        if (ROTATOR_RE.test(classNameOf2(n)) || /carousel|slide/i.test(n.getAttribute("aria-roledescription") || "")) box = n;
+      }
+      return box;
+    },
+    // Did the person just click, press a key, touch, scroll or focus inside this carousel?
+    byUser(box, hoverToo) {
+      const near = (rec, ms) => !!rec && Date.now() - rec.at < ms && rec.target && rec.target.nodeType === 1 && box.contains(rec.target);
+      return near(this.lastInput, USER_MS) || near(this.lastFocus, USER_MS) || hoverToo && near(this.lastHover, 50);
+    },
+    // Remember where each carousel row that scrolls sideways is now.
+    pinScrollers(root) {
+      if (!this.scrollPins || !root || !root.querySelectorAll) return;
+      for (const el of [root, ...root.querySelectorAll("*")]) {
+        if (el.scrollWidth > el.clientWidth + 1 && !this.scrollPins.has(el) && this.carouselOf(el)) this.scrollPins.set(el, el.scrollLeft);
+      }
+    },
+    onScroll(e) {
+      const el = e.target;
+      if (!this.enabled || !el || el.nodeType !== 1) return;
+      const box = this.carouselOf(el);
+      if (!box) return;
+      const pin = this.scrollPins.get(el);
+      if (pin === void 0 || this.byUser(box, false)) {
+        this.scrollPins.set(el, el.scrollLeft);
+        return;
+      }
+      if (Math.abs(el.scrollLeft - pin) < 0.5) return;
+      try {
+        el.scrollTo({ left: pin, behavior: "instant" });
+      } catch {
+        el.scrollLeft = pin;
+      }
+    },
+    // A class moved from one slide to the next. Only such moving classes are
+    // touched (other adapters' classes on the same elements are left alone),
+    // and each move is put back unless the person made it.
+    onClassChange(records) {
+      if (!this.enabled) return;
+      const before = /* @__PURE__ */ new Map();
+      for (const r of records) if (r.target.nodeType === 1 && !before.has(r.target)) before.set(r.target, r.oldValue);
+      const changes = [];
+      for (const [el, was] of before) {
+        const now = el.getAttribute("class");
+        const a = tokensOf(was), b = tokensOf(now);
+        changes.push({ el, now, gained: b.filter((t) => !a.includes(t)), lost: a.filter((t) => !b.includes(t)) });
+      }
+      for (const c of changes) {
+        const parent = c.el.parentElement;
+        for (const t of c.gained) {
+          if (/^ai4a11y-/.test(t) || (this.rotating.get(parent) || /* @__PURE__ */ new Set()).has(t)) continue;
+          if (changes.some((d) => d !== c && d.el.parentElement === parent && d.lost.includes(t)) && this.isSlide(c.el)) {
+            if (!this.rotating.has(parent)) this.rotating.set(parent, /* @__PURE__ */ new Set());
+            this.rotating.get(parent).add(t);
+          }
+        }
+      }
+      let wrote = false;
+      for (const c of changes) {
+        const moving = c.el.parentElement && this.rotating.get(c.el.parentElement);
+        if (!moving) continue;
+        this.pageHas.set(c.el, new Set(tokensOf(c.now).filter((t) => moving.has(t))));
+        if (!c.gained.concat(c.lost).some((t) => moving.has(t))) continue;
+        if (this.byUser(this.carouselOf(c.el) || c.el.parentElement, true)) {
+          this.showPageView(c.el.parentElement);
+        } else {
+          for (const t of c.gained) if (moving.has(t)) c.el.classList.remove(t);
+          for (const t of c.lost) if (moving.has(t)) c.el.classList.add(t);
+        }
+        wrote = true;
+      }
+      if (wrote && this.slideObserver) this.slideObserver.takeRecords();
+    },
+    showPageView(parent) {
+      const moving = this.rotating.get(parent);
+      if (!moving) return;
+      for (const sib of Array.from(parent.children)) {
+        const has = this.pageHas.get(sib);
+        if (has) for (const t of moving) sib.classList.toggle(t, has.has(t));
+      }
+    },
+    // One of two or more like siblings (same tag, a class in common) in
+    // something named like a carousel, slider or banner.
+    isSlide(el) {
+      const parent = el.parentElement;
+      if (!parent || el === document.body || parent === document.documentElement || !this.carouselOf(el)) return false;
+      const mine = tokensOf(classNameOf2(el));
+      return Array.from(parent.children).some((s) => s !== el && s.tagName === el.tagName && tokensOf(classNameOf2(s)).some((t) => mine.includes(t)));
     },
     disable() {
       if (!this.enabled) return;
@@ -3205,6 +5007,45 @@ ${scope(":focus")} {
         this.stoppedMarquees.clear();
         this.stoppedMarquees = null;
       }
+      if (this.addedControls) {
+        for (const el of this.addedControls) {
+          try {
+            el.controls = false;
+          } catch {
+          }
+        }
+        this.addedControls = null;
+      }
+      if (this.slideObserver) {
+        this.slideObserver.disconnect();
+        this.slideObserver = null;
+      }
+      if (this.pageHas) {
+        for (const [el, has] of this.pageHas) {
+          const moving = el.parentElement && this.rotating.get(el.parentElement);
+          if (moving) for (const t of moving) el.classList.toggle(t, has.has(t));
+        }
+        this.pageHas = null;
+        this.rotating = null;
+      }
+      if (this.scrollHandler) {
+        document.removeEventListener("scroll", this.scrollHandler, { capture: true });
+        this.scrollHandler = null;
+      }
+      if (this.inputHandler) {
+        for (const type of ["pointerdown", "keydown", "wheel", "touchstart"]) document.removeEventListener(type, this.inputHandler, { capture: true });
+        this.inputHandler = null;
+      }
+      if (this.hoverHandler) {
+        document.removeEventListener("mouseover", this.hoverHandler, { capture: true });
+        this.hoverHandler = null;
+      }
+      if (this.focusHandler) {
+        document.removeEventListener("focusin", this.focusHandler, true);
+        this.focusHandler = null;
+      }
+      this.scrollPins = null;
+      this.lastInput = this.lastFocus = this.lastHover = null;
       console.log("[AI4A11y] Stop Auto-Advance disabled");
       announce("Auto-advancing content resumed");
     },
@@ -3216,6 +5057,7 @@ ${scope(":focus")} {
   if (typeof window !== "undefined") window.__ai4a11yStopAutoAdvance = StopAutoAdvance;
 
   // tools/adapters/reduce-brightness.js
+  var PAGE_FILTER3 = "html { filter: var(--ai4a11y-filter-dark,) var(--ai4a11y-filter-dim,) var(--ai4a11y-filter-color,) !important; }";
   var ReduceBrightness = {
     styleId: "ai4a11y-reduce-brightness-styles",
     htmlClass: "ai4a11y-dimmed",
@@ -3234,7 +5076,8 @@ ${scope(":focus")} {
       const style = document.createElement("style");
       style.id = this.styleId;
       style.textContent = `
-html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !important; }`;
+html.${this.htmlClass} { --ai4a11y-filter-dim: brightness(${bright}) saturate(${sat}); }
+${PAGE_FILTER3}`;
       (document.head || document.documentElement).appendChild(style);
       if (dimLevel > 0) {
         const overlay = document.createElement("div");
@@ -3284,11 +5127,15 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     if (tag !== "VIDEO" && tag !== "AUDIO") return false;
     return el.muted !== true && el.volume > 0;
   }
+  function isSounding(el) {
+    return isAudible(el) && el.paused === false && el.ended !== true;
+  }
   var SoundVisualizer = {
     enabled: false,
     indicator: null,
     playHandler: null,
     volumeHandler: null,
+    stopHandler: null,
     hideTimer: null,
     flashMs: FLASH_MS,
     enable(options = {}) {
@@ -3299,7 +5146,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       indicator.id = INDICATOR_ID;
       indicator.setAttribute("role", "status");
       indicator.setAttribute("aria-live", "polite");
-      indicator.style.cssText = "position: fixed; top: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; border-radius: 8px;background: rgba(0, 0, 0, 0.85); color: #fff;font: 600 15px/1.2 system-ui, sans-serif;pointer-events: none; display: none;";
+      indicator.style.cssText = "position: fixed; bottom: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; border-radius: 8px;background: rgba(0, 0, 0, 0.85); color: #fff;font: 600 15px/1.2 system-ui, sans-serif;pointer-events: none; display: none;";
       (document.body || document.documentElement).appendChild(indicator);
       this.indicator = indicator;
       this.playHandler = (e) => {
@@ -3310,21 +5157,41 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
         if (!this.enabled) return;
         if (isAudible(e.target) && e.target.paused === false) this.flash();
       };
+      this.stopHandler = () => {
+        if (!this.enabled || this.hideTimer) return;
+        if (!this._anySounding()) this._hide();
+      };
       document.addEventListener("play", this.playHandler, true);
       document.addEventListener("volumechange", this.volumeHandler, true);
+      document.addEventListener("pause", this.stopHandler, true);
+      document.addEventListener("ended", this.stopHandler, true);
+      document.addEventListener("volumechange", this.stopHandler, true);
+      if (this._anySounding()) this.flash();
       console.log("[AI4A11y] Sound Visualizer enabled");
-      announce("Sound indicator on \u2014 a visual cue will flash when the page plays sound");
+      announce("Sound indicator on. A sign shows on screen while the page plays sound");
     },
     // Show the indicator, restarting the auto-hide window on every new cue.
+    // After the flash window it stays up while any media is still sounding.
     flash() {
       if (!this.indicator) return;
-      this.indicator.textContent = "\u{1F50A} Sound playing";
-      this.indicator.style.display = "block";
+      if (this.indicator.style.display === "none" || !this.indicator.textContent) {
+        this.indicator.style.display = "block";
+        const icon = document.createElement("span");
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "\u{1F50A} ";
+        this.indicator.replaceChildren(icon, "Sound playing");
+      }
       if (this.hideTimer) clearTimeout(this.hideTimer);
       this.hideTimer = setTimeout(() => {
         this.hideTimer = null;
-        if (this.indicator) this.indicator.style.display = "none";
+        if (!this._anySounding()) this._hide();
       }, this.flashMs);
+    },
+    _hide() {
+      if (this.indicator) this.indicator.style.display = "none";
+    },
+    _anySounding() {
+      return [...document.querySelectorAll("video, audio")].some(isSounding);
     },
     disable() {
       if (!this.enabled) return;
@@ -3332,9 +5199,14 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       try {
         if (this.playHandler) document.removeEventListener("play", this.playHandler, true);
         if (this.volumeHandler) document.removeEventListener("volumechange", this.volumeHandler, true);
+        if (this.stopHandler) {
+          document.removeEventListener("pause", this.stopHandler, true);
+          document.removeEventListener("ended", this.stopHandler, true);
+          document.removeEventListener("volumechange", this.stopHandler, true);
+        }
       } catch {
       }
-      this.playHandler = this.volumeHandler = null;
+      this.playHandler = this.volumeHandler = this.stopHandler = null;
       if (this.hideTimer) {
         clearTimeout(this.hideTimer);
         this.hideTimer = null;
@@ -3352,62 +5224,156 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   if (typeof window !== "undefined") window.__ai4a11ySoundVisualizer = SoundVisualizer;
 
   // tools/adapters/live-region-announcer.js
-  var REGION_ID = "ai4a11y-live-region";
-  var MAX_ANNOUNCE_CHARS = 200;
+  var MAX_ANNOUNCE_CHARS = 120;
+  var MAX_LINES = 3;
+  var TICK_MS = 1100;
+  var LIST_REDRAW = 3;
+  var ACTION_MS = 3e3;
+  var PAGE_SPOKE_MS = 2e3;
+  var LIVE = '[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"]';
+  var OTHER_UI = '[id^="ai4a11y-"], [class*="ai4a11y-"], [id^="ws-"], [class^="ws-"], [class*=" ws-"]';
+  var MESSAGE_HINT = /\b(error|alert|warning|notice|toast|snackbar|notification|message|status)/i;
+  var INTERACTIVE = 'a[href], button, [role="button"], [role="link"], input, select, textarea';
   var LiveRegionAnnouncer = {
-    regionId: REGION_ID,
     enabled: false,
-    region: null,
     observer: null,
     debounceMs: 300,
     debounceTimer: null,
-    pending: "",
+    pending: null,
+    lastAction: 0,
+    // when the person last clicked, typed Enter/Space, or changed a field
+    pageSpokeAt: 0,
+    // when one of the page's own live regions last changed
+    textTimers: null,
+    // Map: element -> timer for text written into it (see TICK_MS)
+    textChangedAt: null,
+    // Map: element -> when its text last changed
+    tickers: null,
+    // WeakSet of elements found to change on a timer
+    _onAction: null,
+    _onKey: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
       this.debounceMs = options.debounceMs ?? 300;
-      this.pending = "";
-      const region = document.createElement("div");
-      region.id = REGION_ID;
-      region.setAttribute("aria-live", "polite");
-      region.setAttribute("aria-atomic", "false");
-      region.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
-      (document.body || document.documentElement).appendChild(region);
-      this.region = region;
+      this.pending = null;
+      this.lastAction = 0;
+      this.pageSpokeAt = 0;
+      this.textTimers = /* @__PURE__ */ new Map();
+      this.textChangedAt = /* @__PURE__ */ new Map();
+      this.tickers = /* @__PURE__ */ new WeakSet();
+      this._onAction = () => {
+        this.lastAction = Date.now();
+      };
+      this._onKey = (e) => {
+        if (e.key === "Enter" || e.key === " ") this.lastAction = Date.now();
+      };
+      for (const type of ["click", "change", "input", "submit"]) document.addEventListener(type, this._onAction, true);
+      document.addEventListener("keydown", this._onKey, true);
       if (typeof MutationObserver !== "undefined") {
         this.observer = new MutationObserver((mutations) => {
           if (!this.enabled) return;
           this.onMutations(mutations);
         });
-        const target = document.querySelector('main, [role="main"]') || document.body;
+        const target = document.body || document.documentElement;
         if (target) this.observer.observe(target, { childList: true, subtree: true, characterData: false });
       }
       console.log("[AI4A11y] Live-Region Announcer enabled");
       announce("Announcing page updates");
     },
     onMutations(mutations) {
+      const answering = Date.now() - this.lastAction < ACTION_MS;
       for (const m of mutations) {
-        for (const node of m.addedNodes) {
-          if (node.nodeType !== 1) continue;
-          const text = this.summarize(node);
-          if (!text) continue;
-          if (this.isUrgent(node)) this.speak(text);
-          else {
-            this.pending = text;
+        const parent = m.target && m.target.nodeType === 1 ? m.target : null;
+        if (!parent || parent.closest(OTHER_UI)) continue;
+        if (parent.closest(LIVE)) {
+          this.pageSpokeAt = Date.now();
+          continue;
+        }
+        const added = [...m.addedNodes];
+        if (added.some((n) => n.nodeType === 3 && n.nodeValue.trim())) {
+          if (answering || this.isMessage(parent)) this.textChanged(parent);
+          continue;
+        }
+        const elements = added.filter((n) => n.nodeType === 1);
+        if (elements.length >= LIST_REDRAW) continue;
+        for (const node of elements) {
+          if (this.ignored(node)) continue;
+          if (node.getAttribute("role") === "alert") {
+            this.pageSpokeAt = Date.now();
+            continue;
+          }
+          if (this.isUrgent(node)) {
+            const text = this.summarize(node);
+            if (text) this.speak(text);
+          } else if (answering || this.isMessage(node)) {
+            this.pending = node;
             this.schedule();
           }
         }
       }
     },
-    // Short spoken summary of an inserted element, or '' if it isn't worth
-    // announcing (our own region, scripts/styles, near-empty nodes).
+    // Other adapters' panels and notes, and anything added inside a live region
+    // the screen reader already reads by itself.
+    ignored(el) {
+      if (!el.closest) return false;
+      if (el.closest(OTHER_UI)) return true;
+      return !!(el.parentElement && el.parentElement.closest(LIVE));
+    },
+    // The page calls it an error, alert, notice, toast... (itself or the box it is in).
+    isMessage(el) {
+      for (let e = el, i = 0; e && e.nodeType === 1 && i < 3; e = e.parentElement, i++) {
+        if (MESSAGE_HINT.test(`${e.id || ""} ${typeof e.className === "string" ? e.className : ""}`)) return true;
+      }
+      return false;
+    },
+    textChanged(el) {
+      if (this.tickers.has(el)) return;
+      if (this.textTimers.has(el)) {
+        clearTimeout(this.textTimers.get(el));
+        this.textTimers.delete(el);
+        if (!(this.lastAction > this.textChangedAt.get(el))) {
+          this.tickers.add(el);
+          return;
+        }
+      }
+      this.textChangedAt.set(el, Date.now());
+      this.textTimers.set(el, setTimeout(() => {
+        this.textTimers.delete(el);
+        if (!this.enabled) return;
+        this.pending = el;
+        this.schedule();
+      }, TICK_MS));
+    },
+    // Short spoken summary of an element, or '' if it isn't worth announcing
+    // (scripts/styles, hidden or near-empty nodes). Read when it is spoken, not
+    // when it changed: an error box is often filled first and shown after.
+    // The panel's own links and buttons are left out (they are what to do
+    // next, not what happened), and only its first few lines are read.
     summarize(el) {
-      if (!el || el.nodeType !== 1) return "";
-      if (this.region && (this.region.contains(el) || el.contains && el.contains(this.region))) return "";
+      if (!el || el.nodeType !== 1 || !el.isConnected) return "";
       const tag = el.tagName;
       if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT" || tag === "TEMPLATE") return "";
-      let text = (el.textContent || "").replace(/\s+/g, " ").trim();
-      if (text.length < 3) return "";
+      if (el.closest('[hidden], [aria-hidden="true"]')) return "";
+      if (typeof el.checkVisibility === "function" && !el.checkVisibility()) return "";
+      const focused = document.activeElement;
+      if (focused && focused !== document.body && el.contains(focused)) return "";
+      const lines = (el2) => {
+        const raw = typeof el2.innerText === "string" ? el2.innerText : el2.textContent;
+        return (raw || "").split(/\n+/).map((s) => s.replace(/\s+/g, " ").trim()).filter(Boolean);
+      };
+      const all = lines(el);
+      const controls = /* @__PURE__ */ new Set();
+      if (!el.matches(INTERACTIVE)) el.querySelectorAll(INTERACTIVE).forEach((c) => lines(c).forEach((l) => controls.add(l)));
+      let kept = all.filter((l) => !controls.has(l));
+      if (!kept.length) kept = all;
+      let text = "";
+      for (const part of kept.slice(0, MAX_LINES)) {
+        const next = !text ? part : text + (/[.!?:;,…]$/.test(text) ? " " : ". ") + part;
+        if (text && next.length > MAX_ANNOUNCE_CHARS) break;
+        text = next;
+      }
+      if (text.length < 3 && !(tag === "OUTPUT" && text)) return "";
       if (text.length > MAX_ANNOUNCE_CHARS) text = text.slice(0, MAX_ANNOUNCE_CHARS - 1) + "\u2026";
       return text;
     },
@@ -3422,16 +5388,21 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
         clearTimeout(this.debounceTimer);
         this.debounceTimer = null;
       }
-      this.pending = "";
-      if (this.region) this.region.textContent = text;
+      this.pending = null;
+      announce(text);
     },
     schedule() {
       if (this.debounceTimer) clearTimeout(this.debounceTimer);
       this.debounceTimer = setTimeout(() => {
         this.debounceTimer = null;
-        if (!this.enabled || !this.region || !this.pending) return;
-        this.region.textContent = this.pending;
-        this.pending = "";
+        if (!this.enabled || !this.pending) return;
+        if (Date.now() - this.pageSpokeAt < PAGE_SPOKE_MS) {
+          this.pending = null;
+          return;
+        }
+        const text = this.summarize(this.pending);
+        this.pending = null;
+        if (text) announce(text);
       }, this.debounceMs);
     },
     disable() {
@@ -3441,16 +5412,18 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
         clearTimeout(this.debounceTimer);
         this.debounceTimer = null;
       }
-      this.pending = "";
+      for (const t of this.textTimers.values()) clearTimeout(t);
+      this.textTimers = null;
+      this.textChangedAt = null;
+      this.tickers = null;
+      this.pending = null;
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
       }
-      try {
-        (this.region || document.getElementById(REGION_ID))?.remove();
-      } catch {
-      }
-      this.region = null;
+      for (const type of ["click", "change", "input", "submit"]) document.removeEventListener(type, this._onAction, true);
+      document.removeEventListener("keydown", this._onKey, true);
+      this._onAction = this._onKey = null;
       console.log("[AI4A11y] Live-Region Announcer disabled");
       announce("Stopped announcing page updates");
     },
@@ -3531,16 +5504,50 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
         if (typeof document.elementFromPoint !== "function") return;
         const el = document.elementFromPoint(e.clientX, e.clientY);
         if (!el || el === lens || lens.contains(el)) return;
-        const text = (el.textContent || "").replace(/\s+/g, " ").trim();
+        const text = this.textAt(e.clientX, e.clientY);
         if (!text) {
           this.hide();
           return;
         }
-        lens.textContent = text.length > 180 ? `${text.slice(0, 180)}\u2026` : text;
+        lens.textContent = text;
         lens.style.display = "block";
         this.position(e.clientX, e.clientY);
       } catch {
       }
+    },
+    // The text the pointer is actually on. Taking the hit element's
+    // textContent showed a whole card or section, words glued together
+    // ("New in booksThe Weeknight Pantry…"), even over blank space. Use the text
+    // node under the pointer instead: its element's words if short, else the
+    // words around the pointer. Returns '' when the pointer isn't on text.
+    textAt(x, y) {
+      let node = null, offset = 0;
+      if (typeof document.caretPositionFromPoint === "function") {
+        const p = document.caretPositionFromPoint(x, y);
+        if (p) {
+          node = p.offsetNode;
+          offset = p.offset;
+        }
+      } else if (typeof document.caretRangeFromPoint === "function") {
+        const r = document.caretRangeFromPoint(x, y);
+        if (r) {
+          node = r.startContainer;
+          offset = r.startOffset;
+        }
+      }
+      if (!node || node.nodeType !== 3 || !node.parentElement) return "";
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const on = Array.from(range.getClientRects()).some((r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+      if (!on) return "";
+      const el = node.parentElement;
+      const whole = String(el.innerText ?? el.textContent ?? "").replace(/\s+/g, " ").trim();
+      if (whole.length <= 180) return whole;
+      const t = node.data;
+      const start = Math.max(0, offset - 80);
+      const end = Math.min(t.length, offset + 100);
+      const part = t.slice(start, end).replace(/\s+/g, " ").trim();
+      return part ? `${start > 0 ? "\u2026" : ""}${part}${end < t.length ? "\u2026" : ""}` : "";
     },
     // Offset the lens from the cursor, flipping to the other side rather than
     // running off the viewport edge.
@@ -3598,7 +5605,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     styleId: "ai4a11y-flash-guard-styles",
     enabled: false,
     tracked: null,
-    // Set of { video, hadAutoplay, wasPlaying } for exact restore
+    // Set of { video, hadAutoplay, wasPlaying, hadControls } for exact restore
     observer: null,
     enable(options = {}) {
       if (this.enabled) return;
@@ -3639,11 +5646,26 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
         this.tracked.add({
           video,
           hadAutoplay: video.hasAttribute("autoplay"),
-          wasPlaying: !video.paused
+          wasPlaying: !video.paused,
+          hadControls: video.controls
         });
-        video.pause();
+        if (!video.paused && video.readyState < 3 && video.currentSrc) {
+          const done = () => {
+            video.removeEventListener("playing", onPlaying);
+            video.removeEventListener("pause", done);
+          };
+          const onPlaying = () => {
+            done();
+            if (this.enabled) video.pause();
+          };
+          video.addEventListener("playing", onPlaying);
+          video.addEventListener("pause", done);
+        } else {
+          video.pause();
+        }
         video.removeAttribute("autoplay");
         video.autoplay = false;
+        video.controls = true;
       } catch (e) {
       }
     },
@@ -3656,8 +5678,9 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       }
       document.getElementById(this.styleId)?.remove();
       if (this.tracked) {
-        for (const { video, hadAutoplay, wasPlaying } of this.tracked) {
+        for (const { video, hadAutoplay, wasPlaying, hadControls } of this.tracked) {
           try {
+            video.controls = hadControls;
             if (hadAutoplay) {
               video.setAttribute("autoplay", "");
               video.autoplay = true;
@@ -3739,6 +5762,7 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
     live: null,
     lastHover: null,
     _reqSeq: 0,
+    _liveTimer: null,
     _keyHandler: null,
     _clickHandler: null,
     _moveHandler: null,
@@ -3753,6 +5777,9 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       }
       #ai4a11y-describe-panel h2 { font-size: 13px; margin: 0 0 6px; color: #8ab4f8; text-transform: uppercase; letter-spacing: .04em; }
       #ai4a11y-describe-panel .ai4a11y-describe-close { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #f2f5f9; font-size: 18px; cursor: pointer; }
+      /* Our own focus ring: a page that turns outlines off everywhere (with
+         !important) would otherwise hide the keyboard on the close button. */
+      #ai4a11y-describe-panel .ai4a11y-describe-close:focus { outline: 3px solid #8ab4f8 !important; outline-offset: 2px !important; }
     `);
       this.live = document.createElement("div");
       this.live.id = "ai4a11y-describe-live";
@@ -3842,7 +5869,14 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       }
       this.panel.querySelector(".ai4a11y-describe-body").textContent = text;
       this.panel.style.display = "block";
-      if (this.live) this.live.textContent = text;
+      const live = this.live;
+      if (live) {
+        live.textContent = "";
+        clearTimeout(this._liveTimer);
+        this._liveTimer = setTimeout(() => {
+          if (this.live === live) live.textContent = text;
+        }, 50);
+      }
     },
     hide() {
       if (this.panel) this.panel.style.display = "none";
@@ -3854,6 +5888,8 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
       if (this._clickHandler) document.removeEventListener("click", this._clickHandler, true);
       if (this._moveHandler) document.removeEventListener("mouseover", this._moveHandler, true);
       this._keyHandler = this._clickHandler = this._moveHandler = null;
+      clearTimeout(this._liveTimer);
+      this._liveTimer = null;
       try {
         document.getElementById(this.styleId)?.remove();
       } catch {
@@ -3876,11 +5912,18 @@ html.${this.htmlClass} { filter: brightness(${bright}) saturate(${sat}) !importa
   var ReflowColumn = {
     styleId: "ai4a11y-reflow-column-styles",
     rootClass: "ai4a11y-reflow",
+    gridClass: "ai4a11y-reflow-grid",
+    wrapClass: "ai4a11y-reflow-wrap",
     enabled: false,
     style: null,
+    marked: null,
+    // Set of boxes we gave a marker class (for exact restore)
+    unregisterSweep: null,
+    resizeHandler: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
+      this.marked = /* @__PURE__ */ new Set();
       const width = options.width || 720;
       const scope = `html.${this.rootClass}`;
       this.style = injectStyle(this.styleId, `
@@ -3888,6 +5931,9 @@ ${scope} body {
   max-width: ${width}px !important;
   margin: 0 auto !important;
 }
+/* A minimum width on the page itself is what forces sideways scrolling when
+ * zoomed in (e.g. body { min-width: 1280px }). */
+${scope}, ${scope} body { min-width: 0 !important; }
 /* Floats and CSS multi-column are what put content side by side. Scoped to a
  * FINITE set of block/layout/media elements rather than a universal selector:
  * a universal !important rule defeats the browser style-sharing and forces a
@@ -3900,36 +5946,145 @@ ${scope} p, ${scope} ul, ${scope} ol, ${scope} dl, ${scope} li, ${scope} table,
 ${scope} blockquote, ${scope} pre, ${scope} form, ${scope} fieldset,
 ${scope} img, ${scope} picture, ${scope} video, ${scope} iframe {
   float: none !important;
-  column-count: 1 !important;
+  /* auto, not 1: column-count:1 still makes a multi-column box, which broke
+   * two-line clamped product names (they spilled to their full length). */
+  column-count: auto !important;
+  column-width: auto !important;
 }
-/* Linearize the common layout containers so rows stack into one column. */
-${scope} [style*="display: flex"],
-${scope} [style*="display:flex"],
-${scope} [style*="display: grid"],
-${scope} [style*="display:grid"],
-${scope} main,
-${scope} section,
-${scope} article {
-  display: block !important;
-  max-width: 100% !important;
+/* Grid and flex boxes are only changed when they don't fit (fit() finds them):
+ * forcing every flex/grid box to display:block also broke rows that fit fine
+ * (photo thumbnails, price lines) and moved positioned badges out of place.
+ * A grid that doesn't fit becomes one column, keeping its gaps. */
+${scope} .${this.gridClass} {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-areas: none !important;
 }
-/* Media and tables must shrink to the column, never widen it. */
+${scope} .${this.gridClass} > * {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  min-width: 0 !important;
+}
+/* A flex row that doesn't fit wraps onto more lines. (Its items keep their
+ * min-width: lowering it let a search box shrink to one letter instead of
+ * moving to its own line.) */
+${scope} .${this.wrapClass} { flex-wrap: wrap !important; }
+${scope} .${this.wrapClass} > * { max-width: 100% !important; }
+/* Media and tables must shrink to the column, never widen it. No height
+ * override: height:auto !important re-cropped photos the page sizes with a
+ * fixed height and object-fit, and stretched ones with an aspect-ratio. */
 ${scope} img,
 ${scope} video,
+${scope} iframe,
 ${scope} table {
   max-width: 100% !important;
-  height: auto !important;
 }`);
       try {
         document.documentElement.classList.add(this.rootClass);
       } catch {
       }
+      this.fit();
+      this.unregisterSweep = registerSweep("reflow-column", () => this.fit(), { debounceMs: 300 });
+      this.resizeHandler = () => this.fit();
+      try {
+        window.addEventListener("resize", this.resizeHandler, { passive: true });
+      } catch {
+      }
       console.log("[AI4A11y] Reflow enabled");
       announce("Page reflowed into a single column");
+    },
+    // Mark the grid and flex boxes that don't fit the column: their content is
+    // wider than the box, or it squeezes text into a strip a few words wide
+    // (a cart line's product name, one word per line, beside a fixed-width
+    // photo). For squeezed text the OUTERMOST multi-column box around it is
+    // changed first: making the page's own columns into one usually gives the
+    // inner ones room again, so they keep their layout and their photos keep
+    // their size. One pass marks only outermost boxes and the next pass
+    // measures again. Only adds classes (never nodes), so the sweep's childList
+    // observer does not see its own work.
+    fit() {
+      if (!this.enabled || typeof document === "undefined" || !document.body) return;
+      const kind = (el) => {
+        let cs;
+        try {
+          cs = getComputedStyle(el);
+        } catch {
+          return null;
+        }
+        if (cs.overflowX !== "visible" || cs.position === "fixed") return null;
+        if (/grid$/.test(cs.display)) return (cs.gridTemplateColumns || "").trim().split(/\s+/).length > 1 ? this.gridClass : null;
+        if (/flex$/.test(cs.display) && !cs.flexDirection.startsWith("column") && cs.flexWrap === "nowrap") return this.wrapClass;
+        return null;
+      };
+      for (let pass = 0; pass < 6; pass++) {
+        const found = /* @__PURE__ */ new Map();
+        const add = (el, cls) => {
+          if (this.marked.has(el) || found.has(el)) return;
+          for (const f of found.keys()) if (f.contains(el)) return;
+          for (const f of [...found.keys()]) if (el.contains(f)) found.delete(f);
+          found.set(el, cls);
+        };
+        for (const el of document.body.querySelectorAll("*")) {
+          if (el.id && el.id.startsWith("ai4a11y-")) continue;
+          if (el.scrollWidth > el.clientWidth + 1) {
+            const cls = kind(el);
+            if (cls) add(el, cls);
+          }
+          if (this.squeezed(el)) {
+            let outer = null;
+            for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+              if (!this.marked.has(a) && kind(a)) outer = a;
+            }
+            if (outer) add(outer, kind(outer));
+          }
+        }
+        if (!found.size) break;
+        for (const [el, cls] of found) {
+          el.classList.add(cls);
+          this.marked.add(el);
+        }
+      }
+    },
+    // Text of some length wrapped into a strip about two words wide (fewer
+    // than ~14 characters a line). Narrower than a phone layout's columns, so
+    // a page that is already one column is left as it is.
+    squeezed(el) {
+      let len = 0;
+      for (let n = el.firstChild; n; n = n.nextSibling) if (n.nodeType === 3) len += n.data.trim().length;
+      if (len < 40) return false;
+      let w = 0, fs = 0;
+      try {
+        w = el.getBoundingClientRect().width;
+        fs = parseFloat(getComputedStyle(el).fontSize);
+      } catch {
+        return false;
+      }
+      if (!w || !fs || w < 2 * fs) return false;
+      const perLine = w / (0.5 * fs);
+      return perLine < 14 && len > 3 * perLine;
     },
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
+      if (this.unregisterSweep) {
+        this.unregisterSweep();
+        this.unregisterSweep = null;
+      }
+      if (this.resizeHandler) {
+        try {
+          window.removeEventListener("resize", this.resizeHandler);
+        } catch {
+        }
+        this.resizeHandler = null;
+      }
+      if (this.marked) {
+        for (const el of this.marked) {
+          try {
+            el.classList.remove(this.gridClass, this.wrapClass);
+          } catch {
+          }
+        }
+        this.marked = null;
+      }
       try {
         document.documentElement.classList.remove(this.rootClass);
       } catch {
@@ -3966,12 +6121,13 @@ ${scope} table {
     focusOutHandler: null,
     scrollHandler: null,
     resizeHandler: null,
+    rafId: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
       const color = options && options.color || "#ffbf00";
       this.styleHandle = injectStyle(this.styleId, `
-      *:focus, *:focus-visible {
+      *:focus:not(#${this.ringId}), *:focus-visible:not(#${this.ringId}) {
         outline: 4px solid ${color} !important;
         outline-offset: 3px !important;
         box-shadow: 0 0 0 7px color-mix(in srgb, ${color} 40%, transparent) !important;
@@ -3994,7 +6150,8 @@ ${scope} table {
       this.ring = ring;
       this.focusInHandler = (event) => {
         if (!this.enabled) return;
-        const el = event.target;
+        let el = event.target;
+        while (el && el.shadowRoot && el.shadowRoot.activeElement) el = el.shadowRoot.activeElement;
         if (!el || el.nodeType !== 1 || !el.getBoundingClientRect) return;
         this.tracked = el;
         this.position();
@@ -4005,8 +6162,19 @@ ${scope} table {
       };
       document.addEventListener("focusin", this.focusInHandler, true);
       document.addEventListener("focusout", this.focusOutHandler, true);
-      this.scrollHandler = () => this.position();
-      this.resizeHandler = () => this.position();
+      const schedule = () => {
+        if (!this.tracked || this.rafId !== null) return;
+        if (typeof requestAnimationFrame !== "function") {
+          this.position();
+          return;
+        }
+        this.rafId = requestAnimationFrame(() => {
+          this.rafId = null;
+          this.position();
+        });
+      };
+      this.scrollHandler = schedule;
+      this.resizeHandler = schedule;
       window.addEventListener("scroll", this.scrollHandler, { capture: true, passive: true });
       window.addEventListener("resize", this.resizeHandler, { passive: true });
       console.log("[AI4A11y] Focus Locator enabled");
@@ -4022,11 +6190,13 @@ ${scope} table {
       }
       try {
         const rect = this.tracked.getBoundingClientRect();
-        this.ring.style.top = `${rect.top}px`;
-        this.ring.style.left = `${rect.left}px`;
-        this.ring.style.width = `${rect.width}px`;
-        this.ring.style.height = `${rect.height}px`;
-        this.ring.style.display = "block";
+        const st = this.ring.style;
+        const box = [`${rect.top}px`, `${rect.left}px`, `${rect.width}px`, `${rect.height}px`];
+        if (st.top !== box[0]) st.top = box[0];
+        if (st.left !== box[1]) st.left = box[1];
+        if (st.width !== box[2]) st.width = box[2];
+        if (st.height !== box[3]) st.height = box[3];
+        if (st.display !== "block") st.display = "block";
       } catch {
       }
     },
@@ -4049,6 +6219,8 @@ ${scope} table {
         window.removeEventListener("resize", this.resizeHandler);
         this.resizeHandler = null;
       }
+      if (this.rafId !== null && typeof cancelAnimationFrame === "function") cancelAnimationFrame(this.rafId);
+      this.rafId = null;
       this.tracked = null;
       if (this.styleHandle) {
         this.styleHandle.remove();
@@ -4069,6 +6241,47 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yFocusLocator = FocusLocator;
 
   // tools/adapters/persistent-hover.js
+  var OPEN_ATTR = "data-ai4a11y-hover-open";
+  var HOVER = /:hover(?![\w-])/g;
+  function splitSelectors(text) {
+    const out = [];
+    let depth = 0, cur = "";
+    for (const ch of text) {
+      if (ch === "(" || ch === "[") depth++;
+      else if (ch === ")" || ch === "]") depth--;
+      if (ch === "," && depth === 0) {
+        out.push(cur.trim());
+        cur = "";
+      } else cur += ch;
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  }
+  function hoverTrigger(sel) {
+    const m = /:hover(?![\w-])/.exec(sel);
+    if (!m) return null;
+    let depth = 0, i;
+    for (i = 0; i < m.index; i++) {
+      const c = sel[i];
+      if (c === "(" || c === "[") depth++;
+      else if (c === ")" || c === "]") depth--;
+    }
+    if (depth) return null;
+    for (i = m.index + 6; i < sel.length; i++) {
+      const c = sel[i];
+      if (c === "(" || c === "[") depth++;
+      else if (c === ")" || c === "]") depth--;
+      else if (!depth && /[\s>+~]/.test(c)) break;
+    }
+    if (!sel.slice(i).trim()) return null;
+    let trigger = sel.slice(0, i).replace(HOVER, "").trim();
+    if (!trigger || /[\s>+~]$/.test(trigger)) trigger += "*";
+    return trigger;
+  }
+  function reveals(style) {
+    const d = style.getPropertyValue("display"), v = style.getPropertyValue("visibility"), o = style.getPropertyValue("opacity");
+    return d && d !== "none" || v === "visible" || o !== "" && parseFloat(o) > 0;
+  }
   var PersistentHover = {
     styleId: "ai4a11y-persistent-hover-styles",
     tipId: "ai4a11y-hover-tip",
@@ -4079,6 +6292,10 @@ ${scope} table {
     // the single reusable tooltip element
     current: null,
     // the titled element the tooltip is showing for
+    triggers: "",
+    // selector list of elements whose :hover reveals a pop-up
+    opened: null,
+    // the one element holding OPEN_ATTR
     onMouseOver: null,
     // stored listener refs (for exact removal)
     onKeyDown: null,
@@ -4087,7 +6304,9 @@ ${scope} table {
       this.enabled = true;
       const background = options && options.background || "#1c1c1e";
       const color = options && options.color || "#ffffff";
-      this.style = injectStyle(this.styleId, `
+      const kept = this.hoverRules();
+      this.triggers = kept.triggers.join(", ");
+      this.style = injectStyle(this.styleId, kept.css + `
       #${this.tipId} {
         position: fixed;
         z-index: 2147483647;
@@ -4113,6 +6332,7 @@ ${scope} table {
         const target = e.target;
         if (!target || target.nodeType !== 1) return;
         if (this.tip && (target === this.tip || this.tip.contains(target))) return;
+        this.keepOpen(target);
         const el = target.closest ? target.closest("[title]") : null;
         if (!el) return;
         const text = (el.getAttribute("title") || "").trim();
@@ -4122,7 +6342,10 @@ ${scope} table {
       document.addEventListener("mouseover", this.onMouseOver, true);
       this.onKeyDown = (e) => {
         if (!this.enabled) return;
-        if (e.key === "Escape") this.hide();
+        if (e.key === "Escape") {
+          this.hide();
+          this.close();
+        }
       };
       document.addEventListener("keydown", this.onKeyDown, true);
       console.log("[AI4A11y] Persistent Hover enabled");
@@ -4149,6 +6372,77 @@ ${scope} table {
       if (this.tip) this.tip.hidden = true;
       this.current = null;
     },
+    // Copies of the page's :hover rules that reveal something, keyed to
+    // OPEN_ATTR instead of :hover. Same specificity as the originals and later
+    // in the page, so they show exactly what hovering shows. Stylesheets from
+    // other origins can't be read and are skipped.
+    hoverRules() {
+      const out = { css: "", triggers: [] };
+      if (typeof document === "undefined" || !document.styleSheets) return out;
+      const walk = (rules, wrap) => {
+        for (const rule of Array.from(rules || [])) {
+          try {
+            if (rule.selectorText && rule.style && rule.selectorText.includes(":hover") && reveals(rule.style)) {
+              const keep2 = [];
+              for (const sel of splitSelectors(rule.selectorText)) {
+                const trigger = hoverTrigger(sel);
+                if (!trigger) continue;
+                keep2.push(sel.replace(HOVER, `[${OPEN_ATTR}]`));
+                if (!out.triggers.includes(trigger)) out.triggers.push(trigger);
+              }
+              if (keep2.length) out.css += wrap(`${keep2.join(", ")} { ${rule.style.cssText} }`) + "\n";
+            } else if (rule.cssRules) {
+              const cond = rule.media ? `@media ${rule.media.mediaText}` : rule.conditionText ? `@supports ${rule.conditionText}` : "";
+              walk(rule.cssRules, cond ? (css) => wrap(`${cond} { ${css} }`) : wrap);
+            }
+          } catch {
+          }
+        }
+      };
+      for (const sheet of Array.from(document.styleSheets)) {
+        if (sheet.ownerNode && sheet.ownerNode.id && sheet.ownerNode.id.startsWith("ai4a11y-")) continue;
+        let rules;
+        try {
+          rules = sheet.cssRules;
+        } catch {
+          continue;
+        }
+        walk(rules, (css) => css);
+      }
+      out.triggers = out.triggers.filter((t) => {
+        try {
+          document.documentElement.matches(t);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      return out;
+    },
+    // The pointer reached `el`: if it is in an element whose :hover opens a
+    // pop-up, that element's pop-up stays open (and any other one closes).
+    keepOpen(el) {
+      if (!this.triggers || !el.closest) return;
+      let host = null;
+      try {
+        host = el.closest(this.triggers);
+      } catch {
+        return;
+      }
+      if (!host || host === this.opened) return;
+      this.close();
+      host.setAttribute(OPEN_ATTR, "");
+      this.opened = host;
+    },
+    close() {
+      if (this.opened) {
+        try {
+          this.opened.removeAttribute(OPEN_ATTR);
+        } catch {
+        }
+      }
+      this.opened = null;
+    },
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
@@ -4169,6 +6463,8 @@ ${scope} table {
         this.tip = null;
       }
       this.current = null;
+      this.close();
+      this.triggers = "";
       console.log("[AI4A11y] Persistent Hover disabled");
       announce("Persistent hover off");
     },
@@ -4274,7 +6570,10 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yReadingRuler = ReadingRuler;
 
   // tools/adapters/confirm-actions.js
-  var DESTRUCTIVE_RE = /\b(delete|remove|submit|buy|pay|confirm|send|publish|unsubscribe|deactivate|close account)\b/i;
+  var ACTION_WORDS = "delete|remove|submit|buy|pay|confirm|send|publish|unsubscribe|deactivate|close account|place (?:your |my |the )?order|complete (?:your |my |the )?(?:order|purchase)";
+  var DESTRUCTIVE_RE = new RegExp(`\\b(?:${ACTION_WORDS})\\b`, "i");
+  var STARTS_WITH_ACTION_RE = new RegExp(`^(?:${ACTION_WORDS})\\b`, "i");
+  var MIN_CONFIRM_GAP_MS = 400;
   var ConfirmActions = {
     promptId: "ai4a11y-confirm-prompt",
     armedAttr: "data-ai4a11y-armed",
@@ -4286,6 +6585,8 @@ ${scope} table {
     promptTimer: null,
     armed: null,
     // Set of elements currently carrying the data flag
+    armedAt: null,
+    // timeStamp of the click that armed it
     windowMs: 4e3,
     // how long a first click stays armed
     enable(options = {}) {
@@ -4307,6 +6608,12 @@ ${scope} table {
       const el = t.closest ? t.closest('button, [type="submit"], a') : null;
       if (!el || !this.looksDestructive(el)) return;
       if (el.hasAttribute(this.armedAttr)) {
+        const gap = typeof e.timeStamp === "number" && this.armedAt != null ? e.timeStamp - this.armedAt : Infinity;
+        if (gap < MIN_CONFIRM_GAP_MS) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return;
+        }
         this.clearArmed();
         return;
       }
@@ -4315,19 +6622,28 @@ ${scope} table {
       this.clearArmed();
       el.setAttribute(this.armedAttr, "true");
       this.armed.add(el);
-      this.showPrompt(el);
+      this.armedAt = typeof e.timeStamp === "number" ? e.timeStamp : null;
+      this.showPrompt(el, e.detail === 0);
       this.promptTimer = setTimeout(() => this.clearArmed(), this.windowMs);
     },
+    // The control's accessible name, as matched and as said back to the person.
+    nameOf(el) {
+      return (el.getAttribute && el.getAttribute("aria-label") || el.value || el.textContent || "").replace(/\s+/g, " ").trim();
+    },
     looksDestructive(el) {
-      const name = (el.getAttribute && el.getAttribute("aria-label") || el.value || el.textContent || "").replace(/\s+/g, " ").trim();
-      if (!name || name.length > 40) return false;
+      const name = this.nameOf(el);
+      if (!name) return false;
+      if (name.length > 40) return STARTS_WITH_ACTION_RE.test(name);
       return DESTRUCTIVE_RE.test(name);
     },
-    showPrompt(el) {
+    showPrompt(el, byKeyboard = false) {
       const prompt = document.createElement("span");
       prompt.id = this.promptId;
-      prompt.setAttribute("role", "status");
-      prompt.textContent = "Click again to confirm";
+      prompt.setAttribute("aria-hidden", "true");
+      prompt.textContent = byKeyboard ? "Press again to confirm" : "Click again to confirm";
+      let name = this.nameOf(el);
+      if (name.length > 60) name = name.slice(0, 59) + "\u2026";
+      announce(`${name}: ${byKeyboard ? "press" : "click"} again to confirm`);
       prompt.style.cssText = "position:fixed;z-index:2147483647;margin:0;padding:2px 8px;border-radius:4px;background:#b91c1c;color:#fff;font:600 12px/1.6 system-ui,sans-serif;pointer-events:none;";
       (document.body || document.documentElement).appendChild(prompt);
       let rect = null;
@@ -4349,6 +6665,7 @@ ${scope} table {
         this.prompt.remove();
         this.prompt = null;
       }
+      this.armedAt = null;
       if (this.armed) {
         for (const el of this.armed) el.removeAttribute?.(this.armedAttr);
         this.armed.clear();
@@ -4376,6 +6693,7 @@ ${scope} table {
   // tools/adapters/reading-spot.js
   var KEY_PREFIX = "ai4a11y-spot:";
   var SAVE_DELAY_MS = 500;
+  var STYLE_ID3 = "ai4a11y-spot-styles";
   var ReadingSpot = {
     buttonId: "ai4a11y-spot-restore",
     enabled: false,
@@ -4423,11 +6741,21 @@ ${scope} table {
         btn.textContent = "Jump back to where you were";
         btn.style.cssText = "position: fixed; bottom: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; font-size: 16px; border-radius: 8px;border: 2px solid #1a5fb4; background: #ffffff; color: #1a5fb4; cursor: pointer;";
         btn.addEventListener("click", () => {
+          const fromKeyboard = document.activeElement === btn;
           window.scrollTo(0, savedY);
           this.restorePending = false;
           btn.remove();
+          if (fromKeyboard) this.focusAtSpot();
+          announce("Back where you were");
         });
-        (document.body || document.documentElement).appendChild(btn);
+        if (!document.getElementById(STYLE_ID3) && document.head) {
+          const style = document.createElement("style");
+          style.id = STYLE_ID3;
+          style.textContent = `#${this.buttonId}:focus-visible{outline:3px solid #1a5fb4 !important;outline-offset:2px;box-shadow:0 0 0 3px #fff,0 0 0 6px #1a5fb4}`;
+          document.head.appendChild(style);
+        }
+        const body = document.body || document.documentElement;
+        body.insertBefore(btn, body.firstChild);
       }
       this.scrollHandler = () => {
         if (!this.enabled) return;
@@ -4437,6 +6765,7 @@ ${scope} table {
           if (!this.enabled) return;
           const y = window.scrollY;
           if (this.restorePending && this.savedY != null && y <= this.savedY) return;
+          if (this.restorePending) document.getElementById(this.buttonId)?.remove();
           this.restorePending = false;
           this.saveSpot(y);
         }, SAVE_DELAY_MS);
@@ -4444,6 +6773,21 @@ ${scope} table {
       window.addEventListener("scroll", this.scrollHandler, { passive: true });
       console.log("[AI4A11y] Save Reading Spot enabled");
       announce(savedY !== null && savedY > 0 ? "Found your last reading spot \u2014 a jump-back button was added" : "Saving your reading spot as you scroll");
+    },
+    // Focus something at the middle of the screen, so the next Tab continues
+    // from the spot the reader jumped to.
+    focusAtSpot() {
+      try {
+        let el = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+        while (el && el !== document.body && !el.matches("p, li, h1, h2, h3, h4, h5, h6, section, article, td, div")) el = el.parentElement;
+        if (!el || el === document.body) return;
+        if (!el.hasAttribute("tabindex")) {
+          el.setAttribute("tabindex", "-1");
+          el.addEventListener("blur", () => el.removeAttribute("tabindex"), { once: true });
+        }
+        el.focus({ preventScroll: true });
+      } catch {
+      }
     },
     disable() {
       if (!this.enabled) return;
@@ -4459,6 +6803,7 @@ ${scope} table {
       this.restorePending = false;
       this.savedY = null;
       document.getElementById(this.buttonId)?.remove();
+      document.getElementById(STYLE_ID3)?.remove();
       console.log("[AI4A11y] Save Reading Spot disabled");
       announce("Reading spot saving turned off");
     },
@@ -4473,8 +6818,8 @@ ${scope} table {
   var logFix = globalThis.ai4a11yLogFix || (() => {
   });
   var MAX_TEXT_NODES2 = 2e3;
-  var STYLE_ID2 = "ai4a11y-abbr-styles";
-  var SKIP_TAGS2 = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "NOSCRIPT", "SELECT", "OPTION", "ABBR"]);
+  var STYLE_ID4 = "ai4a11y-abbr-styles";
+  var SKIP_TAGS3 = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "NOSCRIPT", "SELECT", "OPTION", "ABBR"]);
   var DICTIONARY = {
     WCAG: "Web Content Accessibility Guidelines",
     ARIA: "Accessible Rich Internet Applications",
@@ -4515,8 +6860,61 @@ ${scope} table {
     "e.g.": "for example",
     "i.e.": "that is",
     "vs.": "versus",
-    "etc.": "and so on"
+    "etc.": "and so on",
+    // Shopping and product-spec abbreviations. Stores lean on these in price
+    // lines, spec tables and order summaries, where there is no room to spell
+    // them out.
+    MSRP: "manufacturer's suggested retail price",
+    OOS: "out of stock",
+    "S&S": "Subscribe & Save, a repeat order",
+    Qty: "quantity",
+    "Qty.": "quantity",
+    "Incl.": "includes",
+    "incl.": "including",
+    "mo.": "months",
+    "Avail.": "available",
+    "Cust.": "customer",
+    BSR: "Best Sellers Rank",
+    "Mfr.": "manufacturer",
+    "Mfg.": "manufacturer",
+    "Cert.": "certification",
+    "config.": "configuration",
+    "I/O": "input and output",
+    "Wt.": "weight",
+    "Dims.": "dimensions",
+    "Dia.": "diameter",
+    "Ht.": "height",
+    "Thk.": "thickness",
+    "Vol.": "volume",
+    "Compat.": "compatible with",
+    "Batt.": "battery",
+    "Insul.": "insulation",
+    "Lum.": "lumens, how bright it is",
+    "Ingr.": "ingredients",
+    "Pcs.": "pieces",
+    "Fmt.": "format",
+    "pp.": "pages",
+    "Pp.": "pages",
+    "Pub. date": "publication date",
+    "Lang.": "language",
+    "ver.": "version",
+    "len.": "length",
+    PD: "USB Power Delivery, a fast-charging standard",
+    PPS: "Programmable Power Supply, a fast-charging standard",
+    GaN: "gallium nitride, a chip material that runs cooler",
+    LED: "light-emitting diode",
+    FCC: "Federal Communications Commission",
+    UL: "Underwriters Laboratories, a safety testing lab",
+    BT: "Bluetooth",
+    ANC: "active noise cancellation",
+    "IP rating": "Ingress Protection rating, how well it keeps out dust and water",
+    CCT: "correlated color temperature, how warm or cool the light looks",
+    CRI: "color rendering index, how true colors look under the light",
+    BPA: "bisphenol A, a chemical in some plastics",
+    GMO: "genetically modified organism"
   };
+  var LIVE_SEL2 = '[aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
+  var RESCAN_MS4 = 400;
   var AbbreviationExpand = {
     markerClass: "ai4a11y-abbr",
     // the injected <abbr> elements
@@ -4525,14 +6923,24 @@ ${scope} table {
     enabled: false,
     handle: null,
     // transformTextNodes handle (owns the exact-restore)
+    handles: null,
+    // later passes, for text the page adds after enable()
     titled: null,
     // pre-existing <abbr> elements whose title WE set
     style: null,
     // injectStyle handle
+    observer: null,
+    rescanTimer: null,
+    spellOut: false,
+    // options.spellOut: also write the full form out once, after the first use
+    spelled: null,
+    // abbreviations already written out on this page
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
       this.titled = [];
+      this.spellOut = options.spellOut === true;
+      this.spelled = /* @__PURE__ */ new Set();
       const dict = Object.assign(/* @__PURE__ */ Object.create(null), DICTIONARY, options.dictionary || {});
       const matcher = this.buildMatcher(dict);
       const root = mainRoot();
@@ -4541,12 +6949,9 @@ ${scope} table {
         return;
       }
       this.fillTitles(root, dict);
-      this.handle = transformTextNodes(root, (text) => this.buildWrapper(text, dict, matcher), {
-        skipTags: SKIP_TAGS2,
-        skipClass: this.wrapperClass,
-        cap: MAX_TEXT_NODES2
-      });
-      this.style = injectStyle(STYLE_ID2, `
+      this.handles = [];
+      this.handle = this.pass(root, dict, matcher, MAX_TEXT_NODES2);
+      this.style = injectStyle(STYLE_ID4, `
       .${this.markerClass} {
         text-decoration: underline dotted;
         text-underline-offset: 2px;
@@ -4556,6 +6961,35 @@ ${scope} table {
       if (this.handle.capped) console.log(`[AI4A11y] Abbreviation Expand: capped at ${MAX_TEXT_NODES2} text nodes`);
       console.log(`[AI4A11y] Abbreviation Expand enabled (${this.handle.records.length} text blocks, ${this.titled.length} existing abbr titles)`);
       announce(count ? "Abbreviation expansion on" : "Abbreviation expansion: no known abbreviations found");
+      this.watch(root, dict, matcher);
+    },
+    pass(root, dict, matcher, cap) {
+      return transformTextNodes(root, (text, node) => {
+        const parent = node.parentElement;
+        if (parent && parent.closest && parent.closest(LIVE_SEL2)) return null;
+        return this.buildWrapper(text, dict, matcher);
+      }, { skipTags: SKIP_TAGS3, skipClass: this.wrapperClass, cap });
+    },
+    // Stores re-render parts of the page (a cart line after a quantity change,
+    // search results after a filter). Mark the new text too, a moment after it
+    // lands. Our own wrappers are ignored, so this never reacts to itself.
+    watch(root, dict, matcher) {
+      if (typeof MutationObserver === "undefined") return;
+      const ours = (n) => n.nodeType === 1 && n.classList && n.classList.contains(this.wrapperClass);
+      this.observer = new MutationObserver((records) => {
+        const fresh = records.some((r) => [...r.addedNodes].some((n) => !ours(n) && (n.nodeType === 1 || n.nodeType === 3 && /\S/.test(n.nodeValue))));
+        if (!fresh || this.rescanTimer) return;
+        this.rescanTimer = setTimeout(() => {
+          this.rescanTimer = null;
+          if (!this.enabled) return;
+          this.fillTitles(root, dict);
+          const used = this.handles.reduce((n, h2) => n + h2.records.length, this.handle.records.length);
+          if (used >= MAX_TEXT_NODES2) return;
+          const h = this.pass(root, dict, matcher, MAX_TEXT_NODES2 - used);
+          if (h.records.length) this.handles.push(h);
+        }, RESCAN_MS4);
+      });
+      this.observer.observe(root, { childList: true, subtree: true });
     },
     // One global alternation over the dictionary keys, longest-first so HTTPS
     // wins over HTTP at the same position. Word boundaries are checked manually
@@ -4600,6 +7034,7 @@ ${scope} table {
         if (!wrap) {
           wrap = document.createElement("span");
           wrap.className = this.wrapperClass;
+          wrap.style.cssText = "all: unset;";
         }
         if (start > last) wrap.appendChild(document.createTextNode(text.slice(last, start)));
         const abbr = document.createElement("abbr");
@@ -4607,6 +7042,14 @@ ${scope} table {
         abbr.setAttribute("title", dict[m[0]]);
         abbr.textContent = m[0];
         wrap.appendChild(abbr);
+        if (this.spellOut && !this.spelled.has(m[0])) {
+          this.spelled.add(m[0]);
+          const full = document.createElement("span");
+          full.className = `${this.markerClass}-full`;
+          full.style.cssText = "all: unset;";
+          full.textContent = ` (${dict[m[0]].split(", ")[0]})`;
+          wrap.appendChild(full);
+        }
         logFix("abbr-expand", abbr, m[0], dict[m[0]]);
         last = end;
       }
@@ -4617,6 +7060,16 @@ ${scope} table {
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      if (this.rescanTimer) {
+        clearTimeout(this.rescanTimer);
+        this.rescanTimer = null;
+      }
+      for (const h of (this.handles || []).reverse()) h.restore();
+      this.handles = null;
       if (this.handle) {
         this.handle.restore();
         this.handle = null;
@@ -4634,6 +7087,7 @@ ${scope} table {
         this.style.remove();
         this.style = null;
       }
+      this.spelled = null;
       console.log("[AI4A11y] Abbreviation Expand disabled");
       announce("Abbreviation expansion off");
     },
@@ -4832,7 +7286,7 @@ ${scope} table {
   var logFix3 = globalThis.ai4a11yLogFix || (() => {
   });
   var CHART_HINT = /chart|graph|plot|diagram/i;
-  var HTML_NS2 = "http://www.w3.org/1999/xhtml";
+  var HTML_NS3 = "http://www.w3.org/1999/xhtml";
   var MAX_CHARTS = 20;
   var MAX_ROWS = 200;
   var ExploreAChart = {
@@ -4891,7 +7345,7 @@ ${scope} table {
         this.lastHover = e.target;
       };
       document.addEventListener("mouseover", this._moveHandler, true);
-      announce(`Explore a chart ready. ${this.charts.length} chart${this.charts.length === 1 ? "" : "s"} found. Tab to a View data table button, or press Alt plus T on a chart.`);
+      announce(this.charts.length ? `Explore a chart ready. ${this.charts.length} chart${this.charts.length === 1 ? "" : "s"} found. Tab to a View data table button, or press Alt plus T on a chart.` : "Explore a chart ready. No charts on this page yet.");
       this.unregisterSweep = registerSweep("explore-a-chart", () => {
         if (!this.enabled) return;
         this.sweep();
@@ -4929,12 +7383,14 @@ ${scope} table {
       document.querySelectorAll("img").forEach((img) => {
         if (CHART_HINT.test(`${img.getAttribute("alt") || ""} ${img.getAttribute("src") || ""}`)) push(img);
       });
-      document.querySelectorAll('[role="img"]').forEach(push);
+      document.querySelectorAll('[role="img"]').forEach((el) => {
+        if (el.querySelector("canvas, svg, img")) push(el);
+      });
       return out;
     },
     attachButton(chart) {
       const parent = chart.parentElement;
-      if (!parent || parent.namespaceURI && parent.namespaceURI !== HTML_NS2) return;
+      if (!parent || parent.namespaceURI && parent.namespaceURI !== HTML_NS3) return;
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "ai4a11y-chart-btn";
@@ -5122,14 +7578,18 @@ ${scope} table {
   // tools/adapters/spa-focus.js
   var logFix4 = globalThis.ai4a11yLogFix || (() => {
   });
-  var REGION_ID2 = "ai4a11y-spa-focus-region";
+  var REGION_ID = "ai4a11y-spa-focus-region";
   var SETTLE_DELAY_MS = 150;
   var SpaFocus = {
-    regionId: REGION_ID2,
+    regionId: REGION_ID,
     enabled: false,
     region: null,
     lastPath: null,
     // pathname+search last handled, so same-path pushes are ignored
+    lastPage: null,
+    // title + main heading last handled (see checkRoute)
+    writeTimer: null,
+    // pending write into the live region, cleared on disable
     settleTimer: null,
     // debounce timeout, cleared on disable
     popstateHandler: null,
@@ -5144,8 +7604,9 @@ ${scope} table {
       if (this.enabled) return;
       this.enabled = true;
       this.lastPath = window.location.pathname + window.location.search;
+      this.lastPage = this.pageKey();
       const region = document.createElement("div");
-      region.id = REGION_ID2;
+      region.id = REGION_ID;
       region.setAttribute("aria-live", "assertive");
       region.setAttribute("aria-atomic", "true");
       region.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
@@ -5185,7 +7646,11 @@ ${scope} table {
     checkRoute() {
       const path = window.location.pathname + window.location.search;
       if (path === this.lastPath) return;
+      const sameRoute = window.location.pathname === (this.lastPath || "").split("?")[0];
       this.lastPath = path;
+      const page = this.pageKey();
+      if (sameRoute && page === this.lastPage) return;
+      this.lastPage = page;
       const target = document.querySelector('main, [role="main"], #main, h1');
       if (target) {
         if (!target.hasAttribute("tabindex")) {
@@ -5195,7 +7660,21 @@ ${scope} table {
         }
         target.focus({ preventScroll: false });
       }
-      if (this.region) this.region.textContent = this.pageName(target);
+      const region = this.region;
+      if (region) {
+        const name = this.pageName(target);
+        region.textContent = "";
+        clearTimeout(this.writeTimer);
+        this.writeTimer = setTimeout(() => {
+          if (this.region === region) region.textContent = name;
+        }, 50);
+      }
+    },
+    // What the page is: its title and its top heading. Navigations change one.
+    pageKey() {
+      const h1 = document.querySelector('h1, [role="heading"][aria-level="1"]');
+      return `${document.title}
+${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     },
     // What to call the new page: its title if the app updates one, else the
     // main heading's text, else a generic fallback so something is always said.
@@ -5217,6 +7696,10 @@ ${scope} table {
         clearTimeout(this.settleTimer);
         this.settleTimer = null;
       }
+      if (this.writeTimer) {
+        clearTimeout(this.writeTimer);
+        this.writeTimer = null;
+      }
       if (this.patchedHistory) {
         this.patchedHistory.pushState = this.origPushState;
         this.patchedHistory.replaceState = this.origReplaceState;
@@ -5231,11 +7714,12 @@ ${scope} table {
       for (const el of this.tabindexAdded) el.removeAttribute("tabindex");
       this.tabindexAdded.clear();
       try {
-        (this.region || document.getElementById(REGION_ID2))?.remove();
+        (this.region || document.getElementById(REGION_ID))?.remove();
       } catch {
       }
       this.region = null;
       this.lastPath = null;
+      this.lastPage = null;
       console.log("[AI4A11y] SPA Focus disabled");
       announce("Stopped announcing page changes");
     },
@@ -5497,7 +7981,7 @@ ${scope} table {
   var INVISIBLE_OPS_RE = /[⁡-⁤]/g;
   var MAX_DEPTH = 20;
   var LEAF_TAGS = /* @__PURE__ */ new Set(["mi", "mn", "mo", "mtext", "ms"]);
-  var SKIP_TAGS3 = /* @__PURE__ */ new Set(["annotation", "annotation-xml", "mphantom"]);
+  var SKIP_TAGS4 = /* @__PURE__ */ new Set(["annotation", "annotation-xml", "mphantom"]);
   function hasAccessibleName2(el) {
     const label = el.getAttribute("aria-label");
     if (label && label.trim()) return true;
@@ -5506,7 +7990,7 @@ ${scope} table {
   function serializeMath(el, depth = 0) {
     if (depth > MAX_DEPTH) return "";
     const name = (el.localName || "").toLowerCase();
-    if (SKIP_TAGS3.has(name)) return "";
+    if (SKIP_TAGS4.has(name)) return "";
     if (LEAF_TAGS.has(name)) return (el.textContent || "").replace(INVISIBLE_OPS_RE, "").trim();
     const kids = [];
     for (let c = el.firstElementChild; c; c = c.nextElementSibling) {
@@ -5622,7 +8106,8 @@ ${scope} table {
         const alt = img.getAttribute("alt");
         if (alt && alt.trim()) continue;
         const src = img.getAttribute("src") || "";
-        if (!MATH_HINT_RE.test(`${img.className} ${alt || ""} ${src}`)) continue;
+        const address = /^data:/i.test(src) ? "" : src;
+        if (!MATH_HINT_RE.test(`${img.className} ${alt || ""} ${address}`)) continue;
         const tex = texFromUrl(src);
         const attrs = [];
         this.setTracked(
@@ -5671,6 +8156,11 @@ ${scope} table {
   if (typeof window !== "undefined") window.__ai4a11yMathA11y = MathA11y;
 
   // tools/adapters/auto-transcriber.js
+  var MESSAGE_MS = 4e3;
+  function captionTracks(video) {
+    const list = video.textTracks ? [...video.textTracks] : [];
+    return list.filter((t) => t && (t.kind === "captions" || t.kind === "subtitles"));
+  }
   var AutoTranscriber = {
     enabled: false,
     observer: null,
@@ -5689,7 +8179,8 @@ ${scope} table {
         if (this.enabled) this.enableCaptionsOnAllVideos();
       }, 1e3);
       console.log("[AI4A11y] Auto Transcriber enabled");
-      announce("Auto Transcriber enabled");
+      const n = this.videoStates.size;
+      announce(n ? `Caption button added to ${n === 1 ? "the video" : n + " videos"}` : "Caption buttons on");
     },
     disable() {
       if (!this.enabled) return;
@@ -5704,6 +8195,7 @@ ${scope} table {
       }
       this.observer?.disconnect();
       this.observer = null;
+      for (const video of [...this.videoStates.keys()]) this.cleanupVideo(video);
       document.querySelectorAll(".ai4a11y-audio-btn, .ai4a11y-caption-box").forEach((el) => el.remove());
       document.getElementById(this.styleId)?.remove();
       document.querySelectorAll("video[data-ai4a11y-setup]").forEach((v) => {
@@ -5711,7 +8203,7 @@ ${scope} table {
       });
       this.videoStates.clear();
       console.log("[AI4A11y] Auto Transcriber disabled");
-      announce("Auto Transcriber disabled");
+      announce("Caption buttons removed");
     },
     injectStyles() {
       if (document.getElementById(this.styleId)) return;
@@ -5720,34 +8212,38 @@ ${scope} table {
       style.textContent = `
       .ai4a11y-audio-btn {
         position: absolute;
-        top: 6px;
-        right: 28px;
-        z-index: 10000;
-        padding: 3px 6px;
-        background: rgba(0, 0, 0, 0.75);
+        top: 8px;
+        right: 8px;
+        z-index: 2;
+        min-width: 44px;
+        min-height: 32px;
+        margin: 0;
+        padding: 4px 10px;
+        background: rgba(0, 0, 0, 0.85);
         color: #fff;
-        border: none;
-        border-radius: 2px;
-        font: 10px/1 system-ui, sans-serif;
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        border-radius: 6px;
+        font: 700 14px/1 system-ui, sans-serif;
         cursor: pointer;
-        opacity: 0.6;
-        transition: opacity 0.15s;
       }
-      .ai4a11y-audio-btn:hover { opacity: 1; }
-      .ai4a11y-audio-btn.recording { color: #f66; }
+      .ai4a11y-audio-btn:hover { background: #000; }
+      .ai4a11y-audio-btn[aria-pressed="true"] { background: #fff; color: #000; border-color: #000; }
+      .ai4a11y-audio-btn:focus-visible { outline: 3px solid #fff !important; outline-offset: 2px; box-shadow: 0 0 0 6px #1a73e8 !important; }
       .ai4a11y-caption-box {
         position: absolute;
         bottom: 48px;
         left: 50%;
         transform: translateX(-50%);
         max-width: 80%;
+        max-height: 45%;
+        overflow: hidden;
         padding: 5px 12px;
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, 0.85);
         color: #fff;
-        font: 14px/1.4 system-ui, sans-serif;
-        border-radius: 2px;
+        font: 16px/1.4 system-ui, sans-serif;
+        border-radius: 4px;
         text-align: center;
-        z-index: 10000;
+        z-index: 2;
         pointer-events: none;
       }
     `;
@@ -5777,13 +8273,23 @@ ${scope} table {
       this._pagehideHandler = () => this.disable();
       window.addEventListener("pagehide", this._pagehideHandler, { once: true });
     },
+    // Puts the page back for one video: its button and caption box go, its
+    // wrapper gets its old position, and track modes we changed are restored.
     cleanupVideo(video) {
       const state = this.videoStates.get(video);
-      if (state) {
-        state.btn?.remove();
-        state.captionBox?.remove();
-        this.videoStates.delete(video);
+      if (!state) return;
+      state.btn?.remove();
+      state.captionBox?.remove();
+      clearTimeout(state.messageTimer);
+      if (state.wrapper && state.prevPosition !== null) state.wrapper.style.position = state.prevPosition;
+      for (const { track, prevMode } of state.trackModes) {
+        try {
+          track.mode = prevMode;
+        } catch {
+        }
       }
+      this.videoStates.delete(video);
+      delete video.dataset.ai4a11ySetup;
     },
     enableCaptionsOnAllVideos() {
       document.querySelectorAll("video").forEach((v) => this.setupVideo(v));
@@ -5791,58 +8297,99 @@ ${scope} table {
       if (location.hostname.includes("youtube.com")) this.enableYouTubePageCaptions();
     },
     setupVideo(video) {
-      if (video.dataset.ai4a11ySetup) return;
-      video.dataset.ai4a11ySetup = "true";
+      if (this.videoStates.has(video)) return;
       const rect = video.getBoundingClientRect();
       if (rect.width < 100 || rect.height < 75) return;
-      let wrapper = video.parentElement;
+      const wrapper = video.parentElement;
+      if (!wrapper) return;
+      video.dataset.ai4a11ySetup = "true";
+      let prevPosition = null;
       if (getComputedStyle(wrapper).position === "static") {
+        prevPosition = wrapper.style.position;
         wrapper.style.position = "relative";
       }
       const btn = document.createElement("button");
+      btn.type = "button";
       btn.className = "ai4a11y-audio-btn";
       btn.textContent = "CC";
-      btn.title = "Auto transcribe";
+      btn.setAttribute("aria-label", "Captions");
+      const showing = captionTracks(video).some((t) => t.mode === "showing");
+      btn.setAttribute("aria-pressed", showing ? "true" : "false");
+      btn.title = showing ? "Hide captions" : "Show captions";
       btn.onclick = () => this.toggleTranscription(video, btn);
       wrapper.appendChild(btn);
       const captionBox = document.createElement("div");
       captionBox.className = "ai4a11y-caption-box";
       captionBox.style.display = "none";
       wrapper.appendChild(captionBox);
-      this.videoStates.set(video, { btn, captionBox, isTranscribing: false });
+      this.videoStates.set(video, { btn, captionBox, wrapper, prevPosition, trackModes: [], isTranscribing: showing, messageTimer: null });
+    },
+    _setPressed(state, on) {
+      state.isTranscribing = on;
+      state.btn.setAttribute("aria-pressed", on ? "true" : "false");
+      state.btn.title = on ? "Hide captions" : "Show captions";
     },
     async toggleTranscription(video, btn) {
       const state = this.videoStates.get(video);
       if (!state) return;
-      if (state.isTranscribing) {
-        state.isTranscribing = false;
-        btn.classList.remove("recording");
-        btn.textContent = "CC";
+      clearTimeout(state.messageTimer);
+      const tracks = captionTracks(video);
+      if (state.isTranscribing || tracks.some((t) => t.mode === "showing")) {
+        this._setPressed(state, false);
         state.captionBox.style.display = "none";
-      } else {
-        state.isTranscribing = true;
-        btn.classList.add("recording");
-        btn.textContent = "\u23FA CC";
-        state.captionBox.style.display = "block";
-        state.captionBox.textContent = "Transcribing...";
-        await this.transcribeVideo(video, state);
-      }
-    },
-    async transcribeVideo(video, state) {
-      try {
-        const ytMatch = video.closest("[data-video-id]")?.dataset.videoId || window.location.href.match(/[?&]v=([^&]+)/)?.[1];
-        if (ytMatch) {
-          const transcript = await getYouTubeTranscript(ytMatch);
-          if (transcript) {
-            state.captionBox.textContent = transcript;
-            return;
+        for (const t of tracks) {
+          if (t.mode !== "showing") continue;
+          if (!state.trackModes.some((m) => m.track === t)) state.trackModes.push({ track: t, prevMode: t.mode });
+          try {
+            t.mode = "hidden";
+          } catch {
           }
         }
-        state.captionBox.textContent = "Live transcription requires API key";
-      } catch (e) {
-        console.error("[AI4A11y] Transcription error:", e);
-        state.captionBox.textContent = "Transcription failed";
+        announce("Captions off");
+        return;
       }
+      this._setPressed(state, true);
+      if (tracks.length) {
+        const lang = String(typeof navigator !== "undefined" && navigator.language || "en").slice(0, 2).toLowerCase();
+        const want = tracks.find((t) => (t.language || "").toLowerCase().startsWith(lang)) || tracks[0];
+        if (!state.trackModes.some((m) => m.track === want)) state.trackModes.push({ track: want, prevMode: want.mode });
+        try {
+          want.mode = "showing";
+        } catch {
+        }
+        announce("Captions on");
+        return;
+      }
+      state.captionBox.style.display = "block";
+      state.captionBox.textContent = "Getting captions\u2026";
+      await this.transcribeVideo(video, state);
+    },
+    async transcribeVideo(video, state) {
+      let text = null;
+      try {
+        const ytMatch = video.closest("[data-video-id]")?.dataset.videoId || location.hostname.includes("youtube.com") && window.location.href.match(/[?&]v=([^&]+)/)?.[1];
+        if (ytMatch) text = await getYouTubeTranscript(ytMatch);
+        if (!text) {
+          const src = video.currentSrc || video.src;
+          const result = src ? await transcribeVideo(src) : null;
+          text = result && result.text ? result.text : null;
+        }
+      } catch (e) {
+        console.warn("[AI4A11y] Transcription error:", e);
+      }
+      if (!this.enabled || !state.isTranscribing || this.videoStates.get(video) !== state) return;
+      if (text) {
+        state.captionBox.textContent = text;
+        announce("Transcript shown on the video");
+        return;
+      }
+      const msg = "No captions are available for this video";
+      state.captionBox.textContent = msg;
+      announce(msg);
+      this._setPressed(state, false);
+      state.messageTimer = setTimeout(() => {
+        if (!state.isTranscribing) state.captionBox.style.display = "none";
+      }, MESSAGE_MS);
     },
     enableYouTubeCaptions(iframe) {
       if (iframe.dataset.ai4a11yCaptionsEnabled) return;
@@ -5881,7 +8428,9 @@ ${scope} table {
     },
     {
       name: "vimeo",
-      button: () => document.querySelector('.vp-captions-button, button[aria-label*="aptions" i]'),
+      // Not the toolkit's own caption buttons (auto-transcriber's "Captions"
+      // toggle): clicking that would pop up its "no captions" message.
+      button: () => document.querySelector('.vp-captions-button, button[aria-label*="aptions" i]:not([class*="ai4a11y"])'),
       isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
     }
   ];
@@ -5896,6 +8445,7 @@ ${scope} table {
     // Enable the best caption/subtitle track on each <video> that has one, once.
     _enableNativeTracks() {
       const lang = preferredLang();
+      let turnedOn = 0;
       for (const v of document.querySelectorAll("video")) {
         if (v.dataset[DATA]) continue;
         const list = v.textTracks ? [...v.textTracks] : [];
@@ -5903,6 +8453,7 @@ ${scope} table {
         if (!tracks.length) continue;
         const want = tracks.find((t) => (t.language || "").toLowerCase().startsWith(lang)) || tracks[0];
         this._restore.push({ track: want, prevMode: want.mode });
+        if (want.mode !== "showing") turnedOn++;
         try {
           want.mode = "showing";
         } catch {
@@ -5910,6 +8461,7 @@ ${scope} table {
         v.dataset[DATA] = "on";
         logFix7("showCaptions", v, "(off)", "showing");
       }
+      return turnedOn;
     },
     // Turn on captions for players that own their CC UI — at most once per URL, so
     // the user turning them back off isn't overridden by the next mutation.
@@ -5936,9 +8488,20 @@ ${scope} table {
       }
     },
     _sweep() {
-      if (!this.enabled) return;
-      this._enableNativeTracks();
+      if (!this.enabled) return 0;
+      const n = this._enableNativeTracks();
       this._enablePlayerCaptions();
+      return n;
+    },
+    // Say what happened, so switching it on is never silent: a video with no
+    // caption track (the store's product video) can't be helped by this one.
+    _report(n) {
+      const videos = document.querySelectorAll("video");
+      if (!videos.length) return;
+      const withTracks = [...videos].filter((v) => v.dataset[DATA]).length;
+      if (n) announce(`Captions turned on for ${n === 1 ? "the video" : n + " videos"}`);
+      else if (withTracks) announce("Captions are on");
+      else announce(videos.length === 1 ? "This video has no captions to turn on" : "These videos have no captions to turn on");
     },
     enable() {
       if (this.enabled) {
@@ -5948,7 +8511,7 @@ ${scope} table {
       this.enabled = true;
       this._restore = [];
       this._clicked = /* @__PURE__ */ new Set();
-      this._sweep();
+      this._report(this._sweep());
       this._unregister = registerSweep("show-captions", () => this._sweep(), { debounceMs: 400 });
       console.log("[AI4A11y] Show Captions enabled");
     },
@@ -5983,6 +8546,8 @@ ${scope} table {
   var incrementStat = globalThis.ai4a11yIncrementStat || (() => {
   });
   var LANDMARK_SELECTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
+  var SHELL_SELECTOR = 'header, footer, main, [role="banner"], [role="contentinfo"], [role="main"]';
+  var MAIN_ID = /^(main|content|main-?content|primary)$/i;
   function ensureMainLandmark() {
     if (document.querySelector('main, [role="main"]')) return false;
     const isCandidate = (el) => {
@@ -5990,7 +8555,7 @@ ${scope} table {
       if (["header", "footer", "nav", "aside", "script", "style", "noscript"].includes(tag)) return false;
       if (el.getAttribute("role")) return false;
       if ((el.textContent?.trim().length || 0) <= 100) return false;
-      if (el.querySelector(LANDMARK_SELECTOR)) return false;
+      if (el.querySelector(SHELL_SELECTOR)) return false;
       return true;
     };
     let level = Array.from(document.body.children);
@@ -6000,7 +8565,8 @@ ${scope} table {
       if (shell) candidates = Array.from(shell.children).filter(isCandidate);
     }
     if (candidates.length === 0) return false;
-    const main = candidates.reduce((a, b) => (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b);
+    const named = candidates.filter((el) => MAIN_ID.test(el.id || "") || el.classList && (el.classList.contains("main") || el.classList.contains("content")));
+    const main = (named.length ? named : candidates).reduce((a, b) => (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b);
     main.setAttribute("role", "main");
     markProcessed(main, "done");
     incrementStat("wcag");
@@ -6667,6 +9233,44 @@ ${chunk}
   });
   var incrementStat5 = globalThis.ai4a11yIncrementStat || (() => {
   });
+  var memories = /* @__PURE__ */ new WeakMap();
+  var MEMORY_MAX2 = 200;
+  function memoryFor() {
+    const p = getAIProvider() || memoryFor;
+    if (!memories.has(p)) memories.set(p, { done: /* @__PURE__ */ new Map(), asking: /* @__PURE__ */ new Map() });
+    return memories.get(p);
+  }
+  function rewrite(text) {
+    const m = memoryFor();
+    if (m.done.has(text)) return Promise.resolve(m.done.get(text));
+    if (!m.asking.has(text)) {
+      m.asking.set(text, Promise.resolve().then(() => simplifyText(text)).finally(() => m.asking.delete(text)));
+    }
+    return m.asking.get(text);
+  }
+  function keep(text, simplified) {
+    const m = memoryFor();
+    if (m.done.size >= MEMORY_MAX2) m.done.delete(m.done.keys().next().value);
+    m.done.set(text, simplified);
+  }
+  var STYLE_ID5 = "ai4a11y-simplify-styles";
+  function addStyles() {
+    if (typeof document === "undefined" || document.getElementById(STYLE_ID5)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID5;
+    style.textContent = ".ai4a11y-toggle-original{margin-left:.5em;font-size:.85em;cursor:pointer}.ai4a11y-toggle-original:focus-visible{outline:2px solid #1a5fb4;outline-offset:2px;box-shadow:0 0 0 2px #fff,0 0 0 4px #1a5fb4}";
+    (document.head || document.documentElement).appendChild(style);
+  }
+  var rewritten = 0;
+  var sayTimer = null;
+  function tell() {
+    rewritten++;
+    clearTimeout(sayTimer);
+    sayTimer = setTimeout(() => {
+      announce(`Rewrote ${rewritten} passage${rewritten === 1 ? "" : "s"} in plainer words. Each has a Show original button.`);
+      rewritten = 0;
+    }, 400);
+  }
   var NOT_PROSE_SEL = 'style, script, noscript, template, [hidden], [aria-hidden="true"]';
   function proseText(element) {
     if (!element || typeof element.cloneNode !== "function") return "";
@@ -6687,12 +9291,15 @@ ${chunk}
       return null;
     }
     try {
-      const simplified = await simplifyText(originalText);
+      const simplified = await rewrite(originalText);
+      if (element.dataset.ai4a11ySimplified !== "pending") return null;
       const rejected = simplified == null ? null : rejectRewrite(simplified, originalText, { minRatio: MIN_SIMPLIFIED_RATIO, maxRatio: MAX_SIMPLIFIED_RATIO });
       if (rejected) {
         console.warn(`[AI4A11y] simplifyText: rejected model output (${rejected})`);
       }
       if (simplified && !rejected) {
+        keep(originalText, simplified);
+        addStyles();
         element.dataset.ai4a11yOriginal = originalText;
         element.classList.add("ai4a11y-simplified");
         const originalWrapper = document.createElement("span");
@@ -6705,22 +9312,20 @@ ${chunk}
         textContainer.className = "ai4a11y-text-content";
         textContainer.textContent = simplified;
         const toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
         toggleBtn.className = "ai4a11y-toggle-original";
         toggleBtn.textContent = "Show original";
-        toggleBtn.setAttribute("aria-pressed", "false");
         toggleBtn.onclick = () => {
           const showingOriginal = element.dataset.ai4a11yShowOriginal === "true";
           if (showingOriginal) {
             originalWrapper.style.display = "none";
             textContainer.style.display = "";
             toggleBtn.textContent = "Show original";
-            toggleBtn.setAttribute("aria-pressed", "false");
             element.dataset.ai4a11yShowOriginal = "false";
           } else {
             textContainer.style.display = "none";
             originalWrapper.style.display = "";
             toggleBtn.textContent = "Show simplified";
-            toggleBtn.setAttribute("aria-pressed", "true");
             element.dataset.ai4a11yShowOriginal = "true";
           }
         };
@@ -6731,13 +9336,14 @@ ${chunk}
         incrementStat5("text");
         logFix12("simplify", element, "(complex)", "(simplified)");
         console.log("[AI4A11y] Simplified text");
+        tell();
         return simplified;
       }
       element.dataset.ai4a11ySimplified = "failed";
       return null;
     } catch (e) {
       console.warn("[AI4A11y] Failed to simplify:", e);
-      element.dataset.ai4a11ySimplified = "failed";
+      if (element.dataset.ai4a11ySimplified === "pending") element.dataset.ai4a11ySimplified = "failed";
       return null;
     }
   }
@@ -6794,114 +9400,6 @@ ${chunk}
     }
   }
 
-  // tools/utils/color.js
-  function parseColor(color) {
-    if (!color || color === "transparent" || color === "rgba(0, 0, 0, 0)") {
-      return null;
-    }
-    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (rgbMatch) {
-      return {
-        r: parseInt(rgbMatch[1]),
-        g: parseInt(rgbMatch[2]),
-        b: parseInt(rgbMatch[3])
-      };
-    }
-    const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-    if (hexMatch) {
-      let hex = hexMatch[1];
-      if (hex.length === 3) {
-        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-      }
-      return {
-        r: parseInt(hex.slice(0, 2), 16),
-        g: parseInt(hex.slice(2, 4), 16),
-        b: parseInt(hex.slice(4, 6), 16)
-      };
-    }
-    return null;
-  }
-  function getLuminance(color) {
-    const rgb = parseColor(color);
-    if (!rgb) return null;
-    const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
-      c = c / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  }
-  function getContrastRatio(color1, color2) {
-    const l1 = getLuminance(color1);
-    const l2 = getLuminance(color2);
-    if (l1 === null || l2 === null) return null;
-    const lighter = Math.max(l1, l2);
-    const darker = Math.min(l1, l2);
-    return (lighter + 0.05) / (darker + 0.05);
-  }
-  function meetsContrastAA(foreground, background, isLarge = false) {
-    const ratio = getContrastRatio(foreground, background);
-    if (ratio === null) return false;
-    return ratio >= (isLarge ? 3 : 4.5);
-  }
-  function nearestAccessibleColor(foreground, background, { target = 4.5 } = {}) {
-    const fg = parseColor(foreground);
-    if (!fg) return null;
-    if (getLuminance(background) === null) return null;
-    const STEPS = 50;
-    function stepToward(endpoint) {
-      for (let i = 1; i <= STEPS; i++) {
-        const t = i / STEPS;
-        const r = Math.round(fg.r + (endpoint.r - fg.r) * t);
-        const g = Math.round(fg.g + (endpoint.g - fg.g) * t);
-        const b = Math.round(fg.b + (endpoint.b - fg.b) * t);
-        const candidate = `rgb(${r}, ${g}, ${b})`;
-        const ratio = getContrastRatio(candidate, background);
-        if (ratio !== null && ratio >= target) return { color: candidate, steps: i };
-      }
-      return null;
-    }
-    const dark = stepToward({ r: 0, g: 0, b: 0 });
-    const light = stepToward({ r: 255, g: 255, b: 255 });
-    if (!dark && !light) {
-      const blackRatio = getContrastRatio("rgb(0, 0, 0)", background) ?? 0;
-      const whiteRatio = getContrastRatio("rgb(255, 255, 255)", background) ?? 0;
-      return blackRatio >= whiteRatio ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)";
-    }
-    if (!dark) return light.color;
-    if (!light) return dark.color;
-    return dark.steps <= light.steps ? dark.color : light.color;
-  }
-  function parseRgba(color) {
-    if (!color) return null;
-    const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-    if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== void 0 ? parseFloat(m[4]) : 1 };
-    const rgb = parseColor(color);
-    return rgb ? { ...rgb, a: 1 } : null;
-  }
-  function getEffectiveBackground(element) {
-    const layers = [];
-    let el = element;
-    while (el) {
-      const parsed = parseRgba(getComputedStyle(el).backgroundColor);
-      if (parsed && parsed.a > 0) {
-        layers.push(parsed);
-        if (parsed.a >= 1) break;
-      }
-      if (el === document.documentElement) break;
-      el = el.parentElement;
-    }
-    let base = { r: 255, g: 255, b: 255 };
-    for (let i = layers.length - 1; i >= 0; i--) {
-      const top = layers[i];
-      base = {
-        r: Math.round(top.r * top.a + base.r * (1 - top.a)),
-        g: Math.round(top.g * top.a + base.g * (1 - top.a)),
-        b: Math.round(top.b * top.a + base.b * (1 - top.a))
-      };
-    }
-    return `rgb(${base.r}, ${base.g}, ${base.b})`;
-  }
-
   // tools/adapters/fix-contrast.js
   var logFix13 = globalThis.ai4a11yLogFix || (() => {
   });
@@ -6918,6 +9416,17 @@ ${chunk}
     const bgImg = getComputedStyle(element).backgroundImage;
     return !!bgImg && bgImg !== "none";
   }
+  function isOpaque(color) {
+    if (!color) return false;
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color)) return true;
+    const m = color.match(/^rgba?\(\s*\d+,\s*\d+,\s*\d+\s*(?:,\s*([\d.]+)\s*)?\)$/);
+    return !!m && (m[1] === void 0 || parseFloat(m[1]) >= 1);
+  }
+  function blackOrWhite(background) {
+    const black = getContrastRatio("rgb(0, 0, 0)", background) ?? 0;
+    const white = getContrastRatio("rgb(255, 255, 255)", background) ?? 0;
+    return black >= white ? "#000000" : "#ffffff";
+  }
   async function fixLowContrast(element, color, background) {
     if (wasProcessed(element)) return null;
     markProcessed(element, "pending");
@@ -6925,7 +9434,7 @@ ${chunk}
       markProcessed(element, "done");
       return null;
     }
-    if (!background || background === "transparent") {
+    if (!isOpaque(background)) {
       background = getEffectiveBackground(element);
     }
     const large = isLargeText(element);
@@ -6937,13 +9446,13 @@ ${chunk}
     const target = large ? 3 : 4.5;
     try {
       fixedColor = await fixContrast(color, background);
-      if (!fixedColor) {
-        fixedColor = nearestAccessibleColor(color, background, { target }) || (getLuminance(background) > 0.5 ? "#000000" : "#ffffff");
-      }
     } catch (e) {
       console.warn("[AI4A11y] Contrast fix failed, using fallback:", e);
-      fixedColor = nearestAccessibleColor(color, background, { target }) || (getLuminance(background) > 0.5 ? "#000000" : "#ffffff");
+      fixedColor = null;
     }
+    const passes = (c) => (getContrastRatio(c, background) ?? 0) >= target;
+    if (!fixedColor || !passes(fixedColor)) fixedColor = nearestAccessibleColor(color, background, { target });
+    if (!fixedColor || !passes(fixedColor)) fixedColor = blackOrWhite(background);
     if (color) {
       element.dataset.ai4a11yOriginalColor = color;
     }

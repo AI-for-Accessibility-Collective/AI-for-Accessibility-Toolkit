@@ -12,8 +12,36 @@ const _fontScaleOriginals = new WeakMap();
 // than the expected 24px. By starting below body we avoid this.
 const TEXT_ELEMENT_SELECTOR =
   'p, h1, h2, h3, h4, h5, h6, li, td, th, div, span, a, button, ' +
-  'input, textarea, label, blockquote, pre, figcaption, caption, dt, dd, ' +
-  'summary, article, section, header, footer, nav, main, aside';
+  'input, select, textarea, label, blockquote, pre, figcaption, caption, dt, dd, ' +
+  'summary, article, section, header, footer, nav, main, aside, ' +
+  // Inline text with its own px size (header captions, labels) stayed small.
+  'small, b, strong, em, legend';
+
+// A box positioned over something with both top and bottom set (e.g. the
+// text on a banner photo, `position:absolute; inset:0`) can't grow with its
+// text: enlarged text there ran under the next row and hid the banner's
+// button. Text in such a box keeps the page's own size and spacing.
+const FIXED_BOX_ATTR = 'data-ai4a11y-fixed-box';
+
+// Whether the page set this inset itself. getComputedStyle reports the used
+// position (a px value even for `auto`), so a badge with only `top` set would
+// look pinned at both ends; the typed computed value keeps `auto`. Without
+// it (older browsers) nothing counts as pinned and text scales as before.
+function _insetSet(el, side) {
+  try {
+    if (typeof el.computedStyleMap !== 'function') return false;
+    const v = el.computedStyleMap().get(side);
+    return !!v && String(v) !== 'auto';
+  } catch (_) { return false; }
+}
+
+// Text that is already large gains less: at 1.25, 15 px text becomes 18.75 px
+// but a 46 px banner heading 50.5 px, not 57.5 px. Large headings are readable
+// as they are, and growing them by a quarter is what pushed buttons out of
+// fixed-size boxes. Sizes keep their order (bigger text stays bigger).
+function _scaledSize(px, scale) {
+  return px + (scale - 1) * Math.min(px, 18);
+}
 
 // Elements to skip when applying font scaling: extension UI + icon fonts.
 function _shouldSkipScale(el) {
@@ -34,6 +62,7 @@ function _shouldSkipScale(el) {
   if (cls.includes('material-icons') || cls.includes('material-symbols') ||
       cls.includes('icon') || cls.includes('fa-') || tag === 'I') return true;
   if (el.getAttribute && el.getAttribute('aria-hidden') === 'true') return true;
+  try { if (el.closest && el.closest(`[${FIXED_BOX_ATTR}]`)) return true; } catch (_) {}
   return false;
 }
 
@@ -54,6 +83,10 @@ export const VisualAssist = {
   // Track the scale currently committed to the DOM.
   appliedScale: null,
   unregisterSweep: null,
+  fixedBoxes: null,      // Map: box -> its inline font-size/line-height/letter-spacing before we set them
+  fixedChecked: null,    // WeakSet of elements already looked at, so sweeps stay cheap
+  overflowBefore: null,  // WeakSet of boxes whose content already overflowed before we changed anything
+  grown: null,           // Map: fixed-height box we let grow -> its inline height/min-height before
   // Generation counter: incremented on every apply/restore cycle so in-flight
   // requestIdleCallback traversals that started before a re-apply or restore
   // detect the change and abort, preventing compounding.
@@ -76,6 +109,9 @@ export const VisualAssist = {
     this.enabled = false;
     this.remove();
     this.restoreFontScale();
+    this.unmarkFixedBoxes();
+    this.ungrowFixedBoxes();
+    this.overflowBefore = null;
     if (this.unregisterSweep) { this.unregisterSweep(); this.unregisterSweep = null; }
     this.appliedScale = null;
     this.disableReadingGuide();
@@ -83,12 +119,14 @@ export const VisualAssist = {
 
   apply() {
     this.remove();
+    if (!this.overflowBefore) this.overflowBefore = this.overflowing();
 
     const css = this.generateCSS();
     const style = document.createElement('style');
     style.id = this.styleId;
     style.textContent = css;
     document.head.appendChild(style);
+    this.markFixedBoxes();
 
     // Font scaling via computed-style DOM traversal, not CSS `zoom` — `zoom`
     // is non-standard (no Firefox support) and its layout side effects (e.g.
@@ -109,6 +147,7 @@ export const VisualAssist = {
       if (!this.unregisterSweep) {
         this.unregisterSweep = registerSweep('visual-assist-font', () => {
           if (!this.enabled || this.appliedScale === null) return;
+          this.markFixedBoxes();
           this.applyFontScale(this.appliedScale);
         }, { debounceMs: 500 });
       }
@@ -118,6 +157,7 @@ export const VisualAssist = {
         this.restoreFontScale();
       }
       if (this.unregisterSweep) { this.unregisterSweep(); this.unregisterSweep = null; }
+      this.growFixedBoxes(); // line spacing alone can overflow a box too
     }
 
     // Dark mode arbitration: if a contrast preset is applied and dark-mode is
@@ -144,52 +184,43 @@ export const VisualAssist = {
     const gen = ++this.scaleGen;
 
     const candidates = typeof document !== 'undefined'
-      ? Array.from(document.querySelectorAll(TEXT_ELEMENT_SELECTOR))
+      ? Array.from(document.querySelectorAll(TEXT_ELEMENT_SELECTOR)).filter(el =>
+        !_shouldSkipScale(el) && !(el.dataset && el.dataset.ai4a11yFontScale === String(scale)))
       : [];
+    if (!candidates.length) return;
 
     // PASS 1 (synchronous): snapshot every candidate's baseline computed
     // font-size BEFORE writing any inline styles. This prevents
     // cascade-amplification: scaling a parent element would otherwise change
     // descendant computed sizes before we read them, causing compounding.
     //
-    // Special case — incremental sweep path (called after ancestors are already
-    // committed to scaled inline styles): a new element nested inside an
-    // already-scaled ancestor inherits the ancestor's *scaled* computed size.
-    // Reading that directly and multiplying again would produce e.g. 2.25x on
-    // a 1.5x pass. Fix: if the element has a scaled ancestor, derive the true
-    // unscaled baseline by dividing the computed size by the ancestor's scale.
+    // Incremental sweep path (content added after the first pass, inside text
+    // we already enlarged): its computed size can't tell an inherited size
+    // (already enlarged) from the page's own px size (not enlarged yet), so
+    // dividing by the ancestor's scale left every re-rendered search result at
+    // its old size. Read the true sizes with our enlargement briefly taken off;
+    // it is put back in this same task, before anything paints.
+    const scaled = typeof document !== 'undefined'
+      ? Array.from(document.querySelectorAll('[data-ai4a11y-font-scale]'))
+      : [];
+    const scaledNow = scaled.map(el => el.style.fontSize);
+    scaled.forEach(el => {
+      const orig = _fontScaleOriginals.get(el);
+      el.style.fontSize = (orig === undefined || orig === null) ? '' : orig;
+    });
     const scalePlan = []; // [{ el, baselinePx }]
     for (const el of candidates) {
-      if (_shouldSkipScale(el)) continue;
-      if (el.dataset && el.dataset.ai4a11yFontScale === String(scale)) continue;
       // Record the original inline value on first visit.
       if (!_fontScaleOriginals.has(el)) {
         _fontScaleOriginals.set(el, el.style.fontSize);
       }
       try {
-        let baselinePx = parseFloat(getComputedStyle(el).fontSize);
+        const baselinePx = parseFloat(getComputedStyle(el).fontSize);
         if (!baselinePx || baselinePx <= 0) continue;
-
-        // If this element has no own scaled data-attribute but a scaled ancestor
-        // does, the computed size is the ancestor's already-scaled value
-        // (inherited). Undo the ancestor's scale to recover the true baseline
-        // so we don't compound (e.g. 24px inherited from a 1.5x-scaled parent
-        // -> unscaled baseline = 24 / 1.5 = 16px -> target = 16 * 1.5 = 24px).
-        if (!el.dataset.ai4a11yFontScale) {
-          try {
-            const scaledAncestor = el.closest && el.closest('[data-ai4a11y-font-scale]');
-            if (scaledAncestor) {
-              const ancestorScale = parseFloat(scaledAncestor.dataset.ai4a11yFontScale);
-              if (ancestorScale && ancestorScale > 0) {
-                baselinePx = baselinePx / ancestorScale;
-              }
-            }
-          } catch (_) {}
-        }
-
         scalePlan.push({ el, baselinePx });
       } catch (_) {}
     }
+    scaled.forEach((el, k) => { el.style.fontSize = scaledNow[k]; });
 
     // PASS 2 (chunked, async): write the pre-computed scaled sizes.
     let i = 0;
@@ -215,9 +246,10 @@ export const VisualAssist = {
         }
         if (gen !== this.scaleGen) return;
         const { el, baselinePx } = scalePlan[i++];
-        el.style.fontSize = `${baselinePx * scale}px`;
+        el.style.fontSize = `${_scaledSize(baselinePx, scale)}px`;
         if (el.dataset) el.dataset.ai4a11yFontScale = String(scale);
       }
+      this.growFixedBoxes();
     };
 
     if (typeof requestIdleCallback !== 'undefined') {
@@ -228,6 +260,126 @@ export const VisualAssist = {
       // Fallback for environments without requestIdleCallback.
       setTimeout(() => processChunk(null), 0);
     }
+  },
+
+  // Find boxes that can't grow with their text (see FIXED_BOX_ATTR) and pin
+  // their text size and line and letter spacing to the page's own, which the
+  // text inside inherits; the font traversal and the spacing rules skip what's
+  // inside.
+  markFixedBoxes() {
+    if (typeof document === 'undefined' || !document.body) return;
+    if (!this.fixedBoxes) { this.fixedBoxes = new Map(); this.fixedChecked = new WeakSet(); }
+    const found = [];
+    for (const el of document.body.querySelectorAll(TEXT_ELEMENT_SELECTOR)) {
+      if (this.fixedChecked.has(el)) continue;
+      this.fixedChecked.add(el);
+      if (_shouldSkipScale(el)) continue;
+      let cs;
+      try { cs = getComputedStyle(el); } catch (_) { continue; }
+      if (cs.position !== 'absolute' || !_insetSet(el, 'top') || !_insetSet(el, 'bottom')) continue;
+      if (!(el.textContent || '').trim()) continue;
+      found.push(el);
+    }
+    if (!found.length) return;
+    // Read the page's own values: our stylesheet off, and text we already
+    // enlarged around each box back to its size, for this synchronous read
+    // only (nothing paints in between).
+    const sheet = document.getElementById(this.styleId)?.sheet;
+    if (sheet) sheet.disabled = true;
+    const lifted = new Map();
+    for (const el of found) {
+      for (let a = el; a && a.nodeType === 1; a = a.parentElement) {
+        if (!a.dataset || !a.dataset.ai4a11yFontScale || lifted.has(a)) continue;
+        lifted.set(a, a.style.fontSize);
+        const orig = _fontScaleOriginals.get(a);
+        a.style.fontSize = (orig === undefined || orig === null) ? '' : orig;
+      }
+    }
+    const own = found.map(el => {
+      const cs = getComputedStyle(el);
+      const fs = parseFloat(cs.fontSize);
+      // Line height as a ratio, so text of other sizes inside inherits the right spacing.
+      const lh = cs.lineHeight === 'normal' || !fs || !parseFloat(cs.lineHeight)
+        ? 'normal' : String(Math.round(parseFloat(cs.lineHeight) / fs * 1000) / 1000);
+      return { 'font-size': cs.fontSize, 'line-height': lh, 'letter-spacing': cs.letterSpacing || 'normal' };
+    });
+    for (const [a, v] of lifted) a.style.fontSize = v;
+    if (sheet) sheet.disabled = false;
+    found.forEach((el, k) => {
+      if (el.closest(`[${FIXED_BOX_ATTR}]`)) return; // inside one found in this same pass
+      const saved = {};
+      for (const prop of Object.keys(own[k])) {
+        saved[prop] = [el.style.getPropertyValue(prop), el.style.getPropertyPriority(prop)];
+      }
+      // Text in it that an earlier pass already enlarged goes back to its size.
+      for (const t of [el, ...el.querySelectorAll('[data-ai4a11y-font-scale]')]) {
+        if (!t.dataset || !t.dataset.ai4a11yFontScale) continue;
+        const orig = _fontScaleOriginals.get(t);
+        t.style.fontSize = (orig === undefined || orig === null) ? '' : orig;
+        _fontScaleOriginals.delete(t);
+        delete t.dataset.ai4a11yFontScale;
+      }
+      this.fixedBoxes.set(el, saved);
+      el.setAttribute(FIXED_BOX_ATTR, '');
+      for (const prop of Object.keys(own[k])) el.style.setProperty(prop, own[k][prop], 'important');
+    });
+  },
+
+  unmarkFixedBoxes() {
+    if (!this.fixedBoxes) return;
+    for (const [el, saved] of this.fixedBoxes) {
+      try {
+        el.removeAttribute(FIXED_BOX_ATTR);
+        for (const prop of Object.keys(saved)) el.style.setProperty(prop, saved[prop][0], saved[prop][1]);
+        if (!el.getAttribute('style')) el.removeAttribute('style');
+      } catch (_) { /* detached */ }
+    }
+    this.fixedBoxes = null;
+    this.fixedChecked = null;
+  },
+
+  // Boxes whose content overflows them vertically right now.
+  overflowing() {
+    const out = new WeakSet();
+    if (typeof document === 'undefined' || !document.body) return out;
+    for (const el of document.body.querySelectorAll('*')) {
+      if (el.scrollHeight > el.clientHeight + 1) out.add(el);
+    }
+    return out;
+  },
+
+  // A box the page gave a fixed height (a 64 px header bar) can't hold
+  // enlarged text that wraps onto another line: the text spilled out above
+  // and below it and was cut off at the top of the page. Let such a box grow
+  // (it keeps at least its old height). Only boxes that overflow now and
+  // didn't before we changed anything, so a page's own overflow is left alone.
+  growFixedBoxes() {
+    if (typeof document === 'undefined' || !document.body) return;
+    if (!this.grown) this.grown = new Map();
+    for (const el of document.body.querySelectorAll('*')) {
+      if (!(el.scrollHeight > el.clientHeight + 1)) continue; // fits (also: no layout, e.g. jsdom)
+      if (this.grown.has(el) || (this.overflowBefore && this.overflowBefore.has(el))) continue;
+      if (_shouldSkipScale(el) || typeof el.computedStyleMap !== 'function') continue;
+      let cs, h;
+      try { cs = getComputedStyle(el); h = String(el.computedStyleMap().get('height')); } catch (_) { continue; }
+      if (cs.overflowY !== 'visible' || cs.display === 'inline' || !/^[\d.]+(px|em|rem)$/.test(h)) continue;
+      this.grown.set(el, [el.style.getPropertyValue('height'), el.style.getPropertyPriority('height'),
+        el.style.getPropertyValue('min-height'), el.style.getPropertyPriority('min-height')]);
+      el.style.setProperty('min-height', cs.height, 'important');
+      el.style.setProperty('height', 'auto', 'important');
+    }
+  },
+
+  ungrowFixedBoxes() {
+    if (!this.grown) return;
+    for (const [el, v] of this.grown) {
+      try {
+        el.style.setProperty('height', v[0], v[1]);
+        el.style.setProperty('min-height', v[2], v[3]);
+        if (!el.getAttribute('style')) el.removeAttribute('style');
+      } catch (_) { /* detached */ }
+    }
+    this.grown = null;
   },
 
   restoreFontScale() {
@@ -296,13 +448,24 @@ export const VisualAssist = {
     }
 
     // fontScale is handled via DOM traversal (applyFontScale) — no CSS zoom rule.
+    // Longer labels beside a radio or checkbox in a flex row squeezed the box
+    // into an oval; keep it its own size.
+    if (s.fontScale && s.fontScale !== 1 && s.fontScale !== 100) {
+      css += `input[type="radio"], input[type="checkbox"] { flex-shrink: 0 !important; }\n`;
+    }
 
+    // Line and letter spacing go on running text only and reach the rest by
+    // inheritance. Forcing them on every div/span/a also hit large headings
+    // (many sites style divs as headings), stretching a two-line title over
+    // twice the height, and pushed small badges (a cart count) onto their icons.
+    const TEXT = 'body, ' + ['p', 'li', 'td', 'th', 'dd', 'dt', 'label', 'blockquote', 'figcaption']
+      .map(t => `${t}:not([${FIXED_BOX_ATTR}] *)`).join(', ');
     if (s.lineHeight && s.lineHeight !== 1.5) {
-      css += `body, p, li, td, th, div, span, a, label { line-height: ${s.lineHeight} !important; }\n`;
+      css += `${TEXT} { line-height: ${s.lineHeight} !important; }\n`;
     }
 
     if (s.letterSpacing && s.letterSpacing !== 0) {
-      css += `body, p, li, td, th, div, span, a, label { letter-spacing: ${s.letterSpacing}em !important; }\n`;
+      css += `${TEXT} { letter-spacing: ${s.letterSpacing}em !important; }\n`;
     }
 
     if (s.largeCursor) {
@@ -312,14 +475,11 @@ export const VisualAssist = {
     if (s.enhanceFocus) {
       // Keep :focus-visible only — no bare *:focus rule (would flash outlines on
       // mouse clicks, which keyboard-nav.js also avoids).
+      // :not(#ai4a11y-focus) adds an id's weight: sites that switch the outline
+      // off do it with !important too (e.g. `html[data-x] *:focus-visible
+      // { outline: none !important }`), and a plain *:focus-visible lost to that.
       css += `
-        *:focus-visible {
-          outline: 4px solid #0066ff !important;
-          outline-offset: 3px !important;
-          box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.3) !important;
-        }
-        a:focus-visible, button:focus-visible, input:focus-visible,
-        select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+        *:focus-visible:not(#ai4a11y-focus) {
           outline: 4px solid #0066ff !important;
           outline-offset: 3px !important;
           box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.3) !important;

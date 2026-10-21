@@ -10,22 +10,28 @@
 // touches a title the page set itself. A MutationObserver titles links added
 // after enable, and is disconnected on disable.
 import { announce } from '../utils/ai.js';
+import { getContrastRatio, getEffectiveBackground } from '../utils/color.js';
 
 export const LinkHighlighter = {
   styleId: 'ai4a11y-link-highlighter-styles',
   bodyClass: 'ai4a11y-highlight-links',
   dataAttr: 'data-ai4a11y-linkhl',
+  ownColorAttr: 'data-ai4a11y-linkhl-own-color',
   enabled: false,
   titled: null,          // Set of links WE titled (for exact restore)
+  ownColor: null,        // Set of links that keep the page's color (see keepOwnColor)
+  color: null,
   observer: null,
 
   enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
     this.titled = new Set();
+    this.ownColor = new Set();
 
     // 7:1 contrast on white; overridable for user-profile theming.
     const color = (options && options.color) || '#0b57d0';
+    this.color = color;
     const style = document.createElement('style');
     style.id = this.styleId;
     style.textContent = `
@@ -34,6 +40,8 @@ export const LinkHighlighter = {
         text-decoration-thickness: 2px !important;
         text-underline-offset: 2px !important;
         font-weight: 600 !important;
+      }
+      .${this.bodyClass} a[href]:not([${this.ownColorAttr}]) {
         color: ${color} !important;
       }
       .${this.bodyClass} a[href]:focus,
@@ -71,14 +79,33 @@ export const LinkHighlighter = {
     let n = 0;
     let links;
     try { links = root.querySelectorAll('a[href]'); } catch { return 0; }
-    for (const a of links) if (this.reveal(a)) n++;
+    for (const a of links) {
+      this.keepOwnColor(a);
+      if (this.reveal(a)) n++;
+    }
     return n;
+  },
+
+  // The link color is dark: on a dark header or a colored button it made
+  // links unreadable (dark blue on dark red). Those keep the page's own
+  // color, which the page already made readable there; the underline and
+  // weight still mark them as links.
+  keepOwnColor(a) {
+    if (!a || a.nodeType !== 1 || this.ownColor.has(a)) return;
+    try {
+      const ratio = getContrastRatio(this.color, getEffectiveBackground(a));
+      if (ratio === null || ratio >= 4.5) return; // null: a color it can't parse
+      a.setAttribute(this.ownColorAttr, '');
+      this.ownColor.add(a);
+    } catch { /* detached */ }
   },
 
   // An added node may itself be a link, or contain links.
   consider(node) {
     if (!node || node.nodeType !== 1) return;
-    try { if (node.matches && node.matches('a[href]')) this.reveal(node); } catch { /* detached */ }
+    try {
+      if (node.matches && node.matches('a[href]')) { this.keepOwnColor(node); this.reveal(node); }
+    } catch { /* detached */ }
     if (node.querySelectorAll) this.sweep(node);
   },
 
@@ -114,6 +141,12 @@ export const LinkHighlighter = {
       }
       this.titled.clear();
       this.titled = null;
+    }
+    if (this.ownColor) {
+      for (const a of this.ownColor) {
+        try { a.removeAttribute(this.ownColorAttr); } catch { /* detached */ }
+      }
+      this.ownColor = null;
     }
     console.log('[AI4A11y] Link Highlighter disabled');
     announce('Link highlighting off');

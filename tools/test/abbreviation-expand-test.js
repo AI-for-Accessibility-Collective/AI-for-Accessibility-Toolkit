@@ -91,6 +91,25 @@ async function run() {
       abbrs.some((a) => a.textContent === 'API' && a.getAttribute('title') === 'Application Programming Interface'));
     AbbreviationExpand.disable();
   }
+
+  // options.spellOut: the first use of each abbreviation also gets its full
+  // form written out, for phones, keyboards and screen readers; later uses
+  // keep only the title. Off by default.
+  {
+    const doc = mount(`<main><p id="p3">MSRP: $24.99. The MSRP is higher. Output (PD/PPS)</p></main>`);
+    const before = doc.querySelector('#p3').textContent;
+    AbbreviationExpand.enable({ spellOut: true });
+    const text = doc.querySelector('#p3').textContent;
+    check('abbr: spellOut writes out the first MSRP once', text.startsWith("MSRP (manufacturer's suggested retail price): $24.99") &&
+      text.split('manufacturer').length === 2);
+    check('abbr: spellOut keeps only the short form, not the explanation',
+      text.includes('PD (USB Power Delivery)/PPS (Programmable Power Supply)'));
+    AbbreviationExpand.disable();
+    check('abbr: disable removes what spellOut wrote', doc.querySelector('#p3').textContent === before);
+    AbbreviationExpand.enable();
+    check('abbr: without spellOut nothing is written out', doc.querySelector('#p3').textContent === before);
+    AbbreviationExpand.disable();
+  }
 }
 
 run().then(() => {

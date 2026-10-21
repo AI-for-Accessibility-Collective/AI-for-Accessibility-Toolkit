@@ -1,7 +1,7 @@
-// Translate Page — jsdom test with a fake AI provider. Verifies the block
-// selection, the AI call, and the LOSSLESS reversibility contract: a paragraph
-// with an inline link is translated to flat text, but disable() re-attaches the
-// exact original child nodes (the link element survives).
+// Translate Page — jsdom test with a fake AI provider. Verifies what is
+// sent, the AI call, and the LOSSLESS reversibility contract: text is
+// translated in place, piece by piece, so a paragraph's inline link stays a
+// link while translated, and disable() puts every original piece back.
 // Run: node tools/test/translate-page-test.js
 import { JSDOM } from 'jsdom';
 import { setAIProvider } from '../utils/ai.js';
@@ -18,10 +18,15 @@ function mount(bodyHTML) {
 }
 
 // Fake provider: prefixes text with the target language, records calls.
+// Several pieces arrive as numbered lines ("[1] Hello"), and each line is
+// translated on its own, the way the real model answers.
 function fakeTranslator() {
   const calls = [];
   setAIProvider({
-    translateText: async (text, lang) => { calls.push({ text, lang }); return `[${lang}] ${text}`; },
+    translateText: async (text, lang) => {
+      calls.push({ text, lang });
+      return text.split('\n').map((l) => l.replace(/^(\[\d+\] )?/, (m) => `${m}[${lang}] `)).join('\n');
+    },
     announce() {},
   });
   return calls;
@@ -43,9 +48,15 @@ async function run() {
     await TranslatePage.enable({ targetLang: 'Spanish' });
     check('translate: the heading text is translated', doc.querySelector('h1').textContent.startsWith('[Spanish] Hello world'));
     check('translate: the paragraph text is translated', doc.querySelector('#p1').textContent.startsWith('[Spanish] '));
-    check('translate: an empty block is skipped', !calls.some(c => c.text.trim() === ''));
-    check('translate: text inside <code> is not sent as its own block', !calls.some(c => c.text === 'npm test'));
+    check('translate: an empty block is skipped', !calls.some(c => c.text.split('\n').some(l => !l.replace(/^\[\d+\]/, '').trim())));
+    check('translate: text inside <code> is never sent', !calls.some(c => c.text.includes('npm test')));
     check('translate: the AI was called with the target language', calls.length > 0 && calls.every(c => c.lang === 'Spanish'));
+    check('translate: the whole page goes in one AI call, not one per block', calls.length === 1);
+    const liveLink = doc.querySelector('#lnk');
+    check('translate: the inline link stays a link while translated',
+      !!liveLink && liveLink.getAttribute('href') === '/x' && liveLink.textContent === '[Spanish] documentation');
+    check('translate: words next to the link keep their spaces', doc.querySelector('#p1').textContent.includes('the [Spanish] documentation'));
+    check('translate: the page language is set for screen readers', doc.documentElement.getAttribute('lang') === 'es');
 
     // Reversibility: the inline link element must come back intact.
     TranslatePage.disable();
@@ -53,6 +64,23 @@ async function run() {
     const link = doc.querySelector('#lnk');
     check('translate: the inline link ELEMENT survives the round-trip', !!link && link.getAttribute('href') === '/x' && link.textContent === 'documentation');
     check('translate: no translated text remains after disable', !doc.querySelector('main').textContent.includes('[Spanish]'));
+    check('translate: the page language is put back', !doc.documentElement.hasAttribute('lang'));
+  }
+
+  // Several pieces in one call: a line that comes back garbled or missing
+  // costs only its own piece.
+  {
+    const doc = mount(`<main><p id="a">First piece of text here</p><p id="b">Second piece of text here</p><p id="c">Third piece of text here</p></main>`);
+    setAIProvider({
+      translateText: async () => "[1] Primer texto aquí\n[3] I'm sorry, I cannot translate this.",
+      announce() {},
+    });
+    await TranslatePage.enable({ targetLang: 'Spanish' });
+    check('translate: a numbered line lands on its own piece', doc.querySelector('#a').textContent === 'Primer texto aquí');
+    check('translate: a missing line leaves its piece untouched', doc.querySelector('#b').textContent === 'Second piece of text here');
+    check('translate: a refused line leaves its piece untouched', doc.querySelector('#c').textContent === 'Third piece of text here');
+    TranslatePage.disable();
+    check('translate: disable restores the one translated piece', doc.querySelector('#a').textContent === 'First piece of text here');
   }
 
   // Idempotency + graceful no-provider behavior.

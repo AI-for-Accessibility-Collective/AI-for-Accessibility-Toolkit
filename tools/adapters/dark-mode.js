@@ -1,6 +1,13 @@
 // Dark Mode - uses DarkReader or CSS fallback
 import { announce } from '../utils/ai.js';
 
+// dark-mode, reduce-brightness and color-blind all filter <html>, and one
+// filter declaration replaces another: with two of them on, one silently did
+// nothing (dark mode + dim gave a dimmed, light page). Each sets its own
+// variable instead, and the same rule in each stylesheet combines whichever
+// are set, in a fixed order.
+const PAGE_FILTER = 'html { filter: var(--ai4a11y-filter-dark,) var(--ai4a11y-filter-dim,) var(--ai4a11y-filter-color,) !important; }';
+
 export const DarkMode = {
   enabled: false,
   styleId: 'ai4a11y-dark-mode',
@@ -41,16 +48,27 @@ export const DarkMode = {
 
     const style = document.createElement('style');
     style.id = this.styleId;
+    // Photos, video and colors set inline on an element (product color
+    // swatches) are inverted back so they keep their real colors: inverted
+    // with the page, the "White" swatch showed black. Inline SVG is not:
+    // it is mostly icons drawn in the text color, and inverting those back
+    // left a white cart icon on the now light header. Media inside an element
+    // that is already inverted back stays as it is, or it would flip twice.
+    const BACK = 'img, video, picture, canvas, iframe, [style*="background-image"], [style*="background:"], [style*="background-color"]';
     style.textContent = `
       html {
-        filter: invert(90%) hue-rotate(180deg) !important;
+        --ai4a11y-filter-dark: invert(90%) hue-rotate(180deg);
         background: #111 !important;
       }
-      img, video, picture, canvas, iframe, svg, [style*="background-image"] {
+      ${PAGE_FILTER}
+      ${BACK} {
         filter: invert(100%) hue-rotate(180deg) !important;
       }
       img, video {
         filter: invert(100%) hue-rotate(180deg) contrast(1.1) !important;
+      }
+      :is(${BACK}) :is(img, video, picture, canvas, iframe) {
+        filter: none !important;
       }
     `;
     document.head.appendChild(style);

@@ -22,6 +22,7 @@ export const DescribeOnDemand = {
   live: null,
   lastHover: null,
   _reqSeq: 0,
+  _liveTimer: null,
   _keyHandler: null,
   _clickHandler: null,
   _moveHandler: null,
@@ -38,6 +39,9 @@ export const DescribeOnDemand = {
       }
       #ai4a11y-describe-panel h2 { font-size: 13px; margin: 0 0 6px; color: #8ab4f8; text-transform: uppercase; letter-spacing: .04em; }
       #ai4a11y-describe-panel .ai4a11y-describe-close { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #f2f5f9; font-size: 18px; cursor: pointer; }
+      /* Our own focus ring: a page that turns outlines off everywhere (with
+         !important) would otherwise hide the keyboard on the close button. */
+      #ai4a11y-describe-panel .ai4a11y-describe-close:focus { outline: 3px solid #8ab4f8 !important; outline-offset: 2px !important; }
     `);
 
     // Screen-reader announcement channel (visually hidden, polite).
@@ -133,7 +137,15 @@ export const DescribeOnDemand = {
     }
     this.panel.querySelector('.ai4a11y-describe-body').textContent = text;
     this.panel.style.display = 'block';
-    if (this.live) this.live.textContent = text; // announce to screen readers
+    // Announce to screen readers. Empty the region first and fill it a moment
+    // later: a screen reader speaks only a change, so asking about the same
+    // element twice ("Describing…" then the same answer, in one go) was silent.
+    const live = this.live;
+    if (live) {
+      live.textContent = '';
+      clearTimeout(this._liveTimer);
+      this._liveTimer = setTimeout(() => { if (this.live === live) live.textContent = text; }, 50);
+    }
   },
 
   hide() {
@@ -147,6 +159,7 @@ export const DescribeOnDemand = {
     if (this._clickHandler) document.removeEventListener('click', this._clickHandler, true);
     if (this._moveHandler) document.removeEventListener('mouseover', this._moveHandler, true);
     this._keyHandler = this._clickHandler = this._moveHandler = null;
+    clearTimeout(this._liveTimer); this._liveTimer = null;
     try { document.getElementById(this.styleId)?.remove(); } catch { /* detached */ }
     this.panel?.remove(); this.panel = null;
     this.live?.remove(); this.live = null;

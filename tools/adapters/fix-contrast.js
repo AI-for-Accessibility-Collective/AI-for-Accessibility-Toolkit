@@ -1,5 +1,5 @@
 import { fixContrast as aiFixContrast } from '../utils/ai.js';
-import { getLuminance, getEffectiveBackground, meetsContrastAA, nearestAccessibleColor } from '../utils/color.js';
+import { getContrastRatio, getEffectiveBackground, meetsContrastAA, nearestAccessibleColor } from '../utils/color.js';
 import { markProcessed, wasProcessed } from '../utils/dom.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
@@ -24,6 +24,22 @@ function hasBackgroundImage(element) {
   return !!bgImg && bgImg !== 'none';
 }
 
+// True only for a color with nothing showing through it: rgb(), hex, or an
+// rgba() whose alpha is 1. Anything else is not the color behind the text.
+function isOpaque(color) {
+  if (!color) return false;
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color)) return true;
+  const m = color.match(/^rgba?\(\s*\d+,\s*\d+,\s*\d+\s*(?:,\s*([\d.]+)\s*)?\)$/);
+  return !!m && (m[1] === undefined || parseFloat(m[1]) >= 1);
+}
+
+// Black or white, whichever reads better on this background.
+function blackOrWhite(background) {
+  const black = getContrastRatio('rgb(0, 0, 0)', background) ?? 0;
+  const white = getContrastRatio('rgb(255, 255, 255)', background) ?? 0;
+  return black >= white ? '#000000' : '#ffffff';
+}
+
 // Fix low contrast text
 export async function fixLowContrast(element, color, background) {
   if (wasProcessed(element)) return null;
@@ -35,8 +51,12 @@ export async function fixLowContrast(element, color, background) {
     return null;
   }
 
-  // Get effective background if not provided
-  if (!background || background === 'transparent') {
+  // Use the color actually behind the text. Callers pass the element's own
+  // computed background, which for most text is "rgba(0, 0, 0, 0)": the box
+  // is transparent and the real background belongs to an ancestor. Read as a
+  // color, that has no luminance, so the fallback below picked white, and
+  // grey text on a white store page turned invisible.
+  if (!isOpaque(background)) {
     background = getEffectiveBackground(element);
   }
 
@@ -56,17 +76,16 @@ export async function fixLowContrast(element, color, background) {
   try {
     // Try AI first for optimal color
     fixedColor = await aiFixContrast(color, background);
-    if (!fixedColor) {
-      // Deterministic fallback: step toward black/white preserving direction,
-      // rather than jumping straight to pure black or white.
-      fixedColor = nearestAccessibleColor(color, background, { target })
-        || (getLuminance(background) > 0.5 ? '#000000' : '#ffffff');
-    }
   } catch (e) {
     console.warn('[AI4A11y] Contrast fix failed, using fallback:', e);
-    fixedColor = nearestAccessibleColor(color, background, { target })
-      || (getLuminance(background) > 0.5 ? '#000000' : '#ffffff');
+    fixedColor = null;
   }
+  // Whatever the AI said, the color applied must pass. Deterministic
+  // fallback: step toward black/white preserving direction, rather than
+  // jumping straight to pure black or white; then whichever of those reads.
+  const passes = (c) => (getContrastRatio(c, background) ?? 0) >= target;
+  if (!fixedColor || !passes(fixedColor)) fixedColor = nearestAccessibleColor(color, background, { target });
+  if (!fixedColor || !passes(fixedColor)) fixedColor = blackOrWhite(background);
 
   // Store original color for revert (only if valid)
   if (color) {

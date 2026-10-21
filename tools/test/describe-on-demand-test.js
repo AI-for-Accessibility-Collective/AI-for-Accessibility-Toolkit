@@ -45,6 +45,9 @@ async function run() {
     const panel = doc.getElementById('ai4a11y-describe-panel');
     check('describe: a description panel appears', !!panel && panel.style.display === 'block');
     check('describe: the description shows in the panel', panel.querySelector('.ai4a11y-describe-body').textContent === 'a described image');
+    // The live region is emptied and refilled a moment later, so a repeated
+    // answer is spoken again: wait for the refill.
+    await new Promise((r) => setTimeout(r, 80));
     check('describe: the description is mirrored to the live region', doc.getElementById('ai4a11y-describe-live').textContent === 'a described image');
 
     // Text path: Alt+D on the focused paragraph → summarize.

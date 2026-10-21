@@ -21,6 +21,7 @@ export const FocusLocator = {
   focusOutHandler: null,
   scrollHandler: null,
   resizeHandler: null,
+  rafId: null,
 
   enable(options = {}) {
     if (this.enabled) return;
@@ -31,9 +32,11 @@ export const FocusLocator = {
     const color = (options && options.color) || '#ffbf00';
 
     // Layer 1: a strong outline on whatever holds focus, overriding site CSS
-    // that suppresses or dims the default indicator.
+    // that suppresses or dims the default indicator. :not(#id) adds an id's
+    // weight: sites switch the outline off with !important too (e.g.
+    // `html[data-x] *:focus { outline: none !important }`), which beat a plain *:focus.
     this.styleHandle = injectStyle(this.styleId, `
-      *:focus, *:focus-visible {
+      *:focus:not(#${this.ringId}), *:focus-visible:not(#${this.ringId}) {
         outline: 4px solid ${color} !important;
         outline-offset: 3px !important;
         box-shadow: 0 0 0 7px color-mix(in srgb, ${color} 40%, transparent) !important;
@@ -60,7 +63,11 @@ export const FocusLocator = {
 
     this.focusInHandler = (event) => {
       if (!this.enabled) return;
-      const el = event.target;
+      let el = event.target;
+      // Focus inside a shadow root (a widget, the workshop panel) is reported
+      // on its host, so the ring framed the whole host; follow it to the
+      // element that actually has focus.
+      while (el && el.shadowRoot && el.shadowRoot.activeElement) el = el.shadowRoot.activeElement;
       if (!el || el.nodeType !== 1 || !el.getBoundingClientRect) return;
       this.tracked = el;
       this.position();
@@ -76,8 +83,15 @@ export const FocusLocator = {
     // this, scrolling or resizing without changing focus would leave the ring
     // at stale viewport coordinates, confidently highlighting the wrong region.
     // Re-rect the tracked element on both. passive so it never blocks scrolling.
-    this.scrollHandler = () => this.position();
-    this.resizeHandler = () => this.position();
+    // One update per frame: the capture listener also hears every inner
+    // scroller, and rows that scroll by themselves fire scroll on every frame.
+    const schedule = () => {
+      if (!this.tracked || this.rafId !== null) return;
+      if (typeof requestAnimationFrame !== 'function') { this.position(); return; }
+      this.rafId = requestAnimationFrame(() => { this.rafId = null; this.position(); });
+    };
+    this.scrollHandler = schedule;
+    this.resizeHandler = schedule;
     window.addEventListener('scroll', this.scrollHandler, { capture: true, passive: true });
     window.addEventListener('resize', this.resizeHandler, { passive: true });
 
@@ -92,11 +106,14 @@ export const FocusLocator = {
     if (this.tracked.isConnected === false) { this.ring.style.display = 'none'; return; }
     try {
       const rect = this.tracked.getBoundingClientRect();
-      this.ring.style.top = `${rect.top}px`;
-      this.ring.style.left = `${rect.left}px`;
-      this.ring.style.width = `${rect.width}px`;
-      this.ring.style.height = `${rect.height}px`;
-      this.ring.style.display = 'block';
+      const st = this.ring.style;
+      // Only write when something moved, so a scroll elsewhere costs a read.
+      const box = [`${rect.top}px`, `${rect.left}px`, `${rect.width}px`, `${rect.height}px`];
+      if (st.top !== box[0]) st.top = box[0];
+      if (st.left !== box[1]) st.left = box[1];
+      if (st.width !== box[2]) st.width = box[2];
+      if (st.height !== box[3]) st.height = box[3];
+      if (st.display !== 'block') st.display = 'block';
     } catch { /* detached element or hostile getBoundingClientRect */ }
   },
 
@@ -113,6 +130,8 @@ export const FocusLocator = {
     }
     if (this.scrollHandler) { window.removeEventListener('scroll', this.scrollHandler, { capture: true }); this.scrollHandler = null; }
     if (this.resizeHandler) { window.removeEventListener('resize', this.resizeHandler); this.resizeHandler = null; }
+    if (this.rafId !== null && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(this.rafId);
+    this.rafId = null;
     this.tracked = null;
     if (this.styleHandle) { this.styleHandle.remove(); this.styleHandle = null; }
     if (this.ring) { this.ring.remove(); this.ring = null; }

@@ -96,12 +96,13 @@ async function run() {
   }
 
   // ── the announcer, specifically ───────────────────────────────────────────
+  // It speaks through announce(), the host's one live region, so it adds no
+  // element to the page at all.
   {
     const doc = mount();
+    const before = doc.body.children.length;
     LiveRegionAnnouncer.enable();
-    const region = doc.getElementById('ai4a11y-live-region');
-    check('announcer: present and out of flow', !!region && !inFlow(region));
-    check('announcer: still a live region for assistive tech', region && region.getAttribute('aria-live') === 'polite');
+    check('announcer: adds no element to <body>', doc.body.children.length === before, { before, after: doc.body.children.length });
     LiveRegionAnnouncer.disable();
   }
 

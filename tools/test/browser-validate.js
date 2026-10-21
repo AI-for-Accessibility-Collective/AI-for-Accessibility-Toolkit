@@ -230,23 +230,34 @@ const check = (name, cond) => { if (cond) { pass++; console.log('PASS:', name); 
     check('sound-viz: indicator removed after disable', !(await exists('#ai4a11y-sound-indicator')));
   }
 
-  // ── Live-Region Announcer — REAL: a dynamic update is mirrored to a live region
+  // ── Live-Region Announcer — REAL: an update the page makes after a click is
+  // read out through announce() (the host's one live region; this harness logs
+  // it as "[Announce] ..."), and nothing is added to the page.
   {
+    const heard = [];
+    const onConsole = (m) => { const t = m.text(); if (t.startsWith('[Announce] ')) heard.push(t.slice(11)); };
+    page.on('console', onConsole);
     await enable('announceUpdates');
-    check('live-region: a polite aria-live region is created', await page.evaluate(() => {
-      const r = document.getElementById('ai4a11y-live-region');
-      return !!r && r.getAttribute('aria-live') === 'polite';
-    }));
-    const announced = await page.evaluate(async () => {
+    check('live-region: no live region of its own is added', !(await exists('#ai4a11y-live-region')));
+    await page.evaluate(async () => {
+      document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       const d = document.createElement('div');
       d.textContent = 'New search results loaded';
       document.querySelector('main').appendChild(d);
-      await new Promise((r) => setTimeout(r, 500));
-      return document.getElementById('ai4a11y-live-region')?.textContent || '';
+      await new Promise((r) => setTimeout(r, 600));
     });
-    check('live-region: a dynamic content update is mirrored into the live region', announced.includes('New search results'));
+    check('live-region: a dynamic update after a click is announced', heard.some((t) => t.includes('New search results')));
     await disable('announceUpdates');
-    check('live-region: the live region is removed after disable', !(await exists('#ai4a11y-live-region')));
+    const n = heard.length;
+    await page.evaluate(async () => {
+      document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      const d = document.createElement('div');
+      d.textContent = 'Inserted after disable';
+      document.querySelector('main').appendChild(d);
+      await new Promise((r) => setTimeout(r, 600));
+    });
+    check('live-region: nothing is announced after disable', !heard.slice(n).some((t) => t.includes('after disable')));
+    page.off('console', onConsole);
   }
 
   // ── Magnifier — REAL: lens appears and shows text under the cursor ──────────

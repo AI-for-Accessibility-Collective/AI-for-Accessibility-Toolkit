@@ -119,5 +119,5 @@ export function transformTextNodes(root, transform, opts = {}) {
 // adapters), falling back to <body>.
 export function mainRoot(doc = (typeof document !== 'undefined' ? document : null)) {
   if (!doc) return null;
-  return doc.querySelector('main, article, [role="main"], .content, #content') || doc.body || null;
+  return doc.querySelector('main, article, [role="main"], #main, .content, #content') || doc.body || null;
 }

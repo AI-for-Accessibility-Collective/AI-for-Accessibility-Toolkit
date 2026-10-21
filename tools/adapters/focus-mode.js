@@ -1,11 +1,24 @@
 // Focus Mode - hides distractions and highlights content
 import { announce } from '../utils/ai.js';
 
+const HIGHLIGHT = 'ai4a11y-focus-mode-highlight';
+
+// True when the element's text is dark enough to stay readable on a light highlight.
+function hasDarkText(el) {
+  const m = (getComputedStyle(el).color || '').match(/[\d.]+/g);
+  if (!m) return false;
+  const [r, g, b] = m.map(Number);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
+}
+
 export const FocusMode = {
   styleId: 'ai4a11y-focus-mode-styles',
   enabled: false,
   progressEl: null,
   progressHandler: null,
+  hoverHandler: null,
+  leaveHandler: null,
+  hovered: null,         // the element carrying the hover highlight
   currentSettings: {
     hideDistractions: false,
     dimBackground: false,
@@ -19,12 +32,16 @@ export const FocusMode = {
     '[id*="google_ads"]', '[class*="advert"]',
     '.social-buttons', '.share-buttons', '.social-share',
     '[class*="popup"]', '[class*="newsletter"]', '[class*="subscribe"]',
-    '[class*="cookie-banner"]', '[class*="consent-banner"]', '[class*="gdpr-banner"]'
+    '[class*="cookie-banner"]', '[class*="consent-banner"]', '[class*="gdpr-banner"]',
+    // Shops mark ads with a "Sponsored" label inside the product card, or with
+    // an "ad" class of their own (brand-ad, ad-row): dim the whole card.
+    ':has(> [class*="sponsored"])', '[class~="ad"]', '[class^="ad-"]', '[class*=" ad-"]', '[class$="-ad"]', '[class*="-ad "]'
   ],
 
   enable(options = {}) {
     document.getElementById(this.styleId)?.remove();
     this.disableProgressIndicator();
+    this.disableHoverHighlight();
 
     this.currentSettings = { ...this.currentSettings, ...options };
     this.enabled = true;
@@ -33,12 +50,17 @@ export const FocusMode = {
     let css = '';
 
     if (s.hideDistractions) {
+      const all = this.distractionSelectors.join(', ');
+      // An ad inside an ad is dimmed once, not twice. Pointing at it or moving
+      // keyboard focus into it brings it back to full strength. :is() so a
+      // browser without :has() still dims the rest instead of dropping the rule.
       css += `
-        ${this.distractionSelectors.join(', ')} {
+        :is(${all}) {
           opacity: ${s.dimOpacity} !important;
           transition: opacity 0.3s ease !important;
         }
-        ${this.distractionSelectors.join(':hover, ')}:hover {
+        :is(${all}) :is(${all}),
+        :is(${all}):hover, :is(${all}):focus-within {
           opacity: 1 !important;
         }
       `;
@@ -58,11 +80,12 @@ export const FocusMode = {
     }
 
     css += `
-      p:hover, li:hover, td:hover {
+      .${HIGHLIGHT} {
         background-color: ${s.highlightColor} !important;
         transition: background-color 0.2s ease !important;
       }
     `;
+    this.enableHoverHighlight();
 
     if (s.showProgress) {
       this.enableProgressIndicator();
@@ -81,6 +104,7 @@ export const FocusMode = {
     this.enabled = false;
     document.getElementById(this.styleId)?.remove();
     this.disableProgressIndicator();
+    this.disableHoverHighlight();
     console.log('[AI4A11y] Focus Mode disabled');
     announce('Focus mode disabled');
   },
@@ -130,6 +154,30 @@ export const FocusMode = {
       document.removeEventListener('scroll', this.progressHandler);
       this.progressHandler = null;
     }
+  },
+
+  // Highlight the paragraph, list item or table cell under the pointer. Light
+  // text (white words on a banner photo, a dark footer's links) would all
+  // but vanish on the light highlight, so only dark text gets it.
+  enableHoverHighlight() {
+    this.hoverHandler = (e) => {
+      const el = e.target && e.target.closest ? e.target.closest('p, li, td') : null;
+      if (el === this.hovered) return;
+      this.hovered?.classList.remove(HIGHLIGHT);
+      this.hovered = el && hasDarkText(el) ? el : null;
+      this.hovered?.classList.add(HIGHLIGHT);
+    };
+    this.leaveHandler = () => { this.hovered?.classList.remove(HIGHLIGHT); this.hovered = null; };
+    document.addEventListener('mouseover', this.hoverHandler, true);
+    document.documentElement.addEventListener('mouseleave', this.leaveHandler);
+  },
+
+  disableHoverHighlight() {
+    if (this.hoverHandler) document.removeEventListener('mouseover', this.hoverHandler, true);
+    if (this.leaveHandler) document.documentElement.removeEventListener('mouseleave', this.leaveHandler);
+    this.hoverHandler = this.leaveHandler = null;
+    this.hovered?.classList.remove(HIGHLIGHT);
+    this.hovered = null;
   },
 
   toggle() {

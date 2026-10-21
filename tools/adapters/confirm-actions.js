@@ -12,8 +12,17 @@
 import { announce } from '../utils/ai.js';
 
 // Action words that mark a control as destructive or final. Matched against
-// the control's textContent / value / aria-label.
-const DESTRUCTIVE_RE = /\b(delete|remove|submit|buy|pay|confirm|send|publish|unsubscribe|deactivate|close account)\b/i;
+// the control's textContent / value / aria-label. "Place your order" is how
+// most stores word the button that pays, and has none of the other words.
+const ACTION_WORDS = 'delete|remove|submit|buy|pay|confirm|send|publish|unsubscribe|deactivate|close account|place (?:your |my |the )?order|complete (?:your |my |the )?(?:order|purchase)';
+const DESTRUCTIVE_RE = new RegExp(`\\b(?:${ACTION_WORDS})\\b`, 'i');
+// A long name only counts when it starts with the action: a store's "Delete"
+// button often carries the product's name for screen readers ("Delete Redbird
+// Basics 20W USB-C wall charger"), while a card link only mentions the word.
+const STARTS_WITH_ACTION_RE = new RegExp(`^(?:${ACTION_WORDS})\\b`, 'i');
+// A second click sooner than this after the first is a double click or a
+// tremor, not a decision, so it doesn't confirm.
+const MIN_CONFIRM_GAP_MS = 400;
 
 export const ConfirmActions = {
   promptId: 'ai4a11y-confirm-prompt',
@@ -23,6 +32,7 @@ export const ConfirmActions = {
   prompt: null,         // the injected "Click again to confirm" element
   promptTimer: null,
   armed: null,          // Set of elements currently carrying the data flag
+  armedAt: null,        // timeStamp of the click that armed it
   windowMs: 4000,       // how long a first click stays armed
 
   enable(options = {}) {
@@ -54,6 +64,13 @@ export const ConfirmActions = {
     if (!el || !this.looksDestructive(el)) return;
 
     if (el.hasAttribute(this.armedAttr)) {
+      const gap = typeof e.timeStamp === 'number' && this.armedAt != null ? e.timeStamp - this.armedAt : Infinity;
+      if (gap < MIN_CONFIRM_GAP_MS) {
+        // Too quick to be a decision: keep holding it, and keep it armed.
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+      }
       // Second click within the window: the user confirmed — let it through.
       this.clearArmed();
       return;
@@ -65,25 +82,40 @@ export const ConfirmActions = {
     this.clearArmed(); // only one pending confirmation at a time
     el.setAttribute(this.armedAttr, 'true');
     this.armed.add(el);
-    this.showPrompt(el);
+    this.armedAt = typeof e.timeStamp === 'number' ? e.timeStamp : null;
+    // A click made with Enter or Space has detail 0: say "press", not "click".
+    this.showPrompt(el, e.detail === 0);
     this.promptTimer = setTimeout(() => this.clearArmed(), this.windowMs);
+  },
+
+  // The control's accessible name, as matched and as said back to the person.
+  nameOf(el) {
+    return ((el.getAttribute && el.getAttribute('aria-label')) || el.value || el.textContent || '')
+      .replace(/\s+/g, ' ').trim();
   },
 
   looksDestructive(el) {
     // Match the control's accessible NAME, not its full subtree text: a whole
     // card wrapped in one <a> would otherwise match a keyword buried anywhere
-    // inside it. Long text is prose or a card, not an action control, so cap it.
-    const name = ((el.getAttribute && el.getAttribute('aria-label')) || el.value || el.textContent || '')
-      .replace(/\s+/g, ' ').trim();
-    if (!name || name.length > 40) return false;
+    // inside it. Long text is prose or a card, not an action control, unless
+    // it starts with the action word.
+    const name = this.nameOf(el);
+    if (!name) return false;
+    if (name.length > 40) return STARTS_WITH_ACTION_RE.test(name);
     return DESTRUCTIVE_RE.test(name);
   },
 
-  showPrompt(el) {
+  showPrompt(el, byKeyboard = false) {
     const prompt = document.createElement('span');
     prompt.id = this.promptId;
-    prompt.setAttribute('role', 'status'); // screen readers hear the ask too
-    prompt.textContent = 'Click again to confirm';
+    // The ask is read out once through announce() (the page's live region).
+    // A role="status" element made on the spot, already holding its words,
+    // is often not read at all, and when it is, the ask is heard twice.
+    prompt.setAttribute('aria-hidden', 'true');
+    prompt.textContent = byKeyboard ? 'Press again to confirm' : 'Click again to confirm';
+    let name = this.nameOf(el);
+    if (name.length > 60) name = name.slice(0, 59) + '…';
+    announce(`${name}: ${byKeyboard ? 'press' : 'click'} again to confirm`);
     // Fixed overlay near the control, NOT inserted after it: an in-flow prompt
     // reflows the row and can shift the armed button out from under the pointer
     // before the confirming second click lands.
@@ -100,6 +132,7 @@ export const ConfirmActions = {
   clearArmed() {
     if (this.promptTimer) { clearTimeout(this.promptTimer); this.promptTimer = null; }
     if (this.prompt) { this.prompt.remove(); this.prompt = null; }
+    this.armedAt = null;
     if (this.armed) {
       for (const el of this.armed) el.removeAttribute?.(this.armedAttr);
       this.armed.clear();

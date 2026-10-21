@@ -28,6 +28,8 @@ export const SpaFocus = {
   enabled: false,
   region: null,
   lastPath: null,        // pathname+search last handled, so same-path pushes are ignored
+  lastPage: null,        // title + main heading last handled (see checkRoute)
+  writeTimer: null,      // pending write into the live region, cleared on disable
   settleTimer: null,     // debounce timeout, cleared on disable
   popstateHandler: null, // stored ref so disable() can removeEventListener
   patchedHistory: null,  // the history object we patched, restored on disable
@@ -39,6 +41,7 @@ export const SpaFocus = {
     if (this.enabled) return;
     this.enabled = true;
     this.lastPath = window.location.pathname + window.location.search;
+    this.lastPage = this.pageKey();
 
     // Assertive, not polite: a navigation replaces the whole page, so the
     // announcement must not queue behind stale reading. Standard sr-only recipe.
@@ -94,7 +97,16 @@ export const SpaFocus = {
     // switches, scroll anchors stored in state) must not steal focus.
     const path = window.location.pathname + window.location.search;
     if (path === this.lastPath) return;
+    const sameRoute = window.location.pathname === (this.lastPath || '').split('?')[0];
     this.lastPath = path;
+    // When only the query string changed, it counts only if the page itself
+    // changed too (its title or top heading). A host that keeps its own
+    // settings in the address (the workshop panel rewrites ?try= with
+    // replaceState each time an adapter is ticked) is not navigating: moving
+    // focus then pulled it out of the panel and announced the same page again.
+    const page = this.pageKey();
+    if (sameRoute && page === this.lastPage) return;
+    this.lastPage = page;
 
     // The new page's main region, by decreasing specificity; the h1 fallback
     // covers pages that never marked up a main landmark.
@@ -107,7 +119,21 @@ export const SpaFocus = {
       }
       target.focus({ preventScroll: false });
     }
-    if (this.region) this.region.textContent = this.pageName(target);
+    // Empty the region first: a screen reader speaks only a change, so a new
+    // page with the same name as the last one would otherwise be silent.
+    const region = this.region;
+    if (region) {
+      const name = this.pageName(target);
+      region.textContent = '';
+      clearTimeout(this.writeTimer);
+      this.writeTimer = setTimeout(() => { if (this.region === region) region.textContent = name; }, 50);
+    }
+  },
+
+  // What the page is: its title and its top heading. Navigations change one.
+  pageKey() {
+    const h1 = document.querySelector('h1, [role="heading"][aria-level="1"]');
+    return `${document.title}\n${h1 ? h1.textContent.replace(/\s+/g, ' ').trim() : ''}`;
   },
 
   // What to call the new page: its title if the app updates one, else the
@@ -130,6 +156,7 @@ export const SpaFocus = {
     if (!this.enabled) return;
     this.enabled = false;
     if (this.settleTimer) { clearTimeout(this.settleTimer); this.settleTimer = null; }
+    if (this.writeTimer) { clearTimeout(this.writeTimer); this.writeTimer = null; }
     if (this.patchedHistory) {
       this.patchedHistory.pushState = this.origPushState;
       this.patchedHistory.replaceState = this.origReplaceState;
@@ -146,6 +173,7 @@ export const SpaFocus = {
     try { (this.region || document.getElementById(REGION_ID))?.remove(); } catch { /* already gone */ }
     this.region = null;
     this.lastPath = null;
+    this.lastPage = null;
     console.log('[AI4A11y] SPA Focus disabled');
     announce('Stopped announcing page changes');
   },

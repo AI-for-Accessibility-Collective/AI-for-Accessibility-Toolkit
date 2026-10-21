@@ -85,7 +85,10 @@ export const ExploreAChart = {
     this._moveHandler = (e) => { this.lastHover = e.target; };
     document.addEventListener('mouseover', this._moveHandler, true);
 
-    announce(`Explore a chart ready. ${this.charts.length} chart${this.charts.length === 1 ? '' : 's'} found. Tab to a View data table button, or press Alt plus T on a chart.`);
+    // With no charts, don't send people looking for a button that isn't there.
+    announce(this.charts.length
+      ? `Explore a chart ready. ${this.charts.length} chart${this.charts.length === 1 ? '' : 's'} found. Tab to a View data table button, or press Alt plus T on a chart.`
+      : 'Explore a chart ready. No charts on this page yet.');
 
     // Late-rendered charts (dashboards that lazy-load panels, infinite-scroll
     // feeds) never get picked up by the one-shot scan above — catch them
@@ -124,7 +127,11 @@ export const ExploreAChart = {
     document.querySelectorAll('img').forEach((img) => {
       if (CHART_HINT.test(`${img.getAttribute('alt') || ''} ${img.getAttribute('src') || ''}`)) push(img);
     });
-    document.querySelectorAll('[role="img"]').forEach(push);
+    // A [role="img"] wrapper counts only with a picture inside for capture()
+    // to read. A row of color dots or a star rating built from spans is not
+    // a chart: on a store with them it got a "View data table" button under
+    // every product card, and the button could only fail.
+    document.querySelectorAll('[role="img"]').forEach((el) => { if (el.querySelector('canvas, svg, img')) push(el); });
     return out;
   },
 

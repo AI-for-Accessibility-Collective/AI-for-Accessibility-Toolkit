@@ -67,11 +67,22 @@ export const UnpinSticky = {
   // true if unpinned. Never touches our own injected nodes.
   consider(el) {
     if (!el || el.nodeType !== 1 || this.unpinned.has(el)) return false;
-    if (el.id === this.styleId) return false;
+    // Other adapters' overlays (focus ring, magnifier lens, tooltip) are
+    // fixed too, and stopped working once unpinned.
+    if (el.id && el.id.startsWith('ai4a11y-')) return false;
     if (el.classList && el.classList.contains(this.unpinnedClass)) return false;
     let pos = '';
     try { pos = (getComputedStyle(el).position || '').toLowerCase(); } catch { return false; /* detached */ }
     if (pos !== 'fixed' && pos !== 'sticky') return false;
+    // A dialog or a panel that covers the screen (an "Added to cart" sheet and
+    // its backdrop) is not a bar: unpinned, it dropped to the bottom of the page.
+    if (pos === 'fixed') {
+      try {
+        if (el.matches('dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"]')) return false;
+        const vh = window.innerHeight || 0;
+        if (vh && el.getBoundingClientRect().height >= vh * 0.5) return false;
+      } catch { /* detached */ }
+    }
     el.classList.add(this.unpinnedClass);
     this.unpinned.add(el);
     return true;

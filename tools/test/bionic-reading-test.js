@@ -51,7 +51,17 @@ async function run() {
     check('bionic: text inside <script> is untouched',
       doc.querySelector('#js').textContent === 'var tracked = "no";' &&
       doc.querySelector('#js .ai4a11y-bionic') === null);
-    check('bionic: the visible text content is unchanged', para.textContent === originalText);
+    // The bolded copy is hidden from screen readers (its words are split in
+    // two) and the original text sits beside it, visually hidden, so a
+    // screen reader reads each word whole.
+    const wrap = para.querySelector('span.ai4a11y-bionic');
+    const shown = wrap?.querySelector('[aria-hidden="true"]');
+    const spoken = wrap?.lastElementChild;
+    check('bionic: the bolded copy shows the same text', shown?.textContent === originalText);
+    check('bionic: the bolded copy is hidden from screen readers', !!shown && !shown.querySelector('[aria-hidden="false"]'));
+    check('bionic: screen readers get the original text, unsplit',
+      spoken !== shown && spoken?.textContent === originalText && !spoken.querySelector('b') &&
+      !spoken.closest('[aria-hidden="true"]'));
 
     // disable() restores the page exactly — the very same text node, not a copy.
     BionicReading.disable();

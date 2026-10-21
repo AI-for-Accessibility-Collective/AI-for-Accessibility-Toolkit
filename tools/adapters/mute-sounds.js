@@ -16,6 +16,10 @@ export const MuteSounds = {
   muted: null,           // Set of elements we muted (for exact restore)
   observer: null,
   playHandler: null,
+  volumeHandler: null,  // re-mutes media a script un-mutes
+  inputHandler: null,   // remembers the person's last click or key, see volumeHandler
+  lastInput: null,
+  userUnmuted: null,    // WeakSet of media the person un-muted with its own controls
 
   enable(options = {}) {
     if (this.enabled) return;
@@ -47,6 +51,25 @@ export const MuteSounds = {
     };
     document.addEventListener('play', this.playHandler, true);
 
+    // Re-mute when a script turns the sound back on. Many pages start a video
+    // muted (browsers block sound until the first click) and unmute it on the
+    // person's first click anywhere, which fires no 'play'. Only the person's
+    // own use of that player's controls is let through.
+    this.lastInput = null;
+    this.inputHandler = (e) => { if (e.isTrusted) this.lastInput = { target: e.target, at: Date.now() }; };
+    for (const type of ['pointerdown', 'keydown']) document.addEventListener(type, this.inputHandler, true);
+    this.userUnmuted = new WeakSet();
+    this.volumeHandler = (e) => {
+      if (!this.enabled) return;
+      const el = e.target;
+      if (!el || (el.tagName !== 'VIDEO' && el.tagName !== 'AUDIO') || el.muted) return;
+      const last = this.lastInput;
+      const own = last && Date.now() - last.at < 1000 && (last.target === el || (el.contains && el.contains(last.target)));
+      if (own) { this.userUnmuted.add(el); return; }
+      this.muteEl(el);
+    };
+    document.addEventListener('volumechange', this.volumeHandler, true);
+
     console.log(`[AI4A11y] Mute Sounds enabled (${count} muted)`);
     announce(count ? `Muted ${count} sound source${count === 1 ? '' : 's'}` : 'Watching for sounds to mute');
   },
@@ -74,6 +97,8 @@ export const MuteSounds = {
   // one, and the play listener routes it back here to be re-muted.
   muteEl(el) {
     if (!el) return false;
+    // The person turned this one's sound on with its own controls: leave it.
+    if (this.userUnmuted && this.userUnmuted.has(el)) return false;
     try {
       if (el.muted === false) {
         el.muted = true;
@@ -92,6 +117,16 @@ export const MuteSounds = {
       document.removeEventListener('play', this.playHandler, true);
       this.playHandler = null;
     }
+    if (this.volumeHandler) {
+      document.removeEventListener('volumechange', this.volumeHandler, true);
+      this.volumeHandler = null;
+    }
+    if (this.inputHandler) {
+      for (const type of ['pointerdown', 'keydown']) document.removeEventListener(type, this.inputHandler, true);
+      this.inputHandler = null;
+    }
+    this.lastInput = null;
+    this.userUnmuted = null;
     if (this.muted) {
       for (const el of this.muted) {
         try { el.muted = false; } catch { /* element since removed */ }
