@@ -108,9 +108,9 @@ export const AgentWatch = {
     box.setAttribute('data-ai4a11y-ui', 'true');
     box.setAttribute('role', 'complementary');
     box.setAttribute('aria-label', 'What the agent is doing');
-    // Polite: the agent working is not an emergency. The one thing that IS
-    // urgent — a held gate — sets assertive on its own region below.
-    box.setAttribute('aria-live', 'polite');
+    // Not a live region. Every update rebuilds this box, and a live box made
+    // a screen reader read all of it again each time. speak() announces each
+    // new line once, and a held gate takes focus.
     document.body.appendChild(box);
     this.root = box;
 
@@ -158,10 +158,15 @@ export const AgentWatch = {
     const s = this.state;
     if (!s) return;
     const m = this.model;
+    // Another surface has the person's focus (the extension's side panel) and
+    // speaks for itself. Two surfaces reading the same line is noise.
+    if (this.isQuiet?.()) return;
 
     if (s.gate && s.gate.allowed === false && s.gate.say && !this.spoken.has('gate:' + s.gate.say)) {
       this.spoken.add('gate:' + s.gate.say);
-      announce(s.gate.say);
+      // With focus in this page the gate takes it, and the screen reader
+      // reads the dialog. Announcing it as well read the question twice.
+      if (!document.hasFocus()) announce(s.gate.say);
       return;                       // the gate is the only thing worth hearing now
     }
 
@@ -322,20 +327,22 @@ export const AgentWatch = {
     send.type = 'submit';
     send.className = 'aw-do';
     send.textContent = 'Send';
+    send.dataset.awKey = 'tell-send';
     tell.append(lab, field, send);
 
+    // Rebuilt on every update, so not a status region: as one it was read
+    // out again each time anything changed. The submit handler announces it once.
     const note = document.createElement('p');
     note.className = 'aw-tell-said';
-    note.setAttribute('role', 'status');      // announced without stealing focus
     if (this.lastTold) note.textContent = `Told the agent: ${this.lastTold}`;
     tell.appendChild(note);
 
     // The subtitle under the headline. The head names the agent and the
     // verb; this carries the full step, so it does not repeat the subject.
-    // When there is nothing to add, it is not rendered.
+    // When there is nothing to add, it is not rendered. Not a status region,
+    // for the same reason as the note above: it repeated on every update.
     const doing = document.createElement('p');
     doing.className = 'aw-doing';
-    doing.setAttribute('role', 'status');
     const a = this.agent;
     doing.textContent = !a || a.status === 'idle'
       ? 'Nothing is running. You’re browsing, and I’m checking as you go.'
@@ -361,6 +368,7 @@ export const AgentWatch = {
       // next action, which can be seconds away, and silence in between reads
       // as the message having gone nowhere.
       note.textContent = `Told the agent: ${said}`;
+      announce(`Told the agent: ${said}`);
     });
 
     // ── the footer: counts on the left, the way out on the right ────────────
@@ -390,6 +398,9 @@ export const AgentWatch = {
     // consequence, not the mood.
     end.textContent = 'End this task';
     end.setAttribute('aria-label', 'End this task and stop the agent');
+    // Every control carries a key, so the rebuild after each update puts
+    // focus back where it was instead of dropping it to the top of the page.
+    end.dataset.awKey = 'end';
     end.addEventListener('click', () => this.onDone?.());
     foot.appendChild(end);
 
@@ -410,6 +421,7 @@ export const AgentWatch = {
         b.textContent = opt.length > 42 ? `${opt.slice(0, 39)}…` : opt;
         b.title = opt;
         b.setAttribute('aria-label', `Go with ${opt}`);
+        b.dataset.awKey = `option:${opt}`;
         b.addEventListener('click', () => {
           this.lastTold = opt;
           this.onTell?.(`Go with "${opt}". Do that now.`);
@@ -437,7 +449,6 @@ export const AgentWatch = {
     if (s.holder === 'person') {
       const w = document.createElement('div');
       w.className = 'aw-wheel';
-      w.setAttribute('role', 'status');
       const at = s.handOverNodeLabel || s.handOverNode;
       const p = document.createElement('p');
       p.textContent = at
@@ -450,6 +461,7 @@ export const AgentWatch = {
       b.type = 'button';
       b.className = 'aw-do aw-primary';
       b.textContent = 'Give it back';
+      b.dataset.awKey = 'hand-back';
       b.addEventListener('click', () =>
         this.onControl?.({ action: 'hand-back', node: s.handOverNode || null }));
       row.appendChild(b);
@@ -461,8 +473,9 @@ export const AgentWatch = {
     if (held) {
       const g = document.createElement('div');
       g.className = 'aw-gate';
+      // An alert dialog that takes focus is read when focus lands in it. As
+      // an assertive live region too, it was read a second time on top.
       g.setAttribute('role', 'alertdialog');
-      g.setAttribute('aria-live', 'assertive');
       g.setAttribute('aria-label', 'Waiting for you');
 
       const p = document.createElement('p');
@@ -485,6 +498,7 @@ export const AgentWatch = {
       send.type = 'submit';
       send.className = 'aw-do';
       send.textContent = 'Send';
+      send.dataset.awKey = 'answer-send';
       form.append(input, send);
       form.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -498,8 +512,10 @@ export const AgentWatch = {
       this.root.appendChild(g);
       // The only place focus moves on its own — the run cannot proceed
       // without an answer, so landing here saves hunting for it.
+      // Not while another surface has focus: pulling it into the page would
+      // take the person away from where they are listening.
       const gateKey = decisionPayload(s, {}).decisionKey;
-      if (gateKey !== this._focusedGate) {
+      if (gateKey !== this._focusedGate && !this.isQuiet?.()) {
         this._focusedGate = gateKey;
         const focusBeforeFrame = document.activeElement;
         requestAnimationFrame(() => {
@@ -527,6 +543,7 @@ export const AgentWatch = {
         b.className = 'aw-do';
         // The count is the point: it is read off the page, not estimated.
         b.textContent = o.count ? `${o.query} (${o.count} results)` : `${o.query} (count unreadable)`;
+        b.dataset.awKey = `probe:${o.query}`;
         b.addEventListener('click', () =>
           this.onControl?.({ action: 'probe-pick', query: o.query }));
         row.appendChild(b);
@@ -536,6 +553,7 @@ export const AgentWatch = {
         keep.type = 'button';
         keep.className = 'aw-do';
         keep.textContent = 'Keep the current search';
+        keep.dataset.awKey = 'probe:keep';
         keep.addEventListener('click', () => this.onControl?.({ action: 'probe-pick' }));
         row.appendChild(keep);
       }
@@ -597,6 +615,7 @@ export const AgentWatch = {
         b.type = 'button';
         b.className = 'aw-do aw-primary';
         b.textContent = f.control.label;
+        b.dataset.awKey = `do:${keyOf(f)}`;
         b.addEventListener('click', () => {
           this.settled.add(keyOf(f));
           // Control first, so the instruction is queued for the agent before
@@ -617,6 +636,7 @@ export const AgentWatch = {
       skip.type = 'button';
       skip.className = 'aw-do';
       skip.textContent = f.control ? (f.control.decline || 'Leave it') : 'Got it';
+      skip.dataset.awKey = `ack:${keyOf(f)}`;
       skip.addEventListener('click', () => {
         this.settled.add(keyOf(f));
         this.onAcknowledge?.(keyOf(f));
@@ -715,6 +735,7 @@ export const AgentWatch = {
   onAcknowledge: null,   // the person dealt with a finding; the agent may move on
   onTell: null,          // free text, straight to the agent, at any time
   onDone: null,          // the person says the task is finished
+  isQuiet: null,         // true while another surface has the person's focus and speaks instead
   lastTold: null,
   agent: null,           // {status, step, doing} — what the delegate is up to
 
