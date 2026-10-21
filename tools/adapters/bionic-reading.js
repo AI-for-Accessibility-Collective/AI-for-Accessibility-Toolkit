@@ -53,6 +53,9 @@ export const BionicReading = {
   boldWord(span, word, ratio) {
     const prefixLen = Math.min(word.length, Math.ceil(word.length * ratio));
     const b = document.createElement('b');
+    // Pages style their own <b> (a margin, a color, a label look). Reset all of that so
+    // the word stays one word and only its start turns bold.
+    b.style.cssText = 'all: unset; font-weight: 700;';
     b.textContent = word.slice(0, prefixLen);
     span.appendChild(b);
     if (prefixLen < word.length) span.appendChild(document.createTextNode(word.slice(prefixLen)));

@@ -178,19 +178,31 @@ export const MotionReducer = {
     } catch (e) {}
   },
 
-  // Freeze every animatable image (gif/webp/apng) to its first frame.
+  // Freeze every image that really animates to its first frame. A .gif, .webp or .apng
+  // file name only says it might: most .webp files are still photos, and swapping a
+  // still photo for a canvas only risks breaking the page's layout. So the start of the
+  // file is read first, and only animated ones are frozen.
   freezeImages() {
     document.querySelectorAll('img').forEach(img => {
       if (img.dataset.ai4a11yMrFrozen) return;
-      const url = img.src || '';
+      const url = img.currentSrc || img.src || '';
       const mightAnimate = /\.(gif|webp|apng)(\?|$)/i.test(url)
         || url.startsWith('data:image/gif')
         || url.startsWith('data:image/webp');
-      if (mightAnimate) {
-        this.freezeSingleImage(img).catch(() => {});
-      } else {
+      if (!mightAnimate) {
         img.dataset.ai4a11yMrFrozen = 'skip';
+        return;
       }
+      img.dataset.ai4a11yMrFrozen = 'checking';
+      const gen = this.freezeGen;
+      isAnimated(url).then(animated => {
+        if (this.freezeGen !== gen) { delete img.dataset.ai4a11yMrFrozen; return; }
+        if (animated === false) { img.dataset.ai4a11yMrFrozen = 'skip'; return; }
+        // true, or null when the file can't be read (another site's image without CORS
+        // headers): freeze it, as before.
+        delete img.dataset.ai4a11yMrFrozen;
+        this.freezeSingleImage(img).catch(() => {});
+      });
     });
   },
 
@@ -239,6 +251,20 @@ export const MotionReducer = {
 
     canvas.setAttribute('width', w);
     canvas.setAttribute('height', h);
+
+    // Page styles written for img (like width: 100% and object-fit) don't reach a canvas,
+    // which would then show at the file's full size. Give it the image's own box instead.
+    const box = getComputedStyle(img);
+    if (img.getClientRects().length) {
+      canvas.style.width = box.width;
+      canvas.style.height = box.height;
+    } else {
+      canvas.style.maxWidth = '100%';
+    }
+    canvas.style.objectFit = box.objectFit;
+    canvas.style.objectPosition = box.objectPosition;
+    canvas.style.borderRadius = box.borderRadius;
+    if (box.display !== 'inline') canvas.style.display = box.display;
 
     const ctx = canvas.getContext('2d');
 
@@ -326,5 +352,58 @@ export const MotionReducer = {
     else this.enable();
   }
 };
+
+// Reads the start of an image file to tell an animated GIF, WebP or PNG from a still one.
+// Resolves true or false, or null when the file can't be read. One read per address.
+const animatedCache = new Map();
+const HEAD_BYTES = 8192;
+function isAnimated(url) {
+  if (!animatedCache.has(url)) animatedCache.set(url, readHead(url).then(animatedFromHead, () => null));
+  return animatedCache.get(url);
+}
+async function readHead(url) {
+  if (url.startsWith('data:')) {
+    const b64 = url.slice(url.indexOf(',') + 1, url.indexOf(',') + 1 + Math.ceil(HEAD_BYTES / 3) * 4);
+    const bin = atob(b64.slice(0, b64.length - (b64.length % 4)));
+    return Uint8Array.from(bin, c => c.charCodeAt(0));
+  }
+  const res = await fetch(url, { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` }, credentials: 'omit' });
+  if (!res.ok || !res.body) throw new Error('unreadable');
+  const reader = res.body.getReader();
+  const chunks = [];
+  let n = 0;
+  while (n < HEAD_BYTES) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    n += value.length;
+  }
+  reader.cancel().catch(() => {});
+  const bytes = new Uint8Array(n);
+  let at = 0;
+  for (const c of chunks) { bytes.set(c, at); at += c.length; }
+  return bytes;
+}
+function animatedFromHead(b) {
+  const text = (from, len) => String.fromCharCode(...b.subarray(from, from + len));
+  if (text(0, 4) === 'RIFF' && text(8, 4) === 'WEBP') {
+    // Only the extended format (VP8X) can animate, and its flags byte says whether it does.
+    return text(12, 4) === 'VP8X' ? (b[20] & 0x02) !== 0 : false;
+  }
+  if (text(0, 3) === 'GIF') {
+    // Looping GIFs carry a NETSCAPE2.0 block near the start. Without one, a file read
+    // to its end is a still; a longer one is unknown.
+    const all = text(0, b.length);
+    if (all.includes('NETSCAPE2.0') || all.includes('ANIMEXTS1.0')) return true;
+    return b.length < HEAD_BYTES ? false : null;
+  }
+  if (b[0] === 0x89 && text(1, 3) === 'PNG') {
+    // An animated PNG has an acTL chunk before its first image data.
+    const all = text(0, b.length);
+    const actl = all.indexOf('acTL'), idat = all.indexOf('IDAT');
+    return actl !== -1 && (idat === -1 || actl < idat);
+  }
+  return null;
+}
 
 if (typeof window !== 'undefined') window.__ai4a11yMotionReducer = MotionReducer;
