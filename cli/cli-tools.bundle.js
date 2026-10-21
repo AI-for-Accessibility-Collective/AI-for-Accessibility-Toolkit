@@ -5885,6 +5885,29 @@ ${scope} table {
       isOn: (btn) => btn.getAttribute("aria-pressed") === "true"
     }
   ];
+  var EMBEDS = [
+    {
+      name: "youtube",
+      match: /(^|\.)(youtube\.com|youtube-nocookie\.com)$/,
+      on: (u) => u.searchParams.set("cc_load_policy", "1"),
+      off: (u) => u.searchParams.set("cc_load_policy", "0")
+    },
+    {
+      name: "vimeo",
+      match: /(^|\.)player\.vimeo\.com$/,
+      on: (u) => u.searchParams.set("texttrack", preferredLang()),
+      off: (u) => u.searchParams.delete("texttrack")
+    }
+  ];
+  function embedFor(frame) {
+    let host;
+    try {
+      host = new URL(frame.src, location.href).hostname;
+    } catch {
+      return null;
+    }
+    return EMBEDS.find((e) => e.match.test(host)) || null;
+  }
   var DATA = "ai4a11yCaptions";
   var ShowCaptions = {
     enabled: false,
@@ -5893,6 +5916,10 @@ ${scope} table {
     _clicked: null,
     // Set of "player|url" we've already turned on (once per URL)
     _unregister: null,
+    _current: null,
+    // the embed the person is using, if they have used one
+    _embedSrc: /* @__PURE__ */ new Map(),
+    // frame -> the src it had before captions were switched on
     // Enable the best caption/subtitle track on each <video> that has one, once.
     _enableNativeTracks() {
       const lang = preferredLang();
@@ -5935,10 +5962,52 @@ ${scope} table {
         }
       }
     },
+    // Which embed the person is using. A click inside a cross-origin frame never
+    // reaches this document as an event, but it does move focus, and
+    // activeElement then names the frame that took it. That is the only thing
+    // this page is ever told about what someone is watching.
+    //
+    // Read when it is wanted, rather than followed. The obvious signal — a blur
+    // on this window — never arrives: this document is itself framed, so it never
+    // held the focus it would have to lose, and the click moves focus straight
+    // past it into the player. Measured on a page of four embeds: zero blur
+    // events, and activeElement already correct.
+    //
+    // activeElement is per-document, so it keeps naming the player even after the
+    // person has gone off to type "turn on captions" somewhere else entirely —
+    // which is exactly when this gets asked.
+    _currentEmbed() {
+      const a = document.activeElement;
+      if (a && a.tagName === "IFRAME" && embedFor(a)) this._current = a;
+      return this._current && this._current.isConnected ? this._current : null;
+    },
+    // Switch captions on for the embed in use, by reloading it with the parameter
+    // its player reads. Only that one, and only when the parameter would actually
+    // change — a reload the person did not ask for, that changes nothing, is pure
+    // loss of their place.
+    _enableEmbedCaptions() {
+      const frame = this._currentEmbed();
+      if (!frame) return;
+      const spec = embedFor(frame);
+      if (!spec) return;
+      let url;
+      try {
+        url = new URL(frame.src, location.href);
+      } catch {
+        return;
+      }
+      spec.on(url);
+      const next = url.toString();
+      if (next === frame.src) return;
+      if (!this._embedSrc.has(frame)) this._embedSrc.set(frame, frame.src);
+      frame.src = next;
+      logFix7("showCaptions", frame, "(embed off)", "embed on");
+    },
     _sweep() {
       if (!this.enabled) return;
       this._enableNativeTracks();
       this._enablePlayerCaptions();
+      this._enableEmbedCaptions();
     },
     enable() {
       if (this.enabled) {
@@ -5967,6 +6036,13 @@ ${scope} table {
       }
       this._restore = [];
       for (const v of document.querySelectorAll("video[data-ai4a11y-captions]")) delete v.dataset[DATA];
+      for (const [frame, src] of this._embedSrc) {
+        try {
+          if (frame.isConnected && frame.src !== src) frame.src = src;
+        } catch {
+        }
+      }
+      this._embedSrc = /* @__PURE__ */ new Map();
       this._clicked = null;
       console.log("[AI4A11y] Show Captions disabled");
     },

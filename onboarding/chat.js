@@ -291,7 +291,7 @@ function useLocal() {
   if (unNote) { unNote(); unNote = null; }
   wireNotes();
 }
-function useRemote(url) {
+function useRemote(url, on = {}) {
   if (!url) return;
   closeFramed(); // one driver at a time
   if (remoteChannel) remoteChannel.close();
@@ -316,11 +316,79 @@ function useRemote(url) {
   try {
     watchConnection(sock, {
       live,
-      onConnected: () => { setConnStatus('connected', url); applyProfileSettings(); },
-      onFailed: () => setConnStatus('failed', url),
-      onLost: () => setConnStatus('lost', url),
+      onConnected: () => { setConnStatus('connected', url); applyProfileSettings(); on.onConnected?.(); },
+      onFailed: () => { setConnStatus('failed', url); on.onFailed?.(); },
+      onLost: () => { setConnStatus('lost', url); on.onLost?.(); },
     });
   } catch {}
+}
+
+// Connecting used to be a person's job: open the drawer, find the field, press
+// the button — and do it again on every new machine, and again every time the
+// receiver restarted. An embedder can ask for it instead, and this keeps asking
+// until it lands.
+//
+// The receiver may still be starting when the first attempt goes out, and it
+// goes away and comes back whenever the stack behind it is restarted. Either
+// way the chat looks fine and drives nothing, which is the worst way for this
+// to fail — so a dropped connection is redialled on the same budget as a
+// refused one.
+const RECONNECT_TRIES = 5;
+let redial = null;
+
+function connectWithRetry(url, reply) {
+  // An embedder that has had no answer yet will ask again; those are the same
+  // request, not a reason to start a second loop dialling the same socket.
+  if (redial && redial.url === url && !redial.settled) {
+    if (reply) redial.replies.push(reply);
+    return;
+  }
+  if (redial) clearTimeout(redial.timer);
+  const r = redial = { url, tries: 0, settled: false, replies: reply ? [reply] : [], timer: null };
+
+  // Answered once. After that the status line carries the story, with the
+  // buttons the person needs if the redialling gives up.
+  const answer = (res) => {
+    if (r.settled) return;
+    r.settled = true;
+    const waiting = r.replies;
+    r.replies = [];
+    for (const f of waiting) { try { f(res); } catch {} }
+  };
+
+  const again = () => {
+    // Someone choosing the preview, or a page to frame, has said what should
+    // drive — both clear the channel, and neither wants it dialled back.
+    if (redial !== r || remoteChannel === null) return;
+    if (r.tries >= RECONNECT_TRIES) {
+      answer({ ok: false, detail: 'could not reach ' + url });
+      return;
+    }
+    r.timer = setTimeout(attempt, Math.min(16000, 1000 * 2 ** Math.max(0, r.tries - 1)));
+  };
+
+  const attempt = () => {
+    if (redial !== r) return;
+    r.tries++;
+    // Three states, not a single done flag: opening, open, and finished with.
+    // watchConnection reports error and then close for one refused socket, so
+    // the second of those has to be ignored — but a socket that opened and
+    // later dropped has to be redialled, and one flag set by the connection
+    // cannot tell those apart. It swallowed every reconnect.
+    let phase = 'opening';
+    useRemote(url, {
+      onConnected: () => {
+        if (phase !== 'opening') return;
+        phase = 'open';
+        r.tries = 0;   // a fresh budget for the next drop
+        answer({ ok: true, detail: 'connected to ' + url });
+      },
+      onFailed: () => { if (phase === 'done') return; phase = 'done'; again(); },
+      onLost: () => { if (phase === 'done') return; phase = 'done'; again(); },
+    });
+  };
+
+  attempt();
 }
 
 // Late results from a remote task arrive as out-of-band notes.
@@ -570,6 +638,14 @@ const CHAT_COMMANDS = {
     return { ok: true, detail: 'stopped' };
   },
   focus() { try { $('composer-input').focus(); } catch {} return { ok: true, detail: 'focused' }; },
+  // Point the chat at a receiver. Answered when the socket settles rather than
+  // when the call returns: the socket is still opening at that point, and an
+  // immediate ok would mean "asked", leaving the embedder believing in a
+  // connection that never happened.
+  connect(m, reply) {
+    connectWithRetry((m && m.url) || 'ws://127.0.0.1:9333', reply);
+    return { deferred: true };
+  },
   // Abort a running task. Same action as the Stop control and the Esc key.
   stop() {
     if (!waitingRow) return { ok: true, detail: 'nothing running' };
@@ -578,10 +654,10 @@ const CHAT_COMMANDS = {
   },
 };
 
-function runChatCommand(name) {
-  const fn = CHAT_COMMANDS[name];
-  if (!fn) return { ok: false, detail: `unknown command: ${name}` };
-  try { return fn(); } catch (e) { return { ok: false, detail: (e && e.message) || 'command failed' }; }
+function runChatCommand(m, reply) {
+  const fn = CHAT_COMMANDS[m.name];
+  if (!fn) return { ok: false, detail: `unknown command: ${m.name}` };
+  try { return fn(m, reply); } catch (e) { return { ok: false, detail: (e && e.message) || 'command failed' }; }
 }
 
 function initEmbedderCommands() {
@@ -595,10 +671,15 @@ function initEmbedderCommands() {
     // new. (An origin allowlist would be firmer if the chat ever gains a way to
     // be configured with one.)
     if (window.parent === window || ev.source !== window.parent) return;
-    const res = runChatCommand(m.name);
     // Tell the embedder whether it landed, so it can fall back to focusing the
     // frame rather than silently doing nothing.
-    try { ev.source.postMessage({ kind: 'aa-chat-command-result', name: m.name, ...res }, '*'); } catch {}
+    const reply = (res) => {
+      try { ev.source.postMessage({ kind: 'aa-chat-command-result', name: m.name, ...res }, '*'); } catch {}
+    };
+    const res = runChatCommand(m, reply);
+    // A command that cannot know yet answers for itself, later.
+    if (res && res.deferred) return;
+    reply(res);
   });
 }
 
