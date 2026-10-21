@@ -162,6 +162,16 @@ export const AgentWatch = {
     // speaks for itself. Two surfaces reading the same line is noise.
     if (this.isQuiet?.()) return;
 
+    // Taking a part of the task is said once, when it happens. As a status
+    // region it was said again on every update while the person held it.
+    if (s.holder === 'person') {
+      const at = s.handOverNodeLabel || s.handOverNode || '';
+      if (!this.spoken.has('wheel:' + at)) {
+        this.spoken.add('wheel:' + at);
+        announce(at ? `You have this part: ${at}. The agent is paused.` : 'You have this part. The agent is paused.');
+      }
+    }
+
     if (s.gate && s.gate.allowed === false && s.gate.say && !this.spoken.has('gate:' + s.gate.say)) {
       this.spoken.add('gate:' + s.gate.say);
       // With focus in this page the gate takes it, and the screen reader
