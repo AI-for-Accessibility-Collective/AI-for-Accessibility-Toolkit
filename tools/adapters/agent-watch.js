@@ -263,7 +263,11 @@ export const AgentWatch = {
           || (ag.doing || 'working').split(' (')[0].replace(/^(\S+(?:\s\S+){0,3}).*/, '$1')}`
       : ag?.status === 'done' ? 'The agent says it’s done'
       : ag?.status === 'stopped' ? 'The agent stopped'
-      : ag && ag.status && ag.status !== 'idle' ? 'The agent hit a problem'
+      // Checks are written before the agent's first step. Without this line
+      // the 15 seconds of getting ready fell through to "hit a problem".
+      : ag?.status === 'preparing' ? 'Getting the checks ready'
+      : ag?.status === 'paused' ? 'The agent is paused'
+      : ag?.status === 'error' ? 'The agent hit a problem'
       : null;
     head.textContent = held
       ? (s.gate?.unread
@@ -340,8 +344,11 @@ export const AgentWatch = {
         // the agent's own reason, already said plainly by the host.
         ? (a.doing ? `${a.step ? `Step ${a.step}: ` : ''}${a.doing}` : '')
         : a.status === 'done' ? (a.summary || '')
-        : a.status === 'stopped' ? ''
-        : String(a.status);
+        : a.status === 'preparing'
+          ? 'This usually takes about 15 seconds, and the agent starts right after.'
+        // The raw status word ("error", "paused") read as a bug, not a reason.
+        : a.status === 'error' ? (a.error || '')
+        : '';
 
     tell.addEventListener('submit', (e) => {
       e.preventDefault();
