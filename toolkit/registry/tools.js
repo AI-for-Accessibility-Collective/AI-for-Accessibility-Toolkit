@@ -24,6 +24,9 @@
 //                are heuristic-first like this) — the field answers "does
 //                the toggle work without a key", not "may it ever call AI".
 
+// NAMING: entries here are ADAPTERS/tools (executable fixes), not Skills
+// (SKILL.md recipes) — `skillRegistry` predates that naming split and is
+// kept for compatibility. Prefer the `toolRegistry` alias (end of file).
 /** @type {import('../core/skill.js').ToolEntry[]} */
 export const skillRegistry = [
   {
@@ -697,6 +700,16 @@ export function getSkillById(id) {
 export function getSkillsByArea(area) {
   return skillRegistry.filter(s => s.supportAreas.includes(area));
 }
+
+// ---------------------------------------------------------------------------
+// Preferred names. Registry entries are ADAPTERS/tools (executable fixes),
+// not Skills (SKILL.md recipes) — `skillRegistry`, `getSkillById` and
+// `getSkillsByArea` predate that naming split and stay exported for
+// compatibility (browser hosts bake them into generated bundles). New code
+// should import these aliases; they are the same objects.
+export const toolRegistry = skillRegistry;
+export const getToolById = getSkillById;
+export const getToolsByArea = getSkillsByArea;
 
 export function getRegistryForPrompt() {
   return skillRegistry.map(s => ({
