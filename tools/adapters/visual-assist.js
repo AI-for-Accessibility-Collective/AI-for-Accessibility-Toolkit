@@ -4,6 +4,34 @@ import { registerSweep } from '../utils/observe.js';
 
 // WeakMap: element -> original inline font-size string ('' means no inline style was set)
 const _fontScaleOriginals = new WeakMap();
+// WeakMap: element -> { attr: its style attribute as the page wrote it,
+// css: that style as the browser reads it, written: the style once we set the
+// size }. Setting and clearing the size rewrites the attribute: an empty
+// style="" was left on hundreds of elements, "background:#F4F4F2" came back as
+// "background: rgb(244, 244, 242);", and a banner's "font:700 30px
+// var(--serif)" lost its size altogether. Where nothing else has changed the
+// style since, the page's own text is put back instead.
+const _styleBefore = new WeakMap();
+
+// Put back an element's own inline text size, and forget it.
+function _restoreFontSize(el) {
+  const before = _styleBefore.get(el);
+  let same = before && before.written === el.style.cssText;
+  if (!same) {
+    const orig = _fontScaleOriginals.get(el);
+    el.style.fontSize = (orig === undefined || orig === null) ? '' : orig;
+    same = before && el.style.cssText === before.css;
+  }
+  if (same) {
+    // Chrome writes a style change into the attribute only when the attribute
+    // is next read; without this read it wrote style="" back after the removal.
+    el.getAttribute('style');
+    if (before.attr === null) el.removeAttribute('style');
+    else el.setAttribute('style', before.attr);
+  }
+  _fontScaleOriginals.delete(el);
+  _styleBefore.delete(el);
+}
 
 // Selector for text-bearing elements that may need font-size scaling.
 // NOTE: `body` is intentionally excluded. Scaling body AND its descendants
@@ -43,6 +71,31 @@ function _scaledSize(px, scale) {
   return px + (scale - 1) * Math.min(px, 18);
 }
 
+// Wrappers other adapters put around text (bionic-reading's bold word
+// starts, abbreviation-expand's marks) reset their own style with
+// `all: unset`, so they always take their parent's text size. Enlarging them
+// too was wasted work: bionic-reading adds four of them for every bit of
+// text, and re-adds them every time a countdown rewrites itself.
+function _inheritsSize(el) {
+  const st = el.style;
+  if (!st) return false;
+  const fs = st.getPropertyValue('font-size');
+  // Chrome reports the size an `all: unset` leaves as '', under `all`.
+  return fs === 'unset' || fs === 'inherit' || (!fs && st.getPropertyValue('all') === 'unset');
+}
+
+// The text elements in and under `roots` (added content), or in the whole
+// page when roots is null.
+function _textElements(roots) {
+  if (!roots) return Array.from(document.body.querySelectorAll(TEXT_ELEMENT_SELECTOR));
+  const found = new Set();
+  for (const root of roots) {
+    if (root.matches && root.matches(TEXT_ELEMENT_SELECTOR)) found.add(root);
+    for (const el of root.querySelectorAll(TEXT_ELEMENT_SELECTOR)) found.add(el);
+  }
+  return [...found];
+}
+
 // Elements to skip when applying font scaling: extension UI + icon fonts.
 function _shouldSkipScale(el) {
   if (!el || !el.tagName) return true;
@@ -62,6 +115,7 @@ function _shouldSkipScale(el) {
   if (cls.includes('material-icons') || cls.includes('material-symbols') ||
       cls.includes('icon') || cls.includes('fa-') || tag === 'I') return true;
   if (el.getAttribute && el.getAttribute('aria-hidden') === 'true') return true;
+  if (_inheritsSize(el)) return true;
   try { if (el.closest && el.closest(`[${FIXED_BOX_ATTR}]`)) return true; } catch (_) {}
   return false;
 }
@@ -143,12 +197,23 @@ export const VisualAssist = {
       if (this.appliedScale !== scale) {
         this.applyFontScale(scale);
       }
-      // Register sweep for late-added nodes (SPA / dynamic content).
+      // Register sweep for late-added nodes (SPA / dynamic content). It looks
+      // at the added elements only: re-scanning the whole page on every
+      // change kept a store busy for a tenth of every second, since its
+      // countdowns change something each second.
       if (!this.unregisterSweep) {
-        this.unregisterSweep = registerSweep('visual-assist-font', () => {
+        this.unregisterSweep = registerSweep('visual-assist-font', ({ added }) => {
           if (!this.enabled || this.appliedScale === null) return;
-          this.markFixedBoxes();
-          this.applyFontScale(this.appliedScale);
+          let roots = null; // a back/forward navigation says nothing about what changed: look at everything
+          if (added) {
+            roots = added.filter(n => n.isConnected && !_inheritsSize(n));
+            // Content inside other added content is covered by it.
+            const set = new Set(roots);
+            roots = roots.filter(n => { for (let a = n.parentElement; a; a = a.parentElement) if (set.has(a)) return false; return true; });
+            if (!roots.length) return;
+          }
+          this.markFixedBoxes(roots);
+          this.applyFontScale(this.appliedScale, roots);
         }, { debounceMs: 500 });
       }
     } else {
@@ -178,13 +243,16 @@ export const VisualAssist = {
 
   // ── Font-scale DOM traversal ──────────────────────────────────────────────
 
-  applyFontScale(scale) {
+  // roots: the added elements to look at (sweeps); null for the whole page.
+  applyFontScale(scale, roots = null) {
     this.appliedScale = scale;
-    // Bump generation so any concurrent in-flight traversal aborts.
-    const gen = ++this.scaleGen;
+    // A whole-page pass bumps the generation so any traversal still running
+    // aborts. A pass over added content runs beside it instead: aborting the
+    // first whole-page pass would leave the rest of the page small.
+    const gen = roots ? this.scaleGen : ++this.scaleGen;
 
-    const candidates = typeof document !== 'undefined'
-      ? Array.from(document.querySelectorAll(TEXT_ELEMENT_SELECTOR)).filter(el =>
+    const candidates = typeof document !== 'undefined' && document.body
+      ? _textElements(roots).filter(el =>
         !_shouldSkipScale(el) && !(el.dataset && el.dataset.ai4a11yFontScale === String(scale)))
       : [];
     if (!candidates.length) return;
@@ -199,10 +267,22 @@ export const VisualAssist = {
     // (already enlarged) from the page's own px size (not enlarged yet), so
     // dividing by the ancestor's scale left every re-rendered search result at
     // its old size. Read the true sizes with our enlargement briefly taken off;
-    // it is put back in this same task, before anything paints.
-    const scaled = typeof document !== 'undefined'
-      ? Array.from(document.querySelectorAll('[data-ai4a11y-font-scale]'))
-      : [];
+    // it is put back in this same task, before anything paints. Only the
+    // enlarged elements the candidates sit inside matter, since text size
+    // comes down from parents.
+    let scaled;
+    if (roots) {
+      const up = new Set();
+      scaled = [];
+      for (const el of candidates) {
+        for (let a = el.parentElement; a && !up.has(a); a = a.parentElement) {
+          up.add(a);
+          if (a.dataset && a.dataset.ai4a11yFontScale) scaled.push(a);
+        }
+      }
+    } else {
+      scaled = Array.from(document.querySelectorAll('[data-ai4a11y-font-scale]'));
+    }
     const scaledNow = scaled.map(el => el.style.fontSize);
     scaled.forEach(el => {
       const orig = _fontScaleOriginals.get(el);
@@ -213,6 +293,7 @@ export const VisualAssist = {
       // Record the original inline value on first visit.
       if (!_fontScaleOriginals.has(el)) {
         _fontScaleOriginals.set(el, el.style.fontSize);
+        _styleBefore.set(el, { attr: el.getAttribute('style'), css: el.style.cssText });
       }
       try {
         const baselinePx = parseFloat(getComputedStyle(el).fontSize);
@@ -248,8 +329,10 @@ export const VisualAssist = {
         const { el, baselinePx } = scalePlan[i++];
         el.style.fontSize = `${_scaledSize(baselinePx, scale)}px`;
         if (el.dataset) el.dataset.ai4a11yFontScale = String(scale);
+        const before = _styleBefore.get(el);
+        if (before) before.written = el.style.cssText;
       }
-      this.growFixedBoxes();
+      this.growFixedBoxes(roots);
     };
 
     if (typeof requestIdleCallback !== 'undefined') {
@@ -266,11 +349,11 @@ export const VisualAssist = {
   // their text size and line and letter spacing to the page's own, which the
   // text inside inherits; the font traversal and the spacing rules skip what's
   // inside.
-  markFixedBoxes() {
+  markFixedBoxes(roots = null) {
     if (typeof document === 'undefined' || !document.body) return;
     if (!this.fixedBoxes) { this.fixedBoxes = new Map(); this.fixedChecked = new WeakSet(); }
     const found = [];
-    for (const el of document.body.querySelectorAll(TEXT_ELEMENT_SELECTOR)) {
+    for (const el of _textElements(roots)) {
       if (this.fixedChecked.has(el)) continue;
       this.fixedChecked.add(el);
       if (_shouldSkipScale(el)) continue;
@@ -314,9 +397,7 @@ export const VisualAssist = {
       // Text in it that an earlier pass already enlarged goes back to its size.
       for (const t of [el, ...el.querySelectorAll('[data-ai4a11y-font-scale]')]) {
         if (!t.dataset || !t.dataset.ai4a11yFontScale) continue;
-        const orig = _fontScaleOriginals.get(t);
-        t.style.fontSize = (orig === undefined || orig === null) ? '' : orig;
-        _fontScaleOriginals.delete(t);
+        _restoreFontSize(t);
         delete t.dataset.ai4a11yFontScale;
       }
       this.fixedBoxes.set(el, saved);
@@ -353,10 +434,22 @@ export const VisualAssist = {
   // and below it and was cut off at the top of the page. Let such a box grow
   // (it keeps at least its old height). Only boxes that overflow now and
   // didn't before we changed anything, so a page's own overflow is left alone.
-  growFixedBoxes() {
+  // roots: added content. Only it, what is inside it, and the boxes around
+  // it can have started overflowing.
+  growFixedBoxes(roots = null) {
     if (typeof document === 'undefined' || !document.body) return;
     if (!this.grown) this.grown = new Map();
-    for (const el of document.body.querySelectorAll('*')) {
+    let els = document.body.querySelectorAll('*');
+    if (roots) {
+      const near = new Set();
+      for (const root of roots) {
+        if (!root.isConnected) continue;
+        for (let a = root; a && a !== document.body && !near.has(a); a = a.parentElement) near.add(a);
+        for (const el of root.querySelectorAll('*')) near.add(el);
+      }
+      els = near;
+    }
+    for (const el of els) {
       if (!(el.scrollHeight > el.clientHeight + 1)) continue; // fits (also: no layout, e.g. jsdom)
       if (this.grown.has(el) || (this.overflowBefore && this.overflowBefore.has(el))) continue;
       if (_shouldSkipScale(el) || typeof el.computedStyleMap !== 'function') continue;
@@ -388,11 +481,7 @@ export const VisualAssist = {
     this.scaleGen++;
     // dataset.ai4a11yFontScale (camelCase) -> attribute data-ai4a11y-font-scale (hyphen)
     document.querySelectorAll('[data-ai4a11y-font-scale]').forEach(el => {
-      const orig = _fontScaleOriginals.get(el);
-      // orig is the inline font-size string before we touched it.
-      // Empty string '' means no inline style was set — clear it back to nothing.
-      el.style.fontSize = (orig === undefined || orig === null) ? '' : orig;
-      _fontScaleOriginals.delete(el);
+      _restoreFontSize(el);
       if (el.dataset) delete el.dataset.ai4a11yFontScale;
     });
     this.appliedScale = null;

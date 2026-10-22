@@ -95,6 +95,7 @@
   var _sweeps = /* @__PURE__ */ new Map();
   var _observer = null;
   var _debounceTimers = /* @__PURE__ */ new Map();
+  var _added = /* @__PURE__ */ new Map();
   var _lastHref = typeof location !== "undefined" ? location.href : "";
   function _flush(reason) {
     _lastHref = typeof location !== "undefined" ? location.href : _lastHref;
@@ -106,16 +107,23 @@
       }
     }
   }
-  function _scheduleSweep(reason) {
+  function _scheduleSweep(reason, records) {
     for (const [name, { callback, debounceMs }] of _sweeps) {
+      if (records) {
+        if (!_added.has(name)) _added.set(name, /* @__PURE__ */ new Set());
+        const added = _added.get(name);
+        for (const r of records) for (const n of r.addedNodes) if (n.nodeType === 1) added.add(n);
+      }
       if (_debounceTimers.has(name)) clearTimeout(_debounceTimers.get(name));
       _debounceTimers.set(name, setTimeout(() => {
         _debounceTimers.delete(name);
+        const added = [..._added.get(name) || []];
+        _added.delete(name);
         const currentHref = typeof location !== "undefined" ? location.href : _lastHref;
         const effectiveReason = currentHref !== _lastHref ? "urlchange" : reason;
         _lastHref = currentHref;
         try {
-          callback({ reason: effectiveReason });
+          callback({ reason: effectiveReason, added });
         } catch (e) {
           console.warn(`[AI4A11y] observe: sweep "${name}" error:`, e);
         }
@@ -125,7 +133,7 @@
   function _startObserver() {
     if (_observer || typeof MutationObserver === "undefined") return;
     if (typeof document === "undefined" || !document.body) return;
-    _observer = new MutationObserver(() => _scheduleSweep("mutation"));
+    _observer = new MutationObserver((records) => _scheduleSweep("mutation", records));
     _observer.observe(document.body, { childList: true, subtree: true });
   }
   function _stopObserver() {
@@ -134,6 +142,7 @@
     _observer = null;
     for (const t of _debounceTimers.values()) clearTimeout(t);
     _debounceTimers.clear();
+    _added.clear();
   }
   if (typeof window !== "undefined") {
     window.addEventListener("popstate", () => {
@@ -149,6 +158,7 @@
     if (_sweeps.size === 1) _startObserver();
     return function unregister() {
       _sweeps.delete(name);
+      _added.delete(name);
       if (_debounceTimers.has(name)) {
         clearTimeout(_debounceTimers.get(name));
         _debounceTimers.delete(name);
@@ -159,6 +169,23 @@
 
   // tools/adapters/visual-assist.js
   var _fontScaleOriginals = /* @__PURE__ */ new WeakMap();
+  var _styleBefore = /* @__PURE__ */ new WeakMap();
+  function _restoreFontSize(el) {
+    const before = _styleBefore.get(el);
+    let same = before && before.written === el.style.cssText;
+    if (!same) {
+      const orig = _fontScaleOriginals.get(el);
+      el.style.fontSize = orig === void 0 || orig === null ? "" : orig;
+      same = before && el.style.cssText === before.css;
+    }
+    if (same) {
+      el.getAttribute("style");
+      if (before.attr === null) el.removeAttribute("style");
+      else el.setAttribute("style", before.attr);
+    }
+    _fontScaleOriginals.delete(el);
+    _styleBefore.delete(el);
+  }
   var TEXT_ELEMENT_SELECTOR = "p, h1, h2, h3, h4, h5, h6, li, td, th, div, span, a, button, input, select, textarea, label, blockquote, pre, figcaption, caption, dt, dd, summary, article, section, header, footer, nav, main, aside, small, b, strong, em, legend";
   var FIXED_BOX_ATTR = "data-ai4a11y-fixed-box";
   function _insetSet(el, side) {
@@ -172,6 +199,21 @@
   }
   function _scaledSize(px, scale) {
     return px + (scale - 1) * Math.min(px, 18);
+  }
+  function _inheritsSize(el) {
+    const st = el.style;
+    if (!st) return false;
+    const fs = st.getPropertyValue("font-size");
+    return fs === "unset" || fs === "inherit" || !fs && st.getPropertyValue("all") === "unset";
+  }
+  function _textElements(roots) {
+    if (!roots) return Array.from(document.body.querySelectorAll(TEXT_ELEMENT_SELECTOR));
+    const found = /* @__PURE__ */ new Set();
+    for (const root of roots) {
+      if (root.matches && root.matches(TEXT_ELEMENT_SELECTOR)) found.add(root);
+      for (const el of root.querySelectorAll(TEXT_ELEMENT_SELECTOR)) found.add(el);
+    }
+    return [...found];
   }
   function _shouldSkipScale(el) {
     if (!el || !el.tagName) return true;
@@ -187,6 +229,7 @@
     const cls = typeof el.className === "string" ? el.className : "";
     if (cls.includes("material-icons") || cls.includes("material-symbols") || cls.includes("icon") || cls.includes("fa-") || tag === "I") return true;
     if (el.getAttribute && el.getAttribute("aria-hidden") === "true") return true;
+    if (_inheritsSize(el)) return true;
     try {
       if (el.closest && el.closest(`[${FIXED_BOX_ATTR}]`)) return true;
     } catch (_) {
@@ -265,10 +308,20 @@
           this.applyFontScale(scale);
         }
         if (!this.unregisterSweep) {
-          this.unregisterSweep = registerSweep("visual-assist-font", () => {
+          this.unregisterSweep = registerSweep("visual-assist-font", ({ added }) => {
             if (!this.enabled || this.appliedScale === null) return;
-            this.markFixedBoxes();
-            this.applyFontScale(this.appliedScale);
+            let roots = null;
+            if (added) {
+              roots = added.filter((n) => n.isConnected && !_inheritsSize(n));
+              const set = new Set(roots);
+              roots = roots.filter((n) => {
+                for (let a = n.parentElement; a; a = a.parentElement) if (set.has(a)) return false;
+                return true;
+              });
+              if (!roots.length) return;
+            }
+            this.markFixedBoxes(roots);
+            this.applyFontScale(this.appliedScale, roots);
           }, { debounceMs: 500 });
         }
       } else {
@@ -293,12 +346,25 @@
       if (typeof document !== "undefined") document.getElementById(this.styleId)?.remove();
     },
     // ── Font-scale DOM traversal ──────────────────────────────────────────────
-    applyFontScale(scale) {
+    // roots: the added elements to look at (sweeps); null for the whole page.
+    applyFontScale(scale, roots = null) {
       this.appliedScale = scale;
-      const gen = ++this.scaleGen;
-      const candidates = typeof document !== "undefined" ? Array.from(document.querySelectorAll(TEXT_ELEMENT_SELECTOR)).filter((el) => !_shouldSkipScale(el) && !(el.dataset && el.dataset.ai4a11yFontScale === String(scale))) : [];
+      const gen = roots ? this.scaleGen : ++this.scaleGen;
+      const candidates = typeof document !== "undefined" && document.body ? _textElements(roots).filter((el) => !_shouldSkipScale(el) && !(el.dataset && el.dataset.ai4a11yFontScale === String(scale))) : [];
       if (!candidates.length) return;
-      const scaled = typeof document !== "undefined" ? Array.from(document.querySelectorAll("[data-ai4a11y-font-scale]")) : [];
+      let scaled;
+      if (roots) {
+        const up = /* @__PURE__ */ new Set();
+        scaled = [];
+        for (const el of candidates) {
+          for (let a = el.parentElement; a && !up.has(a); a = a.parentElement) {
+            up.add(a);
+            if (a.dataset && a.dataset.ai4a11yFontScale) scaled.push(a);
+          }
+        }
+      } else {
+        scaled = Array.from(document.querySelectorAll("[data-ai4a11y-font-scale]"));
+      }
       const scaledNow = scaled.map((el) => el.style.fontSize);
       scaled.forEach((el) => {
         const orig = _fontScaleOriginals.get(el);
@@ -308,6 +374,7 @@
       for (const el of candidates) {
         if (!_fontScaleOriginals.has(el)) {
           _fontScaleOriginals.set(el, el.style.fontSize);
+          _styleBefore.set(el, { attr: el.getAttribute("style"), css: el.style.cssText });
         }
         try {
           const baselinePx = parseFloat(getComputedStyle(el).fontSize);
@@ -336,8 +403,10 @@
           const { el, baselinePx } = scalePlan[i++];
           el.style.fontSize = `${_scaledSize(baselinePx, scale)}px`;
           if (el.dataset) el.dataset.ai4a11yFontScale = String(scale);
+          const before = _styleBefore.get(el);
+          if (before) before.written = el.style.cssText;
         }
-        this.growFixedBoxes();
+        this.growFixedBoxes(roots);
       };
       if (typeof requestIdleCallback !== "undefined") {
         requestIdleCallback(processChunk, { timeout: 500 });
@@ -349,14 +418,14 @@
     // their text size and line and letter spacing to the page's own, which the
     // text inside inherits; the font traversal and the spacing rules skip what's
     // inside.
-    markFixedBoxes() {
+    markFixedBoxes(roots = null) {
       if (typeof document === "undefined" || !document.body) return;
       if (!this.fixedBoxes) {
         this.fixedBoxes = /* @__PURE__ */ new Map();
         this.fixedChecked = /* @__PURE__ */ new WeakSet();
       }
       const found = [];
-      for (const el of document.body.querySelectorAll(TEXT_ELEMENT_SELECTOR)) {
+      for (const el of _textElements(roots)) {
         if (this.fixedChecked.has(el)) continue;
         this.fixedChecked.add(el);
         if (_shouldSkipScale(el)) continue;
@@ -398,9 +467,7 @@
         }
         for (const t of [el, ...el.querySelectorAll("[data-ai4a11y-font-scale]")]) {
           if (!t.dataset || !t.dataset.ai4a11yFontScale) continue;
-          const orig = _fontScaleOriginals.get(t);
-          t.style.fontSize = orig === void 0 || orig === null ? "" : orig;
-          _fontScaleOriginals.delete(t);
+          _restoreFontSize(t);
           delete t.dataset.ai4a11yFontScale;
         }
         this.fixedBoxes.set(el, saved);
@@ -435,10 +502,22 @@
     // and below it and was cut off at the top of the page. Let such a box grow
     // (it keeps at least its old height). Only boxes that overflow now and
     // didn't before we changed anything, so a page's own overflow is left alone.
-    growFixedBoxes() {
+    // roots: added content. Only it, what is inside it, and the boxes around
+    // it can have started overflowing.
+    growFixedBoxes(roots = null) {
       if (typeof document === "undefined" || !document.body) return;
       if (!this.grown) this.grown = /* @__PURE__ */ new Map();
-      for (const el of document.body.querySelectorAll("*")) {
+      let els = document.body.querySelectorAll("*");
+      if (roots) {
+        const near = /* @__PURE__ */ new Set();
+        for (const root of roots) {
+          if (!root.isConnected) continue;
+          for (let a = root; a && a !== document.body && !near.has(a); a = a.parentElement) near.add(a);
+          for (const el of root.querySelectorAll("*")) near.add(el);
+        }
+        els = near;
+      }
+      for (const el of els) {
         if (!(el.scrollHeight > el.clientHeight + 1)) continue;
         if (this.grown.has(el) || this.overflowBefore && this.overflowBefore.has(el)) continue;
         if (_shouldSkipScale(el) || typeof el.computedStyleMap !== "function") continue;
@@ -476,9 +555,7 @@
       if (typeof document === "undefined") return;
       this.scaleGen++;
       document.querySelectorAll("[data-ai4a11y-font-scale]").forEach((el) => {
-        const orig = _fontScaleOriginals.get(el);
-        el.style.fontSize = orig === void 0 || orig === null ? "" : orig;
-        _fontScaleOriginals.delete(el);
+        _restoreFontSize(el);
         if (el.dataset) delete el.dataset.ai4a11yFontScale;
       });
       this.appliedScale = null;
@@ -620,6 +697,8 @@
 
   // tools/adapters/dark-mode.js
   var PAGE_FILTER = "html { filter: var(--ai4a11y-filter-dark,) var(--ai4a11y-filter-dim,) var(--ai4a11y-filter-color,) !important; }";
+  var MEDIA_VARS = '@property --ai4a11y-media-dim { syntax: "*"; inherits: false; } @property --ai4a11y-media-dark { syntax: "*"; inherits: false; }';
+  var MEDIA_FILTER = "filter: var(--ai4a11y-media-dim,) var(--ai4a11y-media-dark,) !important;";
   var DarkMode = {
     enabled: false,
     styleId: "ai4a11y-dark-mode",
@@ -657,19 +736,21 @@
       style.id = this.styleId;
       const BACK = 'img, video, picture, canvas, iframe, [style*="background-image"], [style*="background:"], [style*="background-color"]';
       style.textContent = `
+      ${MEDIA_VARS}
       html {
         --ai4a11y-filter-dark: invert(90%) hue-rotate(180deg);
         background: #111 !important;
       }
       ${PAGE_FILTER}
       ${BACK} {
-        filter: invert(100%) hue-rotate(180deg) !important;
+        --ai4a11y-media-dark: invert(100%) hue-rotate(180deg);
+        ${MEDIA_FILTER}
       }
       img, video {
-        filter: invert(100%) hue-rotate(180deg) contrast(1.1) !important;
+        --ai4a11y-media-dark: invert(100%) hue-rotate(180deg) contrast(1.1);
       }
       :is(${BACK}) :is(img, video, picture, canvas, iframe) {
-        filter: none !important;
+        --ai4a11y-media-dark: initial;
       }
     `;
       document.head.appendChild(style);
@@ -2500,6 +2581,25 @@
   if (typeof window !== "undefined") window.__ai4a11yKeyboardNavigator = KeyboardNavigator;
 
   // tools/adapters/color-blind.js
+  var SEES = {
+    protanopia: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-3882e-6, -0.048116, 1.051998]],
+    deuteranopia: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]],
+    tritanopia: [[1.255528, -0.076749, -0.178779], [-0.078411, 0.930809, 0.147602], [4733e-6, 0.691367, 0.3039]]
+  };
+  var RED_GREEN_SHIFT = [[0, 0, 0], [0, 0, 0], [0.7, 0, 1]];
+  var BLUE_YELLOW_SHIFT = [[1, 0, 0.7], [0, -1, -0.7], [0, 0, 0]];
+  var STRENGTH = 0.5;
+  function correctionMatrix(mode) {
+    const sees = SEES[mode];
+    if (!sees) return null;
+    const shift = mode === "tritanopia" ? BLUE_YELLOW_SHIFT : RED_GREEN_SHIFT;
+    const lost = sees.map((row, i) => row.map((v, j) => (i === j ? 1 : 0) - v));
+    return [0, 1, 2].map((i) => [0, 1, 2].map((j) => (i === j ? 1 : 0) + STRENGTH * shift[i].reduce((sum, w, k) => sum + w * lost[k][j], 0)));
+  }
+  function matrixValues(m) {
+    const f = (v) => (Math.round(v * 1e4) / 1e4).toFixed(4);
+    return m.map((row) => `${row.map(f).join(" ")} 0 0`).concat("0 0 0 1 0").join("\n            ");
+  }
   var PAGE_FILTER2 = "html { filter: var(--ai4a11y-filter-dark,) var(--ai4a11y-filter-dim,) var(--ai4a11y-filter-color,) !important; }";
   var ColorBlindMode = {
     styleId: "ai4a11y-color-blind-styles",
@@ -2547,30 +2647,12 @@
       svg.setAttribute("style", "position:absolute;width:0;height:0");
       svg.innerHTML = `
       <defs>
-        <filter id="ai4a11y-protanopia-filter">
+        ${Object.keys(SEES).map((mode) => `
+        <filter id="ai4a11y-${mode}-filter">
           <feColorMatrix type="matrix" values="
-            0.567, 0.433, 0.000, 0, 0
-            0.558, 0.442, 0.000, 0, 0
-            0.000, 0.242, 0.758, 0, 0
-            0, 0, 0, 1, 0
+            ${matrixValues(correctionMatrix(mode))}
           "/>
-        </filter>
-        <filter id="ai4a11y-deuteranopia-filter">
-          <feColorMatrix type="matrix" values="
-            0.625, 0.375, 0.000, 0, 0
-            0.700, 0.300, 0.000, 0, 0
-            0.000, 0.300, 0.700, 0, 0
-            0, 0, 0, 1, 0
-          "/>
-        </filter>
-        <filter id="ai4a11y-tritanopia-filter">
-          <feColorMatrix type="matrix" values="
-            0.950, 0.050, 0.000, 0, 0
-            0.000, 0.433, 0.567, 0, 0
-            0.000, 0.475, 0.525, 0, 0
-            0, 0, 0, 1, 0
-          "/>
-        </filter>
+        </filter>`).join("")}
       </defs>
     `;
       document.body.appendChild(svg);
@@ -3589,6 +3671,10 @@ ${perElement}`;
         this.rescanTimer = setTimeout(() => {
           this.rescanTimer = null;
           if (!this.enabled) return;
+          for (const h2 of [this.handle, ...this.handles]) {
+            for (let i = h2.records.length - 1; i >= 0; i--) if (!h2.records[i].replacement.parentNode) h2.records.splice(i, 1);
+          }
+          this.handles = this.handles.filter((h2) => h2.records.length);
           const used = this.handles.reduce((n, h2) => n + h2.records.length, this.handle.records.length);
           if (used >= MAX_TEXT_NODES) return;
           const h = this.pass(root, ratio, MAX_TEXT_NODES - used);
@@ -5601,6 +5687,8 @@ ${PAGE_FILTER3}`;
   if (typeof window !== "undefined") window.__ai4a11yMagnifier = Magnifier;
 
   // tools/adapters/flash-guard.js
+  var MEDIA_VARS2 = '@property --ai4a11y-media-dim { syntax: "*"; inherits: false; } @property --ai4a11y-media-dark { syntax: "*"; inherits: false; }';
+  var MEDIA_FILTER2 = "filter: var(--ai4a11y-media-dim,) var(--ai4a11y-media-dark,) !important;";
   var FlashGuard = {
     styleId: "ai4a11y-flash-guard-styles",
     enabled: false,
@@ -5615,8 +5703,10 @@ ${PAGE_FILTER3}`;
       const style = document.createElement("style");
       style.id = this.styleId;
       style.textContent = `
+      ${MEDIA_VARS2}
       video, canvas, img[src*=".gif"], img[src$=".gif"], [class*="gif"] {
-        filter: brightness(0.8) contrast(0.85) !important;
+        --ai4a11y-media-dim: brightness(0.8) contrast(0.85);
+        ${MEDIA_FILTER2}
       }
     `;
       (document.head || document.documentElement).appendChild(style);

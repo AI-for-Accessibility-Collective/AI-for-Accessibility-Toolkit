@@ -12,6 +12,16 @@
 // are the common case), and is disconnected on disable.
 import { announce } from '../utils/ai.js';
 
+// dark-mode filters video and canvas too (it turns them back the right way
+// round on the inverted page), and whichever stylesheet came last won: with
+// both on, the video was either a negative or not dimmed. Each sets its own
+// variable, and the same declaration in each stylesheet combines them: the
+// dimming first, then the turn-back. The variables don't pass down to
+// children.
+const MEDIA_VARS = '@property --ai4a11y-media-dim { syntax: "*"; inherits: false; } ' +
+  '@property --ai4a11y-media-dark { syntax: "*"; inherits: false; }';
+const MEDIA_FILTER = 'filter: var(--ai4a11y-media-dim,) var(--ai4a11y-media-dark,) !important;';
+
 export const FlashGuard = {
   styleId: 'ai4a11y-flash-guard-styles',
   enabled: false,
@@ -31,8 +41,10 @@ export const FlashGuard = {
     const style = document.createElement('style');
     style.id = this.styleId;
     style.textContent = `
+      ${MEDIA_VARS}
       video, canvas, img[src*=".gif"], img[src$=".gif"], [class*="gif"] {
-        filter: brightness(0.8) contrast(0.85) !important;
+        --ai4a11y-media-dim: brightness(0.8) contrast(0.85);
+        ${MEDIA_FILTER}
       }
     `;
     (document.head || document.documentElement).appendChild(style);

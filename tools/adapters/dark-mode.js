@@ -8,6 +8,17 @@ import { announce } from '../utils/ai.js';
 // are set, in a fixed order.
 const PAGE_FILTER = 'html { filter: var(--ai4a11y-filter-dark,) var(--ai4a11y-filter-dim,) var(--ai4a11y-filter-color,) !important; }';
 
+// Video and canvas clash the same way: dark mode turns them back the right
+// way round, flash-guard dims them, and whichever stylesheet came last won,
+// so with both on the video was either a negative or not dimmed. Each sets
+// its own variable, and the same declaration in each stylesheet combines
+// them: the dimming first, then the turn-back. The variables don't pass down
+// to children, so media inside a box that is already turned back isn't
+// turned twice.
+const MEDIA_VARS = '@property --ai4a11y-media-dim { syntax: "*"; inherits: false; } ' +
+  '@property --ai4a11y-media-dark { syntax: "*"; inherits: false; }';
+const MEDIA_FILTER = 'filter: var(--ai4a11y-media-dim,) var(--ai4a11y-media-dark,) !important;';
+
 export const DarkMode = {
   enabled: false,
   styleId: 'ai4a11y-dark-mode',
@@ -56,19 +67,21 @@ export const DarkMode = {
     // that is already inverted back stays as it is, or it would flip twice.
     const BACK = 'img, video, picture, canvas, iframe, [style*="background-image"], [style*="background:"], [style*="background-color"]';
     style.textContent = `
+      ${MEDIA_VARS}
       html {
         --ai4a11y-filter-dark: invert(90%) hue-rotate(180deg);
         background: #111 !important;
       }
       ${PAGE_FILTER}
       ${BACK} {
-        filter: invert(100%) hue-rotate(180deg) !important;
+        --ai4a11y-media-dark: invert(100%) hue-rotate(180deg);
+        ${MEDIA_FILTER}
       }
       img, video {
-        filter: invert(100%) hue-rotate(180deg) contrast(1.1) !important;
+        --ai4a11y-media-dark: invert(100%) hue-rotate(180deg) contrast(1.1);
       }
       :is(${BACK}) :is(img, video, picture, canvas, iframe) {
-        filter: none !important;
+        --ai4a11y-media-dark: initial;
       }
     `;
     document.head.appendChild(style);

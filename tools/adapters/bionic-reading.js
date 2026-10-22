@@ -72,6 +72,13 @@ export const BionicReading = {
       this.rescanTimer = setTimeout(() => {
         this.rescanTimer = null;
         if (!this.enabled) return;
+        // A countdown that rewrites itself every second throws our wrapper
+        // away each time. Forget those: there is nothing to put back, and
+        // counted towards the cap they stopped all wrapping after half an hour.
+        for (const h of [this.handle, ...this.handles]) {
+          for (let i = h.records.length - 1; i >= 0; i--) if (!h.records[i].replacement.parentNode) h.records.splice(i, 1);
+        }
+        this.handles = this.handles.filter((h) => h.records.length);
         const used = this.handles.reduce((n, h) => n + h.records.length, this.handle.records.length);
         if (used >= MAX_TEXT_NODES) return;
         const h = this.pass(root, ratio, MAX_TEXT_NODES - used);
