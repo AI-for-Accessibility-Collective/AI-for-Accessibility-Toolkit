@@ -6,6 +6,13 @@
     "node": "^20.19.0 || ^22.13.0 || >=24.0.0"
   },
   "scripts": {
+    "dev:developer": "node server/index.js",
+    "dev:workshop": "node server/index.js --workshop",
+    "test:developer:e2e": "node server/test/developer-e2e.mjs",
+    "test:adapters:e2e": "node server/test/adapters-e2e.mjs",
+    "test:console:e2e": "node server/test/console-e2e.mjs",
+    "test:redbird:e2e": "node server/test/redbird-e2e.mjs",
+    "test:extension:e2e": "node server/test/extension-adapters-e2e.mjs",
     "test": "for f in tools/test/*-test.js toolkit/test/*-test.js toolkit/test/*-test.mjs toolkit/test/*.test.mjs controller/test/*.test.mjs onboarding/test/*.test.mjs scripts/import-boundaries-test.mjs; do node \"$f\" || exit 1; done",
     "validate:browser": "node tools/test/browser-validate.js",
     "test:e2e": "node onboarding/test/chat-e2e.mjs",

@@ -1,0 +1,82 @@
+{
+  "description": "Maintain a text-size multiplier on a web document.",
+  "adapterProtocol": {
+    "name": "ai4a11y.adapter-mcp",
+    "version": "0.1.0"
+  },
+  "exposure": "mcp",
+  "reach": "external",
+  "mode": "stateful",
+  "capabilities": [],
+  "surfaces": [
+    "web"
+  ],
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "scale": {
+        "type": "number",
+        "minimum": 0.5,
+        "maximum": 2,
+        "description": "Unitless multiplier; 1.5 means 150 percent."
+      }
+    },
+    "required": [
+      "scale"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": true
+  },
+  "stateSchema": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "description": "Whether the adapter reports itself on."
+      },
+      "requestedParameters": {
+        "type": "object",
+        "description": "The last parameters applied through this provider (requested, not observed)."
+      }
+    },
+    "additionalProperties": false
+  },
+  "requires": {
+    "host": [],
+    "profileScopes": [],
+    "dependencies": []
+  },
+  "effects": {
+    "writes": [],
+    "idempotent": true,
+    "reversibility": "full"
+  },
+  "operations": [
+    "query",
+    "check",
+    "apply",
+    "revert"
+  ],
+  "appId": "browser-extension",
+  "id": "text-scale",
+  "name": "Text scale",
+  "version": "1.0.0",
+  "targets": [
+    {
+      "platforms": [
+        "*"
+      ],
+      "urls": [
+        "*"
+      ]
+    }
+  ]
+}

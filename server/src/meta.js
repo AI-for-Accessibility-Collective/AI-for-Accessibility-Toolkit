@@ -18,14 +18,53 @@ export const HTTP_ENDPOINTS = [
   { method: 'GET', path: '/healthz', auth: 'none', purpose: 'liveness: {ok:true, version}' },
   { method: 'GET', path: '/v1/healthz', auth: 'none', purpose: 'the same payload; the path deployed probes must use (the bare /healthz is intercepted at the run.app edge)' },
   { method: 'GET', path: '/v1/meta', auth: 'none', purpose: 'generated service+API description' },
+  { method: 'GET', path: '/developer', auth: 'none (API calls require bearer)', purpose: 'developer profile manager; static assets under /developer/' },
   { method: 'POST', path: '/v1/librarian/{method}', auth: 'bearer', purpose: "invoke a Librarian method for the token's uid" },
-  { method: 'GET', path: '/v1/whoami', auth: 'bearer', purpose: '{uid, label} for the presented token' },
-  { method: 'POST', path: '/admin/tokens', auth: 'admin', purpose: 'create token {uid, label?} -> {token, uid} (token shown once)' },
-  { method: 'GET', path: '/admin/tokens', auth: 'admin', purpose: 'list {id, uid, label, createdAt, revoked} (no token values)' },
+  { method: 'GET', path: '/v1/whoami', auth: 'bearer', purpose: '{uid, label, kind} for the presented token' },
+  { method: 'GET', path: '/v1/adapters', auth: 'bearer', purpose: 'list the adapter marketplace, grouped-by-app metadata included; filters ?app= ?kind= ?mine=1 ?installed=1 (mine/installed are per calling uid)' },
+  { method: 'POST', path: '/v1/adapters', auth: 'bearer', purpose: 'register an adapter {appId, id, name, ...manifest, code?, appName?} -> 201 {adapter}; code present makes kind "code"' },
+  { method: 'POST', path: '/v1/adapters/sync', auth: 'bearer', purpose: 'publish an app catalog in one call {appId, appName?, adapters: [...], full?}; upserts the caller\'s entries, skips another uid\'s, full:true also removes the caller\'s missing ones' },
+  { method: 'GET', path: '/v1/adapters/{appId}/{id}', auth: 'bearer', purpose: '{adapter} for one listing' },
+  { method: 'PUT', path: '/v1/adapters/{appId}/{id}', auth: 'bearer (registering uid) or admin', purpose: 'update the manifest; code present replaces/removes the code blob (empty string removes), absent leaves it' },
+  { method: 'DELETE', path: '/v1/adapters/{appId}/{id}', auth: 'bearer (registering uid) or admin', purpose: 'remove the listing and its code blob' },
+  { method: 'GET', path: '/v1/adapters/{appId}/{id}/code', auth: 'bearer', purpose: '{code, sha256, size, updatedAt} for a kind "code" listing; 404 for data-only' },
+  { method: 'PUT', path: '/v1/adapters/{appId}/{id}/install', auth: 'bearer', purpose: "mark installed in the calling uid's state -> {ok, installed:true}" },
+  { method: 'DELETE', path: '/v1/adapters/{appId}/{id}/install', auth: 'bearer', purpose: 'clear it -> {ok, installed:false}' },
+  { method: 'GET', path: '/sdk/adapter-mcp.js', auth: 'none (public code, any origin)', purpose: 'the Adapter MCP SDK entry point for apps; its modules are under /sdk/toolkit/' },
+  { method: 'POST', path: '/v1/auth/login', auth: 'none (rate limited)', purpose: 'developer sign-in {username, password} -> {token (session, expires), expiresAt, account, defaultToken}' },
+  { method: 'POST', path: '/v1/auth/logout', auth: 'session', purpose: 'end this sign-in session' },
+  { method: 'GET', path: '/v1/account', auth: 'session', purpose: '{account, defaultToken, tokens, session, liveApps} for the signed-in account' },
+  { method: 'POST', path: '/v1/account/default-token', auth: 'session', purpose: 'regenerate the default token -> {defaultToken}; the old one is revoked and its apps disconnect' },
+  { method: 'POST', path: '/v1/account/tokens', auth: 'session', purpose: 'make an app token {label?} -> {token, id, label} (shown once)' },
+  { method: 'DELETE', path: '/v1/account/tokens/{id}', auth: 'session', purpose: "revoke one of the account's tokens" },
+  { method: 'POST', path: '/v1/account/password', auth: 'session', purpose: 'change password {current, next}; signs out other sessions' },
+  { method: 'GET', path: '/v1/account/presets', auth: 'session', purpose: "{presets} saved profile presets for the developer console" },
+  { method: 'PUT', path: '/v1/account/presets', auth: 'session', purpose: 'replace the saved presets {presets: [{id, name, description?, profile}]}' },
+  { method: 'POST', path: '/v1/providers', auth: 'bearer (app or default token)', purpose: 'register an Adapter MCP app instance {providerId?, label?, application, adapters: [descriptor]} -> {providerId, endpoints}' },
+  { method: 'DELETE', path: '/v1/providers/{providerId}', auth: 'bearer (the registering token)', purpose: 'sign the instance off' },
+  { method: 'GET', path: '/v1/providers/{providerId}/channel', auth: 'bearer (the registering token)', purpose: 'server-sent events: each `request` event is one relayed MCP JSON-RPC message' },
+  { method: 'POST', path: '/v1/providers/{providerId}/channel', auth: 'bearer (the registering token)', purpose: 'the instance answers one relayed request with its JSON-RPC response -> 204' },
+  { method: 'POST', path: '/v1/mcp/providers/{providerId}', auth: 'bearer (same account)', purpose: 'MCP Streamable HTTP endpoint (POST JSON-RPC, JSON response) for one connected instance' },
+  { method: 'POST', path: '/v1/mcp/apps/{appId}', auth: 'bearer (same account)', purpose: "MCP endpoint for the app's one live instance; an error names the instance endpoints when several are connected" },
+  { method: 'GET', path: '/v1/apps', auth: 'bearer', purpose: "the account's connected apps grouped by app: {apps: [{appId, name, live, hidden, connections, adapters, endpoint}], hiddenApps}" },
+  { method: 'DELETE', path: '/v1/apps/{appId}', auth: 'bearer', purpose: 'forget an app that is not connected (it returns when it connects again)' },
+  { method: 'PUT', path: '/v1/apps/{appId}/hidden', auth: 'bearer', purpose: 'hide the app in the developer console (Apps and Marketplace)' },
+  { method: 'DELETE', path: '/v1/apps/{appId}/hidden', auth: 'bearer', purpose: 'show it again' },
+  { method: 'GET', path: '/admin/accounts', auth: 'admin', purpose: 'list accounts {accounts: [{uid, displayName, disabled, createdAt, lastLoginAt, appTokens, sessions, liveApps, hasData}]}' },
+  { method: 'POST', path: '/admin/accounts', auth: 'admin', purpose: 'make an account {uid, displayName?, password?} -> 201 {account, password?} (a generated password is shown once)' },
+  { method: 'POST', path: '/admin/accounts/bulk', auth: 'admin', purpose: 'make many {accounts: [{uid, displayName?}]} -> {results: [{uid, ok, password?|error}]}' },
+  { method: 'PUT', path: '/admin/accounts/{uid}', auth: 'admin', purpose: 'rename {displayName}' },
+  { method: 'POST', path: '/admin/accounts/{uid}/password', auth: 'admin', purpose: 'reset the password {password?} -> {password?}; signs the account out everywhere' },
+  { method: 'POST', path: '/admin/accounts/{uid}/disable', auth: 'admin', purpose: 'turn the account off: revokes every token and disconnects its apps' },
+  { method: 'POST', path: '/admin/accounts/{uid}/enable', auth: 'admin', purpose: 'turn it back on (a new default token at the next sign-in)' },
+  { method: 'DELETE', path: '/admin/accounts/{uid}', auth: 'admin', purpose: 'delete the account, its data and its tokens' },
+  { method: 'GET', path: '/admin/assets/console.js', auth: 'none (public code)', purpose: "the admin console's script" },
+  { method: 'POST', path: '/admin/tokens', auth: 'admin', purpose: 'create token {uid, label?, kind?: "app"|"default"} -> {token, uid} (token shown once)' },
+  { method: 'GET', path: '/admin/tokens', auth: 'admin', purpose: 'list {id, uid, label, kind, createdAt, expiresAt?, revoked} (no token values)' },
   { method: 'DELETE', path: '/admin/tokens/{id}', auth: 'admin', purpose: 'revoke' },
   { method: 'GET', path: '/admin/users', auth: 'admin', purpose: 'list {users: uid[]}, every uid holding stored state' },
   { method: 'DELETE', path: '/admin/users/{uid}', auth: 'admin', purpose: "delete that uid's partition and revoke its tokens -> {ok, uid, revokedTokens} (a count); 404 when the uid had neither data nor live tokens" },
-  { method: 'GET', path: '/admin', auth: 'admin (HTTP Basic. An unauthenticated GET answers 401 + WWW-Authenticate, so the browser prompts, then attaches the cached credential to the page\'s own fetches)', purpose: 'minimal HTML config interface' },
+  { method: 'GET', path: '/admin', auth: 'admin (HTTP Basic. An unauthenticated GET answers 401 + WWW-Authenticate, so the browser prompts, then attaches the cached credential to the page\'s own fetches; browser POSTs must be same-origin JSON)', purpose: 'admin console: accounts, tokens, stored data' },
 ];
 
 /** Build the librarian method table by constructing one throwaway toolkit
@@ -85,7 +124,9 @@ export function buildMeta({ version = '0.0.0' } = {}) {
     },
     storage: {
       kv: 'areas local/sync per uid -> users/<uid>/<area>.json',
-      tokens: 'admin/tokens.json',
+      tokens: 'admin/tokens.json (hashes only; kinds app, default, session)',
+      accounts: 'admin/accounts.json (scrypt password hashes)',
+      apps: 'users/<uid>/apps.json (last-known app registrations), users/<uid>/console.json (hidden apps, presets) and users/<uid>/activity.json (the last 200 MCP calls)',
       backends: ['file (DATA_DIR)', 'gcs (TOOLKIT_BUCKET)'],
     },
   };
@@ -149,6 +190,8 @@ export function generateMarkdown(meta = buildMeta()) {
   lines.push('');
   lines.push(`- KV: ${meta.storage.kv}`);
   lines.push(`- Tokens: ${meta.storage.tokens}`);
+  lines.push(`- Accounts: ${meta.storage.accounts}`);
+  lines.push(`- Apps: ${meta.storage.apps}`);
   lines.push(`- Backends: ${meta.storage.backends.join(', ')}`);
   lines.push('');
   return lines.join('\n');

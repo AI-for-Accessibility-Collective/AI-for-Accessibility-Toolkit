@@ -44,14 +44,56 @@ gcloud storage buckets add-iam-policy-binding gs://<your-bucket> --member="servi
 # image (context = repo root; Dockerfile copies toolkit/ + server/)
 gcloud builds submit --config cloudbuild.yaml --substitutions SHORT_SHA=$(git rev-parse --short HEAD) .
 
-# small instance, scale-to-zero
+# small instance, scale-to-zero, ONE instance at most (see below)
 gcloud run deploy toolkit-service \
   --image <region>-docker.pkg.dev/$PROJECT/toolkit/toolkit-service:$(git rev-parse --short HEAD) \
   --region <region> --allow-unauthenticated \
-  --memory 512Mi --cpu 1 --min-instances 0 --max-instances 2 --concurrency 40 \
+  --memory 512Mi --cpu 1 --cpu-boost --min-instances 0 --max-instances 1 --concurrency 250 --timeout 3600 \
   --set-secrets "ADMIN_PASSWORD=toolkit-admin-password:latest,GEMINI_API_KEY=toolkit-gemini-key:latest" \
-  --set-env-vars "TOOLKIT_BUCKET=<your-bucket>"
+  --set-env-vars "TOOLKIT_BUCKET=<your-bucket>,CORS_ORIGINS=*"
 ```
+
+Why these settings:
+
+- `--max-instances 1`: apps connected through Adapter MCP are held in the
+  process's memory (`src/relay.js`). With two instances, an app could connect
+  to one while the console or an MCP client asks the other, which reports it
+  offline. Everything else is in the bucket, so a restart loses nothing but
+  the live connections, and apps reconnect by themselves.
+- `--timeout 3600`: each connected app holds one long request open (its
+  server-sent-event channel). The 300-second default cuts it every five
+  minutes; the app reconnects, but the console flickers.
+- `--concurrency 250`: every open app tab is one long request, and a
+  workshop room has many.
+- `CORS_ORIGINS=*`: lets the Redbird demo store and participants' own pages,
+  on any address, call `/v1` with their token. `/v1` only accepts bearer
+  tokens, never cookies, so this exposes nothing a page did not already
+  hold. List exact origins instead when you know them.
+- Optional: `TOKEN_SECRET` (a secret, like the others). Without it, each
+  account's default token is derived from the admin password, so changing
+  the admin password gives every account a new default token at its next
+  sign-in, and their apps need the new one.
+
+## Logs
+
+The service writes structured JSON, one entry per request and one per event
+(sign-ins, account and token changes, apps connecting, MCP calls, errors with
+their stack); see [README.md](./README.md#logs). Cloud Logging keeps them 30
+days by default. To keep them longer, route them to their own log bucket:
+
+```bash
+gcloud logging buckets create toolkit-service-logs --location=global --retention-days=365
+gcloud logging sinks create toolkit-service-logs \
+  logging.googleapis.com/projects/$PROJECT/locations/global/buckets/toolkit-service-logs \
+  --log-filter='resource.type="cloud_run_revision" AND resource.labels.service_name="toolkit-service"'
+# read them back:
+gcloud logging read 'jsonPayload.event="auth.signin.failed"' \
+  --bucket=toolkit-service-logs --location=global --view=_AllLogs --freshness=7d
+```
+
+Logs carry uids and client addresses but never passwords, tokens or profile
+content. They are still records of who used the service and when: say so to
+the people whose accounts are on it, and delete the log bucket at teardown.
 
 Liveness: `GET /v1/healthz` (the bare `/healthz` is intercepted at the
 `*.run.app` edge — see CONTRACT.md). The server holds the Gemini key, so
@@ -63,9 +105,11 @@ and clients never need an LLM key.
 Every `/v1/*` call needs `Authorization: Bearer <token>`; each token maps to a
 `uid` that partitions all state; tokens are stored hashed.
 
-- **Config interface**: `GET /admin` — the browser shows its native login
+- **Admin console**: `GET /admin` — the browser shows its native login
   popup (any username + the admin password) and remembers the session; the
-  page lists / creates / revokes tokens, and has a Sign out button.
+  page makes developer accounts (one at a time or a whole workshop at once),
+  resets passwords, turns accounts off, and lists / creates / revokes tokens.
+  Developers then sign in at `/developer` and get their default token there.
 - **CLI**:
   ```bash
   AT=$(gcloud secrets versions access latest --secret toolkit-admin-password)
@@ -94,6 +138,6 @@ disclosure.
 
 Small instance, scale-to-zero: idle cost ≈ storage + registry only. Teardown:
 `gcloud run services delete toolkit-service --region <region>`, delete the two
-secrets and the bucket. If real people's profiles were on the instance,
+secrets, the bucket, and the `toolkit-service-logs` sink and log bucket. If real people's profiles were on the instance,
 teardown includes deleting the bucket's contents — a profile is
 disability-related information, not just state.

@@ -26,13 +26,24 @@ in `docs/architecture.md`. This section is the code map.
   - `registry/` — the canonical tools catalog + settings vocabulary.
   - `skills/builtin/` — starter `SKILL.md` recipes.
   - `sync/`, `protocol/` — profile-blob transport + JSON-schema wire contracts.
+    `protocol/adapter/` is the Adapter MCP wire contract (descriptor checks,
+    target matching, the JSON Schema subset validator, canonical digests).
+  - `adapter-mcp/` — the Adapter MCP SDK: `createAdapterProvider`,
+    `fromToggleAdapter`/`fromAction`, `connectToToolkit`, a small MCP client.
+    Apps use it to expose adapters; the service also serves it at
+    `/sdk/adapter-mcp.js`.
   - `hosts/` — runnable demos (`xr-demo`, `skill-demo`).
 - `tools/` — the developer **catalog**: `adapters/` (executable fixes),
   `auditors/` (issue detectors), `validators/` (the verifier engine for agentic
   flows), `profiles/` (ability presets), `insights/` (knowledge modules, e.g.
   ArtInsight), `utils/`.
 - `server/` — hosted HTTP service exposing the Librarian methods to any
-  language/runtime.
+  language/runtime. Also: developer accounts (`src/accounts.js`; `/admin` is
+  the admin console, `/developer` the developer console), the adapter
+  marketplace (`src/adapters.js`), and the Adapter MCP relay
+  (`src/relay.js`, `src/providers.js`) that puts connected apps under
+  **Apps** and at `/v1/mcp/…`. The relay is in memory, one process. A
+  Redbird checkout at `../redbird` is used by `npm run test:redbird:e2e`.
 - `cli/` — an experimental Python CLI (`ai4a11y`) that drives a real page over the
   DevTools Protocol and bundles the catalog as `cli/cli-tools.bundle.js`.
   Rebuild the bundle with `npm run build:cli` and commit it; CI fails on drift.
@@ -102,7 +113,9 @@ skill for the full surface.
 
 ## Build & Test
 
-Pure ES modules, no build step for the core. The one generated file is
+Pure ES modules, no build step for the core. Browser suites (Playwright):
+`npm run test:developer:e2e`, `test:adapters:e2e`, `test:console:e2e`,
+`test:redbird:e2e` (skips without `../redbird`). The one generated file is
 `cli/cli-tools.bundle.js` (`npm run build:cli`). Run `npm ci` once first —
 the demos need nothing installed, but the tools suites need jsdom. Run the
 suites:

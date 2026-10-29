@@ -17,6 +17,8 @@ import { fileURLToPath } from 'node:url';
 import { buildModel } from './introspect.mjs';
 import { QUICK_START_CODE, PACKAGE_NAME } from './generate-api-docs.mjs';
 import { renderMethodGroups, renderPorts } from './render-lib.mjs';
+import { PROFILE_NAME, PROFILE_VERSION, MCP_PROTOCOL_VERSION, TOOL_DESCRIPTIONS } from '../protocol/adapter/index.js';
+import * as adapterMcp from '../adapter-mcp/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TOOLKIT_ROOT = path.join(__dirname, '..');       // toolkit/
@@ -104,20 +106,62 @@ function buildServerDevSection() {
 **Run locally** (file-backed storage, no cloud account needed):
 
 \`\`\`bash
-DATA_DIR=./data ADMIN_PASSWORD=dev PORT=8080 node server/index.js
-# mint a token:  curl -X POST localhost:8080/admin/tokens \\
-#   -H 'Authorization: Bearer dev' -H 'content-type: application/json' \\
-#   -d '{"uid":"me","label":"dev"}'
+ADMIN_PASSWORD=dev npm run dev:workshop      # from the repo root; --workshop lets any local page call /v1
+# make an account (or use the admin console at http://localhost:8080/admin):
+#   curl -X POST localhost:8080/admin/accounts -H 'Authorization: Bearer dev' \\
+#     -H 'content-type: application/json' -d '{"uid":"me"}'      # → 201 {account, password}
+# then sign in at http://localhost:8080/developer for the default token
 \`\`\`
 
-**Environment variables** (parsed from the server source at doc-generation time): ${envVars.map((v) => `\`${v}\``).join(', ')}. \`TOOLKIT_BUCKET\` switches storage from the \`DATA_DIR\` file backend to GCS; \`GEMINI_API_KEY\` enables the server-side LLM lane (\`extract\`/\`reflect\`/\`buildSkill\`/\`interpretNeedsPrompt\`) so clients never need a key; \`ADMIN_PASSWORD\` (a generated 16-character password) guards \`/admin\` (token management UI + CRUD).
+For a workshop, the admin console's **Fill in team-1 … team-10** makes a batch
+of accounts and shows each password once (print or copy them then).
+
+**Environment variables** (parsed from the server source at doc-generation time): ${envVars.map((v) => `\`${v}\``).join(', ')}. \`TOOLKIT_BUCKET\` switches storage from the \`DATA_DIR\` file backend to GCS; \`GEMINI_API_KEY\` enables the server-side LLM lane (\`extract\`/\`reflect\`/\`buildSkill\`/\`interpretNeedsPrompt\`) so clients never need a key; \`ADMIN_PASSWORD\` (a generated 16-character password) guards \`/admin\` (the admin console: developer accounts and tokens); \`TOKEN_SECRET\` derives each account's default token (it falls back to \`ADMIN_PASSWORD\`; when the secret in use changes, each account gets a new default token at its next sign-in and apps need the new one).
 
 **npm scripts** (\`server/package.json\`):
 ${scriptLines}
 
-**Deploying**: \`server/Dockerfile\` builds from the repo root (it copies \`toolkit/\` + \`server/\`); \`cloudbuild.yaml\` + \`server/DEPLOYMENT.md\` document the Cloud Run deployment (small instance, Secret Manager for the two secrets, GCS bucket, IAM). \`server/API.md\` is generated from the route table (\`npm run docs\` in \`server/\`) and the live service serves the same data at \`GET /v1/meta\`. Liveness: use \`/v1/healthz\` (bare \`/healthz\` is intercepted at the run.app edge).
+**Deploying**: \`server/Dockerfile\` builds from the repo root (it copies \`toolkit/\` + \`server/\`); \`cloudbuild.yaml\` + \`server/DEPLOYMENT.md\` document the Cloud Run deployment (small instance, Secret Manager for the secrets, GCS bucket, IAM). Keep \`--max-instances 1\` (connected Adapter MCP apps live in the process's memory, so a second instance would report them offline), \`--timeout 3600\` (each connected app holds one long server-sent-event request), and \`CORS_ORIGINS=*\` when browser apps on other origins must connect (\`/v1\` accepts bearer tokens only, never cookies). Everything else — accounts, tokens, profiles, presets, each account's last 200 MCP calls — is in the store and survives a restart. Logs are structured JSON on Cloud Run (requests, sign-ins, account and token changes, apps connecting, MCP calls, errors with stacks; never passwords, tokens or profile content); DEPLOYMENT.md shows routing them to a 365-day log bucket. \`server/API.md\` is generated from the route table (\`npm run docs\` in \`server/\`) and the live service serves the same data at \`GET /v1/meta\`. Liveness: use \`/v1/healthz\` (bare \`/healthz\` is intercepted at the run.app edge).
 
 **Extending the wire surface**: add a route entry in \`server/src/routes.js\` (plain \`{route, target, kind}\`, or a custom \`invoke\` for arg-shape dispatch — see \`setPause\`), then regenerate docs and update the oracle list in \`server/test/server-test.mjs\`. A remote-mode host wraps these routes in a Librarian-shaped facade.`;
+}
+
+/** "Exposing an app's adapters" — the version numbers, tool names and SDK
+ *  exports are read from the protocol and SDK modules, so they cannot drift. */
+function buildAdapterMcpSection() {
+  const tools = Object.entries(TOOL_DESCRIPTIONS).map(([name, text]) => `- \`${name}\` — ${text}`).join('\n');
+  const helpers = ['createAdapterProvider', 'defineDescriptor', 'fromToggleAdapter', 'fromAction', 'connectToToolkit', 'detectBrowserPlatform', 'createMcpClient', 'adapterClient', 'catalogDescriptors']
+    .filter((name) => typeof adapterMcp[name] === 'function');
+  return `**Adapter MCP** (profile \`${PROFILE_NAME}\` \`${PROFILE_VERSION}\`, on MCP \`${MCP_PROTOCOL_VERSION}\`) is how an app makes its own accessibility adapters callable: the app keeps running them, and the toolkit relays standard MCP tool calls to it. A pre-alpha draft — the wire shapes can still change, and the adapters it carries are not validated with the people they are meant for, so treat what you build as a prototype. Design: \`docs/design/adapter-mcp.md\`; SDK guide: \`toolkit/adapter-mcp/README.md\`; wire checks: \`toolkit/protocol/adapter/\`.
+
+**Connect an app** (a web page loads the SDK from the toolkit itself; in Node import \`${PACKAGE_NAME}/adapter-mcp\`):
+
+\`\`\`javascript
+const { createAdapterProvider, connectToToolkit, defineDescriptor, fromToggleAdapter, detectBrowserPlatform } =
+  await import(\`\${TOOLKIT_URL}/sdk/adapter-mcp.js\`);
+const provider = createAdapterProvider({
+  application: { appId: 'my-app', name: 'My app', version: '0.1.0',
+    supportedPlatforms: [{ environment: 'web-page' }], platform: detectBrowserPlatform(), surfaces: ['web'] },
+  adapters: [fromToggleAdapter({
+    adapter: bigText,               // any object with enable(options), disable() and \`enabled\`
+    descriptor: defineDescriptor({ appId: 'my-app', id: 'big-text', name: 'Big text', version: '0.1.0',
+      description: 'Makes the text bigger.', targets: [{ platforms: ['*'], urls: [location.origin + '/*'] }],
+      inputSchema: { type: 'object', properties: { scale: { type: 'number', minimum: 1, maximum: 2 } }, additionalProperties: false } }),
+  })],
+});
+const link = connectToToolkit({ url: TOOLKIT_URL, token: DEFAULT_TOKEN, provider, label: 'My app tab' });
+await link.ready;                   // now live under Apps in the developer console, grouped by appId
+\`\`\`
+
+\`createAdapterProvider\` checks every descriptor when it is created and throws \`AdapterMcpError\` with the reasons; read them rather than loosening the descriptor. Adapters with \`exposure: 'internal'\` are never exported. SDK helpers: ${helpers.map((h) => `\`${h}\``).join(', ')}.
+
+**Tools every connected app answers** (plus an \`apply_<id>\` shortcut per adapter, taking \`{enabled, parameters?, target?, requestKey?}\` with the adapter's parameter schema inlined; \`target\` may be left out only when the adapter has exactly one current target):
+
+${tools}
+
+A client pins the adapter it means with \`adapterRef\` = \`{appId, id, version, descriptorDigest}\` from \`adapter_list\`; a changed adapter refuses the call instead of running something else. Undo works only through the receipt an apply returned, and refuses if anything changed the adapter since.
+
+**Calling an app's adapters** (same account only): \`POST /v1/mcp/apps/{appId}\` reaches the app's single live instance, \`POST /v1/mcp/providers/{providerId}\` one particular instance. From Claude Code: \`claude mcp add --transport http <name> $TOOLKIT_SERVER_URL/v1/mcp/apps/<appId> --header "Authorization: Bearer <default token>"\`. From code: \`adapterClient(createMcpClient({ url, token }))\`. The developer console's **Apps** page does the same from a form (Try it), lists each app's connections and recent calls, and can hide an app; the Redbird demo store connects as \`redbird\` ("Redbird demo") via **Connect an app → Open Redbird**.`;
 }
 
 const ADD_SKILL_SECTION = `This skill ships **inside the toolkit repo** at \`.claude/skills/ai4a11y-toolkit/SKILL.md\`, so anyone opening this repo in Claude Code gets it automatically. To use it from **your own project**:
@@ -132,9 +176,10 @@ Claude Code discovers project skills in \`.claude/skills/\` on the next session.
 export function renderSkillMd(model) {
   const serviceMapping = buildServiceMappingSection();
   const serverDev = buildServerDevSection();
+  const adapterMcpSection = buildAdapterMcpSection();
   return `---
 name: ai4a11y-toolkit
-description: Use when embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), talking to the hosted toolkit HTTP service, or running/deploying your own toolkit service instance.
+description: Use when embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), exposing an app's accessibility adapters through Adapter MCP (the SDK, the developer console's Apps page, calling adapters from an MCP client), talking to the hosted toolkit HTTP service with an account's default token, or running/deploying your own toolkit service instance (accounts, workshops, Cloud Run).
 ---
 
 # AI for Accessibility Toolkit
@@ -176,28 +221,40 @@ lives in the project's untracked \`.env\` at the repo root:
 
 \`\`\`bash
 TOOLKIT_SERVER_URL=https://<your-instance>     # ask a maintainer, or your own deployment
-TOOLKIT_SERVER_TOKEN=aat_...                   # UID-bound access token, minted on the instance's /admin page
+TOOLKIT_SERVER_TOKEN=aat_...                   # the account's default token, from the developer console
 \`\`\`
+
+Tokens come from **accounts**. An admin makes developer accounts in the
+instance's admin console (\`/admin\`, browser login popup: any username, the
+admin password). The developer signs in at \`/developer\`; the sidebar shows
+the account's **default token**, which every app, adapter and script of that
+account uses. The console's own sign-in session token is refused outside the
+console, and **Account & tokens** can make extra app tokens that are revoked on
+their own. All of an account's state is partitioned by its \`uid\`.
 
 **When a task needs the hosted service, do this first:**
 
 1. Check \`.env\` for \`TOOLKIT_SERVER_URL\` / \`TOOLKIT_SERVER_TOKEN\`.
 2. If either is missing, **ask the user** for it (the URL comes from a
-   maintainer or their own deployment; a token is minted on the instance's
-   \`/admin\` page — browser login popup) and **offer to write both into
+   maintainer or their own deployment; the token is the default token shown
+   after signing in at \`/developer\`) and **offer to write both into
    \`.env\`** — create the file if needed, and confirm \`.env\` is gitignored
    *before* writing (\`git check-ignore .env\`).
 3. Read the values from \`.env\` at run time — never hardcode them in code,
    commits, or generated files, and never echo the token back into output.
 4. Verify the connection: \`GET $TOOLKIT_SERVER_URL/v1/whoami\` with
    \`Authorization: Bearer $TOOLKIT_SERVER_TOKEN\` returns the token's
-   \`{uid, label}\`.
+   \`{uid, label, kind}\` (\`kind\` is \`default\` or \`app\`).
 
 The browser extensions do **not** use \`.env\` and do not live in this
 repository. Their config lives in \`chrome.storage.sync\` (\`toolkitServerUrl\` /
 \`toolkitServerToken\`), written by each extension's Options page. Do not write a
 token into any file in this repository; the extension repository documents its
 own demo-build configuration.
+
+## Exposing an app's adapters (Adapter MCP)
+
+${adapterMcpSection}
 
 ## Running or deploying your own toolkit service
 

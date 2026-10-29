@@ -75,6 +75,14 @@ const KNOWN_EDGES = {
     to: ['toolkit/index.js', 'toolkit/platforms/node/ports.js', 'toolkit/registry/tools.js'],
     why: 'the hosted service embeds the core over the node reference ports and hands it the registry',
   },
+  'server/src/providers.js': {
+    to: ['toolkit/protocol/adapter/index.js'],
+    why: 'app registrations are re-validated against the Adapter MCP contract (descriptors, digests) before the service stores or relays them',
+  },
+  'server/src/adapters.js': {
+    to: ['toolkit/protocol/adapter/index.js'],
+    why: 'marketplace listings may carry an Adapter MCP descriptor, validated and digested with the same contract code',
+  },
   'server/src/meta.js': {
     to: ['toolkit/index.js', 'toolkit/platforms/node/kv.js'],
     why: 'the /v1/meta payload and server/API.md are introspected from a real librarian built on an in-memory KV',

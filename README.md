@@ -143,6 +143,28 @@ There are four ways to use the toolkit:
 
 [docs/COMPONENTS.md](docs/COMPONENTS.md) has more on each.
 
+To work with the toolkit visually, run `npm run dev:developer` (or
+`npm run dev:workshop`, which also lets other local pages connect), make an
+account at `http://localhost:8080/admin`, and sign in at
+`http://localhost:8080/developer`. Signing in gives you a **default token** for
+your apps. The console's pages:
+
+- **Profiles:** edit test profiles, save presets to your account, or load one
+  of nine W3C WAI-inspired profiles. Loading one updates the toolkit at once.
+- **Apps:** apps built with the [Adapter MCP SDK](toolkit/adapter-mcp/README.md)
+  appear here, grouped by app, as soon as they connect with your token. The
+  Redbird demo store opens from here already connected. Try an app's adapters,
+  or hide an app you are not working on. Coding agents can call the same
+  adapters over MCP.
+- **Marketplace:** the adapters apps have listed on this instance. See
+  [docs/ADAPTER-MARKETPLACE.md](docs/ADAPTER-MARKETPLACE.md).
+- **Account & tokens:** your default token, extra app tokens, and your password.
+
+Adapter MCP is a pre-alpha draft and the adapters are not validated with the
+people they are meant for, so treat what you build with it as a prototype to
+learn from. [server/README.md](server/README.md#running-a-workshop) has the
+steps for running a workshop.
+
 ### What your app needs to provide
 
 - Ports: a `KVStore` is required, and `Clock`, `Scheduler` and `Consent` have

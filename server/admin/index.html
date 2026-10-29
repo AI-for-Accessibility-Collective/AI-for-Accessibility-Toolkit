@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · Toolkit Service</title>
+  <link rel="stylesheet" href="/developer/styles.css">
+  <link rel="stylesheet" href="/developer/console.css">
+  <script type="module" src="/admin/assets/console.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="topbar">
+    <a class="brand" href="/admin"><span class="brand-mark" aria-hidden="true">a<span>+</span></span><span>Toolkit Service <small>ADMIN CONSOLE</small></span></a>
+    <span class="heading-actions"><a href="/developer">Developer console</a><button id="signOutBtn" class="secondary small" type="button">Sign out</button></span>
+  </header>
+  <main id="main" class="admin-shell">
+    <p class="eyebrow">ADMINISTRATION</p>
+    <h1>Accounts and access</h1>
+    <p class="muted">Make accounts for the developers using this toolkit. Each account signs in to the developer console and gets a default token for their apps.</p>
+    <p id="status" role="status" aria-live="polite"></p>
+    <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+      <button type="button" role="tab" id="tab-accounts" aria-controls="panel-accounts" aria-selected="true">Accounts</button>
+      <button type="button" role="tab" id="tab-tokens" aria-controls="panel-tokens" aria-selected="false" tabindex="-1">Tokens</button>
+      <button type="button" role="tab" id="tab-data" aria-controls="panel-data" aria-selected="false" tabindex="-1">Stored data</button>
+    </div>
+
+    <section id="panel-accounts" role="tabpanel" aria-labelledby="tab-accounts" class="admin-section">
+      <div class="account-grid">
+        <section class="panel" aria-labelledby="create-heading">
+          <h2 id="create-heading">Make one account</h2>
+          <form id="create-form" class="stack">
+            <div class="input-group"><label for="new-uid">Username</label><input id="new-uid" required autocapitalize="none" spellcheck="false" pattern="[a-z0-9][a-z0-9._\-]{1,63}" placeholder="e.g. team-3"></div>
+            <div class="input-group"><label for="new-name">Display name <small>(optional)</small></label><input id="new-name" maxlength="120" placeholder="e.g. Team 3"></div>
+            <div class="input-group"><label for="new-password">Password <small>(optional — leave blank to make one)</small></label><input id="new-password" type="text" autocomplete="off" spellcheck="false" minlength="8"></div>
+            <div><button class="primary" type="submit">Make account</button></div>
+          </form>
+        </section>
+        <section class="panel" aria-labelledby="bulk-heading">
+          <h2 id="bulk-heading">Make many (for a workshop)</h2>
+          <form id="bulk-form" class="stack">
+            <div class="input-group"><label for="bulk-rows">One per line: username, then an optional display name after a comma</label><textarea id="bulk-rows" rows="6" spellcheck="false" placeholder="team-1, Team 1&#10;team-2, Team 2"></textarea></div>
+            <div class="row-actions"><button class="primary" type="submit">Make accounts</button><button id="bulk-fill" class="secondary" type="button">Fill in team-1 … team-10</button></div>
+          </form>
+        </section>
+      </div>
+      <section id="credentials" class="panel new-secret" hidden aria-labelledby="credentials-heading">
+        <h2 id="credentials-heading">New sign-in details</h2>
+        <p class="hint">Passwords are shown once. Print or copy them now; afterwards you can only reset them.</p>
+        <div id="credentials-body"></div>
+        <div class="row-actions no-print"><button id="credentials-copy" class="secondary small" type="button">Copy as text</button><button id="credentials-print" class="secondary small" type="button">Print</button><button id="credentials-close" class="text-button" type="button">Done</button></div>
+      </section>
+      <section class="panel" aria-labelledby="accounts-heading">
+        <div class="section-heading"><h2 id="accounts-heading">Accounts</h2><span id="account-count" class="count">0</span></div>
+        <div style="overflow-x:auto"><table class="data-table" id="accounts-table">
+          <thead><tr><th scope="col">Account</th><th scope="col">Status</th><th scope="col">Last sign-in</th><th scope="col">Tokens</th><th scope="col">Apps live</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+    </section>
+
+    <section id="panel-tokens" role="tabpanel" aria-labelledby="tab-tokens" class="admin-section" hidden>
+      <section class="panel" aria-labelledby="token-create-heading">
+        <h2 id="token-create-heading">Make a token without an account</h2>
+        <p class="hint">For a script or a service. The token reaches the profile stored for that uid.</p>
+        <form id="token-form" class="form-row">
+          <div class="input-group"><label for="uid">uid</label><input id="uid" required spellcheck="false"></div>
+          <div class="input-group"><label for="label">Label <small>(optional)</small></label><input id="label"></div>
+          <button id="createBtn" class="primary" type="submit">Create</button>
+        </form>
+        <div id="newToken" class="new-secret" hidden></div>
+      </section>
+      <section class="panel" aria-labelledby="tokens-heading">
+        <div class="section-heading"><h2 id="tokens-heading">Tokens</h2><span class="row-actions"><label class="toggle-control"><input type="checkbox" id="show-sessions"> Show sign-in sessions</label><button id="refreshBtn" class="text-button" type="button">Refresh list</button></span></div>
+        <div style="overflow-x:auto"><table class="data-table" id="tokensTable">
+          <thead><tr><th scope="col">uid</th><th scope="col">Label</th><th scope="col">Kind</th><th scope="col">Created</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+    </section>
+
+    <section id="panel-data" role="tabpanel" aria-labelledby="tab-data" class="admin-section" hidden>
+      <section class="panel" aria-labelledby="data-heading">
+        <div class="section-heading"><h2 id="data-heading">Stored profiles</h2><button id="data-refresh" class="text-button" type="button">Refresh</button></div>
+        <p class="hint">Every uid with data on this toolkit. Deleting a uid’s data also revokes its tokens and disconnects its apps; its account (if any) stays and starts empty at the next sign-in.</p>
+        <ul id="users-list" class="stack"></ul>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

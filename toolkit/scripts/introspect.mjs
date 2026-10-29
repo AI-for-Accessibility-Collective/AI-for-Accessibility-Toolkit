@@ -254,6 +254,7 @@ const CONCERN_MAP = {
   'librarian:getProfile': 'profile/ability',
   'librarian:setProfileField': 'profile/ability',
   'librarian:setProfileFields': 'profile/ability',
+  'librarian:replaceProfile': 'profile/ability',
   'librarian:getAbilityModel': 'profile/ability',
   'librarian:interpretNeedsPrompt': 'profile/ability',
   'librarian:getSiteCategory': 'profile/ability',

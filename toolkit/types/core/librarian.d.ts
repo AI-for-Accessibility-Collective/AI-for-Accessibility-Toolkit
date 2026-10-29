@@ -18,6 +18,7 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
 }): {
     setGeminiCaller(fn: any): void;
     getProfile(): Promise<any>;
+    replaceProfile(profile: any): Promise<any>;
     getAbilityModel(): Promise<import("./ability.js").AbilityModel>;
     setProfileField(path: any, value: any): Promise<any>;
     setProfileFields(fields: any): Promise<any>;

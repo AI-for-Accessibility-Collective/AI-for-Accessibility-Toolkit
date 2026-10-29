@@ -90,6 +90,12 @@
     "./registry": {
       "types": "./types/registry/tools.d.ts",
       "default": "./registry/tools.js"
+    },
+    "./protocol/adapter": {
+      "default": "./protocol/adapter/index.js"
+    },
+    "./adapter-mcp": {
+      "default": "./adapter-mcp/index.js"
     }
   },
   "files": [
@@ -101,6 +107,7 @@
     "platforms/",
     "registry/",
     "protocol/",
+    "adapter-mcp/",
     "skills/",
     "types/",
     "README.md"

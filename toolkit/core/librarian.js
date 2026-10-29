@@ -349,6 +349,42 @@ export function createLibrarian({
       return await getOrInitProfile();
     },
 
+    // Replace the active profile in one write, including removal of omitted keys.
+    // Explicit developer/user edits use the same authority as setProfileFields.
+    // Memories, grants and skills are separate records and are not replaced.
+    async replaceProfile(profile) {
+      const isObject = (v) => v != null && typeof v === 'object'
+        && !Array.isArray(v) && (Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null);
+      if (!isObject(profile)) throw new TypeError('Profile must be a JSON object');
+      function validate(value, depth = 0) {
+        if (depth > 50) throw new TypeError('Profile is too deeply nested');
+        if (value === null || typeof value === 'string' || typeof value === 'boolean') return;
+        if (typeof value === 'number' && Number.isFinite(value)) return;
+        if (!Array.isArray(value) && !isObject(value)) throw new TypeError('Profile values must be JSON');
+        for (const [key, child] of Object.entries(value)) {
+          if (PROTO_SEGMENTS.has(key)) throw new TypeError(`Unsafe profile key: ${key}`);
+          validate(child, depth + 1);
+        }
+      }
+      validate(profile);
+      if ('supportAreas' in profile && (!Array.isArray(profile.supportAreas)
+        || profile.supportAreas.some(v => typeof v !== 'string'))) throw new TypeError('supportAreas must be an array of strings');
+      for (const key of ['fields', 'metaPreferences']) {
+        if (key in profile && !isObject(profile[key])) throw new TypeError(`${key} must be an object`);
+      }
+      if ('freeText' in profile && typeof profile.freeText !== 'string') throw new TypeError('freeText must be a string');
+      if (profile.fields?.needs != null && (!Array.isArray(profile.fields.needs)
+        || profile.fields.needs.some(n => !isObject(n) || typeof n.dimension !== 'string' || !n.dimension.trim() || !('value' in n)))) {
+        throw new TypeError('fields.needs must be an array of needs with dimension and value');
+      }
+      // Clone before awaiting storage so callers cannot change the pending write.
+      const next = JSON.parse(JSON.stringify(profile));
+      return await DS().patch('mine.profile', previous => ({
+        ...next, schemaVersion: 1,
+        createdAt: previous?.createdAt ?? clock.now(), updatedAt: clock.now(),
+      }));
+    },
+
     // The modality-agnostic AbilityModel view (../core/ability). Pure read,
     // fast lane — what a non-web surface (XR, ArtInsight) reads to derive its
     // own rendering. Today's profiles project to an empty `needs[]`.

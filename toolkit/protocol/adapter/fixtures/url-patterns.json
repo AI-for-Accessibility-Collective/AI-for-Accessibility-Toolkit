@@ -1,0 +1,24 @@
+{
+  "comment": "URL scope-pattern vectors for Adapter MCP target rules (adapter-mcp.md §6). Each case: pattern, url, expected match. Query and fragment are ignored; a pattern without a port matches any port.",
+  "cases": [
+    { "pattern": "*", "url": "https://example.org/a", "match": true },
+    { "pattern": "*", "url": "http://localhost:8000/", "match": true },
+    { "pattern": "*", "url": "file:///etc/passwd", "match": false },
+    { "pattern": "*", "url": "chrome://settings", "match": false },
+    { "pattern": "https://docs.example.org/*", "url": "https://docs.example.org/article?x=1#y", "match": true },
+    { "pattern": "https://docs.example.org/*", "url": "http://docs.example.org/article", "match": false },
+    { "pattern": "*://docs.example.org/*", "url": "http://docs.example.org/article", "match": true },
+    { "pattern": "https://*.example.com/*", "url": "https://example.com/", "match": true },
+    { "pattern": "https://*.example.com/*", "url": "https://a.b.example.com/x", "match": true },
+    { "pattern": "https://*.example.com/*", "url": "https://badexample.com/", "match": false },
+    { "pattern": "https://example.com/shop/*", "url": "https://example.com/shop/cart", "match": true },
+    { "pattern": "https://example.com/shop/*", "url": "https://example.com/blog/", "match": false },
+    { "pattern": "https://example.com/*.html", "url": "https://example.com/a/b.html", "match": true },
+    { "pattern": "http://localhost/*", "url": "http://localhost:5179/product", "match": true },
+    { "pattern": "http://localhost:8000/*", "url": "http://localhost:5179/product", "match": false },
+    { "pattern": "http://localhost:8000/*", "url": "http://localhost:8000/product", "match": true },
+    { "pattern": "https://example.com:443/*", "url": "https://example.com/x", "match": true },
+    { "pattern": "*://*/*", "url": "https://anything.test/x", "match": true }
+  ],
+  "invalid": ["", "example.com/*", "https://example.com", "ftp://example.com/*", "https://ex*mple.com/*", "https://*.*.com/*"]
+}

@@ -1,0 +1,120 @@
+/* Sign-in, Apps, Account and admin console additions. Shares the tokens and
+   base components in styles.css. */
+
+.small { min-height: 34px; padding: 6px 11px; font-size: .8125rem; }
+.nav-count { margin-left: auto; background: var(--green); color: white; border-radius: 999px; padding: 1px 8px; font-size: .75rem; font-weight: 700; }
+.signed-in-as { margin: 0 0 10px; font-size: .9rem; overflow-wrap: anywhere; }
+.badge.connected { background: #dff0e6; color: var(--green); }
+.badge.live { background: #dff0e6; color: #14513f; border-color: #9cc9b2; }
+.badge.offline { background: #f1f1ee; color: #5c5f5a; }
+.badge.warn { background: #fff4d6; color: #6a4b00; border-color: #e7cf8c; }
+.badge.error { background: #fde8e8; color: #8a1c1c; border-color: #efb4b4; }
+
+#token-connect { margin-top: 12px; font-size: .875rem; }
+#token-connect summary { cursor: pointer; color: var(--green); font-weight: 600; padding: 4px 0; }
+#token-connect form { margin-top: 10px; }
+#disconnect { margin-top: 10px; width: 100%; }
+
+.token-chip { border: 1px solid var(--line); border-radius: 8px; background: var(--wash); padding: 10px; display: grid; gap: 6px; }
+.token-chip-label { font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.token-chip-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .875rem; }
+.token-value { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8125rem; overflow-wrap: anywhere; word-break: break-all; background: white; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+
+.heading-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+/* ── Apps page: the same panels, groups and cards as the Marketplace ──── */
+.connect-app { padding: 22px 24px; margin-bottom: 22px; }
+.connect-app-body { display: grid; gap: 14px; }
+.connect-step { min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.connect-step h3 { font-size: .9rem; }
+.connect-step .hint { margin: 0; }
+.connect-form { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+.connect-form .input-group { flex: 1 1 260px; max-width: 420px; margin: 0; }
+.connect-form button { min-height: 42px; }
+/* The same light code block as the Marketplace's View code. */
+.snippet { margin: 0; background: #f6f8f6; color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .72rem; line-height: 1.55; overflow: auto; white-space: pre; max-height: 300px; min-width: 0; }
+
+.adapter-group.is-hidden { opacity: .72; }
+.adapter-title h4, .app-title h3 { margin: 0; font-size: .875rem; }
+.adapter-title h4 { font-size: .9rem; }
+.app-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.app-title .badge, .adapter-title .badge { font-size: .62rem; padding: 4px 8px; }
+.adapter-group > .section-heading { align-items: flex-start; flex-wrap: wrap; }
+.adapter-group > .section-heading .card-actions .delete { margin-left: 0; }
+.app-description { margin: -8px 0 14px; }
+.app-connections { background: #f6f8f6; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: .75rem; color: var(--muted); display: grid; gap: 6px; }
+.connection-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.connection-list li { display: flex; gap: 8px; align-items: center; overflow-wrap: anywhere; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #b9c2bd; flex: none; }
+.dot.is-live { background: var(--green); }
+.recent-calls summary { color: var(--green); font-weight: 600; cursor: pointer; font-size: .72rem; }
+.activity { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 2px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .7rem; }
+.adapter-card.is-trying { grid-column: 1 / -1; }
+.adapter-card .card-actions .hint { margin: 0; }
+
+.try-panel { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; background: #f6f8f6; display: grid; gap: 14px; margin-top: 4px; }
+.try-panel .input-group { margin: 0; }
+.try-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; align-items: end; }
+.param-toggle { min-height: 42px; }
+.try-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.try-actions button { min-height: 36px; padding: 6px 12px; font-size: .75rem; }
+.try-result { border-radius: 6px; padding: 10px 12px; background: white; border: 1px solid var(--line); font-size: .8rem; }
+.try-result.ok { border-color: #9cc9b2; }
+.try-result.bad { border-color: #efb4b4; }
+.try-result pre { margin: 8px 0 0; font-size: .7rem; max-height: 260px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ── Account page: panels like the Profiles editor ─────────────────────── */
+.account-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; align-items: start; }
+.account-panel { padding: 22px 24px; display: grid; gap: 16px; align-content: start; min-width: 0; }
+.account-panel > .section-heading { margin-bottom: 0; }
+.account-panel > .hint { margin: -6px 0 0; }
+.account-wide { grid-column: 1 / -1; }
+.token-box { display: grid; gap: 10px; }
+.account-facts { display: grid; grid-template-columns: max-content 1fr; gap: 10px 20px; margin: 0; font-size: .85rem; }
+.account-facts dt { color: var(--muted); font-size: .75rem; font-weight: 600; }
+.account-facts dd { margin: 0; overflow-wrap: anywhere; }
+.password-form { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 14px; }
+.password-form .editor-meta { margin-bottom: 0; }
+.password-form .input-group { margin: 0; }
+.token-form { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+.token-form .input-group { flex: 1 1 240px; margin: 0; }
+.token-form button { min-height: 42px; font-size: .8rem; }
+.token-table, .data-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.token-table th, .token-table td, .data-table th, .data-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.token-table th, .data-table th { font-size: .68rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; }
+.token-table td.row-end { text-align: right; }
+.token-table td.row-end .card-actions { justify-content: flex-end; }
+.revoked-row td:first-child { color: #8a8f8a; text-decoration: line-through; }
+.new-secret { border: 1px solid #9cc9b2; background: #f3faf6; border-radius: 8px; padding: 12px 14px; display: grid; gap: 10px; font-size: .8rem; }
+.stack { display: grid; gap: 12px; }
+.row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Admin console */
+.admin-shell { max-width: 1180px; margin: 0 auto; padding: 24px 20px 60px; }
+.admin-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin: 18px 0 20px; flex-wrap: wrap; }
+.admin-tabs button { background: transparent; border-radius: 7px 7px 0 0; border: 1px solid transparent; border-bottom: 0; color: var(--muted); }
+.admin-tabs button[aria-selected="true"] { background: white; border-color: var(--line); color: var(--ink); margin-bottom: -1px; }
+.admin-section { display: grid; gap: 20px; }
+.admin-shell .panel { padding: 20px 24px; }
+.admin-shell .panel h2 { margin-top: 0; }
+.form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.form-row .input-group { flex: 1 1 200px; margin: 0; }
+.credentials { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.credentials td, .credentials th { border: 1px solid var(--line); padding: 6px 8px; text-align: left; }
+.credentials code { font-size: .85rem; }
+
+/* Four pages do not fit in one row on a phone: two by two instead. */
+@media (max-width: 720px) {
+  .nav-links { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nav-link { min-width: 0; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 640px) {
+  .password-form .editor-meta { grid-template-columns: 1fr; }
+  .account-panel, .connect-app { padding: 18px; }
+  .token-table th:nth-child(2), .token-table td:nth-child(2) { display: none; }
+}
+
+@media print {
+  .admin-tabs, .topbar, .no-print { display: none !important; }
+}

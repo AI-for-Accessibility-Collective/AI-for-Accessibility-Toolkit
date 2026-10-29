@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profiles · Toolkit Developer</title>
+  <link rel="stylesheet" href="/developer/styles.css">
+  <link rel="stylesheet" href="/developer/console.css">
+  <script type="module" src="/developer/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="topbar">
+    <a class="brand" href="/developer"><span class="brand-mark" aria-hidden="true">a<span>+</span></span><span>Accessibility Toolkit <small>DEVELOPER WORKSPACE</small></span></a>
+    <span class="environment" id="environment">PROFILE MANAGER</span>
+  </header>
+  <div class="shell">
+    <nav class="sidebar" aria-label="Developer workspace">
+      <div class="nav-links" role="navigation" aria-label="Pages">
+        <a class="nav-link active" href="#/profiles" data-page="profiles" aria-current="page"><span aria-hidden="true">◧</span> Profiles</a>
+        <a class="nav-link" href="#/apps" data-page="apps"><span aria-hidden="true">▣</span> Apps <span id="nav-live" class="nav-count" hidden></span></a>
+        <a class="nav-link" href="#/adapters" data-page="adapters"><span aria-hidden="true">⧉</span> Marketplace</a>
+        <a class="nav-link" href="#/account" data-page="account"><span aria-hidden="true">◎</span> Account &amp; tokens</a>
+      </div>
+      <section class="connection panel" aria-labelledby="connection-heading">
+        <div class="connection-title"><h2 id="connection-heading">Toolkit</h2><span id="connection-state" class="badge">Signed out</span></div>
+        <div id="signed-in" hidden>
+          <p class="signed-in-as">Signed in as <strong id="account-name"></strong> <span id="account-uid" class="muted"></span></p>
+          <div class="token-chip" id="sidebar-token" hidden>
+            <span class="token-chip-label">Your default token</span>
+            <code id="sidebar-token-value" class="token-value">aat_…</code>
+            <div class="token-chip-actions"><button id="sidebar-token-copy" type="button" class="secondary small">Copy token</button><a id="sidebar-connect-app" href="#/apps">Connect an app</a></div>
+          </div>
+        </div>
+        <form id="signin-form" aria-describedby="signin-help">
+          <div class="input-group"><label for="signin-username">Username</label><input id="signin-username" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+          <div class="input-group"><label for="signin-password">Password</label><input id="signin-password" type="password" required autocomplete="current-password"></div>
+          <button id="signin" class="primary" type="submit">Sign in</button>
+          <p id="signin-help" class="hint">The person running this toolkit gives you a username and password.</p>
+        </form>
+        <details id="token-connect">
+          <summary>Connect with an access token instead</summary>
+          <form id="connect-form"><div class="input-group"><label for="instance-url">Instance URL</label><input id="instance-url" type="url" required placeholder="http://localhost:8080" autocomplete="url"></div><div class="input-group"><label for="instance-token">Access token</label><input id="instance-token" type="password" required placeholder="aat_…" autocomplete="off"></div><button id="connect" class="primary" type="submit">Connect</button></form>
+          <p class="hint">Use a token from <a href="/admin">service administration</a>. The token stays in memory. A remote instance must allow this page’s origin through CORS.</p>
+        </details>
+        <button id="disconnect" class="secondary" type="button" hidden>Sign out</button>
+      </section>
+      <p id="status" role="status" aria-live="polite">Sign in to read and update your toolkit profile.</p>
+    </nav>
+    <main id="main">
+      <section id="page-profiles" class="page" aria-labelledby="profiles-heading">
+        <div class="page-heading"><div><p class="eyebrow">DEVELOP &amp; TEST</p><h1 id="profiles-heading">Profiles</h1><p class="muted">Explore different needs. Shape how your toolkit responds.</p></div><button id="new-profile" class="secondary" type="button">+ New profile</button></div>
+        <div class="workspace">
+          <aside class="library panel" aria-labelledby="library-heading">
+            <div class="section-heading"><h2 id="library-heading">Profile library</h2><span id="profile-count" class="count">9</span></div>
+            <label for="profile-search" class="visually-hidden">Search profiles</label><input id="profile-search" type="search" placeholder="Search profiles…">
+            <div class="tabs" aria-label="Filter profiles"><button type="button" data-filter="all" aria-pressed="true">All profiles</button><button type="button" data-filter="custom" aria-pressed="false">Saved</button></div>
+            <div id="profile-list"></div>
+            <p class="library-note">Nine starting points adapted from <a href="https://www.w3.org/WAI/people-use-web/user-stories/" target="_blank" rel="noreferrer">W3C WAI user stories</a>. Settings are illustrative mappings for development; individual needs vary.</p>
+          </aside>
+          <section class="editor panel" aria-labelledby="editor-heading">
+            <div class="section-heading"><div><p class="eyebrow">PROFILE EDITOR</p><h2 id="editor-heading">Current profile</h2></div><span id="draft-state" class="badge">Draft</span></div>
+            <p class="hint">Loading a library profile updates the connected toolkit immediately. Editor changes are drafts until you apply them.</p>
+            <div class="editor-meta"><div class="input-group"><label for="profile-name">Preset name</label><input id="profile-name" value="My profile" maxlength="120"></div><div class="input-group"><label for="profile-description">Description (shown in parentheses)</label><input id="profile-description" maxlength="240" placeholder="Optional description"></div></div>
+            <div class="key-heading"><h3>Profile keys <span id="key-count" class="count">0</span></h3><button id="refresh" type="button" class="text-button" disabled>Read from toolkit</button></div>
+            <div id="key-list"></div>
+            <form id="add-form" class="add-key"><div class="input-group"><label for="new-key">Key path</label><input id="new-key" required placeholder="fields.customPreference"></div><div class="input-group"><label for="new-type">Value type</label><select id="new-type"><option value="string">Text</option><option value="number">Number</option><option value="boolean" selected>Boolean</option><option value="array">List</option><option value="object">Object</option><option value="null">Null</option></select></div><div class="input-group new-value-group"><label for="new-value">Value</label><div id="new-value-control"></div></div><button type="submit" class="secondary">+ Add key</button></form>
+            <details class="json-editor"><summary>Edit full JSON</summary><label for="profile-json">Profile object (system timestamps are managed by the toolkit)</label><textarea id="profile-json" rows="15" spellcheck="false"></textarea><button id="use-json" class="secondary" type="button">Use JSON as draft</button></details>
+            <div class="editor-actions"><div><button id="apply" class="primary" type="button" disabled>Apply to toolkit</button><button id="save" class="secondary" type="button">Save preset</button></div><span class="hint">Presets are saved in your account when you are signed in, otherwise in this browser.</span></div>
+          </section>
+        </div>
+      </section>
+      <section id="page-apps" class="page" hidden aria-labelledby="apps-heading">
+        <div class="page-heading"><div><p class="eyebrow">CONNECT &amp; TRY</p><h1 id="apps-heading">Apps</h1><p class="muted">Apps built with the Adapter MCP SDK appear here as soon as they connect with your token, grouped by app. Try their adapters from here, or hide an app you are not working on.</p></div><button id="connect-app-toggle" class="secondary" type="button" aria-controls="connect-app" aria-expanded="false">+ Connect an app</button></div>
+        <section id="connect-app" class="panel connect-app" hidden aria-labelledby="connect-heading">
+          <div class="section-heading"><div><p class="eyebrow">CONNECT</p><h2 id="connect-heading">Connect an app</h2></div></div>
+          <div class="connect-app-body">
+            <div class="connect-step">
+              <h3>Open the Redbird demo, connected</h3>
+              <p class="hint">Redbird opens with your token and shows up below as <strong>Redbird demo</strong>. Its adapters use the profile you load on the Profiles page.</p>
+              <form id="open-redbird" class="connect-form"><div class="input-group"><label for="redbird-url">Redbird address</label><input id="redbird-url" type="url" required value="http://localhost:8000"></div><button class="primary" type="submit">Open Redbird</button></form>
+            </div>
+            <div class="connect-step">
+              <h3>Your own web app</h3>
+              <p class="hint">Import the SDK from this toolkit, describe your adapters, and connect with your default token.</p>
+              <pre class="snippet" id="snippet-web"></pre>
+              <div class="card-actions"><button type="button" class="secondary" data-copy="snippet-web">Copy code</button></div>
+            </div>
+            <div class="connect-step">
+              <h3>A coding agent (MCP)</h3>
+              <p class="hint">Once an app is connected, an MCP client can call its adapters through this toolkit. For Claude Code:</p>
+              <pre class="snippet" id="snippet-mcp"></pre>
+              <div class="card-actions"><button type="button" class="secondary" data-copy="snippet-mcp">Copy command</button></div>
+            </div>
+          </div>
+        </section>
+        <section class="panel adapters-browser" aria-labelledby="apps-list-heading">
+          <div class="section-heading"><h2 id="apps-list-heading">Connected apps</h2><span id="apps-count" class="count">0</span></div>
+          <div class="adapter-filters">
+            <label class="toggle-control"><input type="checkbox" id="apps-show-hidden"> Show hidden apps <span id="apps-hidden-count"></span></label>
+            <button id="apps-refresh" class="text-button" type="button" disabled>Refresh</button>
+          </div>
+          <div id="app-groups" aria-live="polite"></div>
+        </section>
+      </section>
+      <section id="page-account" class="page" hidden aria-labelledby="account-heading">
+        <div class="page-heading"><div><p class="eyebrow">ACCOUNT</p><h1 id="account-heading">Account &amp; tokens</h1><p class="muted">Your apps and adapters talk to the toolkit with a token. Use your default token unless you want a separate one you can revoke on its own.</p></div></div>
+        <div id="account-body"></div>
+      </section>
+      <section id="page-adapters" class="page" hidden aria-labelledby="adapters-heading">
+        <div class="page-heading"><div><p class="eyebrow">DISCOVER &amp; PUBLISH</p><h1 id="adapters-heading">Marketplace</h1><p class="muted">Adapter listings every app has published on this toolkit, grouped by app — a marketplace of what each host offers. Hidden apps stay hidden here too. Register your own to list it.</p></div><button id="new-adapter" class="secondary" type="button">+ Register adapter</button></div>
+        <section id="register-panel" class="panel adapter-register" hidden aria-labelledby="register-heading">
+          <div class="section-heading"><div><p class="eyebrow">NEW LISTING</p><h2 id="register-heading">Register an adapter</h2></div></div>
+          <form id="register-form">
+            <div class="register-grid">
+              <div class="input-group"><label for="reg-app">App id</label><input id="reg-app" list="known-apps" required placeholder="browser-extension" maxlength="64" pattern="[a-z0-9][a-z0-9._-]*"><datalist id="known-apps"><option value="browser-extension">Browser Extension</option><option value="xr">XR Task Guide</option></datalist></div>
+              <div class="input-group"><label for="reg-app-name">App display name <small>(optional)</small></label><input id="reg-app-name" maxlength="120" placeholder="Browser Extension"></div>
+              <div class="input-group"><label for="reg-id">Adapter id</label><input id="reg-id" required placeholder="dark-mode" maxlength="64" pattern="[a-z0-9][a-z0-9._-]*"></div>
+              <div class="input-group"><label for="reg-name">Display name</label><input id="reg-name" required placeholder="Dark Mode" maxlength="120"></div>
+              <div class="input-group"><label for="reg-version">Version <small>(optional)</small></label><input id="reg-version" maxlength="32" placeholder="1.0.0"></div>
+              <div class="input-group"><label for="reg-keys">Settings keys <small>(comma-separated)</small></label><input id="reg-keys" placeholder="darkMode, textScale"></div>
+              <div class="input-group register-wide"><label for="reg-description">Description</label><textarea id="reg-description" rows="2" maxlength="2000" placeholder="What this adapter changes, and for whom."></textarea></div>
+              <fieldset class="register-areas"><legend>Support areas</legend><label><input type="checkbox" name="area" value="vision"> Vision</label><label><input type="checkbox" name="area" value="motor"> Motor</label><label><input type="checkbox" name="area" value="hearing"> Hearing</label><label><input type="checkbox" name="area" value="cognitive"> Cognitive</label><label><input type="checkbox" name="area" value="sensory"> Sensory</label><label><input type="checkbox" name="area" value="reading"> Reading</label></fieldset>
+              <div class="register-links"><div class="input-group"><label for="reg-source">Source URL <small>(optional)</small></label><input id="reg-source" type="url" maxlength="500" placeholder="https://github.com/…"></div><div class="input-group"><label for="reg-docs">Docs URL <small>(optional)</small></label><input id="reg-docs" type="url" maxlength="500" placeholder="https://…"></div></div>
+              <div class="register-code">
+                <label class="toggle-control"><input type="checkbox" id="reg-has-code"> Include adapter code <small>(data + code listing)</small></label>
+                <div id="reg-code-group" class="input-group" hidden><label for="reg-code">Adapter source <small>(JavaScript, stored verbatim for hosts to download)</small></label><textarea id="reg-code" rows="8" spellcheck="false" placeholder="document.documentElement.style.colorScheme = 'dark';"></textarea></div>
+              </div>
+            </div>
+            <div class="editor-actions"><div><button id="register-submit" class="primary" type="submit">Register</button><button id="register-cancel" class="secondary" type="button">Cancel</button></div><span class="hint">Data-only listings publish a manifest; the code stays in your app’s repo. Listings with code store the source on this instance for hosts to download, lint, and install behind their own consent — the server never runs it.</span></div>
+          </form>
+        </section>
+        <section class="panel adapters-browser" aria-labelledby="marketplace-heading">
+          <div class="section-heading"><h2 id="marketplace-heading">Marketplace</h2><span id="adapter-count" class="count">0</span></div>
+          <label for="adapter-search" class="visually-hidden">Search adapters</label><input id="adapter-search" type="search" placeholder="Search adapters…">
+          <div class="adapter-filters">
+            <div class="input-group"><label for="adapter-app">App</label><select id="adapter-app"><option value="">All apps</option></select></div>
+            <div class="input-group"><label for="adapter-kind">Kind</label><select id="adapter-kind"><option value="">All kinds</option><option value="data">Data only</option><option value="code">Data + code</option></select></div>
+            <label class="toggle-control"><input type="checkbox" id="adapter-mine"> Mine</label>
+            <label class="toggle-control"><input type="checkbox" id="adapter-installed"> Installed</label>
+            <label class="toggle-control"><input type="checkbox" id="adapter-show-hidden"> Show hidden apps</label>
+            <button id="adapter-refresh" class="text-button" type="button" disabled>Refresh</button>
+          </div>
+          <div id="adapter-groups"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <footer>AI for Accessibility Toolkit <span>Build around people’s needs.</span></footer>
+</body>
+</html>

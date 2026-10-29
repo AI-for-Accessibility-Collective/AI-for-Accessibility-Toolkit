@@ -1,0 +1,276 @@
+{
+  "comment": "descriptorDigest vectors: sha256 over the RFC 8785 (JCS) form of {descriptor, executionArtifactDigest}. canonical is the exact UTF-8 input. Regenerate only when the digest rule itself changes.",
+  "cases": [
+    {
+      "name": "text-scale, metadata only",
+      "descriptor": {
+        "description": "Maintain a text-size multiplier on a web document.",
+        "adapterProtocol": {
+          "name": "ai4a11y.adapter-mcp",
+          "version": "0.1.0"
+        },
+        "exposure": "mcp",
+        "reach": "external",
+        "mode": "stateful",
+        "capabilities": [],
+        "surfaces": [
+          "web"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "scale": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 2,
+              "description": "Unitless multiplier; 1.5 means 150 percent."
+            }
+          },
+          "required": [
+            "scale"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        },
+        "stateSchema": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether the adapter reports itself on."
+            },
+            "requestedParameters": {
+              "type": "object",
+              "description": "The last parameters applied through this provider (requested, not observed)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "requires": {
+          "host": [],
+          "profileScopes": [],
+          "dependencies": []
+        },
+        "effects": {
+          "writes": [],
+          "idempotent": true,
+          "reversibility": "full"
+        },
+        "operations": [
+          "query",
+          "check",
+          "apply",
+          "revert"
+        ],
+        "appId": "browser-extension",
+        "id": "text-scale",
+        "name": "Text scale",
+        "version": "1.0.0",
+        "targets": [
+          {
+            "platforms": [
+              "*"
+            ],
+            "urls": [
+              "*"
+            ]
+          }
+        ]
+      },
+      "executionArtifactDigest": null,
+      "canonical": "{\"descriptor\":{\"adapterProtocol\":{\"name\":\"ai4a11y.adapter-mcp\",\"version\":\"0.1.0\"},\"appId\":\"browser-extension\",\"capabilities\":[],\"description\":\"Maintain a text-size multiplier on a web document.\",\"effects\":{\"idempotent\":true,\"reversibility\":\"full\",\"writes\":[]},\"exposure\":\"mcp\",\"id\":\"text-scale\",\"inputSchema\":{\"additionalProperties\":false,\"properties\":{\"scale\":{\"description\":\"Unitless multiplier; 1.5 means 150 percent.\",\"maximum\":2,\"minimum\":0.5,\"type\":\"number\"}},\"required\":[\"scale\"],\"type\":\"object\"},\"mode\":\"stateful\",\"name\":\"Text scale\",\"operations\":[\"query\",\"check\",\"apply\",\"revert\"],\"outputSchema\":{\"additionalProperties\":true,\"properties\":{\"enabled\":{\"type\":\"boolean\"}},\"type\":\"object\"},\"reach\":\"external\",\"requires\":{\"dependencies\":[],\"host\":[],\"profileScopes\":[]},\"stateSchema\":{\"additionalProperties\":false,\"properties\":{\"enabled\":{\"description\":\"Whether the adapter reports itself on.\",\"type\":\"boolean\"},\"requestedParameters\":{\"description\":\"The last parameters applied through this provider (requested, not observed).\",\"type\":\"object\"}},\"type\":\"object\"},\"surfaces\":[\"web\"],\"targets\":[{\"platforms\":[\"*\"],\"urls\":[\"*\"]}],\"version\":\"1.0.0\"},\"executionArtifactDigest\":null}",
+      "digest": "sha256:587cf8610a3a9ba91446961de132b66ee9d4a49bb5dd72563e64184821cdb5c3"
+    },
+    {
+      "name": "text-scale, pinned build",
+      "descriptor": {
+        "description": "Maintain a text-size multiplier on a web document.",
+        "adapterProtocol": {
+          "name": "ai4a11y.adapter-mcp",
+          "version": "0.1.0"
+        },
+        "exposure": "mcp",
+        "reach": "external",
+        "mode": "stateful",
+        "capabilities": [],
+        "surfaces": [
+          "web"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "scale": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 2,
+              "description": "Unitless multiplier; 1.5 means 150 percent."
+            }
+          },
+          "required": [
+            "scale"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        },
+        "stateSchema": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether the adapter reports itself on."
+            },
+            "requestedParameters": {
+              "type": "object",
+              "description": "The last parameters applied through this provider (requested, not observed)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "requires": {
+          "host": [],
+          "profileScopes": [],
+          "dependencies": []
+        },
+        "effects": {
+          "writes": [],
+          "idempotent": true,
+          "reversibility": "full"
+        },
+        "operations": [
+          "query",
+          "check",
+          "apply",
+          "revert"
+        ],
+        "appId": "browser-extension",
+        "id": "text-scale",
+        "name": "Text scale",
+        "version": "1.0.0",
+        "targets": [
+          {
+            "platforms": [
+              "*"
+            ],
+            "urls": [
+              "*"
+            ]
+          }
+        ]
+      },
+      "executionArtifactDigest": "sha256:abababababababababababababababababababababababababababababababab",
+      "canonical": "{\"descriptor\":{\"adapterProtocol\":{\"name\":\"ai4a11y.adapter-mcp\",\"version\":\"0.1.0\"},\"appId\":\"browser-extension\",\"capabilities\":[],\"description\":\"Maintain a text-size multiplier on a web document.\",\"effects\":{\"idempotent\":true,\"reversibility\":\"full\",\"writes\":[]},\"exposure\":\"mcp\",\"id\":\"text-scale\",\"inputSchema\":{\"additionalProperties\":false,\"properties\":{\"scale\":{\"description\":\"Unitless multiplier; 1.5 means 150 percent.\",\"maximum\":2,\"minimum\":0.5,\"type\":\"number\"}},\"required\":[\"scale\"],\"type\":\"object\"},\"mode\":\"stateful\",\"name\":\"Text scale\",\"operations\":[\"query\",\"check\",\"apply\",\"revert\"],\"outputSchema\":{\"additionalProperties\":true,\"properties\":{\"enabled\":{\"type\":\"boolean\"}},\"type\":\"object\"},\"reach\":\"external\",\"requires\":{\"dependencies\":[],\"host\":[],\"profileScopes\":[]},\"stateSchema\":{\"additionalProperties\":false,\"properties\":{\"enabled\":{\"description\":\"Whether the adapter reports itself on.\",\"type\":\"boolean\"},\"requestedParameters\":{\"description\":\"The last parameters applied through this provider (requested, not observed).\",\"type\":\"object\"}},\"type\":\"object\"},\"surfaces\":[\"web\"],\"targets\":[{\"platforms\":[\"*\"],\"urls\":[\"*\"]}],\"version\":\"1.0.0\"},\"executionArtifactDigest\":\"sha256:abababababababababababababababababababababababababababababababab\"}",
+      "digest": "sha256:9955034262e877f3f4ef1193ad468e668d04f35c00c07d84ed803976fbd2ac42"
+    },
+    {
+      "name": "unicode and key order",
+      "descriptor": {
+        "description": "z then a",
+        "adapterProtocol": {
+          "name": "ai4a11y.adapter-mcp",
+          "version": "0.1.0"
+        },
+        "exposure": "mcp",
+        "reach": "external",
+        "mode": "stateful",
+        "capabilities": [
+          {
+            "id": "a11y.text.scale@1",
+            "parameterBindings": {
+              "scale": "scale"
+            }
+          }
+        ],
+        "surfaces": [
+          "web"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "scale": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 2,
+              "description": "Unitless multiplier; 1.5 means 150 percent."
+            }
+          },
+          "required": [
+            "scale"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        },
+        "stateSchema": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether the adapter reports itself on."
+            },
+            "requestedParameters": {
+              "type": "object",
+              "description": "The last parameters applied through this provider (requested, not observed)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "requires": {
+          "host": [],
+          "profileScopes": [],
+          "dependencies": []
+        },
+        "effects": {
+          "writes": [],
+          "idempotent": true,
+          "reversibility": "full"
+        },
+        "operations": [
+          "query",
+          "check",
+          "apply",
+          "revert"
+        ],
+        "appId": "browser-extension",
+        "id": "unicode",
+        "name": "Ünïcödé — 😀",
+        "version": "1.0.0",
+        "targets": [
+          {
+            "platforms": [
+              "*"
+            ],
+            "urls": [
+              "*"
+            ]
+          }
+        ]
+      },
+      "executionArtifactDigest": null,
+      "canonical": "{\"descriptor\":{\"adapterProtocol\":{\"name\":\"ai4a11y.adapter-mcp\",\"version\":\"0.1.0\"},\"appId\":\"browser-extension\",\"capabilities\":[{\"id\":\"a11y.text.scale@1\",\"parameterBindings\":{\"scale\":\"scale\"}}],\"description\":\"z then a\",\"effects\":{\"idempotent\":true,\"reversibility\":\"full\",\"writes\":[]},\"exposure\":\"mcp\",\"id\":\"unicode\",\"inputSchema\":{\"additionalProperties\":false,\"properties\":{\"scale\":{\"description\":\"Unitless multiplier; 1.5 means 150 percent.\",\"maximum\":2,\"minimum\":0.5,\"type\":\"number\"}},\"required\":[\"scale\"],\"type\":\"object\"},\"mode\":\"stateful\",\"name\":\"Ünïcödé — 😀\",\"operations\":[\"query\",\"check\",\"apply\",\"revert\"],\"outputSchema\":{\"additionalProperties\":true,\"properties\":{\"enabled\":{\"type\":\"boolean\"}},\"type\":\"object\"},\"reach\":\"external\",\"requires\":{\"dependencies\":[],\"host\":[],\"profileScopes\":[]},\"stateSchema\":{\"additionalProperties\":false,\"properties\":{\"enabled\":{\"description\":\"Whether the adapter reports itself on.\",\"type\":\"boolean\"},\"requestedParameters\":{\"description\":\"The last parameters applied through this provider (requested, not observed).\",\"type\":\"object\"}},\"type\":\"object\"},\"surfaces\":[\"web\"],\"targets\":[{\"platforms\":[\"*\"],\"urls\":[\"*\"]}],\"version\":\"1.0.0\"},\"executionArtifactDigest\":null}",
+      "digest": "sha256:a5de3840e4872a2c71656894a2343f485a4ff47ee394389cb085dff2cb623834"
+    }
+  ]
+}

@@ -7,7 +7,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node test/server-test.mjs && node test/delete-cascade.test.mjs && node test/gcs-pagination.test.mjs && node test/token-conflict.test.mjs",
+    "test": "node test/server-test.mjs && node test/adapters.test.mjs && node test/developer.test.mjs && node test/accounts.test.mjs && node test/apps.test.mjs && node test/logging.test.mjs && node test/delete-cascade.test.mjs && node test/gcs-pagination.test.mjs && node test/token-conflict.test.mjs",
     "docs": "node scripts/generate-docs.mjs"
   },
   "engines": {

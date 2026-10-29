@@ -21,6 +21,7 @@
 // reached only through the barrel. No other toolkit/sync/* import needed.
 export const LIBRARIAN_ROUTES = [
   { route: 'getProfile', target: 'getProfile', kind: 'librarian' },
+  { route: 'replaceProfile', target: 'replaceProfile', kind: 'librarian' },
   { route: 'getAbilityModel', target: 'getAbilityModel', kind: 'librarian' },
   { route: 'listProcedural', target: 'listProcedural', kind: 'librarian' },
   { route: 'setProfileField', target: 'setProfileField', kind: 'librarian' },

@@ -11,6 +11,7 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 
 import { createApp } from '../src/app.js';
+import { DEVELOPER_ASSETS } from '../src/developer-page.js';
 import { fileStore } from '../src/store.js';
 import { createGeminiCaller } from '../src/gemini.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
@@ -43,6 +44,7 @@ assert.equal(EXTENSION_ALIAS_ROUTES.length, 36, 'the oracle itself must list 36 
 const DIRECT_SURFACE_ROUTES = [
   'interpretNeedsPrompt', 'hasScopedSetting', 'getScopedSetting',
   'removeScopedSetting', 'recordExplicitSetting', 'setProfileFields',
+  'replaceProfile',
   // "back to my profile" — the bulk inverse of recordScopedSettings. Unrouted,
   // a remote host's reset reaches nothing and still reports success.
   'resetToProfile',
@@ -50,7 +52,7 @@ const DIRECT_SURFACE_ROUTES = [
 // Natural-language notes — routed under their own method names.
 const NOTE_ROUTES = ['addNote', 'listNotes', 'updateNote', 'deleteNote', 'findNotes'];
 const ALL_ROUTES = [...EXTENSION_ALIAS_ROUTES, ...DIRECT_SURFACE_ROUTES, ...NOTE_ROUTES];
-assert.equal(ALL_ROUTES.length, 48, 'contract total must be 48 routes'); // CONTRACT.md "48 routes total"
+assert.equal(ALL_ROUTES.length, 49, 'contract total must be 49 routes');
 
 const results = [];
 
@@ -107,7 +109,7 @@ async function main() {
     });
 
     // ---- meta: the full route set --------------------------------------------
-    await test('GET /v1/meta lists all 48 routes (36 extension aliases + 7 direct-surface + 5 notes), all supported', async () => {
+    await test('GET /v1/meta lists all 49 routes (36 extension aliases + 8 direct-surface + 5 notes), all supported', async () => {
       const r = await call('GET', '/v1/meta');
       assert.equal(r.status, 200);
       const methods = r.body.librarian.methods;
@@ -420,6 +422,7 @@ async function main() {
       // shapes, so normalize the table's `{placeholder}` paths onto the
       // prefix they belong to and compare prefixes to prefixes.
       const norm = (p) => {
+        if (p.startsWith('/developer/')) return '/developer';
         for (const prefix of usedPrefixes) {
           const bare = prefix.replace(/\/$/, '');
           if (p === bare || p.startsWith(bare + '/')) return bare;
@@ -427,7 +430,7 @@ async function main() {
         return p;
       };
 
-      const served = new Set([...literals, ...usedPrefixes.map((p) => norm(p))].map(norm));
+      const served = new Set([...literals, ...DEVELOPER_ASSETS.keys(), ...usedPrefixes.map((p) => norm(p))].map(norm));
       assert.ok(served.size > 0, 'parsed no paths out of app.js, the parser has gone stale');
 
       const documented = new Set(HTTP_ENDPOINTS.map((e) => norm(e.path)));

@@ -66,6 +66,7 @@ Every method below was read off a REAL `createToolkit(...)` instance at doc-gene
 | Method | Async | Description |
 | --- | --- | --- |
 | `librarian.getProfile()` | async | (no doc comment) |
+| `librarian.replaceProfile(profile)` | async | Replace the active profile in one write, including removal of omitted keys. |
 | `librarian.getAbilityModel()` | async | The modality-agnostic AbilityModel view (../core/ability). |
 | `librarian.setProfileField(path, value)` | async | User-initiated edit — bypasses the proposal gate by design (the gate exists for *inferred* changes; explicit user intent needs no consent). |
 | `librarian.setProfileFields(fields)` | async | Set SEVERAL profile paths in ONE write. |

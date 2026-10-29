@@ -31,6 +31,8 @@ back in this repository under `cli/`.
 - [architecture.md](architecture.md): How the system is shaped: one need followed end to end, skill creation, the privacy and consent mechanics, and the invariants a change must not break.
 - [../.claude/skills/ai4a11y-toolkit/SKILL.md](../.claude/skills/ai4a11y-toolkit/SKILL.md): Embedding walkthrough: wire the ports, call the API, implement a host, or use the HTTP service.
 - [web-extension-getting-started.md](web-extension-getting-started.md): Short path for a browser-extension host: the Chrome port factories, skill-layer wiring, render-and-apply, the two AI seams.
+- [ADAPTER-MARKETPLACE.md](ADAPTER-MARKETPLACE.md): The adapter marketplace API: apps registering their adapters (manifest or manifest + code), grouping by app, and how the browser extension and XR app adopt it.
+- [../toolkit/adapter-mcp/README.md](../toolkit/adapter-mcp/README.md): Connect your app's adapters to a toolkit with the Adapter MCP SDK, so they show up in the developer console and any MCP client on your account can call them.
 - [xr-getting-started.md](xr-getting-started.md): Short path for a non-web host: demo, the needs model, embed-vs-HTTP integration, consent-gated write-back.
 - [adding-to-the-catalog.md](adding-to-the-catalog.md): Step-by-step instructions for adding a skill, adapter, auditor or profile, plus testing and package boundaries.
 - [using-in-your-project.md](using-in-your-project.md): Consuming `@ai4a11y/toolkit` and `@ai4a11y/tools` in your own project (not on npm yet — the pack-and-vendor recipe).
@@ -69,6 +71,8 @@ and independent of the core.
 
 [design/](design/): proposals and analyses; snapshots, not necessarily current behavior:
 
+- [adapter-mcp.md](design/adapter-mcp.md): Draft Adapter MCP application contract: standard MCP tools for adapter discovery, execution, results, and guarded undo. Version 0.1.0 is implemented (§13 lists what and where); cancellation and execution handles are not.
+- [adapter-mcp-research.md](design/adapter-mcp-research.md): Architecture study of accessibility personalization, MCP, and related runtimes; recommendations for simplifying the Adapter MCP draft.
 - [toolkit-refactor-plan.md](design/toolkit-refactor-plan.md): Extraction of the Librarian/datastore core into a portable toolkit (Phases 0–4, with status updates).
 - [toolkit-adversarial-analysis.md](design/toolkit-adversarial-analysis.md): W3C-persona adversarial analysis that stress-tested the refactor plan.
 - [cross-surface-analysis.md](design/cross-surface-analysis.md): How one AbilityModel renders to web/XR/mobile; the translation chain and its honest limits.
