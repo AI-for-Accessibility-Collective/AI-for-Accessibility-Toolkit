@@ -157,3 +157,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 const named = Number(new URLSearchParams(location.search).get('tab'));
 tab = named ? await chrome.tabs.get(named).catch(() => null) : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
 render().catch(e => say(e.message, true));
+// Opening the popup syncs too, so it shows what is installed now, not at the
+// last alarm (up to 30 seconds ago). An unchanged answer is cheap (etag), and
+// the storage listener above redraws when the sync writes.
+ask('sync').catch(() => {});
