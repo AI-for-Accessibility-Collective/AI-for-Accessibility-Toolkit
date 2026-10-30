@@ -65,7 +65,7 @@ const slugify = (s) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, 
 
 const RESULT_TEXT = { applied: 'Running', failed: 'Failed', skipped: 'Not running', removed: 'Switched off' };
 
-export function createAdaptersPage({ getClient, status, run }) {
+export function createAdaptersPage({ getClient, getAppToken = () => null, status, run }) {
   let registry = null;     // for the current connection
   let uid = null;
   let mine = [], shared = [], installed = new Map(), results = [], instances = [], apps = [];
@@ -434,10 +434,42 @@ export function createAdaptersPage({ getClient, status, run }) {
 
   // ── wiring ────────────────────────────────────────────────────────────────
 
+  // New adapter opens a guide to building one with a coding agent and the
+  // toolkit skill (served by this toolkit). The in-page editor stays one
+  // step away.
   $('ws-new').addEventListener('click', () => {
-    if (!getClient()) { status('Sign in before writing an adapter.', true); return; }
+    const client = getClient();
+    if (!client) { status('Sign in before writing an adapter.', true); return; }
+    const skill = `${client.base}/skill/ai4a11y-toolkit`;
+    $('ws-guide-install').textContent = [
+      'mkdir -p .claude/skills/ai4a11y-toolkit/scripts',
+      `curl -fsSo .claude/skills/ai4a11y-toolkit/SKILL.md ${skill}/SKILL.md`,
+      `curl -fsSo .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs ${skill}/scripts/adapter.mjs`,
+    ].join('\n');
+    $('ws-guide-env').textContent = [
+      `export TOOLKIT_URL=${client.base}`,
+      `export TOOLKIT_TOKEN=${getAppToken() || '<your default token from Account>'}`,
+    ].join('\n');
+    $('ws-guide-status').textContent = '';
+    $('ws-guide').showModal();
+  });
+  $('ws-guide-done').addEventListener('click', () => $('ws-guide').close());
+  $('ws-guide-editor').addEventListener('click', () => {
+    $('ws-guide').close();
     run(() => openEditor(null));
   });
+  for (const copy of document.querySelectorAll('[data-guide-copy]')) {
+    // The page's status line sits behind the modal, so the guide has its own.
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText($(copy.dataset.guideCopy).textContent);
+        $('ws-guide-status').textContent = copy.dataset.guideCopy === 'ws-guide-env'
+          ? 'Copied. It includes your token, so paste it only into your own terminal.' : 'Copied.';
+      } catch (error) {
+        $('ws-guide-status').textContent = `Could not copy: ${error.message}. Select the text and copy it instead.`;
+      }
+    });
+  }
   $('ws-cancel').addEventListener('click', closeEditor);
   $('ws-form').addEventListener('submit', (event) => { event.preventDefault(); run(save); });
   $('ws-name').addEventListener('input', () => { if (!editing && !idTouched) $('ws-id').value = slugify($('ws-name').value); });

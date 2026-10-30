@@ -16,8 +16,8 @@ An adapter is one JavaScript file that removes one barrier on a website, for exa
 **What the person does**
 
 1. Once: set up the adapter runtime extension in Chrome (`extension/README.md`, "Set it up": Load unpacked, Allow User Scripts, Connect with this console).
-2. Copy two things from the developer console: the toolkit address, and the default token (sidebar, **Copy token**).
-3. Tell you what to fix, for example: "Use the ai4a11y-toolkit skill. Make an adapter that makes small buttons bigger on https://example.com."
+2. In the developer console, open **Adapters** and choose **+ New adapter**. The guide there gives the commands to add this skill to a project and to set the toolkit address and the default token.
+3. Tell you what to fix, for example: "Make an adapter that makes small buttons bigger on https://example.com." You pick up this skill on your own.
 4. Open the page in Chrome. The change appears within a few seconds.
 5. Say what to change next. You edit the file and publish again.
 
@@ -364,6 +364,7 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
 | POST | `/v1/librarian/{method}` | invoke a Librarian method for the token's uid |
 | GET | `/v1/whoami` | `{uid, label, kind}` for the presented token |
 | GET | `/sdk/adapter-mcp.js` | the Adapter MCP SDK for apps (public code, any origin); its modules are under `/sdk/toolkit/` |
+| GET | `/skill/ai4a11y-toolkit/SKILL.md` | the toolkit skill for coding agents such as Claude Code and opencode (public); its helper is `/skill/ai4a11y-toolkit/scripts/adapter.mjs` |
 | POST | `/v1/auth/login` | developer sign-in `{username, password}` → `{token, expiresAt, account, defaultToken}`; `token` is a session |
 | POST | `/v1/auth/logout` | end this session (session token) |
 | GET | `/v1/account` | `{account, defaultToken, tokens, session, liveApps}` (session token) |
@@ -583,6 +584,8 @@ This skill ships **inside the toolkit repo** at `.claude/skills/ai4a11y-toolkit/
 mkdir -p .claude/skills
 cp -r <path-to-toolkit-repo>/.claude/skills/ai4a11y-toolkit .claude/skills/
 ```
+
+Or download it from any toolkit service, which serves it at `/skill/ai4a11y-toolkit/SKILL.md` and `/skill/ai4a11y-toolkit/scripts/adapter.mjs` (the developer console's **+ New adapter** guide gives the commands).
 
 Copy the whole folder: `scripts/adapter.mjs` (the helper in "Build an adapter with a coding agent") lives next to `SKILL.md`. Claude Code discovers project skills in `.claude/skills/` on the next session, and so does opencode (it reads `.claude/skills/`, `.opencode/skills/` and `.agents/skills/`). If you vendor or depend on the toolkit, re-copy after upgrades (the file is generated from the toolkit source, so it always matches the version you copied it from — check the "Regenerate" line at the bottom to rebuild it against your checkout).
 

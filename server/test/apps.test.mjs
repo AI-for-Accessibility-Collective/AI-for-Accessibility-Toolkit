@@ -92,6 +92,7 @@ try {
     assert.equal(res.headers.get('access-control-allow-origin'), '*');
     assert.match(res.headers.get('content-type'), /javascript/);
     for (const [url, asset] of SDK_ASSETS) {
+      if (!url.startsWith('/sdk/')) continue;
       const src = asset.body.toString('utf8');
       for (const m of src.matchAll(/(?:from|import)\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
         const resolved = new URL(m[1], `http://x${url}`).pathname;
@@ -99,6 +100,17 @@ try {
       }
     }
     assert.equal((await fetch(`${base}/sdk/../server/index.js`)).status, 404);
+  });
+
+  await test('the coding-agent skill and its helper are served, for the New adapter guide', async () => {
+    const skill = await fetch(`${base}/skill/ai4a11y-toolkit/SKILL.md`);
+    assert.equal(skill.status, 200);
+    assert.match(skill.headers.get('content-type'), /markdown/);
+    assert.match(await skill.text(), /^---\nname: ai4a11y-toolkit/);
+    const helper = await fetch(`${base}/skill/ai4a11y-toolkit/scripts/adapter.mjs`);
+    assert.equal(helper.status, 200);
+    assert.match(await helper.text(), /adapter_publish/);
+    assert.equal((await fetch(`${base}/skill/ai4a11y-toolkit/../../server/index.js`)).status, 404);
   });
 
   await test('an app connects with the default token and appears under its account, grouped by app', async () => {

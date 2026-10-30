@@ -43,6 +43,16 @@ SDK_ASSETS.set('/sdk/adapter-mcp.js', {
   type: JS,
 });
 
+// The toolkit's skill for coding agents (Claude Code, opencode), so a
+// developer can add it to a project with one command (the Adapters page's
+// New adapter guide). A build without the skill folder leaves these out.
+const SKILL_DIR = new URL('../../.claude/skills/ai4a11y-toolkit/', import.meta.url);
+for (const [file, type] of [['SKILL.md', 'text/markdown; charset=utf-8'], ['scripts/adapter.mjs', JS]]) {
+  try {
+    SDK_ASSETS.set(`/skill/ai4a11y-toolkit/${file}`, { body: readFileSync(new URL(file, SKILL_DIR)), type });
+  } catch { /* not in this build */ }
+}
+
 export function serveSdkAsset(res, asset, req) {
   const headers = {
     'access-control-allow-origin': '*',

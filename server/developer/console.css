@@ -149,3 +149,17 @@ a.text-button:hover { text-decoration: underline; }
 .dot.is-failed { background: #b42318; }
 .install-into { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .install-into select { min-height: 36px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; font-size: .8rem; background: white; }
+
+/* ── New adapter guide (a modal dialog) ─────────────────────────────── */
+.guide-dialog { width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border: 1px solid var(--line); border-radius: 10px; padding: 22px 24px; color: var(--ink); background: white; }
+.guide-dialog::backdrop { background: rgb(20 30 25 / .45); }
+.guide-dialog > .hint { margin: 0 0 14px; }
+.guide-steps { margin: 0; padding-left: 22px; display: grid; gap: 16px; }
+/* The guide's code wraps, so each line reads in full at any width (Copy
+   takes the exact text). */
+.guide-steps > li { min-width: 0; }
+.guide-steps .snippet { white-space: pre-wrap; overflow-wrap: anywhere; }
+.guide-steps h3 { font-size: .9rem; margin: 0 0 4px; }
+.guide-steps .hint { margin: 0 0 8px; }
+.guide-steps .card-actions { margin-top: 8px; }
+.guide-actions { margin-top: 20px; align-items: center; gap: 16px; }

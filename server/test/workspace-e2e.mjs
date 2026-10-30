@@ -60,8 +60,20 @@ try {
   assert.equal(await page.locator('#ws-runtime-state').innerText(), 'Not found in this browser');
   assert.equal(await page.locator('#ws-runtime-setup').getAttribute('open'), '', 'setup steps are open while no runtime is found');
 
+  // ── New adapter opens the coding-agent guide, filled in for this toolkit ──
+  await page.click('#ws-new');
+  await page.locator('#ws-guide[open]').waitFor();
+  assert.match(await page.locator('#ws-guide-install').innerText(), new RegExp(`curl -fsSo \\.claude/skills/ai4a11y-toolkit/SKILL\\.md ${base}/skill/ai4a11y-toolkit/SKILL\\.md`));
+  assert.match(await page.locator('#ws-guide-env').innerText(), new RegExp(`export TOOLKIT_URL=${base}\nexport TOOLKIT_TOKEN=${ada.token}`));
+  const served = await (await fetch(`${base}/skill/ai4a11y-toolkit/SKILL.md`)).text();
+  assert.match(served, /name: ai4a11y-toolkit/, 'the skill the guide installs is served');
+  await page.keyboard.press('Escape');
+  await page.locator('#ws-guide:not([open])').waitFor({ state: 'attached' });
+  assert.equal(await page.locator('#ws-new').evaluate(el => el === document.activeElement), true, 'closing the guide returns focus to New adapter');
+
   // ── write one: the id follows the name, lint speaks up, problems block saving ──
   await page.click('#ws-new');
+  await page.click('#ws-guide-editor');
   assert.equal(await page.locator('#ws-name').evaluate(el => el === document.activeElement), true, 'the editor opens with focus on the name');
   await page.fill('#ws-name', 'Bigger Buttons!');
   assert.equal(await page.inputValue('#ws-id'), 'bigger-buttons');
@@ -187,10 +199,13 @@ try {
   await boPage.waitForFunction(() => /Nobody has shared|No shared adapters/.test(document.getElementById('ws-groups').textContent));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.click('#ws-new');
+  const guide = await page.locator('#ws-guide').boundingBox();
+  assert.ok(guide.x >= 0 && guide.x + guide.width <= 390, 'the New adapter guide fits a phone');
+  await page.click('#ws-guide-editor');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'the Adapters page fits a phone');
   await page.screenshot({ path: path.join(tmpdir(), 'toolkit-adapters-mobile.png'), fullPage: true });
   assert.deepEqual(errors, [], 'browser must not raise JS errors');
-  console.log('Adapters workspace browser workflow passed: template and id, lint, blocking errors with focus, save and run, runtime reports and badge, share, a second developer installing pinned, edit to revision 2, unchanged save, update offered and applied, Apps page registry counts, delete, phone layout.');
+  console.log('Adapters workspace browser workflow passed: the coding-agent guide, template and id, lint, blocking errors with focus, save and run, runtime reports and badge, share, a second developer installing pinned, edit to revision 2, unchanged save, update offered and applied, Apps page registry counts, delete, phone layout.');
 } finally {
   await browser?.close();
   app.registry.closeAll();

@@ -31,6 +31,7 @@
 | POST | `/v1/librarian/{method}` | invoke a Librarian method for the token's uid |
 | GET | `/v1/whoami` | `{uid, label, kind}` for the presented token |
 | GET | `/sdk/adapter-mcp.js` | the Adapter MCP SDK for apps (public code, any origin); its modules are under `/sdk/toolkit/` |
+| GET | `/skill/ai4a11y-toolkit/SKILL.md` | the toolkit skill for coding agents such as Claude Code and opencode (public); its helper is `/skill/ai4a11y-toolkit/scripts/adapter.mjs` |
 | POST | `/v1/auth/login` | developer sign-in `{username, password}` → `{token, expiresAt, account, defaultToken}`; `token` is a session |
 | POST | `/v1/auth/logout` | end this session (session token) |
 | GET | `/v1/account` | `{account, defaultToken, tokens, session, liveApps}` (session token) |

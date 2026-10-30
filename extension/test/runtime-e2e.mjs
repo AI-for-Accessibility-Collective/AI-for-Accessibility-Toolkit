@@ -241,6 +241,7 @@ try {
   await consoleUi.waitForFunction(() => document.getElementById('connection-state').textContent.includes('Signed in'));
   await consoleUi.waitForFunction(() => document.getElementById('ws-runtime-state').textContent === 'Connected in this browser', null, { timeout: 15000 });
   await consoleUi.click('#ws-new');
+  await consoleUi.click('#ws-guide-editor');
   await consoleUi.fill('#ws-name', 'Shop heading label');
   await consoleUi.fill('#ws-urls', 'http://localhost/*');
   await consoleUi.fill('#ws-code', `export const HeadingLabel = {

@@ -31,6 +31,7 @@ export const HTTP_ENDPOINTS = [
   { method: 'PUT', path: '/v1/adapters/{appId}/{id}/install', auth: 'bearer', purpose: "mark installed in the calling uid's state -> {ok, installed:true}" },
   { method: 'DELETE', path: '/v1/adapters/{appId}/{id}/install', auth: 'bearer', purpose: 'clear it -> {ok, installed:false}' },
   { method: 'GET', path: '/sdk/adapter-mcp.js', auth: 'none (public code, any origin)', purpose: 'the Adapter MCP SDK entry point for apps; its modules are under /sdk/toolkit/' },
+  { method: 'GET', path: '/skill/ai4a11y-toolkit/SKILL.md', auth: 'none (public, any origin)', purpose: 'the toolkit skill for coding agents (Claude Code, opencode); its helper is /skill/ai4a11y-toolkit/scripts/adapter.mjs' },
   { method: 'POST', path: '/v1/auth/login', auth: 'none (rate limited)', purpose: 'developer sign-in {username, password} -> {token (session, expires), expiresAt, account, defaultToken}' },
   { method: 'POST', path: '/v1/auth/logout', auth: 'session', purpose: 'end this sign-in session' },
   { method: 'GET', path: '/v1/account', auth: 'session', purpose: '{account, defaultToken, tokens, session, liveApps} for the signed-in account' },

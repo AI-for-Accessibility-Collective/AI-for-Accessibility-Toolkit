@@ -187,6 +187,38 @@
       </section>
     </main>
   </div>
+  <dialog id="ws-guide" class="guide-dialog" aria-labelledby="ws-guide-heading">
+    <div class="section-heading"><div><p class="eyebrow">NEW ADAPTER</p><h2 id="ws-guide-heading">Build an adapter with a coding agent</h2></div></div>
+    <p class="hint">A coding agent such as Claude Code or opencode writes the adapter, publishes it to this toolkit and runs it in your browser. The toolkit skill shows it how.</p>
+    <ol class="guide-steps">
+      <li>
+        <h3>Add the toolkit skill to your project</h3>
+        <p class="hint">Run this in your project folder. Claude Code and opencode both find skills in <code>.claude/skills</code>.</p>
+        <pre class="snippet" id="ws-guide-install"></pre>
+        <div class="card-actions"><button type="button" class="secondary small" data-guide-copy="ws-guide-install">Copy commands</button></div>
+      </li>
+      <li>
+        <h3>Connect it to your toolkit</h3>
+        <p class="hint">Run this in the same terminal, then start <code>claude</code> or <code>opencode</code> there. It holds your token, so keep it out of files you share.</p>
+        <pre class="snippet" id="ws-guide-env"></pre>
+        <div class="card-actions"><button type="button" class="secondary small" data-guide-copy="ws-guide-env">Copy commands</button></div>
+      </li>
+      <li>
+        <h3>Say what to fix</h3>
+        <p class="hint">Name the website and the barrier. The agent picks up the skill on its own. For example:</p>
+        <pre class="snippet" id="ws-guide-ask">Make an adapter that underlines each link on https://example.com, for people who find links hard to tell apart from other text. Publish it to my toolkit so it runs in my browser.</pre>
+      </li>
+      <li>
+        <h3>See it work</h3>
+        <p class="hint">Open the page in Chrome with the adapter runtime extension connected. The adapter appears on this page under Yours, with how it ran.</p>
+      </li>
+    </ol>
+    <div class="card-actions guide-actions">
+      <button type="button" id="ws-guide-done">Done</button>
+      <button type="button" id="ws-guide-editor" class="text-button">Write it here instead</button>
+      <p id="ws-guide-status" class="hint" role="status"></p>
+    </div>
+  </dialog>
   <footer>AI for Accessibility Toolkit <span>Build around people’s needs.</span></footer>
 </body>
 </html>

@@ -296,7 +296,7 @@ const appsPage = createAppsPage({
   getClient: () => client, getAppToken: () => defaultToken, status, run,
   onLiveCount(n) { $('nav-live').hidden = !n; $('nav-live').textContent = String(n); $('nav-live').setAttribute('aria-label', `${n} live`); },
 });
-const adaptersPage = createAdaptersPage({ getClient: () => client, status, run });
+const adaptersPage = createAdaptersPage({ getClient: () => client, getAppToken: () => defaultToken, status, run });
 const listingsPage = createListingsPage({ getClient: () => client, status, run, getHiddenApps: () => appsPage.hiddenApps });
 const accountPage = createAccountPage({
   getClient: () => client, isSession: () => session, status, run,

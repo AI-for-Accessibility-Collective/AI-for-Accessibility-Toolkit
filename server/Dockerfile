@@ -1,5 +1,5 @@
 # Build context is the REPO ROOT (server/ imports ../toolkit/**, so both
-# trees must be in the image):
+# trees must be in the image, plus the skill it serves):
 #   docker build -f server/Dockerfile -t toolkit-service .
 FROM node:24-slim
 
@@ -10,6 +10,8 @@ WORKDIR /app
 # no `npm install` step needed for either.
 COPY toolkit/ ./toolkit/
 COPY server/ ./server/
+# The coding-agent skill, served at /skill/ai4a11y-toolkit/ (sdk-assets.js).
+COPY .claude/skills/ai4a11y-toolkit/ ./.claude/skills/ai4a11y-toolkit/
 
 WORKDIR /app/server
 
