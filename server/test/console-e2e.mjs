@@ -191,6 +191,8 @@ try {
   await dev.getByRole('button', { name: 'Larger text' }).click();
   assert.match(await dev.locator('#text-reset').innerText(), /125%/);
   assert.ok(Math.abs(await rootSize() - defaultSize * 1.25) < 0.1);
+  // Whitespace grows at half the rate: the 24px gap beside the sidebar is 27px at 125%.
+  assert.equal(await dev.evaluate(() => getComputedStyle(document.querySelector('.shell')).columnGap), '27px');
   await dev.reload();
   await dev.waitForFunction(() => document.getElementById('connection-state').textContent === 'Signed in');
   await dev.locator('#text-reset', { hasText: '125%' }).waitFor();
